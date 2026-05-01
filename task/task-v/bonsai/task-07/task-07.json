@@ -1,0 +1,56 @@
+{
+  "id": "v-bonsai-task-07-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Facade Window Layout IFC\n\nThis task starts from scratch. No local reference images are provided. Use Bonsai's native IFC authoring workflow to create a single facade wall with hosted doors and windows, then save the required output as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc with exact relative path /home/user/Desktop/result.ifc.\n2. /home/user/Desktop/result.ifc is an IFC4 model with exactly one IfcProject, exactly one IfcBuildingStorey named Level 00, and zero IfcBuildingElementProxy elements.\n3. The model contains exactly one IfcWall named Facade Wall whose geometric bounding-box spans are 18.0 m in X, 0.25 m in Y, and 3.6 m in Z, each within 0.05 m.\n4. The model contains exactly two IfcDoor elements named Door A and Door B; each door has OverallWidth 950 mm within 20 mm and OverallHeight 2200 mm within 20 mm.\n5. The model contains exactly six IfcWindow elements named Window N 2.6, Window N 5.2, Window N 7.8, Window W 10.8, Window W 13.4, and Window W 16.0.\n6. Exactly three windows have OverallWidth 1200 mm within 20 mm and OverallHeight 1200 mm within 20 mm, and exactly three windows have OverallWidth 1800 mm within 20 mm and OverallHeight 1400 mm within 20 mm.\n7. The model contains exactly eight IfcOpeningElement elements, exactly eight IfcRelVoidsElement relationships, and exactly eight IfcRelFillsElement relationships; every door and window fills one opening, and every opening voids the Facade Wall.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/window.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

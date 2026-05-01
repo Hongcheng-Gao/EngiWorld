@@ -1,0 +1,62 @@
+{
+  "id": "v-zbrush-task-07-windows",
+  "snapshot": "zbrush-2026.2.0",
+  "instruction": "Split a Multi-Polygroup Mesh into Named SubTools\n\nThe file at C:\\Users\\Administrator\\Desktop\\scene.obj contains a ZBrush Tool whose first (and only) SubTool, named MergedParts, is a single manifold mesh with exactly six polygroups. The polygroups partition all faces of the mesh into six non-overlapping regions. The mesh has no UVs, no polypaint, and no subdivision levels.\n\nLoad this OBJ into ZBrush, split the SubTool into six independent SubTools, one per polygroup, rename them sequentially, and export the result as C:\\Users\\Administrator\\Desktop\\output.obj.\n\nThe exported C:\\Users\\Administrator\\Desktop\\output.obj must satisfy:\n\n- Contains exactly six SubTools; their names are exactly the set {Part_01, Part_02, Part_03, Part_04, Part_05, Part_06}. No other SubTools are present, and no SubTool named MergedParts remains.\n- Each of the six SubTools carries exactly one polygroup.\n- The sum of face counts across the six SubTools equals the face count of the input MergedParts exactly.\n- The sum of vertex counts across the six SubTools is at most 1.5 x the input vertex count.\n- Each SubTool's faces form a single connected mesh.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07\\init_file\\scene.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.obj"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "zbrush"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

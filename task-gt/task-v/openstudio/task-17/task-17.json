@@ -1,0 +1,78 @@
+{
+  "id": "v-openstudio-task-17-ubuntu-gt",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Office Schedule Metadata From Init Model\n\nThis task starts from Desktop input file: /home/user/Desktop/init.osm. Reference image is provided on the Desktop: /home/user/Desktop/init_plan.png. Modify the OpenStudio 3.10 model as needed and save the required output as /home/user/Desktop/result.osm.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.osm with size at least 500 bytes.\n2. /home/user/Desktop/result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. /home/user/Desktop/result.osm contains exactly 1 OS:BuildingStory, 4 OS:Space objects, and 4 OS:ThermalZone objects.\n4. The OS:Space names are exactly Office-A, Office-B, Conference, and Support.\n5. Every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2.\n6. The model has exactly 26 OS:Surface objects: 4 Floor surfaces, 4 RoofCeiling surfaces, and 18 Wall surfaces.\n7. The surface Outside Boundary Condition counts are exactly 4 Ground, 12 Outdoors, and 10 Surface.\n8. The model has exactly 0 OS:SubSurface objects.\n9. The model contains exactly 4 OS:ZoneHVAC:IdealLoadsAirSystem objects, 4 OS:ZoneHVAC:EquipmentList objects, 4 OS:ThermostatSetpoint:DualSetpoint objects, 2 OS:People objects, 2 OS:Lights objects, and 2 OS:ElectricEquipment objects.\n10. Office-A, Office-B, and Conference use an OS:SpaceType named OfficeType whose default schedule set is Office Defaults; Support uses an OS:SpaceType named SupportType whose default schedule set is Support Defaults.\n11. The surface geometry bounding box has X span 16.00 m, Y span 12.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m.\n12. The sum of floor surface areas is 192.00 m2 with tolerance +/-0.50 m2.\n13. The sum of exterior wall gross areas is 179.20 m2 with tolerance +/-0.50 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-2.9.0-doc/model/html/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          },
+          {
+            "local_path": "task-17/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/ground_truth/answer.osm",
+            "path": "/home/user/Desktop/result.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "DISPLAY=:99",
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

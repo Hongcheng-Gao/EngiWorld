@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-path-task-05-ubuntu",
+  "snapshot": "freecad-path-1.1.1",
+  "instruction": "Use the FreeCAD 1.1.1 GUI with the Path/CAM workbench. Open or import the initial CAD geometry file(s) from the Desktop path(s): /home/user/Desktop/chamfer_plate.step. Create a FreeCAD Path/CAM Job. Use T2, the 90 degree chamfer mill, to create chamfer or deburring toolpaths on the top outside contour and all four hole mouths. The target chamfer width is 0.5 mm and the toolpath must cover the outside contour and every hole mouth. Tool definition: T2 is a 90 degree chamfer mill for the 0.5 mm chamfers. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-5.nc.",
+  "source": "https://wiki.freecad.org/CAM_Profile；https://wiki.freecad.org/CAM_Workbench https://wiki.freecad.org/CAM_Profile%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/chamfer_plate.step",
+            "path": "/home/user/Desktop/chamfer_plate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/chamfer_plate.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

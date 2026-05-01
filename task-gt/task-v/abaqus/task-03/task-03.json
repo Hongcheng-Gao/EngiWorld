@@ -1,0 +1,75 @@
+{
+  "id": "v-abaqus-task-03-windows-gt",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform a tensile analysis of a plate with a central circular hole (flange-related variant):\n\n1. Part:\n   - 3D Deformable Shell, Planar\n   - Sketch a rectangle of 120 mm x 240 mm\n   - Add a central circular hole with diameter 12 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3\n   - Shell Section, Homogeneous, thickness 1 mm, 5 integration points\n\n3. Assembly: Create an instance.\n\n4. Step:\n   - Static, General, named Step-HoleTension\n\n5. Load:\n   - Apply Shell Edge Load = 8 N/mm outward on the left and right short edges\n   - Apply symmetry constraints on the top and bottom long edges (U2 = 0)\n\n6. Mesh:\n   - Hole edge seed = 1.2 mm, global seed = 6 mm\n   - Element type: S4R\n\n7. Job: Create Job-FlangeHole and submit for solving.\n\n8. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-FlangeHole.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-FlangeHole.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/ground_truth/groundtruth_manifest.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\groundtruth_manifest.csv"
+          },
+          {
+            "local_path": "task-03/ground_truth/gt_humancraft__abaqus3__eval.py",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__abaqus3__eval.py"
+          },
+          {
+            "local_path": "task-03/ground_truth/gt_humancraft__abaqus3__task.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__abaqus3__task.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

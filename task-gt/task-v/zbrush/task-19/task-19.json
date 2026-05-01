@@ -1,0 +1,73 @@
+{
+  "id": "v-zbrush-task-19-windows-gt",
+  "snapshot": "zbrush-2026.2.0",
+  "instruction": "Transpose Bend - Curl a Tapered Tail into a 180 deg C-Shape\n\nThe file at C:\\Users\\Administrator\\Desktop\\scene.obj contains a ZBrush Tool whose first (and only) SubTool, named Tail, is a straight tapered cylinder running along +X from (0, 0, 0) to (1.5, 0, 0). Radius tapers from 0.10 BU at the root (x=0) to 0.03 BU at the tip (x=1.5). 40 length segments x 12 circular segments, with cap fans at both ends - ~494 vertices and ~504 faces. Single polygroup.\n\nLoad this OBJ into ZBrush and use Transpose Bend to curl the tail into a half-circle (180 deg arc) while keeping the root anchored. Export the result as C:\\Users\\Administrator\\Desktop\\output.obj.\n\nThe exported C:\\Users\\Administrator\\Desktop\\output.obj must satisfy:\n\n- Exactly one SubTool, named Tail.\n- Face count and vertex count preserved exactly (Bend never adds or removes topology).\n- Every vertex with original x approx 0 (root ring) has displacement < 0.001 BU - the root is anchored.\n- Endpoint chord divided by original arc length (= 1.5) equals 2\\pi approx 0.6366 within 5% - confirming a 180 deg C-shape.\n- Centerline discrete curvature stdev < 0.1 (curvature is approximately constant along the bend).",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19\\init_file\\scene.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/ground_truth/answer.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\output.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.obj"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "zbrush"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

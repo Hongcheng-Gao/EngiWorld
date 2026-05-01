@@ -1,0 +1,62 @@
+{
+  "id": "v-kicad-task-39-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "BGA Fan-Out Grid\n\nThe file /home/user/Desktop/design.kicad_pcb contains a 15x15 BGA footprint (U1, 225 pads at 0.8mm pitch) placed at the center of the board. Rows are labeled A-O, columns 1-15. Rows F through J (inner rows) carry ground signals. Currently there are no vias.\n\nAdd fan-out vias to the PCB following the dog-bone escape routing pattern and write the result as /home/user/Desktop/design.kicad_pcb.\n\nRequirements:\n1. Add exactly one via per BGA pad (225 vias total).\n2. For ground pads (rows F-J): place vias at the pad center (via-in-pad style) with drill diameter <= 0.2mm, and set the tented property.\n3. For signal pads (all other rows): place each via at a 45-degree diagonal offset from the pad center (dog-bone pattern). The offset distance should be approximately 0.566mm from the pad center.\n4. The dog-bone offset direction should alternate: use one diagonal direction for even row indices (A, C, E, K, M, O) and a different diagonal for odd row indices.\n5. No two vias may share the same position (via centres must all be distinct).\n\nWrite /home/user/Desktop/design.kicad_pcb.",
+  "source": "JEDEC MO-220 (BGA) / MO-247 (TO-247) Package Standards (MO-220), TI / Analog Devices / Nordic / Microchip PCB layout app notes (Xilinx/AMD BGA fan-out UG)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39/init_file/design.kicad_pcb",
+            "path": "/home/user/Desktop/design.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad/kicad-cli",
+          "/home/user/Desktop/design.kicad_pcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-39/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "v-openscad-task-06-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Open /home/user/Desktop/task-006_initial.scad. Make the cable channel a semicircular opening with diameter 18 mm. The clamp outside width must be 42 mm, total height 24 mm, and thickness 12 mm. Add one vertical bottom mounting hole of diameter 5 mm at the center. Use difference() to remove the cable channel and the mounting hole. Render with F6 and export /home/user/Desktop/task-006_output.stl.",
+  "source": "https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/task-006_initial.scad",
+            "path": "/home/user/Desktop/task-006_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "/home/user/Desktop/task-006_initial.scad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

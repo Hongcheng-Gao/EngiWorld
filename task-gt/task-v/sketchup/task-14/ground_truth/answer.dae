@@ -1,0 +1,194 @@
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <created>2026-04-23T23:14:32.951967</created>
+    <modified>2026-04-23T23:14:32.951974</modified>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="wood-eff" name="wood-eff">
+      <profile_COMMON>
+        <newparam sid="wood-surface">
+          <surface type="2D">
+            <init_from>wood-img</init_from>
+            <format>A8R8G8B8</format>
+          </surface>
+        </newparam>
+        <newparam sid="wood-sampler">
+          <sampler2D>
+            <source>wood-surface</source>
+          </sampler2D>
+        </newparam>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0.0 0.0 0.0 1.0</color>
+            </emission>
+            <ambient>
+              <color>0.0 0.0 0.0 1.0</color>
+            </ambient>
+            <diffuse>
+              <texture texture="wood-sampler" texcoord="UVSET0" />
+            </diffuse>
+            <specular>
+              <color>0.0 0.0 0.0 1.0</color>
+            </specular>
+            <shininess>
+              <float>0.0</float>
+            </shininess>
+            <reflective>
+              <color>0.0 0.0 0.0 1.0</color>
+            </reflective>
+            <reflectivity>
+              <float>0.0</float>
+            </reflectivity>
+            <transparent>
+              <color>0.0 0.0 0.0 1.0</color>
+            </transparent>
+            <transparency>
+              <float>1.0</float>
+            </transparency>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>0</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+    </effect>
+    <effect id="plain-eff" name="plain-eff">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0.0 0.0 0.0 1.0</color>
+            </emission>
+            <ambient>
+              <color>0.0 0.0 0.0 1.0</color>
+            </ambient>
+            <diffuse>
+              <color>0.75 0.62 0.45 1.0</color>
+            </diffuse>
+            <specular>
+              <color>0.0 0.0 0.0 1.0</color>
+            </specular>
+            <shininess>
+              <float>0.0</float>
+            </shininess>
+            <reflective>
+              <color>0.0 0.0 0.0 1.0</color>
+            </reflective>
+            <reflectivity>
+              <float>0.0</float>
+            </reflectivity>
+            <transparent>
+              <color>0.0 0.0 0.0 1.0</color>
+            </transparent>
+            <transparency>
+              <float>1.0</float>
+            </transparency>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>0</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="top-geom" name="DesktopTop">
+      <mesh>
+        <source id="top-pos-array">
+          <float_array count="12" id="top-pos-array-array">0 0 0.03 1.6 0 0.03 1.6 0.8 0.03 0 0.8 0.03</float_array>
+          <technique_common>
+            <accessor count="4" source="#top-pos-array-array" stride="3">
+              <param type="float" name="X" />
+              <param type="float" name="Y" />
+              <param type="float" name="Z" />
+            </accessor>
+          </technique_common>
+        </source>
+        <source id="top-uv-array">
+          <float_array count="8" id="top-uv-array-array">0 0 0 2 1 2 1 0</float_array>
+          <technique_common>
+            <accessor count="4" source="#top-uv-array-array" stride="2">
+              <param type="float" name="S" />
+              <param type="float" name="T" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="top-pos-array-vertices">
+          <input semantic="POSITION" source="#top-pos-array" />
+        </vertices>
+        <triangles count="2" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#top-pos-array-vertices" />
+          <input offset="1" semantic="TEXCOORD" source="#top-uv-array" set="0" />
+          <p>0 0 1 1 2 2 0 0 2 2 3 3</p>
+        </triangles>
+      </mesh>
+    </geometry>
+    <geometry id="body-geom" name="DesktopBody">
+      <mesh>
+        <source id="body-pos-array">
+          <float_array count="24" id="body-pos-array-array">0 0 0 1.6 0 0 1.6 0.8 0 0 0.8 0 0 0 0.03 1.6 0 0.03 1.6 0.8 0.03 0 0.8 0.03</float_array>
+          <technique_common>
+            <accessor count="8" source="#body-pos-array-array" stride="3">
+              <param type="float" name="X" />
+              <param type="float" name="Y" />
+              <param type="float" name="Z" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="body-pos-array-vertices">
+          <input semantic="POSITION" source="#body-pos-array" />
+        </vertices>
+        <triangles count="10" material="matref-plain">
+          <input offset="0" semantic="VERTEX" source="#body-pos-array-vertices" />
+          <p>0 2 1 0 3 2 0 1 5 0 5 4 1 2 6 1 6 5 2 3 7 2 7 6 3 0 4 3 4 7</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_images>
+    <image id="wood-img" name="wood-img">
+      <init_from>tex/wood.png</init_from>
+    </image>
+  </library_images>
+  <library_materials>
+    <material id="wood-mat" name="Wood">
+      <instance_effect url="#wood-eff" />
+    </material>
+    <material id="plain-mat" name="Plain">
+      <instance_effect url="#plain-eff" />
+    </material>
+  </library_materials>
+  <library_visual_scenes>
+    <visual_scene id="scene">
+      <node id="DesktopTop" name="DesktopTop">
+        <instance_geometry url="#top-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-wood" target="#wood-mat">
+                <bind_vertex_input semantic="UVSET0" input_semantic="TEXCOORD" input_set="0" />
+              </instance_material>
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="DesktopBody" name="DesktopBody">
+        <instance_geometry url="#body-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-plain" target="#plain-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#scene" />
+  </scene>
+</COLLADA>

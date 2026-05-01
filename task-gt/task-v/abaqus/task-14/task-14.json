@@ -1,0 +1,75 @@
+{
+  "id": "v-abaqus-task-14-windows-gt",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform a constrained thermal stress analysis (Case A):\n\n1. Part:\n   - 3D Deformable Solid, Extrusion\n   - Sketch: 10 mm x 10 mm rectangle\n   - Extrude to length 100 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3, Expansion = 1.2e-5 /K\n\n3. Assembly: Create an instance.\n\n4. Step:\n   - Static, General, named Step-Thermal-A\n\n5. Load:\n   - Predefined Field > Temperature, Initial, whole model = 20 degC\n   - Boundary conditions: both end faces fully constrained (all translational DOFs fixed)\n   - In Step-Thermal-A, apply Predefined Field > Temperature = 120 degC to the whole model\n\n6. Mesh:\n   - Global seed size: 5 mm\n   - Element type: C3D8R\n\n7. Job: Create Job-ThermalStress-A and submit for solving.\n\n8. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-ThermalStress-A.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-ThermalStress-A.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/ground_truth/groundtruth_manifest.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\groundtruth_manifest.csv"
+          },
+          {
+            "local_path": "task-14/ground_truth/gt_humancraft__abaqus14__eval.py",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__abaqus14__eval.py"
+          },
+          {
+            "local_path": "task-14/ground_truth/gt_humancraft__abaqus14__task.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__abaqus14__task.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

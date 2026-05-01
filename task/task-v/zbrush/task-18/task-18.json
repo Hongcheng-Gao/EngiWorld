@@ -1,0 +1,62 @@
+{
+  "id": "v-zbrush-task-18-windows",
+  "snapshot": "zbrush-2026.2.0",
+  "instruction": "Transpose Rotate - Rotate an Arm About the Shoulder Pivot\n\nThe file at C:\\Users\\Administrator\\Desktop\\scene.obj contains a ZBrush Tool whose first (and only) SubTool, named Body, is a simplified T-pose humanoid made of three rigid pieces:\n\n- Torso: axis-aligned box of size 0.4 x 1.0 x 0.2, occupying x in [-0.2, 0.2], y in [0.0, 1.0], z in [-0.1, 0.1].\n- Arm: a cylinder of radius 0.08, length 0.8, running along +X from the shoulder pivot at (0.2, 0.35, 0) to the hand at (1.0, 0.35, 0). 8 rings x 16 side segments plus cap fans.\n- Lower body: axis-aligned box of size 0.4 x 0.8 x 0.2, occupying x in [-0.2, 0.2], y in [-0.8, 0], z in [-0.1, 0.1].\n\nTotal ~200 vertices. Single SubTool (Body), single polygroup.\n\nLoad this OBJ into ZBrush, mask the lower body, place the Transpose Action Line across the shoulder, and rotate the arm -30 deg around the global X axis. Export the result as C:\\Users\\Administrator\\Desktop\\output.obj.\n\nThe exported C:\\Users\\Administrator\\Desktop\\output.obj must satisfy:\n\n- Exactly one SubTool, named Body.\n- Face count and vertex count preserved exactly (Transpose Rotate never adds or removes topology).\n- Every vertex with original y < 0 (the lower body) has displacement < 0.001 BU (unchanged by the masked rotation).\n- Every vertex with original x > 0.2 (the arm) lies at the position obtained by rotating the original vertex by -30 deg around the global X axis through the pivot (0.2, 0.35, 0), within 0.01 BU.\n- The vertex closest to the shoulder pivot in the input remains closest to the pivot in the output (did not move more than 0.01 BU). This confirms the pivot was placed correctly.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18\\init_file\\scene.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.obj"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "zbrush"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

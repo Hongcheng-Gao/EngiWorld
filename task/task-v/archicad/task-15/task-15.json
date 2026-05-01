@@ -1,0 +1,70 @@
+{
+  "id": "v-archicad-task-15-windows",
+  "snapshot": "archicad-29",
+  "instruction": "Accessibility Clinic Renovation Report\n\nThis task starts from C:\\Users\\Administrator\\Desktop\\init.ifc. Reference images are provided on the Desktop: C:\\Users\\Administrator\\Desktop\\init_plan.png, C:\\Users\\Administrator\\Desktop\\init_section.png. Modify the Archicad model as needed and save the required outputs as C:\\Users\\Administrator\\Desktop\\result.txt, C:\\Users\\Administrator\\Desktop\\result.ifc, C:\\Users\\Administrator\\Desktop\\result.pdf. Export C:\\Users\\Administrator\\Desktop\\result.txt as a tab-delimited zone property schedule text file from the Archicad schedule/list workflow.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes, C:\\Users\\Administrator\\Desktop\\result.pdf with size at least 500 bytes, and C:\\Users\\Administrator\\Desktop\\result.txt with size at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 5 IfcSpace entities.\n5. The IFC model contains at least 4 IfcWall entities, at least 1 IfcSlab entity, and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: RECEPTION, WAITING, CONSULT, TREATMENT, WC-ACC.\n7. Every listed space is assigned to the single IfcBuildingStorey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [13.0, 7.0, 3.2].\n9. C:\\Users\\Administrator\\Desktop\\result.txt is tab-delimited and has exactly these headers in this order: ZoneNumber, ZoneName, Area, AccessibilityCritical.\n10. C:\\Users\\Administrator\\Desktop\\result.txt has exactly 5 data rows in this order: C01 RECEPTION 12.0 Yes, C02 WAITING 15.0 Yes, C03 CONSULT 12.0 No, C04 TREATMENT 24.0 No, C05 WC-ACC 16.0 Yes, with numeric values matching within tolerance +/-0.10.\n11. C:\\Users\\Administrator\\Desktop\\result.pdf has exactly 2 pages and extracted text contains at least these case-insensitive tokens: A101, A201, ACCESSIBILITY CLINIC RENOVATION REPORT, RECEPTION, WAITING, CONSULT, WC-ACC.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/050_ViewsVB/050_ViewsVB-122.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-15/init_image/init_plan.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+          },
+          {
+            "local_path": "task-15/init_image/init_section.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe",
+          "C:\\Users\\Administrator\\Desktop\\init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

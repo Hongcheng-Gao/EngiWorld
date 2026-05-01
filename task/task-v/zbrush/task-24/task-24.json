@@ -1,0 +1,62 @@
+{
+  "id": "v-zbrush-task-24-windows",
+  "snapshot": "zbrush-2026.2.0",
+  "instruction": "Radial Symmetry Sculpting (6-petal Flower Depression)\n\nThe file at C:\\Users\\Administrator\\Desktop\\scene.obj contains a ZBrush Tool whose first (and only) SubTool, named FlowerDisk, is a flat circular disk of radius 1 BU lying in the XZ plane at Y=0. The disk is tessellated as a polar grid with 20 radial rings and 36 angular segments (720 faces, 721 vertices: 1 center vertex plus 20 rings of 36 vertices; the inner ring is connected to the center via 36 triangles, and the outer 19 ring bands are quads). No Y displacement yet, no polygroups, and no polypaint.\n\nLoad this OBJ into ZBrush, enable radial symmetry with count = 6 around the Y axis, sculpt one Gaussian-shaped depression at radius 0.7 and angle 0 deg using a Standard brush with Zsub, and export the result as C:\\Users\\Administrator\\Desktop\\output.obj.\n\nThe exported C:\\Users\\Administrator\\Desktop\\output.obj must satisfy:\n\n- Exactly one SubTool, still named FlowerDisk, with its base topology unchanged: 721 vertices and 720 faces.\n- Max |Y displacement| across all vertices is at least 0.05 BU.\n- Rotating the mesh by 60 deg around the Y axis yields a vertex cloud matching the original within 0.005 BU for every vertex.\n- Exactly 6 distinct local Y-minima are present, located approximately at (0.7*cos(k*60 deg), y<0, 0.7*sin(k*60 deg)) for k = 0..5.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\scene.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.obj"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "zbrush"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-24\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

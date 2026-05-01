@@ -1,0 +1,61 @@
+{
+  "id": "v-sketchup-task-15-windows-gt",
+  "snapshot": "sketchup2026",
+  "instruction": "Garden with Flat Patio and Curved Path (SketchUp Sandbox)\n\nUsing SketchUp's GUI, build a small landscape scene and export it as a COLLADA DAE. There is no initial file.\n\nSpecification:\n\n- **Rolling terrain**: a real triangulated terrain surface covering a 10 m x 10 m domain centered at the world origin (X in [-5, +5] m, Y in [-5, +5] m). Build it with SketchUp's Sandbox *From Scratch* on at least a 20 x 20 vertex grid (>= 722 triangles), then use *Smoove* (or equivalent vertex-height editing) to create rolling hills and a depression so the terrain shows real elevation variation. The peak-to-peak Z range of the terrain must be **>= 0.3 m**.\n\n- **Flat patio**: a 6.0 m (along X) x 4.0 m (along Y) rectangular patio centered at the world origin, built as a **strictly flat** face (same Z for all four corners) at a Z equal to the **average terrain height over the patio footprint**. Think of it as using Sandbox *Stamp* on the central 6 x 4 m footprint with zero transition ring - everything inside the footprint is snapped to one elevation. The patio must occupy the central 6 x 4 m rectangle (XY extent >= 1.5 m on each axis inside that rectangle) and all of its vertices must share the same Z within +\\-5 mm.\n\n- **Curved garden path**: a draped polyline (5-10 vertices) running from the front \\ +Y edge of the terrain down to the north edge of the patio. Start the path near the edge at roughly (x approx +3.5 m, y approx +4.5 m) and finish at the patio edge near (x approx 0, y approx +2.0 m), curving smoothly in between. Every path vertex's Z must be set to the terrain height at that (x, y) - i.e. the path is *draped* onto the terrain surface, not floating or buried. Export the path as a COLLADA `<line_set>` primitive (or equivalent line chain referencing every path vertex). The path Z range must span at least 50 mm to confirm it actually follows the terrain.\n\nExport the whole scene as `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as a valid COLLADA file.\n2. The scene's XY bounding box is approximately 10 m x 10 m (+\\-1 m).\n3. The terrain's Z range is >= 0.3 m (visible rolling variation).\n4. There is a triangulated terrain surface present (>= 50 triangles).\n5. A flat patio region is detectable: >= 4 vertices in the central 6 x 4 m footprint sharing the same Z within +\\-5 mm, with an XY extent of at least 1.5 m x 1.5 m.\n6. A draped polyline (LineSet primitive or equivalent line chain) is present with >= 5 vertices.\n7. The polyline shows real Z variation (>= 50 mm span) from following the terrain.\n8. Every polyline vertex's Z matches a terrain-surface query at the same (x, y) within 100 mm (draped, not floating).",
+  "source": "SU-Help Sandbox: From Scratch + Smoove + Stamp + Drape tools; Chopra — SketchUp For Dummies (Sandbox chapter); COLLADA 1.5 library_geometries (triangles + lines)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/ground_truth/answer.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\output.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

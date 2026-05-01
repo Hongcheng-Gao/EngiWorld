@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-path-task-10-ubuntu",
+  "snapshot": "freecad-path-1.1.1",
+  "instruction": "Use the FreeCAD 1.1.1 GUI with the Path/CAM workbench. Open or import the initial CAD geometry file(s) from the Desktop path(s): /home/user/Desktop/sheet_panel.step. Create a FreeCAD Path/CAM 2D Profile cutting Job. Machine the internal rectangular windows and circular holes as inside profiles before cutting the outside profile. Approximate the tool diameter from the 0.15 mm kerf setting. Cutting setup: use a 2D Profile operation and approximate the cutter from the 0.15 mm kerf requirement. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-10.gcode.",
+  "source": "https://wiki.freecad.org/CAM_Profile；https://wiki.freecad.org/CAM_ToolBit https://wiki.freecad.org/CAM_Profile%EF%BC%9Bhttps:/wiki.freecad.org/CAM_ToolBit",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/sheet_panel.step",
+            "path": "/home/user/Desktop/sheet_panel.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/sheet_panel.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

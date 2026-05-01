@@ -1,0 +1,117 @@
+{
+  "id": "v-sketchup-task-28-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Relink Broken Texture Paths\n\nThe file `C:\\Users\\Administrator\\Desktop\\broken_tex.dae` is a COLLADA scene with 5 materials. Each material's diffuse input references a texture image at an ABSOLUTE path that does not exist on the agent's machine:\n\n\\missing\\original\\tex_1.png\n\\missing\\original\\tex_2.png\n\\missing\\original\\tex_3.png\n\\missing\\original\\tex_4.png\n\\missing\\original\\tex_5.png\n\nThe real texture files are present on disk next to the DAE at `C:\\Users\\Administrator\\Desktop\\textures\\tex_1.png`... `C:\\Users\\Administrator\\Desktop\\textures\\tex_5.png` (5 PNG files). The filename-stem of each real texture matches the basename of the broken path it should replace (`tex_N.png`).\n\n1. Load `C:\\Users\\Administrator\\Desktop\\broken_tex.dae` (pycollada works fine - broken paths are retained as-is by the parser).\n2. For every image in `<library_images>`, detect that its `<init_from>` path is absolute and unresolved on disk. Find the real texture by BASENAME in `C:\\Users\\Administrator\\Desktop\\textures\\`, and rewrite the image reference to the relative path `C:\\Users\\Administrator\\Desktop\\textures\\<basename>`.\n3. Write the repaired file to `C:\\Users\\Administrator\\Desktop\\output.dae` and bundle the 5 PNG files into a `C:\\Users\\Administrator\\Desktop\\textures\\` subdirectory next to `C:\\Users\\Administrator\\Desktop\\output.dae` (i.e. `C:\\Users\\Administrator\\Desktop\\output.dae` and its `C:\\Users\\Administrator\\Desktop\\textures\\` folder form a portable self-contained COLLADA bundle with relative texture references).\n4. Write an audit log to `C:\\Users\\Administrator\\Desktop\\relink_report.json` with the exact schema:\n\n{\n\"relinked\": {\n\"\\missing\\original\\tex_1.png\": \"C:\\Users\\Administrator\\Desktop\\textures\\tex_1.png\",\n\"\\missing\\original\\tex_2.png\": \"C:\\Users\\Administrator\\Desktop\\textures\\tex_2.png\",\n\"\\missing\\original\\tex_3.png\": \"C:\\Users\\Administrator\\Desktop\\textures\\tex_3.png\",\n\"\\missing\\original\\tex_4.png\": \"C:\\Users\\Administrator\\Desktop\\textures\\tex_4.png\",\n\"\\missing\\original\\tex_5.png\": \"C:\\Users\\Administrator\\Desktop\\textures\\tex_5.png\"\n},\n\"n_relinked\": 5\n}\n\n`relinked` is a map from each broken original path to the relative path you rewrote it to. `n_relinked` is the integer count.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. `C:\\Users\\Administrator\\Desktop\\output.dae` has exactly 5 `<library_images>` entries AND exactly 5 `<library_materials>` entries.\n3. For each of the 5 images:\n- Its `<init_from>` path starts with `C:\\Users\\Administrator\\Desktop\\textures\\` (is relative).\n- That relative path resolves to an existing file on disk next to `C:\\Users\\Administrator\\Desktop\\output.dae`.\n- The 5 basenames together form a bijection with `{tex_1.png, tex_2.png, tex_3.png, tex_4.png, tex_5.png}`.\n4. `C:\\Users\\Administrator\\Desktop\\relink_report.json` parses as valid JSON, has keys `relinked` (dict) and `n_relinked` (int), and the `relinked` dict maps each of the 5 expected broken absolute paths to the corresponding relative path.",
+  "source": "SU-Help Materials editor (missing-texture resolution); SU-Sage broken-path fix; COLLADA 1.4 library_images <init_from> relative-path conventions",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28\\init_file\\broken_tex.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_tex.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28\\init_file\\textures\\tex_1.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\tex_1.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28\\init_file\\textures\\tex_2.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\tex_2.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28\\init_file\\textures\\tex_3.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\tex_3.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28\\init_file\\textures\\tex_4.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\tex_4.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28\\init_file\\textures\\tex_5.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\tex_5.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe",
+          "C:\\Users\\Administrator\\Desktop\\broken_tex.dae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-28\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

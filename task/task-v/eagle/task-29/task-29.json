@@ -1,0 +1,61 @@
+{
+  "id": "v-eagle-task-29-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Create `/home/user/Desktop/mylib_xc6206.lbr`, an EAGLE library for an XC6206-style 3-pin LDO in an SOT package, and save it.\n\nRequirements:\n1. The file must parse as XML.\n2. It must contain a `<library>` with `<packages>`, `<symbols>`, and `<devicesets>` sections.\n3. It must contain exactly one symbol with exactly 3 pins named `VIN`, `GND`, and `VOUT`.\n4. Pin directions must be acceptable for those roles: `VIN` as `in` or `pas`, `GND` as `pwr` or `sup`, and `VOUT` as `out` or `pas`.\n5. It must contain at least one package whose name contains `SOT`, with exactly 3 `<smd>` pads named `1`, `2`, and `3` in a plausible SOT-23-3 layout.\n6. The package must include at least one silkscreen or documentation shape on layer `21` or `51`.\n7. The package must include a pin-1 marker.\n8. It must contain a deviceset with `prefix=\"U\"` and a device whose `<connects>` block covers `VIN`, `GND`, and `VOUT` exactly once.",
+  "source": "https://learn.adafruit.com/ktowns-ultimate-creating-parts-in-eagle-tutorial/understanding-parts-in-eagle",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-29/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-29/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

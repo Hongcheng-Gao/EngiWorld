@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-03-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "Use `C:\\Users\\Administrator\\Desktop\\scene.blend`. Keep `Terrain` as a mesh with its existing FLOAT attribute `density`, keep `Tree` as a mesh object, and give `Terrain` exactly one modifier, a Geometry Nodes modifier. Save as `C:\\Users\\Administrator\\Desktop\\answer.blend`. The node group must contain a `Distribute Points on Faces` node with distribute method `POISSON` and Seed 42, and an `Instance on Points` node. The evaluated depsgraph must expose true instances parented to `Terrain` with a total count between 30 and 500, and every instance must have world-space `x >= -0.1`.",
+  "source": "Bridson 2007 — \"Fast Poisson Disk Sampling in Arbitrary Dimensions\", SIGGRAPH Sketches",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

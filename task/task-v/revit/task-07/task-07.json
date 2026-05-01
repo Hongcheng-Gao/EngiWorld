@@ -1,0 +1,56 @@
+{
+  "id": "v-revit-task-07-windows",
+  "snapshot": "Revit-2027",
+  "instruction": "Single Storey School Wing IFC And Revit Room Schedule CSV\n\nThis task starts from scratch with no init_file inputs and no local reference images. In Revit, create a single-storey school wing, export the model as C:\\Users\\Administrator\\Desktop\\result.ifc, and export a Revit room area schedule as C:\\Users\\Administrator\\Desktop\\result.csv in the Desktop.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc and C:\\Users\\Administrator\\Desktop\\result.csv; C:\\Users\\Administrator\\Desktop\\result.ifc is at least 500 bytes and C:\\Users\\Administrator\\Desktop\\result.csv is at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 7 IfcSpace entities, 4 IfcWall entities, 1 IfcSlab, 1 IfcRoof, 4 IfcDoor entities, and 4 IfcWindow entities.\n5. The IFC model contains 0 IfcStair, 0 IfcColumn, 0 IfcBeam, 0 IfcCurtainWall, and 0 IfcBuildingElementProxy entities.\n6. After replacing hyphens and underscores with spaces and lowercasing names, the IfcSpace name list contains the token classroom at least 3 times, art at least once, admin at least once, toilet at least once, and corridor at least once.\n7. C:\\Users\\Administrator\\Desktop\\result.csv is a Revit room schedule export with exactly the headers room name,area in that order and exactly 7 non-empty data rows.\n8. C:\\Users\\Administrator\\Desktop\\result.csv contains these exact room name and area rows: Administration Room=17.50, Art Room=30.00, Classroom 1=66.50, Classroom 2=66.50, Classroom 3=66.50, Corridor=65.00, and Toilet Room=10.00.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-DD74A51D-A0B0-4461-A4BA-0F9CCC191CDB",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Revit 2027\\Revit.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

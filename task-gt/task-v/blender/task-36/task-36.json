@@ -1,0 +1,73 @@
+{
+  "id": "v-blender-task-36-windows-gt",
+  "snapshot": "blender-5.1",
+  "instruction": "Animated Grease Pencil -> Mesh Conversion\n\nUsing `C:\\Users\\Administrator\\Desktop\\scene.blend`, create three mesh objects named `Frame_1_Mesh`, `Frame_10_Mesh`, and `Frame_20_Mesh`, then save `C:\\Users\\Administrator\\Desktop\\answer.blend`. Their mesh data must have exactly `8 verts \\ 7 edges`, `12 verts \\ 11 edges`, and `16 verts \\ 15 edges` respectively. Each object must have a `hide_viewport` f-curve with at least one keyframe. At frame `1`, only `Frame_1_Mesh` may be visible; at frame `10`, only `Frame_10_Mesh`; at frame `20`, only `Frame_20_Mesh`. The original `Sketch` object may remain or be removed.",
+  "source": "Blender Manual — Convert Grease Pencil to Mesh",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/ground_truth/answer.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\answer.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

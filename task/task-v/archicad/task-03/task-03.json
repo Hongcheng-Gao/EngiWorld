@@ -1,0 +1,56 @@
+{
+  "id": "v-archicad-task-03-windows",
+  "snapshot": "archicad-29",
+  "instruction": "Corner Bakery and Cafe Drawing Set and Room Schedule\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create the Archicad model as needed and save the required outputs as C:\\Users\\Administrator\\Desktop\\result.txt, C:\\Users\\Administrator\\Desktop\\result.ifc, C:\\Users\\Administrator\\Desktop\\result.pdf. Export C:\\Users\\Administrator\\Desktop\\result.txt as a tab-delimited room schedule text file from the Archicad schedule/list workflow.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes, C:\\Users\\Administrator\\Desktop\\result.pdf with size at least 500 bytes, and C:\\Users\\Administrator\\Desktop\\result.txt with size at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 8 IfcSpace entities.\n5. The IFC model contains at least 32 IfcWall entities, at least 1 IfcSlab entity, and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: CAFE, COUNTER, BAKERY, DISHWASH, DRY-STORE, COLD-STORE, STAFF, WC.\n7. Every listed space is assigned to the single IfcBuildingStorey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [14.0, 8.0, 3.6].\n9. C:\\Users\\Administrator\\Desktop\\result.txt is tab-delimited and has exactly these headers in this order: RoomNumber, RoomName, Area.\n10. C:\\Users\\Administrator\\Desktop\\result.txt has exactly 8 data rows in this order: B01 CAFE 30.0, B02 COUNTER 6.0, B03 BAKERY 25.0, B04 DISHWASH 4.0, B05 DRY-STORE 4.0, B06 COLD-STORE 4.0, B07 STAFF 12.0, B08 WC 4.0, with numeric values matching within tolerance +/-0.10.\n11. C:\\Users\\Administrator\\Desktop\\result.pdf has exactly 2 pages and extracted text contains at least these case-insensitive tokens: A101, A201, FLOOR PLAN, ELEVATION, CORNER BAKERY AND CAFE, CAFE, BAKERY, COUNTER.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

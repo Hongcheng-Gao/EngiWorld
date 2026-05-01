@@ -1,0 +1,28 @@
+使用 Abaqus/CAE GUI 完成周边固支圆板轴对称弯曲分析：
+
+1. Part：Axisymmetric Deformable Shell，Planar
+   - 草图：水平线从 (0,0) 到 (50,0)，竖直线从 (50,0) 到 (50,1)，闭合
+   - 即：半径 50mm，厚度 1mm
+
+2. Property：
+   - 材料 Steel：E = 210000 MPa，ν = 0.3
+   - Shell Section，Homogeneous，厚度 1mm，5 个积分点
+
+3. Assembly：实例化
+
+4. Step：Static, General，名称 Step-Pressure
+
+5. Load：
+   - 板面施加 Pressure = 0.1 MPa（向下）
+   - 外圆周边 Encastre（固支）
+   - 底边（轴线）U1=0（对称）
+
+6. Mesh：
+   - 全局种子 2mm
+   - 单元类型 SAX1 或 S4R（若用 3D 壳则加轴对称约束）
+
+7. Job：Job-Plate，提交求解
+
+8. 保存：
+   - 模型：outputs/Job-Plate.cae
+   - 结果：outputs/Job-Plate.odb

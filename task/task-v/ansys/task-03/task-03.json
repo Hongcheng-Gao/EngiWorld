@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-03-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use the ANSYS Mechanical APDL GUI to complete the following analysis:\n\nPhysical problem: rectangular plate with a central circular hole under uniaxial tension.\n\nModel parameters:\n- Plate 100 mm x 200 mm, thickness 1 mm\n- Center hole diameter 10 mm\n- Material: linear elastic steel, E = 210000 MPa, nu = 0.3\n- Element: PLANE183, Plane Stress with thickness option\n- Mesh: local refinement to 1 mm around the hole, global size 5 mm\n\nBoundary conditions and load:\n- Left and right edges: uniform tension equivalent to nominal stress 10 MPa\n- Top and bottom edges: constraints to prevent rigid body motion\n\nAnalysis type: static analysis\n\nSave requirements:\n- Database file: C:\\Users\\Administrator\\Desktop\\apdl_hole_plate.db\n- Result file (.rst) must exist in the working directory",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

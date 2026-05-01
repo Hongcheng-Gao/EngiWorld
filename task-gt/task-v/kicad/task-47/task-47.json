@@ -1,0 +1,84 @@
+{
+  "id": "v-kicad-task-47-ubuntu-gt",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Board Outline to Raspberry Pi HAT+\n\nThe file /home/user/Desktop/board.kicad_pcb is an 85x56 mm rectangular PCB with a 2x20 GPIO header (J1) and no mounting holes. The file /home/user/Desktop/spec.txt points to the Raspberry Pi HAT+ form factor.\n\nModify the board to comply with the Raspberry Pi HAT+ mechanical specification. Replace the rectangular Edge.Cuts outline with the HAT+ outline: 65x56.5 mm with R=3 mm rounded corners. Add 4 M2.5 mounting holes at the HAT+ positions. Move the GPIO header to the HAT+ required location.\n\nRequirements:\n1. Edge.Cuts bounding box: width = 65 mm +/- 0.05, height = 56.5 mm +/- 0.05.\n2. Exactly 4 gr_arc elements on Edge.Cuts, each with radius approx 3 mm (+/- 0.1 mm).\n3. 4 mounting hole footprints at positions (3.5,3.5), (61.5,3.5), (3.5,53.0), (61.5,53.0) +/- 0.05 mm.\n4. GPIO header J1 at (29.0, 52.5) +/- 0.1 mm.\n\nWrite /home/user/Desktop/board.kicad_pcb.",
+  "source": "Raspberry Pi HAT+ Specification (HAT+ mechanical spec)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-47/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-47/init_file/spec.txt",
+            "path": "/home/user/Desktop/spec.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-47/ground_truth/answer.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad/kicad-cli",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-47/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

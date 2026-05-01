@@ -1,0 +1,118 @@
+{
+  "id": "v-blender-task-34-windows-gt",
+  "snapshot": "blender-5.1",
+  "instruction": "Reference-File Path Normalization\n\n`C:\\Users\\Administrator\\Desktop\\scene.blend` contains three mesh objects `Plane_R`, `Plane_G`, and `Plane_B`. Each plane has a material with an Image Texture node bound to a 16x16 PNG (`red.png`, `green.png`, `blue.png`, stored in `C:\\Users\\Administrator\\Desktop\\textures\\`). Crucially, each image datablock was loaded from an ABSOLUTE filesystem path, so `bpy.data.images[name].filepath` does NOT start with the Blender-relative `\\\\` prefix.\n\nYour task is to make every image path blend-relative and save the result to `C:\\Users\\Administrator\\Desktop\\answer.blend` (relative to the working directory).\n\nWhat to do\n1. Open `C:\\Users\\Administrator\\Desktop\\scene.blend`.\n2. Save the blend to `C:\\Users\\Administrator\\Desktop\\answer.blend` FIRST (because `bpy.ops.file.make_paths_relative()` requires the.blend to already have a filepath on disk - that's what anchors the `\\\\` prefix).\n3. Ensure the PNG assets are reachable from the new blend's location (e.g., copy `C:\\Users\\Administrator\\Desktop\\textures\\*.png` into `C:\\Users\\Administrator\\Desktop\\textures\\`).\n4. Run `bpy.ops.file.make_paths_relative()`. This rewrites every absolute filepath (images, libraries, caches, etc.) into a blend-relative path starting with `\\\\`.\n5. Save the blend again.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\answer.blend` exists and opens as a valid Blender file.\n2. There are at least three disk-backed (`source == 'FILE'`) image datablocks, excluding `Render Result` and `Viewer Node`.\n3. Every such image's `filepath` starts with `\\\\` (blend-relative).\n4. `bpy.path.abspath(image.filepath)` resolves to an existing file on disk for every image.\n5. Every image loads (non-zero size, pixels accessible) after the blend is reopened - no missing images.\n6. The three mesh objects `Plane_R`, `Plane_G`, `Plane_B` still exist, each with a material whose node tree includes an Image Texture node with an assigned image.\n\nDo not rename any object, material, or image datablock, and do not alter the shader graphs - only the image filepaths (and the location of the texture files on disk) should change.",
+  "source": "Blender Manual — File Paths (Absolute vs Relative) and Remap",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34\\init_file\\textures\\blue.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\blue.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34\\init_file\\textures\\green.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\green.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34\\init_file\\textures\\red.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\red.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/ground_truth/answer.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\answer.blend"
+          },
+          {
+            "local_path": "task-34/ground_truth/textures/blue.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\blue.png"
+          },
+          {
+            "local_path": "task-34/ground_truth/textures/green.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\green.png"
+          },
+          {
+            "local_path": "task-34/ground_truth/textures/red.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\textures\\red.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-34\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

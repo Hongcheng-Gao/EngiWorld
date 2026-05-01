@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-11-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "Freestyle Line-Art Render\n\n`C:\\Users\\Administrator\\Desktop\\scene.blend` contains:\n- A `Cube` at the origin (2x2x2), a `Sphere` at (3, 0, 0) with radius 1, and a `Cone` at (0, 3, 0) with radius 0.7 and depth 1.5.\n- A `Camera` at (5, -5, 3) pointing at the origin.\n- A `Sun` light at (4, -4, 6) pointing at the origin.\n- A plain white World background (strength 1.0, color (1, 1, 1)).\n- Render engine = BLENDER_EEVEE, resolution 256x256, samples 16.\n- Freestyle is currently disabled on both the scene and the active view layer.\n\nTask: turn this into a clean black-line line-art render.\n\n1. Enable Freestyle on the scene and on the active view layer:\n- `scene.render.use_freestyle = True`\n- `view_layer.use_freestyle = True` for the active view layer.\n2. Configure the active view layer's default lineset with all three of the following edge types enabled:\n- `select_silhouette = True`\n- `select_crease = True`\n- `select_border = True`\nIf no lineset exists, create one first (`freestyle_settings.linesets.new('LineSet')`).\n3. Set the associated line style to thickness 2.0 and color black (0, 0, 0).\n4. Keep the render engine as BLENDER_EEVEE at 256x256.\n5. Render the scene using `bpy.ops.render.render(write_still=True)` and save the PNG to `C:\\Users\\Administrator\\Desktop\\lineart.png`. Save the.blend to `C:\\Users\\Administrator\\Desktop\\answer.blend`.\n\nRequirements:\n1. The.blend opens.\n2. `scene.render.use_freestyle == True`.\n3. At least one view layer has `use_freestyle == True`.\n4. The primary lineset on that view layer has `select_silhouette`, `select_crease`, and `select_border` all True.\n5. A fresh Eevee re-render at 256x256 has:\n- Mean luminance ((R+G+B)\\3 averaged over all pixels) >= 0.82 (mostly white with a small amount of black lines).\n- Largest 4-connected component of dark pixels (luminance < 0.2) in the binary line mask >= 100 pixels.",
+  "source": "Grabli, Turquin, Durand, Sillion 2004 — \"Programmable Style for NPR Line Drawing\", EGSR (Freestyle)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

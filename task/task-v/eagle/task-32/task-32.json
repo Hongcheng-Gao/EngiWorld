@@ -1,0 +1,62 @@
+{
+  "id": "v-eagle-task-32-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Open `/home/user/Desktop/usb_breakout.brd` in the EAGLE board editor. The board has 4 SMD pads forming two unrouted signal pairs: USB_DP (pads at (10, 20) and (30, 20)) and USB_DM (pads at (10, 15) and (30, 15)). No copper wire currently exists on either net. Your job: use the ROUTE command (or draw wires on layer 1 / Top) to connect each signal's two pads, choosing route shapes whose total lengths are equal within 0.5 mm (this is a length-matched differential pair).\n\nRequirements:\n1. The file parses as XML.\n2. Both USB_DP and USB_DM signals exist.\n3. Each signal has >= 1 <wire> child on a copper layer (layer 1 or 16).\n4. The sum of <wire> segment lengths per signal differs by <= 0.5 mm between USB_DP and USB_DM.",
+  "source": "https://www.autodesk.com/products/fusion-360/blog/length-match-high-speed-nets/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-32/init_file/usb_breakout.brd",
+            "path": "/home/user/Desktop/usb_breakout.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/usb_breakout.brd"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-32/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

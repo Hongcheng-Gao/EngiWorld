@@ -1,0 +1,73 @@
+{
+  "id": "v-bonsai-task-20-ubuntu-gt",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Two Storey Roof And Upper Opening IFC Redesign\n\nStart from /home/user/Desktop/init.ifc and use Bonsai's native IFC authoring workflow to complete the two-storey house with first-floor spaces, upper wall openings, and a two-part roof redesign. Save the completed IFC model as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc at the top level, and the file is non-empty.\n2. /home/user/Desktop/result.ifc is an IFC4 file with exactly 1 IfcProject, 2 IfcBuildingStorey, 4 IfcSpace, 8 IfcWall, 2 IfcSlab, 2 IfcRoof, 1 IfcDoor, 4 IfcWindow, 5 IfcOpeningElement, 5 IfcRelVoidsElement, and 5 IfcRelFillsElement.\n3. The two IfcBuildingStorey names are exactly Ground Floor and First Floor after case-insensitive comparison that ignores repeated spaces, hyphens, and underscores.\n4. The four IfcSpace names are exactly GF Living, GF Kitchen, FF Bed 1, and FF Bed 2 after the same normalization; GF Living and GF Kitchen are assigned to Ground Floor, and FF Bed 1 and FF Bed 2 are assigned to First Floor.\n5. The eight IfcWall names are exactly Ground Floor-S, Ground Floor-N, Ground Floor-W, Ground Floor-E, First Floor-S, First Floor-N, First Floor-W, and First Floor-E after the same normalization.\n6. The two IfcSlab names are exactly GF Slab and FF Slab, and the two IfcRoof names are exactly Main Roof and Rear Roof after the same normalization.\n7. The single IfcDoor name is Main Entry, and the four IfcWindow names are exactly Upper North 1, Upper North 2, Upper East 1, and Upper East 2 after the same normalization.\n8. /home/user/Desktop/result.ifc contains no IfcBuildingElementProxy or IfcFurnishingElement objects.\n9. Every IfcDoor and IfcWindow is linked by one IfcRelFillsElement to an IfcOpeningElement, and each of those openings is linked by one IfcRelVoidsElement to an IfcWall.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/modeling_slabs_roofs.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/ground_truth/answer.ifc",
+            "path": "/home/user/Desktop/result.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "/home/user/Desktop/init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

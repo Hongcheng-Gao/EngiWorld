@@ -1,0 +1,75 @@
+{
+  "id": "v-abaqus-task-02-windows-gt",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform an internal-pressure analysis of an axisymmetric thick-walled cylinder:\n\n1. Part: Axisymmetric Deformable Solid, Extrusion\n   - Sketch: rectangle, radial direction 50 mm to 100 mm, axial direction 0 to 10 mm\n   - This corresponds to an inner radius of 50 mm, an outer radius of 100 mm, and a thickness of 10 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3\n   - Solid Homogeneous section\n\n3. Assembly: Create an instance.\n\n4. Step: Static, General, named Step-Pressure.\n\n5. Load:\n   - Apply Pressure = 10 MPa on the inner cylindrical surface\n   - Set U2 = 0 on the left end face (axisymmetric condition)\n   - Set U1 = 0 on the bottom edge (axis) for symmetry\n\n6. Mesh:\n   - Global seed size: 5 mm\n   - Element type: CAX4R\n\n7. Job: Create Job-Cylinder and submit for solving.\n\n8. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Cylinder.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Cylinder.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/ground_truth/groundtruth_manifest.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\groundtruth_manifest.csv"
+          },
+          {
+            "local_path": "task-02/ground_truth/gt_humancraft__abaqus2__eval.py",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__abaqus2__eval.py"
+          },
+          {
+            "local_path": "task-02/ground_truth/gt_humancraft__abaqus2__task.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__abaqus2__task.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

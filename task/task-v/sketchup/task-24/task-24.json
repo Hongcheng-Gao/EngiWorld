@@ -1,0 +1,62 @@
+{
+  "id": "v-sketchup-task-24-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Google Earth KMZ placement\n\nThe file `C:\\Users\\Administrator\\Desktop\\house.dae` contains a simple single-storey house model with four separate geometries: outer walls (with a door opening in the Y=0 front wall), a pitched gable roof, a door panel, and a floor slab. All dimensions are in metres; the footprint spans X in [0, 10], Y in [0, 6], Z in [-0.1, 5]. The house is authored with its front wall on Y = 0.\n\nwrap `C:\\Users\\Administrator\\Desktop\\house.dae` inside a geo-located Google Earth KMZ placemark at San Francisco, oriented so the front of the house faces south.\n\nProduce a single output `C:\\Users\\Administrator\\Desktop\\output.kmz` - a ZIP archive containing two members with the exact names shown below:\n\ndoc.kml - OGC KML 2.2 document\nmodels\\house.dae - a copy of the input DAE, referenced by the KML\n\nThe KML document must contain a `<Placemark>` whose child is a `<Model>` element (not a bare `<Point>`) that places the house at:\n\n- `<Location><longitude>-122.4194<\\longitude><latitude>37.7749<\\latitude><altitude>0<\\altitude><\\Location>`\n- `<Orientation><heading>180<\\heading><tilt>0<\\tilt><roll>0<\\roll><\\Orientation>` (heading=180 rotates the +Y front wall to face south)\n- `<altitudeMode>relativeToGround<\\altitudeMode>` (any KML-recognized altitudeMode is accepted)\n- `<Scale>` with x\\y\\z = 1\n- `<Link><href>models\\house.dae<\\href><\\Link>` - the Link\\href must match the ZIP entry name for the bundled DAE exactly.\n\nThe KML root element must be `<kml xmlns=\"http:\\\\www.opengis.net\\kml\\2.2\">`. Wrap the Placemark in a `<Document>` inside the root.\n\nReference: OGC KML 2.2 specification, `<Model>` element (Location\\Orientation\\Scale\\Link children); SketchUp Add-Location \\ Geo-location and KMZ export.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.kmz` exists and is a valid ZIP (no corrupt members).\n2. The ZIP contains both `doc.kml` and `models\\house.dae` with those exact names.\n3. `doc.kml` parses as well-formed XML with the `http:\\\\www.opengis.net\\kml\\2.2` namespace on the root `<kml>`.\n4. A `<Placemark>` is present and contains a `<Model>` element.\n5. The Model's `<Location><longitude>` equals -122.4194 within 1e-6 and `<latitude>` equals 37.7749 within 1e-6.\n6. The Model has an `<Orientation>` block with heading\\tilt\\roll numeric children; `heading` equals 180 within 1 degree (so the front faces south).\n7. The Model declares a valid KML `<altitudeMode>` (one of: relativeToGround, absolute, clampToGround, relativeToSeaFloor, clampToSeaFloor).\n8. The Model's `<Link><href>` exactly names `models\\house.dae` and that path is an entry in the KMZ.\n9. The DAE extracted from the KMZ parses via `pycollada` and contains at least one triangulated geometry.",
+  "source": "OGC KML 2.2 reference (`<Model>` \\ `<Location>` \\ `<Orientation>` \\ `<Link>`); SU-Help Add Location and KMZ export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\house.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\house.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe",
+          "C:\\Users\\Administrator\\Desktop\\house.dae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-24\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,85 @@
+{
+  "id": "v-archicad-task-12-windows-gt",
+  "snapshot": "archicad-29",
+  "instruction": "Office Cleanup Issue Set\n\nThis task starts from C:\\Users\\Administrator\\Desktop\\init.ifc. Reference images are provided on the Desktop: C:\\Users\\Administrator\\Desktop\\init_plan.png, C:\\Users\\Administrator\\Desktop\\init_section.png. Modify the Archicad model as needed and save the required outputs as C:\\Users\\Administrator\\Desktop\\result.ifc, C:\\Users\\Administrator\\Desktop\\result.pdf.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes, and C:\\Users\\Administrator\\Desktop\\result.pdf with size at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 4 IfcSpace entities.\n5. The IFC model contains at least 4 IfcWall entities, at least 1 IfcSlab entity, and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: LOBBY, OFFICE-1, OFFICE-2, MEETING.\n7. Every listed space is assigned to the single IfcBuildingStorey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [15.0, 7.0, 3.2].\n9. C:\\Users\\Administrator\\Desktop\\result.pdf has exactly 3 pages and extracted text contains at least these case-insensitive tokens: A001, A101, A201, OFFICE CLEANUP ISSUE SET, LOBBY, OFFICE-1, OFFICE-2, MEETING.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-12/init_image/init_plan.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+          },
+          {
+            "local_path": "task-12/init_image/init_section.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/ground_truth/answer.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.ifc"
+          },
+          {
+            "local_path": "task-12/ground_truth/answer.pdf",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.pdf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe",
+          "C:\\Users\\Administrator\\Desktop\\init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

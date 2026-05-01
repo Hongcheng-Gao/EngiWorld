@@ -1,0 +1,50 @@
+{
+  "id": "v-sketchup-task-07-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Perforated Screen Panel\n\nUsing SketchUp's GUI, model a flat perforated screen panel and export it as a binary STL. No initial file is provided.\n\nSpecification:\n- **Panel outer box**: 2.0 x 1.0 m in plan, 50 mm thick. Center the panel on the X and Y origin (so it spans X in [-1.0, 1.0] m, Y in [-0.5, 0.5] m, Z in [0, 0.05] m).\n- **Holes**: 12 x 6 = 72 circular through-holes, each 40 mm diameter (20 mm radius), going all the way through the panel's thickness. Arrange them on a regular grid with 150 mm spacing in both X and Y. Center the grid on the panel (i.e., equal margins on all four sides). The first-row first-column hole center is at (X = -0.825, Y = -0.375) m; the last hole is at (+0.825, +0.375) m.\n- Each hole should be cut using SketchUp Pro's Solid Tools Subtract (or equivalent CSG operation) so the result is a single watertight solid.\n- Cylinder approximation: use at least 16 segments per hole so each hole is a clean circle.\n\nExport the final solid as `C:\\Users\\Administrator\\Desktop\\output.stl` (binary STL is acceptable).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.stl` parses as a valid STL mesh.\n2. The mesh is a watertight manifold (every edge shared by exactly 2 faces).\n3. Bounding-box extents: 2.0 x 1.0 x 0.05 m within +\\- 20 mm.\n4. Volume within +\\- 0.003 m^3 of the expected `2*1*0.05 - 72*pi*0.02^2*0.05 approx 0.0955 m^3`.\n5. Topological genus = 72 (since the mesh is a closed orientable 2-manifold with one handle per through-hole): Euler characteristic chi = 2 - 2*72 = -142.",
+  "source": "SU-Help Solid Tools (Subtract); Trimble SketchUp Pro documentation on Boolean Difference",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

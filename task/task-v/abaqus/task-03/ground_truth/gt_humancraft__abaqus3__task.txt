@@ -1,0 +1,29 @@
+使用 Abaqus/CAE GUI 完成带中心圆孔板的拉伸分析（法兰相关变体）：
+
+1. Part：
+   - 创建 3D Deformable Shell, Planar
+   - 绘制 120 mm x 240 mm 矩形板
+   - 在中心创建直径 12 mm 的圆孔
+
+2. Property：
+   - 材料 Steel：E = 210000 MPa，nu = 0.3
+   - 创建 Shell Section（Homogeneous），厚度 1 mm，积分点 5
+
+3. Assembly：创建实例。
+
+4. Step：
+   - 创建 Static, General 分析步，命名为 Step-HoleTension
+
+5. Load：
+   - 在左右短边施加向外 Shell Edge Load = 8 N/mm
+   - 在上下长边施加对称约束（U2 = 0）
+
+6. Mesh：
+   - 孔边种子尺寸 1.2 mm，全局种子尺寸 6 mm
+   - 单元类型：S4R
+
+7. Job：创建 Job-FlangeHole 并提交计算。
+
+8. 保存：
+   - 模型：outputs/Job-FlangeHole.cae
+   - 结果：outputs/Job-FlangeHole.odb

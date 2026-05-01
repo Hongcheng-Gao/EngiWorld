@@ -1,0 +1,72 @@
+{
+  "id": "v-solvespace-task-09-ubuntu-gt",
+  "snapshot": "SolveSpace3.0.rc2repack1-3",
+  "instruction": "Open/import the input DXF file(s) from the Desktop path(s): /home/user/Desktop/seed_ss_gui_09_step_profile.dxf. Generate a three-step plate. Total width is 150 and total height is 70. From left to right, the top heights are 70, 50, and 30, with segment widths 40, 50, and 60. The bottom edge is one complete horizontal line. Add one diameter 8 hole at the center of the left high step. Export exactly one DXF deliverable named /home/user/Desktop/final_ss_gui_09.dxf.",
+  "source": "https://solvespace.readthedocs.io/en/latest/groups/sketch.html ; https://solvespace.readthedocs.io/en/latest/groups.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/seed_ss_gui_09_step_profile.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_09_step_profile.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/ground_truth/final_ss_gui_09.dxf",
+            "path": "/home/user/Desktop/final_ss_gui_09.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

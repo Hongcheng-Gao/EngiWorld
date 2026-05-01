@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-26-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "External Helical Thread\n\n`C:\\Users\\Administrator\\Desktop\\scene.blend` contains a single mesh object `Shaft` - a smooth cylindrical shaft coaxial with the world Z axis. Cut a continuous helical groove into the top 2 BU of the shaft so that the lower portion remains an untouched smooth cylinder.\n\nSave the result as `C:\\Users\\Administrator\\Desktop\\answer.blend`.\n\nGroove parameters\n- Thread region: the upper 2 BU of the shaft (top 40% of the axial length).\n- Pitch (lead): 0.5 BU of axial travel per full 360 deg turn.\n- Groove cross-section: circular, radius 0.05 BU.\n- Exactly four complete turns over the thread region; helix starts at the lower edge of the region and ends at the top face.\n- Subtractive only: the groove removes material. No geometry extends beyond the original cylindrical envelope.\n\nRequirements:\n1. The scene contains a mesh object named `Shaft`.\n2. Exactly one mesh object exists in the scene.\n3. The object's world location and rotation are unchanged from the initial scene.\n4. The mesh is closed-manifold (every edge shared by exactly two faces).\n5. The axial extent of the mesh is unchanged (z from 0 to 5 within tol).\n6. The lower portion of the shaft (z in [0.5, 2.5]) is still a smooth cylinder at the original radius.\n7. Inside the thread region the groove cuts at least one full groove-radius below the shaft surface.\n8. Inside the thread region the crest of the thread still reaches the original shaft radius.\n9. The groove follows a right-handed helix whose angular position advances consistently with the specified pitch across the thread region.\n\nInspect the initial mesh to read off shaft radius, length, and orientation before cutting.",
+  "source": "ISO 68-1:1998 — ISO general-purpose metric screw threads: Basic profile",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,73 @@
+{
+  "id": "v-librecad-task-18-ubuntu-gt",
+  "snapshot": "LibreCAD2.1.3",
+  "instruction": "Open /home/user/Desktop/gui18_wall_openings_seed.dxf. Create a 900 mm wide door opening in the wall with opening center x=1200. Create a 1200 mm wide window opening with opening center x=3300. At the door opening, add a door leaf line and a door swing arc. At the window opening, add two window lines on layer WINDOW. Keep the remaining wall segments on layer WALL. Save as /home/user/Desktop/gui18_wall_openings_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/gui18_wall_openings_seed.dxf",
+            "path": "/home/user/Desktop/gui18_wall_openings_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/ground_truth/gui18_wall_openings_completed.dxf",
+            "path": "/home/user/Desktop/gui18_wall_openings_completed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/gui18_wall_openings_seed.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

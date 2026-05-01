@@ -1,0 +1,75 @@
+{
+  "id": "v-ansys-task-16-windows-gt",
+  "snapshot": "ansys-2026",
+  "instruction": "Use the ANSYS Fluent GUI to complete the following analysis:\n\nPhysical problem: 2D Poiseuille flow (pressure-driven channel laminar flow).\n\nModel parameters:\n- Domain: rectangle, length 1000 mm, height 2 mm\n- Fluid: water\n- Mesh: structured quadrilateral mesh\n\nBoundary conditions:\n- Inlet: velocity inlet, mean velocity 0.1 m/s\n- Outlet: pressure outlet, gauge pressure 0 Pa\n- Top and bottom walls: stationary, no-slip\n\nAnalysis type: laminar steady-state analysis\n\nSolver setup:\n- Pressure-based solver, steady\n- Laminar model\n- Second-order schemes\n- SIMPLE algorithm\n\nSave requirements:\n- Case and Data files: C:\\Users\\Administrator\\Desktop\\poiseuille_2d.cas and C:\\Users\\Administrator\\Desktop\\poiseuille_2d.dat",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/ground_truth/groundtruth_manifest.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\groundtruth_manifest.csv"
+          },
+          {
+            "local_path": "task-16/ground_truth/gt_humancraft__ansys16__eval.py",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__ansys16__eval.py"
+          },
+          {
+            "local_path": "task-16/ground_truth/gt_humancraft__ansys16__task.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\gt_humancraft__ansys16__task.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

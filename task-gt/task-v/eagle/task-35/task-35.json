@@ -1,0 +1,84 @@
+{
+  "id": "v-eagle-task-35-ubuntu-gt",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Open `/home/user/Desktop/loose.brd`, tighten its design rules in the EAGLE DRC dialog, and save the updated board as `/home/user/Desktop/tight.brd`.\n\nRequired thresholds:\n- `mdWireWire` >= `0.15 mm`\n- `mdWirePad` >= `0.15 mm`\n- `mdWireVia` >= `0.15 mm`\n- `mdDrill` >= `0.30 mm`\n- `msWidth` >= `0.15 mm`\n- `msDrill` >= `0.30 mm`",
+  "source": "https://github.com/ArduinoHannover/Eagle/blob/master/dru/PCBway.dru",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/loose.brd",
+            "path": "/home/user/Desktop/loose.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/ground_truth/answer.brd",
+            "path": "/home/user/Desktop/tight.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/loose.brd"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

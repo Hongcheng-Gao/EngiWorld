@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-path-task-20-ubuntu",
+  "snapshot": "freecad-path-1.1.1",
+  "instruction": "Use the FreeCAD 1.1.1 GUI with the Path/CAM workbench. Open or import the initial CAD geometry file(s) from the Desktop path(s): /home/user/Desktop/full_gui_benchmark.step. Create a complete FreeCAD Path/CAM Job. Complete Face machining of the top, two pockets, eight holes, outside Profile, and top-face Engrave. The toolpaths must keep at least 3 mm clearance from the two fixture blocks. Tool definitions: use end mills, drills, and an engraving cutter sufficient for facing, pockets, holes, outside profile, and top-face engraving. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-20.nc.",
+  "source": "https://wiki.freecad.org/CAM_Workbench；https://wiki.freecad.org/CAM_Post https://wiki.freecad.org/CAM_Workbench%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Post",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/full_gui_benchmark.step",
+            "path": "/home/user/Desktop/full_gui_benchmark.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/full_gui_benchmark.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

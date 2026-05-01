@@ -1,0 +1,75 @@
+{
+  "id": "v-archicad-task-09-windows-gt",
+  "snapshot": "archicad-29",
+  "instruction": "Nursery Cluster Issue Set with Occupancy Schedule\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create the Archicad model as needed and save the required outputs as C:\\Users\\Administrator\\Desktop\\result.txt, C:\\Users\\Administrator\\Desktop\\result.ifc, C:\\Users\\Administrator\\Desktop\\result.pdf. Export C:\\Users\\Administrator\\Desktop\\result.txt as a tab-delimited occupancy schedule text file from the Archicad schedule/list workflow.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes, C:\\Users\\Administrator\\Desktop\\result.pdf with size at least 500 bytes, and C:\\Users\\Administrator\\Desktop\\result.txt with size at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 8 IfcSpace entities.\n5. The IFC model contains at least 1 IfcSlab entity, and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: CLASSROOM-1, CLASSROOM-2, CLASSROOM-3, COMMON, SLEEP, STAFF, WC-CHILD, WC-STAFF.\n7. Every listed space is assigned to the single IfcBuildingStorey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, -0.3] and max [15.0, 17.0, 4.35].\n9. C:\\Users\\Administrator\\Desktop\\result.txt is tab-delimited and has exactly these headers in this order: ZoneName, Area, Storey.\n10. C:\\Users\\Administrator\\Desktop\\result.txt has exactly 8 data rows in this order: CLASSROOM-1 20.0 GROUND, CLASSROOM-2 20.0 GROUND, CLASSROOM-3 20.0 GROUND, COMMON 36.0 GROUND, SLEEP 16.0 GROUND, STAFF 9.0 GROUND, WC-CHILD 9.0 GROUND, WC-STAFF 7.5 GROUND, with numeric values matching within tolerance +/-0.10.\n11. C:\\Users\\Administrator\\Desktop\\result.pdf has exactly 2 pages and extracted text contains at least these case-insensitive tokens: A131, PLAN, SECTION, NURSERY CLUSTER WITH OCCUPANCY SCHEDULE, CLASSROOM-1, COMMON, SLEEP, WC-STAFF.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/ground_truth/answer.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.ifc"
+          },
+          {
+            "local_path": "task-09/ground_truth/answer.pdf",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.pdf"
+          },
+          {
+            "local_path": "task-09/ground_truth/answer.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

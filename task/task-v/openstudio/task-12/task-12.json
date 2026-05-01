@@ -1,0 +1,67 @@
+{
+  "id": "v-openstudio-task-12-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Clinic Fit-Out From Init Model\n\nThis task starts from Desktop input file: /home/user/Desktop/init.osm. Reference image is provided on the Desktop: /home/user/Desktop/init_plan.png. Modify the OpenStudio 3.10 model as needed and save the required output as /home/user/Desktop/result.osm.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.osm with size at least 500 bytes.\n2. /home/user/Desktop/result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. /home/user/Desktop/result.osm contains exactly 1 OS:BuildingStory, 5 OS:Space objects, and 5 OS:ThermalZone objects.\n4. The OS:Space names are exactly Reception, Exam-1, Exam-2, Nurse, and Storage.\n5. Every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2.\n6. The model has exactly 33 OS:Surface objects: 5 Floor surfaces, 5 RoofCeiling surfaces, and 23 Wall surfaces.\n7. The surface Outside Boundary Condition counts are exactly 5 Ground, 14 Outdoors, and 14 Surface.\n8. The model has exactly 5 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 5.\n9. The model contains exactly 5 OS:ZoneHVAC:IdealLoadsAirSystem objects, 5 OS:ZoneHVAC:EquipmentList objects, 5 OS:ThermostatSetpoint:DualSetpoint objects, 3 OS:People objects, and 3 OS:Lights objects.\n10. The surface geometry bounding box has X span 22.00 m, Y span 12.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m.\n11. The sum of floor surface areas is 264.00 m2 with tolerance +/-0.50 m2.\n12. The sum of exterior wall gross areas is 217.60 m2 with tolerance +/-0.50 m2.\n13. The total fixed-window area is 24.64 m2 with tolerance +/-0.50 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          },
+          {
+            "local_path": "task-12/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "DISPLAY=:99",
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "v-abaqus-task-04-windows",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use Abaqus/CAE in GUI mode to complete the following task:\n\n1. Part module:\n   - Create a 3D Deformable Solid, Extrusion\n   - Sketch a 10 mm x 10 mm rectangle and extrude to length 100 mm\n\n2. Property module:\n   - Create material Steel: E = 210000 MPa, nu = 0.3\n   - Create a Solid Homogeneous section and assign material Steel\n\n3. Assembly module: Create an instance of the part.\n\n4. Step module: Create a Static, General step named Step-Load.\n\n5. Load module:\n   - Fix one end (Encastre)\n   - Apply a 1000 N tensile load at the other end (axial, +X direction)\n\n6. Mesh module:\n   - Global seed size: 5 mm\n   - Element type: C3D8R\n\n7. Job module: Create Job-Tension and submit for solving.\n\n8. Visualization module:\n   - Open the ODB\n   - Display the Mises stress contour\n   - Query U1 displacement at the free end\n\n9. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Tension.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Tension.odb (copy via File > Save As)",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

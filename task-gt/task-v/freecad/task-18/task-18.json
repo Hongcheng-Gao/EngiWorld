@@ -1,0 +1,73 @@
+{
+  "id": "v-freecad-task-18-ubuntu-gt",
+  "snapshot": "FreeeCAD0.19",
+  "instruction": "Open /home/user/Desktop/freecad_task-18_input.step in the FreeCAD GUI. Cut a dovetail slot through the full 80 mm length along X. The slot is centered at Y=20 mm on the top face, has top opening width 26 mm, bottom width 16 mm, and depth 10 mm. Export the dovetail block as /home/user/Desktop/freecad_task-18_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/freecad_task-18_input.step",
+            "path": "/home/user/Desktop/freecad_task-18_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/ground_truth/freecad_task-18_output.step",
+            "path": "/home/user/Desktop/freecad_task-18_output.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-18_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

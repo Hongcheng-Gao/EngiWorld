@@ -1,0 +1,56 @@
+{
+  "id": "v-bonsai-task-03-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Single-Storey Bungalow IFC\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 single-storey bungalow with five named spaces, a main roof slab, and a porch canopy slab, then save the required output as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc at least 500 bytes.\n2. /home/user/Desktop/result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 5 IfcSpace entities, 7 IfcWall entities, 3 IfcSlab entities, 1 IfcDoor, 4 IfcWindow entities, 5 IfcOpeningElement entities, 5 IfcRelVoidsElement relationships, and 5 IfcRelFillsElement relationships.\n4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The single IfcBuildingStorey is named exactly Bungalow Level after trimming leading and trailing whitespace.\n7. The IfcSpace names are exactly Living, Kitchen, Bed 1, Bed 2, and Bath after trimming leading and trailing whitespace.\n8. The IfcSpace geometry has these world-coordinate plan spans with tolerance +/-0.10 m: Living X = 5.80 m and Y = 3.00 m, Kitchen X = 2.80 m and Y = 3.00 m, Bed 1 X = 2.80 m and Y = 2.60 m, Bed 2 X = 3.00 m and Y = 2.60 m, Bath X = 2.80 m and Y = 2.60 m.\n9. The three IfcSlab names are exactly Main Slab, Main Roof, and Porch Canopy after trimming leading and trailing whitespace.\n10. The Main Roof slab geometry has minimum world Z coordinate at least 3.00 m, and the Porch Canopy slab geometry has minimum world Z coordinate at least 2.50 m and minimum world Y coordinate below 0.00 m.\n11. Each IfcWall geometry has height 3.00 m with tolerance +/-0.10 m.\n12. The Entrance Door IfcDoor has OverallWidth 0.90 m with tolerance +/-0.05 m and fills exactly one IfcOpeningElement that voids the IfcWall named South Wall.\n13. These IfcWindow OverallWidth values are required with tolerance +/-0.05 m: Kitchen Window = 1.20 m, Bed1 Window = 1.20 m, Bed2 Window = 1.20 m, Bath Window = 1.20 m.\n14. Kitchen Window, Bed1 Window, Bed2 Window, and Bath Window each fill exactly one different IfcOpeningElement voiding the IfcWall named East Wall, North Wall, North Wall, and North Wall respectively.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/tutorials/project2.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,73 @@
+{
+  "id": "v-blender-task-40-windows-gt",
+  "snapshot": "blender-5.1",
+  "instruction": "Switch to the Correct Render Engine\n\nOpen `C:\\Users\\Administrator\\Desktop\\scene.blend`, set `scene.render.engine = 'CYCLES'`, and save the result as `C:\\Users\\Administrator\\Desktop\\answer.blend`. Keep `scene.cycles.device == 'CPU'`, `scene.render.resolution_x == 64`, `scene.render.resolution_y == 64`, and `scene.cycles.samples <= 16`. The saved file must still contain a mesh object `Sphere` with `GlassMat` in material slot 0, and `GlassMat` must still use a Principled BSDF whose transmission is greater than `0.9`. The scene must also still contain at least one camera and at least one light.",
+  "source": "Blender Manual — Render Engines (Cycles \\ EEVEE \\ Workbench)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/ground_truth/answer.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\answer.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-40\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

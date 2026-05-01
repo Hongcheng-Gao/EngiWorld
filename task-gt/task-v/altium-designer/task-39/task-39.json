@@ -1,0 +1,84 @@
+{
+  "id": "v-altium-designer-task-39-windows-gt",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Open `C:\\Users\\Administrator\\Desktop\\template.OutJob` in Altium Designer. Using `C:\\Users\\Administrator\\Desktop\\spec_list.json`, build a batch PDF publishing OutJob and save it as `C:\\Users\\Administrator\\Desktop\\pdfs.OutJob`.\n\nRequirements:\n- Add a PDF output medium whose `Name` is `PDF` and whose `Type` is `Publish`.\n- Create exactly 8 outputs in the same output group.\n- For each output, keep `OutputEnabled=1` and route it to the PDF medium.\n- The `OutputName`, `OutputType`, and distinguishing extra field (`DocumentType` or `PlotLayer`, as specified in `C:\\Users\\Administrator\\Desktop\\spec_list.json`) must match the specification exactly for all 8 outputs.",
+  "source": "task.md #8 (Altium Creating Fabrication and Assembly Drawings, Zach Peterson)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39\\init_file\\spec_list.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\spec_list.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39\\init_file\\template.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\template.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39/ground_truth/pdfs.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\pdfs.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\template.OutJob"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-39\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

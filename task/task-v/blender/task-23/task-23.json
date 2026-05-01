@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-23-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "Fresnel-driven Emission Ring\n\n`C:\\Users\\Administrator\\Desktop\\scene.blend` contains a UV sphere `Orb` (radius 1, default 32x16 segmentation) at the origin, shaded with a simple grey material `OrbMat` (Principled BSDF only, no emission). A camera at (0, -3, 0) looks along +Y at the orb (focal 50mm), and a single area light sits behind the camera. The scene renders with Cycles CPU (seed=0, samples=32, 256x256, denoiser on).\n\nModify `OrbMat` so that the sphere gains a bright emission RING along its view-facing silhouette - i.e. a Fresnel-driven emission where grazing angles (the edges) glow and the centre stays dim. Wire a `ShaderNodeFresnel` so its output drives an emission contribution. A clean way is: Fresnel (IOR=1.45) -> Mix Shader factor, mixing the existing grey Principled BSDF with a cyan `ShaderNodeEmission` (color `(0.1, 1.0, 1.0)`, strength chosen so the ring is visibly bright). Equivalently, you can drive the Principled BSDF's Emission input with the Fresnel factor multiplied into a cyan color.\n\nSave the modified scene to `C:\\Users\\Administrator\\Desktop\\answer.blend`.\n\nParameters\n- Emission color: `(0.1, 1.0, 1.0)` (bright cyan).\n- Fresnel IOR: 1.45 (the default).\n- Emission strength: scale so the ring is visibly bright (start around 2-3 and tune).\n\nRequirements:\n1. `Orb` mesh exists at the origin with the same vertex count as in the init scene.\n2. `OrbMat` uses nodes and contains a `ShaderNodeFresnel`.\n3. `OrbMat` contains an emission pathway: either a `ShaderNodeEmission`, or the Principled BSDF's Emission input is driven.\n4. The Fresnel node's output is connected (directly, or through a Mix Shader \\ Math node) into the emission path.\n5. When rendered with Cycles (seed=0, samples=32, 256x256, denoiser on), the rendered image satisfies:\n- Edge ROI (pixels with radius in [100, 120] from the image centre) has mean luma > 0.30.\n- Centre ROI (pixels with radius in [0, 30] from the image centre) has mean luma < 0.40.\n- Edge mean luma exceeds centre mean luma by at least 0.05.\n- On the edge ROI, mean B minus mean R > 0.10 (the rim is visibly cyan).\n\nDo not alter the orb's mesh, the camera, the light, or the render configuration - only `OrbMat` should change.",
+  "source": "Schlick 1994 — \"An Inexpensive BRDF Model for Physically-based Rendering\", Eurographics",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-23\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-23\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

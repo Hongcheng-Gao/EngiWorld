@@ -1,0 +1,73 @@
+{
+  "id": "v-bonsai-task-17-ubuntu-gt",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Reworked Bungalow IFC Plan Model\n\nStart from /home/user/Desktop/init.ifc and use Bonsai's native IFC authoring workflow to rework the bungalow shell into a five-room plan. Save the completed IFC model as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc at the top level, and the file is non-empty.\n2. /home/user/Desktop/result.ifc is an IFC4 file with exactly 1 IfcProject, 1 IfcBuildingStorey, 5 IfcSpace, 7 IfcWall, 1 IfcSlab, 3 IfcDoor, 2 IfcWindow, 5 IfcOpeningElement, 5 IfcRelVoidsElement, and 5 IfcRelFillsElement.\n3. The five IfcSpace names are exactly Living, Bed 1, Bed 2, Bath, and Kitchen after case-insensitive comparison that ignores repeated spaces, hyphens, and underscores.\n4. The seven IfcWall names are exactly Shell-S, Shell-N, Shell-W, Shell-E, Part-1, Part-2, and Part-3 after case-insensitive comparison that ignores repeated spaces, hyphens, and underscores.\n5. /home/user/Desktop/result.ifc contains no IfcBuildingElementProxy or IfcFurnishingElement objects.\n6. Every IfcDoor and IfcWindow is linked by one IfcRelFillsElement to an IfcOpeningElement, and each of those openings is linked by one IfcRelVoidsElement to an IfcWall.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/reference/drawings_and_documents/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/ground_truth/answer.ifc",
+            "path": "/home/user/Desktop/result.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "/home/user/Desktop/init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

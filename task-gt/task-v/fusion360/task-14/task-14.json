@@ -1,0 +1,73 @@
+{
+  "id": "v-fusion360-task-14-windows-gt",
+  "snapshot": "fusion360-latest",
+  "instruction": "Use the Autodesk Fusion 360 GUI in the Manufacture workspace. Open the initial file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\collision_drill.step. Plan drilling for the twelve candidate holes. Skip the two holes with holder collision risk near the 30 mm wall and post only the safe drilling operations. Tool definition: T1 is the drilling tool; use a holder length and collision settings that allow safe holes only. In the NC Program or post-process dialog, use metric units and the selected post processor for this setup, then export C:\\Users\\Administrator\\Desktop\\task-14.nc to the Desktop path(s) using exactly these absolute file paths.",
+  "source": "Fusion toolpath modification、G-code 参考。(Autodesk Help) https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-NC-OLD-V-NEW&utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/collision_drill.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\collision_drill.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/ground_truth/task-14.nc",
+            "path": "C:\\Users\\Administrator\\Desktop\\task-14.nc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe",
+          "C:\\Users\\Administrator\\Desktop\\collision_drill.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

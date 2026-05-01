@@ -1,0 +1,71 @@
+{
+  "id": "v-revit-task-04-windows-gt",
+  "snapshot": "Revit-2027",
+  "instruction": "Two Storey Duplex Townhouse IFC And Revit Plan Sheet PDF\n\nThis task starts from scratch with no init_file inputs and no local reference images. In Revit, create a pair of two-storey duplex townhouses, export the model as C:\\Users\\Administrator\\Desktop\\result.ifc, and export a two-page Revit plan sheet PDF as C:\\Users\\Administrator\\Desktop\\result.pdf in the Desktop.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc and C:\\Users\\Administrator\\Desktop\\result.pdf; C:\\Users\\Administrator\\Desktop\\result.ifc is at least 500 bytes and C:\\Users\\Administrator\\Desktop\\result.pdf is at least 200 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 2 IfcBuildingStorey entities, 10 IfcSpace entities, 16 IfcWall entities, 2 IfcSlab entities, 1 IfcRoof, 10 IfcDoor entities, 8 IfcWindow entities, and 2 IfcStair entities.\n5. The IFC model contains 0 IfcColumn, 0 IfcBeam, 0 IfcCurtainWall, and 0 IfcBuildingElementProxy entities.\n6. After replacing hyphens and underscores with spaces and lowercasing names, the IfcSpace name list contains the token living at least 2 times, kitchen at least 2 times, bedroom at least 4 times, and bath at least 2 times.\n7. C:\\Users\\Administrator\\Desktop\\result.pdf contains exactly 2 pages exported from Revit sheets.\n8. The extracted text from C:\\Users\\Administrator\\Desktop\\result.pdf contains the case-insensitive tokens A101 LEVEL 1 PLAN, A102 LEVEL 2 PLAN, Bedroom 1 A, and Bedroom 2 B.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/ground_truth/answer.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.ifc"
+          },
+          {
+            "local_path": "task-04/ground_truth/answer.pdf",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.pdf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Revit 2027\\Revit.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

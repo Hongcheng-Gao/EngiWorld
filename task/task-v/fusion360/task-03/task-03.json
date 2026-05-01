@@ -1,0 +1,62 @@
+{
+  "id": "v-fusion360-task-03-windows",
+  "snapshot": "fusion360-latest",
+  "instruction": "Use the Autodesk Fusion 360 GUI in the Manufacture workspace. Open the initial file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\drill_plate.step. Create spot drilling and through drilling operations at the four hole centers (+25,+15), (+25,-15), (-25,+15), and (-25,-15). The drilling operation must break through the bottom by 1 mm. Tool definitions: T1 is a 90 degree spot drill at S8000 rpm and F250 mm/min; T2 is a 5 mm drill at S5000 rpm and F180 mm/min. In the NC Program or post-process dialog, use metric units and the selected post processor for this setup, then export C:\\Users\\Administrator\\Desktop\\task-3.nc to the Desktop path(s) using exactly these absolute file paths.",
+  "source": "Fusion Manufacture 与 G-code 解析参考。(Autodesk Help) https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-NC-OLD-V-NEW&utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/drill_plate.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\drill_plate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe",
+          "C:\\Users\\Administrator\\Desktop\\drill_plate.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

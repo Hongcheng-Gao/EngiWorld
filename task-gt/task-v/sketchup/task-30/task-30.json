@@ -1,0 +1,72 @@
+{
+  "id": "v-sketchup-task-30-windows-gt",
+  "snapshot": "sketchup2026",
+  "instruction": "Spiral Staircase\n\nRead `C:\\Users\\Administrator\\Desktop\\spiral_spec.json`; it has these fields:\n- `inner_radius` - inner arc radius of each tread sector in metres (gap between column and tread inner edge is `inner_radius - column_radius`).\n- `outer_radius` - outer arc radius of each tread sector, and the platform radius, in metres.\n- `total_rise` - total vertical height of the staircase in metres.\n- `n_treads` - number of treads (each tread fans an angular wedge of `360 \\ n_treads` degrees around the vertical axis).\n- `tread_thickness` - tread board thickness in metres (every tread's top face sits `tread_thickness` above its bottom face).\n- `column_radius` - radius of the central round column in metres.\n- `column_segments` - polygon edge count approximating the circular column cross-section (at least 24).\n- `arc_segments_per_tread` - polygon edge count approximating the inner\\outer arc of each tread sector (at least 8).\n\nThe origin is the column centre axis. Build the model in world space with Z up:\n\n1. Central column: a `column_segments`-sided circular prism of radius `column_radius`, centred on the origin, running continuously from Z = 0 to Z = `total_rise`.\n\n2. Treads: `n_treads` trapezoidal-sector prisms arranged around Z. Let `dtheta = 2*pi \\ n_treads` (= 18 deg for n_treads = 20) and `rise_per_tread = total_rise \\ n_treads` (= 0.15 m). Tread `i` (i = 0..n_treads-1) occupies the angular wedge `theta in [i*dtheta, (i+1)*dtheta]`, radial range `r in [inner_radius, outer_radius]`, and vertical range `Z in [(i+1)*rise_per_tread - tread_thickness, (i+1)*rise_per_tread]`. Each tread sector must be a real sector - its inner and outer arcs must each be approximated by at least `arc_segments_per_tread` straight segments (so the tread boundary is `arc_segments_per_tread + 1` points on the inner arc, `arc_segments_per_tread + 1` points on the outer arc, joined by two radial edges, and extruded vertically by `tread_thickness`). Plain four-vertex rectangular wedges are rejected.\n\n3. Export the whole assembly to `C:\\Users\\Administrator\\Desktop\\output.dae`. The scene must contain `n_treads + 1` scene components (one central column plus `n_treads` treads). You may either emit `n_treads + 1` distinct geometries, or emit one tread geometry definition plus `n_treads` transformed instances (each instance rotated by `i * dtheta` around Z). Both layouts are accepted.\n\nPass conditions (evaluated against `C:\\Users\\Administrator\\Desktop\\output.dae`):\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Overall world-space bounding box is approximately `2*outer_radius x 2*outer_radius x total_rise` (within 0.02 m).\n3. 20 distinct tread-top Z levels are present at `(i+1) * rise_per_tread` for i = 0..n_treads-1, within 2 mm.\n4. 20 distinct angular wedges are detected around Z, with their mean angular positions at `(i + 0.5) * dtheta` for i = 0..n_treads-1 (tol 2 deg), i.e. treads span the full 360 deg without gaps or overlaps.\n5. The central column has at least `column_segments` distinct 1 deg-binned angular samples around the origin (proving it is a circular prism, not a square box).\n6. Treads span the full radial range: the minimum cylindrical radius of tread vertices is `inner_radius` (tol 5 mm) and the maximum is `outer_radius` (tol 5 mm).\n7. Each tread's outer (and inner) arc contains at least `arc_segments_per_tread` distinct radial directions within its wedge (proving it is a real sector, not a four-vertex rectangular wedge).",
+  "source": "[Roskes-Book] spiral staircase chapter; [SU-Ruby] Geom::Transformation.rotation; COLLADA 1.5 instancing \\ <matrix> transforms",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-30\\init_file\\spiral_spec.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\spiral_spec.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-30/ground_truth/answer.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\output.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-30\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

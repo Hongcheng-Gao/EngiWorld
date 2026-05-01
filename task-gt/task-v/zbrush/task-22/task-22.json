@@ -1,0 +1,73 @@
+{
+  "id": "v-zbrush-task-22-windows-gt",
+  "snapshot": "zbrush-2026.2.0",
+  "instruction": "Bake Surface Noise into Sphere Geometry\n\nThe file at C:\\Users\\Administrator\\Desktop\\scene.obj contains a ZBrush Tool whose first (and only) SubTool, named Sphere, is a smooth polygonal sphere of radius 1.0 BU centred at the Tool's origin, with roughly 15,000-30,000 faces. Every vertex lies at distance 1.0 +\\- 1e-4 from the origin; there is no surface noise, no polygroups beyond the default, no UVs, and no polypaint.\n\nLoad this OBJ into ZBrush, apply a mid-frequency procedural Surface Noise pattern to the sphere, bake that noise into the mesh as actual vertex displacement, and export the result as C:\\Users\\Administrator\\Desktop\\output.obj.\n\nThe exported C:\\Users\\Administrator\\Desktop\\output.obj must satisfy:\n\n- Exactly one SubTool, still named Sphere.\n- The face count equals the input face count exactly.\n- The standard deviation of (|vertex - origin| - 1.0) across all vertices lies in the range [0.004, 0.05].\n- The axis-aligned bounding-box diagonal differs from the input's by less than 2%.\n- The mean per-vertex Laplacian magnitude is at least 10 x the input mesh's value.\n- The mesh is manifold.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22\\init_file\\scene.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/ground_truth/answer.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\output.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.obj"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "zbrush"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-22\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

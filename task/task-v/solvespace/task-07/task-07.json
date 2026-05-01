@@ -1,0 +1,61 @@
+{
+  "id": "v-solvespace-task-07-ubuntu",
+  "snapshot": "SolveSpace3.0.rc2repack1-3",
+  "instruction": "Open/import the input DXF file(s) from the Desktop path(s): /home/user/Desktop/seed_ss_gui_07_circular_flange.dxf. Generate a circular flange with outer diameter 120 and inner diameter 60. Add six diameter 8 holes equally spaced on a pitch circle of diameter 90, with the first hole at the positive Y direction. Export exactly one DXF deliverable named /home/user/Desktop/final_ss_gui_07.dxf.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/seed_ss_gui_07_circular_flange.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_07_circular_flange.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

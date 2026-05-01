@@ -1,0 +1,50 @@
+{
+  "id": "v-sketchup-task-16-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Terraced Amphitheater Seating\n\nUsing SketchUp's GUI, model a terraced amphitheater carved into a hillside and export it as COLLADA DAE. No initial file is provided.\n\nSpecification:\n- **Plan**: five concentric semi-annular terraces sharing a common centre at the origin. Each terrace spans the half-plane theta in [0, pi] (i.e. vertices lie in Y >= 0), with the stage at the centre. Viewed from above, the five terraces form five nested half-ring bands.\n- **Radial layout**: the innermost (stage-side) radius is 3.0 m, the outermost radius of the largest terrace is 15.0 m. Divide the radial span into 5 equal bands of 2.4 m each. Terrace i (0-indexed, i = 0..4, where i = 0 is closest to the stage and lowest):\n- inner radius = 3.0 + i * 2.4 m\n- outer radius = 3.0 + (i + 1) * 2.4 m\n- **Vertical layout**: each terrace is 500 mm higher than the one below it. Terrace i's floor sits at Z = i * 0.5 m, so the five floor levels are exactly Z = 0, 0.5, 1.0, 1.5, 2.0 m.\n- **Terrace surface**: each terrace floor is a real semi-annular strip, NOT a single rectangle. Approximate the inner and outer half-circle arcs with at least 16 angular segments each (17 points per arc on the closed half-circle boundary from theta = 0 to theta = pi). A four-vertex flat rectangle standing in for a terrace is rejected.\n- **Bench**: along each terrace place a continuous semi-annular bench running along the full half-circle arc. Each bench is 500 mm wide radially and approximately 400 mm tall. Position the bench against the outer (back) edge of its terrace: the bench's radial range is [outer_radius_i - 0.5, outer_radius_i] and its vertical range is [i * 0.5, i * 0.5 + 0.4] m. The bench must be a real 3-D semi-annular prism approximating its inner and outer arcs with at least 16 angular segments each.\n\nExport as `C:\\Users\\Administrator\\Desktop\\output.dae` at the output root.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Overall world-space bounding box is approximately 30 m (X) x 15 m (Y) x 2.4 m (Z) within 50 mm (Y spans 0..15 because the plan is semi-circular; Z spans 0..2.4 because the tallest bench top sits at 2.0 + 0.4 = 2.4 m).\n3. Five distinct terrace-floor Z levels are present at Z = 0.0, 0.5, 1.0, 1.5, 2.0 m (within 5 mm).\n4. Semi-circular plan: of the vertices that lie in any terrace floor plane, at least 95% have Y >= -1 mm (so the terrace lives in the Y >= 0 half-plane; small negative numerical jitter is tolerated).\n5. Five distinct benches are detectable. For each terrace i there is a band of vertices near the outer arc (r within [outer_i - 0.5 - 0.01, outer_i + 0.01] m) and at Z = i * 0.5 + 0.4 m (within 5 mm), spanning the full half-circle (theta from near 0 to near pi).\n6. Each terrace floor and each bench contains at least 16 distinct angular samples around the origin (so every strip is a real arc, not a rectangle).\n7. The innermost radial extent of any terrace vertex is 3.0 m (within 5 mm) and the outermost extent is 15.0 m (within 5 mm).",
+  "source": "landscape architecture references for Greek\\Roman amphitheatre seating; [Chopra-Architect] SketchUp terrain and follow-me arcs; COLLADA 1.5 mesh",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

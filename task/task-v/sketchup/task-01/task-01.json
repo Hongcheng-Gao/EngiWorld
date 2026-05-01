@@ -1,0 +1,50 @@
+{
+  "id": "v-sketchup-task-01-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Turned-Leg Dining Table\n\nUsing SketchUp's GUI, build a dining table and export it as a COLLADA DAE. There is no initial file - model the table from scratch.\n\nSpecification:\n- **Tabletop**: rectangular slab, 1200 x 600 x 30 mm. Place it so its **bottom face is at Z = 720 mm** and its top face is at Z = 750 mm. Center it at the world origin on the X and Y axes (so it spans X in [-0.6, 0.6] m and Y in [-0.3, 0.3] m).\n- **Legs (4 identical)**: each leg is produced by revolving a vertical profile around its own local Z axis (Follow Me tool, with a circular path of >= 16 segments). The profile goes through these (z_mm, radius_mm) control points, interpolated in straight segments:\n(0, 40) -> (200, 40) -> (400, 25) -> (600, 40) -> (720, 40)\nThis gives a turned shape with full 80 mm diameter at the top and bottom, a widening \"shoulder\" through the middle 200-600 mm zone, and a narrow 50 mm-diameter \"waist\" at Z = 400 mm.\n- **Leg placement**: at the 4 corners of a 1100 x 500 mm rectangle centered at the world origin. The 4 leg centers are at (+\\-0.55, +\\-0.25, 0) m. The legs rise from Z = 0 up to Z = 720 mm so their tops touch the underside of the tabletop.\n- **Components**: make all 4 legs instances of a single ComponentDefinition so the COLLADA export references one shared `<geometry>` for them, not four duplicated copies.\n\nExport the whole assembly as `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. The scene has exactly 2 distinct geometry definitions (leg + tabletop).\n3. The leg geometry is instanced exactly 4 times; the tabletop exactly once.\n4. Tabletop dimensions 1.2 x 0.6 x 0.03 m (+\\-0.05 m), bottom face at Z = 0.72 m (+\\-0.01).\n5. The 4 leg instances sit at the 4 corners (+\\-0.55, +\\-0.25, 0) within 50 mm.\n6. Each leg spans Z = [0, 0.72] m.\n7. Leg mesh has >= 4 distinct Z-ring levels (evidence of a revolved profile, not a pure cylinder).\n8. Leg radius varies by >= 10 mm between its widest and narrowest rings; max radius approx 40 mm and min radius approx 25 mm (both within 10 mm).",
+  "source": "Chopra — SketchUp For Dummies (Follow Me chapter); SU-Help Follow Me and Component Definitions",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

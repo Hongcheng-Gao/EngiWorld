@@ -1,0 +1,73 @@
+{
+  "id": "v-freecad-task-07-ubuntu-gt",
+  "snapshot": "FreeeCAD0.19",
+  "instruction": "Open /home/user/Desktop/freecad_task-7_input.step in the FreeCAD GUI. Create four vertical through holes of diameter 6 mm in the thin cover plate. The hole centers must be 15 mm from the adjacent outside edges, at (15,15), (145,15), (15,85), and (145,85). Keep the 160 x 100 x 6 mm outside envelope unchanged and export /home/user/Desktop/freecad_task-7_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/freecad_task-7_input.step",
+            "path": "/home/user/Desktop/freecad_task-7_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/ground_truth/freecad_task-7_output.step",
+            "path": "/home/user/Desktop/freecad_task-7_output.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-7_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

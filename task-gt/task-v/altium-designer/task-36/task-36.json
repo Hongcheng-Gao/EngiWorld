@@ -1,0 +1,84 @@
+{
+  "id": "v-altium-designer-task-36-windows-gt",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Open `C:\\Users\\Administrator\\Desktop\\template.OutJob` in Altium Designer and build a fabrication OutJob according to `C:\\Users\\Administrator\\Desktop\\spec.yaml`. Save the result as `C:\\Users\\Administrator\\Desktop\\fab.OutJob`.\n\nRequirements:\n- In `[OutputGroup1]`, create 8 Gerber outputs that cover `TopLayer`, `MidLayer1` through `MidLayer6`, and `BottomLayer` exactly once each.\n- Create 1 NC Drill output with `UnitsPrecision=4:3 metric` and `GerberUnit=Metric`.\n- Create 1 IPC-2581 output with `IPC2581Revision=B`.\n- Create 1 Pick Place output with `Columns=Designator,Comment,Layer,X,Y,Rotation`.\n- Include exactly one `Folder Structure` output medium with `ZipOutput=True`.\n- Keep all 11 outputs enabled and route each of them to that `Folder Structure` medium.",
+  "source": "task.md #5 (Altium Creating OutJob File; PCBSync Gerber\\Drill tutorial)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36\\init_file\\spec.yaml",
+            "path": "C:\\Users\\Administrator\\Desktop\\spec.yaml"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36\\init_file\\template.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\template.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/ground_truth/fab.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\fab.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\template.OutJob"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "v-kicad-task-43-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Keepout Zone for Antenna Clearance\n\nThe file `/home/user/Desktop/board.kicad_pcb` contains an nRF52 module with a PCB antenna trace on net ANT routed on F.Cu near coordinates (52.5-67.5, 6.5-13.5) mm. A GND copper pour currently covers the entire F.Cu layer including the antenna area. Per Nordic antenna keepout guidelines, no copper other than the antenna trace itself should remain in the antenna zone.\n\n1. Add a rectangular 15x7 mm keepout zone enclosing the antenna trace area. The keepout must block copper pours, vias, and tracks on all copper layers.\n2. Keep the F.Cu GND zone present and filled everywhere outside the keepout.\n3. Do not leave any pad centers or non-ANT vias inside the keepout.\n\nRequirements:\n1. A (zone...) with (keepout...) exists with width approx 15 mm and height approx 7 mm (+/-1.5 mm).\n2. The keepout has (copperpour not_allowed), (vias not_allowed), and (tracks not_allowed).\n3. No pad centers inside the keepout bounding box.\n4. No non-ANT vias inside the keepout bounding box.\n5. The GND zone on F.Cu remains with at least one (filled_polygon...) child.\n6. No GND filled polygon point falls inside the keepout boundary.\n\nWrite /home/user/Desktop/board.kicad_pcb.",
+  "source": "TI / Analog Devices / Nordic / Microchip PCB layout app notes (Nordic antenna keepout guidelines for nRF52)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad/kicad-cli",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-43/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

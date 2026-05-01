@@ -1,0 +1,28 @@
+使用 Abaqus/CAE GUI 完成轴对称厚壁圆筒内压分析：
+
+1. Part：Axisymmetric Deformable Solid，Extrusion
+   - 草图：矩形，径向 50mm→100mm，轴向 0→10mm
+   - 即：内径 50mm，外径 100mm，厚 10mm
+
+2. Property：
+   - 材料 Steel：E = 210000 MPa，ν = 0.3
+   - Solid Homogeneous 截面
+
+3. Assembly：实例化
+
+4. Step：Static, General，名称 Step-Pressure
+
+5. Load：
+   - 内圆柱面施加 Pressure = 10 MPa
+   - 左端面 U2=0（轴对称）
+   - 底边（轴线）U1=0（对称）
+
+6. Mesh：
+   - 全局种子 5mm
+   - 单元类型 CAX4R
+
+7. Job：Job-Cylinder，提交求解
+
+8. 保存：
+   - 模型：outputs/Job-Cylinder.cae
+   - 结果：outputs/Job-Cylinder.odb

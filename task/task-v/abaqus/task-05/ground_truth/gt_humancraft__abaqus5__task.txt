@@ -1,0 +1,33 @@
+使用 Abaqus/CAE GUI 完成长方体实体拉伸分析：
+
+1. Part：
+   - 创建 3D Deformable Solid, Extrusion
+   - 草图为 12 mm x 8 mm 矩形
+   - 拉伸长度 120 mm
+
+2. Property：
+   - 材料 Aluminum：E = 70000 MPa，nu = 0.33
+   - 创建 Solid Homogeneous section
+
+3. Assembly：创建实例。
+
+4. Step：
+   - 创建 Static, General 分析步，命名为 Step-Load
+
+5. Load：
+   - 一端面固定（Encastre）
+   - 另一端面沿 +X 方向施加轴向拉力 800 N
+
+6. Mesh：
+   - 全局种子尺寸 4 mm
+   - 单元类型：C3D8R
+
+7. Job：创建 Job-BlockTension 并提交计算。
+
+8. Visualization：
+   - 查看 S11 应力云图
+   - 查询自由端 U1 位移
+
+9. 保存：
+   - 模型：outputs/Job-BlockTension.cae
+   - 结果：outputs/Job-BlockTension.odb

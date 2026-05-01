@@ -1,0 +1,77 @@
+{
+  "id": "v-revit-task-16-windows-gt",
+  "snapshot": "Revit-2027",
+  "instruction": "Single Storey Kindergarten Retrofit IFC\n\nThis task starts from C:\\Users\\Administrator\\Desktop\\init.ifc and uses the local reference image C:\\Users\\Administrator\\Desktop\\init_sheet.png. In Revit, modify the starting model into a single-storey kindergarten layout and export the completed model as C:\\Users\\Administrator\\Desktop\\result.ifc in the Desktop.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc, and C:\\Users\\Administrator\\Desktop\\result.ifc is at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 6 IfcSpace entities, 8 IfcWall entities, 2 IfcSlab entities, 2 IfcRoof entities, and 8 IfcWindow entities.\n5. The IFC model contains 0 IfcDoor, 0 IfcStair, 0 IfcColumn, 0 IfcBeam, 0 IfcCurtainWall, and 0 IfcBuildingElementProxy entities.\n6. After replacing hyphens and underscores with spaces and lowercasing names, the IfcSpace name list contains the token lobby at least once, classroom at least 2 times, nap at least once, kitchen at least once, and toilet at least once.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-16/init_image/init_sheet.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_sheet.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/ground_truth/answer.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\result.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Revit 2027\\Revit.exe",
+          "C:\\Users\\Administrator\\Desktop\\init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
