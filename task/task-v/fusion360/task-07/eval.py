@@ -14,7 +14,7 @@ ROOT = Path(__file__).resolve().parent
 TARGET = Path(r"C:\Users\Administrator\Desktop")
 
 def fail() -> None:
-    print(False)
+    print("false")
     raise SystemExit(0)
 
 def read_text(path: Path) -> str:
@@ -119,5 +119,5 @@ if __name__ == "__main__":
         result = main()
     except Exception:
         result = False
-    print(True if result else False)
+    print("true" if result else "false")
     raise SystemExit(0)
