@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-11-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "Three-Operation Machining of a Casting\n\n`C:\\Users\\Administrator\\Desktop\\scene.blend` contains a single mesh object `Casting`: a rectangular blank aligned to the world axes with X extent `[-1, +1]`, Y extent `[-0.7, +0.7]`, and Z extent `[0, 1.0]`.\n\nMachine it into the final part below and save the result as `C:\\Users\\Administrator\\Desktop\\answer.blend`.\n\nRequirements:\n1. Keep exactly one mesh object, still named `Casting`.\n2. Leave the object's world location and rotation unchanged.\n3. Save a final mesh with an empty modifier stack.\n4. The final mesh must be closed and manifold, with no loose geometry.\n5. Face off the top by `0.1 BU`, so the top face lies at `Z = 0.9` while the X and Y extents stay unchanged.\n6. Add a central vertical through-hole of diameter `0.5 BU` on the world Z axis, passing from `Z = 0` to `Z = 0.9`.\n7. Add two blind pin holes of diameter `0.1 BU` with axes parallel to world X, centered at `(Y, Z) = (0, 0.45)`, one entering from `+X` and one from `-X`. Each blind hole is `0.45 BU` deep, so the flat blind ends lie at `X = +0.55` and `X = -0.55`.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11\\init_file\\scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
