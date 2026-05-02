@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 import csv
 import re
-import subprocess
+try:
+    import fitz
+except ImportError:
+    import pymupdf as fitz
+try:
+    from pdfminer.high_level import extract_text as _pdfminer_extract_text
+    from pdfminer.pdfpage import PDFPage as _PDFPage
+    _HAS_PDFMINER = True
+except ImportError:
+    _HAS_PDFMINER = False
+
 from pathlib import Path
 
 import ifcopenshell
@@ -76,18 +86,22 @@ def parse_csv(path):
 
 def parse_pdf(path):
     try:
-        info = subprocess.run(["pdfinfo", str(path)], capture_output=True, text=True, check=True)
-        pages = None
-        for line in info.stdout.splitlines():
-            if line.startswith("Pages:"):
-                pages = int(line.split(":", 1)[1].strip())
-                break
-        if pages is None:
-            return None, None
-        text = subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True, check=True).stdout
+        doc = fitz.open(str(path))
+        pages = doc.page_count
+        text = "".join(page.get_text("text") for page in doc)
+        doc.close()
         return pages, text.upper()
     except Exception:
-        return None, None
+        pass
+    if _HAS_PDFMINER:
+        try:
+            with open(str(path), "rb") as f:
+                pages = sum(1 for _ in _PDFPage.get_pages(f))
+            text = _pdfminer_extract_text(str(path))
+            return pages, text.upper()
+        except Exception:
+            pass
+    return None, None
 
 
 def compare_cell(actual, expected, tolerance):

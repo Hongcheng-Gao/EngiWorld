@@ -1,124 +1,243 @@
-#!/usr/bin/env python3
-import re
-import subprocess
-from pathlib import Path
-DESKTOP = Path("C:/Users/Administrator/Desktop")
-
-import ifcopenshell
-
-
-SPEC = {
-    "required_ifc": "result.ifc",
-    "required_pdf": "result.pdf",
-    "min_ifc_bytes": 500,
-    "min_pdf_bytes": 200,
-    "schema": "IFC4",
-    "counts": {
-        "IfcProject": 1,
-        "IfcSite": 1,
-        "IfcBuilding": 1,
-        "IfcBuildingStorey": 1,
-        "IfcWall": 4,
-        "IfcSlab": 1,
-        "IfcCurtainWall": 5,
-    },
-    "forbidden_counts": {
-        "IfcSpace": 0,
-        "IfcRoof": 0,
-        "IfcDoor": 0,
-        "IfcWindow": 0,
-        "IfcStair": 0,
-        "IfcColumn": 0,
-        "IfcBeam": 0,
-        "IfcBuildingElementProxy": 0,
-    },
-    "pdf_tokens": ["PODIUM FACADE", "A301"],
-}
-
-
-def finish(ok):
-    print("true" if ok else "false")
-    raise SystemExit(0)
-
-
-def entity_count(model, ifc_class):
-    return len(model.by_type(ifc_class))
-
-
-def unique_global_ids(model):
-    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-    return len(gids) == len(set(gids))
-
-
-def check_counts(model):
-    for ifc_class, expected in SPEC["counts"].items():
-        if entity_count(model, ifc_class) != expected:
-            return False
-    for ifc_class, expected in SPEC["forbidden_counts"].items():
-        if entity_count(model, ifc_class) != expected:
-            return False
-    return True
-
-
-def extract_pdf_text(path):
-    proc = subprocess.run(
-        ["pdftotext", "-layout", str(path), "-"],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError("pdftotext failed")
-    return proc.stdout
-
-
-def page_count(path):
-    proc = subprocess.run(
-        ["pdfinfo", str(path)],
-        check=False,
-        capture_output=True,
-        text=True,
-    )
-    if proc.returncode != 0:
-        raise RuntimeError("pdfinfo failed")
-    for line in proc.stdout.splitlines():
-        if line.lower().startswith("pages:"):
-            return int(line.split(":", 1)[1].strip())
-    raise RuntimeError("missing page count")
-
-
-def check_pdf(pdf_path):
-    if page_count(pdf_path) != 1:
-        return False
-    text = extract_pdf_text(pdf_path).lower()
-    return all(token.lower() in text for token in SPEC["pdf_tokens"])
-
-
-def evaluate(result_dir):
-    root = Path(result_dir)
-    ifc_path = root / SPEC["required_ifc"]
-    pdf_path = root / SPEC["required_pdf"]
-    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
-        return False
-    if not pdf_path.is_file() or pdf_path.stat().st_size < SPEC["min_pdf_bytes"]:
-        return False
-    model = ifcopenshell.open(str(ifc_path))
-    return (
-        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
-        and unique_global_ids(model)
-        and check_counts(model)
-        and check_pdf(pdf_path)
-    )
-
-
-def main():
-    try:
-        finish(evaluate(DESKTOP))
-    except SystemExit:
-        raise
-    except Exception:
-        finish(False)
-
-
-if __name__ == "__main__":
-    main()
+#!/usr/bin/env python3
+
+import re
+
+try:
+    import fitz
+except ImportError:
+    import pymupdf as fitz
+try:
+    from pdfminer.high_level import extract_text as _pdfminer_extract_text
+    from pdfminer.pdfpage import PDFPage as _PDFPage
+    _HAS_PDFMINER = True
+except ImportError:
+    _HAS_PDFMINER = False
+
+
+from pathlib import Path
+
+DESKTOP = Path("C:/Users/Administrator/Desktop")
+
+
+
+import ifcopenshell
+
+
+
+
+
+SPEC = {
+
+    "required_ifc": "result.ifc",
+
+    "required_pdf": "result.pdf",
+
+    "min_ifc_bytes": 500,
+
+    "min_pdf_bytes": 200,
+
+    "schema": "IFC4",
+
+    "counts": {
+
+        "IfcProject": 1,
+
+        "IfcSite": 1,
+
+        "IfcBuilding": 1,
+
+        "IfcBuildingStorey": 1,
+
+        "IfcWall": 4,
+
+        "IfcSlab": 1,
+
+        "IfcCurtainWall": 5,
+
+    },
+
+    "forbidden_counts": {
+
+        "IfcSpace": 0,
+
+        "IfcRoof": 0,
+
+        "IfcDoor": 0,
+
+        "IfcWindow": 0,
+
+        "IfcStair": 0,
+
+        "IfcColumn": 0,
+
+        "IfcBeam": 0,
+
+        "IfcBuildingElementProxy": 0,
+
+    },
+
+    "pdf_tokens": ["PODIUM FACADE", "A301"],
+
+}
+
+
+
+
+
+def finish(ok):
+
+    print("true" if ok else "false")
+
+    raise SystemExit(0)
+
+
+
+
+
+def entity_count(model, ifc_class):
+
+    return len(model.by_type(ifc_class))
+
+
+
+
+
+def unique_global_ids(model):
+
+    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
+
+    return len(gids) == len(set(gids))
+
+
+
+
+
+def check_counts(model):
+
+    for ifc_class, expected in SPEC["counts"].items():
+
+        if entity_count(model, ifc_class) != expected:
+
+            return False
+
+    for ifc_class, expected in SPEC["forbidden_counts"].items():
+
+        if entity_count(model, ifc_class) != expected:
+
+            return False
+
+    return True
+
+
+
+
+
+def extract_pdf_text(path):
+    try:
+        doc = fitz.open(str(path))
+        text = "".join(page.get_text("text") for page in doc)
+        doc.close()
+        return text
+    except Exception:
+        pass
+    if _HAS_PDFMINER:
+        try:
+            return _pdfminer_extract_text(str(path))
+        except Exception:
+            pass
+    raise RuntimeError("cannot extract PDF text")
+
+
+
+
+
+def page_count(path):
+    try:
+        doc = fitz.open(str(path))
+        n = doc.page_count
+        doc.close()
+        return n
+    except Exception:
+        pass
+    if _HAS_PDFMINER:
+        try:
+            with open(str(path), "rb") as f:
+                return sum(1 for _ in _PDFPage.get_pages(f))
+        except Exception:
+            pass
+    raise RuntimeError("cannot determine page count")
+
+
+
+
+
+def check_pdf(pdf_path):
+
+    if page_count(pdf_path) != 1:
+
+        return False
+
+    text = extract_pdf_text(pdf_path).lower()
+
+    return all(token.lower() in text for token in SPEC["pdf_tokens"])
+
+
+
+
+
+def evaluate(result_dir):
+
+    root = Path(result_dir)
+
+    ifc_path = root / SPEC["required_ifc"]
+
+    pdf_path = root / SPEC["required_pdf"]
+
+    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
+
+        return False
+
+    if not pdf_path.is_file() or pdf_path.stat().st_size < SPEC["min_pdf_bytes"]:
+
+        return False
+
+    model = ifcopenshell.open(str(ifc_path))
+
+    return (
+
+        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
+
+        and unique_global_ids(model)
+
+        and check_counts(model)
+
+        and check_pdf(pdf_path)
+
+    )
+
+
+
+
+
+def main():
+
+    try:
+
+        finish(evaluate(DESKTOP))
+
+    except SystemExit:
+
+        raise
+
+    except Exception:
+
+        finish(False)
+
+
+
+
+
+if __name__ == "__main__":
+
+    main()
+
