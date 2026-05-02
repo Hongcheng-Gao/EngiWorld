@@ -1,0 +1,57 @@
+{
+  "id": "c-brl-cad-task-34-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/branch_pipe.step, /home/user/Desktop/main_pipe.step. Read /home/user/Desktop/main_pipe.step and /home/user/Desktop/branch_pipe.step. Place two branch pipes so they intersect the main pipe at X=30 mm and X=70 mm, with both branch axes along Y and intersecting the main pipe centerline. Fuse all three pipes. Then cut a through hole of diameter 12 mm along the main pipe axis through the full main pipe length. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/input/branch_pipe.step",
+            "path": "/home/user/Desktop/branch_pipe.step"
+          },
+          {
+            "local_path": "task-34/init_file/input/main_pipe.step",
+            "path": "/home/user/Desktop/main_pipe.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-34/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

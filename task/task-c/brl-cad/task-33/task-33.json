@@ -1,0 +1,53 @@
+{
+  "id": "c-brl-cad-task-33-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/bracket_seed.step. Read /home/user/Desktop/bracket_seed.step. Add a vertical plate of 10 x 40 x 60 mm at the left end of the base. Add a 60 x 20 x 10 mm cantilever extending rightward from the top of the vertical plate. Cut two 18 x 10 x 6 mm weight-reduction blind pockets in the cantilever, symmetrically distributed along X. Cut four through holes of diameter 5 mm in the base corners. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33/init_file/input/bracket_seed.step",
+            "path": "/home/user/Desktop/bracket_seed.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-33/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

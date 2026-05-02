@@ -1,0 +1,57 @@
+{
+  "id": "c-fusion360-task-33-win",
+  "snapshot": "fusion360-latest",
+  "instruction": "Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\hole_recognition_part.step, C:\\Users\\Administrator\\Desktop\\tools.csv. Recognize and group all twenty-four holes in C:\\Users\\Administrator\\Desktop\\hole_recognition_part.step: eight through holes, eight blind holes, four counterbores, and four threaded holes. Create spot drilling, drilling, bore or circular pocket, and thread milling toolpaths for the groups. Export C:\\Users\\Administrator\\Desktop\\task-33.nc and C:\\Users\\Administrator\\Desktop\\hole_groups.json. Tool definitions: create spot drilling, drilling, boring/circular-pocket, and thread-milling tools for the recognized hole groups. Write the output file(s) to the Desktop path(s) using exactly these absolute file paths: C:\\Users\\Administrator\\Desktop\\task-33.nc, C:\\Users\\Administrator\\Desktop\\hole_groups.json.",
+  "source": "Fusion Manufacture 与 G-code。(Autodesk Help) https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-NC-OLD-V-NEW&utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33/init_file/hole_recognition_part.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\hole_recognition_part.step"
+          },
+          {
+            "local_path": "task-33/init_file/tools.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-33/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

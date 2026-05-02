@@ -1,0 +1,48 @@
+{
+  "id": "c-bonsai-task-10-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Shell Sequence IFC And CSV\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 shell model with a construction task sequence and a matching CSV schedule, then save the required outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv; /home/user/Desktop/result.ifc is at least 500 bytes and /home/user/Desktop/result.csv is not empty.\n2. /home/user/Desktop/result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 4 IfcWall entities, 1 IfcSlab, 1 IfcDoor, 1 IfcOpeningElement, 1 IfcRelVoidsElement relationship, 1 IfcRelFillsElement relationship, 1 IfcWorkSchedule, 4 IfcTask entities, and 3 IfcRelSequence relationships.\n4. The IFC model contains 0 IfcSpace, 0 IfcWindow, 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The single IfcBuildingStorey is named exactly Level 00, ignoring leading and trailing whitespace only.\n7. The slab is named exactly Shell Slab, ignoring leading and trailing whitespace only, and has bounding-box dimensions 4.00 m by 3.00 m by 0.20 m, in any axis order, with tolerance +/-0.08 m.\n8. Each wall has height 3.00 m with tolerance +/-0.05 m and plan thickness 0.20 m with tolerance +/-0.04 m.\n9. The door is named exactly Shell Door, ignoring leading and trailing whitespace only, has OverallWidth 0.90 m with tolerance +/-0.08 m, and fills exactly one IfcOpeningElement that voids an IfcWall.\n10. All walls, the slab, and the door are spatially assigned to Level 00.\n11. The IfcWorkSchedule is named exactly Shell Sequence, ignoring leading and trailing whitespace only.\n12. The IFC task names and ISO duration values are exactly Cast Slab with P2D, Build Walls with P4D, Install Door with P1D, and QC Handover with P1D.\n13. The IFC sequence relationships are exactly Cast Slab before Build Walls, Build Walls before Install Door, and Install Door before QC Handover.\n14. /home/user/Desktop/result.csv has exactly these headers in this order: TaskName, DurationDays, DirectPredecessor.\n15. /home/user/Desktop/result.csv has exactly 4 data rows in this order: Cast Slab, 2, empty predecessor; Build Walls, 4, Cast Slab; Install Door, 1, Build Walls; QC Handover, 1, Install Door.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/sequence/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

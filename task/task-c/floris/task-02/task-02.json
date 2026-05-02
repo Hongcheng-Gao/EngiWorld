@@ -1,0 +1,57 @@
+{
+  "id": "c-floris-task-02-ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "You are given an incomplete script `/home/user/Desktop/yaw_base.py`.\nFLORIS can perform wake steering through yaw control.\nComplete the following from the command line:\n\n1. Write a complete script `/home/user/Desktop/yaw.py`:\n- Compute baseline case power (`yaw=0°`)\n- Compute power with upstream yaw of `20°`\n- Extract `turbine_1` (downstream) power in both cases\n\n2. Execute and save to `/home/user/Desktop/summary.txt` in this format:\n`baseline_t1_kw, yawed_t1_kw, power_gain_percent`",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/two_turbine.yaml",
+            "path": "/home/user/Desktop/two_turbine.yaml"
+          },
+          {
+            "local_path": "task-02/init_file/yaw_base.py",
+            "path": "/home/user/Desktop/yaw_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

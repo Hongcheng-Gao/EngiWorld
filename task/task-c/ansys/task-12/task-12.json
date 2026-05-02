@@ -1,0 +1,53 @@
+{
+  "id": "c-ansys-task-12-win",
+  "snapshot": "ansys-2026",
+  "instruction": "You are given an input file with errors: `C:\\Users\\Administrator\\Desktop\\broken.inp`.\nComplete a command-line diagnose-fix-rerun workflow: repair it as `C:\\Users\\Administrator\\Desktop\\fixed.inp`, resubmit, and ensure `C:\\Users\\Administrator\\Desktop\\results.txt` is generated.\n\n5. Write a diagnosis report `C:\\Users\\Administrator\\Desktop\\diagnosis.txt` (list each error cause and fix method; total length >= 100 Chinese characters).\n6. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `results.txt`\n- Required column order: `max_mises, tip_u2`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/broken.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

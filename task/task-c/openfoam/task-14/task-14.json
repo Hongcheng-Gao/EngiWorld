@@ -1,0 +1,121 @@
+{
+  "id": "c-openfoam-task-14-ubuntu",
+  "snapshot": "OpenFOAM9",
+  "instruction": "You are given a `snappyHexMesh` template `/home/user/Desktop/snappy_base/`.\nComplete unstructured mesh generation and simulation from the command line:\n\n1. Modify and create `/home/user/Desktop/cylinder_snappy/`:\n- Ensure the STL geometry file is available\n- Configure `snappyHexMesh` parameters (background mesh, surface snapping, boundary layers)\n- Generate the mesh and check mesh quality\n\n2. Set boundary conditions and properties, then run the solver.\n\n3. Extract wall `y+`.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Average cylinder-surface `yPlus` as `avg_yplus`\n- Format: `avg_yplus`\n\n5. Do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/snappy_base/0/U",
+            "path": "/home/user/Desktop/snappy_base/0/U"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/0/epsilon",
+            "path": "/home/user/Desktop/snappy_base/0/epsilon"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/0/k",
+            "path": "/home/user/Desktop/snappy_base/0/k"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/0/nut",
+            "path": "/home/user/Desktop/snappy_base/0/nut"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/0/p",
+            "path": "/home/user/Desktop/snappy_base/0/p"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/Allclean",
+            "path": "/home/user/Desktop/snappy_base/Allclean"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/Allrun",
+            "path": "/home/user/Desktop/snappy_base/Allrun"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/README.init.md",
+            "path": "/home/user/Desktop/snappy_base/README.init.md"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/constant/momentumTransport",
+            "path": "/home/user/Desktop/snappy_base/constant/momentumTransport"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/constant/physicalProperties",
+            "path": "/home/user/Desktop/snappy_base/constant/physicalProperties"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/constant/triSurface/cylinder.stl",
+            "path": "/home/user/Desktop/snappy_base/constant/triSurface/cylinder.stl"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/blockMeshDict",
+            "path": "/home/user/Desktop/snappy_base/system/blockMeshDict"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/controlDict",
+            "path": "/home/user/Desktop/snappy_base/system/controlDict"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/fvSchemes",
+            "path": "/home/user/Desktop/snappy_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/fvSolution",
+            "path": "/home/user/Desktop/snappy_base/system/fvSolution"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/meshQualityDict",
+            "path": "/home/user/Desktop/snappy_base/system/meshQualityDict"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/snappyHexMeshDict",
+            "path": "/home/user/Desktop/snappy_base/system/snappyHexMeshDict"
+          },
+          {
+            "local_path": "task-14/init_file/snappy_base/system/surfaceFeaturesDict",
+            "path": "/home/user/Desktop/snappy_base/system/surfaceFeaturesDict"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

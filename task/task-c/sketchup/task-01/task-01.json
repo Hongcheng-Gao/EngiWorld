@@ -1,0 +1,53 @@
+{
+  "id": "c-sketchup-task-01-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Parametric Straight-Run Staircase\n\nRead `C:\\Users\\Administrator\\Desktop\\params.json`; it contains:\n- `total_rise_m`: total vertical height of the staircase in meters\n- `total_run_m`: total horizontal length along the walking direction in meters\n- `max_rise_per_step_mm`: maximum allowed rise per step in millimeters\n- `tread_thickness_mm`: tread thickness in millimeters\n- `tread_width_m`: tread width in meters\n\nCompute `N = ceil(total_rise_m * 1000 / max_rise_per_step_mm)`, then compute `rise_per_step = total_rise_m / N` and `run_per_step = total_run_m / N`.\n\nCreate a SketchUp model containing exactly `N` separate axis-aligned tread solids. For tread `i` (0-indexed), its bounding box must be exactly:\n\nX: [i * run_per_step, (i+1) * run_per_step]\nY: [0, tread_width_m]\nZ: [(i+1) * rise_per_step - tread_thickness_mm/1000, (i+1) * rise_per_step]\n\nDo not include extra geometry. Save the native SketchUp model to `C:\\Users\\Administrator\\Desktop\\answer.skp`.",
+  "source": "SketchUp Help (Push/Pull; Move and Copy); IRC R311.7 stair rise/run limits",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01\\init_file\\params.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\params.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

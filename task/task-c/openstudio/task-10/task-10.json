@@ -1,0 +1,48 @@
+{
+  "id": "c-openstudio-task-10-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Perimeter Daylighting WWR Model\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an OpenStudio 3.10 one-story perimeter-and-core daylighting model and save the required outputs as /home/user/Desktop/result.osm and /home/user/Desktop/kpis.json.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.osm with size at least 500 bytes and /home/user/Desktop/kpis.json with size at least 10 bytes.\n2. /home/user/Desktop/result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. /home/user/Desktop/result.osm contains exactly 1 OS:BuildingStory, 5 OS:Space objects, and 5 OS:ThermalZone objects.\n4. The OS:Space names are exactly North Perimeter, South Perimeter, East Perimeter, West Perimeter, and Core.\n5. Every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2.\n6. The model has exactly 30 OS:Surface objects: 5 Floor surfaces, 5 RoofCeiling surfaces, and 20 Wall surfaces.\n7. The surface Outside Boundary Condition counts are exactly 5 Ground, 17 Outdoors, and 8 Surface.\n8. The model has exactly 12 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 12.\n9. The model contains exactly 5 OS:ZoneHVAC:IdealLoadsAirSystem objects, 5 OS:ZoneHVAC:EquipmentList objects, 5 OS:ThermostatSetpoint:DualSetpoint objects, and 2 OS:Daylighting:Control objects.\n10. The surface geometry bounding box has X span 24.00 m, Y span 24.00 m, and Z span 3.00 m, each with tolerance +/-0.05 m.\n11. The sum of floor surface areas is 512.00 m2 with tolerance +/-0.50 m2.\n12. The sum of exterior wall gross areas is 288.00 m2 with tolerance +/-0.50 m2.\n13. The total fixed-window area is 100.80 m2 with tolerance +/-0.50 m2.\n14. /home/user/Desktop/kpis.json contains zone_count, daylighting_control_count, south_wwr, west_wwr, north_wwr, and east_wwr values matching the evaluator-computed model metrics with tolerance max(0.10, 1%).\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-2.9.0-doc/model/html/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

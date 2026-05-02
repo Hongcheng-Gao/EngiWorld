@@ -1,0 +1,53 @@
+{
+  "id": "c-kicad-task-22-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Tab-Route Panel with Mouse Bites\n\nThe file `/home/user/Desktop/A.kicad_pcb` is a small irregular PCB with an L-shaped outline using mixed straight (`gr_line`) and curved (`gr_arc`) edges on Edge.Cuts. You must panelize this board into a 3x2 array.\n\nProduce a panelized KiCad PCB file at `/home/user/Desktop/panel.kicad_pcb` containing:\n1. 6 copies of board A arranged in a 3-column x 2-row grid, with approximately 8 mm spacing between copies.\n2. 2 mm tab bridges on each straight-edge interface between adjacent copies and between copies and the panel rail. Do NOT place tabs on curved (`gr_arc`) edges.\n3. Mouse-bite perforation through each tab: an array of 4 non-plated through-holes (`np_thru_hole`) each 0.5 mm drill at 1 mm pitch, centered along the tab.\n4. One breakaway rail strip (a horizontal Edge.Cuts line) across the full panel width at the top (Y-min side).\n5. Overall panel outline <= 180x120 mm.\n6. Also write `/home/user/Desktop/edgecuts.svg` as the native KiCad CLI Edge.Cuts SVG export of your final panel.\n7. Also write `/home/user/Desktop/panel.drl` as the native KiCad CLI drill export of your final panel.\n\nWrite /home/user/Desktop/panel.kicad_pcb, /home/user/Desktop/edgecuts.svg, and /home/user/Desktop/panel.drl.",
+  "source": "KiKit Panelization Documentation, KiCad 9 Official Documentation - PCB Editor / CLI (`kicad-cli pcb export svg`, `kicad-cli pcb export drill`)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/A.kicad_pcb",
+            "path": "/home/user/Desktop/A.kicad_pcb"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-22/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

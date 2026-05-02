@@ -1,0 +1,53 @@
+{
+  "id": "c-altium-designer-task-09-win",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Fix the native Altium board `C:\\Users\\Administrator\\Desktop\\broken_pcie_active_settings.PcbDoc` and save the repaired document as `C:\\Users\\Administrator\\Desktop\\pcie_active_settings.PcbDoc`. The repaired board must restore the ActiveRoute gloss/corner settings fragment, and it must restore the specific differential-pair declarations for `PCIE_TX0`, `PCIE_RX0`, and `MINIPCIE_REFCLK`.",
+  "source": "Local Altium example `Mini PC - Motherboard/MiniPC.PcbDoc`; benchmark task restored from JSON export generation to native ActiveRoute/diff-pair repair.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09\\init_file\\broken_pcie_active_settings.PcbDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_pcie_active_settings.PcbDoc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

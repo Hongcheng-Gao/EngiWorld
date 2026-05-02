@@ -1,0 +1,53 @@
+{
+  "id": "c-calculix-task-12-ubuntu",
+  "snapshot": "CalculiX-2.17",
+  "instruction": "You are given a template with completed modal analysis `/home/user/Desktop/earthquake_base.inp`.\nComplete the following from the command line:\n\n1. Submit modal analysis to generate `eq_modal.eig`.\n\n2. Write seismic-response input `/home/user/Desktop/earthquake.inp`:\n- Use `*Modal Dynamic`, total time `2.0 s`, increment `0.01 s`\n- Use `*Base Motion, amplitude=Amp-1, type=acceleration, direction=2` (Y direction)\n- Define `*Amplitude, name=Amp-1, definition=SMOOTH STEP`:\n  `0.0, 0.0, 0.5, 9.81, 1.0, 0.0`\n- Use the fixed end as the base excitation location\n\n3. Submit and write a post-processing script to parse `earthquake.dat`:\n- Extract maximum absolute `UY` at free-end node 2 (peak response)\n- Extract `UY` at `t=2.0 s`\n- Write to `/home/user/Desktop/summary.txt` in this format: `peak_u2, final_u2`",
+  "source": "https://github.com/calculix/CalculiX-Examples",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/earthquake_base.inp",
+            "path": "/home/user/Desktop/earthquake_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

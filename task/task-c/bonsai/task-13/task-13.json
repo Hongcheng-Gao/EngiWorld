@@ -1,0 +1,57 @@
+{
+  "id": "c-bonsai-task-13-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Merge Two Building Hierarchies\n\nThis task starts from /home/user/Desktop/init.ifc and may use /home/user/Desktop/init_plan.png as a local reference image. Modify the provided IFC so the two wings share one project hierarchy, then save the required output as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes.\n2. /home/user/Desktop/result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 2 IfcBuildingStorey entities, 8 IfcWall entities, and 2 IfcSlab entities.\n4. The IFC model contains 0 IfcSpace, 0 IfcDoor, 0 IfcWindow, 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The single IfcProject is named exactly Unified Project, the single IfcSite is named exactly Unified Site, the single IfcBuilding is named exactly Unified Building, and the IfcBuildingStorey names are exactly Ground Floor and First Floor, each ignoring leading and trailing whitespace only.\n7. The wall names are exactly WingA South Wall, WingA East Wall, WingA North Wall, WingA West Wall, WingB South Wall, WingB East Wall, WingB North Wall, and WingB West Wall, ignoring leading and trailing whitespace only.\n8. Each wall has bounding-box dimensions 8.00 m by 0.20 m by 3.00 m or 0.20 m by 6.00 m by 3.00 m, in any axis order, with tolerance +/-0.08 m.\n9. The slab names are exactly WingA Slab and WingB Slab, ignoring leading and trailing whitespace only, and each slab has bounding-box dimensions 8.00 m by 6.00 m by 0.20 m, in any axis order, with tolerance +/-0.08 m.\n10. Every wall and slab is spatially assigned to either Ground Floor or First Floor.\n11. The overall product bounding box has minimum coordinates -0.20 m, 0.00 m, 0.00 m and maximum coordinates 22.00 m, 6.00 m, 6.20 m, each with tolerance +/-0.08 m.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.ifcopenshell.org/autoapi/ifcpatch/recipes/MergeProjects/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-13/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-07-win",
+  "snapshot": "archicad-29",
+  "instruction": "Three-Storey Office Annex\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an Archicad three-storey office annex with a compact circulation core and save the required output to C:\\Users\\Administrator\\Desktop\\result.ifc.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 3 IfcBuildingStorey entities and exactly 12 IfcSpace entities.\n5. The IFC model contains at least 3 IfcSlab entities, at least 1 IfcRoof entity, and at least 1 IfcStair entity.\n6. The IFC model contains spaces with exactly these normalized names: G-RECEPTION, G-MEETING, G-CORRIDOR, G-STAIR, 1-OFFICE-1, 1-OFFICE-2, 1-CORRIDOR, 1-WC, 2-OFFICE-3, 2-OFFICE-4, 2-CORRIDOR, and 2-TERRACE.\n7. G-RECEPTION, G-MEETING, G-CORRIDOR, and G-STAIR are assigned to one storey; 1-OFFICE-1, 1-OFFICE-2, 1-CORRIDOR, and 1-WC are assigned to a second storey; and 2-OFFICE-3, 2-OFFICE-4, 2-CORRIDOR, and 2-TERRACE are assigned to a third storey.\n8. The IFC area quantities for the spaces are G-RECEPTION 20.0 m2, G-MEETING 20.0 m2, G-CORRIDOR 30.0 m2, G-STAIR 9.0 m2, 1-OFFICE-1 20.0 m2, 1-OFFICE-2 20.0 m2, 1-CORRIDOR 30.0 m2, 1-WC 7.5 m2, 2-OFFICE-3 20.0 m2, 2-OFFICE-4 20.0 m2, 2-CORRIDOR 30.0 m2, and 2-TERRACE 15.0 m2, each with tolerance +/-0.10 m2.\n9. The total ground-level area is between 78.0 m2 and 80.0 m2, the total level-1 area is between 76.5 m2 and 78.5 m2, and the total level-2 area is between 84.0 m2 and 86.0 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-179.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

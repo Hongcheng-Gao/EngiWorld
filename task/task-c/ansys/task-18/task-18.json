@@ -1,0 +1,53 @@
+{
+  "id": "c-ansys-task-18-win",
+  "snapshot": "ansys-2026",
+  "instruction": "You are given a cylinder flow-around mesh `C:\\Users\\Administrator\\Desktop\\cylinder.msh`.\nComplete the following using Fluent command line:\n\n1. Write journal file `C:\\Users\\Administrator\\Desktop\\cylinder.jou`:\n- Read mesh, set 2D Pressure-Based Transient solver\n- Laminar model (`Re≈100`)\n- Inlet velocity `0.1 m/s`, outlet pressure `0`\n- Time step `0.01 s`, run 500 steps\n- Monitor lift coefficient history on the cylinder surface\n- Export lift history to `C:\\Users\\Administrator\\Desktop\\lift_history.xy`\n\n2. Submit the job.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\lift_history.xy` is generated.\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `lift_history.xy`\n- Required column order: `step, lift`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/cylinder.msh",
+            "path": "C:\\Users\\Administrator\\Desktop\\cylinder.msh"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

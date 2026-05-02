@@ -1,0 +1,53 @@
+{
+  "id": "c-abaqus-task-01-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given an incomplete base input file `C:\\Users\\Administrator\\Desktop\\cantilever_base.inp`.\nComplete the full workflow from the command line:\n\n1. Use Python or a shell script to generate three input files from the template:\n   - `C:\\Users\\Administrator\\Desktop\\cantilever_100.inp` (load: 100 N)\n   - `C:\\Users\\Administrator\\Desktop\\cantilever_200.inp` (load: 200 N)\n   - `C:\\Users\\Administrator\\Desktop\\cantilever_300.inp` (load: 300 N)\n\n2. Submit all jobs in batch (serial submission is acceptable).\n\n3. Write a Python post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Read the last frame of each ODB\n   - Extract the global maximum Mises stress\n   - Extract the maximum U2 displacement at the free end (`x≈100, y≈10`)\n   - Print in this format: `job_name, max_mises, tip_u2`\n\n4. Run the post-processing from the command line and save the log to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Ensure all generated files are under `C:\\Users\\Administrator\\Desktop\\`, and do not use the Abaqus/CAE GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `load, max_mises, tip_u2 (one case per line; loads 100/200/300)`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/cantilever_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\cantilever_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

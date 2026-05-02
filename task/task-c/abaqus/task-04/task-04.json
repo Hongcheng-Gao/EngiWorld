@@ -1,0 +1,53 @@
+{
+  "id": "c-abaqus-task-04-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given an input file with errors: `C:\\Users\\Administrator\\Desktop\\modal_base.inp`.\n\nRepair the file and save it as `C:\\Users\\Administrator\\Desktop\\fixed.inp` (do not use CAE).\nSubmit the job and ensure `C:\\Users\\Administrator\\Desktop\\fixed.odb` is generated successfully.\nWrite a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py` to extract from `fixed.odb`:\n   - Global maximum Mises stress\n   - Maximum U2 displacement at the free end\nSave the result to `C:\\Users\\Administrator\\Desktop\\summary.txt` in this format: `max_mises, tip_u2`.\nAlso save an error diagnosis report to `C:\\Users\\Administrator\\Desktop\\diagnosis.txt` (explain each error cause and fix method line by line, with at least 100 Chinese characters).\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises, tip_u2`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/modal_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\modal_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

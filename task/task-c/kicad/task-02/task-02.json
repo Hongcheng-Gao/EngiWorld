@@ -1,0 +1,75 @@
+{
+  "id": "c-kicad-task-02-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Deterministic Reference Re-Annotation\n\nThe files /home/user/Desktop/sheet1.kicad_sch, /home/user/Desktop/sheet2.kicad_sch, and /home/user/Desktop/sheet3.kicad_sch form a 3-sheet KiCad 9 schematic with ~42 resistor and capacitor symbols. Approximately 20% of the symbols are unannotated (Reference = \"R?\" or \"C?\"). The remaining symbols already have numeric refdes assigned.\n\nAnnotate every unannotated symbol by assigning the next available integer for its prefix (R or C), using geometric ordering within each sheet (top-to-bottom, then left-to-right), processing sheets in filename order. Write the annotated sheets and an annotation report.\n\nRequirements:\n1. No Reference field may remain as \"R?\" or \"C?\" in the output.\n2. Pre-existing numeric refdes (R1, C3, etc.) must not be changed or removed.\n3. No two symbols may share the same refdes across all sheets combined.\n4. New refdes must use positive integers that do not collide with pre-existing ones.\n5. Total symbol count per sheet must remain unchanged.\n6. Write an /home/user/Desktop/annotate.csv with columns: sheet, before, after - one row per annotation made.\n\nWrite /home/user/Desktop/sheet1.kicad_sch, /home/user/Desktop/sheet2.kicad_sch, /home/user/Desktop/sheet3.kicad_sch, and /home/user/Desktop/annotate.csv.",
+  "source": "KiCad 9 Official Documentation — PCB Editor / Schematic Editor / CLI (annotation), Ritchey & Zasio, *Right the First Time* vol. 1 & 2 vol. 2 (stable references policy)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/sheet1.kicad_sch",
+            "path": "/home/user/Desktop/sheet1.kicad_sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/sheet2.kicad_sch",
+            "path": "/home/user/Desktop/sheet2.kicad_sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/sheet3.kicad_sch",
+            "path": "/home/user/Desktop/sheet3.kicad_sch"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

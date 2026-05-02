@@ -1,0 +1,53 @@
+{
+  "id": "c-ansys-task-17-win",
+  "snapshot": "ansys-2026",
+  "instruction": "You are given a 2D cavity mesh `C:\\Users\\Administrator\\Desktop\\cylinder.msh`.\nComplete a lid-driven cavity analysis in Fluent command line (`Re=1000`):\n\n1. Write journal file `C:\\Users\\Administrator\\Desktop\\cavity.jou`:\n   - Read mesh `C:\\Users\\Administrator\\Desktop\\cylinder.msh`\n   - Check mesh quality\n   - Solver settings: Pressure-Based, Steady, 2D Planar\n   - Laminar model\n   - Material: air\n   - Boundary conditions:\n     * `lid`: Moving Wall, X-velocity `1 m/s`\n     * `wall_left`, `wall_right`, `wall_bottom`: Stationary Wall, No Slip\n   - Initialize and iterate 2000 steps\n   - Export X-velocity profile on geometric centerline (`x=0.5`) to `C:\\Users\\Administrator\\Desktop\\centerline_u.xy`\n\n2. Submit the job.\n\n3. From `C:\\Users\\Administrator\\Desktop\\centerline_u.xy`, extract the centerline velocity at `y=0.5` and save it to `C:\\Users\\Administrator\\Desktop\\center_velocity.txt` (numeric value only, unit `m/s`).\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `center_velocity.txt`\n- Required column order: `center_velocity`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/cylinder.msh",
+            "path": "C:\\Users\\Administrator\\Desktop\\cylinder.msh"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

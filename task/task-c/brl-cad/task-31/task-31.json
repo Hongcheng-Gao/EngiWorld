@@ -1,0 +1,53 @@
+{
+  "id": "c-brl-cad-task-31-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/housing_blank.step. Read /home/user/Desktop/housing_blank.step. Create a shell by cutting a 120 x 80 x 38 mm internal cavity open at the top. Cut a 70 x 30 mm observation window centered on the front face. Add two symmetric top cylindrical bosses of diameter 16 mm and height 8 mm, with boss centers offset by ±30 mm along X from the model center. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
+  "source": "https://cadquery.readthedocs.io/en/latest/importexport.html https://cadquery.readthedocs.io/en/latest/genindex.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-31/init_file/input/housing_blank.step",
+            "path": "/home/user/Desktop/housing_blank.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-31/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

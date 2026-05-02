@@ -1,0 +1,53 @@
+{
+  "id": "c-altium-designer-task-01-win",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Fix the native Altium board `C:\\Users\\Administrator\\Desktop\\broken_sodimm_stackup.PcbDoc` and save the repaired document as `C:\\Users\\Administrator\\Desktop\\sodimm_stackup.PcbDoc`. The repaired board must restore the stackup naming fragments, keep the required dielectric-constant fragments at `4.200`, and restore the `Width_DQ` rule fragment with its expected width values.",
+  "source": "Local Altium example `Mini PC - SODIMM/PC4-SODIMM_V200_RC_A1_20141015.PcbDoc`; benchmark task restored from text-export generation to native PCB stackup/rule repair.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01\\init_file\\broken_sodimm_stackup.PcbDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_sodimm_stackup.PcbDoc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

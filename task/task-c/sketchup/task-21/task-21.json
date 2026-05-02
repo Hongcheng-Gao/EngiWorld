@@ -1,0 +1,53 @@
+{
+  "id": "c-sketchup-task-21-win",
+  "snapshot": "sketchup2026",
+  "instruction": "TIN Terrain from Contour Lines\n\nThe file `C:\\Users\\Administrator\\Desktop\\contours.dxf` contains exactly 10 elevation-labeled contour polylines traced from an underlying height field. Each contour is a single LWPOLYLINE entity on layer `CONTOURS`:\n\n- Each LWPOLYLINE is 2D (all vertices share that polyline's Z elevation).\n- The elevation is stored in the DXF `elevation` attribute of the LWPOLYLINE (the standard way CAD encodes a 3D elevation on a 2D polyline).\n- Elevations are all distinct and span the surface's real Z range (approximately 21 m to 37 m).\n- Each contour has at least 8 vertices (they are not axis-aligned rectangles; they are natural iso-elevation curves of the height field).\n- The horizontal footprint covers a terrain domain of X in [0, 100] m and Y in [0, 80] m.\n\nYour task (SketchUp Sandbox `From Contours` equivalent):\n1. Load `C:\\Users\\Administrator\\Desktop\\contours.dxf` via ezdxf and collect the 3D vertex set (every vertex becomes a `(x, y, z)` point with `z = LWPOLYLINE.elevation`).\n2. Compute a triangulation of the XY point set (2D Delaunay is the standard approach used by Sandbox From Contours).\n3. Lift each 2D triangle back into 3D using the vertices' Z values (so vertex `i` in the mesh sits at exactly the contour's elevation). The resulting mesh is a TIN (Triangulated Irregular Network) - an open, triangulated surface that interpolates between the contours.\n4. Export the TIN as `C:\\Users\\Administrator\\Desktop\\answer.skp` (Wavefront OBJ, triangles only).\n\nThe TIN is an open surface, not a closed solid (like any SketchUp From-Contours terrain).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\answer.skp` can be opened and inspected as a native SketchUp model with triangular faces.\n2. Triangle count is at least 200 (10 contours x 24 vertices = 240 input points; Delaunay yields on the order of ~400 triangles).\n3. The mesh is an open surface (not watertight).\n4. `C:\\Users\\Administrator\\Desktop\\contours.dxf` parses via ezdxf and contains exactly 10 LWPOLYLINE entities, each with >= 8 vertices and all distinct elevations.\n5. Mesh XY bounding box matches the DXF's contour XY extent within 0.5 m.\n6. Mesh Z range brackets the DXF Z range within 0.1 m on each side.\n7. Every LWPOLYLINE vertex, at its elevation Z, lies on the mesh surface within 100 mm (checked via nearest-triangle-surface distance).",
+  "source": "SketchUp Sandbox tools (From Contours); DXF/AutoCAD LWPOLYLINE elevation convention",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21\\init_file\\contours.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\contours.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-21\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

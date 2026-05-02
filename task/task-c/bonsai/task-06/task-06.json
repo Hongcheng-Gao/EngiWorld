@@ -1,0 +1,48 @@
+{
+  "id": "c-bonsai-task-06-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Georeferenced Office IFC Shell\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 georeferenced small office shell and save the required output as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes.\n2. /home/user/Desktop/result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 2 IfcSpace entities, 5 IfcWall entities, 1 IfcSlab, 1 IfcDoor, 2 IfcWindow entities, 3 IfcOpeningElement entities, 3 IfcRelVoidsElement relationships, 3 IfcRelFillsElement relationships, 1 IfcProjectedCRS, and 1 IfcMapConversion.\n4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The single IfcBuildingStorey is named exactly Level 00, ignoring leading and trailing whitespace only.\n7. The IfcSpace names are exactly Office and WC, ignoring leading and trailing whitespace only; Office has clear plan dimensions 5.60 m by 4.60 m and WC has clear plan dimensions 1.70 m by 2.20 m, each in either X/Y orientation with tolerance +/-0.08 m.\n8. Each IfcSpace has geometry height 3.00 m with tolerance +/-0.05 m.\n9. The slab is named exactly Floor Slab, ignoring leading and trailing whitespace only, and has plan dimensions 8.00 m by 5.00 m in either X/Y orientation and thickness 0.20 m, each with tolerance +/-0.08 m for plan dimensions and +/-0.05 m for thickness.\n10. The door has OverallWidth 0.80 m with tolerance +/-0.08 m and fills exactly one IfcOpeningElement that voids an IfcWall.\n11. The 2 windows have OverallWidth values 1.00 m and 1.40 m, each with tolerance +/-0.08 m, and each window fills exactly one IfcOpeningElement that voids an IfcWall.\n12. Each wall has height 3.00 m with tolerance +/-0.05 m and plan thickness either 0.12 m or 0.20 m with tolerance +/-0.04 m.\n13. All spaces, walls, the slab, door, and windows are spatially assigned to Level 00.\n14. The IfcProjectedCRS name is exactly EPSG:3857, ignoring leading and trailing whitespace only.\n15. The IfcMapConversion has Eastings 501234.000, Northings 6843210.000, OrthogonalHeight 35.000, XAxisAbscissa 1.000, XAxisOrdinate 0.000, and Scale 1.000, each with tolerance +/-0.001.\n16. The absolute value of every generated product bounding-box coordinate is no greater than 100.00 m in the model local coordinate system.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/georeferencing.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

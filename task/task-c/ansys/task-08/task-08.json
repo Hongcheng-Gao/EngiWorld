@@ -1,0 +1,53 @@
+{
+  "id": "c-ansys-task-08-win",
+  "snapshot": "ansys-2026",
+  "instruction": "You are given a steady-state heat conduction template `C:\\Users\\Administrator\\Desktop\\steady_thermal_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\thermal.inp`:\n- Apply `100°C` on the left edge line\n- Apply `20°C` on the right edge line\n\n2. Submit the job.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\results.txt` includes node temperatures at `x=25 mm` and `x=50 mm`.\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `results.txt`\n- Required column order: `temp_at_25mm, temp_at_50mm`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/steady_thermal_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\steady_thermal_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "c-calculix-task-14-ubuntu",
+  "snapshot": "CalculiX-2.17",
+  "instruction": "You are given an assembly template missing contact definitions: `/home/user/Desktop/friction_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/friction.inp`:\n- Define block bottom face as Slave and plate top face as Master\n- Use `*Contact Pair, interaction=Int-1`\n- Use `*Surface Interaction, name=Int-1` + `*Surface Behavior, penalty=1000000` + `*Friction, slip tolerance=0.005, 0.3` (friction coefficient `0.3`)\n- Apply `P=10 MPa` on block top face\n- Apply `UX=0.1 mm` on plate side face (push the block)\n\n2. Submit the job and write a post-processing script to parse `friction.dat`:\n- Extract interface tangential displacement (slip)\n- Extract maximum Mises stress at interface\n- Write to `/home/user/Desktop/summary.txt` in this format: `slip_mm, max_mises`",
+  "source": "https://github.com/calculix/CalculiX-Examples",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/friction_base.inp",
+            "path": "/home/user/Desktop/friction_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

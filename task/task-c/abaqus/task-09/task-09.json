@@ -1,0 +1,53 @@
+{
+  "id": "c-abaqus-task-09-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given a very coarse plate-with-hole template `C:\\Users\\Administrator\\Desktop\\plate_hole_base.inp`.\nThe model should be a `100 mm × 200 mm` plate with a central hole of diameter `10 mm`, but it currently has only one element and no hole.\nComplete the following from the command line:\n\n1. Regenerate or modify `C:\\Users\\Administrator\\Desktop\\plate_hole.inp`:\n   - Build the correct geometry with a central circular hole (`100 × 200 mm`, hole diameter 10 mm)\n   - Use local refinement at the hole edge (seed `<= 2 mm`) and global seed 5 mm\n   - Apply simply supported boundaries on all four sides (`U3=0`), and apply tensile surface traction `10 N/mm` on left and right edges\n   - Use element type `S4R`\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Extract the maximum Mises stress near the hole edge (around `theta=90°`)\n   - Extract the average far-field Mises stress (away from the hole)\n   - Output format: `hole_max_mises, far_field_mises`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `hole_mises, far_field_mises`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/plate_hole_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\plate_hole_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

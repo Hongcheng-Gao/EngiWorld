@@ -1,0 +1,75 @@
+{
+  "id": "c-kicad-task-17-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Decoupling-Cap PDN Impedance\n\nThe board in /home/user/Desktop/board.kicad_pcb has a 3V3 power rail with a single 100 nF decoupling cap. The file /home/user/Desktop/target_z.csv defines the maximum allowed PDN impedance at 5 frequencies (10 kHz to 100 MHz). The file /home/user/Desktop/cap_models.csv lists available capacitor values with their ESR and ESL. The current single-cap PDN does not meet target impedance at all frequencies.\n\nAdd decoupling capacitors near the 3V3 rail to meet the target impedance at all 5 frequencies. Use the lumped PDN model: Z_total(f) = 1 / |Sigma_i( 1 / Z_cap_i(f) )| where Z_cap_i = ESR_i + j*(2*pi*f*ESL_i - 1/(2*pi*f*C_i)). Place caps within 5mm of the nearest 3V3 pad. Record the resulting impedance in a CSV.\n\nRequirements:\n1. /home/user/Desktop/pdn_analysis.csv has exactly 5 rows with columns freq_hz,z_ohm.\n2. At every frequency, z_ohm <= target_ohm from /home/user/Desktop/target_z.csv.\n3. All decoupling caps placed within 5mm of a 3V3 pad (center-to-center distance).\n4. Cap count >= initial count (1 cap minimum).\n5. Each added cap value matches an entry in /home/user/Desktop/cap_models.csv.\n6. All caps placed within board outline (0,0)-(80,60).\n7. No cap overlaps another footprint.\n\nWrite /home/user/Desktop/board.kicad_pcb and /home/user/Desktop/pdn_analysis.csv.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/cap_models.csv",
+            "path": "/home/user/Desktop/cap_models.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/target_z.csv",
+            "path": "/home/user/Desktop/target_z.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

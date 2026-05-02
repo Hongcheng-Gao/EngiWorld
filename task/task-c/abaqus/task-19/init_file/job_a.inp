@@ -1,0 +1,30 @@
+*Heading
+Job A - 100N cantilever
+*Node
+1, 0.0, 0.0, 0.0
+2, 100.0, 0.0, 0.0
+3, 100.0, 10.0, 0.0
+4, 0.0, 10.0, 0.0
+5, 0.0, 0.0, 10.0
+6, 100.0, 0.0, 10.0
+7, 100.0, 10.0, 10.0
+8, 0.0, 10.0, 10.0
+*Element, type=C3D8R, elset=ALL
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*Material, name=Steel
+*Elastic
+210000.0, 0.3
+*Solid Section, elset=ALL, material=Steel
+*Assembly, name=Assembly
+*Instance, name=Beam-1, part=Beam
+*End Instance
+*End Assembly
+*Boundary
+FIX, ENCASTRE
+*Step, name=Step-1, nlgeom=NO
+*Static
+1.0, 1.0, 1e-5, 1.0
+*Cload
+LOAD, 2, -100.0
+*Output, field, variable=PRESELECT
+*End Step

@@ -1,0 +1,65 @@
+{
+  "id": "c-autocad-task-40-win",
+  "snapshot": "AutoCAD2027",
+  "instruction": "Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\base_bad.dxf, C:\\Users\\Administrator\\Desktop\\arm_bad.dxf, C:\\Users\\Administrator\\Desktop\\pin_bad.dxf, C:\\Users\\Administrator\\Desktop\\cap_bad.dxf. Recreate the target 2D CAD drawing for task 40 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be represented as clean DXF entities on sensible layers. Export exactly one DXF deliverable named C:\\Users\\Administrator\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/init_file/final_assy/base_bad.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\base_bad.dxf"
+          },
+          {
+            "local_path": "task-40/init_file/arm_bad.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\arm_bad.dxf"
+          },
+          {
+            "local_path": "task-40/init_file/pin_bad.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\pin_bad.dxf"
+          },
+          {
+            "local_path": "task-40/init_file/cap_bad.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\cap_bad.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-40/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

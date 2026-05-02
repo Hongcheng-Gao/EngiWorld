@@ -1,0 +1,97 @@
+{
+  "id": "c-openfoam-task-03-ubuntu",
+  "snapshot": "OpenFOAM9",
+  "instruction": "You are given a backward-facing-step template `/home/user/Desktop/bfs_base/`.\nComplete a turbulent separation and reattachment analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/bfs/`:\n- Build the backward-facing-step geometry (inlet section, step, downstream expansion section)\n- Set the turbulence model and inflow conditions\n- Configure wall boundary conditions\n\n2. Run the solver to convergence.\n\n3. Extract downstream wall pressure distribution and verify the presence of a separation bubble (negative-pressure region).\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Minimum pressure coefficient on the downstream wall `min_cp`\n- Format: `min_cp`\n\n5. Do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/bfs_base/0/U",
+            "path": "/home/user/Desktop/bfs_base/0/U"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/0/k",
+            "path": "/home/user/Desktop/bfs_base/0/k"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/0/nut",
+            "path": "/home/user/Desktop/bfs_base/0/nut"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/0/omega",
+            "path": "/home/user/Desktop/bfs_base/0/omega"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/0/p",
+            "path": "/home/user/Desktop/bfs_base/0/p"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/README.init.md",
+            "path": "/home/user/Desktop/bfs_base/README.init.md"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/constant/momentumTransport",
+            "path": "/home/user/Desktop/bfs_base/constant/momentumTransport"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/constant/physicalProperties",
+            "path": "/home/user/Desktop/bfs_base/constant/physicalProperties"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/system/blockMeshDict",
+            "path": "/home/user/Desktop/bfs_base/system/blockMeshDict"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/system/controlDict",
+            "path": "/home/user/Desktop/bfs_base/system/controlDict"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/system/fvSchemes",
+            "path": "/home/user/Desktop/bfs_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-03/init_file/bfs_base/system/fvSolution",
+            "path": "/home/user/Desktop/bfs_base/system/fvSolution"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

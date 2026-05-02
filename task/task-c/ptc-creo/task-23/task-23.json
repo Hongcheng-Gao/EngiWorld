@@ -1,0 +1,53 @@
+{
+  "id": "c-ptc-creo-task-23-win",
+  "snapshot": "ptccreo-12.4.0.0",
+  "instruction": "Use the command-line evaluation workflow to open C:\\Users\\Administrator\\Desktop\\task-23_initial.step in Creo. On the top surface, create a 3 by 2 set of blind rectangular lightening pockets. Each pocket must be 30 x 20 mm and 6 mm deep. The first pocket center is at (45 mm, 40 mm), with X pitch 45 mm and Y pitch 40 mm. Export C:\\Users\\Administrator\\Desktop\\task-23_output.step.",
+  "source": "https://support.ptc.com/help/creo/creo_pma/r12/usascii/data_exchange/interface/STEP_Import_Profile_Settings_and_Corresponding_Configuration_Options.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/data_exchange/interface/To_Export_a_Part_or_Assembly_to_STEP.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/fundamentals/fundamentals/About_Mapkeys.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-23/init_file/task-23_initial.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\task-23_initial.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ptc-creo"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-23/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

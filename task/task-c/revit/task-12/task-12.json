@@ -1,0 +1,57 @@
+{
+  "id": "c-revit-task-12-win",
+  "snapshot": "Revit-2027",
+  "instruction": "Two Storey School Retrofit IFC\n\nThis task starts from C:\\Users\\Administrator\\Desktop\\init.ifc and uses the local reference image C:\\Users\\Administrator\\Desktop\\init_sheet.png. Modify the starting model into a compact two-storey school and save the required output in the Desktop as C:\\Users\\Administrator\\Desktop\\result.ifc.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc, and C:\\Users\\Administrator\\Desktop\\result.ifc is at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 2 IfcBuildingStorey entities, 9 IfcSpace entities, 8 IfcWall entities, 2 IfcSlab entities, and 1 IfcStair.\n5. The IFC model contains 0 IfcRoof, 0 IfcDoor, 0 IfcWindow, 0 IfcCurtainWall, 0 IfcBuildingElementProxy, 0 IfcColumn, and 0 IfcBeam entities.\n6. The normalized IfcSpace name list contains the token classroom at least 6 times, toilet at least 2 times, and administration at least once.\n7. The normalized IfcSpace name list contains the exact space names toilet block 1 and toilet block 2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-12/init_image/init_sheet.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_sheet.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "c-fenics-task-12-ubuntu",
+  "snapshot": "fenics",
+  "instruction": "You are given a template `/home/user/Desktop/thermomech_base.py` with completed thermal analysis.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/thermomech.py`:\n- Keep thermal part and solve for temperature field `T_sol`\n- Create structural analysis space `VectorFunctionSpace(mesh, 'P', 1)`\n- Define thermal strain:\n  `epsilon_th = alpha*(T_sol - T0)*I`, with `alpha=1.2e-5`, `T0=20`\n- Define total strain:\n  `epsilon = sym(grad(u)) + epsilon_th`\n- Fix both ends and solve displacement field\n\n2. Extract and save to `/home/user/Desktop/summary.txt`:\n- Global maximum Mises stress\n- Maximum absolute UX displacement\nFormat:\n`max_mises, max_ux`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/fenics/dolfinx",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/thermomech_base.py",
+            "path": "/home/user/Desktop/thermomech_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

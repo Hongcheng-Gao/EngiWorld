@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-task-25-ubuntu",
+  "snapshot": "FreeCAD0.19",
+  "instruction": "Using the FreeCAD command line, open /home/user/Desktop/freecad_task-25_input.step. Make a circular flange by cutting a center through hole of diameter 40 mm, then cut eight through bolt holes of diameter 9 mm on a bolt circle radius of 45 mm, with the first hole on +X and the rest every 45 degrees. Export /home/user/Desktop/freecad_task-25_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/freecad_task-25_input.step",
+            "path": "/home/user/Desktop/freecad_task-25_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-25/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

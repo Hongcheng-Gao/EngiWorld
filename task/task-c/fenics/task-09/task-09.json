@@ -1,0 +1,53 @@
+{
+  "id": "c-fenics-task-09-ubuntu",
+  "snapshot": "fenics",
+  "instruction": "You are given a very coarse-mesh template `/home/user/Desktop/plate_hole_base.py`.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/plate_hole.py`:\n- Generate geometry with `mshr`:\n  `domain = Rectangle(Point(0,0), Point(100,200)) - Circle(Point(50,100), 5)`\n  `mesh = generate_mesh(domain, 30)`\n- Or generate `.msh` by command-line `gmsh` and import it\n- Apply Dirichlet displacement on left and right sides (equivalent tensile loading of `10 MPa`)\n- Solve linear elasticity\n\n2. Extract and save to `/home/user/Desktop/summary.txt`:\n- Maximum Mises stress near hole boundary (`θ=90°` region)\n- Far-field average Mises stress\nFormat:\n`hole_mises, far_mises`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/fenics/dolfinx",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/plate_hole_base.py",
+            "path": "/home/user/Desktop/plate_hole_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

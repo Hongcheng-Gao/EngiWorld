@@ -1,0 +1,53 @@
+{
+  "id": "c-abaqus-task-07-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given a static analysis template `C:\\Users\\Administrator\\Desktop\\impact_base.inp`.\nConvert it into a transient impact analysis from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\impact.inp`:\n   - Change the step to `*Dynamic, Explicit` with total time period `0.01 s`\n   - Replace the load with a Smooth Step amplitude curve: `0 s -> 0 N`, `0.01 s -> -1000 N`\n   - Add `*Bulk Viscosity`\n   - Add `*Energy Output` request (`ALLKE, ALLIE, ALLWK`)\n\n2. Submit the explicit job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Read `impact.odb`\n   - Extract the maximum absolute U2 displacement of the free-end node over the full time history\n   - Extract `ALLKE/ALLIE` ratio (percent) in the last frame\n   - Output format: `peak_u2, ke_ie_ratio_percent`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `peak_u2, residual_ratio_percent`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/impact_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\impact_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

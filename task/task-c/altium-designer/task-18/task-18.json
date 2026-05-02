@@ -1,0 +1,53 @@
+{
+  "id": "c-altium-designer-task-18-win",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Directly maintain the native Altium schematic library `C:\\Users\\Administrator\\Desktop\\harness_parts.SCHLIB` instead of exporting a BOM or a multi-board report. Save the modified native library as `C:\\Users\\Administrator\\Desktop\\resistor_library.SCHLIB`.\n\nThe target component is `LibReference = CMP-009-00016-5`.\nRequirements:\n- Change `Tolerance` to `0.5%`.\n- Change `Power` to `500mW`.\n- Change `Comment` to `Resistor 10k +/-0.5% 1206 500 mW`.\n- Keep `Value` as `10k`.\n\nThis task evaluates native `.SCHLIB` parameter and comment maintenance, not an external BOM merge.",
+  "source": "Local Altium example `Harness Demo MB/Libs/SCH.SCHLIB`; benchmark task substantially redesigned from the text-only multi-board degeneration and should receive a source refresh.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18\\init_file\\harness_parts.SCHLIB",
+            "path": "C:\\Users\\Administrator\\Desktop\\harness_parts.SCHLIB"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

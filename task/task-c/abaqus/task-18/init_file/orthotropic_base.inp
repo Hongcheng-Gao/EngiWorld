@@ -1,0 +1,26 @@
+*Heading
+Orthotropic beam template
+*Node
+1, 0.0, 0.0, 0.0
+2, 100.0, 0.0, 0.0
+3, 100.0, 10.0, 0.0
+4, 0.0, 10.0, 0.0
+5, 0.0, 0.0, 10.0
+6, 100.0, 0.0, 10.0
+7, 100.0, 10.0, 10.0
+8, 0.0, 10.0, 10.0
+*Element, type=C3D8R, elset=ALL
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*Material, name=Composite
+*Elastic, type=ENGINEERING CONSTANTS
+210000.0, 100000.0, 100000.0, 0.3, 0.3, 0.3, 80769.0, 38461.0
+38461.0
+*Solid Section, elset=ALL, material=Composite, orientation=ORI-1
+*Assembly, name=Assembly
+*Instance, name=Beam-1, part=Beam
+*End Instance
+*End Assembly
+*Step, name=Step-1, nlgeom=NO
+*Static
+1.0, 1.0, 1e-5, 1.0
+*End Step

@@ -1,0 +1,7 @@
+from floris import FlorisModel
+import numpy as np
+
+fmodel = FlorisModel("init_file/two_turbine.yaml")
+fmodel.set(wind_directions=[270], wind_speeds=[8], turbulence_intensities=[0.06])
+fmodel.run()
+# 提取总功率

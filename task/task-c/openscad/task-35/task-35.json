@@ -1,0 +1,57 @@
+{
+  "id": "c-openscad-task-35-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Modify /home/user/Desktop/task-035_initial.scad from the command line. Import /home/user/Desktop/task-035_logo.dxf, scale the logo to approximately 30 mm width, and cut it through the center of the nameplate to make a logo cutout. Export /home/user/Desktop/task-035_output.stl.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Importing_Geometry; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_the_2D_Subsystem; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/task-035_initial.scad",
+            "path": "/home/user/Desktop/task-035_initial.scad"
+          },
+          {
+            "local_path": "task-35/init_file/task-035_logo.dxf",
+            "path": "/home/user/Desktop/task-035_logo.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

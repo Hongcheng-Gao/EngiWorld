@@ -1,0 +1,48 @@
+{
+  "id": "c-revit-task-10-win",
+  "snapshot": "Revit-2027",
+  "instruction": "Two Storey Community Center IFC\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create a Revit community center with a central atrium, classrooms, a maker room, and two roof elements, then save the required output in the Desktop as C:\\Users\\Administrator\\Desktop\\result.ifc.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc, and C:\\Users\\Administrator\\Desktop\\result.ifc is at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 2 IfcBuildingStorey entities, 7 IfcSpace entities, 8 IfcWall entities, 5 IfcSlab entities, and 2 IfcRoof entities.\n5. The IFC model contains at least 5 IfcDoor entities, at least 8 IfcWindow entities, and at least 2 IfcStair entities.\n6. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcColumn, and 0 IfcBeam entities.\n7. The normalized IfcSpace name list contains the token classroom at least 2 times, maker at least once, lobby at least once, toilet at least once, and gallery at least 2 times.\n8. The shaped IFC product bounding-box X span is between 20.0 m and 24.0 m.\n9. The shaped IFC product bounding-box Y span is between 18.5 m and 22.0 m.\n10. The shaped IFC product bounding-box Z span is between 6.7 m and 8.0 m.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

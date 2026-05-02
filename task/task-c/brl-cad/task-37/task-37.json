@@ -1,0 +1,53 @@
+{
+  "id": "c-brl-cad-task-37-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/assy.step. Read /home/user/Desktop/assy.step, which contains two separated solids. Move the cylinder to the center of the right end face of the block, with the cylinder axis along X, so it connects to the block. Fuse them into a single solid. Then cut a through hole of diameter 8 mm along Z at the joint center. The final output must be one solid and must not retain separated bodies. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-37/init_file/input/assy.step",
+            "path": "/home/user/Desktop/assy.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-37/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
