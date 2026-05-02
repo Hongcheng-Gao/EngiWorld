@@ -1,0 +1,25 @@
+*Heading
+Torsion analysis - {TORQUE} Nmm
+*Node
+1, 0.0, 0.0, 0.0
+2, 0.0, 5.0, 0.0
+3, 0.0, 5.0, 100.0
+4, 0.0, 0.0, 100.0
+5, 5.0, 0.0, 0.0
+6, 5.0, 5.0, 0.0
+7, 5.0, 5.0, 100.0
+8, 5.0, 0.0, 100.0
+*Element, type=C3D8R, elset=ALL
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*Material, name=Steel
+*Elastic
+210000.0, 0.3
+*Solid Section, elset=ALL, material=Steel
+*Assembly, name=Assembly
+*Instance, name=Shaft-1, part=Shaft
+*End Instance
+*End Assembly
+*Step, name=Step-Torque, nlgeom=NO
+*Static
+1.0, 1.0, 1e-5, 1.0
+*End Step

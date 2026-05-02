@@ -1,0 +1,67 @@
+{
+  "id": "c-fusion360-task-31-win",
+  "snapshot": "fusion360-latest",
+  "instruction": "Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\shaft_family.step, C:\\Users\\Administrator\\Desktop\\tools.csv. Create a turning setup for C:\\Users\\Administrator\\Desktop\\shaft_family.step with Z as the turning axis. Generate OD roughing, OD finishing, two grooving operations, and an end-face center drill operation. Export C:\\Users\\Administrator\\Desktop\\task-31.nc and C:\\Users\\Administrator\\Desktop\\turning_report.json with roughing allowance, finishing tool, and groove count. Tool definitions: use OD roughing, OD finishing, grooving, and center-drilling turning tools from C:\\Users\\Administrator\\Desktop\\tools.csv. Write the output file(s) to the Desktop path(s) using exactly these absolute file paths: C:\\Users\\Administrator\\Desktop\\task-31.nc, C:\\Users\\Administrator\\Desktop\\turning_report.json.",
+  "source": "Setup、NC Program、G-code。(Autodesk) https://www.autodesk.com/learn/ondemand/tutorial/create-a-setup-in-fusion-for-milling?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-31/init_file/shaft_family.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\shaft_family.step"
+          },
+          {
+            "local_path": "task-31/init_file/tools.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-31/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

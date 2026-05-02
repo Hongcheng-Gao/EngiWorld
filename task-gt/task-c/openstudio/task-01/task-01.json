@@ -1,0 +1,57 @@
+{
+  "id": "c-openstudio-task-01-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Single Zone Office Shoebox\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an OpenStudio 3.10 single-story office shoebox model and save the required outputs as /home/user/Desktop/result.osm and /home/user/Desktop/kpis.json.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.osm with size at least 500 bytes and /home/user/Desktop/kpis.json with size at least 10 bytes.\n2. /home/user/Desktop/result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. /home/user/Desktop/result.osm contains exactly 1 OS:Building, 1 OS:BuildingStory, 1 OS:Space, and 1 OS:ThermalZone.\n4. The single OS:Space references the single OS:BuildingStory, references the single OS:ThermalZone, and has Part of Total Floor Area set to Yes.\n5. The model has exactly 6 OS:Surface objects: 1 Floor surface, 1 RoofCeiling surface, and 4 Wall surfaces with Outside Boundary Condition set to Outdoors.\n6. The surface geometry forms a rectangular box with X span 12.00 m, Y span 8.00 m, and Z span 3.60 m, each with tolerance +/-0.05 m.\n7. The floor surface area is 96.00 m2 with tolerance +/-0.50 m2.\n8. The sum of the 4 exterior wall gross areas is 144.00 m2 with tolerance +/-0.50 m2.\n9. The model has exactly 2 window subsurfaces whose Sub Surface Type is FixedWindow, OperableWindow, GlassDoor, or Skylight.\n10. The south facade is the exterior wall with the lowest world-coordinate center Y value, and its total window area is 17.28 m2 with tolerance +/-0.50 m2.\n11. The east facade is the exterior wall with the highest world-coordinate center X value, and its total window area is 11.52 m2 with tolerance +/-0.50 m2.\n12. The north facade and west facade have total window area no greater than 0.05 m2 each.\n13. The south window-to-wall ratio is 0.40 with tolerance +/-0.03, and the east window-to-wall ratio is 0.40 with tolerance +/-0.03.\n14. Each window has minimum vertex Z equal to 0.90 m with tolerance +/-0.05 m.\n15. The model contains at least one OS:DefaultConstructionSet and the single OS:Building references a default construction set.\n16. The model contains exactly 1 OS:ZoneHVAC:IdealLoadsAirSystem, exactly 1 OS:ZoneHVAC:EquipmentList, and the equipment list references both the single OS:ThermalZone and the ideal loads system.\n17. The model contains exactly 1 OS:ThermostatSetpoint:DualSetpoint referenced by the single OS:ThermalZone.\n18. The thermostat heating schedule is an OS:Schedule:Constant with value 21.00 C with tolerance +/-0.25 C, and the cooling schedule is an OS:Schedule:Constant with value 24.00 C with tolerance +/-0.25 C.\n19. The ideal loads availability schedule is an OS:Schedule:Constant with value 1.\n20. /home/user/Desktop/kpis.json contains floor_area_m2, exterior_wall_area_m2, south_window_area_m2, and east_window_area_m2 values matching the evaluator-computed model metrics with tolerance max(0.10, 1%).\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-2.9.0-doc/model/html/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openstudio",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

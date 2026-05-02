@@ -1,0 +1,64 @@
+{
+  "id": "c-ansys-task-14-win",
+  "snapshot": "ansys-2026",
+  "instruction": "You are given a meshed 2D channel `C:\\Users\\Administrator\\Desktop\\channel.msh`.\nComplete laminar Fluent analysis using command line:\n\n1. Write journal file `C:\\Users\\Administrator\\Desktop\\channel.jou`:\n- Read mesh: `/file/read-mesh C:\\Users\\Administrator\\Desktop\\channel.msh`\n- Solver settings: Pressure-Based, Steady, 2D Planar\n- Material: water-liquid (`rho=998.2`, `mu=0.001003`)\n- Boundaries: inlet velocity `0.02 m/s`, outlet pressure `0`, wall no-slip\n- Laminar model\n- Initialize and iterate 500 steps\n- Export outlet velocity profile to `C:\\Users\\Administrator\\Desktop\\outlet_profile.xy`\n\n2. Run the journal file.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\outlet_profile.xy` is generated.\n4. Do not use Fluent GUI.\n\n[Strict Output Format]\n- Target file: `outlet_profile.xy`\n- Required column order: `y, velocity`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/channel.msh",
+            "path": "C:\\Users\\Administrator\\Desktop\\channel.msh"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ansys.exe",
+          "-b",
+          "-i",
+          "nul"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

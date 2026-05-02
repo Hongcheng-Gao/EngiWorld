@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-task-01-ubuntu",
+  "snapshot": "FreeCAD0.19",
+  "instruction": "look at freecad_task-1_input.step in the FreeCAD GUI. Keep the rectangular plate outer size, thickness, and coordinate frame unchanged. Create one vertical through hole at the geometric center of the plate, centered at X=60 mm and Y=40 mm, with the hole axis along Z and diameter 20 mm through the full 10 mm thickness. Export only the final solid as freecad_task-1_output.step. Do not create images, PDFs, CSV files, JSON files, or other extra outputs.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/freecad_task-1_input.step",
+            "path": "/home/user/Desktop/freecad_task-1_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-1_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

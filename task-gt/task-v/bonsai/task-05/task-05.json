@@ -1,0 +1,56 @@
+{
+  "id": "v-bonsai-task-05-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Mirrored Duplex IFC\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 single-storey duplex with two mirrored units, A and B, sharing a central wall, then save the required output as result.ifc.\n\n## Pass conditions\n1. The output folder contains result.ifc at least 500 bytes.\n2. result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 4 IfcSpace entities, 7 IfcWall entities, 1 IfcSlab, 2 IfcDoor entities, 4 IfcWindow entities, 6 IfcOpeningElement entities, 6 IfcRelVoidsElement relationships, and 6 IfcRelFillsElement relationships.\n4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The single IfcBuildingStorey is named exactly Duplex Level after trimming leading and trailing whitespace.\n7. The IfcSpace names are exactly A Living, A Bed, B Living, and B Bed after trimming leading and trailing whitespace.\n8. Each of the four IfcSpace geometries has world-coordinate plan spans of X = 3.20 m and Y = 2.90 m with tolerance +/-0.10 m.\n9. The IfcWall named Shared Wall defines the mirror centerline. A Living and B Living must have plan areas matching within 0.35 m2, X centroids matching within 0.65 m, and average Y centroid within 0.65 m of the Shared Wall Y centroid; A Bed and B Bed must meet the same three mirror checks.\n10. Each IfcWall geometry has height 3.00 m with tolerance +/-0.10 m.\n11. These IfcDoor OverallWidth values are required with tolerance +/-0.05 m: A Entrance = 0.95 m and B Entrance = 0.95 m.\n12. A Entrance and B Entrance each fill exactly one different IfcOpeningElement voiding the IfcWall named South Wall and North Wall respectively.\n13. These IfcWindow OverallWidth values are required with tolerance +/-0.05 m: A Living Window = 1.20 m, A Bed Window = 1.20 m, B Living Window = 1.20 m, B Bed Window = 1.20 m.\n14. A Living Window, A Bed Window, B Living Window, and B Bed Window each fill exactly one different IfcOpeningElement voiding the IfcWall named West Wall, East Wall, West Wall, and East Wall respectively.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/tutorials/project4.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

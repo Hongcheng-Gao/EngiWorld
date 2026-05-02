@@ -1,0 +1,56 @@
+{
+  "id": "v-abaqus-task-20-windows",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform a tensile analysis of a plate with a central circular hole:\n\n1. Part: 3D Deformable Shell, Planar\n   - Sketch: rectangle 100 mm x 200 mm, with a central circular hole of diameter 10 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3\n   - Shell Section, Homogeneous, thickness 1 mm, 5 integration points\n\n3. Assembly: Create an instance.\n\n4. Step: Static, General, named Step-Tension.\n\n5. Load:\n   - Apply Shell Edge Load = 10 N/mm outward on the left and right short edges\n   - Apply Symmetry on the upper and lower long edges (U2 = 0)\n\n6. Mesh:\n   - Hole edge seed = 1 mm, global seed = 5 mm\n   - Element type: S4R\n\n7. Job: Create Job-Hole and submit for solving.\n\n8. Save:\n   - Model: Job-Hole.cae\n   - Results: Job-Hole.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

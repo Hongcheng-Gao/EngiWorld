@@ -1,0 +1,73 @@
+{
+  "id": "c-kicad-task-18-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Excellon NC Drill with Route-Through Slots\n\nThe file /home/user/Desktop/board.kicad_pcb contains through-hole pads. The file /home/user/Desktop/slots.csv defines four routed slots, each with start and end coordinates and a width in millimeters.\n\nModify the board so those four slots are represented in the KiCad PCB, then export the native KiCad drill file from that finished board.\n\nRequirements:\n1. The exported drill file must be a complete native KiCad Excellon output with an M48 header and an M30 trailer.\n2. It must include METRIC, FMAT,2, and G90.\n3. It must contain exactly four G85 routed-slot entries, one for each row of /home/user/Desktop/slots.csv, with coordinates matching the slot geometry within 0.01 mm in KiCad's drill export coordinate system.\n4. It must retain the round drill hits for the through-hole pads already present in /home/user/Desktop/board.kicad_pcb.\n5. The slot tool widths used in the drill file must match the widths listed in /home/user/Desktop/slots.csv.\n\nWrite /home/user/Desktop/board.kicad_pcb and /home/user/Desktop/board.drl.",
+  "source": "KiCad 9 Official Documentation, Excellon NC drill format reference",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/slots.csv",
+            "path": "/home/user/Desktop/slots.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad-cli",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

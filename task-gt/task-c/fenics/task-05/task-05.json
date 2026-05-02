@@ -1,0 +1,63 @@
+{
+  "id": "c-fenics-task-05-ubuntu",
+  "snapshot": "fenics",
+  "instruction": "You are given an incomplete modal-analysis template `/home/user/Desktop/eigenvalue_base.py`.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/modal.py`:\n- Clamp the left end (all displacement components equal to 0)\n- Define stiffness bilinear form:\n  `a = inner(sigma(u), epsilon(v))*dx`\n- Define mass bilinear form:\n  `m = rho*inner(u, v)*dx`, where `rho=7.85e-9`\n- Use `SLEPc.EPS` solver and request 3 smallest eigenvalues\n- Convert frequencies (Hz) as `sqrt(λ)/(2π)`\n\n2. Run and save the first 3 frequencies to `/home/user/Desktop/summary.txt`:\nFormat:\n`mode1, mode2, mode3`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/fenics/dolfinx",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/eigenvalue_base.py",
+            "path": "/home/user/Desktop/eigenvalue_base.py"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "source activate fenicsx 2>/dev/null || conda activate fenicsx; python -c 'import dolfinx; print(dolfinx.__version__)'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

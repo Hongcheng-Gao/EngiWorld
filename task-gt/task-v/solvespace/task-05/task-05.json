@@ -1,0 +1,61 @@
+{
+  "id": "v-solvespace-task-05-ubuntu",
+  "snapshot": "SolveSpace3.0.rc2repack1-3",
+  "instruction": "look at seed_ss_gui_05_window_frame.dxf. Generate a window-frame profile. The outer rectangle is 160 x 100 and the inner cutout rectangle is 100 x 50. The inner window center must coincide with the outer frame center. Add one diameter 8 hole at each corner, with each hole center 15 from the nearest two sides. Export exactly one DXF deliverable named final_ss_gui_05.dxf.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/seed_ss_gui_05_window_frame.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_05_window_frame.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

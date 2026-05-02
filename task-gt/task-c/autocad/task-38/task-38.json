@@ -1,0 +1,78 @@
+{
+  "id": "c-autocad-task-38-win",
+  "snapshot": "AutoCAD2027",
+  "instruction": "Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\base.dxf, C:\\Users\\Administrator\\Desktop\\slider.dxf, C:\\Users\\Administrator\\Desktop\\stop1.dxf, C:\\Users\\Administrator\\Desktop\\stop2.dxf, C:\\Users\\Administrator\\Desktop\\pin.dxf. Recreate the target 2D CAD drawing for task 38 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be represented as clean DXF entities on sensible layers. Export exactly one DXF deliverable named C:\\Users\\Administrator\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-38/init_file/assy_opt/base.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\base.dxf"
+          },
+          {
+            "local_path": "task-38/init_file/slider.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\slider.dxf"
+          },
+          {
+            "local_path": "task-38/init_file/stop1.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\stop1.dxf"
+          },
+          {
+            "local_path": "task-38/init_file/stop2.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\stop2.dxf"
+          },
+          {
+            "local_path": "task-38/init_file/pin.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\pin.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2027\\accoreconsole.exe",
+          "/?"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-38/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

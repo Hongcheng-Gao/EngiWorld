@@ -1,0 +1,59 @@
+{
+  "id": "c-ansys-task-20-win",
+  "snapshot": "ansys-2026",
+  "instruction": "Complete thermo-structural coupling through ANSYS Workbench command line:\n\n1. Write script `C:\\Users\\Administrator\\Desktop\\thermal_structural.wbjn`:\n- Create a coupled Steady-State Thermal + Static Structural system\n- Geometry: `100 mm × 10 mm × 10 mm` bar\n- Thermal analysis: left end `100°C`, right end `20°C`\n- Structural analysis: both ends fixed, import temperature field\n\n2. Submit the job.\n\n3. Export structural results to `C:\\Users\\Administrator\\Desktop\\thermal_stress.csv` (including `Max Equivalent Stress`, `Max Total Deformation`).\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `thermal_stress.csv`\n- Required column order: `max_mises, max_deformation`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ansys.exe",
+          "-b",
+          "-i",
+          "nul"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

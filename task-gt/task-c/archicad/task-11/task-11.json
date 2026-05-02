@@ -1,0 +1,71 @@
+{
+  "id": "c-archicad-task-11-win",
+  "snapshot": "archicad-29",
+  "instruction": "Two-Storey Shared House Conversion Schedule\n\nThis task starts from C:\\Users\\Administrator\\Desktop\\init.ifc. Reference images are provided on the Desktop: C:\\Users\\Administrator\\Desktop\\init_plan.png, C:\\Users\\Administrator\\Desktop\\init_section.png. Modify the Archicad model as needed and save the required outputs to C:\\Users\\Administrator\\Desktop\\result.ifc, and C:\\Users\\Administrator\\Desktop\\result.txt. Export C:\\Users\\Administrator\\Desktop\\result.txt as a tab-delimited zone schedule text file from the Archicad schedule/list workflow.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes and C:\\Users\\Administrator\\Desktop\\result.txt with size at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 2 IfcBuildingStorey entities and exactly 11 IfcSpace entities.\n5. The IFC model contains at least 8 IfcWall entities, at least 2 IfcSlab entities, and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: BED-1, BED-2, BED-3, SHARED-KITCHEN, DINING, LOUNGE, LAUNDRY, COURTYARD, BED-4, BED-5, and BED-6.\n7. BED-1, BED-2, BED-3, SHARED-KITCHEN, DINING, LOUNGE, LAUNDRY, and COURTYARD are assigned to one storey, and BED-4, BED-5, and BED-6 are assigned to the other storey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [18.0, 12.0, 6.6].\n9. C:\\Users\\Administrator\\Desktop\\result.txt is tab-delimited and has exactly these headers in this order: ZoneNumber, ZoneName, Area.\n10. C:\\Users\\Administrator\\Desktop\\result.txt has exactly 11 data rows in this order: Z01 BED-1 16.0, Z02 BED-2 16.0, Z03 BED-3 16.0, Z04 SHARED-KITCHEN 20.0, Z05 DINING 20.0, Z06 LOUNGE 16.0, Z07 LAUNDRY 16.0, Z08 COURTYARD 36.0, Z09 BED-4 16.0, Z10 BED-5 16.0, and Z11 BED-6 16.0, each Area value with tolerance +/-0.10 m2.\n11. The sum of all schedule Area values is between 203.0 m2 and 205.0 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-11/init_image/init_plan.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+          },
+          {
+            "local_path": "task-11/init_image/init_section.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

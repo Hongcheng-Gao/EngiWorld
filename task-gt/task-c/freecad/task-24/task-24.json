@@ -1,0 +1,62 @@
+{
+  "id": "c-freecad-task-24-ubuntu",
+  "snapshot": "FreeCAD0.19",
+  "instruction": "Using FreeCAD CLI/API, import /home/user/Desktop/freecad_task-24_input.step. Cut a top-opening internal cavity of size 110 x 60 x 24 mm centered at (70,45), leaving a 6 mm bottom floor. Then cut a 30 x 12 mm rectangular connector opening through the front wall on the Y=0 side, centered at X=70 mm and Z=18 mm. Export /home/user/Desktop/freecad_task-24_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24/init_file/freecad_task-24_input.step",
+            "path": "/home/user/Desktop/freecad_task-24_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecadcmd",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-24/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

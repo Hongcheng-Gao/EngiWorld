@@ -1,0 +1,64 @@
+{
+  "id": "c-ansys-task-15-win",
+  "snapshot": "ansys-2026",
+  "instruction": "You are given a 2D backward-facing-step mesh `C:\\Users\\Administrator\\Desktop\\step.msh`.\nComplete the following using Fluent command line:\n\n1. Write journal file `C:\\Users\\Administrator\\Desktop\\step.jou`:\n- Read mesh, set Steady Pressure-Based solver\n- Turbulence model: Standard `k-epsilon`\n- Inlet velocity `1 m/s`, outlet pressure `0`\n- Iterate 1000 steps\n- Export wall pressure coefficient downstream of step to `C:\\Users\\Administrator\\Desktop\\wall_pressure.xy`\n\n2. Submit the job.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\wall_pressure.xy` is generated.\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `wall_pressure.xy`\n- Required column order: `x, wall_pressure`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/step.msh",
+            "path": "C:\\Users\\Administrator\\Desktop\\step.msh"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ansys.exe",
+          "-b",
+          "-i",
+          "nul"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

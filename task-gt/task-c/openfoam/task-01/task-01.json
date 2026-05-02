@@ -1,0 +1,91 @@
+{
+  "id": "c-openfoam-task-01-ubuntu",
+  "snapshot": "OpenFOAM9",
+  "instruction": "You are given an incomplete OpenFOAM case in `/home/user/Desktop/cavity_base/`.\nComplete a 2D incompressible laminar channel-flow analysis from the command line:\n\n1. Modify and create case `/home/user/Desktop/channel/`:\n- Change the geometry to a rectangular channel (aspect ratio >= 10), and set boundary conditions suitable for fully developed laminar flow\n- Set incompressible laminar fluid properties\n- Configure solver settings to convergence\n\n2. Run the solver and ensure the flow is fully developed.\n\n3. Extract the outlet velocity profile and verify it against Poiseuille-flow theory.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Outlet maximum velocity `u_max`\n- Format: `u_max`\n\n5. Do not use the ParaView GUI.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/cavity_base/0/U",
+            "path": "/home/user/Desktop/cavity_base/0/U"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/0/p",
+            "path": "/home/user/Desktop/cavity_base/0/p"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/README.init.md",
+            "path": "/home/user/Desktop/cavity_base/README.init.md"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/constant/physicalProperties",
+            "path": "/home/user/Desktop/cavity_base/constant/physicalProperties"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/system/blockMeshDict",
+            "path": "/home/user/Desktop/cavity_base/system/blockMeshDict"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/system/controlDict",
+            "path": "/home/user/Desktop/cavity_base/system/controlDict"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/system/fvSchemes",
+            "path": "/home/user/Desktop/cavity_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-01/init_file/cavity_base/system/fvSolution",
+            "path": "/home/user/Desktop/cavity_base/system/fvSolution"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "source /opt/openfoam9/etc/bashrc && simpleFoam -help"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

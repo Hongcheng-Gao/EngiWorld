@@ -1,0 +1,123 @@
+{
+  "id": "c-openfoam-task-04-ubuntu",
+  "snapshot": "OpenFOAM9",
+  "instruction": "You are given a pipe template `/home/user/Desktop/pipe_base/`.\nComplete a 3D fully developed laminar-flow analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/pipe_laminar/`:\n- Build a 3D circular-pipe geometry (axisymmetric or full pipe), and set laminar properties\n- Configure inlet and outlet boundary conditions\n- Run until the flow is fully developed\n\n2. Extract the outlet velocity profile and verify fully developed laminar characteristics.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Outlet maximum velocity `u_max`\n- Format: `u_max`\n\n4. Do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/pipe_base/0/U",
+            "path": "/home/user/Desktop/pipe_base/0/U"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/0/epsilon",
+            "path": "/home/user/Desktop/pipe_base/0/epsilon"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/0/k",
+            "path": "/home/user/Desktop/pipe_base/0/k"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/0/nut",
+            "path": "/home/user/Desktop/pipe_base/0/nut"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/0/p",
+            "path": "/home/user/Desktop/pipe_base/0/p"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/Allclean",
+            "path": "/home/user/Desktop/pipe_base/Allclean"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/Allrun",
+            "path": "/home/user/Desktop/pipe_base/Allrun"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/README.init.md",
+            "path": "/home/user/Desktop/pipe_base/README.init.md"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/constant/momentumTransport",
+            "path": "/home/user/Desktop/pipe_base/constant/momentumTransport"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/constant/physicalProperties",
+            "path": "/home/user/Desktop/pipe_base/constant/physicalProperties"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/system/blockMeshDict",
+            "path": "/home/user/Desktop/pipe_base/system/blockMeshDict"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/system/controlDict",
+            "path": "/home/user/Desktop/pipe_base/system/controlDict"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/system/decomposeParDict",
+            "path": "/home/user/Desktop/pipe_base/system/decomposeParDict"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/system/fvSchemes",
+            "path": "/home/user/Desktop/pipe_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/system/fvSolution",
+            "path": "/home/user/Desktop/pipe_base/system/fvSolution"
+          },
+          {
+            "local_path": "task-04/init_file/pipe_base/system/topoSetDict",
+            "path": "/home/user/Desktop/pipe_base/system/topoSetDict"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "source /opt/openfoam9/etc/bashrc && simpleFoam -help"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

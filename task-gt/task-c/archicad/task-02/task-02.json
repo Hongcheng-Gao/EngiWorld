@@ -1,0 +1,58 @@
+{
+  "id": "c-archicad-task-02-win",
+  "snapshot": "archicad-29",
+  "instruction": "Two-Storey Duplex Pair\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an Archicad two-storey duplex pair and save the required output to C:\\Users\\Administrator\\Desktop\\result.ifc.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 2 IfcBuildingStorey entities and exactly 12 IfcSpace entities.\n5. The IFC model contains at least 5 IfcWall entities, at least 2 IfcSlab entities, at least 1 IfcRoof entity, and at least 2 IfcStair entities.\n6. The IFC model contains spaces with exactly these normalized names: A-LIVING, A-KITCHEN, A-BATH, A-STAIR, A-BED-1, A-BED-2, B-LIVING, B-KITCHEN, B-BATH, B-STAIR, B-BED-1, and B-BED-2.\n7. A-LIVING, A-KITCHEN, A-BATH, A-STAIR, B-LIVING, B-KITCHEN, B-BATH, and B-STAIR are assigned to one storey, and A-BED-1, A-BED-2, B-BED-1, and B-BED-2 are assigned to the other storey.\n8. Each listed space has a Reference property or LongName equal to its zone number: A-LIVING A01, A-KITCHEN A02, A-BATH A03, A-STAIR A04, A-BED-1 A05, A-BED-2 A06, B-LIVING B01, B-KITCHEN B02, B-BATH B03, B-STAIR B04, B-BED-1 B05, and B-BED-2 B06.\n9. The IFC area quantities for the spaces are A-LIVING 20.0 m2, A-KITCHEN 7.5 m2, A-BATH 5.0 m2, A-STAIR 4.0 m2, A-BED-1 9.6 m2, A-BED-2 6.4 m2, B-LIVING 20.0 m2, B-KITCHEN 7.5 m2, B-BATH 5.0 m2, B-STAIR 4.0 m2, B-BED-1 9.6 m2, and B-BED-2 6.4 m2, each with tolerance +/-0.10 m2.\n10. The total area of all A-unit spaces is between 50.0 m2 and 55.0 m2, and the total area of all B-unit spaces is between 50.0 m2 and 55.0 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

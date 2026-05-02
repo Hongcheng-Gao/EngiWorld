@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-02-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Wine-Glass Revolution\n\nRead `C:\\Users\\Administrator\\Desktop\\profile.csv` and revolve the 20 sampled `(r_mm, z_mm)` points around the world Z axis with 72 segments, then save the result as `C:\\Users\\Administrator\\Desktop\\answer.skp`.\n\nEnsure that the OBJ parses, has about `19 * 72 * 2` faces (+/-100), stays 72-fold rotationally symmetric within 2 mm after a 5 deg rotation, spans about `0.252 m` in Z (+/-3 mm), and has a top rim radius of about `40 mm` (+/-5 mm).",
+  "source": "Chopra — SketchUp For Dummies (Follow Me); COLLADA/OBJ revolution primitives",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02\\init_file\\profile.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\profile.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,63 @@
+{
+  "id": "c-abaqus-task-17-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given a structural template with a predefined uniform temperature field (100°C, initial 20°C): `C:\\Users\\Administrator\\Desktop\\thermal_uniform_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\thermal.inp`:\n   - Add fully fixed boundary conditions (Encastre) on both end faces\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Extract global maximum Mises stress\n   - Extract global maximum absolute E11 (axial strain)\n   - Output format: `max_mises, max_e11`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises, thermal_strain_e11`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/thermal_uniform_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\thermal_uniform_base.inp"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "abaqus information=version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

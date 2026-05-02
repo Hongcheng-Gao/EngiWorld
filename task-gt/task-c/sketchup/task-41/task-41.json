@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-41-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Face-Level Statistics CSV\n\nThe file `C:\\Users\\Administrator\\Desktop\\stats_input.dae` contains a non-trivial COLLADA scene with **three named component/group nodes**, each wrapping a distinct geometry definition bound to a distinct material:\n\n- Group `Box_Frame` -> component `Box_Def` (a cuboid, 12 triangles, material `Steel`)\n- Group `Prism_Tower` -> component `Prism_Def` (a triangular prism, 8 triangles, material `Glass`)\n- Group `Pyramid_Roof` -> component `Pyramid_Def` (a hexagonal pyramid, 10 triangles, material `Brick`)\n\nThis yields **30 total faces** across the scene.\n\nIterate every face of every geometry instance (walking nested scene nodes). For each face (triangle), write one CSV row with the following exact schema:\n\n```\nface_id,area_m2,normal_x,normal_y,normal_z,material_name,parent_group,parent_definition\n```\n\nRequirements:\n- `face_id` is a contiguous integer starting at 0 and incrementing by 1 per row.\n- `area_m2` is the world-space triangle area in square meters (the DAE authoring unit is the meter).\n- `(normal_x, normal_y, normal_z)` is the **unit** outward-facing normal of the triangle in world coordinates (right-hand rule on the CCW vertex order as stored).\n- `material_name` is the name of the material bound to that triangle (`Steel`, `Glass`, or `Brick`).\n- `parent_group` is the name of the scene-graph node that instances the geometry (`Box_Frame`, `Prism_Tower`, or `Pyramid_Roof`).\n- `parent_definition` is the `name` attribute of the referenced `<geometry>` (`Box_Def`, `Prism_Def`, or `Pyramid_Def`).\n- Rows are ordered by parent group in the order `Box_Frame`, `Prism_Tower`, `Pyramid_Roof`; within a group, rows follow the storage order of the triangle indices.\n- Numeric formatting: `area_m2` with 6 decimal places; each normal component with 6 decimal places (signed).\n\nSave the CSV to `C:\\Users\\Administrator\\Desktop\\output.csv`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.csv` is a valid CSV with the exact header `face_id,area_m2,normal_x,normal_y,normal_z,material_name,parent_group,parent_definition`.\n2. Row count equals the total face count (30).\n3. Each row's `area_m2` matches the reference area within 0.1% (relative).\n4. Each row's normal has unit length within +/-1e-4.\n5. Each row's `material_name`, `parent_group`, `parent_definition` match the reference exactly.\n6. `face_id` values are 0..N-1 in order.",
+  "source": "SU-Ruby Face class (area, normal, material, parent); Geom::Vector3d; COLLADA 1.5 visual_scene + instance_geometry",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-41\\init_file\\stats_input.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\stats_input.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-41\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

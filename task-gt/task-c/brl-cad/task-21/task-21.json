@@ -1,0 +1,67 @@
+{
+  "id": "c-brl-cad-task-21-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/block_a.step, /home/user/Desktop/cyl_b.step. Read /home/user/Desktop/block_a.step and /home/user/Desktop/cyl_b.step. Reorient the cylinder so its axis is along Y and passes through the center of the block, then fuse it with the block. Finally cut a central through hole of diameter 10 mm along Z through the fused solid. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
+  "source": "https://cadquery.readthedocs.io/en/latest/importexport.html https://cadquery.readthedocs.io/en/latest/genindex.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/input/block_a.step",
+            "path": "/home/user/Desktop/block_a.step"
+          },
+          {
+            "local_path": "task-21/init_file/input/cyl_b.step",
+            "path": "/home/user/Desktop/cyl_b.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "echo q | mged -c 2>&1 | head -1"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-21/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

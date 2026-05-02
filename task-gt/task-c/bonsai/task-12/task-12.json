@@ -1,0 +1,68 @@
+{
+  "id": "c-bonsai-task-12-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Add Mezzanine To Warehouse Shell\n\nThis task starts from /home/user/Desktop/init.ifc and may use /home/user/Desktop/init_plan.png as a local reference image. Modify the provided warehouse model by adding a mezzanine layout and save the required output as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes.\n2. /home/user/Desktop/result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 2 IfcBuildingStorey entities, 3 IfcSpace entities, 4 IfcWall entities, 2 IfcSlab entities, 1 IfcDoor, 2 IfcOpeningElement entities, 2 IfcRelVoidsElement relationships, and 1 IfcRelFillsElement relationship.\n4. The IFC model contains 0 IfcWindow, 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The IfcBuildingStorey names are exactly Ground Floor and Mezzanine, ignoring leading and trailing whitespace only.\n7. The IfcSpace names are exactly Ground Storage, Ground Entry, and Mezzanine Office, ignoring leading and trailing whitespace only.\n8. Ground Storage is assigned to Ground Floor and has clear plan dimensions 9.20 m by 7.40 m, Ground Entry is assigned to Ground Floor and has clear plan dimensions 2.10 m by 2.20 m, and Mezzanine Office is assigned to Mezzanine and has clear plan dimensions 9.40 m by 3.70 m; each may be in either X/Y orientation with tolerance +/-0.08 m.\n9. Each IfcSpace has geometry height 3.00 m with tolerance +/-0.05 m.\n10. The slab names are exactly Ground Slab and Mezzanine Slab, ignoring leading and trailing whitespace only; Ground Slab is assigned to Ground Floor and has bounding-box dimensions 12.00 m by 8.00 m by 0.25 m, and Mezzanine Slab is assigned to Mezzanine and has bounding-box dimensions 10.00 m by 8.00 m by 0.20 m, each in any axis order with tolerance +/-0.08 m.\n11. The single door is named exactly Entry Door, ignoring leading and trailing whitespace only, and fills an opening in South Wall with opening dimensions 1.00 m by 0.20 m by 2.10 m, in any axis order with tolerance +/-0.08 m.\n12. Exactly 1 IfcOpeningElement has no filling relationship and voids the slab named Mezzanine Slab, and that opening is named exactly Stair Void, ignoring leading and trailing whitespace only.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/tutorials/project3.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-12/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "--background",
+          "--python-expr",
+          "import bonsai; print('OK')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

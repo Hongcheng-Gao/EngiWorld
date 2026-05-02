@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-39-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Bulk Component Renaming via Regex\n\nThe file `C:\\Users\\Administrator\\Desktop\\naming_mess.dae` is a COLLADA scene that came out of a SketchUp model where 50 components were named arbitrarily by several different modellers over the project's lifetime. The `<geometry>` elements in `library_geometries` therefore carry messy, inconsistent names like `chair_5`, `TABLE003`, `lamp-01`, `Desk_002`, `sofa 12`, `BookShelf_7`, `window-003`, etc. - a mix of capitalizations (lower, UPPER, Title, Mixed), separators (underscore, hyphen, space, none) and zero-padding styles (no padding, 2-digit, 3-digit).\n\nYour task is to normalize every component name to the canonical form\n\n<Type>_<NNN>\n\nwhere:\n* `<Type>` is the leading alphabetic prefix of the original name, Title-cased (first letter upper, rest lower). Non-alphabetic, non-numeric characters (spaces, hyphens, underscores) between the prefix and the number must be discarded.\n* `<NNN>` is the trailing integer run of the original name, zero-padded to 3 digits.\n\nExamples:\n* `chair_5` -> `Chair_005`\n* `TABLE003` -> `Table_003`\n* `lamp-01` -> `Lamp_001`\n* `Desk_002` -> `Desk_002`\n* `sofa 12` -> `Sofa_012`\n* `BookShelf_7`-> `Bookshelf_007`\n\nIf two or more original names normalize to the same canonical string (e.g. both `chair_5` and `CHAIR_05` map to `Chair_005`), disambiguate by appending `_<k>` where `k` is a 1-based integer for the second, third,... collision (so the first occurrence keeps the clean form `Chair_005`, the second becomes `Chair_005_2`, the third `Chair_005_3`, and so on). Every output name must therefore match the regex\n\n^[A-Z][a-z]+_\\d{3}(_\\d+)?$\n\nDeliverables:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` - a COLLADA file with the same 50 `<geometry>` entries as the input, but with the `name` attribute of each `<geometry>` renamed to its canonical form. Preserve the mesh data; only the name changes.\n2. `C:\\Users\\Administrator\\Desktop\\rename_map.json` - a JSON object with exactly 50 key->value entries mapping each original (messy) name to its new (canonical) name. Exactly one entry per input geometry.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA via pycollada.\n2. `C:\\Users\\Administrator\\Desktop\\output.dae` contains exactly 50 `<geometry>` entries.\n3. Every `<geometry>` name in `C:\\Users\\Administrator\\Desktop\\output.dae` matches the regex `^[A-Z][a-z]+_\\d{3}(_\\d+)?$`.\n4. All 50 output names are unique.\n5. `C:\\Users\\Administrator\\Desktop\\rename_map.json` is valid JSON with exactly 50 keys.\n6. The set of keys in `C:\\Users\\Administrator\\Desktop\\rename_map.json` equals the set of original names in `C:\\Users\\Administrator\\Desktop\\naming_mess.dae`.\n7. The set of values in `C:\\Users\\Administrator\\Desktop\\rename_map.json` equals the set of `<geometry>` names in `C:\\Users\\Administrator\\Desktop\\output.dae`.\n8. Each value in `C:\\Users\\Administrator\\Desktop\\rename_map.json` is the correct canonical form of its key (up to collision suffixes).",
+  "source": "SU-Ruby ComponentDefinition#name=; Ruby string processing; COLLADA 1.5 library_geometries",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39\\init_file\\naming_mess.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\naming_mess.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-39\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

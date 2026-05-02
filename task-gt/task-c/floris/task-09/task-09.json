@@ -1,0 +1,63 @@
+{
+  "id": "c-floris-task-09-ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "You are given a layout-optimization template `/home/user/Desktop/layout_opt_base.py`.\nComplete the following from the command line:\n\n1. Write a complete script `/home/user/Desktop/layout_opt.py`:\n- Initialize a 4-turbine grid layout\n- Set single-condition or multi-condition `WindRose`\n- Use `LayoutOptimization` or a Scipy optimizer\n- Validate the minimum-spacing constraint after optimization\n\n2. Execute and save to `/home/user/Desktop/summary.txt` in this format:\n`initial_aep_gwh, optimized_aep_gwh, min_spacing_m`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/layout_opt_base.py",
+            "path": "/home/user/Desktop/layout_opt_base.py"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "from floris import FlorisModel; fm = FlorisModel('defaults'); fm.run(); print(fm.get_turbine_powers())"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

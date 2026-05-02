@@ -1,0 +1,62 @@
+{
+  "id": "v-fusion360-task-04-windows",
+  "snapshot": "fusion360-latest",
+  "instruction": "look at rect_pocket_block.step. Create a 2D Pocket operation for the centered 50 x 30 mm pocket. Machine the pocket floor to Z=8.000 mm, use maximum stepover 3.2 mm, maximum stepdown 2 mm, leave 0.1 mm finishing stock, and include a floor finish pass. Tool definition: T1 is an 8 mm flat end mill for 2D pocketing, S8000 rpm, F600 mm/min. In the NC Program or post-process dialog, use metric units and the selected post processor for this setup, then export task-4.nc to the Desktop path(s) using exactly these absolute file paths.",
+  "source": "2D Pocket 文档。(Autodesk Forums) https://forums.autodesk.com/t5/fusion-manufacture-forum/2d-pocket-toolpath-having-issues-after-updates/td-p/12367083?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/rect_pocket_block.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\rect_pocket_block.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe",
+          "C:\\Users\\Administrator\\Desktop\\rect_pocket_block.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

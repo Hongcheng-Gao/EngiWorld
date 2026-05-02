@@ -1,0 +1,63 @@
+{
+  "id": "c-brl-cad-task-35-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/base_ref.step. Read /home/user/Desktop/base_ref.step. Generate only a matching cover plate: outer size 124 x 84 x 6 mm; four mounting holes must be strictly coaxial with the four base holes, each with diameter 6.5 mm; the cover bottom face must be 2 mm above the base top face. Generate only the cover geometry; do not include the base body in the output. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/input/base_ref.step",
+            "path": "/home/user/Desktop/base_ref.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "echo q | mged -c 2>&1 | head -1"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

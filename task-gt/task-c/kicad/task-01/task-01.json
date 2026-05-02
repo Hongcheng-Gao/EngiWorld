@@ -1,0 +1,392 @@
+{
+  "id": "c-kicad-task-01-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Symbol-Footprint Pin Consistency Audit\n\n/home/user/Desktop/opamps.kicad_sym contains 30 op-amp symbol definitions. /home/user/Desktop/opamps.pretty/ contains matching SOT-23-5 footprints (one per symbol). A subset of symbols have pin numbers that do not match the corresponding footprint pad numbers - the footprints are always correct, the symbols may be wrong.\n\nThe correct SOT-23-5 pin assignment (same for all parts) is:\nPad 1 = IN- (inverting input)\nPad 2 = IN+ (non-inverting input)\nPad 3 = V- (negative supply)\nPad 4 = OUT (output)\nPad 5 = V+ (positive supply)\n\n1. For each symbol, compare its pin numbers against the footprint pad numbers.\n2. Produce /home/user/Desktop/audit.csv listing every pin where the symbol pin number differs from the footprint pad number.\n3. Produce a corrected /home/user/Desktop/opamps.kicad_sym where all symbol pin numbers match the footprint pad numbers. Do not change footprints.\n\nRequirements:\n- /home/user/Desktop/audit.csv with columns: symbol_name, pin_name, symbol_pin_number, footprint_pad_number.\nOne row per mismatched pin (not per symbol).\n- /home/user/Desktop/opamps.kicad_sym: corrected library with 30 symbols; mismatch symbols fixed; correct symbols unchanged.\n\nWrite /home/user/Desktop/audit.csv and /home/user/Desktop/opamps.kicad_sym.",
+  "source": "KiCad 9 Official Documentation — PCB Editor / Schematic Editor / CLI, Kester et al., *Analog Devices Linear Design Seminar Notes* (analog pin ordering best practice)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.kicad_sym",
+            "path": "/home/user/Desktop/opamps.kicad_sym"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8599_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8599_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8602_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8602_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8605_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8605_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8610_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8610_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8628_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8628_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8641_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8641_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/AD8672_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/AD8672_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LM2904_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LM2904_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LM321_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LM321_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LM358_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LM358_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LM4562_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LM4562_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LM6132_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LM6132_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LM833_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LM833_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/LMV321_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/LMV321_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/MCP6001_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/MCP6001_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/MCP6002_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/MCP6002_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA191_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA191_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA211_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA211_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA2134_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA2134_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA277_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA277_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA347_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA347_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA627_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA627_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/OPA827_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/OPA827_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TLV2316_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TLV2316_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TLV2401_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TLV2401_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TLV2462_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TLV2462_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TLV2771_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TLV2771_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TLV316_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TLV316_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TLV9001_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TLV9001_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/opamps.pretty/TS912_SOT23-5.kicad_mod",
+            "path": "/home/user/Desktop/opamps.pretty/TS912_SOT23-5.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad-cli",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

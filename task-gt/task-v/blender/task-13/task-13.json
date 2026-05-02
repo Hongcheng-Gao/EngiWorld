@@ -1,0 +1,73 @@
+{
+  "id": "v-blender-task-13-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "HDRI Environment Rotation\n\nOpen `scene.blend`, keep the existing `Ball`, camera, and HDRI setup intact, and rotate the World `Mapping` node around Z to about `+60 deg` (`math.radians(60)`), leaving its X and Y rotation unchanged. Render a visible `512x512` PNG to `render.png` so the bright reflected highlight is shifted from the unrotated position, then save the scene as `answer.blend`.",
+  "source": "Debevec 1998 — \"Rendering Synthetic Objects into Real Scenes: Bridging Traditional and Image-Based Graphics with Global Illumination and High Dynamic Range Photography\", SIGGRAPH",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/env.exr",
+            "path": "C:\\Users\\Administrator\\Desktop\\env.exr"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

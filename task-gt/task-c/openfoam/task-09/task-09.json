@@ -1,0 +1,87 @@
+{
+  "id": "c-openfoam-task-09-ubuntu",
+  "snapshot": "OpenFOAM9",
+  "instruction": "You are given a heat-conduction template `/home/user/Desktop/heat_base/`.\nComplete a steady thermal analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/heat/`:\n- Build a rectangular plate geometry\n- Set different temperature boundary conditions on two sides, with adiabatic conditions on the others\n- Configure thermal diffusivity and steady solver parameters\n\n2. Run the solver.\n\n3. Extract the centerline temperature distribution and verify linear-distribution theory.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Temperatures at two specified locations: `temp_a, temp_b`\n- Format: `temp_a, temp_b`\n\n5. Do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/heat_base/0/T",
+            "path": "/home/user/Desktop/heat_base/0/T"
+          },
+          {
+            "local_path": "task-09/init_file/heat_base/README.init.md",
+            "path": "/home/user/Desktop/heat_base/README.init.md"
+          },
+          {
+            "local_path": "task-09/init_file/heat_base/constant/physicalProperties",
+            "path": "/home/user/Desktop/heat_base/constant/physicalProperties"
+          },
+          {
+            "local_path": "task-09/init_file/heat_base/system/blockMeshDict",
+            "path": "/home/user/Desktop/heat_base/system/blockMeshDict"
+          },
+          {
+            "local_path": "task-09/init_file/heat_base/system/controlDict",
+            "path": "/home/user/Desktop/heat_base/system/controlDict"
+          },
+          {
+            "local_path": "task-09/init_file/heat_base/system/fvSchemes",
+            "path": "/home/user/Desktop/heat_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-09/init_file/heat_base/system/fvSolution",
+            "path": "/home/user/Desktop/heat_base/system/fvSolution"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "source /opt/openfoam9/etc/bashrc && simpleFoam -help"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

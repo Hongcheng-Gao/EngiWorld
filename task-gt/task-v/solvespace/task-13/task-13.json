@@ -1,0 +1,61 @@
+{
+  "id": "v-solvespace-task-13-ubuntu",
+  "snapshot": "SolveSpace3.0.rc2repack1-3",
+  "instruction": "look at seed_ss_gui_13_dogbone.dxf. Draw a dogbone outline. The left and right outside circles have radius 20 and centers at (30,30) and (110,30). Connect them with two common tangent lines to form a closed outer outline. Add one diameter 8 hole at the center of each outside circle. Export exactly one DXF deliverable named final_ss_gui_13.dxf.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/seed_ss_gui_13_dogbone.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_13_dogbone.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

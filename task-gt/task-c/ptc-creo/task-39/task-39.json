@@ -1,0 +1,63 @@
+{
+  "id": "c-ptc-creo-task-39-win",
+  "snapshot": "ptccreo-12.4.0.0",
+  "instruction": "Use the command-line evaluation workflow to open C:\\Users\\Administrator\\Desktop\\task-39_initial.step. Create a central diameter 52 mm bearing through hole. On the top surface, create a circular locating register with diameter 80 mm and depth 4 mm. Create four corner diameter 9 mm through mounting holes, each hole center 18 mm from the two adjacent outside edges. Add R2 mm rounds to all top outside-outline edges. Export C:\\Users\\Administrator\\Desktop\\task-39_output.step.",
+  "source": "https://support.ptc.com/help/creo/creo_pma/r12/usascii/data_exchange/interface/STEP_Import_Profile_Settings_and_Corresponding_Configuration_Options.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/data_exchange/interface/To_Export_a_Part_or_Assembly_to_STEP.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/part_modeling/part_modeling/To_Create_a_Simple_Hole.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/part_modeling/part_modeling/To_Create_a_Constant_Round.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/fundamentals/fundamentals/About_Mapkeys.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39/init_file/task-39_initial.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\task-39_initial.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Creo 12.4.0.0\\Parametric\\bin\\parametric.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ptc-creo"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-39/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

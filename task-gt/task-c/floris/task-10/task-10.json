@@ -1,0 +1,67 @@
+{
+  "id": "c-floris-task-10-ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "You are given a three-turbine in-line template.\nComplete the following from the command line:\n\n1. Write a complete script `/home/user/Desktop/derating.py`:\n- Baseline: all turbines full output; compute total power `P_base`\n- Derating: set `turbine_0` power setpoint to `80%` of rated power (or adjust thrust)\n- Compute derated total power `P_derated`\n- If using simple derating, configure it in turbine YAML or in script\n\n2. Execute and save to `/home/user/Desktop/summary.txt` in this format:\n`P_base_kw, P_derated_kw, net_change_kw`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/derating_base.py",
+            "path": "/home/user/Desktop/derating_base.py"
+          },
+          {
+            "local_path": "task-10/init_file/derating_base.yaml",
+            "path": "/home/user/Desktop/derating_base.yaml"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "from floris import FlorisModel; fm = FlorisModel('defaults'); fm.run(); print(fm.get_turbine_powers())"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

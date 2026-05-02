@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-task-15-windows",
+  "snapshot": "AutoCAD2027",
+  "instruction": "look at valve_body.dxf. Recreate the target 2D CAD drawing for task 15 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be represented as clean DXF entities on sensible layers. Export exactly one DXF deliverable named autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/valve_body.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\valve_body.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2027\\acad.exe",
+          "C:\\Users\\Administrator\\Desktop\\valve_body.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

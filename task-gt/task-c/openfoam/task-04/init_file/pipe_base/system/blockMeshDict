@@ -1,0 +1,104 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+  =========                 |
+  \\      /  F ield         | OpenFOAM: The Open Source CFD Toolbox
+   \\    /   O peration     | Website:  https://openfoam.org
+    \\  /    A nd           | Version:  10
+     \\/     M anipulation  |
+\*---------------------------------------------------------------------------*/
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+// * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
+
+convertToMeters 1;
+
+//- Half angle of wedge in degrees [deg]
+halfAngle 45;
+
+//- Radius of pipe [m]
+radius 0.5;
+
+//- Derived quantities
+radHalfAngle #calc "degToRad($halfAngle)";
+y #calc "$radius*sin($radHalfAngle)";
+z #calc "$radius*cos($radHalfAngle)";
+
+vertices
+(
+    (0 0 0)
+    (10 0 0)
+    (10 0 0)
+    (0 0 0)
+    (0 #neg $y $z)
+    (10 #neg $y $z)
+    (10 $y $z)
+    (0 $y $z)
+);
+
+blocks
+(
+    hex (0 1 2 3 4 5 6 7) (50 5 5) simpleGrading (1 1 1)
+);
+
+edges
+(
+    arc 4 7 (0 0 $radius)
+    arc 5 6 (10 0 $radius)
+);
+
+boundary
+(
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (0 4 7 3)
+        );
+    }
+
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (1 2 6 5)
+        );
+    }
+
+    side1
+    {
+        type cyclic;
+        neighbourPatch side2;
+        faces
+        (
+            (0 1 5 4)
+        );
+    }
+
+    side2
+    {
+        type cyclic;
+        neighbourPatch side1;
+        faces
+        (
+            (7 6 2 3)
+        );
+    }
+
+    walls
+    {
+        type wall;
+        faces
+        (
+            (4 5 6 7)
+            (3 2 1 0)
+        );
+    }
+);
+
+
+// ************************************************************************* //

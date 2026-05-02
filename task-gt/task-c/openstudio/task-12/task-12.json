@@ -1,0 +1,66 @@
+{
+  "id": "c-openstudio-task-12-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Library Space Type Retrofit From Init Model\n\nThis task starts from Desktop input file: /home/user/Desktop/init.osm. Reference image is provided on the Desktop: /home/user/Desktop/init_plan.png. Modify the OpenStudio 3.10 model as needed and save the required outputs as /home/user/Desktop/result.osm and /home/user/Desktop/kpis.json.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.osm with size at least 500 bytes and /home/user/Desktop/kpis.json with size at least 10 bytes.\n2. /home/user/Desktop/result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. /home/user/Desktop/result.osm contains exactly 1 OS:BuildingStory, 4 OS:Space objects, and 4 OS:ThermalZone objects.\n4. The OS:Space names are exactly Reading, Stacks, Staff, and Circulation.\n5. Every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2.\n6. The model has exactly 26 OS:Surface objects: 4 Floor surfaces, 4 RoofCeiling surfaces, and 18 Wall surfaces.\n7. The surface Outside Boundary Condition counts are exactly 4 Ground, 12 Outdoors, and 10 Surface.\n8. The model has exactly 8 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 8.\n9. The model contains exactly 4 OS:ZoneHVAC:IdealLoadsAirSystem objects, 4 OS:ZoneHVAC:EquipmentList objects, 4 OS:ThermostatSetpoint:DualSetpoint objects, 2 OS:People objects, and 2 OS:Lights objects.\n10. The surface geometry bounding box has X span 20.00 m, Y span 14.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m.\n11. The sum of floor surface areas is 280.00 m2 with tolerance +/-0.50 m2.\n12. The sum of exterior wall gross areas is 217.60 m2 with tolerance +/-0.50 m2.\n13. The total fixed-window area is 49.92 m2 with tolerance +/-0.50 m2.\n14. /home/user/Desktop/kpis.json contains zone_count, reading_area_m2, stacks_area_m2, and total_lpd_w_m2; zone_count, reading_area_m2, and stacks_area_m2 must match evaluator-computed model metrics, and total_lpd_w_m2 must be 7.771 with tolerance max(0.10, 1%).\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-2.9.0-doc/model/html/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          },
+          {
+            "local_path": "task-12/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openstudio",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,66 @@
+{
+  "id": "v-bonsai-task-14-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Building Storey Assignment IFC CSV Schedule\n\nStart from the provided IFC model at init.ifc and reference image at init_plan.png. Correct the spatial containment so ground-floor elements belong to the Ground Floor storey and first-floor elements belong to the First Floor storey, save the completed model as result.ifc, and use Bonsai/IfcCSV-style IFC data export to save the storey summary as result.csv.\n\n## Pass conditions\n1. The output folder contains result.ifc and result.csv with those exact relative paths.\n2. result.ifc is an IFC4 file with exactly one IfcProject, one IfcSite, one IfcBuilding, and exactly two IfcBuildingStorey objects named Ground Floor and First Floor after case-insensitive normalization of spaces, hyphens, and underscores.\n3. result.ifc contains exactly eight IfcWall objects, exactly two IfcSlab objects, no IfcBuildingElementProxy objects, and no IfcFurniture objects.\n4. Through IfcRelContainedInSpatialStructure relationships, the Ground Floor storey contains exactly these five named elements: GF South Wall, GF North Wall, GF West Wall, GF East Wall, and GF Slab.\n5. Through IfcRelContainedInSpatialStructure relationships, the First Floor storey contains exactly these five named elements: FF South Wall, FF North Wall, FF West Wall, FF East Wall, and FF Slab.\n6. result.csv contains headers Storey, ElementCount, and TotalSlabArea, matched case-insensitively while ignoring spaces, hyphens, and underscores.\n7. result.csv contains exactly two data rows: Ground Floor with ElementCount 5 and TotalSlabArea 63.0 within 0.1, and First Floor with ElementCount 5 and TotalSlabArea 63.0 within 0.1.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/spatial/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-14/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "/home/user/Desktop/init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

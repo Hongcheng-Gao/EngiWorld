@@ -1,0 +1,61 @@
+{
+  "id": "v-solvespace-task-08-ubuntu",
+  "snapshot": "SolveSpace3.0.rc2repack1-3",
+  "instruction": "look at seed_ss_gui_08_l_bracket.dxf. Modify the input into an L-shaped bracket. The horizontal leg length is 120, vertical leg height is 90, and material thickness is 20. Add a diameter 10 hole at the horizontal leg end with center (90,10), and a diameter 10 hole in the vertical leg with center (10,60). Export exactly one DXF deliverable named final_ss_gui_08.dxf.",
+  "source": "https://solvespace.readthedocs.io/en/latest/groups/sketch.html ; https://solvespace.readthedocs.io/en/latest/constraints/distance_diameter.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/seed_ss_gui_08_l_bracket.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_08_l_bracket.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

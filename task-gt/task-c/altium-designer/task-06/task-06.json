@@ -1,0 +1,63 @@
+{
+  "id": "c-altium-designer-task-06-win",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Fix the native Altium board `C:\\Users\\Administrator\\Desktop\\broken_usb3_rules.PcbDoc` and save the repaired document as `C:\\Users\\Administrator\\Desktop\\usb3_rules_repaired.PcbDoc`. The repaired board must restore the `USB3_85` differential-pair class fragment, the `DiffPairsRouting_USB3_85` gap/width rule fragment, and the `MatchedLengths_USB3` tolerance fragment.",
+  "source": "Local Altium example `Mini PC - Motherboard/MiniPC.PcbDoc`; benchmark task restored from JSON export generation to native USB3 routing-rule repair.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06\\init_file\\broken_usb3_rules.PcbDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_usb3_rules.PcbDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\Altium\\AD26\\X2.EXE\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

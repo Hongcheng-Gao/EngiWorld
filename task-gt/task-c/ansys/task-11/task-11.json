@@ -1,0 +1,59 @@
+{
+  "id": "c-ansys-task-11-win",
+  "snapshot": "ansys-2026",
+  "instruction": "Complete a fully command-line parametric batch workflow from scratch:\n\n1. Write a master script `C:\\Users\\Administrator\\Desktop\\batch_master.mac` (or Python/shell):\n- Generate three input files: `pressure_10.inp`, `pressure_20.inp`, `pressure_30.inp`\n- Each model is a `100 mm × 10 mm × 10 mm` cantilever beam with different surface pressure (`10/20/30 MPa`)\n\n2. Submit the three APDL jobs sequentially.\n\n3. Each `.inp` must include `/POST1` post-processing and automatically write `results_*.txt`.\n\n4. Write a summary script `C:\\Users\\Administrator\\Desktop\\summarize.py` to read the three result files:\n- Extract maximum Mises stress and displacement\n- Write `C:\\Users\\Administrator\\Desktop\\summary.txt` in this format: `pressure, max_mises, tip_u2`\n\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `pressure, max_mises, tip_u2 (one case per line)`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ansys.exe",
+          "-b",
+          "-i",
+          "nul"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "c-kicad-task-20-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "DDR3 Byte Lane Length Matching\n\nThe file `/home/user/Desktop/ddr3.kicad_pcb` contains a DDR3 byte lane with 11 nets routed on F.Cu: DQS_P, DQS_N (the reference pair at 35 mm each), DQ0-DQ7, and DM. The DQ and DM traces are currently unmatched, ranging from approximately 28 mm to 34 mm.\n\nAdd serpentine segments to the DQ0-DQ7 and DM nets to match the DQS reference length. Do NOT modify the DQS_P or DQS_N traces.\n\nRequirements:\n1. The maximum minus minimum length across all 11 nets must be <= 150 um.\n2. DQS_P and DQS_N lengths must remain within +/-0.1 mm of their input values.\n3. Serpentine bends must maintain at least 0.2 mm spacing between net traces (3H rule for 0.1 mm trace width); bends must stay within 1.5 mm of their track's y-center.\n4. All segments must remain on F.Cu.\n5. The output file must parse as a valid KiCad 9 PCB s-expression.\n6. Also write `/home/user/Desktop/fcu.svg` as the native KiCad CLI F.Cu SVG export of your final board.\n\nWrite /home/user/Desktop/ddr3.kicad_pcb and /home/user/Desktop/fcu.svg.",
+  "source": "JEDEC DDR3 / DDR4 Design Guidelines (DDR3 fly-by), TI / Analog Devices / Nordic / Microchip PCB layout app notes (Micron DDR3 layout guideline), KiCad 9 Official Documentation - PCB Editor / CLI (`kicad-cli pcb export svg`)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/ddr3.kicad_pcb",
+            "path": "/home/user/Desktop/ddr3.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad-cli",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

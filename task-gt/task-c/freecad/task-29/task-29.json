@@ -1,0 +1,62 @@
+{
+  "id": "c-freecad-task-29-ubuntu",
+  "snapshot": "FreeCAD0.19",
+  "instruction": "Using FreeCAD CLI/API, open /home/user/Desktop/freecad_task-29_input.step. Cut five through obround slots along X. The slot centers are at X=25, 50, 75, 100, and 125 mm with Y=30 mm. Each obround slot has total length 18 mm, width 6 mm, and passes through the full 8 mm thickness. Export /home/user/Desktop/freecad_task-29_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-29/init_file/freecad_task-29_input.step",
+            "path": "/home/user/Desktop/freecad_task-29_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecadcmd",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-29/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

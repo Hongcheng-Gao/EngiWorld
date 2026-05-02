@@ -1,0 +1,68 @@
+{
+  "id": "v-openstudio-task-14-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Facade WWR And Overhang Retrofit From Init Model\n\nThis task starts from Desktop input file: init.osm. Reference image is provided on the Desktop: init_plan.png. Modify the OpenStudio 3.10 model as needed and save the required output as result.osm.\n\n## Pass conditions\n1. The output folder contains result.osm with size at least 500 bytes.\n2. result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. result.osm contains exactly 1 OS:BuildingStory, 1 OS:Space named V14-Base, and 1 OS:ThermalZone.\n4. The OS:Space references the OS:BuildingStory, references the OS:ThermalZone, and has floor area greater than 0.05 m2.\n5. The model has exactly 6 OS:Surface objects: 1 Floor surface, 1 RoofCeiling surface, and 4 Wall surfaces.\n6. The surface Outside Boundary Condition counts are exactly 1 Ground and 5 Outdoors.\n7. The model has exactly 4 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 4.\n8. The model contains exactly 1 OS:ShadingSurface, 1 OS:ZoneHVAC:IdealLoadsAirSystem, 1 OS:ZoneHVAC:EquipmentList, and 1 OS:ThermostatSetpoint:DualSetpoint.\n9. The surface geometry bounding box has X span 22.00 m, Y span 14.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m.\n10. The sum of floor surface areas is 308.00 m2 with tolerance +/-0.50 m2.\n11. The sum of exterior wall gross areas is 230.40 m2 with tolerance +/-0.50 m2.\n12. The total fixed-window area is 62.72 m2 with tolerance +/-0.50 m2.\n13. The total shading surface area is 24.144 m2 with tolerance +/-0.50 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          },
+          {
+            "local_path": "task-14/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "env",
+          "DISPLAY=:99",
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-46-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Unit-Scale Diagnosis and Correction (multi-turn)\n\nThe file `C:\\Users\\Administrator\\Desktop\\scaled_wrong.dae` is a single-storey building model (walls + roof + floor slab) that was exported from SketchUp with the wrong unit declaration. The author's source measurements were in millimetres, but the export declared the coordinates as inches, so the downstream consumer sees a building whose AABB is ~178 m x 127 m x 76 m - roughly 25.4x (or, in some older pipelines, 39.37x) too large to be a plausible single-storey building.\n\nYour task is structured as two turns.\n\n# Turn 1 - Diagnose\n\nWrite a JSON report at `C:\\Users\\Administrator\\Desktop\\diagnosis.json` with this exact schema:\n\n```json\n{\n\"scale_factor\": 0.03937007874015748,\n\"original_max_dim\": 177.8,\n\"corrected_max_dim\": 7.0\n}\n```\n\n- `scale_factor` is the multiplier you propose applying to every vertex to recover real-world metres. For this file it should be approximately `1 / 25.4 = 0.03937`. The alternate `1 / 39.37` scale interpretation is also acceptable within 5% relative tolerance.\n- `original_max_dim` is the largest single-axis span of the input's world-space AABB, expressed in the file's current (wrong) units. For this input it is approximately `177.8`.\n- `corrected_max_dim` is the largest single-axis span AFTER applying your `scale_factor` - it must equal `original_max_dim * scale_factor` within 5 %, AND fall inside the building-plausible range `[5, 30] m`. For this input it is approximately `7.0`.\n\nTo perform the diagnosis, parse `C:\\Users\\Administrator\\Desktop\\scaled_wrong.dae`, compute the world-space bounding box by walking the scene graph (multiplying each mesh vertex by its chain of node transforms), and pick a scale factor so the corrected AABB lies in `[5, 30] m`. A `max_dim > 30 m` for a single-storey building is the red flag; `25.4` and `39.37` are the two classic unit-mismatch multipliers to consider.\n\n# Turn 2 - Correct\n\nWrite the corrected model to `C:\\Users\\Administrator\\Desktop\\fixed.dae`. The fix is a pure uniform scale by the factor you reported in `C:\\Users\\Administrator\\Desktop\\diagnosis.json`: every vertex coordinate multiplied by `scale_factor`, with topology preserved (no verts added or removed, no faces added or removed). The scene-graph structure may be re-emitted however you like, but:\n\n- `C:\\Users\\Administrator\\Desktop\\fixed.dae` must parse via pycollada / python-collada.\n- Its world-space AABB max-dim must lie in `[5, 30] m`.\n- Its vertex count (summed across all `<geometry>` position sources) must match the input's.\n- Its axis-span ratios (each axis / max axis) must match the input's within 1 %, i.e. the shape must be rescaled uniformly - no squashing.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\diagnosis.json` exists, parses as JSON, and is an object.\n2. `scale_factor` is a number within 5 % of `1/25.4` OR `1/39.37`.\n3. `original_max_dim` matches the input file's actual world-space max-dim within 2 % (so you can't fabricate it).\n4. `corrected_max_dim` is in `[5, 30] m` and matches `original_max_dim * scale_factor` within 5 %.\n5. `C:\\Users\\Administrator\\Desktop\\fixed.dae` exists, parses, and has world-space AABB max-dim in `[5, 30] m`.\n6. `C:\\Users\\Administrator\\Desktop\\fixed.dae` has the same total vertex count as the input (pure-scale preserves topology).\n7. `C:\\Users\\Administrator\\Desktop\\fixed.dae`'s axis-span ratios match the input's within 1 % (uniform scale, no squashing).",
+  "source": "SketchUp Units + Import dialog; [SU-Help] Unit mismatch on DAE import; COLLADA 1.4 scene graph",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-46\\init_file\\scaled_wrong.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\scaled_wrong.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-46\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

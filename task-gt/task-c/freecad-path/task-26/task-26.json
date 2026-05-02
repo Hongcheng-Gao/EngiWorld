@@ -1,0 +1,62 @@
+{
+  "id": "c-freecad-path-task-26-ubuntu",
+  "snapshot": "freecad-path-1.1.1",
+  "instruction": "Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/job_input.step. Complete a FreeCAD Path/CAM Job containing Pocket, Drilling, and Profile operations. Tool definitions: use an end mill for pockets, a drill for holes, and a profile end mill for outside contours. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-26.nc.",
+  "source": "https://wiki.freecad.org/CAM_ExportTemplate；https://wiki.freecad.org/CAM_Job https://wiki.freecad.org/CAM_ExportTemplate%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Job",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26/init_file/job_input.step",
+            "path": "/home/user/Desktop/job_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecadcmd",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

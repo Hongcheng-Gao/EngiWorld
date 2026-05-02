@@ -1,0 +1,62 @@
+{
+  "id": "v-kicad-task-38-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Crystal Oscillator Placement Rules\n\nThe file design.kicad_pcb contains a board with an MCU (U1) at position (100, 80) mm with an OSC_IN pad at relative offset (-8, 4) from the MCU center, an 8 MHz crystal (Y1) and two load capacitors (C1, C2) placed far from the MCU.\n\nReposition the crystal and its load capacitors according to oscillator layout best practices and write the result as design.kicad_pcb.\n\nRequirements:\n1. The crystal (Y1) centre must be within 5 mm of the MCU's OSC_IN pad (at absolute position MCU_X-8, MCU_Y+4).\n2. Both load capacitors (C1, C2) must be on the same copper layer as the crystal.\n3. Both load caps must be placed within 10 mm of the crystal centre.\n4. A keepout zone must be added on layer In1.Cu directly under the crystal body (the zone must contain the crystal centre point).\n5. The MCU (U1) position must not change.\n\nWrite design.kicad_pcb.",
+  "source": "TI / Analog Devices / Nordic / Microchip PCB layout app notes (STM32 HSE layout app note AN2867)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-38/init_file/design.kicad_pcb",
+            "path": "/home/user/Desktop/design.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/design.kicad_pcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-38/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

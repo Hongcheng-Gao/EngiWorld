@@ -1,0 +1,62 @@
+{
+  "id": "v-altium-designer-task-44-windows",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Perform pre-release height maintenance on the native Altium PCB footprint library `connector_lib.PcbLib` instead of exporting a manifest. Save the modified native library as `connector_lib_release.PcbLib` in Altium Designer.\n\nRequirements:\n- Change `Height` of `RESC3216X60X45ML15T20` to `25mil`.\n- Change `Height` of `51163-0500-Footprint-1` to `90mil`.\n- Change `Height` of `53375-0510-Footprint-1` to `100mil`.\n\nThe evaluation checks footprint metadata inside the native `.PcbLib`, not an external release manifest text.",
+  "source": "Local Altium example `Harness Demo MB\\Libs\\PCB1.PcbLib`; benchmark task substantially redesigned from the text-only release-manifest degeneration and should receive a source refresh.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-44/init_file/connector_lib.PcbLib",
+            "path": "C:\\Users\\Administrator\\Desktop\\connector_lib.PcbLib"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\connector_lib.PcbLib"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-44/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-05-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use the ANSYS Mechanical APDL GUI to complete the following analysis:\n\nPhysical problem: modal analysis of a beam fixed at both ends.\n\nModel parameters:\n- Beam cross section 10 mm x 10 mm, length 500 mm\n- Material: steel, E = 210000 MPa, nu = 0.3, density 7850 kg/m^3\n- Element: BEAM188\n- Section: rectangle 10x10 mm\n- Mesh: 20 equal divisions along the beam length\n\nBoundary conditions:\n- Both ends: all DOFs constrained\n\nAnalysis type: modal analysis, extract first 3 modes\n\nSave requirements:\n- Database file: apdl_fixed_beam_modal.db\n- Result file (.rst) must exist in the working directory",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\ANSYS Student\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

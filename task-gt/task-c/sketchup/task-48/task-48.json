@@ -1,0 +1,96 @@
+{
+  "id": "c-sketchup-task-48-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Full architectural pipeline: DXF plan + CSV schedule + JSON materials + site geolocation -> DAE + IFC + summary + 6 scene views.\n\nThe flagship multi-resource composite task. The agent is given four input files in `C:\\Users\\Administrator\\Desktop\\` that together fully specify a single-storey building plus its solar context:\n\n- `C:\\Users\\Administrator\\Desktop\\plan.dxf` - 2D DXF (R2010) floor plan on layer `WALL`, carrying four closed LWPOLYLINE rectangles (the 0.2 m thick footprint of each wall: `W_S`, `W_E`, `W_N`, `W_W`) plus a TEXT label per wall at its centroid. The plan footprint is 10 m x 7 m, axis-aligned, lower-left at origin. Wall height is **3.0 m** (hard-coded convention, same as SK-C-24).\n\n- `C:\\Users\\Administrator\\Desktop\\windows.csv` - door + window schedule. Columns: `id,type,host_wall,width_m,height_m,sill_m,x_offset_m`. The first line is the header. `type` is one of `{DOOR, WINDOW}`; `host_wall` is the wall id (e.g. `W_S`); `x_offset_m` is the distance from the wall's origin corner to the left edge of the opening along the wall's long axis. One row per opening. The CSV has **1 door and 3 windows**.\n\n- `C:\\Users\\Administrator\\Desktop\\materials.json` - material library keyed by role. Schema: `{\"materials\": {role: {\"name\": str, \"rgb\": [r,g,b]}}}` where `role in {wall, roof, glass}` and rgb components are floats in [0,1].\n\n- `C:\\Users\\Administrator\\Desktop\\site.json` - geolocation + shadow time. Schema: `{\"lat\": float, \"lon\": float, \"date\": \"YYYY-MM-DD\", \"time\": \"HH:MM\", \"timezone_offset_hours\": int}`. Used to compute the sun's **azimuth** at that local civil time using the standard NOAA solar-position formula.\n\nDeliverables:\n\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` - COLLADA 3D model of the house: four walls extruded from 0 to 3 m with door/window openings cut per the CSV, plus a flat roof slab (thickness 0.1 m, 3.0 <= Z <= 3.1) and a floor slab (-0.1 <= Z <= 0.0). Plan bbox matches `[0, 0, 10, 7]` +/- 0.05 m; Z bbox `[-0.1, 3.1]` +/- 0.05 m.\n\n2. `C:\\Users\\Administrator\\Desktop\\output.ifc` - IFC 4 file with the full spatial hierarchy `IfcProject -> IfcSite -> IfcBuilding -> IfcBuildingStorey` linked via `IfcRelAggregates`, plus all physical products contained in the storey via `IfcRelContainedInSpatialStructure`:\n- Exactly 4 x `IfcWall` with Name attributes `{W_S, W_E, W_N, W_W}`.\n- Exactly 1 x `IfcDoor`. Name taken from the CSV `id` column.\n- Exactly 3 x `IfcWindow`. Names taken from the CSV `id` column.\n- At least 2 x `IfcSlab` (floor + roof).\n- Every physical element carries a tessellated Body representation.\n\n3. `C:\\Users\\Administrator\\Desktop\\summary.json` - machine-readable digest with **exactly** these keys (additional keys are allowed but these must be present):\n```json\n{\n\"walls\": 4,\n\"doors\": 1,\n\"windows\": 3,\n\"lat\": <float from C:\\Users\\Administrator\\Desktop\\site.json>,\n\"lon\": <float from C:\\Users\\Administrator\\Desktop\\site.json>,\n\"shadow_azimuth_deg\": <float - sun azimuth at given date/time, 0 deg = North, clockwise to 360 deg>\n}\n```\nThe shadow azimuth is computed from `C:\\Users\\Administrator\\Desktop\\site.json.lat`, `C:\\Users\\Administrator\\Desktop\\site.json.lon`, `C:\\Users\\Administrator\\Desktop\\site.json.date`, `C:\\Users\\Administrator\\Desktop\\site.json.time`, and `C:\\Users\\Administrator\\Desktop\\site.json.timezone_offset_hours` using the standard solar-position formula (NOAA / Michalsky 1988). Result must be within **2 deg** of the reference implementation.\n\n4. `C:\\Users\\Administrator\\Desktop\\scenes/1.png` through `C:\\Users\\Administrator\\Desktop\\scenes/6.png` - six scene renders (front / side / back / top / iso-NW / iso-SE). Each must be a valid PNG at least 64 x 64 pixels. Placeholder silhouette renders are acceptable; the check only verifies file existence and minimum dimensions.\n\n# Requirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA and its world-space bounding box matches the plan footprint plus slabs (XY `[0,0,10,7]` +/- 0.05; Z `[-0.1, 3.1]` +/- 0.05).\n2. `C:\\Users\\Administrator\\Desktop\\output.ifc` parses via `ifcopenshell` and uses IFC4-family schema.\n3. Entity counts match the CSV: 4 x IfcWall, 1 x IfcDoor, 3 x IfcWindow, >= 2 x IfcSlab.\n4. IfcWall names = `{W_S, W_E, W_N, W_W}`; IfcDoor + IfcWindow names match the `id` column of the CSV.\n5. Project -> Site -> Building -> Storey chain is linked via IfcRelAggregates, and all physical products are contained in the storey.\n6. `C:\\Users\\Administrator\\Desktop\\summary.json` exists, is valid JSON, and contains the 6 required keys with values matching the CSV (walls/doors/windows) and `C:\\Users\\Administrator\\Desktop\\site.json` (lat/lon), and `shadow_azimuth_deg` within 2 deg of the NOAA-formula reference value.\n7. `C:\\Users\\Administrator\\Desktop\\scenes/1.png` through `C:\\Users\\Administrator\\Desktop\\scenes/6.png` exist and each is at least 64 x 64 pixels.",
+  "source": "Cline-AGS full architectural pipeline (SK-C-48); buildingSMART IFC 4 (IFC-43); NOAA solar-position algorithm (Michalsky 1988); ezdxf / ifcopenshell / trimesh / pycollada / Pillow",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\materials.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\materials.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\plan.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\plan.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\site.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\site.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\windows.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\windows.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-48\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

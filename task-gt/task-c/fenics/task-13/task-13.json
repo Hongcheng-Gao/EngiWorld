@@ -1,0 +1,63 @@
+{
+  "id": "c-fenics-task-13-ubuntu",
+  "snapshot": "fenics",
+  "instruction": "You are given a placeholder-containing template `/home/user/Desktop/re_scan_base.py`.\nComplete parameterized batch scanning from the command line:\n\n1. Use Python or shell script to generate 3 files from the template:\n- `/home/user/Desktop/re_100.py` (`Re=100`)\n- `/home/user/Desktop/re_400.py` (`Re=400`)\n- `/home/user/Desktop/re_1000.py` (`Re=1000`)\n\n2. Submit the solves in serial.\n\n3. In each script, extract X-direction velocity at geometric center `(0.5, 0.5)` and write to its own result file.\n\n4. Write summary script `/home/user/Desktop/summarize.py` to read all 3 results:\n- Output `/home/user/Desktop/summary.txt` in this format:\n  `Re, center_ux`\n\n5. Do not use any GUI.",
+  "source": "https://github.com/fenics/dolfinx",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/re_scan_base.py",
+            "path": "/home/user/Desktop/re_scan_base.py"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "source activate fenicsx 2>/dev/null || conda activate fenicsx; python -c 'import dolfinx; print(dolfinx.__version__)'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

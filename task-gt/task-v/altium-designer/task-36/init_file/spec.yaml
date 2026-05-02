@@ -1,0 +1,47 @@
+# spec.yaml for task-05 — Fabrication OutJob generation spec.
+#
+# The OutJob must contain, inside [OutputGroup1]:
+#   - Exactly 8 Gerber outputs, one per signal/power/ground copper layer in
+#     this 8-layer stackup, each declaring its PlotLayer=<target>.
+#   - 1 NC Drill output with format "4:3 metric" (write keys
+#     UnitsPrecision=4:3 metric and GerberUnit=Metric).
+#   - 1 IPC-2581 output at revision B (write key IPC2581Revision=B).
+#   - 1 Pick-and-Place output exporting CSV columns in this order (written
+#     as a comma-separated list in the Columns= key):
+#         Designator,Comment,Layer,X,Y,Rotation
+#   - 1 OutputMedium "Folder Structure" for bundling all generated files
+#     into a single ZIP (write ZipOutput=True in the OutputMedium line).
+#
+# All outputs must be enabled (OutputEnabledN=1) and dispatched to the
+# Folder Structure OutputMedium (OutputEnabledN_OutputMedium1=1) so they
+# end up in the package.
+
+gerber:
+  layers:
+    - TopLayer
+    - MidLayer1
+    - MidLayer2
+    - MidLayer3
+    - MidLayer4
+    - MidLayer5
+    - MidLayer6
+    - BottomLayer
+
+nc_drill:
+  precision: "4:3 metric"
+
+ipc2581:
+  revision: "B"
+
+pickplace:
+  columns:
+    - Designator
+    - Comment
+    - Layer
+    - X
+    - Y
+    - Rotation
+
+packaging:
+  medium: "Folder Structure"
+  zip: true

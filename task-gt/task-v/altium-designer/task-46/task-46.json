@@ -1,0 +1,73 @@
+{
+  "id": "v-altium-designer-task-46-windows",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "Generate `release.PCBDwf` from `template.PCBDwf` and `requirements.md`.\n\nThe result must contain exactly two sheets:\n- `Sheet1` must have a `SheetName` containing `Fabrication`.\n- `Sheet2` must have a `SheetName` containing `Assembly`.\n\n`Sheet1` must contain at least:\n- 1 `BoardView`\n- 1 `DrillTable`\n- 1 `LayerStackLegend`\n- 1 `FabricationNotes`\n- 1 `TitleBlock`\n- at least 4 `DimensionAnnotation`\n- at least 2 `RadiusAnnotation`\n- and at least one `TitleBlock` containing no fewer than 10 `ParameterN.Name` child items.\n\n`Sheet2` must contain at least:\n- 2 `BoardAssemblyView` objects, one with `Side=Top` and one with `Side=Bottom`\n- 1 `BOMTable`\n- 1 `AssemblyNotes`\n- 1 `RevisionTable`\n- 1 `TitleBlock`\n\nObject sections must use the form `[SheetN.ObjectM]` and include a `Type=` field.",
+  "source": "task.md #46 (Altium 'Creating the Fabrication Drawing in Draftsman'; 'Creating the Assembly Drawing in Draftsman'; 'Streamlining Board Design Documentation with Draftsman')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-46/init_file/requirements.md",
+            "path": "C:\\Users\\Administrator\\Desktop\\requirements.md"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-46/init_file/template.PCBDwf",
+            "path": "C:\\Users\\Administrator\\Desktop\\template.PCBDwf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\template.PCBDwf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-46/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

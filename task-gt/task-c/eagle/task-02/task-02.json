@@ -1,0 +1,74 @@
+{
+  "id": "c-eagle-task-02-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Open `/home/user/Desktop/audit.brd` in EAGLE, then run the provided silkscreen-audit User Language Program and save its output as `/home/user/Desktop/silk_audit.txt`.\n\nEach line in the output has the form:\n`text=\"VALUE\" x=X.XXX y=Y.YYY size=S.SSS layer=tPlace|bPlace`\n\nRequirements:\n1. `/home/user/Desktop/silk_audit.txt` exists and is non-empty.\n2. Every line conforms to the above format.\n3. Number of reported lines equals the number of <text> elements in /home/user/Desktop/audit.brd on layers 21/22 with size < 0.8 mm.\n4. Every expected violation appears in the report (by value, x, y, size, layer).\n5. No false positives (no reported text has size >= 0.8 mm).",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/audit.brd",
+            "path": "/home/user/Desktop/audit.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/silk_audit.ulp",
+            "path": "/home/user/Desktop/silk_audit.ulp"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "test -x /opt/eagle-7.7.0/bin/eagle && echo OK || echo MISSING"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

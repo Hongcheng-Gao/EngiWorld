@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-35-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Geo-located KMZ Export (Placemark Model)\n\nThe file `C:\\Users\\Administrator\\Desktop\\house.dae` contains a non-trivial architectural building model: a single-storey house with four separate geometries - outer walls (with a door opening cut into the front wall), a pitched gable roof, a door panel, and a floor slab. All dimensions are in meters with the footprint covering X in [0, 10], Y in [0, 6], Z in [-0.1, 5].\n\nwrap `C:\\Users\\Administrator\\Desktop\\house.dae` inside a geo-located Google Earth KMZ placemark.\n\nProduce a single output `C:\\Users\\Administrator\\Desktop\\output.kmz` - a ZIP archive containing two members with the exact names shown below:\n\ndoc.kml - OGC KML 2.2 document\nmodels/house.dae - a copy of the input DAE, referenced by the KML\n\nThe KML document must contain a `<Placemark>` whose child is a `<Model>` element (not a bare `<Point>`) that places the house at San Francisco:\n\n- `<Location><longitude>-122.4194</longitude><latitude>37.7749</latitude><altitude>0</altitude></Location>`\n- `<Orientation>` with `<heading>`, `<tilt>` and `<roll>` elements (use 0 for each - true-north alignment on a flat reference surface)\n- `<altitudeMode>relativeToGround</altitudeMode>` (any KML-recognized altitudeMode is accepted)\n- `<Scale>` with x/y/z = 1\n- `<Link><href>models/house.dae</href></Link>` - the Link/href must match the ZIP entry name for the bundled DAE exactly.\n\nThe KML root element must be `<kml xmlns=\"http://www.opengis.net/kml/2.2\">`. Wrap the Placemark in a `<Document>` inside the root.\n\nReference: OGC KML 2.2 specification, `<Model>` element (Location/Orientation/Scale/Link children).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.kmz` exists and is a valid ZIP (no corrupt members).\n2. The ZIP contains both `doc.kml` and `models/house.dae` with those exact names.\n3. `doc.kml` parses as well-formed XML with the `http://www.opengis.net/kml/2.2` namespace on the root `<kml>`.\n4. A `<Placemark>` is present and contains a `<Model>` element.\n5. The Model's `<Location><longitude>` equals -122.4194 within 1e-6 and `<latitude>` equals 37.7749 within 1e-6.\n6. The Model has an `<Orientation>` block with heading, tilt and roll numeric children.\n7. The Model declares a valid KML `<altitudeMode>` (one of: relativeToGround, absolute, clampToGround, relativeToSeaFloor, clampToSeaFloor).\n8. The Model's `<Link><href>` exactly names `models/house.dae` and that path is an entry in the KMZ.\n9. The DAE extracted from the KMZ parses via `pycollada` and contains at least 3 separate geometries (non-trivial house, not a single cuboid).\n10. The extracted DAE has at least one triangle in its geometries.",
+  "source": "OGC KML 2.2 reference (`<Model>` / `<Location>` / `<Orientation>` / `<Link>`); SU-Help Geo-location and KMZ export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35\\init_file\\house.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\house.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

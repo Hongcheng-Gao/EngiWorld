@@ -1,0 +1,63 @@
+{
+  "id": "c-abaqus-task-13-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given a transient heat conduction template `C:\\Users\\Administrator\\Desktop\\steady_thermal_base.inp` (`20 × 50 × 20 mm`).\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\transient.inp`:\n   - Initial temperature field: 20°C for the whole model\n   - Left end face (`x=0`) temperature: 100°C\n   - All other surfaces adiabatic\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Read the frame at `t=10 s`\n   - Extract nodal temperature on the `x=0` surface\n   - Extract nodal temperature at `x=5 mm`\n   - Output format: `surface_temp, temp_at_5mm`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `surface_temp, temp_at_5s`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/steady_thermal_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\steady_thermal_base.inp"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "abaqus information=version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

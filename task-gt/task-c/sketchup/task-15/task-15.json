@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-15-win",
+  "snapshot": "sketchup2026",
+  "instruction": "Tag-based visibility and 3 scenes\n\nThe file `C:\\Users\\Administrator\\Desktop\\house_raw.dae` contains a small house scene with exactly 5 named top-level geometry groups: `Walls`, `Roof`, `Floors`, `Furniture`, `Fixtures`. Each group is a distinct COLLADA `<geometry>` referenced by a scene `<node>` whose `name` attribute matches the group name (these map to SketchUp groups/components tagged with same-named Tags).\n\n1. Assign each of the 5 groups to a matching Tag (one Tag per group, identical names). Since COLLADA has no native SketchUp tag/scene concept, emit a sidecar JSON file `C:\\Users\\Administrator\\Desktop\\scenes.json` that records the tag assignment and scene visibility data.\n2. Create 3 scenes, each toggling tag visibility:\n- `S_Structure`: `Walls`, `Roof`, `Floors` visible; `Furniture`, `Fixtures` hidden.\n- `S_Interior`: `Floors`, `Furniture`, `Fixtures` visible; `Walls`, `Roof` hidden.\n- `S_All`: all 5 tags visible.\n3. Produce per-scene DAE exports that contain **only the geometry of the visible groups** for each scene. Exports must be:\n- `C:\\Users\\Administrator\\Desktop\\S_Structure.dae` - contains geometry of Walls, Roof, Floors only (no Furniture, no Fixtures).\n- `C:\\Users\\Administrator\\Desktop\\S_Interior.dae` - contains geometry of Floors, Furniture, Fixtures only (no Walls, no Roof).\n- `C:\\Users\\Administrator\\Desktop\\S_All.dae` - contains all 5 groups.\n4. Also write `C:\\Users\\Administrator\\Desktop\\output.dae` which is the full scene with all 5 groups present (same as `C:\\Users\\Administrator\\Desktop\\S_All.dae`).\n\n`C:\\Users\\Administrator\\Desktop\\scenes.json` must have exactly this schema:\n```\n{\n\"tags\": [\"Walls\", \"Roof\", \"Floors\", \"Furniture\", \"Fixtures\"],\n\"group_to_tag\": {\n\"Walls\": \"Walls\", \"Roof\": \"Roof\", \"Floors\": \"Floors\",\n\"Furniture\": \"Furniture\", \"Fixtures\": \"Fixtures\"\n},\n\"scenes\": {\n\"S_Structure\": {\"visible\": [\"Walls\", \"Roof\", \"Floors\"], \"hidden\": [\"Furniture\", \"Fixtures\"]},\n\"S_Interior\": {\"visible\": [\"Floors\", \"Furniture\", \"Fixtures\"], \"hidden\": [\"Walls\", \"Roof\"]},\n\"S_All\": {\"visible\": [\"Walls\", \"Roof\", \"Floors\", \"Furniture\", \"Fixtures\"], \"hidden\": []}\n}\n}\n```\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\scenes.json` parses as valid JSON and has all required keys.\n2. `tags` contains exactly the 5 required tag names.\n3. `group_to_tag` maps every group name to a matching tag.\n4. For each of the 3 scenes, the `visible`/`hidden` lists match the specification exactly (order-insensitive) and are disjoint + together cover all 5 tags.\n5. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA and contains all 5 named groups.\n6. `C:\\Users\\Administrator\\Desktop\\S_Structure.dae` parses, contains ONLY `Walls`, `Roof`, `Floors` as named groups, and `Furniture` + `Fixtures` are absent.\n7. `C:\\Users\\Administrator\\Desktop\\S_Interior.dae` parses, contains ONLY `Floors`, `Furniture`, `Fixtures`, and `Walls` + `Roof` are absent.\n8. `C:\\Users\\Administrator\\Desktop\\S_All.dae` parses and contains all 5 named groups.",
+  "source": "SU-Help Tags, Scenes, Styles; COLLADA 1.5 library_visual_scenes",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15\\init_file\\house_raw.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\house_raw.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

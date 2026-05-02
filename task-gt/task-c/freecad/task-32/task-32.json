@@ -1,0 +1,62 @@
+{
+  "id": "c-freecad-task-32-ubuntu",
+  "snapshot": "FreeCAD0.19",
+  "instruction": "Using FreeCAD CLI/API, open /home/user/Desktop/freecad_task-32_input.step. Add four triangular reinforcing ribs to the L bracket and fuse them to the bracket. The ribs are 5 mm thick and located at X=20, 45, 75, and 100 mm, with triangular section legs of about 35 mm and 45 mm. Then cut two vertical through holes of diameter 10 mm in the base at X=30 mm and X=90 mm, Y=25 mm. Export /home/user/Desktop/freecad_task-32_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-32/init_file/freecad_task-32_input.step",
+            "path": "/home/user/Desktop/freecad_task-32_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecadcmd",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-32/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

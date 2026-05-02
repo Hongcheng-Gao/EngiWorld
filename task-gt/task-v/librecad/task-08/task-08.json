@@ -1,0 +1,72 @@
+{
+  "id": "v-librecad-task-08-ubuntu",
+  "snapshot": "LibreCAD2.1.3",
+  "instruction": "look at gui08_mirror_bracket_seed.dxf. Use x=0 as the mirror centerline and copy the left half bracket to the right side. Keep the original left half unchanged. Place the mirrored right outline on layer OUTLINE and the mirrored right circular hole on layer HOLE. Delete the temporary guide text on layer GUIDE. Save as gui08_mirror_bracket_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/gui08_mirror_bracket_seed.dxf",
+            "path": "/home/user/Desktop/gui08_mirror_bracket_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/gui08_mirror_bracket_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

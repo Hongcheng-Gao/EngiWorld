@@ -1,0 +1,74 @@
+{
+  "id": "v-altium-designer-task-40-windows",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "look at `template.OutJob` in Altium Designer. Following `spec.txt`, create a JLCPCB-style Pick and Place OutJob and save it as `jlcpcb.OutJob`.\n\nRequirements:\n- In `[OutputGroup1]`, create exactly one Pick Place output.\n- Set `Columns` to `Designator,Comment,Layer,X,Y,Rotation`.\n- Set `Units` to `mil`.\n- Set `DecimalPlaces` to `2`.\n- Set `Delimiter` to `,`.\n- Keep the output enabled and route it to the `Folder Structure` output medium.",
+  "source": "task.md #9 (JLCPCB 'How to generate Bill of Materials and Centroid File from Altium')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/init_file/spec.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\spec.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/init_file/template.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\template.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\spec.txt",
+          "C:\\Users\\Administrator\\Desktop\\template.OutJob"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-40/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

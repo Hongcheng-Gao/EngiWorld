@@ -1,0 +1,59 @@
+{
+  "id": "c-bonsai-task-05-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Mirrored Duplex IFC Shell\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 one-storey mirrored duplex shell and save the required output as /home/user/Desktop/result.ifc.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes.\n2. /home/user/Desktop/result.ifc uses an IFC4 schema.\n3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 4 IfcSpace entities, 8 IfcWall entities, 1 IfcSlab, 2 IfcDoor entities, 4 IfcWindow entities, 6 IfcOpeningElement entities, 6 IfcRelVoidsElement relationships, and 6 IfcRelFillsElement relationships.\n4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities.\n5. All IfcRoot GlobalId values are unique.\n6. The single IfcBuildingStorey is named exactly Duplex Level, ignoring leading and trailing whitespace only, and has Elevation 0.00 m with tolerance +/-0.05 m.\n7. The IfcSpace names are exactly A Living, A Bed, B Living, and B Bed, ignoring leading and trailing whitespace only.\n8. Each IfcSpace has clear plan dimensions 4.80 m by 2.00 m, in either X/Y orientation, with tolerance +/-0.08 m, and geometry height 2.80 m with tolerance +/-0.05 m.\n9. The slab is named exactly Duplex Slab, ignoring leading and trailing whitespace only, and has plan dimensions 10.40 m by 4.40 m in either X/Y orientation and thickness 0.20 m, each with tolerance +/-0.08 m for plan dimensions and +/-0.05 m for thickness.\n10. The 2 doors each have OverallWidth 0.95 m with tolerance +/-0.08 m, and each door fills exactly one IfcOpeningElement that voids an IfcWall.\n11. The 4 windows each have OverallWidth 1.20 m with tolerance +/-0.08 m, and each window fills exactly one IfcOpeningElement that voids an IfcWall.\n12. Each wall has height 3.00 m with tolerance +/-0.05 m and plan thickness either 0.15 m or 0.20 m with tolerance +/-0.04 m.\n13. Exactly 1 full-height party wall has X-axis thickness no greater than 0.30 m, Y-axis length at least 4.00 m, and center X coordinate within +/-0.25 m of the midpoint of the Duplex Slab X-axis bounding-box span.\n14. All spaces, walls, the slab, doors, and windows are spatially assigned to Duplex Level.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/tutorials/project4.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "--background",
+          "--python-expr",
+          "import bonsai; print('OK')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

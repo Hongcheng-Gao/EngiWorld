@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-task-19-windows",
+  "snapshot": "AutoCAD2027",
+  "instruction": "look at segmented_flange_gui.dxf. Recreate the target 2D CAD drawing for task 19 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be represented as clean DXF entities on sensible layers. Export exactly one DXF deliverable named autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/segmented_flange_gui.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\segmented_flange_gui.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2027\\acad.exe",
+          "C:\\Users\\Administrator\\Desktop\\segmented_flange_gui.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

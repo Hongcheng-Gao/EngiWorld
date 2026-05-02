@@ -1,0 +1,67 @@
+{
+  "id": "c-floris-task-05-ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "You are given a yaw-optimization template `/home/user/Desktop/yaw_opt_base.py`.\nComplete the following from the command line:\n\n1. Write a complete script `/home/user/Desktop/yaw_opt.py`:\n- Set conditions and run to get baseline power\n- Create `YawOptimizationSR(fmodel)`\n- Set `min_yaw=-30`, `max_yaw=30`, `Ny_passes=[3,4]`\n- Execute `optimize()`\n- Apply optimized yaw angles, re-run, and get optimized power\n\n2. Execute and save to `/home/user/Desktop/summary.txt` in this format:\n`baseline_total_kw, optimized_total_kw, opt_yaw_t0_deg, opt_yaw_t1_deg`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/two_turbine.yaml",
+            "path": "/home/user/Desktop/two_turbine.yaml"
+          },
+          {
+            "local_path": "task-05/init_file/yaw_opt_base.py",
+            "path": "/home/user/Desktop/yaw_opt_base.py"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "from floris import FlorisModel; fm = FlorisModel('defaults'); fm.run(); print(fm.get_turbine_powers())"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,74 @@
+{
+  "id": "c-autocad-task-26-win",
+  "snapshot": "AutoCAD2027",
+  "instruction": "Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\base.dxf, C:\\Users\\Administrator\\Desktop\\slider.dxf, C:\\Users\\Administrator\\Desktop\\pin.dxf, C:\\Users\\Administrator\\Desktop\\cover.dxf. Recreate the target 2D CAD drawing for task 26 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be represented as clean DXF entities on sensible layers. Export exactly one DXF deliverable named C:\\Users\\Administrator\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26/init_file/slider_assy/base.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\base.dxf"
+          },
+          {
+            "local_path": "task-26/init_file/slider.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\slider.dxf"
+          },
+          {
+            "local_path": "task-26/init_file/pin.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\pin.dxf"
+          },
+          {
+            "local_path": "task-26/init_file/cover.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\cover.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2027\\accoreconsole.exe",
+          "/?"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

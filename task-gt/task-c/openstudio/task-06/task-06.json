@@ -1,0 +1,57 @@
+{
+  "id": "c-openstudio-task-06-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Residential Unit Mix Model\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an OpenStudio 3.10 one-story residential unit mix model and save the required outputs as /home/user/Desktop/result.osm and /home/user/Desktop/kpis.json.\n\n## Pass conditions\n1. The output folder contains /home/user/Desktop/result.osm with size at least 500 bytes and /home/user/Desktop/kpis.json with size at least 10 bytes.\n2. /home/user/Desktop/result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. /home/user/Desktop/result.osm contains exactly 1 OS:BuildingStory, 6 OS:Space objects, 6 OS:ThermalZone objects, and 6 OS:ZoneHVAC:EquipmentList objects.\n4. The OS:Space names are exactly Unit-1, Unit-2, Unit-3, Unit-4, Corridor, and Stair.\n5. Every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2.\n6. The model has exactly 40 OS:Surface objects: 6 Floor surfaces, 6 RoofCeiling surfaces, and 28 Wall surfaces.\n7. The surface Outside Boundary Condition counts are exactly 6 Ground, 16 Outdoors, and 18 Surface.\n8. The model has exactly 6 OS:SubSurface objects whose Sub Surface Type is Door.\n9. The surface geometry bounding box has X span 24.00 m, Y span 8.00 m, and Z span 3.00 m, each with tolerance +/-0.05 m.\n10. The sum of floor surface areas is 192.00 m2 with tolerance +/-0.50 m2.\n11. The sum of exterior wall gross areas is 192.00 m2 with tolerance +/-0.50 m2.\n12. /home/user/Desktop/kpis.json contains unit_count, residential_floor_area_m2, common_floor_area_m2, and exterior_door_count values matching the evaluator-computed model metrics with tolerance max(0.10, 1%).\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-2.9.0-doc/model/html/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openstudio",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

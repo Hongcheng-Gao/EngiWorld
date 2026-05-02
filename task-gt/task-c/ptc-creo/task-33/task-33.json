@@ -1,0 +1,63 @@
+{
+  "id": "c-ptc-creo-task-33-win",
+  "snapshot": "ptccreo-12.4.0.0",
+  "instruction": "Use the command-line evaluation workflow to open C:\\Users\\Administrator\\Desktop\\task-33_initial.step. Replace the original short spacers with spacer geometry of height 20 mm while keeping each spacer X/Y size and center position unchanged. Move the clamp plate upward so its bottom face contacts the top faces of the new spacers. Export C:\\Users\\Administrator\\Desktop\\task-33_output.step.",
+  "source": "https://support.ptc.com/help/creo/creo_pma/r12/usascii/data_exchange/interface/STEP_Import_Profile_Settings_and_Corresponding_Configuration_Options.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/data_exchange/interface/To_Export_a_Part_or_Assembly_to_STEP.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/assembly/asm/About_Creating_an_Assembly.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/assembly/asm/About_Working_with_Assembly_Components.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/assembly/asm/Tip_Successful_Component_Replacement.html; https://support.ptc.com/help/creo/creo_pma/r12/usascii/fundamentals/fundamentals/About_Mapkeys.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33/init_file/task-33_initial.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\task-33_initial.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Creo 12.4.0.0\\Parametric\\bin\\parametric.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ptc-creo"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-33/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

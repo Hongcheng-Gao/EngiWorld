@@ -1,0 +1,62 @@
+{
+  "id": "c-kicad-task-21-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "V-Score Panel with Rail\n\nYou have a single-board design in `/home/user/Desktop/A.kicad_pcb` (50x30 mm, containing R1, C1, D1 footprints). You must create a panelized version with rails and V-score markings for depaneling.\n\nGenerate `/home/user/Desktop/panel.kicad_pcb` as a 3-column x 2-row panel of the A board.\n\nRequirements:\n1. Panel outer Edge.Cuts outline must be within a 180x120 mm bounding box.\n2. Include 6 copies of A board's footprints (refdes prefixed: A1_R1, A1_C1, A1_D1, A2_R1,... A6_D1) placed in a 3x2 grid with 50 mm horizontal spacing and 30 mm vertical spacing, plus 5 mm rails at top and bottom and 5 mm margins on left and right.\n3. Add at least 5 V-score lines on the Eco1.User layer: 2 vertical interior seams (between columns), 1 horizontal interior seam (between rows), plus top and bottom rail boundary lines.\n4. Include exactly 12 Fiducial:Fiducial_1mm_Mask2mm footprints: 3 per rail corner group (top-left, top-right, bottom-left, bottom-right corners of the panel rails).\n5. All 6 board instances must not overlap: centroid distance between instances >= 20 mm.\n6. Also write `/home/user/Desktop/edgecuts.svg` as the native KiCad CLI Edge.Cuts SVG export of your final panel.\n7. Also write `/home/user/Desktop/eco1.svg` as the native KiCad CLI Eco1.User SVG export of your final panel.\n\nWrite /home/user/Desktop/panel.kicad_pcb, /home/user/Desktop/edgecuts.svg, and /home/user/Desktop/eco1.svg.",
+  "source": "KiKit Panelization Documentation (KiKit `panelize vscore`), KiCad 9 Official Documentation - PCB Editor / CLI (`kicad-cli pcb export svg`), IPC-6012F Qualification for Rigid PCBs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/A.kicad_pcb",
+            "path": "/home/user/Desktop/A.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad-cli",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-21/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

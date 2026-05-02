@@ -1,0 +1,71 @@
+{
+  "id": "c-fusion360-task-36-win",
+  "snapshot": "fusion360-latest",
+  "instruction": "Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\revision_A.step, C:\\Users\\Administrator\\Desktop\\revision_B.step, C:\\Users\\Administrator\\Desktop\\tools.csv. Compare C:\\Users\\Administrator\\Desktop\\revision_A.step and C:\\Users\\Administrator\\Desktop\\revision_B.step, identify changes in pocket dimensions and hole positions, and generate the final CAM program only for revision_B. Export C:\\Users\\Administrator\\Desktop\\task-36_B.nc and C:\\Users\\Administrator\\Desktop\\change_report.json. The NC program must match revision_B geometry and not the old revision_A hole positions. Tool definitions: use the supplied tools to program only revision_B geometry. Write the output file(s) to the Desktop path(s) using exactly these absolute file paths: C:\\Users\\Administrator\\Desktop\\task-36_B.nc, C:\\Users\\Administrator\\Desktop\\change_report.json.",
+  "source": "Fusion Manufacture workflow 与 NC Program。(Autodesk Help) https://help.autodesk.com/view/fusion360/ENU/?contextId=MFG-REF-NC-OLD-V-NEW&utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/init_file/revision_A.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\revision_A.step"
+          },
+          {
+            "local_path": "task-36/init_file/revision_B.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\revision_B.step"
+          },
+          {
+            "local_path": "task-36/init_file/tools.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

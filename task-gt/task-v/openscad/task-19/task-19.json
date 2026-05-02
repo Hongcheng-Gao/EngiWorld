@@ -1,0 +1,62 @@
+{
+  "id": "v-openscad-task-19-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "look at task-019_initial.scad. Change the model into a three-level step calibration block. Level 1 is 40 x 20 x 5 mm. Level 2 is 30 x 20 x 5 mm and centered on level 1. Level 3 is 20 x 20 x 5 mm and centered on level 2. Final total height must be 15 mm. Fully render and export task-019_output.stl.",
+  "source": "https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/task-019_initial.scad",
+            "path": "/home/user/Desktop/task-019_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "/home/user/Desktop/task-019_initial.scad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

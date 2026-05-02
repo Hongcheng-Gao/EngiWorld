@@ -1,0 +1,70 @@
+{
+  "id": "v-archicad-task-16-windows",
+  "snapshot": "archicad-29",
+  "instruction": "Library Sheet Set from Existing Model\n\nThis task starts from init.ifc. Reference images are provided on the Desktop: init_plan.png, init_section.png. Modify the Archicad model as needed and save the required outputs as result.ifc, result.pdf.\n\n## Pass conditions\n1. The output folder contains result.ifc with size at least 500 bytes, and result.pdf with size at least 500 bytes.\n2. result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 6 IfcSpace entities.\n5. The IFC model contains at least 4 IfcWall entities, at least 1 IfcSlab entity, and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: LOBBY, READING, STACKS, OFFICE, WC, STORE.\n7. Every listed space is assigned to the single IfcBuildingStorey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [19.0, 9.0, 3.4].\n9. result.pdf has exactly 3 pages and extracted text contains at least these case-insensitive tokens: A001, A101, A201, LIBRARY SHEET SET FROM EXISTING MODEL, LOBBY, READING, STACKS, OFFICE.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/070_Documentation/070_Documentation-1.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-16/init_image/init_plan.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+          },
+          {
+            "local_path": "task-16/init_image/init_section.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe",
+          "C:\\Users\\Administrator\\Desktop\\init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

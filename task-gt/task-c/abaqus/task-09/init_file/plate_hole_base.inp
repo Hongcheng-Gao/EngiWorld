@@ -1,0 +1,25 @@
+*Heading
+Plate with hole - coarse mesh
+*Node
+1, 0.0, 0.0, 0.0
+2, 100.0, 0.0, 0.0
+3, 100.0, 200.0, 0.0
+4, 0.0, 200.0, 0.0
+*Element, type=S4R, elset=ALL
+1, 1, 2, 3, 4
+*Material, name=Steel
+*Elastic
+210000.0, 0.3
+*Shell Section, elset=ALL, material=Steel, thickness=1.0
+*Assembly, name=Assembly
+*Instance, name=Plate-1, part=Plate
+*End Instance
+*End Assembly
+*Step, name=Step-Tension, nlgeom=NO
+*Static
+1.0, 1.0, 1e-5, 1.0
+*Boundary
+SYM, YSYMM
+*Dsload
+LOAD, TRSHR, 10.0
+*End Step

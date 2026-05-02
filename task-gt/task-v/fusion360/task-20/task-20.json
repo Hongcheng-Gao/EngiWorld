@@ -1,0 +1,62 @@
+{
+  "id": "v-fusion360-task-20-windows",
+  "snapshot": "fusion360-latest",
+  "instruction": "look at two_sided_housing.step. Create two independent setups for the two-sided housing. Setup A machines the A-face pocket and four holes. Setup B machines the two B-face counterbores. The WCS Z axes of the two setups must point in opposite directions. Tool definitions: T1 is a pocketing end mill, T2 is a drill, and T3 is a counterbore tool for the B-side counterbores. In the NC Program or post-process dialog, use metric units and the selected post processor for this setup, then export task-20_sideA.nc, task-20_sideB.nc to the Desktop path(s) using exactly these absolute file paths.",
+  "source": "Setup、WCS 与 NC Program。(Autodesk) https://www.autodesk.com/learn/ondemand/tutorial/create-a-setup-in-fusion-for-milling?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/two_sided_housing.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\two_sided_housing.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe",
+          "C:\\Users\\Administrator\\Desktop\\two_sided_housing.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

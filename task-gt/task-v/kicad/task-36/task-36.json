@@ -1,0 +1,74 @@
+{
+  "id": "v-kicad-task-36-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Back-Annotation of Footprint Changes\n\nThe files design.kicad_sch and design.kicad_pcb are a matched KiCad 9 schematic and board. During layout, 12 components had their footprints changed from 0603 to 0402 in the PCB file. The schematic still shows the original 0603 footprints for those components.\n\nBack-annotate the schematic so every component's Footprint field matches the footprint used in the board. Write the updated schematic as design.kicad_sch.\n\nRequirements:\n1. For every refdes, the Footprint property in the output schematic must exactly match the footprint name used for that component in design.kicad_pcb.\n2. Components whose footprints were not changed in the board must retain their original Footprint field (no spurious changes).\n3. The symbol count, all reference designators, all Value fields, and all other properties must remain unchanged.\n4. No Footprint field may be empty.\n\nWrite design.kicad_sch.",
+  "source": "KiCad 9 Official Documentation — PCB Editor / Schematic Editor / CLI (back-annotation workflow)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/init_file/design.kicad_pcb",
+            "path": "/home/user/Desktop/design.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/init_file/design.kicad_sch",
+            "path": "/home/user/Desktop/design.kicad_sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/design.kicad_pcb",
+          "/home/user/Desktop/design.kicad_sch"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

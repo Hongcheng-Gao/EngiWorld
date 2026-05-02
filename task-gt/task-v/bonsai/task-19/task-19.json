@@ -1,0 +1,62 @@
+{
+  "id": "v-bonsai-task-19-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Facility Management IFC CSV Room Finish Schedule\n\nStart from init.ifc and add room finish and area data to the office layout. Save the completed IFC model as result.ifc and use Bonsai/IfcCSV-style IFC data export to save the room finish schedule as result.csv.\n\n## Pass conditions\n1. The output folder contains result.ifc and result.csv at the top level, and both files are non-empty.\n2. result.ifc is an IFC4 file with exactly 1 IfcProject, 1 IfcBuildingStorey, 5 IfcSpace, 7 IfcWall, 1 IfcSlab, 4 IfcDoor, 3 IfcWindow, 7 IfcOpeningElement, 7 IfcRelVoidsElement, and 7 IfcRelFillsElement.\n3. result.ifc contains no IfcBuildingElementProxy or IfcFurnishingElement objects.\n4. Every IfcDoor and IfcWindow is linked by one IfcRelFillsElement to an IfcOpeningElement, and each of those openings is linked by one IfcRelVoidsElement to an IfcWall.\n5. The five IfcSpace names are exactly Lobby, Office A, Office B, Meeting, and WC after case-insensitive comparison that ignores repeated spaces, hyphens, and underscores.\n6. Each IfcSpace has an EPset_FMFinish property set containing RoomNumber, FloorFinish, WallFinish, and CeilingFinish, and a Qto_SpaceBaseQuantities NetFloorArea quantity.\n7. result.csv has exactly these headers in this order: RoomNumber, SpaceName, FloorFinish, WallFinish, CeilingFinish, NetFloorArea.\n8. result.csv has exactly 5 data rows, one for each IfcSpace, and each row matches that space's EPset_FMFinish values and NetFloorArea within 0.05 square meters.\n9. The required room records are: 101 Lobby Polished Concrete Painted GWB Acoustic Tile NetFloorArea 10.08; 102 Office A Carpet Tile Painted GWB Acoustic Tile NetFloorArea 23.04; 103 Office B Carpet Tile Painted GWB Acoustic Tile NetFloorArea 33.84; 104 Meeting Vinyl Plank Painted GWB Acoustic Tile NetFloorArea 14.96; 105 WC Ceramic Tile Moisture Board Painted Ceiling NetFloorArea 15.64.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/reference/facility_management/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "/home/user/Desktop/init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

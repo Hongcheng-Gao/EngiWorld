@@ -1,0 +1,63 @@
+{
+  "id": "c-abaqus-task-11-win",
+  "snapshot": "abaqus-2025",
+  "instruction": "You are given a simply supported beam template `C:\\Users\\Administrator\\Desktop\\ssb_base.inp` (`200 mm × 10 mm × 10 mm`).\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\ssb.inp`:\n   - Left end: simply supported (bottom midpoint `U2=U3=0`, allow `UX` and rotation)\n   - Right end: roller support (bottom midpoint `U2=U3=0`, allow `UX`)\n   - Implement using RP and Coupling\n   - Apply uniform pressure `0.05 MPa` on top surface (equivalent `q=0.5 N/mm`)\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Extract U2 displacement at the bottom midpoint of span center (`x≈100 mm`)\n   - Extract global maximum Mises stress\n   - Output format: `mid_u2, max_mises`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `midspan_u2, max_mises`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/ssb_base.inp",
+            "path": "C:\\Users\\Administrator\\Desktop\\ssb_base.inp"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "abaqus information=version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,63 @@
+{
+  "id": "c-sketchup-task-36-win",
+  "snapshot": "sketchup2026",
+  "instruction": "DAE roundtrip fidelity.\n\nThe input file `C:\\Users\\Administrator\\Desktop\\orig.dae` is a COLLADA scene generated as if it had been exported from SketchUp. It contains:\n\n- 20 component instances (scene `<node>` elements that each carry one `<instance_geometry>`).\n- 5 shared `<geometry>` definitions in `<library_geometries>` (component instances re-use them, mimicking SketchUp's ComponentDefinition/ComponentInstance model): `geom-chair`, `geom-table`, `geom-shelf`, `geom-lamp`, `geom-bench`.\n- 3 `<material>` entries (`mat-wood`, `mat-metal`, `mat-fabric`) bound to different subsets of the 20 instances via the per-instance `<bind_material>` symbol `matref`.\n- 5 SketchUp-style tags (\"layers\") encoded inside group `<node>` `<extra>` blocks: `Structure`, `RoomA`, `RoomB`, `Fixtures`, `Misc`.\n- A 2-level nested group hierarchy: the scene root contains a `Floors` container, which contains `Floor_01` and `Floor_02` group nodes, each of which contains multiple `Room_*` group nodes, each of which contains the leaf component instance nodes. So the deepest named-node chain is `Floors > Floor_XX > Room_Y > Inst_ZZ` (depth 4).\n\nYour task mimics the SketchUp roundtrip test: export the scene to DAE, import that DAE back into a fresh empty scene, then re-export it a second time. Concretely:\n\n1. Load `C:\\Users\\Administrator\\Desktop\\orig.dae`.\n2. Save it to an intermediate DAE (e.g. `tmp_a.dae`).\n3. Load the intermediate DAE from disk and re-save it to `C:\\Users\\Administrator\\Desktop\\output.dae`.\n4. Compare `C:\\Users\\Administrator\\Desktop\\orig.dae` with `C:\\Users\\Administrator\\Desktop\\output.dae` and write `C:\\Users\\Administrator\\Desktop\\report.json` with EXACTLY these four keys:\n\n```\n{\n\"vertex_count_preserved\": <bool>, // total vertex entries in <geometry>/<float_array> is identical\n\"material_count_preserved\": <bool>, // number of <material> entries is identical\n\"hierarchy_depth_preserved\": <bool>, // deepest named-node chain depth is identical\n\"total_instances\": <int> // count of scene <node>s carrying an <instance_geometry> in C:\\Users\\Administrator\\Desktop\\output.dae\n}\n```\n\nThe three booleans MUST be computed from actually measuring both DAEs - do not hardcode `true`. `total_instances` is an integer count measured on `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` exists and parses via `pycollada`.\n2. `C:\\Users\\Administrator\\Desktop\\report.json` exists, is valid JSON, and has exactly the four keys above with the correct types (3 booleans + 1 integer).\n3. `C:\\Users\\Administrator\\Desktop\\output.dae` has the same total `<geometry>` vertex count as `C:\\Users\\Administrator\\Desktop\\orig.dae`.\n4. `C:\\Users\\Administrator\\Desktop\\output.dae` has the same number of `<material>` entries as `C:\\Users\\Administrator\\Desktop\\orig.dae`.\n5. `C:\\Users\\Administrator\\Desktop\\output.dae`'s scene-graph depth (deepest named-node chain) equals `C:\\Users\\Administrator\\Desktop\\orig.dae`'s.\n6. `C:\\Users\\Administrator\\Desktop\\output.dae` carries exactly 20 instance nodes (scene `<node>`s with at least one `<instance_geometry>`).\n7. The three `*_preserved` flags in `C:\\Users\\Administrator\\Desktop\\report.json` equal the actual comparison between the input and output files; `total_instances` equals the actual instance count in `C:\\Users\\Administrator\\Desktop\\output.dae`.",
+  "source": "COLLADA 1.5 schema fidelity expectations [COLLADA-15]; SketchUp DAE export options [SU-Help]; pycollada 0.9.x",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36\\init_file\\orig.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\orig.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36\\eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

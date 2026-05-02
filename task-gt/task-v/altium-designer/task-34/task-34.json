@@ -1,0 +1,157 @@
+{
+  "id": "v-altium-designer-task-34-windows",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "The input directory contains `old.PrjPcb`, `old.PrjPcbStructure`, and 7 `.SchDoc` files whose filenames contain the substring `old` (`old_Top.SchDoc` plus 6 child sheets). Rename the whole project from `old` to `new`:\n1. Write `old.PrjPcb` out as `new.PrjPcb`, preserving the original `[Design]` and `[Preferences]` sections, while replacing the substring `old` with `new` inside every `[DocumentN]` section's `DocumentPath`.\n2. Write `old.PrjPcbStructure` out as `new.PrjPcbStructure`, preserving the original pipe-separated `Record=...|key=val|...` line format, while replacing the substring `old` with `new` in `FileName`, `RawFileName`, and `SourceDocument` fields of `TopLevelDocument` and `SheetSymbol` records.\n3. Rename all 7 `.SchDoc` filenames by replacing the substring `old` with `new`, while leaving file contents unchanged.\n\nWrite the results to ``. Do not leave files named `old.PrjPcb` or `old.PrjPcbStructure`.",
+  "source": "task.md #2 (Altium Multi-sheet & Hierarchical Designs; SpiritLevel-SL1 example)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old.PrjPcb",
+            "path": "C:\\Users\\Administrator\\Desktop\\old.PrjPcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old.PrjPcbStructure",
+            "path": "C:\\Users\\Administrator\\Desktop\\old.PrjPcbStructure"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_Analog.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_Analog.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_Debug.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_Debug.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_IO.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_IO.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_MCU.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_MCU.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_Power.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_Power.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_Storage.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_Storage.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-34/init_file/old_Top.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\old_Top.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\old.PrjPcb",
+          "C:\\Users\\Administrator\\Desktop\\old_Analog.SchDoc",
+          "C:\\Users\\Administrator\\Desktop\\old_Debug.SchDoc",
+          "C:\\Users\\Administrator\\Desktop\\old_IO.SchDoc",
+          "C:\\Users\\Administrator\\Desktop\\old_MCU.SchDoc",
+          "C:\\Users\\Administrator\\Desktop\\old_Power.SchDoc",
+          "C:\\Users\\Administrator\\Desktop\\old_Storage.SchDoc",
+          "C:\\Users\\Administrator\\Desktop\\old_Top.SchDoc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-34/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

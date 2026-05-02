@@ -1,0 +1,67 @@
+{
+  "id": "c-floris-task-14-ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "You are given a custom turbine definition `/home/user/Desktop/custom_turbine.yaml`.\nComplete the following from the command line:\n\n1. Write a complete script `/home/user/Desktop/external.py`:\n- Build a single-turbine wind farm using `custom_3mw`\n- Sweep wind speeds `3, 5, 7, 9, 11, 13, 15 m/s`\n- Extract power and thrust coefficient at each wind speed\n\n2. Execute and save to `/home/user/Desktop/summary.txt` in this format:\n`ws3_power_kw, ws3_ct, ws9_power_kw, ws9_ct, ws15_power_kw, ws15_ct`\n\n3. Do not use any GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/custom_turbine.yaml",
+            "path": "/home/user/Desktop/custom_turbine.yaml"
+          },
+          {
+            "local_path": "task-14/init_file/external_base.py",
+            "path": "/home/user/Desktop/external_base.py"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "from floris import FlorisModel; fm = FlorisModel('defaults'); fm.run(); print(fm.get_turbine_powers())"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,72 @@
+{
+  "id": "v-librecad-task-19-ubuntu",
+  "snapshot": "LibreCAD2.1.3",
+  "instruction": "look at gui19_layout_copy_seed.dxf. Copy the complete existing part into a 3 column by 2 row array. Column spacing must be 60 mm and row spacing must be 45 mm. Keep the original part as the lower-left instance and create the other five as copied instances. Keep every part outline on layer OUTLINE. Save as gui19_layout_copy_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/gui19_layout_copy_seed.dxf",
+            "path": "/home/user/Desktop/gui19_layout_copy_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/gui19_layout_copy_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,56 @@
+{
+  "id": "v-archicad-task-08-windows",
+  "snapshot": "archicad-29",
+  "instruction": "Transit Kiosk and Canopy Issue Set\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create the Archicad model as needed and save the required outputs as result.ifc, result.pdf.\n\n## Pass conditions\n1. The output folder contains result.ifc with size at least 500 bytes, and result.pdf with size at least 500 bytes.\n2. result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 4 IfcSpace entities.\n5. The IFC model contains at least 1 IfcSlab entity, and at least 2 IfcRoof entities.\n6. The IFC model contains spaces with exactly these normalized names: TICKETING, STAFF, WC, CANOPY-AREA.\n7. Every listed space is assigned to the single IfcBuildingStorey.\n8. The shaped IFC product bounding box is within 0.5 m of min [-1.0, -0.5, -0.3] and max [11.0, 10.0, 3.8].\n9. result.pdf has exactly 2 pages and extracted text contains at least these case-insensitive tokens: A121, PLAN, SECTION, TRANSIT KIOSK AND CANOPY, TICKETING, STAFF, WC, CANOPY-AREA.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-59.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

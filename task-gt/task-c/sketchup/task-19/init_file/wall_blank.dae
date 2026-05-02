@@ -1,0 +1,93 @@
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <created>2026-04-23T21:24:08.922581</created>
+    <modified>2026-04-23T21:24:08.922595</modified>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="wall-eff" name="wall-eff">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0.0 0.0 0.0 1.0</color>
+            </emission>
+            <ambient>
+              <color>0.0 0.0 0.0 1.0</color>
+            </ambient>
+            <diffuse>
+              <color>0.82 0.82 0.82 1.0</color>
+            </diffuse>
+            <specular>
+              <color>0.0 0.0 0.0 1.0</color>
+            </specular>
+            <shininess>
+              <float>0.0</float>
+            </shininess>
+            <reflective>
+              <color>0.0 0.0 0.0 1.0</color>
+            </reflective>
+            <reflectivity>
+              <float>0.0</float>
+            </reflectivity>
+            <transparent>
+              <color>0.0 0.0 0.0 1.0</color>
+            </transparent>
+            <transparency>
+              <float>1.0</float>
+            </transparency>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>0</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="wall-geom" name="WallBlank">
+      <mesh>
+        <source id="wall-pos-array">
+          <float_array count="12" id="wall-pos-array-array">0 0 0 8 0 0 8 0 3 0 0 3</float_array>
+          <technique_common>
+            <accessor count="4" source="#wall-pos-array-array" stride="3">
+              <param type="float" name="X" />
+              <param type="float" name="Y" />
+              <param type="float" name="Z" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="wall-pos-array-vertices">
+          <input semantic="POSITION" source="#wall-pos-array" />
+        </vertices>
+        <triangles count="2" material="matref">
+          <input offset="0" semantic="VERTEX" source="#wall-pos-array-vertices" />
+          <p>0 1 2 0 2 3</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_materials>
+    <material id="wall-mat" name="Default">
+      <instance_effect url="#wall-eff" />
+    </material>
+  </library_materials>
+  <library_visual_scenes>
+    <visual_scene id="scene">
+      <node id="WallBlank" name="WallBlank">
+        <instance_geometry url="#wall-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref" target="#wall-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#scene" />
+  </scene>
+</COLLADA>

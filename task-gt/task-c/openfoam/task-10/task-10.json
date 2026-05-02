@@ -1,0 +1,107 @@
+{
+  "id": "c-openfoam-task-10-ubuntu",
+  "snapshot": "OpenFOAM9",
+  "instruction": "You are given a buoyancy-driven template `/home/user/Desktop/buoyant_base/`.\nComplete a natural-convection cavity analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/buoyant/`:\n- Build a rectangular cavity geometry\n- Set a wall temperature difference on two sides; configure buoyancy model and properties\n- Run to quasi-steady state\n\n2. Extract the temperature at the geometric center.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Geometric-center temperature `center_temp`\n- Format: `center_temp`\n\n4. Do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/buoyant_base/0/T",
+            "path": "/home/user/Desktop/buoyant_base/0/T"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/0/U",
+            "path": "/home/user/Desktop/buoyant_base/0/U"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/0/p",
+            "path": "/home/user/Desktop/buoyant_base/0/p"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/0/p_rgh",
+            "path": "/home/user/Desktop/buoyant_base/0/p_rgh"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/README.init.md",
+            "path": "/home/user/Desktop/buoyant_base/README.init.md"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/constant/g",
+            "path": "/home/user/Desktop/buoyant_base/constant/g"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/constant/momentumTransport",
+            "path": "/home/user/Desktop/buoyant_base/constant/momentumTransport"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/constant/physicalProperties",
+            "path": "/home/user/Desktop/buoyant_base/constant/physicalProperties"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/system/blockMeshDict",
+            "path": "/home/user/Desktop/buoyant_base/system/blockMeshDict"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/system/controlDict",
+            "path": "/home/user/Desktop/buoyant_base/system/controlDict"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/system/fvSchemes",
+            "path": "/home/user/Desktop/buoyant_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/system/fvSolution",
+            "path": "/home/user/Desktop/buoyant_base/system/fvSolution"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "bash",
+          "-lc",
+          "source /opt/openfoam9/etc/bashrc && simpleFoam -help"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

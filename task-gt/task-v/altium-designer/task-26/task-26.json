@@ -1,0 +1,62 @@
+{
+  "id": "v-altium-designer-task-26-windows",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "look at the native Altium schematic `broken_spiritlevel_top.SchDoc` in Altium Designer, repair the broken sheet-symbol target filenames, and save the repaired document as `spiritlevel_top.SchDoc`. The repaired schematic must restore the four sheet-symbol target filenames : `SL_Config_2E.SchDoc`, `SL_LCD_SW_LED_2E.SchDoc`, `SL_FPGA_Auto_2E.SchDoc`, and `SL_Power.SchDoc`.",
+  "source": "Local Altium example `SpiritLevel-SL1\\SL1 Xilinx Spartan-IIE PQ208 Rev1.02.SchDoc`; benchmark task restored from text-only project rewriting to native schematic repair.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26/init_file/broken_spiritlevel_top.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_spiritlevel_top.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\broken_spiritlevel_top.SchDoc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

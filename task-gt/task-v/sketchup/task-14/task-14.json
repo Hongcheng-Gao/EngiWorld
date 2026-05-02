@@ -1,0 +1,61 @@
+{
+  "id": "v-sketchup-task-14-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Wood Grain Aligned to Long Axis\n\nUsing SketchUp's GUI, model a rectangular desk tabletop and apply the provided wood texture with its grain direction aligned to the long axis of the tabletop.\n\nInitial files:\n- `tex\\wood.png` - a pre-generated tileable wood-grain texture. In the image, the grain runs horizontally (parallel to the image U axis), i.e. the parallel dark\\light stripes of the grain are horizontal lines. The V (vertical, 0..1) axis of the image crosses the grain.\n\nSpecification:\n- **Tabletop**: a single flat rectangular slab **1.6 m x 0.8 m x 0.03 m** (long x short x thickness). Orient it in whatever plane is convenient (e.g. lying flat in XY with the long 1.6 m edge along world X and the short 0.8 m edge along world Y). The tabletop bounding box, sorted, must be 1.6 m, 0.8 m, 0.03 m.\n- **Material**: create a SketchUp material that references `tex\\wood.png` as its texture image on the large top face of the slab. Other faces may be left with a default material.\n- **Grain direction**: orient the UVs on the large top face so the texture's **V axis (the 0..1 direction perpendicular to the image grain stripes) runs along the long 1.6 m axis of the tabletop**. Equivalently, the wood grain stripes (horizontal in the source image) must appear running along the long axis in the final scene - not crossing the short axis. Use SketchUp's `Texture > Position` (fixed pins) + rotate-pin to lock the orientation.\n- No visible stretch artifacts; UV scaling is not constrained to a specific physical size, only the orientation matters for this task.\n\nExport the result as `output.dae` with its textures bundled in a `tex\\` subdirectory (relative path references, e.g. `tex\\wood.png`).\n\nRequirements:\n1. `output.dae` parses as valid COLLADA.\n2. The tabletop's three sorted bounding-box dimensions are 1.6 m, 0.8 m, 0.03 m within 20 mm.\n3. The DAE references a `wood*.png` image in `<library_images>` (relative path under `tex\\`).\n4. The referenced texture file exists on disk at the resolved relative path.\n5. At least one primitive has TEXCOORD input.\n6. On the large tabletop face, the UV V axis direction aligns with the world's longest in-plane axis (the 1.6 m axis). Equivalently, the absolute gradient of V with respect to world-X is much larger than with respect to world-Y (or vice versa depending on orientation, but V must align with the long edge).",
+  "source": "SU-Help Texture Position \\ Fixed Pins; SU-Sage wood grain alignment",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/tex/wood.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex\\wood.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

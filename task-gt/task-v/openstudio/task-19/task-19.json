@@ -1,0 +1,76 @@
+{
+  "id": "v-openstudio-task-19-ubuntu",
+  "snapshot": "OpenStudio-1.8.0",
+  "instruction": "Single Office Result From Init Package\n\nThis task starts from Desktop input files: init.osm, weather.epw, workflow.osw. Reference image is provided on the Desktop: init_plan.png. Modify the OpenStudio 3.10 model as needed and save the required output as result.osm.\n\n## Pass conditions\n1. The output folder contains result.osm with size at least 500 bytes.\n2. result.osm contains exactly one OS:Version object whose version identifier starts with 3.10.\n3. result.osm contains exactly 1 OS:BuildingStory, 1 OS:Space named Office, and 1 OS:ThermalZone.\n4. The OS:Space references the OS:BuildingStory, references the OS:ThermalZone, and has floor area greater than 0.05 m2.\n5. The model has exactly 6 OS:Surface objects: 1 Floor surface, 1 RoofCeiling surface, and 4 Wall surfaces.\n6. The surface Outside Boundary Condition counts are exactly 1 Ground and 5 Outdoors.\n7. The model has exactly 2 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 2.\n8. The model contains exactly 1 OS:ZoneHVAC:IdealLoadsAirSystem, 1 OS:ZoneHVAC:EquipmentList, 1 OS:ThermostatSetpoint:DualSetpoint, 1 OS:People object, 1 OS:Lights object, and 1 OS:ElectricEquipment object.\n9. The surface geometry bounding box has X span 15.00 m, Y span 10.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m.\n10. The sum of floor surface areas is 150.00 m2 with tolerance +/-0.50 m2.\n11. The sum of exterior wall gross areas is 160.00 m2 with tolerance +/-0.50 m2.\n12. The total fixed-window area is 24.00 m2 with tolerance +/-0.50 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-3.8.0-doc/utilities/html/classopenstudio_1_1_workflow_j_s_o_n.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          },
+          {
+            "local_path": "task-19/init_file/weather.epw",
+            "path": "/home/user/Desktop/weather.epw"
+          },
+          {
+            "local_path": "task-19/init_file/workflow.osw",
+            "path": "/home/user/Desktop/workflow.osw"
+          },
+          {
+            "local_path": "task-19/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "env",
+          "DISPLAY=:99",
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

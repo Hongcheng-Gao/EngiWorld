@@ -1,0 +1,67 @@
+{
+  "id": "c-fusion360-task-35-win",
+  "snapshot": "fusion360-latest",
+  "instruction": "Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\\Users\\Administrator\\Desktop\\risky_setup.step, C:\\Users\\Administrator\\Desktop\\tools.csv. Plan drilling for sixteen candidate holes in C:\\Users\\Administrator\\Desktop\\risky_setup.step with fixtures present. Skip all holes with holder collision risk and do not include their coordinates in the final NC program. Machine all safe holes and keep low-level tool positions at least 3 mm clear of fixtures. Export C:\\Users\\Administrator\\Desktop\\task-35.nc and C:\\Users\\Administrator\\Desktop\\collision_filter.json. Tool definitions: use drilling tools that allow safe candidate holes and skip holes with holder collision risk. Write the output file(s) to the Desktop path(s) using exactly these absolute file paths: C:\\Users\\Administrator\\Desktop\\task-35.nc, C:\\Users\\Administrator\\Desktop\\collision_filter.json.",
+  "source": "Setup、NC Program、G-code。(Autodesk) https://www.autodesk.com/learn/ondemand/tutorial/create-a-setup-in-fusion-for-milling?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/risky_setup.step",
+            "path": "C:\\Users\\Administrator\\Desktop\\risky_setup.step"
+          },
+          {
+            "local_path": "task-35/init_file/tools.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "cmd",
+          "/c",
+          "if exist \"C:\\Users\\Administrator\\AppData\\Local\\Autodesk\\webdeploy\\production\\6a0c9611291d45bb9226980209917c3d\\FusionLauncher.exe\" (echo OK) else (echo MISSING & exit /b 1)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fusion360"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "v-kicad-task-29-ubuntu",
+  "snapshot": "kicad-10.0.1",
+  "instruction": "Differential-Pair Labelling\n\nmipi.kicad_sch contains a MIPI D-PHY interface with 4 differential pairs drawn between an image sensor SoC (U1) and a 10-pin FFC connector (J1). The nets are currently named with arbitrary labels: D0A/D0B, D1P/D1N, CLK+/CLK-, D2plus/D2minus. A hidden property 'PadConvention' on J1 states the pad numbering rule.\n\nRename all 8 MIPI differential-pair net labels to follow the KiCad convention required for length-matching: <NAME>_P for the positive lane, <NAME>_N for the negative lane. The P/N assignment must be consistent with the connector footprint pad convention (even-numbered pad = P lane, odd-numbered pad = N lane). Use the standard MIPI D-PHY signal names.\n\nRequired net names:\n- MIPI_D0_P / MIPI_D0_N (data lane 0)\n- MIPI_D1_P / MIPI_D1_N (data lane 1)\n- MIPI_D2_P / MIPI_D2_N (data lane 2)\n- MIPI_CLK_P / MIPI_CLK_N (clock lane)\n\nRequirements:\n1. All 8 nets renamed exactly as listed above (uppercase _P and _N suffixes).\n2. No original arbitrary net names remain as label text.\n3. J1 Pad properties updated to reflect new net names.\n4. U1 and J1 still present in the schematic.\n\nWrite mipi.kicad_sch.",
+  "source": "MIPI D-PHY Specification v2.5, KiCad 9 Official Documentation — PCB Editor / Schematic Editor / CLI (diff-pair net naming `_P`/`_N`)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-29/init_file/mipi.kicad_sch",
+            "path": "/home/user/Desktop/mipi.kicad_sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/mipi.kicad_sch"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-29/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

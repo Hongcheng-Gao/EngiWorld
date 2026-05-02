@@ -1,0 +1,66 @@
+{
+  "id": "v-revit-task-17-windows",
+  "snapshot": "Revit-2027",
+  "instruction": "Two Storey Meeting Center Retrofit IFC\n\nThis task starts from init.ifc and uses the local reference image init_sheet.png. In Revit, modify the starting model into a two-storey meeting center scheme and export the completed model as result.ifc in the Desktop.\n\n## Pass conditions\n1. The output folder contains result.ifc, and result.ifc is at least 500 bytes.\n2. result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 2 IfcBuildingStorey entities, 5 IfcSpace entities, 12 IfcWall entities, 3 IfcSlab entities, and 5 IfcCurtainWall entities.\n5. The IFC model contains 0 IfcRoof, 0 IfcDoor, 0 IfcWindow, 0 IfcStair, 0 IfcColumn, 0 IfcBeam, and 0 IfcBuildingElementProxy entities.\n6. After replacing hyphens and underscores with spaces and lowercasing names, the IfcSpace name list contains the token lobby at least once and meeting at least 4 times.\n7. After the same normalization, the IfcSpace name list contains the exact space name central lobby at least once.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-FBEDC621-38C6-4F6F-A9A0-5BA690DB1A45",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-17/init_image/init_sheet.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_sheet.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Users\\Administrator\\Desktop\\Revit 2027\\Revit.exe",
+          "C:\\Users\\Administrator\\Desktop\\init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

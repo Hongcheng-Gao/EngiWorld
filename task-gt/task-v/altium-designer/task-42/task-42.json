@@ -1,0 +1,62 @@
+{
+  "id": "v-altium-designer-task-42-windows",
+  "snapshot": "altium-designer-26.5",
+  "instruction": "look at the native Altium schematic `broken_frequency_stage.SchDoc` in Altium Designer, repair the target component values and source comment, and save the repaired document as `frequency_stage_nominal.SchDoc`. The repaired schematic must restore the original `R4` value fragment, the original `C6` value fragment, and the original `V9` sine-source comment fragment.",
+  "source": "Local Altium example `Simulation Quick Start\\3_Reinforcing properties  Frequency characteristics.SchDoc`; benchmark task restored from report-generation to native schematic repair.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-42/init_file/broken_frequency_stage.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_frequency_stage.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Users\\Administrator\\Desktop\\broken_frequency_stage.SchDoc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-42/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

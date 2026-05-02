@@ -1,0 +1,32 @@
+使用 Abaqus/CAE GUI 模式完成以下任务：
+
+1. Part 模块：
+   - 创建 3D Deformable Solid，Extrusion
+   - 绘制 10mm × 10mm 矩形，拉伸长度 100mm
+
+2. Property 模块：
+   - 创建材料 Steel：E = 210000 MPa，ν = 0.3
+   - 创建 Solid Homogeneous 截面，分配材料 Steel
+
+3. Assembly 模块：实例化 Part
+
+4. Step 模块：创建 Static, General 步，名称 Step-Load
+
+5. Load 模块：
+   - 固定一端（Encastre）
+   - 另一端施加 1000N 拉力（沿轴向，+X 方向）
+
+6. Mesh 模块：
+   - 全局种子 5mm
+   - 单元类型 C3D8R
+
+7. Job 模块：创建 Job-Tension，提交求解
+
+8. Visualization 模块：
+   - 打开 ODB
+   - 显示 Mises 应力云图
+   - 查询自由端 X 方向位移 U1
+
+9. 保存：
+   - 模型：outputs/Job-Tension.cae
+   - 结果：outputs/Job-Tension.odb（通过 File > Save As 复制）

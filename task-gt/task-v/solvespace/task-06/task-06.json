@@ -1,0 +1,61 @@
+{
+  "id": "v-solvespace-task-06-ubuntu",
+  "snapshot": "SolveSpace3.0.rc2repack1-3",
+  "instruction": "look at seed_ss_gui_06_hex_plate.dxf. Draw a regular hexagonal plate with top and bottom edges horizontal and circumradius 40. Add one center hole of diameter 20. Add one diameter 6 hole near each left and right vertex; each hole center must be horizontally aligned with the corresponding vertex and inset 12 from that vertex. Export exactly one DXF deliverable named final_ss_gui_06.dxf.",
+  "source": "https://solvespace.readthedocs.io/en/latest/groups/sketch.html ; https://solvespace.readthedocs.io/en/latest/groups.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/seed_ss_gui_06_hex_plate.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_06_hex_plate.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

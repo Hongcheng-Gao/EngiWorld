@@ -1,0 +1,62 @@
+{
+  "id": "c-openscad-task-33-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Modify /home/user/Desktop/task-033_initial.scad from the command line. Use minkowski() or an equivalent method to add about 3 mm outside corner rounding to the box, then subtract an internal cavity so the wall thickness is about 3 mm and the top remains open. Export /home/user/Desktop/task-033_output.stl.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33/init_file/task-033_initial.scad",
+            "path": "/home/user/Desktop/task-033_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "--version"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-33/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

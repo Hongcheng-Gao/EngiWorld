@@ -1,0 +1,66 @@
+{
+  "id": "v-bonsai-task-12-ubuntu",
+  "snapshot": "Bonsai-0.8.x",
+  "instruction": "Cafe Mezzanine IFC Retrofit\n\nStart from the provided IFC model at init.ifc and reference image at init_plan.png. Use Bonsai's native IFC authoring workflow to convert the retail shell into a two-level cafe with a mezzanine, then save the required output as result.ifc.\n\n## Pass conditions\n1. The output folder contains result.ifc with exact relative path result.ifc.\n2. result.ifc is an IFC4 file with exactly one IfcProject, one IfcSite, one IfcBuilding, and exactly two IfcBuildingStorey objects named Ground Floor and Mezzanine after case-insensitive normalization of spaces, hyphens, and underscores.\n3. result.ifc contains exactly three IfcSpace objects, with one space named Ground Seating, one named Counter, and one named Upper Seating after normalization.\n4. result.ifc contains at least two IfcSlab objects, at least four IfcWall objects, at least one IfcDoor, at least two IfcRelVoidsElement relationships, at least one IfcRelFillsElement relationship, no IfcBuildingElementProxy objects, and no IfcFurniture objects.\n\nAny item not explicitly required in the pass conditions may vary.",
+  "source": "https://docs.bonsaibim.org/tutorials/project3.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-12/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "./blender-4.2.0-linux-x64/blender",
+          "/home/user/Desktop/init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
