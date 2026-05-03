@@ -1,7 +1,17 @@
 #!/usr/bin/env python3
 import csv
 import re
-import subprocess
+try:
+    import fitz
+except ImportError:
+    import pymupdf as fitz
+try:
+    from pdfminer.high_level import extract_text as _pdfminer_extract_text
+    from pdfminer.pdfpage import PDFPage as _PDFPage
+    _HAS_PDFMINER = True
+except ImportError:
+    _HAS_PDFMINER = False
+
 from pathlib import Path
 DESKTOP = Path("C:/Users/Administrator/Desktop")
 
@@ -92,20 +102,36 @@ def parse_float(value):
 
 
 def page_count(path):
-    proc = subprocess.run(["pdfinfo", str(path)], capture_output=True, text=True, check=False)
-    if proc.returncode != 0:
-        raise RuntimeError("pdfinfo failed")
-    for line in proc.stdout.splitlines():
-        if line.lower().startswith("pages:"):
-            return int(line.split(":", 1)[1].strip())
-    raise RuntimeError("missing pages")
+    try:
+        doc = fitz.open(str(path))
+        n = doc.page_count
+        doc.close()
+        return n
+    except Exception:
+        pass
+    if _HAS_PDFMINER:
+        try:
+            with open(str(path), "rb") as f:
+                return sum(1 for _ in _PDFPage.get_pages(f))
+        except Exception:
+            pass
+    raise RuntimeError("cannot determine page count")
 
 
 def extract_pdf_text(path):
-    proc = subprocess.run(["pdftotext", "-layout", str(path), "-"], capture_output=True, text=True, check=False)
-    if proc.returncode != 0:
-        raise RuntimeError("pdftotext failed")
-    return proc.stdout
+    try:
+        doc = fitz.open(str(path))
+        text = "".join(page.get_text("text") for page in doc)
+        doc.close()
+        return text
+    except Exception:
+        pass
+    if _HAS_PDFMINER:
+        try:
+            return _pdfminer_extract_text(str(path))
+        except Exception:
+            pass
+    raise RuntimeError("cannot extract PDF text")
 
 
 def parse_csv_rows(path):

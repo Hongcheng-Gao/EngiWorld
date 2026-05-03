@@ -8,6 +8,37 @@ import zlib
 from pathlib import Path
 
 
+def _push_utf8_text_io():
+    import builtins
+    import pathlib
+
+    orig_open = builtins.open
+    orig_read_text = pathlib.Path.read_text
+
+    def patched_open(file, mode='r', buffering=-1, encoding=None, errors=None, newline=None, closefd=True, opener=None):
+        if 'b' not in mode and encoding is None:
+            encoding = 'utf-8'
+        return orig_open(file, mode, buffering, encoding, errors, newline, closefd, opener)
+
+    def patched_read_text(self, encoding=None, errors=None):
+        if encoding is None:
+            encoding = 'utf-8'
+        return orig_read_text(self, encoding=encoding, errors=errors)
+
+    builtins.open = patched_open
+    pathlib.Path.read_text = patched_read_text
+    return orig_open, orig_read_text
+
+
+def _pop_utf8_text_io(state):
+    import builtins
+    import pathlib
+
+    orig_open, orig_read_text = state
+    builtins.open = orig_open
+    pathlib.Path.read_text = orig_read_text
+
+
 DESKTOP = Path('/home/user/Desktop')
 BUNDLE = {'common/__init__.py': 'eNoDAAAAAAE=', 'common/sexp.py': 'eNqtV0tv4zYQvhvwf5hqD5JaR9nt0akXKIpsD213F92iQBEHMi1RazYSpZJUEqPtf+8MSUcP27GzaA6OxHl9881wSAVB8IuQomIl6Av+2CiutaglNExprqCoFfwkfmA5FKLkGqLkTmQsT3W2gUvwL022hsvpxL/lqu1EVZ13L3pbxcl0Mp38qFhVMQVCA4OfhW5At2vNzXw6AfzTiAP/zRfATF3BPxBGoV38GsI4dDpWYnW0UUJ+Ri10v65LfJBtteaKAn2yMoyiOOR1uy75xV9tbXgOD8JsYLUMVsBkjg/LFXCdsYbrBD5ZR85qjT/TianvuETJe+vZSRQ3rZLoimkoypqZSyFNQumYfYWPW7Op5XRSWunDptYcGVXaAC95xaUhLsy2QZ7KcousuGSQrSAIppNCYbZpWrTokacpiKqplUHosjbMYL201yEXSIaXfy+3xMJ0kvPCVTQy/NHMibMYLt4CwfGkY5yPpIFOh53g+L3y6YDZcDB1c1Hye15aB4mFSD4aWEBqvSgbKPbLib4TTfqgI7/gXTWJxZRSMBINkKZIxDloScpZBXXRg9VPQJ/EV7cGBTe3R9A+bLD1cVnAd1ByGaFC7GF464Q1DZd5NEwo7nSOMYC2XdqFkLnNWtY5n8GGs9zl3uX8h+BlDpii2lo2jnYSFslvhxX5Wc0wYtYqLZCdbUeIKFBbSG2YzLiPS377+aEOCew+GSnfvL6dueqQ0K/AYuGwdy7ob2uhk063TtMlQ3bRsbSigza2sZ/IsfqOnbjPHTIwJm4GKGJtiS2EOwFL/L6WvMfmr11HOwZzgSwZD8nyi8kqQzvKzQvL5YA+3ICnKfTV9mjc+nO5D8viM7ZOLdHO7OnpOOc+rtUa9N0Tkh1/96xs+Uv5e4cprCJSh/vYtph1fn+FrYhd6Y07uiS6GBcq7pikxqUIgG5pn8kYN9y3J2j0a/Lmza3LJiuZ1rtd7o0pwzTFY86kaaR5Wcygmyy9ACRKNKIk6WhZ4PJrCrBzuNvRJO07cePC27iJ4fzGo+pk6NFJbpz27VCOnGSJ0Lph2ARj4x6ubxbwZijkJdlSU4RX4RzgFTYP8prVlR0QkbInG049zQoe7zs+noLtuiFo+ArDLGV4AOAJkJofsFnjNL/r89wbqWOqHZDhZPXM+bBvF88UQDGBbfo7tf61UrWKglZiHBwBeGhff3gX9Fw+V6wnsqPw8Aa0FqlLhLbxCKszDs4wdmdx3/yAEl2N3HH61Pu90GMOcbdwvCqMauqy2dsCwyoOz82ucX5T7biyxyr1gmodq5jhqhKSUc0oweCI92FucfiS/TQ+sfvrvePf2o9uAHtF8CU8vwzBqTKs2+JgGf6nEWRBLJcvJkw+mhPePfgdfX+HOETsKJlBaOyjoceAHgN6IhT299/kM8dT5NHMKEwcf9lsDL60CcIw+bMWMkLw8XlDrcsyOxfsiV53fRQcajE7APZmJd1kdgUR5/SKv9SNm7I7kmC5n8qB88FekZC0KN4j/GDi9mOr1zoEfL7XQK9wzGzpU48rkfWM1Xa+18NhEhIC5xhvFyEfvV937/OjVbcfeZFVig9Oavz+2xPzx4w3plfGw0PeQcGk6HvTX92nk/8AqENGEw==', 'eval_inner.py': 'eNrNWNtu4zgSffdXEBxgIWEdwUp3dnqCdgOL3mB7MJh56J1+CgKCkahYG91A0okNI8B+xH7hfMlWFSlKsuWgu+dlA8TmpVisqlM3mnN+8ySrrbStZgX8P5aZzC/evmPRrzcfV2/YxQW7abKqNVutWNbWnbTlfVmVds+eS7thn2Rdt03O0rdXV3HCOV8Uuq2ZEMXWwhEhWFl3rbZMNk1r4XDbmIVfasPI7M1iAR8JsN8kZWOUttFqCRRu5d9t2UT9JC91I2sVwR1lBTfES8aThMexu9pkG1XL/tqPG5U9flZmW9klQ1Xd2JGCPiB8YtSu6+k7qY1asqJsciGrCkfa2MXi97//6xfx8z/YmvHeRHzx6ebzDaycFWyxWOSqYKJqZS72sq4ipIuvFwz+cjh5eKEhWbLtVOP2mTSscET4h7BUZaNY2YyX8Y+W1/SVGKvLLoon+2XhSCQgxK85cghzgKM/KLU1KEPEf+Dx9Ab8e1yyp3BLB9hHwGvJ0viEMr997OW4gxMFKG6jp37J0WsFjtGwvDdO0Qmtiqjo/M2obrYpq5z07QZxQJnSgG9Y2WQqIpIlCGVsTPq4M2F0uwIJAC3grbSCE5z2KjAy7cfsw5pdTpX1ooG4juY2vZvIDN49CA2aBZmlRW3RU2AN3FFa7g6CzNKGi6WlW98Mt3rGkbOUtHjjkoXZ5d3UaNEqgaiAj+Ba963Uubi/b3eR1Up5eSAO/6kso0343DZ52TzAYMfI7x80mDyDANQ4JI9oG3aTP6jk49YaCmN3a2YNaHbbECoNIeIjg64DVT0vfuQMqHizj8aATcBynz1IldwrTQCduBS5OYLmAPPnUncuiMyd26CATXzXm57kHxs7Q5xoFW4O6yaAh1ugE0XESCN1TKCafLQNNxmSSwWkjQM6zNUx8KfgmzH2BqHvJ2q8o5xTLPrw/wp8kOz/Ep8+BZmTgPitbZSLrKoSnXPCu8VxNjw6O+CIG6/i6AnO4DhCcIqYlyaRHSTrPDqLXDxhql53g3mmM6APKcWdOE0jNZTJDkFDK3VoIk8KnNxeOrd3Amotd+f50N4cn0mqIgRdklKuw1BU3a4xvcbs4sOoGjtFNKAzrEVWmkdR5mtfeZdwTnVUWddUJcdO1FdgtQMPNuMqS4wTpXWL7Avebm23tQzZ0MkCkyPm6AMeeuHHJtUu0qCACCQYVXvqSbADAD8qm9KSaJycyvdLCZZ8719W7weBXq/3RK52VFISrWQ+KuoY1LBOXUqERCPnbjLYGfUavcyORO0y1Vl2Q1/QheGlat5GxJ3R/Jod1FmjmKq14hmOwE23YAOroP+phFsWdc3vBrLNPNlmIHtUAC94k6dTkDqEX3NERIWVDtU8rnu9N9B+acj95rTjTTsUOof+OfV2UGr38L9L4TuFs8jb9Wsw2aXsAkhojsrtcb5fuaM/uL6Tpde+Bj+XOUD+ft3bLErTn+raB0ySIXFIAKOWNQqiYWO55k5rYiagw0RmfIjeThqj8nX0PLror9AtpKMIh1YXShhQFRyIDo7qhYGBBxqZ2a2s1hqNEz0v2ZvRedtWSmO9WANft9xXo17py17pjSofNjYIs2HRj+++W2nH7BWtN6OLvkbrzWtab75Z6zdTqD+wFYswweTqQTVw2Ko/hXbXmtKWT2oWbrhsTlkO618B67Emb68xo9NjD4KosSxTGLMGS1cfpNRGOn0xUN2DBlI9FBmRQw4WthW4EWW7Jcv28UmpwmqU7SiEli6WHCUF0dJFE5xzkhWdofcHttdH7U3RtrbTkFS4Lz+2bQXmXzVtGYrOPSfM5D3BfwVjWOiNPwHA9DzC3j+09f1f1iLRVoVFL+t69BAIe/iuO2eG8d05ex/MeYE9/dVRCegVCY3B6Km0ZA7GHGHsAfwG18KSHQA2AgsSiIzilM2Mi2HvEuSJsbVbzUcXuMjBK4Xh5fwELUAgwK2n/jgABkYZJqqCD5STtY983lGvQqKBWjZo4+JO1Z3df2+ukWZknTP2AF9yLe986GEvHJzTnKrds5hX7W+9alDKTA1WUJrZjcQOH9KArKCAXK126WoF+ZT98Z//MrOBex4lGLrNsq3WKv8+1YHPtnkUiJvwd81XGAYCkN9e4TNygwsrvzBrkPdB9CD5qVEKfujTUxq/7A59MoZJID821Y/QUcIlZVFmjJRFQ1n2JUXbdVoZwJAObFPhpxCh+PgZxRO9Vr6kfJorvtl9voQrTo02XD9nHhA3eAs75eHtw13DgpEy0saFSl0aeMw9nLHSO5fU3wJY5UMJ/dc4YMZW6kVCy2DWPaBZINF+ucTPzzT+fMlffGYFcXpKo+zEpDOmpJdCwGByVQLib++Rx8A0/pNp7SwWIzlmwDCthq9oIl58goWnGpngL2zuSMjOobkMjyLhXiMmct9QMjQ9j7BPTTg9kvIy88+juefHcA5QoQBO6NdJ0WX3/uGBzCYPsMkr7RC04v69xa/B4H6MT+is1YrWaAQrzoS05IbLEY/WQr4gDjjCxxD23bRCoxGtAxW2bidl78ARSljOEhyML8z6C4GtNzSt9pOjdyx3QBGJGy5RQt/J0XKYLfFhYP21MHiZsAq/XfSuGHbvRgqZbV1LvXfGcuPI+8ALgA4xKwSqJARlGyFqCTVX8Am8+CO41A9P+MDGX2/xlwi/BNWGpT7Yj7F2LDB5RFOwB0nixf8ATuv8FA==', 'schema.py': 'eNqNVG1u00AQ/R8pdxjMH0eAW/HTUlAjFCQkBFXafyWyFnuWmm52rd0NIgqWOAQX6RU4Cidh9sOx06ShjiXH4zdv3ozfOEmS8Wj+nYkFmrWwYMpbXDH4++s32FsEY5msmK5Ao11rCXbTIHClgQkBSGlrZjFrNpSn68aabDxKHCPXagUVs6wUzBg0UK8apW0fegm8RlFFJNHW8msHmsnNeOR+Fzv4eOQv8PYWy7sgNR+PgA7JVpiTTh1uG1euyuGLUiJE8EeDpXUx4oUpfFQSwxNW2jUTh3GrBGomS+LlQjELP/3DPYxUNpSlqGs4RCvkUBQULYrUoOCTKNIdNEq7Ng5+Obu6SqDm4CBZUAwoDELybvb+Q9LnNExbl3LDk5ttIGiXsPV5rvE2WfbgjrBrGGrjZHrRAx073ow1Dcoq5UmXMd3uEbTJ5JA9DO3p3AEfmcPNM32UeTf2p5NTyvTP/XY//Si5f18nudLtDthOhhTR+gnQ+cJfsm+qlqnPnzzm1H6nYlnLzF1RVwOvGotNwWsx9G/pDG5yELWxNwO3L8kFfmNS8hijQMFpmEpvpg4Z1aLWSgdX7lkW4DlNwbphXF3PL4EzKlqRz4HsXXXmvWi0alDbTe/l4M1gZXj1Bmpp84PBmPUqLTsbu29DSbgw9dDN5EQFqywT/ykgUKZPpDOl0tjT+fXNj6yIGxTQGZ1DGmA6hfMHDon1z7Pzw6YHq3s2oBl+CWgwK6Y3vRx6MYMKopYYl/uavBHXOtqkzeN9qNGebfsabXRJfD0AqW877pj/n2evObl4+UjrD/r0SvpNAJgvFp8WnQKfsbdUx17yKUrqOy0nR1bqs4y75OEE+AcnCfRs'}
 CALL_FUNC = 'eval_outputs'
@@ -110,6 +141,7 @@ def _run() -> bool:
     runtime_base.mkdir(parents=True, exist_ok=True)
     root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
     root.mkdir(parents=True, exist_ok=False)
+    io_state = _push_utf8_text_io()
     try:
         _materialize_bundle(root)
         module = _load_module(root)
@@ -120,6 +152,7 @@ def _run() -> bool:
     except Exception:
         return False
     finally:
+        _pop_utf8_text_io(io_state)
         shutil.rmtree(root, ignore_errors=True)
 if __name__ == "__main__":
     print("true" if _run() else "false")

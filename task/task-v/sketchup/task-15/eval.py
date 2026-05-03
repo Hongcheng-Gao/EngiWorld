@@ -117,8 +117,6 @@ def _run() -> bool:
         args = [_resolve_arg(arg) for arg in CALL_ARGS]
         result = func(*args)
         return _is_pass(result)
-    except Exception:
-        return False
     finally:
         shutil.rmtree(root, ignore_errors=True)
 if __name__ == "__main__":

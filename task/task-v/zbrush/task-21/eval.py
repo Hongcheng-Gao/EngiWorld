@@ -34,6 +34,28 @@ def _materialize_bundle(root: Path) -> None:
             shutil.copy2(src, dst)
 
 
+def _materialize_desktop_view(root: Path) -> Path:
+    stage = root / "_desktop_view"
+    stage.mkdir(parents=True, exist_ok=True)
+    if DESKTOP.exists():
+        for item in DESKTOP.iterdir():
+            if item.name in {"eval.py", "_runtime"}:
+                continue
+            dst = stage / item.name
+            if item.is_dir():
+                shutil.copytree(item, dst, dirs_exist_ok=True)
+            elif item.is_file():
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.copy2(item, dst)
+    for rel, desktop_path in INIT_MAP:
+        src = Path(desktop_path)
+        if src.exists():
+            dst = stage / "initial_files" / rel
+            dst.parent.mkdir(parents=True, exist_ok=True)
+            shutil.copy2(src, dst)
+    return stage
+
+
 def _bundle_python_paths(root: Path) -> list[str]:
     paths: list[str] = []
     seen: set[str] = set()
@@ -97,9 +119,13 @@ def _is_pass(result) -> bool:
     return False
 
 
-def _resolve_arg(spec: str):
+def _resolve_arg(spec: str, desktop_view: Path):
     if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
+        return str(desktop_view)
+    desktop_prefix = str(DESKTOP)
+    if spec.startswith(desktop_prefix):
+        rel = spec[len(desktop_prefix):].lstrip("\\/")
+        return str(desktop_view / Path(rel)) if rel else str(desktop_view)
     return spec
 
 
@@ -112,9 +138,10 @@ def _run() -> bool:
     root.mkdir(parents=True, exist_ok=False)
     try:
         _materialize_bundle(root)
+        desktop_view = _materialize_desktop_view(root)
         module = _load_module(root)
         func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
+        args = [_resolve_arg(arg, desktop_view) for arg in CALL_ARGS]
         result = func(*args)
         return _is_pass(result)
     except Exception:
