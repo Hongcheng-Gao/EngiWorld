@@ -1,6 +1,6 @@
-{
+﻿{
   "id": "v-altium-designer-task-37-windows",
-  "snapshot": "altium-designer-26.5",
+  "snapshot": "AltiumDesigner26.5.0",
   "instruction": "The input directory contains `C:\\Users\\Administrator\\Desktop\\stackup.json` (a 6-layer stackup description in which each layer has `index`, `name`, and `type`, where `type` is `Signal`, `GND`, or `PWR`) and `C:\\Users\\Administrator\\Desktop\\template.OutJob` (an empty OutJob containing only `[OutputJobFile]` and an empty `[OutputGroup1]`).\n\nGenerate one `OutputType=Gerber` output inside `[OutputGroup1]` for each stackup layer, for 6 outputs total, and write the corresponding `PlotLayerN` field for each output according to these rules:\n- Signal layers (`type=Signal`) map to Altium copper-layer names from top to bottom: the first signal layer becomes `TopLayer`, the last signal layer becomes `BottomLayer`, and any intermediate signal layers become `MidLayer1`, `MidLayer2`, and so on in order.\n- Plane layers (`type=GND` or `PWR`) all map to `Mechanical15`.\n\nTo associate each output with the input stackup layer, each Gerber output must also include `StackupSourceN=<layer.name>` (for example, `StackupSource1=L1`). Other fields such as `OutputTypeN`, `OutputNameN`, `OutputCategoryN`, and `OutputEnabledN` may use any reasonable values. Write the result to `C:\\Users\\Administrator\\Desktop\\layered.OutJob`.",
   "source": "task.md #6 (PCBSync DRC \\ Altium Gerber Setup documentation)",
   "config": [
@@ -30,7 +30,7 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Program Files\\Altium\\AD26\\X2.EXE",
+          "C:\\Program Files\\Altium\\AD26\\X2.exe",
           "C:\\Users\\Administrator\\Desktop\\template.OutJob"
         ]
       }
