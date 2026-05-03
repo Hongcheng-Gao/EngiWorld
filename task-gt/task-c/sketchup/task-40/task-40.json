@@ -3,18 +3,7 @@
   "snapshot": "sketchup2026",
   "instruction": "Architectural Drawing Set by Tags\n\nUsing SketchUp's GUI, build a small architectural model and organize it into 4 named Tags so that distinct scenes can filter what is drawn on screen. There is no initial file - model everything from scratch.\n\nSpecification:\n- Build 4 named tag-groups. Every geometry in the scene must belong to exactly one tag and its `<geometry>` `name`/`id` must start with the tag prefix followed by an underscore:\n- `Arch` - architectural shell (walls, roof, floor, etc.). At least one geometry named `Arch_*`.\n- `Furn` - furniture. At least one geometry named `Furn_*`.\n- `Plumb` - plumbing. At least one geometry named `Plumb_*`.\n- `Elec` - electrical. At least one geometry named `Elec_*`.\n- Produce 4 scenes, each with a specific tag-visibility subset:\n- `Scene_Arch` - only `Arch` visible.\n- `Scene_Plumb` - `Arch` + `Plumb` visible.\n- `Scene_Elec` - `Arch` + `Elec` visible.\n- `Scene_All` - all 4 tags visible.\n- Since COLLADA has no native SketchUp tag/scene concept, emit a sidecar JSON `C:\\Users\\Administrator\\Desktop\\scenes.json` describing the scenes exactly with this schema:\n```\n{\n\"scenes\": [\n{\"name\": \"Scene_Arch\", \"visible_tags\": [\"Arch\"]},\n{\"name\": \"Scene_Plumb\", \"visible_tags\": [\"Arch\", \"Plumb\"]},\n{\"name\": \"Scene_Elec\", \"visible_tags\": [\"Arch\", \"Elec\"]},\n{\"name\": \"Scene_All\", \"visible_tags\": [\"Arch\", \"Furn\", \"Plumb\", \"Elec\"]}\n]\n}\n```\n- Produce a full-scene export `C:\\Users\\Administrator\\Desktop\\output.dae` with all 4 tag-groups present.\n- Produce per-scene DAE exports containing **only the geometry of the visible tags** for each scene (excluded tag geometries must be physically absent from the file):\n- `C:\\Users\\Administrator\\Desktop\\output_Arch.dae` - contains `Arch_*` geometry only.\n- `C:\\Users\\Administrator\\Desktop\\output_Plumb.dae` - contains `Arch_*` and `Plumb_*` geometries only.\n- `C:\\Users\\Administrator\\Desktop\\output_Elec.dae` - contains `Arch_*` and `Elec_*` geometries only.\n- `C:\\Users\\Administrator\\Desktop\\output_All.dae` - contains all 4 tag-groups (same content as `C:\\Users\\Administrator\\Desktop\\output.dae`).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\scenes.json` is valid JSON and matches the schema - `scenes` is a list of 4 entries with the expected `name`/`visible_tags` values (order-insensitive for the tags within each entry).\n2. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA and contains >= 1 geometry for each of the 4 tag prefixes (`Arch_*`, `Furn_*`, `Plumb_*`, `Elec_*`).\n3. Each per-scene DAE parses as valid COLLADA.\n4. Each per-scene DAE contains at least one geometry for every visible tag listed in `C:\\Users\\Administrator\\Desktop\\scenes.json` for that scene.\n5. Each per-scene DAE contains NO geometry whose name starts with an excluded tag prefix (substantive check - not just the sidecar JSON).",
   "source": "SU-Help Tags + Scenes; [O-Connor] architectural drawing sets; COLLADA 1.5 library_visual_scenes",
-  "config": [
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "cmd",
-          "/c",
-          "if exist \"C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe\" (echo OK) else (echo MISSING & exit /b 1)"
-        ]
-      }
-    }
-  ],
+  "config": [],
   "trajectory": "trajectories\\",
   "related_apps": [
     "sketchup"
@@ -31,12 +20,23 @@
             }
           ]
         }
+      },
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-40\\check_and_eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
+            }
+          ]
+        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
       "shell": "true"
     },
     "expected": {

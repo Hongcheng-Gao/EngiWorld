@@ -1,6 +1,6 @@
 {
   "id": "c-archicad-task-06-windows",
-  "snapshot": "archicad-29",
+  "snapshot": "archicad-27",
   "instruction": "One-Storey Early Learning Centre Schedule\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an Archicad one-storey early learning centre model and save the required outputs to C:\\Users\\Administrator\\Desktop\\result.ifc, and C:\\Users\\Administrator\\Desktop\\result.txt. Export C:\\Users\\Administrator\\Desktop\\result.txt as a tab-delimited zone schedule text file from the Archicad schedule/list workflow.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes and C:\\Users\\Administrator\\Desktop\\result.txt with size at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey and exactly 10 IfcSpace entities.\n5. The IFC model contains at least 1 IfcSlab entity and at least 1 IfcRoof entity.\n6. The IFC model contains spaces with exactly these normalized names: CLASSROOM-1, CLASSROOM-2, CLASSROOM-3, CLASSROOM-4, PLAY-HALL, NAP, STAFF, WC-CHILD, WC-STAFF, and YARD.\n7. Each listed space is assigned to the single IfcBuildingStorey.\n8. The IFC area quantities for the spaces are CLASSROOM-1 22.5 m2, CLASSROOM-2 22.5 m2, CLASSROOM-3 22.5 m2, CLASSROOM-4 22.5 m2, PLAY-HALL 64.0 m2, NAP 16.0 m2, STAFF 16.0 m2, WC-CHILD 10.0 m2, WC-STAFF 6.0 m2, and YARD 40.0 m2, each with tolerance +/-0.10 m2.\n9. The combined area of CLASSROOM-1 through CLASSROOM-4 is between 89.0 m2 and 91.0 m2, and the sum of all listed space areas is between 241.0 m2 and 243.0 m2.\n10. C:\\Users\\Administrator\\Desktop\\result.txt is tab-delimited and has exactly these headers in this order: ZoneNumber, ZoneName, Area, Storey.\n11. C:\\Users\\Administrator\\Desktop\\result.txt has exactly 10 data rows in the same zone order as the IFC area list, with ZoneNumber values 01 through 10, Storey value GROUND for every row, and the same names and areas listed in the IFC pass conditions.\n12. Each schedule Area value matches the corresponding IFC space area with tolerance +/-0.10 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
   "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
   "config": [
@@ -8,16 +8,6 @@
       "type": "upload_file",
       "parameters": {
         "files": []
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "cmd",
-          "/c",
-          "if exist \"C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe\" (echo OK) else (echo MISSING & exit /b 1)"
-        ]
       }
     }
   ],
@@ -37,12 +27,23 @@
             }
           ]
         }
+      },
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/check_and_eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
+            }
+          ]
+        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
       "shell": "true"
     },
     "expected": {

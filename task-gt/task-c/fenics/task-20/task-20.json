@@ -18,16 +18,6 @@
           }
         ]
       }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "bash",
-          "-lc",
-          "source activate fenicsx 2>/dev/null || conda activate fenicsx; python -c 'import dolfinx; print(dolfinx.__version__)'"
-        ]
-      }
     }
   ],
   "trajectory": "trajectories/",
@@ -46,12 +36,23 @@
             }
           ]
         }
+      },
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/check_and_eval.py",
+              "path": "/home/user/Desktop/check_and_eval.py"
+            }
+          ]
+        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
+      "command": "python /home/user/Desktop/check_and_eval.py",
       "shell": "true"
     },
     "expected": {

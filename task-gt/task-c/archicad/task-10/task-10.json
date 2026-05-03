@@ -1,6 +1,6 @@
 {
   "id": "c-archicad-task-10-windows",
-  "snapshot": "archicad-29",
+  "snapshot": "archicad-27",
   "instruction": "One-Storey Courtyard Guesthouse\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an Archicad one-storey courtyard guesthouse model and save the required output to C:\\Users\\Administrator\\Desktop\\result.ifc.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey and exactly 10 IfcSpace entities.\n5. The IFC model contains at least 1 IfcSlab entity and at least 4 IfcRoof entities.\n6. The IFC model contains spaces with exactly these normalized names: GUEST-1, GUEST-2, GUEST-3, GUEST-4, GUEST-5, GUEST-6, RECEPTION, LINEN, LAUNDRY, and COURT.\n7. Each listed space is assigned to the single IfcBuildingStorey.\n8. The IFC area quantities for the spaces are GUEST-1 20.0 m2, GUEST-2 20.0 m2, GUEST-3 24.0 m2, GUEST-4 24.0 m2, GUEST-5 20.0 m2, GUEST-6 20.0 m2, RECEPTION 28.0 m2, LINEN 12.0 m2, LAUNDRY 40.0 m2, and COURT 80.0 m2, each with tolerance +/-0.10 m2.\n9. The combined area of GUEST-1 through GUEST-6 is between 127.0 m2 and 129.0 m2, the COURT area is between 79.0 m2 and 81.0 m2, and the total area of all listed spaces is between 287.0 m2 and 289.0 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
   "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
   "config": [
@@ -8,16 +8,6 @@
       "type": "upload_file",
       "parameters": {
         "files": []
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "cmd",
-          "/c",
-          "if exist \"C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe\" (echo OK) else (echo MISSING & exit /b 1)"
-        ]
       }
     }
   ],
@@ -37,12 +27,23 @@
             }
           ]
         }
+      },
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/check_and_eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
+            }
+          ]
+        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
       "shell": "true"
     },
     "expected": {

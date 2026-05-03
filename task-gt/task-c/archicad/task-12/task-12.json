@@ -1,6 +1,6 @@
 {
   "id": "c-archicad-task-12-windows",
-  "snapshot": "archicad-29",
+  "snapshot": "archicad-27",
   "instruction": "Two-Storey Learning Annex Conversion Schedule\n\nThis task starts from C:\\Users\\Administrator\\Desktop\\init.ifc. Reference images are provided on the Desktop: C:\\Users\\Administrator\\Desktop\\init_plan.png, C:\\Users\\Administrator\\Desktop\\init_section.png. Modify the Archicad model as needed and save the required outputs to C:\\Users\\Administrator\\Desktop\\result.ifc, and C:\\Users\\Administrator\\Desktop\\result.txt. Export C:\\Users\\Administrator\\Desktop\\result.txt as a tab-delimited zone schedule text file from the Archicad schedule/list workflow.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes and C:\\Users\\Administrator\\Desktop\\result.txt with size at least 20 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 2 IfcBuildingStorey entities and exactly 8 IfcSpace entities.\n5. The IFC model contains at least 8 IfcWall entities, at least 2 IfcSlab entities, and at least 2 IfcRoof entities.\n6. The IFC model contains spaces with exactly these normalized names: CLASSROOM-1, CLASSROOM-2, PLAY-HALL, STAFF, WC-CHILD, WC-STAFF, CLASSROOM-3, and CLASSROOM-4.\n7. CLASSROOM-1, CLASSROOM-2, PLAY-HALL, STAFF, WC-CHILD, and WC-STAFF are assigned to one storey, and CLASSROOM-3 and CLASSROOM-4 are assigned to the other storey.\n8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [18.0, 8.0, 6.6].\n9. C:\\Users\\Administrator\\Desktop\\result.txt is tab-delimited and has exactly these headers in this order: ZoneNumber, ZoneName, Area.\n10. C:\\Users\\Administrator\\Desktop\\result.txt has exactly 8 data rows in this order: Z01 CLASSROOM-1 24.0, Z02 CLASSROOM-2 24.0, Z03 PLAY-HALL 48.0, Z04 STAFF 8.0, Z05 WC-CHILD 4.0, Z06 WC-STAFF 4.0, Z07 CLASSROOM-3 24.0, and Z08 CLASSROOM-4 24.0, each Area value with tolerance +/-0.10 m2.\n11. The sum of all schedule Area values is between 159.0 m2 and 161.0 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
   "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
   "config": [
@@ -22,16 +22,6 @@
           }
         ]
       }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "cmd",
-          "/c",
-          "if exist \"C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe\" (echo OK) else (echo MISSING & exit /b 1)"
-        ]
-      }
     }
   ],
   "trajectory": "trajectories/",
@@ -50,12 +40,23 @@
             }
           ]
         }
+      },
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/check_and_eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
+            }
+          ]
+        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
       "shell": "true"
     },
     "expected": {

@@ -1,6 +1,6 @@
 {
   "id": "c-archicad-task-05-windows",
-  "snapshot": "archicad-29",
+  "snapshot": "archicad-27",
   "instruction": "One-Storey Light Industrial Workshop\n\nThis task starts from scratch with no init_file inputs and no local reference images. Create an Archicad one-storey light industrial workshop model and save the required output to C:\\Users\\Administrator\\Desktop\\result.ifc.\n\n## Pass conditions\n1. The output folder contains C:\\Users\\Administrator\\Desktop\\result.ifc with size at least 500 bytes.\n2. C:\\Users\\Administrator\\Desktop\\result.ifc uses an IFC4 schema.\n3. All IfcRoot GlobalId values are unique.\n4. The IFC model contains exactly 1 IfcBuildingStorey and exactly 6 IfcSpace entities.\n5. The IFC model contains at least 20 IfcWall entities, at least 1 IfcSlab entity, and at least 4 IfcRoof entities.\n6. The IFC model contains spaces with exactly these normalized names: BAY-1, BAY-2, OFFICE, STORE, WC, and LOADING.\n7. Each listed space is assigned to the single IfcBuildingStorey.\n8. Each listed space has a Reference property or LongName equal to its zone number: BAY-1 W01, BAY-2 W02, OFFICE W03, STORE W04, WC W05, and LOADING W06.\n9. The IFC area quantities for the spaces are BAY-1 30.0 m2, BAY-2 30.0 m2, OFFICE 9.0 m2, STORE 9.0 m2, WC 4.0 m2, and LOADING 16.0 m2, each with tolerance +/-0.10 m2.\n10. The combined area of BAY-1 and BAY-2 is between 59.0 m2 and 61.0 m2, and the total area of all listed spaces is between 97.0 m2 and 99.0 m2.\n\nAny item not explicitly required in the pass conditions may vary.",
   "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-59.htm",
   "config": [
@@ -8,16 +8,6 @@
       "type": "upload_file",
       "parameters": {
         "files": []
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "cmd",
-          "/c",
-          "if exist \"C:\\Users\\Administrator\\Desktop\\Archicad 29\\Archicad Starter.exe\" (echo OK) else (echo MISSING & exit /b 1)"
-        ]
       }
     }
   ],
@@ -37,12 +27,23 @@
             }
           ]
         }
+      },
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/check_and_eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
+            }
+          ]
+        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
       "shell": "true"
     },
     "expected": {
