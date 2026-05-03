@@ -1,62 +1,72 @@
 {
-  "id": "v-kicad-task-28-ubuntu",
-  "snapshot": "kicad-10.0.1",
-  "instruction": "ERC-Clean Bus Expansion\n\n`/home/user/Desktop/mcu.kicad_sch` is a KiCad 9 schematic with an STM32 MCU (U1) and an ISSI IS62WV SRAM (U2). The data bus between them is currently unconnected - U1 has pins PA0..PA7 and U2 has pins IO0..IO7, but they are not wired together. Hidden properties on U2 (MCU_DATA_PINS, MEM_DATA_PINS) indicate the intended pin-to-pin mapping.\n\nExpand the 8-bit data bus into eight individually named nets and update the schematic:\n1. Create net labels DATA0..DATA7 in the schematic.\n2. Connect MCU pin PA0 to DATA0, PA1 to DATA1,..., PA7 to DATA7.\n3. Connect SRAM pin IO0 to DATA0, IO1 to DATA1,..., IO7 to DATA7.\n4. Add PWR_FLAG symbols on every power net (3V3 and GND) to satisfy ERC.\n5. Preserve all existing symbols; do not remove or rename any component.\n\nRequirements:\n- All 8 nets named exactly DATA0, DATA1, DATA2, DATA3, DATA4, DATA5, DATA6, DATA7.\n- No unexpanded bus notation (no DATA[0..7] syntax).\n- At least one PWR_FLAG symbol present.\n- PA0..PA7 and IO0..IO7 pin references must remain in the schematic.\n\nWrite /home/user/Desktop/answer.kicad_sch.",
-  "source": "human_craft",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-28/init_file/mcu.kicad_sch",
-            "path": "/home/user/Desktop/mcu.kicad_sch"
-          }
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "kicad",
-          "/home/user/Desktop/mcu.kicad_sch"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "kicad"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-28/eval.py",
-              "path": "/home/user/Desktop/eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "true\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "id":  "v-kicad-task-28-ubuntu",
+    "snapshot":  "kicad-10.0.1",
+    "instruction":  "ERC-Clean Bus Expansion\n\n`/home/user/Desktop/mcu.kicad_sch` is a KiCad 9 schematic with an STM32 MCU (U1) and an ISSI IS62WV SRAM (U2). The data bus between them is currently unconnected - U1 has pins PA0..PA7 and U2 has pins IO0..IO7, but they are not wired together. Hidden properties on U2 (MCU_DATA_PINS, MEM_DATA_PINS) indicate the intended pin-to-pin mapping.\n\nExpand the 8-bit data bus into eight individually named nets and update the schematic:\n1. Create net labels DATA0..DATA7 in the schematic.\n2. Connect MCU pin PA0 to DATA0, PA1 to DATA1,..., PA7 to DATA7.\n3. Connect SRAM pin IO0 to DATA0, IO1 to DATA1,..., IO7 to DATA7.\n4. Add PWR_FLAG symbols on every power net (3V3 and GND) to satisfy ERC.\n5. Preserve all existing symbols; do not remove or rename any component.\n\nRequirements:\n- All 8 nets named exactly DATA0, DATA1, DATA2, DATA3, DATA4, DATA5, DATA6, DATA7.\n- No unexpanded bus notation (no DATA[0..7] syntax).\n- At least one PWR_FLAG symbol present.\n- PA0..PA7 and IO0..IO7 pin references must remain in the schematic.\n\nWrite /home/user/Desktop/answer.kicad_sch.",
+    "source":  "human_craft",
+    "config":  [
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-28/init_file/mcu.kicad_sch",
+                                                            "path":  "/home/user/Desktop/mcu.kicad_sch"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "launch",
+                       "parameters":  {
+                                          "command":  [
+                                                          "kicad",
+                                                          "/home/user/Desktop/mcu.kicad_sch"
+                                                      ]
+                                      }
+                   },
+                   {
+                       "type":  "execute",
+                       "parameters":  {
+                                          "command":  [
+                                                          "python",
+                                                          "-c",
+                                                          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
+                                                      ]
+                                      }
+                   }
+               ],
+    "trajectory":  "trajectories/",
+    "related_apps":  [
+                         "kicad"
+                     ],
+    "evaluator":  {
+                      "postconfig":  [
+                                         {
+                                             "type":  "upload_file",
+                                             "parameters":  {
+                                                                "files":  [
+                                                                              {
+                                                                                  "local_path":  "task-28/eval.py",
+                                                                                  "path":  "/home/user/Desktop/eval.py"
+                                                                              }
+                                                                          ]
+                                                            }
+                                         }
+                                     ],
+                      "func":  "exact_match",
+                      "result":  {
+                                     "type":  "vm_command_line",
+                                     "command":  "python /home/user/Desktop/eval.py",
+                                     "shell":  "true"
+                                 },
+                      "expected":  {
+                                       "type":  "rule",
+                                       "rules":  {
+                                                     "expected":  "true\n"
+                                                 }
+                                   }
+                  },
+    "proxy":  false,
+    "fixed_ip":  false,
+    "possibility_of_env_change":  "low"
 }
