@@ -1,18 +1,13 @@
 {
   "id": "c-ansys-task-09-windows",
   "snapshot": "ansys-2026",
-  "instruction": "You are given a transient heat conduction template `C:\\Users\\Administrator\\Desktop\\transient_thermal_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\transient.inp`:\n- Initial temperature field: `20°C` for the whole model\n- Left edge line temperature: `100°C`\n- Keep other boundaries adiabatic (default)\n\n2. Submit the job.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\results.txt` includes surface temperature and the temperature at `x=5 mm` at `t=10 s`.\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `results.txt`\n- Required column order: `surface_temp, temp_at_5s`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 2D lid-driven cavity flow analysis.\n\nPhysical problem:\nLaminar lid-driven cavity flow in a square cavity.\n\nCoordinate system and geometry:\n- Use a 2D planar model.\n- Use SI units in Fluent.\n- The cavity is a square domain with side length 1 mm.\n- In Fluent coordinates, the domain should occupy:\n  - 0 ≤ X ≤ 0.001 m\n  - 0 ≤ Y ≤ 0.001 m\n- The top lid is the boundary at Y = 0.001 m.\n- The bottom wall is the boundary at Y = 0 m.\n- The left wall is the boundary at X = 0 m.\n- The right wall is the boundary at X = 0.001 m.\n\nModel parameters:\n- Fluid: water-liquid\n- Use constant material properties:\n  - Density: 998.2 kg/m³\n  - Dynamic viscosity: 0.001003 Pa·s\n- Mesh:\n  - Structured quadrilateral mesh\n  - Element size: 0.05 mm, equivalent to 5.0e-5 m\n  - Use approximately 20 divisions along each side of the square cavity.\n\nBoundary conditions:\n- Top lid:\n  - Moving wall\n  - X-velocity = 0.1 m/s\n  - Y-velocity = 0 m/s\n- Bottom wall:\n  - Stationary no-slip wall\n- Left wall:\n  - Stationary no-slip wall\n- Right wall:\n  - Stationary no-slip wall\n\nSolver setup:\n- Solver type: pressure-based\n- Time setting: steady\n- Flow model: laminar\n- Pressure-velocity coupling: SIMPLE\n- Spatial discretization: second-order schemes where applicable\n- Initialization: hybrid initialization\n- Run 1000 iterations or until the solution is converged.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the working directory.\n- Save the Fluent case file as:\n  C:\\Users\\Administrator\\Desktop\\cavity.cas\n- Save the Fluent data file as:\n  C:\\Users\\Administrator\\Desktop\\cavity.dat",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-09/init_file/transient_thermal_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\transient_thermal_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],

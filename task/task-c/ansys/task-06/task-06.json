@@ -1,18 +1,13 @@
 {
   "id": "c-ansys-task-06-windows",
   "snapshot": "ansys-2026",
-  "instruction": "You are given an incomplete modal analysis template `C:\\Users\\Administrator\\Desktop\\modal_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\modal.inp`:\n- Add material density: `MP,DENS,1,7.85e-9`\n- Add fixed-end constraints (full constraint at K1)\n\n2. Submit the job.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\results.txt` includes the first three frequencies (Hz).\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `results.txt`\n- Required column order: `mode1_hz, mode2_hz, mode3_hz`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve a 2D axisymmetric structural model of a thick-walled cylinder under internal pressure.\n\nPhysical problem:\nAxisymmetric thick-walled cylinder under internal pressure.\n\nCoordinate system and geometry:\n- Use the global Cartesian coordinate system for the axisymmetric cross-section.\n- X is the radial direction.\n- Y is the axial direction.\n- The cylinder has an inner diameter of 50 mm and an outer diameter of 100 mm.\n- Therefore, model the radial domain from X = 25 mm to X = 50 mm.\n- The axial thickness is 10 mm.\n- Model the rectangular axisymmetric cross-section:\n  - 25 ≤ X ≤ 50 mm\n  - 0 ≤ Y ≤ 10 mm\n- Do not model or constrain a symmetry axis at X = 0, because the cylinder has a central hole and the axis is outside the modeled annular cross-section.\n\nModel parameters:\n- Material: linear elastic steel\n  - Young's modulus E = 210000 MPa\n  - Poisson's ratio ν = 0.3\n- Element type: PLANE183 with axisymmetric option enabled\n- Mesh: global element size 5 mm\n\nBoundary conditions and load:\n- Inner cylindrical surface at X = 25 mm: apply an internal pressure of 10 MPa acting on the cylinder wall.\n- Outer cylindrical surface at X = 50 mm: free surface.\n- Axial faces:\n  - At Y = 0 mm: constrain axial displacement UY = 0.\n  - At Y = 10 mm: constrain axial displacement UY = 0.\n- Do not constrain radial displacement UX on the inner or outer cylindrical surfaces.\n\nAnalysis type:\n- Static structural analysis.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the ANSYS working directory.\n- Save the database file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_cylinder.db\n- Save the structural result file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_cylinder.rst",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-06/init_file/modal_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\modal_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],

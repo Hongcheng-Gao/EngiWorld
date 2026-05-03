@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-17-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use the ANSYS Fluent GUI to complete a 2D laminar Couette-flow analysis.\n\nPhysical problem:\nTwo-dimensional shear flow of water between two parallel plates.\n\nCoordinate system and geometry:\n- Use a 2D planar model.\n- Use SI units in Fluent.\n- The channel length is along the global X direction.\n- The channel height is along the global Y direction.\n- The domain length is 100 mm, equivalent to 0.100 m.\n- The domain height is 2 mm, equivalent to 0.002 m.\n- The computational domain should occupy:\n  - 0 ≤ X ≤ 0.100 m\n  - 0 ≤ Y ≤ 0.002 m\n- The bottom wall is the boundary at Y = 0 m.\n- The top wall is the boundary at Y = 0.002 m.\n- The left boundary is at X = 0 m.\n- The right boundary is at X = 0.100 m.\n\nBoundary zone names:\n- Name the bottom wall boundary: bottom\n- Name the top wall boundary: top\n- Name the left boundary: left\n- Name the right boundary: right\n\nModel parameters:\n- Fluid: water-liquid\n- Use constant material properties:\n  - Density: 998.2 kg/m³\n  - Dynamic viscosity: 0.001003 Pa·s\n- Mesh:\n  - Structured quadrilateral mesh\n  - Use sufficient resolution across the channel height to resolve the linear velocity profile.\n\nBoundary conditions:\n- Bottom wall:\n  - Stationary no-slip wall\n- Top wall:\n  - Moving wall\n  - X-velocity = 1.0 m/s\n  - Y-velocity = 0 m/s\n- Left and right boundaries:\n  - Use symmetry boundaries or a periodic pair.\n  - If using a periodic pair, set zero pressure drop between the paired boundaries.\n\nSolver setup:\n- Solver type: pressure-based\n- Time setting: steady\n- Flow model: laminar\n- Pressure-velocity coupling: SIMPLE\n- Spatial discretization: second-order schemes where applicable\n- Initialize the solution and iterate until convergence.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the working directory.\n- Save the Fluent case file as:\n  C:\\Users\\Administrator\\Desktop\\couette.cas\n- Save the Fluent data file as:\n  C:\\Users\\Administrator\\Desktop\\couette.dat",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\ANSYS Student\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

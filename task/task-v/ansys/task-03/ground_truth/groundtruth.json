@@ -1,0 +1,62 @@
+{
+  "metadata": {
+    "description": "ANSYS 2D Plane-Stress Plate with Hole - Ground Truth",
+    "software": "ANSYS Mechanical APDL Student v261",
+    "units": "mm-N-MPa"
+  },
+  "input_parameters": {
+    "geometry": {
+      "plate_width_mm": 100.0,
+      "plate_length_mm": 200.0,
+      "thickness_mm": 1.0,
+      "hole_center": {
+        "X_mm": 50.0,
+        "Y_mm": 100.0
+      },
+      "hole_diameter_mm": 10.0,
+      "hole_radius_mm": 5.0
+    },
+    "material": {
+      "name": "Steel",
+      "youngs_modulus_MPa": 210000.0,
+      "poissons_ratio": 0.3
+    },
+    "mesh": {
+      "element_type": "PLANE183",
+      "element_behavior": "plane stress with thickness",
+      "thickness_mm": 1.0,
+      "global_element_size_mm": 5.0,
+      "local_element_size_hole_mm": 1.0
+    },
+    "boundary_conditions": {
+      "load": {
+        "type": "uniaxial tension",
+        "nominal_stress_MPa": 10.0,
+        "left_edge_X0": "traction in -X",
+        "right_edge_X100": "traction in +X"
+      },
+      "rigid_body_constraints": {
+        "reference_node_1": {
+          "location": "(0,0)",
+          "UX": 0,
+          "UY": 0
+        },
+        "reference_node_2": {
+          "location": "(100,0)",
+          "UY": 0
+        }
+      }
+    }
+  },
+  "results": {
+    "hole_edge_max_sx_MPa": 30.2440767288208,
+    "maximum_von_mises_stress_MPa": 30.100845448392764,
+    "maximum_displacement_mm": {
+      "USUM_MAX": 0.0055384356776572415
+    },
+    "reference_node_reaction_force_N": {
+      "FX": -1.3136691734416672e-10,
+      "FY": -1.3474386884038125e-10
+    }
+  }
+}

@@ -1,18 +1,13 @@
 {
   "id": "c-ansys-task-10-windows",
   "snapshot": "ansys-2026",
-  "instruction": "You are given a thermal analysis template `C:\\Users\\Administrator\\Desktop\\thermal_structural_base.inp`.\nComplete sequential thermo-mechanical coupling from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\thermal.inp`, set left temperature `100°C` and right temperature `20°C`, then run thermal analysis to generate `thermal.rst`.\n\n2. Write structural analysis input `C:\\Users\\Administrator\\Desktop\\structural.inp`:\n- Same geometry, element type `SOLID185`\n- Material: `E=210000`, `nu=0.3`, `alpha=1.2e-5`\n- Both ends fully fixed\n- Read `thermal.rst` as temperature load\n\n3. Submit structural analysis.\n\n4. Ensure `C:\\Users\\Administrator\\Desktop\\results.txt` includes maximum Mises stress.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `results.txt`\n- Required column order: `max_mises`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 2D laminar channel-flow analysis.\n\nPhysical problem:\nTwo-dimensional laminar flow through a straight rectangular channel.\n\nCoordinate system and geometry:\n- Use a 2D planar model.\n- Use SI units in Fluent.\n- The channel length is along the X direction.\n- The channel height is along the Y direction.\n- The channel domain should occupy:\n  - 0 ≤ X ≤ 0.200 m\n  - 0 ≤ Y ≤ 0.002 m\n- The inlet is the boundary at X = 0 m.\n- The outlet is the boundary at X = 0.200 m.\n- The bottom wall is the boundary at Y = 0 m.\n- The top wall is the boundary at Y = 0.002 m.\n- Name the four boundary zones as:\n  - inlet\n  - outlet\n  - bottom\n  - top\n\nModel parameters:\n- Fluid: water-liquid\n- Use constant material properties:\n  - Density: 998.2 kg/m³\n  - Dynamic viscosity: 0.001003 Pa·s\n- Mesh:\n  - Structured quadrilateral mesh\n  - Element size: 0.5 mm, equivalent to 5.0e-4 m\n\nBoundary conditions:\n- Inlet:\n  - Velocity inlet\n  - Uniform X-velocity = 0.2 m/s\n  - Y-velocity = 0 m/s\n- Outlet:\n  - Pressure outlet\n  - Gauge pressure = 0 Pa\n- Top wall:\n  - Stationary no-slip wall\n- Bottom wall:\n  - Stationary no-slip wall\n\nSolver setup:\n- Solver type: pressure-based\n- Time setting: steady\n- Flow model: laminar\n- Pressure-velocity coupling: SIMPLE\n- Spatial discretization: second-order schemes where applicable\n- Initialization: hybrid initialization\n- Run 500 iterations or until the solution is converged.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the working directory.\n- Save the Fluent case file as:\n  C:\\Users\\Administrator\\Desktop\\poiseuille_shear.cas\n- Save the Fluent data file as:\n  C:\\Users\\Administrator\\Desktop\\poiseuille_shear.dat",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-10/init_file/thermal_structural_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\thermal_structural_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],

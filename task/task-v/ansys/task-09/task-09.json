@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-09-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use the ANSYS Fluent GUI to complete a 2D lid-driven cavity flow analysis.\n\nPhysical problem:\nLaminar lid-driven cavity flow in a square cavity.\n\nCoordinate system and geometry:\n- Use a 2D planar model.\n- Use SI units in Fluent.\n- The cavity is a square domain with side length 1 mm.\n- In Fluent coordinates, the domain should occupy:\n  - 0 ≤ X ≤ 0.001 m\n  - 0 ≤ Y ≤ 0.001 m\n- The top lid is the boundary at Y = 0.001 m.\n- The bottom wall is the boundary at Y = 0 m.\n- The left wall is the boundary at X = 0 m.\n- The right wall is the boundary at X = 0.001 m.\n\nModel parameters:\n- Fluid: water-liquid\n- Use constant material properties:\n  - Density: 998.2 kg/m³\n  - Dynamic viscosity: 0.001003 Pa·s\n- Mesh:\n  - Structured quadrilateral mesh\n  - Element size: 0.05 mm, equivalent to 5.0e-5 m\n  - Use approximately 20 divisions along each side of the square cavity.\n\nBoundary conditions:\n- Top lid:\n  - Moving wall\n  - X-velocity = 0.1 m/s\n  - Y-velocity = 0 m/s\n- Bottom wall:\n  - Stationary no-slip wall\n- Left wall:\n  - Stationary no-slip wall\n- Right wall:\n  - Stationary no-slip wall\n\nSolver setup:\n- Solver type: pressure-based\n- Time setting: steady\n- Flow model: laminar\n- Pressure-velocity coupling: SIMPLE\n- Spatial discretization: second-order schemes where applicable\n- Initialization: hybrid initialization\n- Run 1000 iterations or until the solution is converged.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the working directory.\n- Save the Fluent case file as:\n  C:\\Users\\Administrator\\Desktop\\cavity.cas\n- Save the Fluent data file as:\n  C:\\Users\\Administrator\\Desktop\\cavity.dat",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\ANSYS Student\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

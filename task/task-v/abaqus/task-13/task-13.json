@@ -1,0 +1,56 @@
+{
+  "id": "v-abaqus-task-13-windows",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform a modal analysis of a cantilever beam (Variant A):\n\n1. Part: 3D Deformable Solid, Extrusion\n   - Sketch a 12 mm x 10 mm rectangle in the Y-Z plane\n   - Extrude along the global X-axis to length 420 mm\n   - This creates a beam with cross-section 12 mm x 10 mm and length 420 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3, Density = 7.80e-9 tonne/mm^3\n\n3. Assembly: Create an instance.\n\n4. Step:\n   - Create a Linear Perturbation > Frequency step named Step-Modal-A\n   - Request 4 eigenvalues\n\n5. Load:\n   - Apply Encastre boundary condition to the fixed end face at X=0\n\n6. Mesh:\n   - Global seed size: 12 mm\n   - Element type: C3D8R\n\n7. Job: Create Job-Modal-A and submit for solving.\n\n8. Visualization:\n   - Review the first four mode shapes\n   - Record the first natural frequency (Hz)\n\n9. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Modal-A.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Modal-A.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

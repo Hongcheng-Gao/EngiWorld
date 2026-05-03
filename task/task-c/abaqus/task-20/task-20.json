@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-20-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given a steady-state heat conduction model `C:\\Users\\Administrator\\Desktop\\thermal_base.inp`.\nComplete the full sequential thermo-mechanical coupling workflow from the command line:\n\n1. Submit the thermal analysis and ensure `thermal.odb` is generated.\n\n2. Write and run a Python script `C:\\Users\\Administrator\\Desktop\\extract_temp.py`:\n   - Use `odbAccess` to read `thermal.odb`\n   - Extract `NT11` (nodal temperature) for all nodes in the last frame of `Step-Thermal`\n   - Write to `C:\\Users\\Administrator\\Desktop\\nodal_temp.txt` (format: one line per node as `node_id, temperature`)\n\n3. Write structural analysis input file `C:\\Users\\Administrator\\Desktop\\structural.inp`:\n   - Same geometry and mesh as thermal analysis\n   - Material: `E=210000 MPa`, `nu=0.3`, thermal expansion coefficient `alpha=1.2e-5 /K`\n   - Fully fix both end faces (Encastre)\n   - Inside `*Step`, use the `*Temperature` keyword to import data from `C:\\Users\\Administrator\\Desktop\\nodal_temp.txt`\n   - Ensure output request includes `S` (stress)\n\n4. Submit the structural analysis.\n\n5. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\postprocess.py`:\n   - Read `structural.odb`\n   - Extract global maximum Mises stress\n   - Save to `C:\\Users\\Administrator\\Desktop\\summary.txt` (format: `max_mises`)\n\n6. Run post-processing and save the result.\n7. Do not use Abaqus/CAE GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to perform a static tensile analysis of a thin rectangular shell plate with a central circular hole (Variant A):\n\n1. Part:\n   - Create a 3D Deformable Shell, Planar part.\n   - Sketch a rectangle from (0,0) to (160,80) in the X-Y plane.\n   - Sketch a circular hole at the plate center (X=80, Y=40) with diameter = 16 mm.\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3.\n   - Create a Homogeneous Shell Section with thickness = 1.2 mm and 5 integration points.\n   - Assign the shell section to the whole plate.\n\n3. Assembly:\n   - Create one dependent instance of the plate.\n\n4. Step:\n   - Create a Static, General step named Step-Tension-A.\n   - Use small-displacement analysis with nonlinear geometry off.\n\n5. Boundary conditions:\n   - Apply U3 = 0 to all plate nodes to keep the shell in the X-Y plane.\n   - At the bottom-left corner node (X=0, Y=0), apply U1 = U2 = 0.\n   - At the bottom-right corner node (X=160, Y=0), apply U2 = 0 only.\n\n6. Load:\n   - Represent the tensile edge load of 12 N/mm on the left and right vertical edges using equivalent nodal forces after meshing.\n   - On the X=0 edge, apply nodal forces in the -X direction.\n   - On the X=160 edge, apply nodal forces in the +X direction.\n   - For each loaded edge node, calculate the nodal force as 12 N/mm multiplied by that node's tributary edge length.\n\n7. Mesh:\n   - Global seed size = 10 mm.\n   - Seed the circular hole edge with size = 4 mm.\n   - Use S4R shell elements.\n\n8. Job:\n   - Create Job-Hole-A and submit it for solving.\n\n9. Visualization:\n   - Review the von Mises stress field.\n   - Record the maximum von Mises stress and whether it occurs near the circular hole.\n\n10. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Hole-A.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Hole-A.odb",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-20/init_file/thermal_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\thermal_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -37,7 +32,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {

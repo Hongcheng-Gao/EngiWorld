@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-08-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve a coupled thermal-structural analysis model.\n\nPhysical problem:\nA straight steel bar is axially restrained and subjected to a uniform temperature increase.\n\nCoordinate system and geometry:\n- Use the global Cartesian coordinate system.\n- The bar length is along the X direction.\n- The bar occupies:\n  - 0 ≤ X ≤ 100 mm\n  - 0 ≤ Y ≤ 10 mm\n  - 0 ≤ Z ≤ 10 mm\n- The left end face is X = 0.\n- The right end face is X = 100 mm.\n\nModel parameters:\n- Block size: 100 mm × 10 mm × 10 mm\n- Material: linear elastic steel with thermal expansion properties:\n  - Young's modulus E = 210000 MPa\n  - Poisson's ratio ν = 0.3\n  - Coefficient of thermal expansion α = 1.5e-5 /°C\n- Element type: SOLID185\n- Mesh: global element size 5 mm\n\nThermal condition:\n- Set the reference temperature for thermal strain to 20 °C.\n- Apply a uniform body temperature of 100 °C to the entire bar.\n\nStructural boundary conditions:\n- Restrain axial expansion by applying UX = 0 on both end faces:\n  - X = 0\n  - X = 100 mm\n- Add only the minimum additional constraints required to prevent rigid-body motion in 3D space. For a solid model, this requires fixing translational degrees of freedom at strategically selected nodes on the same end face, for example:\n  - At node (0, 0, 0): fix UY = 0 and UZ = 0.\n  - At node (0, 10, 0): fix UZ = 0.\n- Do not fully constrain the lateral surfaces.\n\nAnalysis type:\n- Static structural analysis with thermal strain.\n- The temperature field is applied as a uniform body load for thermal strain calculation.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the ANSYS working directory.\n- Save the database file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_thermal_stress.db\n- Save the structural result file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_thermal_stress.rst",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\ANSYS Student\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

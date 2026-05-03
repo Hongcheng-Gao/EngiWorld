@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-06-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve a 2D axisymmetric structural model of a thick-walled cylinder under internal pressure.\n\nPhysical problem:\nAxisymmetric thick-walled cylinder under internal pressure.\n\nCoordinate system and geometry:\n- Use the global Cartesian coordinate system for the axisymmetric cross-section.\n- X is the radial direction.\n- Y is the axial direction.\n- The cylinder has an inner diameter of 50 mm and an outer diameter of 100 mm.\n- Therefore, model the radial domain from X = 25 mm to X = 50 mm.\n- The axial thickness is 10 mm.\n- Model the rectangular axisymmetric cross-section:\n  - 25 ≤ X ≤ 50 mm\n  - 0 ≤ Y ≤ 10 mm\n- Do not model or constrain a symmetry axis at X = 0, because the cylinder has a central hole and the axis is outside the modeled annular cross-section.\n\nModel parameters:\n- Material: linear elastic steel\n  - Young's modulus E = 210000 MPa\n  - Poisson's ratio ν = 0.3\n- Element type: PLANE183 with axisymmetric option enabled\n- Mesh: global element size 5 mm\n\nBoundary conditions and load:\n- Inner cylindrical surface at X = 25 mm: apply an internal pressure of 10 MPa acting on the cylinder wall.\n- Outer cylindrical surface at X = 50 mm: free surface.\n- Axial faces:\n  - At Y = 0 mm: constrain axial displacement UY = 0.\n  - At Y = 10 mm: constrain axial displacement UY = 0.\n- Do not constrain radial displacement UX on the inner or outer cylindrical surfaces.\n\nAnalysis type:\n- Static structural analysis.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the ANSYS working directory.\n- Save the database file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_cylinder.db\n- Save the structural result file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_cylinder.rst",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\ANSYS Student\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,7 +1,7 @@
 {
   "id": "c-abaqus-task-05-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "Complete the full workflow from modeling to post-processing using command line only:\n\nWrite and run a Python script `C:\\Users\\Administrator\\Desktop\\build_model.py` using the Abaqus Python API:\n   - Create a 3D solid part with dimensions `100 mm × 10 mm × 10 mm`\n   - Material Steel: `E=210000 MPa`, `nu=0.3`\n   - Fix one end and apply a `-200 N` concentrated force on the other end (Y direction)\n   - Mesh with `C3D8R`, seed size 5 mm\n   - Create a Job and submit it\n\nWrite and run a post-processing script `C:\\Users\\Administrator\\Desktop\\postprocess.py`:\n   - Read the generated ODB\n   - Extract maximum Mises stress and free-end U2 displacement\n   - Save to `C:\\Users\\Administrator\\Desktop\\summary.txt` in this format: `max_mises, tip_u2`\n\nEnsure all outputs are under `C:\\Users\\Administrator\\Desktop\\`.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises, tip_u2`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to perform a tensile analysis of a rectangular solid block:\n\n1. Part:\n   - 3D Deformable Solid, Extrusion\n   - Sketch a rectangle from (0,0) to (12,8) in the Y-Z plane\n   - Extrude along the global X-axis to length 120 mm\n   - This creates a block with cross-section 12 mm x 8 mm and length 120 mm\n\n2. Property:\n   - Material Aluminum: E = 70000 MPa, nu = 0.33\n   - Solid Homogeneous section\n\n3. Assembly: Create an instance.\n\n4. Step:\n   - Static, General, named Step-Load\n\n5. Load:\n   - Fix the end face at X=0 with Encastre boundary condition\n   - Apply a uniform pressure of 8.33 MPa on the end face at X=120 mm in the +X direction (equivalent to a total 800 N tensile force)\n\n6. Mesh:\n   - Global seed size: 4 mm\n   - Element type: C3D8R\n\n7. Job: Create Job-BlockTension and submit for solving.\n\n8. Visualization:\n   - Review S11 stress contour at the mid-section (X ~ 60 mm)\n   - Query U1 displacement at the center of the free end face (X=120 mm, Y=6 mm, Z=4 mm)\n\n9. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-BlockTension.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-BlockTension.odb",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
@@ -32,7 +32,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {

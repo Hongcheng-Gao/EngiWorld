@@ -1,0 +1,56 @@
+{
+  "id": "v-ansys-task-14-windows",
+  "snapshot": "ansys-2026",
+  "instruction": "Use ANSYS Mechanical APDL GUI to complete a harmonic response analysis.\n\nPhysical problem:\nA cantilever beam is subjected to a harmonic force at its free end.\n\nCoordinate system and geometry:\n- Use the global Cartesian coordinate system.\n- Model the beam as a line body using BEAM188.\n- The beam reference line is along the global X direction.\n- The fixed end is at X = 0 mm.\n- The free end is at X = 500 mm.\n- The beam cross section is rectangular:\n  - Width = 10 mm\n  - Height = 10 mm\n\nModel parameters:\n- Beam length: 500 mm\n- Element type: BEAM188\n- Section type: rectangular beam section\n- Section size: 10 mm × 10 mm\n- Mesh: 20 uniform divisions along the beam length\n- Material: Structural Steel\n- Use a consistent N-mm-s unit system:\n  - Young's modulus E = 210000 MPa\n  - Poisson's ratio ν = 0.3\n  - Density ρ = 7.85e-9 tonne/mm³, equivalent to 7850 kg/m³\n\nBoundary conditions and load:\n- Fixed end at X = 0 mm:\n  - Fully constrain UX, UY, UZ, ROTX, ROTY, and ROTZ.\n- Free end at X = 500 mm:\n  - Apply a harmonic force with magnitude 10 N.\n  - Force direction: negative global Y direction.\n  - Excitation frequency: 5 Hz.\n- Use no damping, or use a damping ratio smaller than 0.001.\n\nAnalysis type:\n- Harmonic response analysis.\n- Use the Full method.\n- Solve a single frequency point at 5 Hz.\n- Save the harmonic response result.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the ANSYS working directory.\n- Save the database file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_harmonic.db\n- Save the structural result file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_harmonic.rst",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\ANSYS Student\\v261\\Framework\\bin\\Win64\\RunWB2.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

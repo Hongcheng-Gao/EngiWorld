@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-07-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given a static analysis template `C:\\Users\\Administrator\\Desktop\\impact_base.inp`.\nConvert it into a transient impact analysis from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\impact.inp`:\n   - Change the step to `*Dynamic, Explicit` with total time period `0.01 s`\n   - Replace the load with a Smooth Step amplitude curve: `0 s -> 0 N`, `0.01 s -> -1000 N`\n   - Add `*Bulk Viscosity`\n   - Add `*Energy Output` request (`ALLKE, ALLIE, ALLWK`)\n\n2. Submit the explicit job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Read `impact.odb`\n   - Extract the maximum absolute U2 displacement of the free-end node over the full time history\n   - Extract `ALLKE/ALLIE` ratio (percent) in the last frame\n   - Output format: `peak_u2, ke_ie_ratio_percent`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `peak_u2, residual_ratio_percent`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to perform a torsion analysis of a circular shaft (Variant A):\n\n1. Part: 3D Deformable Solid, Revolution\n   - Sketch in the X-Y plane: draw a rectangle from (0,0) to (5,80)\n   - The left vertical edge at X=0 is the revolution axis (global Y-axis)\n   - Revolve 360 deg to create a solid cylinder with diameter 10 mm and length 80 mm, aligned with the global Y-axis\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3\n   - Solid Homogeneous section\n\n3. Assembly: Create an instance.\n\n4. Step: Static, General, named Step-Torque-A.\n\n5. Load:\n   - Apply Encastre at the fixed end face (the face at Y=0, perpendicular to the Y-axis)\n   - Create RP-1 at the center of the free end face (Y=80 mm) and couple it kinematically to that end face\n   - Apply a torque (Moment) = 850 N*mm at RP-1 around the shaft axis (global Y-axis)\n\n6. Mesh:\n   - Global seed size: 4 mm\n   - Element type: C3D8R\n\n7. Job: Create Job-Torsion-A and submit for solving.\n\n8. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Torsion-A.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Torsion-A.odb",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-07/init_file/impact_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\impact_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -37,7 +32,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
