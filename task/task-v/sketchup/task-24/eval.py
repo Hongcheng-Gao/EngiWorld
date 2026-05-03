@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import os
 import shutil
 import tempfile
 import zlib
@@ -108,9 +109,25 @@ def _run() -> bool:
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"
     runtime_base.mkdir(parents=True, exist_ok=True)
+    local_tmp = runtime_base / "_tmp"
+    local_tmp.mkdir(parents=True, exist_ok=True)
     root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
     root.mkdir(parents=True, exist_ok=False)
+    old_env = {key: os.environ.get(key) for key in ("TMP", "TEMP", "TMPDIR")}
+    old_tempdir = tempfile.tempdir
+    old_mkdtemp = tempfile.mkdtemp
     try:
+        tmp_path = str(local_tmp.resolve())
+        for key in ("TMP", "TEMP", "TMPDIR"):
+            os.environ[key] = tmp_path
+        tempfile.tempdir = tmp_path
+        def _local_mkdtemp(prefix="tmp", suffix="", dir=None):
+            base_dir = Path(dir) if dir else local_tmp
+            base_dir.mkdir(parents=True, exist_ok=True)
+            created = base_dir / f"{prefix}{uuid.uuid4().hex}{suffix}"
+            created.mkdir(parents=True, exist_ok=False)
+            return str(created)
+        tempfile.mkdtemp = _local_mkdtemp
         _materialize_bundle(root)
         module = _load_module(root)
         func = getattr(module, CALL_FUNC)
@@ -118,6 +135,13 @@ def _run() -> bool:
         result = func(*args)
         return _is_pass(result)
     finally:
+        tempfile.tempdir = old_tempdir
+        tempfile.mkdtemp = old_mkdtemp
+        for key, value in old_env.items():
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
         shutil.rmtree(root, ignore_errors=True)
 if __name__ == "__main__":
     print("true" if _run() else "false")

@@ -97,7 +97,242 @@ def _is_pass(result) -> bool:
     return False
 
 
-def _resolve_arg(spec: str):
+def _install_ifcopenshell_fallback() -> None:
+
+    try:
+
+        __import__("ifcopenshell")
+
+        return
+
+    except ImportError:
+
+        pass
+
+    import re
+
+    import sys
+
+    import types
+
+    def _normalize_type_name(name: str) -> str:
+
+        known = {
+
+            "IFCPROJECT": "IfcProject",
+
+            "IFCSITE": "IfcSite",
+
+            "IFCBUILDING": "IfcBuilding",
+
+            "IFCBUILDINGSTOREY": "IfcBuildingStorey",
+
+            "IFCWALL": "IfcWall",
+
+            "IFCDOOR": "IfcDoor",
+
+            "IFCWINDOW": "IfcWindow",
+
+            "IFCSLAB": "IfcSlab",
+
+            "IFCRELAGGREGATES": "IfcRelAggregates",
+
+            "IFCRELCONTAINEDINSPATIALSTRUCTURE": "IfcRelContainedInSpatialStructure",
+
+        }
+
+        return known.get(name.upper(), name)
+
+    class _IfcEntity:
+
+        def __init__(self, eid: str, etype: str, args_text: str):
+
+            self._id = eid
+
+            self._type = _normalize_type_name(etype)
+
+            self._args_text = args_text
+
+            self.Name = None
+
+            self.IsDecomposedBy = []
+
+            self.ContainsElements = []
+
+            self.ContainedInStructure = []
+
+        def is_a(self, type_name=None):
+
+            if type_name is None:
+
+                return self._type
+
+            return self._type.upper() == str(type_name).upper()
+
+    class _IfcModel:
+
+        def __init__(self, schema: str, entities_by_id: dict[str, _IfcEntity]):
+
+            self.schema = schema
+
+            self._entities_by_id = entities_by_id
+
+        def by_type(self, type_name: str):
+
+            want = str(type_name).upper()
+
+            return [ent for ent in self._entities_by_id.values() if ent._type.upper() == want]
+
+    def _split_top_level_args(text: str) -> list[str]:
+
+        parts: list[str] = []
+
+        buf: list[str] = []
+
+        depth = 0
+
+        in_string = False
+
+        i = 0
+
+        while i < len(text):
+
+            ch = text[i]
+
+            if ch == "'":
+
+                buf.append(ch)
+
+                if in_string and i + 1 < len(text) and text[i + 1] == "'":
+
+                    buf.append(text[i + 1])
+
+                    i += 1
+
+                else:
+
+                    in_string = not in_string
+
+            elif not in_string and ch == "(":
+
+                depth += 1
+
+                buf.append(ch)
+
+            elif not in_string and ch == ")":
+
+                depth -= 1
+
+                buf.append(ch)
+
+            elif not in_string and ch == "," and depth == 0:
+
+                parts.append("".join(buf).strip())
+
+                buf = []
+
+            else:
+
+                buf.append(ch)
+
+            i += 1
+
+        tail = "".join(buf).strip()
+
+        if tail:
+
+            parts.append(tail)
+
+        return parts
+
+    def _parse_name(parts: list[str]):
+
+        if len(parts) <= 2:
+
+            return None
+
+        value = parts[2]
+
+        if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+
+            return value[1:-1].replace("''", "'")
+
+        return None
+
+    def _parse_refs(text: str) -> list[str]:
+
+        return re.findall(r"#\d+", text or "")
+
+    def _open_ifc(path):
+
+        raw = Path(path).read_text(encoding="utf-8", errors="ignore")
+
+        schema_match = re.search(r"FILE_SCHEMA\(\('([^']+)'\)\)", raw, re.IGNORECASE)
+
+        schema = schema_match.group(1) if schema_match else ""
+
+        data_match = re.search(r"DATA;(.*)ENDSEC;", raw, re.IGNORECASE | re.DOTALL)
+
+        data = data_match.group(1) if data_match else raw
+
+        entities_by_id: dict[str, _IfcEntity] = {}
+
+        for match in re.finditer(r"(#\d+)\s*=\s*([A-Z0-9_]+)\((.*?)\);", data, re.IGNORECASE | re.DOTALL):
+
+            eid, etype, args_text = match.groups()
+
+            entities_by_id[eid] = _IfcEntity(eid, etype, args_text)
+
+        for ent in entities_by_id.values():
+
+            ent.Name = _parse_name(_split_top_level_args(ent._args_text))
+
+        for ent in entities_by_id.values():
+
+            parts = _split_top_level_args(ent._args_text)
+
+            etype = ent._type.upper()
+
+            if etype == "IFCRELAGGREGATES" and len(parts) >= 2:
+
+                parent = entities_by_id.get(parts[-2].strip())
+
+                children = [entities_by_id[ref] for ref in _parse_refs(parts[-1]) if ref in entities_by_id]
+
+                ent.RelatedObjects = children
+
+                if parent is not None:
+
+                    parent.IsDecomposedBy.append(ent)
+
+            elif etype == "IFCRELCONTAINEDINSPATIALSTRUCTURE" and len(parts) >= 2:
+
+                children = [entities_by_id[ref] for ref in _parse_refs(parts[-2]) if ref in entities_by_id]
+
+                structure = entities_by_id.get(parts[-1].strip())
+
+                ent.RelatedElements = children
+
+                ent.RelatingStructure = structure
+
+                if structure is not None:
+
+                    structure.ContainsElements.append(ent)
+
+                for child in children:
+
+                    child.ContainedInStructure.append(ent)
+
+        return _IfcModel(schema, entities_by_id)
+
+    module = types.ModuleType("ifcopenshell")
+
+    module.open = _open_ifc
+
+    sys.modules["ifcopenshell"] = module
+
+
+def _resolve_arg(spec: str):
     if spec == "__DESKTOP_DIR__":
         return str(DESKTOP)
     return spec
@@ -112,7 +347,9 @@ def _run() -> bool:
     root.mkdir(parents=True, exist_ok=False)
     try:
         _materialize_bundle(root)
-        module = _load_module(root)
+        module = _load_module(root)
+
+        _install_ifcopenshell_fallback()
         func = getattr(module, CALL_FUNC)
         args = [_resolve_arg(arg) for arg in CALL_ARGS]
         result = func(*args)
