@@ -1,6 +1,6 @@
 {
   "id": "c-brl-cad-task-25-ubuntu",
-  "snapshot": "BRL-CAD7.32.2",
+  "snapshot": "",
   "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/body.step, /home/user/Desktop/drill.step. Read /home/user/Desktop/body.step and /home/user/Desktop/drill.step. Use the same cylindrical tool for two cuts: first with its axis along X and center passing through (45,30,15), second with its axis along Y and center passing through (60,45,15). Then add a 20 x 20 x 10 mm square boss at the top center. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
   "source": "human_craft",
   "config": [
@@ -9,14 +9,20 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-25/init_file/input/body.step",
+            "local_path": "task-25/init_file/body.step",
             "path": "/home/user/Desktop/body.step"
           },
           {
-            "local_path": "task-25/init_file/input/drill.step",
+            "local_path": "task-25/init_file/drill.step",
             "path": "/home/user/Desktop/drill.step"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -31,19 +37,8 @@
         "parameters": {
           "files": [
             {
-              "local_path": "task-25/eval.py",
+              "local_path": "task-25/eval-ubuntu.py",
               "path": "/home/user/Desktop/eval.py"
-            }
-          ]
-        }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-25/check_and_eval.py",
-              "path": "/home/user/Desktop/check_and_eval.py"
             }
           ]
         }
@@ -52,7 +47,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/check_and_eval.py",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

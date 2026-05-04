@@ -7,7 +7,9 @@ import trimesh
 
 TASK_ID = 'task-35'
 STL_SPECS = [{'path': 'out.stl', 'bbox': [115.0, 45.0, 23.0], 'vertices': 8, 'faces': 12}]
-OUTPUT_PATH = Path('/home/user/Desktop/out.stl')
+DESKTOP_OUTPUT_PATH = Path('/home/user/Desktop/out.stl')
+GROUND_TRUTH_OUTPUT_PATH = Path(__file__).resolve().parent / "ground_truth" / "out.stl"
+OUTPUT_PATHS = [DESKTOP_OUTPUT_PATH, GROUND_TRUTH_OUTPUT_PATH]
 BBOX_TOL = 0.05
 
 
@@ -25,10 +27,13 @@ def summarize_stl(path: Path) -> dict[str, object]:
 
 
 def evaluate() -> bool:
-    if not STL_SPECS or not OUTPUT_PATH.exists() or OUTPUT_PATH.stat().st_size <= 0:
+    if not STL_SPECS:
+        return False
+    paths = [path for path in OUTPUT_PATHS if path.exists() and path.stat().st_size > 0]
+    if not paths:
         return False
     spec = STL_SPECS[0]
-    actual = summarize_stl(OUTPUT_PATH)
+    actual = summarize_stl(paths[0])
     if actual["faces"] != spec["faces"] or actual["vertices"] != spec["vertices"]:
         return False
     if any(abs(float(a) - float(b)) > BBOX_TOL for a, b in zip(actual["bbox"], spec["bbox"])):

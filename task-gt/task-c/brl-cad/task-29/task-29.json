@@ -1,6 +1,6 @@
 {
   "id": "c-brl-cad-task-29-ubuntu",
-  "snapshot": "BRL-CAD7.32.2",
+  "snapshot": "",
   "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/lower.step, /home/user/Desktop/upper.step. Read /home/user/Desktop/lower.step and /home/user/Desktop/upper.step. Place the upper block at the center of the top face of the lower plate and fuse them. Cut a central top blind pocket of 30 x 20 x 8 mm in the upper block. Finally cut four through holes of diameter 6 mm in the lower plate corners, each hole center 12 mm from the nearest two sides. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
   "source": "human_craft",
   "config": [
@@ -9,14 +9,20 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-29/init_file/input/lower.step",
+            "local_path": "task-29/init_file/lower.step",
             "path": "/home/user/Desktop/lower.step"
           },
           {
-            "local_path": "task-29/init_file/input/upper.step",
+            "local_path": "task-29/init_file/upper.step",
             "path": "/home/user/Desktop/upper.step"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -31,19 +37,8 @@
         "parameters": {
           "files": [
             {
-              "local_path": "task-29/eval.py",
+              "local_path": "task-29/eval-ubuntu.py",
               "path": "/home/user/Desktop/eval.py"
-            }
-          ]
-        }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-29/check_and_eval.py",
-              "path": "/home/user/Desktop/check_and_eval.py"
             }
           ]
         }
@@ -52,7 +47,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/check_and_eval.py",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

@@ -1,6 +1,6 @@
 {
   "id": "c-brl-cad-task-40-ubuntu",
-  "snapshot": "BRL-CAD7.32.2",
+  "snapshot": "",
   "instruction": "Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/part_ref.step. Read /home/user/Desktop/part_ref.step. Generate an inspection fixture block from the reference part: first create an envelope block that adds 4 mm total clearance in X, Y, and Z around the reference bounding box; subtract the reference body from the envelope while adding an additional 2 mm clamping clearance; finally cut one guide hole of diameter 8 mm on each side, with hole axes along Y, hole centers on the fixture height midplane and 15 mm from the two end faces. Export exactly one STL mesh named /home/user/Desktop/out.stl to the output folder.",
   "source": "human_craft",
   "config": [
@@ -9,10 +9,16 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-40/init_file/input/part_ref.step",
+            "local_path": "task-40/init_file/part_ref.step",
             "path": "/home/user/Desktop/part_ref.step"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -27,19 +33,8 @@
         "parameters": {
           "files": [
             {
-              "local_path": "task-40/eval.py",
+              "local_path": "task-40/eval-ubuntu.py",
               "path": "/home/user/Desktop/eval.py"
-            }
-          ]
-        }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-40/check_and_eval.py",
-              "path": "/home/user/Desktop/check_and_eval.py"
             }
           ]
         }
@@ -48,7 +43,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/check_and_eval.py",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
