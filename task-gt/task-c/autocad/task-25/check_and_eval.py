@@ -19,10 +19,12 @@ EVAL_PY = HERE / "eval.py"
 
 def check_software() -> bool:
     candidates = [
-        'C:\\Program Files\\Autodesk\\AutoCAD 2027\\acad.exe',
+        r'C:\Program Files\Autodesk\AutoCAD 2024\acad.exe',
+        r'C:\Program Files\Autodesk\AutoCAD 2024\accoreconsole.exe',
+        r'C:\Program Files\Autodesk\AutoCAD 2027\acad.exe',
+        r'C:\Program Files\Autodesk\AutoCAD 2027\accoreconsole.exe',
     ]
-    return all(os.path.exists(p) for p in candidates)
-
+    return any(os.path.exists(p) for p in candidates)
 
 def main() -> int:
     try:
