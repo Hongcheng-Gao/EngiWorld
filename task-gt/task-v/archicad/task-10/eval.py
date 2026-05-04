@@ -24,7 +24,7 @@ SPEC = {'title': 'Skylit Art Studio Issue Set', 'starts_from_init': False, 'requ
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

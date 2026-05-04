@@ -24,7 +24,7 @@ SPEC = {'title': 'Farm Shop and Greenhouse Link Drawing Set and Room Schedule', 
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

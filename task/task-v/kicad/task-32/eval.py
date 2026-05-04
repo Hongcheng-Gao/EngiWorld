@@ -155,4 +155,4 @@ def _run() -> bool:
         _pop_utf8_text_io(io_state)
         shutil.rmtree(root, ignore_errors=True)
 if __name__ == "__main__":
-    print("true" if _run() else "false")
+    print("True" if _run() else "False")

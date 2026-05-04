@@ -9,7 +9,7 @@ EXPECTED_COLUMN_POINTS = {(0.0, 0.0), (6.0, 0.0), (6.0, 4.0), (0.0, 4.0)}
 
 
 def emit(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

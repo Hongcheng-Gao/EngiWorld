@@ -24,7 +24,7 @@ SPEC = {'title': 'Maker Lab Issue Set with Room Schedule', 'starts_from_init': F
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

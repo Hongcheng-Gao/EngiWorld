@@ -57,4 +57,4 @@ if __name__ == "__main__":
         ok = main()
     except Exception:
         ok = False
-    print("true" if ok else "false")
+    print("True" if ok else "False")

@@ -95,7 +95,7 @@ def evaluate() -> int:
 
 def main() -> int:
     result = evaluate()
-    print("true" if result == 1 else "false")
+    print("True" if result == 1 else "False")
     return 0
 
 

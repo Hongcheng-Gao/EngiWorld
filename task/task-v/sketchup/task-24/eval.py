@@ -144,4 +144,4 @@ def _run() -> bool:
                 os.environ[key] = value
         shutil.rmtree(root, ignore_errors=True)
 if __name__ == "__main__":
-    print("true" if _run() else "false")
+    print("True" if _run() else "False")

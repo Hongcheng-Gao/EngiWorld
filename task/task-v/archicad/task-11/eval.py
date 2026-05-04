@@ -24,7 +24,7 @@ SPEC = {'title': 'Hotel Room Book Issue Set', 'starts_from_init': True, 'require
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

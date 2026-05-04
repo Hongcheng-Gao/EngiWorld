@@ -24,7 +24,7 @@ SPEC = {'title': 'Chapel Pavilion Issue Sheets', 'starts_from_init': False, 'req
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

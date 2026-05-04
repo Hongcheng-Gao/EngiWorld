@@ -24,7 +24,7 @@ SPEC = {'title': 'Accessibility Clinic Renovation Report', 'starts_from_init': T
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

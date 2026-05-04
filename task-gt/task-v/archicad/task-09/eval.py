@@ -24,7 +24,7 @@ SPEC = {'title': 'Nursery Cluster Issue Set with Occupancy Schedule', 'starts_fr
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

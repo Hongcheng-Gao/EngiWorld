@@ -24,7 +24,7 @@ SPEC = {'title': 'Warehouse to Food Hall Issue Package', 'starts_from_init': Tru
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

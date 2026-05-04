@@ -14,7 +14,7 @@ SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'openstudio_v
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 

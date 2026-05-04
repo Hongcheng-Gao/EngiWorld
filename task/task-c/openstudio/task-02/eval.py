@@ -14,7 +14,7 @@ SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'openstudio_ve
 
 
 def finish(ok):
-    print("true" if ok else "false")
+    print("True" if ok else "False")
     raise SystemExit(0)
 
 
