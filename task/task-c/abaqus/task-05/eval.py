@@ -28,11 +28,11 @@ ABS_TOL_ZERO = 1.0e-8
 
 def output_result(value):
     try:
-        sys.__stdout__.write('true\n' if value else 'false\n')
+        sys.__stdout__.write('True\n' if value else 'False\n')
         sys.__stdout__.flush()
     except Exception:
         try:
-            sys.stdout.write('true\n' if value else 'false\n')
+            sys.stdout.write('True\n' if value else 'False\n')
             sys.stdout.flush()
         except Exception:
             pass

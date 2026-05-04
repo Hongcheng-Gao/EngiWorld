@@ -1,9 +1,10 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
-import json
 from pathlib import Path
+
+ABS_TOL = 1e-6
+REL_TOL = 1e-4
 
 
 def is_result_artifact(path: Path) -> bool:
@@ -16,7 +17,7 @@ def is_result_artifact(path: Path) -> bool:
 
 def is_nonempty_file(path: Path) -> bool:
     if not is_result_artifact(path):
-        return True
+        return path.exists() and path.is_file()
     return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
@@ -31,33 +32,33 @@ def parse_csv_values(path: Path) -> list[str]:
     return [p.strip() for p in content.split(",")]
 
 
-def write_result(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
+def close_enough(actual: float, target: float) -> bool:
+    limit = max(ABS_TOL, REL_TOL * max(1.0, abs(target)))
+    return abs(actual - target) <= limit
 
 
 def check_task(root: Path) -> bool:
-    required = ["cyclic.inp", "cyclic.dat", "summary.txt"]
+    required = ['cyclic.inp', 'cyclic.dat', 'summary.txt']
     for rel in required:
         if not is_nonempty_file(root / rel):
             return False
+    actual_parts = parse_csv_values(root / "summary.txt")
+    expected_vals = [19.0723, 17.5432]
 
-    parts = parse_csv_values(root / "summary.txt")
-    if len(parts) < 2:
+    if len(actual_parts) != len(expected_vals):
         return False
 
     try:
-        mises = float(parts[0])
-        error = float(parts[1])
+        actual_vals = [float(v) for v in actual_parts]
     except (TypeError, ValueError):
         return False
 
-    if abs(mises - 23.13) / 23.13 > 0.10:
-        return False
-    if abs(error) > 10.0:
-        return False
+    for a, g in zip(actual_vals, expected_vals):
+        if not close_enough(a, g):
+            return False
 
     return True
+
 
 def evaluate() -> int:
     root = Path("/home/user/Desktop")
@@ -70,7 +71,7 @@ def evaluate() -> int:
 
 def main() -> int:
     result = evaluate()
-    print("true" if result == 1 else "false")
+    print("True" if result == 1 else "False")
     return 0
 
 

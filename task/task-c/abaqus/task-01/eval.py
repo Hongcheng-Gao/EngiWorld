@@ -371,7 +371,7 @@ def check_odb_file():
 # except:
 #     passed = False
 
-# result_text = 'true' if passed else 'false'
+# result_text = 'True' if passed else 'false'
 
 # # 1. 输出到命令行
 # print(result_text)
@@ -391,7 +391,7 @@ try:
 except:
     passed = False
 
-result_text = 'true' if passed else 'false'
+result_text = 'True' if passed else 'false'
 
 # 写入结果文件
 with open(result_file, 'w') as f:

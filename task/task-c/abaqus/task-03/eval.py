@@ -146,7 +146,7 @@ ABS_TOL_U3 = 1.0e-8
 # ============================================================
 
 def output_result(value):
-    result_text = 'true' if value else 'false'
+    result_text = 'True' if value else 'false'
 
     try:
         with open(result_file, 'w') as f:

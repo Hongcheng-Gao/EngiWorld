@@ -1,23 +1,15 @@
-      
 # -*- coding: utf-8 -*-
 # extract_truth_job_tension.py
 # Run with:
 #     abaqus cae noGUI=extract_truth_job_tension.py
 #
 # Purpose:
-#     Extract ground-truth values from:
-#         <Desktop>\Job-Tension.cae
-#         <Desktop>\Job-Tension.odb
+#     Evaluate the Job-Tension model and output a boolean result.
 #
 # Output:
-#     <Desktop>\truth_values_job_tension.json
-#
-# This script is designed for the Job-Tension.py model:
-#     100 mm x 10 mm x 10 mm 3D solid bar
-#     Steel, E=210000 MPa, nu=0.3
-#     Step-Load
-#     X=0 fixed, X=100 loaded in +X
-#     C3D8R, global seed = 5 mm
+#     True
+#     or
+#     False
 
 from abaqus import *
 from abaqusConstants import *
@@ -26,7 +18,6 @@ from odbAccess import openOdb
 
 import os
 import sys
-import json
 import math
 import traceback
 
@@ -60,8 +51,6 @@ desktop = get_desktop()
 
 CAE_PATH = os.path.join(desktop, 'Job-Tension.cae')
 ODB_PATH = os.path.join(desktop, 'Job-Tension.odb')
-OUT_PATH = os.path.join(desktop, 'truth_values_job_tension.json')
-
 STEP_NAME = 'Step-Load'
 
 
@@ -147,15 +136,11 @@ def infer_coordinate_mode(ext):
     if ext is None:
         return 'UNKNOWN'
 
-    # In the intended final assembly coordinates:
-    # X span = 100, Y span = 10, Z span = 10.
     if abs(ext['x_span'] - 100.0) < 1.0e-6 and \
        abs(ext['y_span'] - 10.0) < 1.0e-6 and \
        abs(ext['z_span'] - 10.0) < 1.0e-6:
         return 'GLOBAL_X_LENGTH'
 
-    # In some cases, part/local coordinates may be reported:
-    # X span = 10, Y span = 10, Z span = 100.
     if abs(ext['x_span'] - 10.0) < 1.0e-6 and \
        abs(ext['y_span'] - 10.0) < 1.0e-6 and \
        abs(ext['z_span'] - 100.0) < 1.0e-6:
@@ -230,84 +215,6 @@ def get_element_centroids(inst):
             )
 
     return centroids
-
-
-def get_best_model_from_cae():
-    best_model_name = None
-    best_model = None
-    best_score = -1
-
-    for model_name in mdb.models.keys():
-        model = mdb.models[model_name]
-        score = 0
-
-        if get_step_key(model.steps, STEP_NAME) is not None:
-            score += 100000
-
-        try:
-            for part_name in model.parts.keys():
-                part = model.parts[part_name]
-                score += len(part.nodes) + 2 * len(part.elements)
-        except:
-            pass
-
-        try:
-            for inst_name in model.rootAssembly.instances.keys():
-                inst = model.rootAssembly.instances[inst_name]
-                score += len(inst.nodes) + 2 * len(inst.elements)
-        except:
-            pass
-
-        if score > best_score:
-            best_score = score
-            best_model_name = model_name
-            best_model = model
-
-    return best_model_name, best_model
-
-
-def get_best_part_or_instance_mesh_from_cae(model):
-    best_source = None
-    best_obj = None
-    best_nodes = -1
-    best_elements = -1
-    best_counts = {}
-
-    try:
-        for part_name in model.parts.keys():
-            part = model.parts[part_name]
-            try:
-                n = len(part.nodes)
-                e = len(part.elements)
-                if n > best_nodes:
-                    best_source = 'part:' + part_name
-                    best_obj = part
-                    best_nodes = n
-                    best_elements = e
-                    best_counts = get_element_type_counts(part.elements)
-            except:
-                pass
-    except:
-        pass
-
-    try:
-        for inst_name in model.rootAssembly.instances.keys():
-            inst = model.rootAssembly.instances[inst_name]
-            try:
-                n = len(inst.nodes)
-                e = len(inst.elements)
-                if n > best_nodes:
-                    best_source = 'instance:' + inst_name
-                    best_obj = inst
-                    best_nodes = n
-                    best_elements = e
-                    best_counts = get_element_type_counts(inst.elements)
-            except:
-                pass
-    except:
-        pass
-
-    return best_source, best_obj, best_nodes, best_elements, best_counts
 
 
 def get_materials_truth(model):
@@ -404,375 +311,301 @@ def get_bcs_truth(model):
     return out
 
 
+def close_enough(obs, exp, rel_tol=1.0e-4, abs_tol=1.0e-6):
+    try:
+        obsf = float(obs)
+        expf = float(exp)
+    except Exception:
+        return False
+    tol = max(float(abs_tol), float(rel_tol) * abs(expf))
+    return abs(obsf - expf) <= tol
+
+
+def compare_dict_value(actual, expected):
+    if expected is None:
+        return actual is None
+    if isinstance(expected, bool):
+        return bool(actual) == expected
+    if isinstance(expected, (int, float)):
+        return close_enough(actual, expected)
+    if isinstance(expected, (list, tuple)):
+        if not isinstance(actual, (list, tuple)):
+            return False
+        if len(actual) != len(expected):
+            return False
+        for a, e in zip(actual, expected):
+            if not compare_dict_value(a, e):
+                return False
+        return True
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            return False
+        for key, exp_value in expected.items():
+            if key not in actual:
+                return False
+            if not compare_dict_value(actual[key], exp_value):
+                return False
+        return True
+    return actual == expected
+
+
 # ============================================================
-# 3. Extract truth
+# 3. Evaluate
 # ============================================================
 
-truth = {}
-truth['cae_path'] = CAE_PATH
-truth['odb_path'] = ODB_PATH
-truth['cae_exists'] = os.path.exists(CAE_PATH)
-truth['odb_exists'] = os.path.exists(ODB_PATH)
+def check_task():
+    expected = {
+        'cae_exists': True,
+        'odb_exists': True,
+        'has_step_load': True,
+        'odb_has_step_load': True,
+        'odb_num_frames': 2,
+        'last_frame_value': 1.0,
+        'cae_num_nodes': 189,
+        'cae_num_elements': 80,
+        'odb_num_nodes': 189,
+        'odb_num_elements': 80,
+        'cae_element_types': {'C3D8R': 80},
+        'odb_element_types': {'C3D8R': 80},
+        'material_truth': {'Steel': {'poisson_ratio': 0.3, 'youngs_modulus': 210000.0}},
+        'section_truth': {'Solid-Section-Steel': {'material': 'Steel', 'thickness': None, 'type': 'HomogeneousSolidSection'}},
+        'max_abs_u1': 0.004753996152430773,
+        'free_end_center_U1': 0.004753996152430773,
+        'fixed_end_sum_RF1': -1000.0000152587891,
+        'total_sum_RF1': -1000.0000152587891,
+        'central_avg_s11': 10.0,
+        'central_avg_mises': 9.994122982025146,
+        'free_end_center_node_distance': 0.0,
+        'odb_job_status': 'JOB_STATUS_COMPLETED_SUCCESSFULLY',
+    }
 
-try:
-    # --------------------------------------------------------
-    # CAE truth
-    # --------------------------------------------------------
-    if truth['cae_exists']:
+    if not os.path.exists(CAE_PATH):
+        return False
+    if not os.path.exists(ODB_PATH):
+        return False
+
+    try:
         openMdb(pathName=CAE_PATH)
+    except Exception:
+        return False
 
-        model_name, model = get_best_model_from_cae()
-        truth['model_name'] = model_name
+    truth = {}
+    odb = None
+    try:
+        truth['cae_exists'] = True
+        truth['odb_exists'] = True
 
-        if model is not None:
-            truth['step_names_in_cae'] = list(model.steps.keys())
-            truth['has_step_load'] = get_step_key(model.steps, STEP_NAME) is not None
+        model_name = None
+        model = None
+        for name in mdb.models.keys():
+            model_name = name
+            model = mdb.models[name]
+            break
+        if model is None:
+            return False
 
-            truth['material_truth'] = get_materials_truth(model)
-            truth['section_truth'] = get_sections_truth(model)
-            truth['load_names'] = sorted(list(model.loads.keys()))
-            truth['loads'] = get_loads_truth(model)
-            truth['bc_names'] = sorted(list(model.boundaryConditions.keys()))
-            truth['boundary_conditions'] = get_bcs_truth(model)
+        truth['has_step_load'] = get_step_key(model.steps, STEP_NAME) is not None
+        truth['material_truth'] = get_materials_truth(model)
+        truth['section_truth'] = get_sections_truth(model)
 
-            source, obj, n_nodes, n_elements, elem_counts = get_best_part_or_instance_mesh_from_cae(model)
-            truth['cae_mesh_source'] = source
-            truth['cae_num_nodes'] = int(n_nodes)
-            truth['cae_num_elements'] = int(n_elements)
-            truth['cae_element_types'] = elem_counts
-
-            try:
-                ext = coord_extents_from_nodes(obj.nodes)
-                truth['cae_geometry_extents'] = ext
-                truth['cae_coordinate_mode'] = infer_coordinate_mode(ext)
-            except:
-                truth['cae_geometry_extents'] = None
-                truth['cae_coordinate_mode'] = 'UNKNOWN'
-
-            # Get main assembly instance information as well.
-            try:
-                inst_name, inst = get_main_instance(model.rootAssembly)
-                truth['cae_main_instance_name'] = inst_name
-                truth['cae_main_instance_num_nodes'] = len(inst.nodes)
-                truth['cae_main_instance_num_elements'] = len(inst.elements)
-                truth['cae_main_instance_element_types'] = get_element_type_counts(inst.elements)
-                truth['cae_main_instance_extents'] = coord_extents_from_nodes(inst.nodes)
-                truth['cae_main_instance_coordinate_mode'] = infer_coordinate_mode(
-                    truth['cae_main_instance_extents']
-                )
-            except:
-                truth['cae_main_instance_name'] = None
-
-    # --------------------------------------------------------
-    # ODB truth
-    # --------------------------------------------------------
-    if truth['odb_exists']:
-        odb = openOdb(path=ODB_PATH, readOnly=True)
+        source, obj, n_nodes, n_elements, elem_counts = None, None, -1, -1, {}
+        try:
+            for part_name in model.parts.keys():
+                part = model.parts[part_name]
+                source = 'part:' + part_name
+                obj = part
+                n_nodes = len(part.nodes)
+                n_elements = len(part.elements)
+                elem_counts = get_element_type_counts(part.elements)
+                break
+        except Exception:
+            pass
+        truth['cae_num_nodes'] = int(n_nodes)
+        truth['cae_num_elements'] = int(n_elements)
+        truth['cae_element_types'] = elem_counts
 
         try:
-            truth['odb_step_names'] = list(odb.steps.keys())
-            truth['odb_has_step_load'] = get_step_key(odb.steps, STEP_NAME) is not None
+            ext = coord_extents_from_nodes(obj.nodes)
+            truth['cae_coordinate_mode'] = infer_coordinate_mode(ext)
+        except Exception:
+            truth['cae_coordinate_mode'] = 'UNKNOWN'
 
+        odb = openOdb(path=ODB_PATH, readOnly=True)
+        truth['odb_has_step_load'] = get_step_key(odb.steps, STEP_NAME) is not None
+        try:
+            truth['odb_job_status'] = str(odb.diagnosticData.jobStatus)
+        except Exception:
+            truth['odb_job_status'] = None
+
+        inst_name, inst = get_main_instance(odb.rootAssembly)
+        if inst is None:
+            return False
+        truth['odb_main_instance_name'] = inst_name
+        truth['odb_num_nodes'] = len(inst.nodes)
+        truth['odb_num_elements'] = len(inst.elements)
+        truth['odb_element_types'] = get_element_type_counts(inst.elements)
+
+        ext = coord_extents_from_nodes(inst.nodes)
+        truth['odb_coordinate_mode'] = infer_coordinate_mode(ext)
+
+        step_key = get_step_key(odb.steps, STEP_NAME)
+        if step_key is None:
+            return False
+        step = odb.steps[step_key]
+        truth['odb_num_frames'] = len(step.frames)
+        if len(step.frames) == 0:
+            return False
+
+        last_frame = step.frames[-1]
+        truth['last_frame_value'] = float(last_frame.frameValue)
+        if not close_enough(truth['last_frame_value'], expected['last_frame_value'], rel_tol=1.0e-8, abs_tol=1.0e-10):
+            return False
+
+        if 'U' not in last_frame.fieldOutputs.keys():
+            return False
+        if 'RF' not in last_frame.fieldOutputs.keys():
+            return False
+        if 'S' not in last_frame.fieldOutputs.keys():
+            return False
+
+        U_field = last_frame.fieldOutputs['U']
+        RF_field = last_frame.fieldOutputs['RF']
+        S_field = last_frame.fieldOutputs['S']
+
+        node_coord = get_node_coord_dict(inst)
+        max_u_magnitude = -1.0
+        max_abs_u1 = -1.0
+        max_abs_u2 = -1.0
+        min_u2 = 1.0e100
+
+        for val in U_field.values:
             try:
-                truth['odb_job_status'] = str(odb.diagnosticData.jobStatus)
-            except:
-                truth['odb_job_status'] = None
+                u1 = float(val.data[0])
+                u2 = float(val.data[1])
+                u3 = float(val.data[2])
+                umag = vec_mag(val.data)
+            except Exception:
+                continue
+            max_u_magnitude = max(max_u_magnitude, umag)
+            max_abs_u1 = max(max_abs_u1, abs(u1))
+            max_abs_u2 = max(max_abs_u2, abs(u2))
+            min_u2 = min(min_u2, u2)
 
-            inst_name, inst = get_main_instance(odb.rootAssembly)
-            truth['odb_main_instance_name'] = inst_name
-            truth['odb_num_nodes'] = len(inst.nodes)
-            truth['odb_num_elements'] = len(inst.elements)
-            truth['odb_element_types'] = get_element_type_counts(inst.elements)
+        truth['max_abs_u1'] = float(max_abs_u1)
 
-            ext = coord_extents_from_nodes(inst.nodes)
-            truth['odb_geometry_extents'] = ext
-            truth['odb_coordinate_mode'] = infer_coordinate_mode(ext)
+        center_label, center_dist, center_coord, matched_target = find_nearest_node(
+            inst,
+            targets=((100.0, 5.0, 5.0), (5.0, 5.0, 100.0))
+        )
+        truth['free_end_center_node_distance'] = float(center_dist)
+        center_val = get_field_value_by_node(U_field, center_label)
+        if center_val is None:
+            return False
+        truth['free_end_center_U1'] = float(center_val.data[0])
 
-            step_key = get_step_key(odb.steps, STEP_NAME)
-            truth['odb_resolved_step_name'] = step_key
+        fixed_labels = set()
+        free_labels = set()
+        mode = infer_coordinate_mode(ext)
+        if mode == 'GLOBAL_X_LENGTH':
+            fixed_coord = ext['x_min']
+            free_coord = ext['x_max']
+            for label, coord in node_coord.items():
+                if abs(coord[0] - fixed_coord) <= 1.0e-8:
+                    fixed_labels.add(label)
+                if abs(coord[0] - free_coord) <= 1.0e-8:
+                    free_labels.add(label)
+        elif mode == 'LOCAL_Z_LENGTH':
+            fixed_coord = ext['z_min']
+            free_coord = ext['z_max']
+            for label, coord in node_coord.items():
+                if abs(coord[2] - fixed_coord) <= 1.0e-8:
+                    fixed_labels.add(label)
+                if abs(coord[2] - free_coord) <= 1.0e-8:
+                    free_labels.add(label)
+        else:
+            return False
 
-            if step_key is not None:
-                step = odb.steps[step_key]
-                truth['odb_num_frames'] = len(step.frames)
+        fixed_sum_rf = [0.0, 0.0, 0.0]
+        total_sum_rf = [0.0, 0.0, 0.0]
 
-                if len(step.frames) > 0:
-                    last_frame = step.frames[-1]
-                    truth['last_frame_value'] = float(last_frame.frameValue)
-                    truth['last_frame_description'] = str(last_frame.description)
+        for val in RF_field.values:
+            label = val.nodeLabel
+            rf1 = float(val.data[0])
+            rf2 = float(val.data[1])
+            rf3 = float(val.data[2])
+            total_sum_rf[0] += rf1
+            total_sum_rf[1] += rf2
+            total_sum_rf[2] += rf3
+            if label in fixed_labels:
+                fixed_sum_rf[0] += rf1
+                fixed_sum_rf[1] += rf2
+                fixed_sum_rf[2] += rf3
 
-                    truth['field_output_names'] = list(last_frame.fieldOutputs.keys())
+        truth['fixed_end_sum_RF1'] = float(fixed_sum_rf[0])
+        truth['total_sum_RF1'] = float(total_sum_rf[0])
 
-                    # ------------------------------------------------
-                    # U field truth
-                    # ------------------------------------------------
-                    if 'U' in last_frame.fieldOutputs.keys():
-                        U_field = last_frame.fieldOutputs['U']
+        centroids = get_element_centroids(inst)
+        central_s11 = []
+        central_mises = []
+        for val in S_field.values:
+            el = val.elementLabel
+            if el not in centroids:
+                continue
+            c = centroids[el]
+            if mode == 'GLOBAL_X_LENGTH':
+                length_coord = c[0]
+            elif mode == 'LOCAL_Z_LENGTH':
+                length_coord = c[2]
+            else:
+                continue
+            if abs(length_coord - 50.0) <= 5.1:
+                try:
+                    central_s11.append(float(val.data[0]))
+                except Exception:
+                    pass
+                try:
+                    central_mises.append(float(val.mises))
+                except Exception:
+                    pass
 
-                        max_u_magnitude = -1.0
-                        max_abs_u1 = -1.0
-                        max_abs_u2 = -1.0
-                        max_abs_u3 = -1.0
+        if len(central_s11) == 0 or len(central_mises) == 0:
+            return False
+        truth['central_avg_s11'] = float(sum(central_s11) / len(central_s11))
+        truth['central_avg_mises'] = float(sum(central_mises) / len(central_mises))
 
-                        max_u1 = None
-                        min_u1 = None
-                        max_u2 = None
-                        min_u2 = None
-                        max_u3 = None
-                        min_u3 = None
+        for key, exp_value in expected.items():
+            if key not in truth:
+                return False
+            if not compare_dict_value(truth[key], exp_value):
+                return False
 
-                        for val in U_field.values:
-                            u1 = float(val.data[0])
-                            u2 = float(val.data[1])
-                            u3 = float(val.data[2])
-                            umag = vec_mag(val.data)
+        return True
 
-                            max_u_magnitude = max(max_u_magnitude, umag)
-                            max_abs_u1 = max(max_abs_u1, abs(u1))
-                            max_abs_u2 = max(max_abs_u2, abs(u2))
-                            max_abs_u3 = max(max_abs_u3, abs(u3))
+    except Exception:
+        return False
+    finally:
+        try:
+            if odb is not None:
+                odb.close()
+        except Exception:
+            pass
 
-                            max_u1 = u1 if max_u1 is None else max(max_u1, u1)
-                            min_u1 = u1 if min_u1 is None else min(min_u1, u1)
-                            max_u2 = u2 if max_u2 is None else max(max_u2, u2)
-                            min_u2 = u2 if min_u2 is None else min(min_u2, u2)
-                            max_u3 = u3 if max_u3 is None else max(max_u3, u3)
-                            min_u3 = u3 if min_u3 is None else min(min_u3, u3)
 
-                        truth['max_u_magnitude'] = float(max_u_magnitude)
-                        truth['max_abs_u1'] = float(max_abs_u1)
-                        truth['max_abs_u2'] = float(max_abs_u2)
-                        truth['max_abs_u3'] = float(max_abs_u3)
-                        truth['max_u1'] = float(max_u1)
-                        truth['min_u1'] = float(min_u1)
-                        truth['max_u2'] = float(max_u2)
-                        truth['min_u2'] = float(min_u2)
-                        truth['max_u3'] = float(max_u3)
-                        truth['min_u3'] = float(min_u3)
-
-                        # Query U1 at the free-end center.
-                        # Intended final/global target: (100,5,5)
-                        # Compatibility part-local target: (5,5,100)
-                        center_label, center_dist, center_coord, matched_target = find_nearest_node(
-                            inst,
-                            targets=((100.0, 5.0, 5.0), (5.0, 5.0, 100.0))
-                        )
-
-                        truth['free_end_center_node_label'] = center_label
-                        truth['free_end_center_node_distance'] = float(center_dist)
-                        truth['free_end_center_node_coordinate'] = center_coord
-                        truth['free_end_center_matched_target'] = matched_target
-
-                        center_val = get_field_value_by_node(U_field, center_label)
-                        if center_val is not None:
-                            truth['free_end_center_U'] = tuple(float(x) for x in center_val.data)
-                            truth['free_end_center_U1'] = float(center_val.data[0])
-                            truth['free_end_center_U2'] = float(center_val.data[1])
-                            truth['free_end_center_U3'] = float(center_val.data[2])
-                        else:
-                            truth['free_end_center_U'] = None
-                            truth['free_end_center_U1'] = None
-                            truth['free_end_center_U2'] = None
-                            truth['free_end_center_U3'] = None
-
-                    # ------------------------------------------------
-                    # RF field truth
-                    # ------------------------------------------------
-                    if 'RF' in last_frame.fieldOutputs.keys():
-                        RF_field = last_frame.fieldOutputs['RF']
-                        node_coord = get_node_coord_dict(inst)
-
-                        fixed_labels = set()
-                        free_labels = set()
-
-                        mode = infer_coordinate_mode(ext)
-
-                        if mode == 'GLOBAL_X_LENGTH':
-                            fixed_coord = ext['x_min']
-                            free_coord = ext['x_max']
-                            for label, coord in node_coord.items():
-                                if abs(coord[0] - fixed_coord) <= 1.0e-8:
-                                    fixed_labels.add(label)
-                                if abs(coord[0] - free_coord) <= 1.0e-8:
-                                    free_labels.add(label)
-
-                        elif mode == 'LOCAL_Z_LENGTH':
-                            fixed_coord = ext['z_min']
-                            free_coord = ext['z_max']
-                            for label, coord in node_coord.items():
-                                if abs(coord[2] - fixed_coord) <= 1.0e-8:
-                                    fixed_labels.add(label)
-                                if abs(coord[2] - free_coord) <= 1.0e-8:
-                                    free_labels.add(label)
-
-                        truth['fixed_end_node_count'] = len(fixed_labels)
-                        truth['free_end_node_count'] = len(free_labels)
-
-                        fixed_sum_rf = [0.0, 0.0, 0.0]
-                        free_sum_rf = [0.0, 0.0, 0.0]
-                        total_sum_rf = [0.0, 0.0, 0.0]
-
-                        for val in RF_field.values:
-                            label = val.nodeLabel
-                            rf1 = float(val.data[0])
-                            rf2 = float(val.data[1])
-                            rf3 = float(val.data[2])
-
-                            total_sum_rf[0] += rf1
-                            total_sum_rf[1] += rf2
-                            total_sum_rf[2] += rf3
-
-                            if label in fixed_labels:
-                                fixed_sum_rf[0] += rf1
-                                fixed_sum_rf[1] += rf2
-                                fixed_sum_rf[2] += rf3
-
-                            if label in free_labels:
-                                free_sum_rf[0] += rf1
-                                free_sum_rf[1] += rf2
-                                free_sum_rf[2] += rf3
-
-                        truth['fixed_end_sum_RF1'] = float(fixed_sum_rf[0])
-                        truth['fixed_end_sum_RF2'] = float(fixed_sum_rf[1])
-                        truth['fixed_end_sum_RF3'] = float(fixed_sum_rf[2])
-                        truth['free_end_sum_RF1'] = float(free_sum_rf[0])
-                        truth['free_end_sum_RF2'] = float(free_sum_rf[1])
-                        truth['free_end_sum_RF3'] = float(free_sum_rf[2])
-                        truth['total_sum_RF1'] = float(total_sum_rf[0])
-                        truth['total_sum_RF2'] = float(total_sum_rf[1])
-                        truth['total_sum_RF3'] = float(total_sum_rf[2])
-
-                    # ------------------------------------------------
-                    # S field truth
-                    # ------------------------------------------------
-                    if 'S' in last_frame.fieldOutputs.keys():
-                        S_field = last_frame.fieldOutputs['S']
-
-                        max_mises = -1.0
-                        min_mises = None
-
-                        max_s11 = None
-                        min_s11 = None
-                        max_abs_s11 = -1.0
-
-                        max_s22 = None
-                        min_s22 = None
-                        max_abs_s22 = -1.0
-
-                        max_s33 = None
-                        min_s33 = None
-                        max_abs_s33 = -1.0
-
-                        for val in S_field.values:
-                            try:
-                                mises = float(val.mises)
-                                max_mises = max(max_mises, mises)
-                                min_mises = mises if min_mises is None else min(min_mises, mises)
-                            except:
-                                pass
-
-                            data = val.data
-
-                            if len(data) >= 1:
-                                s11 = float(data[0])
-                                max_s11 = s11 if max_s11 is None else max(max_s11, s11)
-                                min_s11 = s11 if min_s11 is None else min(min_s11, s11)
-                                max_abs_s11 = max(max_abs_s11, abs(s11))
-
-                            if len(data) >= 2:
-                                s22 = float(data[1])
-                                max_s22 = s22 if max_s22 is None else max(max_s22, s22)
-                                min_s22 = s22 if min_s22 is None else min(min_s22, s22)
-                                max_abs_s22 = max(max_abs_s22, abs(s22))
-
-                            if len(data) >= 3:
-                                s33 = float(data[2])
-                                max_s33 = s33 if max_s33 is None else max(max_s33, s33)
-                                min_s33 = s33 if min_s33 is None else min(min_s33, s33)
-                                max_abs_s33 = max(max_abs_s33, abs(s33))
-
-                        truth['max_mises'] = float(max_mises)
-                        truth['min_mises'] = float(min_mises) if min_mises is not None else None
-
-                        truth['max_s11'] = float(max_s11) if max_s11 is not None else None
-                        truth['min_s11'] = float(min_s11) if min_s11 is not None else None
-                        truth['max_abs_s11'] = float(max_abs_s11)
-
-                        truth['max_s22'] = float(max_s22) if max_s22 is not None else None
-                        truth['min_s22'] = float(min_s22) if min_s22 is not None else None
-                        truth['max_abs_s22'] = float(max_abs_s22)
-
-                        truth['max_s33'] = float(max_s33) if max_s33 is not None else None
-                        truth['min_s33'] = float(min_s33) if min_s33 is not None else None
-                        truth['max_abs_s33'] = float(max_abs_s33)
-
-                        # Central/midspan stress average.
-                        centroids = get_element_centroids(inst)
-                        mode = infer_coordinate_mode(ext)
-
-                        central_s11 = []
-                        central_mises = []
-
-                        for val in S_field.values:
-                            el = val.elementLabel
-                            if el not in centroids:
-                                continue
-
-                            c = centroids[el]
-                            if mode == 'GLOBAL_X_LENGTH':
-                                length_coord = c[0]
-                            elif mode == 'LOCAL_Z_LENGTH':
-                                length_coord = c[2]
-                            else:
-                                continue
-
-                            # Include elements with centroids near the middle.
-                            if abs(length_coord - 50.0) <= 5.1:
-                                try:
-                                    central_s11.append(float(val.data[0]))
-                                except:
-                                    pass
-                                try:
-                                    central_mises.append(float(val.mises))
-                                except:
-                                    pass
-
-                        truth['central_stress_value_count'] = len(central_s11)
-
-                        if len(central_s11) > 0:
-                            truth['central_avg_s11'] = float(sum(central_s11) / len(central_s11))
-                            truth['central_min_s11'] = float(min(central_s11))
-                            truth['central_max_s11'] = float(max(central_s11))
-                        else:
-                            truth['central_avg_s11'] = None
-                            truth['central_min_s11'] = None
-                            truth['central_max_s11'] = None
-
-                        if len(central_mises) > 0:
-                            truth['central_avg_mises'] = float(sum(central_mises) / len(central_mises))
-                            truth['central_min_mises'] = float(min(central_mises))
-                            truth['central_max_mises'] = float(max(central_mises))
-                        else:
-                            truth['central_avg_mises'] = None
-                            truth['central_min_mises'] = None
-                            truth['central_max_mises'] = None
-
-        finally:
-            odb.close()
-
-except Exception:
-    truth['extraction_error'] = traceback.format_exc()
-
-# ============================================================
-# 4. Save JSON and print
-# ============================================================
-
-with open(OUT_PATH, 'w') as f:
-    json.dump(truth, f, indent=2, sort_keys=True)
-
-try:
-    sys.__stdout__.write('TRUE_VALUES_JSON_PATH = ' + OUT_PATH + '\n')
-    sys.__stdout__.write(json.dumps(truth, indent=2, sort_keys=True) + '\n')
+def output_result(value):
+    if value:
+        sys.__stdout__.write('True\n')
+    else:
+        sys.__stdout__.write('False\n')
     sys.__stdout__.flush()
-except:
-    print('TRUE_VALUES_JSON_PATH = ' + OUT_PATH)
-    print(json.dumps(truth, indent=2, sort_keys=True))
+
+
+def main():
+    try:
+        ok = check_task()
+    except Exception:
+        ok = False
+    output_result(ok)
+
+
+if __name__ == '__main__':
+    main()

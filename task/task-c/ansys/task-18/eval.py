@@ -142,7 +142,7 @@ def evaluate() -> bool:
 
 
 def main() -> None:
-    print("true" if evaluate() else "false")
+    print("True" if evaluate() else "False")
 
 
 if __name__ == "__main__":

@@ -381,7 +381,7 @@ try:
 except:
     passed = False
 
-result_text = 'true' if passed else 'false'
+result_text = 'True' if passed else 'false'
 
 with open(result_file, 'w') as f:
     f.write(result_text + '\n')
