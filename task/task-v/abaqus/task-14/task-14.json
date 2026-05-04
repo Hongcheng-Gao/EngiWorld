@@ -1,0 +1,56 @@
+{
+  "id": "v-abaqus-task-14-windows",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform a constrained thermal stress analysis (Case A):\n\n1. Part:\n   - 3D Deformable Solid, Extrusion\n   - Sketch a 10 mm x 10 mm rectangle in the Y-Z plane (Y from 0 to 10, Z from 0 to 10)\n   - Extrude along the global X-axis to length 100 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3, Expansion = 1.2e-5 /K\n\n3. Assembly: Create an instance.\n\n4. Step:\n   - Static, General, named Step-Thermal-A\n\n5. Load:\n   - Predefined Field > Temperature, Initial, whole model = 20 degC\n   - Boundary conditions: fix both end faces with U1 = U2 = U3 = 0\n     - Left end face at X=0\n     - Right end face at X=100 mm\n   - In Step-Thermal-A, apply Predefined Field > Temperature = 120 degC to the whole model\n\n6. Mesh:\n   - Global seed size: 5 mm\n   - Element type: C3D8R\n\n7. Job: Create Job-ThermalStress-A and submit for solving.\n\n8. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-ThermalStress-A.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-ThermalStress-A.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

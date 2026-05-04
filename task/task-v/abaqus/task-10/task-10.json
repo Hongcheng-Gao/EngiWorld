@@ -1,0 +1,56 @@
+{
+  "id": "v-abaqus-task-10-windows",
+  "snapshot": "abaqus-2025",
+  "instruction": "Use the Abaqus/CAE GUI to perform a torsion analysis of a circular shaft (Variant B):\n\n1. Part: 3D Deformable Solid, Revolution\n   - Sketch in the X-Y plane: draw a rectangle from (0,0) to (6,72)\n   - The left vertical edge at X=0 is the revolution axis (global Y-axis)\n   - Revolve 360 deg to create a solid cylinder with diameter 12 mm and length 72 mm, aligned with the global Y-axis\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3\n   - Solid Homogeneous section\n\n3. Assembly: Create an instance.\n\n4. Step: Static, General, named Step-Torque-B.\n\n5. Interaction:\n   - Create a Reference Point (RP-1) at the center of the free end face (Y=72 mm, X=0, Z=0)\n   - Use Constraint > Coupling to kinematically couple the free end face and RP-1 (all 6 DOFs)\n   - Apply Encastre to the fixed end face (Y=0)\n\n6. Load:\n   - Apply a torque (Moment) = 920 N*mm at RP-1 about the shaft axis (global Y-axis, i.e., component MY)\n\n7. Mesh:\n   - Global seed size: 4 mm\n   - Element type: C3D8R\n\n8. Job: Create Job-Torsion-B and submit for solving.\n\n9. Visualization:\n   - Review Mises stress contour\n   - Query RP-1 rotation magnitude (UR)\n   - Query shear stress components at any node on the shaft outer surface (radius ≈ 6 mm)\n\n10. Save:\n    - Model: C:\\Users\\Administrator\\Desktop\\Job-Torsion-B.cae\n    - Results: C:\\Users\\Administrator\\Desktop\\Job-Torsion-B.odb",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\Commands\\abq_cae_open.bat"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
