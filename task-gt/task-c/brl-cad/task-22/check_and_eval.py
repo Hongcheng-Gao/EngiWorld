@@ -8,6 +8,7 @@ exact_match against `True\r\n` / `true\r\n` registers a clear failure.
 from __future__ import annotations
 
 import os
+import shutil
 import subprocess
 import sys
 from pathlib import Path
@@ -18,21 +19,16 @@ EVAL_PY = HERE / "eval.py"
 
 
 def check_software() -> bool:
-    cmd = [
-        'bash',
-        '-lc',
-        'echo q | mged -c >/dev/null 2>&1',
+    extra_dirs = [
+        '/home/user/BRL-CAD_7.32.2_Linux_x86_64/bin',
+        '/usr/brlcad/bin',
+        '/usr/local/brlcad/bin',
+        '/opt/brlcad/bin',
+        '/opt/brlcad/rel-7.32.2/bin',
     ]
-    try:
-        result = subprocess.run(
-            cmd,
-            capture_output=True,
-            timeout=60,
-        )
-    except (FileNotFoundError, subprocess.TimeoutExpired, OSError):
-        return False
-    return result.returncode == 0
-
+    os.environ['PATH'] = os.pathsep.join(extra_dirs + [os.environ.get('PATH', '')])
+    commands = ['mged', 'g-stl', 'rt']
+    return any(shutil.which(command) for command in commands)
 
 def main() -> int:
     try:
