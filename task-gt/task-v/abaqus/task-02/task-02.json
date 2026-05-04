@@ -1,7 +1,7 @@
 {
   "id": "v-abaqus-task-02-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "Use the Abaqus/CAE GUI to perform an internal-pressure analysis of an axisymmetric thick-walled cylinder:\n\n1. Part: Axisymmetric Deformable Solid, Extrusion\n   - Sketch: rectangle, radial direction 50 mm to 100 mm, axial direction 0 to 10 mm\n   - This corresponds to an inner radius of 50 mm, an outer radius of 100 mm, and a thickness of 10 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3\n   - Solid Homogeneous section\n\n3. Assembly: Create an instance.\n\n4. Step: Static, General, named Step-Pressure.\n\n5. Load:\n   - Apply Pressure = 10 MPa on the inner cylindrical surface\n   - Set U2 = 0 on the left end face (axisymmetric condition)\n   - Set U1 = 0 on the bottom edge (axis) for symmetry\n\n6. Mesh:\n   - Global seed size: 5 mm\n   - Element type: CAX4R\n\n7. Job: Create Job-Cylinder and submit for solving.\n\n8. Save:\n   - Model: Job-Cylinder.cae\n   - Results: Job-Cylinder.odb",
+  "instruction": "Use Abaqus/CAE through the graphical user interface to build and solve a 2D axisymmetric finite-element model of an internally pressurized thick-walled cylinder.\n\nUse the N-mm-MPa unit system.\n\nGeometry:\nCreate a 2D axisymmetric deformable solid model of a cylindrical cross-section.\nThe radial direction is from r = 50 mm to r = 100 mm.\nThe axial direction is from z = 0 mm to z = 10 mm.\n\nMaterial:\nCreate a material named Steel.\nUse Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3.\nAssign this material to the entire cylinder section using a homogeneous solid section.\n\nElement type and mesh:\nUse CAX4R axisymmetric solid elements.\nUse a structured mesh with global mesh size 5.0 mm.\nCreate node sets named ALLNODES, INNER, OUTER, ZMIN, and ZMAX.\n\nBoundary conditions:\nApply U2 = 0 to all nodes in ALLNODES to enforce plane strain in the axial direction.\nDo not apply any additional U1 constraint.\n\nLoading:\nApply internal pressure p = 10 N/mm^2 on the INNER boundary (r = 50 mm).\nRepresent this pressure as equivalent axisymmetric concentrated nodal forces on INNER nodes.\nFor each INNER node at axial position z_i, use:\nF_i = p x 2pi x r_in x Delta z_i\nin the positive U1 direction.\nFor the first and last INNER nodes, use half of the adjacent axial interval for Delta z_i.\nFor interior INNER nodes, use half of the distance between neighboring INNER nodes for Delta z_i.\n\nAnalysis:\nCreate a static analysis step named Step-Pressure.\nRequest field output for U, RF, and S.\nCreate and run a job named Job-Cylinder.\nWait for the analysis to complete successfully.\n\nRequired saved files:\nSave the Abaqus/CAE model database as:\nC:\\Users\\Administrator\\Desktop\\Job-Cylinder.cae\n\nSave the Abaqus output database as:\nC:\\Users\\Administrator\\Desktop\\Job-Cylinder.odb\n\nThe final answer should only confirm that both required files have been generated.",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
@@ -40,7 +40,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
