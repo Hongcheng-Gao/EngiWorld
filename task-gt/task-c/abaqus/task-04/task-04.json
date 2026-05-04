@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-04-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given an input file with errors: `C:\\Users\\Administrator\\Desktop\\modal_base.inp`.\n\nRepair the file and save it as `C:\\Users\\Administrator\\Desktop\\fixed.inp` (do not use CAE).\nSubmit the job and ensure `C:\\Users\\Administrator\\Desktop\\fixed.odb` is generated successfully.\nWrite a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py` to extract from `fixed.odb`:\n   - Global maximum Mises stress\n   - Maximum U2 displacement at the free end\nSave the result to `C:\\Users\\Administrator\\Desktop\\summary.txt` in this format: `max_mises, tip_u2`.\nAlso save an error diagnosis report to `C:\\Users\\Administrator\\Desktop\\diagnosis.txt` (explain each error cause and fix method line by line, with at least 100 Chinese characters).\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises, tip_u2`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to complete the following task.\n\n1. Part module:\n   - Create a 3D Deformable Solid part using Extrusion.\n   - Create a straight rectangular bar with length 100 mm along the global X-axis.\n   - The cross-section should be a 10 mm × 10 mm square in the Y-Z plane.\n   - The final geometry should occupy:\n     - X = 0 to 100 mm\n     - Y = 0 to 10 mm\n     - Z = 0 to 10 mm\n\n2. Property module:\n   - Create a material named Steel.\n   - Define the elastic material properties:\n     - Young’s modulus E = 210000 MPa\n     - Poisson’s ratio nu = 0.3\n   - Create a Solid Homogeneous section using material Steel.\n   - Assign the section to the entire bar.\n\n3. Assembly module:\n   - Create one dependent instance of the bar.\n\n4. Step module:\n   - Create a Static, General step named Step-Load.\n   - Use the Initial step as the previous step.\n\n5. Load module:\n   - Apply an Encastre boundary condition to the end face at X = 0.\n   - Apply a tensile surface traction to the end face at X = 100 mm.\n   - Use Surface Traction, General.\n   - Set the traction magnitude to 10 MPa.\n   - Set the traction direction to the global positive X direction.\n   - The traction is equivalent to a total tensile force of 1000 N over the 10 mm × 10 mm end face.\n\n6. Mesh module:\n   - Apply a global seed size of 5 mm.\n   - Assign element type C3D8R.\n   - Generate the mesh.\n\n7. Job module:\n   - Create a job named Job-Tension.\n   - Submit the job for analysis.\n   - Wait for the analysis to complete successfully.\n\n8. Visualization module:\n   - Open the output database.\n   - Display the Mises stress contour.\n   - Query the U1 displacement at the node located at the center of the free end face:\n     - X = 100 mm\n     - Y = 5 mm\n     - Z = 5 mm\n\n9. Save:\n   - Save the Abaqus model database as:\n     C:\\Users\\Administrator\\Desktop\\Job-Tension.cae\n   - Ensure that the output database is generated as:\n     C:\\Users\\Administrator\\Desktop\\Job-Tension.odb",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-04/init_file/modal_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\modal_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -32,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-04/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-18-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given an orthotropic cantilever beam template `C:\\Users\\Administrator\\Desktop\\orthotropic_base.inp`.\nThe axial modulus `E1=210000 MPa` (same as steel), but the template is missing an `*Orientation` definition.\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\ortho.inp`:\n   - Add `*Orientation, name=ORI-1` so that material direction 1 is aligned with the beam axis (X direction)\n   - Fix one end and apply `-100 N` concentrated force on the other end (Y direction)\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Extract global maximum Mises stress\n   - Extract free-end U2 displacement\n   - Output format: `max_mises, tip_u2`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises, tip_u2`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to perform a modal analysis of a cantilever beam (Variant B):\n\n1. Part: 3D Deformable Solid, Extrusion\n   - Sketch a 14 mm x 8 mm rectangle in the Y-Z plane\n   - Extrude along the global X-axis to length 360 mm\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3, Density = 7.95e-9 tonne/mm^3\n\n3. Assembly: Create an instance.\n\n4. Step:\n   - Linear Perturbation > Frequency, named Step-Modal-B\n   - Request 5 eigenvalues\n\n5. Load:\n   - Apply Encastre boundary condition to the fixed end face at X=0\n\n6. Mesh:\n   - Global seed size: 10 mm\n   - Element type: C3D8R\n\n7. Job: Create Job-Modal-B and submit for solving.\n\n8. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Modal-B.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Modal-B.odb",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-18/init_file/orthotropic_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\orthotropic_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -32,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-18/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

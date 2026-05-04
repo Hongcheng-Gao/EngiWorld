@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-02-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given a structural analysis template `C:\\Users\\Administrator\\Desktop\\thermal_stress_base.inp`.\nA uniform temperature field of 100°C (initial temperature 20°C) is already defined, but boundary conditions are missing.\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\thermal.inp`:\n   - Add fully fixed boundary conditions (Encastre) on both end faces\n   - Ensure the output request includes `S` and `E`\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Read `thermal.odb`\n   - Extract the global maximum Mises stress\n   - Extract the global maximum absolute E11 (axial strain)\n   - Print in this format: `max_mises, max_e11`\n\n4. Run post-processing and save the output to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `max_mises, auxiliary_value`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to build and solve a 2D axisymmetric finite-element model of an internally pressurized thick-walled cylinder.\n\nUse the N-mm-MPa unit system.\n\nGeometry:\nCreate a 2D axisymmetric deformable solid model of a cylindrical cross-section.\nThe radial direction is from r = 50 mm to r = 100 mm.\nThe axial direction is from z = 0 mm to z = 10 mm.\n\nMaterial:\nCreate a material named Steel.\nUse Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3.\nAssign this material to the entire cylinder section using a homogeneous solid section.\n\nElement type and mesh:\nUse CAX4R axisymmetric solid elements.\nUse a structured mesh with global mesh size 5.0 mm.\nCreate node sets named ALLNODES, INNER, OUTER, ZMIN, and ZMAX.\n\nBoundary conditions:\nApply U2 = 0 to all nodes in ALLNODES to enforce plane strain in the axial direction.\nDo not apply any additional U1 constraint.\n\nLoading:\nApply internal pressure p = 10 N/mm^2 on the INNER boundary (r = 50 mm).\nRepresent this pressure as equivalent axisymmetric concentrated nodal forces on INNER nodes.\nFor each INNER node at axial position z_i, use:\nF_i = p x 2pi x r_in x Delta z_i\nin the positive U1 direction.\nFor the first and last INNER nodes, use half of the adjacent axial interval for Delta z_i.\nFor interior INNER nodes, use half of the distance between neighboring INNER nodes for Delta z_i.\n\nAnalysis:\nCreate a static analysis step named Step-Pressure.\nRequest field output for U, RF, and S.\nCreate and run a job named Job-Cylinder.\nWait for the analysis to complete successfully.\n\nRequired saved files:\nSave the Abaqus/CAE model database as:\nC:\\Users\\Administrator\\Desktop\\Job-Cylinder.cae\n\nSave the Abaqus output database as:\nC:\\Users\\Administrator\\Desktop\\Job-Cylinder.odb\n\nThe final answer should only confirm that both required files have been generated.",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-02/init_file/thermal_stress_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\thermal_stress_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -32,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-02/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

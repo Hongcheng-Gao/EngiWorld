@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-12-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given a steady-state heat conduction template `C:\\Users\\Administrator\\Desktop\\steady_thermal_base.inp` (`100 mm × 50 mm × 10 mm`).\nComplete the following from the command line:\n\n1. Modify and generate `C:\\Users\\Administrator\\Desktop\\thermal.inp`:\n   - Left end face temperature: 100°C\n   - Right end face temperature: 20°C\n   - All other surfaces adiabatic\n\n2. Submit the job.\n\n3. Write a post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Extract temperature at `x=25 mm`\n   - Extract temperature at `x=50 mm`\n   - Output format: `temp_at_25mm, temp_at_50mm`\n\n4. Save to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `temp_at_25mm, temp_at_50mm`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to perform a linear buckling analysis of a thin plate (Variant A):\n\n1. Part:\n   - Create a 3D Deformable Shell, Planar part.\n   - Sketch a square plate from (0,0) to (96,96) in the X-Y plane.\n\n2. Property:\n   - Material Steel: E = 210000 MPa, nu = 0.3.\n   - Create a Homogeneous Shell Section with thickness = 1.2 mm and 5 integration points.\n   - Assign the shell section to the entire plate.\n\n3. Assembly:\n   - Create one dependent instance of the plate.\n\n4. Step:\n   - Create a Linear Perturbation > Buckle step named Step-Buckle-A.\n   - Request 3 eigenvalues.\n\n5. Mesh:\n   - Use global seed size = 6 mm.\n   - Use S4R shell elements.\n   - Generate the mesh.\n\n6. Load and boundary conditions:\n   - Represent the compressive edge load of 1.2 N/mm on the two vertical edges by equivalent nodal forces after meshing.\n   - On the X=0 edge, apply nodal forces in the +X direction. On the X=96 edge, apply nodal forces in the -X direction.\n   - Because the edge length is 96 mm and the mesh spacing is 6 mm, apply 7.2 N to each interior edge node and 3.6 N to each corner edge node on each loaded vertical edge.\n   - Apply U3 = 0 on all four plate edges: X=0, X=96, Y=0, and Y=96, to represent simply supported transverse conditions.\n   - Select the center mesh node at approximately (X=48, Y=48, Z=0) and apply U1 = U2 = 0 to suppress in-plane translational rigid-body motion.\n   - Select the bottom-edge midpoint mesh node at approximately (X=48, Y=0, Z=0) and apply U1 = 0 only to suppress the remaining in-plane rotational rigid-body mode.\n\n7. Job:\n   - Create Job-Buckle-A and submit it for solving.\n\n8. Visualization:\n   - Review the first buckling mode.\n   - Record the first eigenvalue.\n\n9. Save:\n   - Model: C:\\Users\\Administrator\\Desktop\\Job-Buckle-A.cae\n   - Results: C:\\Users\\Administrator\\Desktop\\Job-Buckle-A.odb",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-12/init_file/steady_thermal_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\steady_thermal_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -32,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-12/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

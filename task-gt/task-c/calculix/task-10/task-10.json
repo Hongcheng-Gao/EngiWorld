@@ -1,7 +1,7 @@
 {
   "id": "c-calculix-task-10-ubuntu",
   "snapshot": "CalculiX-2.17",
-  "instruction": "You are given a `90°` sector annulus template `/home/user/Desktop/cyclic_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/cyclic.inp`:\n- Define cyclic symmetry with 4 sectors (full `360°`)\n- Define symmetry faces on both sector sides (Master and Slave)\n- Apply pressure `10 MPa` on the inner surface\n\n2. Submit the job and write a post-processing script to parse `cyclic.dat`:\n- Extract maximum Mises stress on inner wall\n- Compare against full-cylinder Lame solution (`23.13 MPa`)\n- Write to `/home/user/Desktop/summary.txt` in this format: `max_mises, lame_error_percent`\n\n4. Do not use the CGX GUI.",
+  "instruction": "You are given a `90°` sector annulus template `/home/user/Desktop/cyclic_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/cyclic.inp`:\n- Repair missing nodes and invalid element connectivity so the C3D8 sector mesh is valid\n- Define cyclic symmetry with 4 sectors (full `360°`) and sector-side symmetry faces (Master and Slave)\n- Apply pressure `10 MPa` on the inner surface\n\n2. Submit the job and write a post-processing script to parse `cyclic.dat`:\n- Extract maximum Mises stress from the stress output\n- Compare against full-cylinder Lame solution (`23.13 MPa`) and compute error percent\n- Write to `/home/user/Desktop/summary.txt` in this format: `max_mises, lame_error_percent`\n\n3. Do not use the CGX GUI.",
   "source": "https://github.com/calculix/CalculiX-Examples",
   "config": [
     {
@@ -32,29 +32,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-10/check_and_eval.py",
-              "path": "/home/user/Desktop/check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/check_and_eval.py",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

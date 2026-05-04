@@ -1,18 +1,13 @@
 {
   "id": "c-ansys-task-18-windows",
   "snapshot": "ansys-2026",
-  "instruction": "You are given a cylinder flow-around mesh `C:\\Users\\Administrator\\Desktop\\cylinder.msh`.\nComplete the following using Fluent command line:\n\n1. Write journal file `C:\\Users\\Administrator\\Desktop\\cylinder.jou`:\n- Read mesh, set 2D Pressure-Based Transient solver\n- Laminar model (`Re≈100`)\n- Inlet velocity `0.1 m/s`, outlet pressure `0`\n- Time step `0.01 s`, run 500 steps\n- Monitor lift coefficient history on the cylinder surface\n- Export lift history to `C:\\Users\\Administrator\\Desktop\\lift_history.xy`\n\n2. Submit the job.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\lift_history.xy` is generated.\n4. Do not use the GUI.\n\n[Strict Output Format]\n- Target file: `lift_history.xy`\n- Required column order: `step, lift`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use ANSYS Workbench via the Command Line Interface (CLI) to complete a Static Structural analysis.\n\nPhysical problem:\nA square plate with four simply supported edges is subjected to a uniform pressure load.\n\nCoordinate system and geometry:\n- Use the global Cartesian coordinate system.\n- Model the plate mid-surface in the global X-Y plane.\n- The out-of-plane direction is the global Z direction.\n- The square plate mid-surface occupies:\n  - 0 ≤ X ≤ 100 mm\n  - 0 ≤ Y ≤ 100 mm\n  - Z = 0 mm\n- The plate thickness is 1 mm.\n- Use a shell or surface-body plate model with assigned thickness 1 mm.\n\nModel parameters:\n- Plate size: 100 mm × 100 mm\n- Plate thickness: 1 mm\n- Material: Structural Steel with the following linear elastic properties:\n  - Young's modulus E = 210000 MPa\n  - Poisson's ratio ν = 0.3\n- Mesh:\n  - Face element size: 5 mm\n  - Use a mapped or regular quadrilateral-dominant mesh where possible.\n\nBoundary conditions:\n- Apply simply supported boundary conditions on all four plate edges.\n- On the edges at X = 0, X = 100 mm, Y = 0, and Y = 100 mm:\n  - Constrain only the out-of-plane displacement UZ = 0.\n  - Do not fully fix the edges.\n- Add only the minimum in-plane constraints required to prevent rigid-body motion.\n\nLoad:\n- Apply a uniform pressure of 0.1 MPa to the plate surface.\n- The pressure should act in the negative global Z direction.\n\nAnalysis type:\n- Static Structural analysis.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the working location.\n- Save the Workbench project file as:\n  C:\\Users\\Administrator\\Desktop\\wb_plate.wbpj\n- Save the MAPDL-equivalent database file as:\n  C:\\Users\\Administrator\\Desktop\\wb_plate.db\n- Save the MAPDL-equivalent structural result file as:\n  C:\\Users\\Administrator\\Desktop\\wb_plate.rst",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-18/init_file/cylinder.msh",
-            "path": "C:\\Users\\Administrator\\Desktop\\cylinder.msh"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -23,17 +18,6 @@
   "evaluator": {
     "postconfig": [
       {
-        "type": "execute",
-        "parameters": {
-          "command": [
-            "taskkill",
-            "/F",
-            "/IM",
-            "ANSYS261.exe"
-          ]
-        }
-      },
-      {
         "type": "upload_file",
         "parameters": {
           "files": [
@@ -43,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-18/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

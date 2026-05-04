@@ -1,0 +1,28 @@
+*Heading
+Composite laminate - CalculiX shell test (task02)
+*Node
+1, 0.0, 0.0, 0.0
+2, 100.0, 0.0, 0.0
+3, 100.0, 100.0, 0.0
+4, 0.0, 100.0, 0.0
+*Element, type=S4R, elset=Plate_Elements
+1, 1, 2, 3, 4
+*Material, name=Carbon
+*Elastic, type=ORTHO
+140000.0, 10000.0, 10000.0, 0.3, 0.3, 0.3, 5000.0, 5000.0
+5000.0
+*SHELL SECTION, ELSET=Plate_Elements, MATERIAL=Carbon
+1.5
+*Nset, nset=AllNodes
+1,2,3,4
+*Step
+*Static
+*Boundary
+AllNodes,3,3,0.
+*Dload
+Plate_Elements,P,0.1
+*Node Print, NSET=AllNodes
+U
+*El Print, ELSET=Plate_Elements
+S
+*End Step

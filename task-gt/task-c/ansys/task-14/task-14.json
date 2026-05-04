@@ -1,18 +1,13 @@
 {
   "id": "c-ansys-task-14-windows",
   "snapshot": "ansys-2026",
-  "instruction": "You are given a meshed 2D channel `C:\\Users\\Administrator\\Desktop\\channel.msh`.\nComplete laminar Fluent analysis using command line:\n\n1. Write journal file `C:\\Users\\Administrator\\Desktop\\channel.jou`:\n- Read mesh: `/file/read-mesh C:\\Users\\Administrator\\Desktop\\channel.msh`\n- Solver settings: Pressure-Based, Steady, 2D Planar\n- Material: water-liquid (`rho=998.2`, `mu=0.001003`)\n- Boundaries: inlet velocity `0.02 m/s`, outlet pressure `0`, wall no-slip\n- Laminar model\n- Initialize and iterate 500 steps\n- Export outlet velocity profile to `C:\\Users\\Administrator\\Desktop\\outlet_profile.xy`\n\n2. Run the journal file.\n\n3. Ensure `C:\\Users\\Administrator\\Desktop\\outlet_profile.xy` is generated.\n4. Do not use Fluent GUI.\n\n[Strict Output Format]\n- Target file: `outlet_profile.xy`\n- Required column order: `y, velocity`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use ANSYS Mechanical APDL via the Command Line Interface (CLI) to complete a harmonic response analysis.\n\nPhysical problem:\nA cantilever beam is subjected to a harmonic force at its free end.\n\nCoordinate system and geometry:\n- Use the global Cartesian coordinate system.\n- Model the beam as a line body using BEAM188.\n- The beam reference line is along the global X direction.\n- The fixed end is at X = 0 mm.\n- The free end is at X = 500 mm.\n- The beam cross section is rectangular:\n  - Width = 10 mm\n  - Height = 10 mm\n\nModel parameters:\n- Beam length: 500 mm\n- Element type: BEAM188\n- Section type: rectangular beam section\n- Section size: 10 mm × 10 mm\n- Mesh: 20 uniform divisions along the beam length\n- Material: Structural Steel\n- Use a consistent N-mm-s unit system:\n  - Young's modulus E = 210000 MPa\n  - Poisson's ratio ν = 0.3\n  - Density ρ = 7.85e-9 tonne/mm³, equivalent to 7850 kg/m³\n\nBoundary conditions and load:\n- Fixed end at X = 0 mm:\n  - Fully constrain UX, UY, UZ, ROTX, ROTY, and ROTZ.\n- Free end at X = 500 mm:\n  - Apply a harmonic force with magnitude 10 N.\n  - Force direction: negative global Y direction.\n  - Excitation frequency: 5 Hz.\n- Use no damping, or use a damping ratio smaller than 0.001.\n\nAnalysis type:\n- Harmonic response analysis.\n- Use the Full method.\n- Solve a single frequency point at 5 Hz.\n- Save the harmonic response result.\n\nSave requirements:\n- Use C:\\Users\\Administrator\\Desktop as the ANSYS working directory.\n- Save the database file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_harmonic.db\n- Save the structural result file as:\n  C:\\Users\\Administrator\\Desktop\\apdl_harmonic.rst",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-14/init_file/channel.msh",
-            "path": "C:\\Users\\Administrator\\Desktop\\channel.msh"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -23,17 +18,6 @@
   "evaluator": {
     "postconfig": [
       {
-        "type": "execute",
-        "parameters": {
-          "command": [
-            "taskkill",
-            "/F",
-            "/IM",
-            "ANSYS261.exe"
-          ]
-        }
-      },
-      {
         "type": "upload_file",
         "parameters": {
           "files": [
@@ -43,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-14/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

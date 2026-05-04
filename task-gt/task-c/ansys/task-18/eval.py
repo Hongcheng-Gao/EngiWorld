@@ -1,107 +1,149 @@
-#!/usr/bin/env python3
-from __future__ import annotations
-
-import argparse
-import json
-import re
-from pathlib import Path
-
-
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return True
-    return path.exists() and path.is_file()
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
-SEP_RE = re.compile(r"[,\t;，；]+")
-
-
-def parse_floats(text: str) -> list[float]:
-    values: list[float] = []
-    for token in FLOAT_RE.findall(text):
-        try:
-            values.append(float(token))
-        except (TypeError, ValueError):
-            continue
-    return values
-
-
-def split_fields(line: str) -> list[str]:
-    return [p.strip() for p in SEP_RE.split(line) if p.strip()]
-
-
-def parse_line_numbers(line: str, expected_len: int) -> list[float]:
-    values: list[float] = []
-    for field in split_fields(line):
-        nums = parse_floats(field)
-        if nums:
-            values.append(nums[-1])
-        if len(values) >= expected_len:
-            return values[:expected_len]
-    fallback = parse_floats(line)
-    if len(fallback) >= expected_len:
-        return fallback[:expected_len]
-    return values
-
-
-def write_result(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
-
-
-def check_task(root: Path) -> bool:
-    required = ["cylinder.jou", "lift_history.xy"]
-    for rel in required:
-        if not is_file(root / rel):
-            return False
-
-    lines = read_text(root / "lift_history.xy").splitlines()
-    lifts = []
-    for line in lines:
-        line = line.strip()
-        if not line or line.startswith("#"):
-            continue
-        nums = parse_line_numbers(line, 2)
-        if len(nums) >= 2:
-            lifts.append(nums[1])
-
-    if len(lifts) < 50:
-        return False
-    if max(lifts) <= 0 or min(lifts) >= 0:
-        return False
-
-    amplitude = (max(lifts) - min(lifts)) / 2.0
-    if not (0.1 <= amplitude <= 1.5):
-        return False
-
-    return True
-
-def evaluate() -> int:
-    root = Path(r"C:\\Users\\Administrator\\Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
-
-
-def main() -> int:
-    result = evaluate()
-    print("true" if result == 1 else "false")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+from pathlib import Path
+import subprocess
+
+
+DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+MAPDL_PORT = 50118
+JOBNAME = "eval_wb_plate"
+
+WBPJ_FILE = DESKTOP / "wb_plate.wbpj"
+DB_FILE = DESKTOP / "wb_plate.db"
+RESULT_FILE = DESKTOP / "wb_plate.rst"
+REQUIRED_FILES = [WBPJ_FILE, DB_FILE, RESULT_FILE]
+
+GROUND_TRUTH = {
+    "center_uz_mm": -2.1156713073584488,
+    "min_z_mm": -2.1156713073584488,
+    "max_von_mises_mpa": 322.6727777809399,
+}
+
+TOLERANCE = {
+    "default": {"rel": 0.08, "abs": 0.01},
+    "max_von_mises_mpa": {"rel": 0.12, "abs": 0.5},
+}
+
+
+def is_nonempty_file(path: Path) -> bool:
+    return path.exists() and path.is_file() and path.stat().st_size > 0
+
+
+def within_tolerance(name: str, truth: float, pred: float) -> bool:
+    tol = TOLERANCE.get(name, TOLERANCE["default"])
+    rel = tol["rel"]
+    abs_tol = tol["abs"]
+    if truth == 0:
+        return abs(pred - truth) <= abs_tol
+    return abs(pred - truth) <= max(abs(truth) * rel, abs_tol)
+
+
+def allsel(mapdl) -> None:
+    mapdl.run("ALLSEL,ALL")
+
+
+def node_at(mapdl, x: float, y: float, z: float, tol: float = 1e-3) -> int:
+    allsel(mapdl)
+    mapdl.nsel("S", "LOC", "X", x - tol, x + tol)
+    mapdl.nsel("R", "LOC", "Y", y - tol, y + tol)
+    mapdl.nsel("R", "LOC", "Z", z - tol, z + tol)
+    node = int(mapdl.get_value("NODE", 0, "NUM", "MIN"))
+    allsel(mapdl)
+    if node < 1:
+        raise RuntimeError(f"No node found near ({x}, {y}, {z}).")
+    return node
+
+
+def sort_max(mapdl, item: str, comp: str = "") -> float:
+    if comp:
+        mapdl.run(f"NSORT,{item},{comp},0,1,ALL")
+    else:
+        mapdl.run(f"NSORT,{item},,0,1,ALL")
+    return float(mapdl.get_value("SORT", 0, "MAX"))
+
+
+def sort_min(mapdl, item: str, comp: str = "") -> float:
+    if comp:
+        mapdl.run(f"NSORT,{item},{comp},0,0,ALL")
+    else:
+        mapdl.run(f"NSORT,{item},,0,0,ALL")
+    return float(mapdl.get_value("SORT", 0, "MIN"))
+
+
+def extract_predictions(mapdl) -> dict:
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.post1()
+    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
+    mapdl.set("LAST")
+
+    center = node_at(mapdl, x=50.0, y=50.0, z=0.0)
+    center_uz = float(mapdl.get_value("NODE", center, "U", "Z"))
+    return {
+        "center_uz_mm": center_uz,
+        "min_z_mm": sort_min(mapdl, "U", "Z"),
+        "max_von_mises_mpa": sort_max(mapdl, "S", "EQV"),
+    }
+
+
+def _kill_ansys_related() -> None:
+    for target in (
+        "ANSYS261.exe",
+        "ansys261.exe",
+        "ANSYS.exe",
+        "ansys.exe",
+        "fluent.exe",
+        "Fluent.exe",
+        "cortex.exe",
+        "Cortex.exe",
+    ):
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/IM", target],
+                capture_output=True,
+                creationflags=0x08000000,
+            )
+        except Exception:
+            pass
+
+
+def evaluate() -> bool:
+    _kill_ansys_related()
+
+    if any(not is_nonempty_file(path) for path in REQUIRED_FILES):
+        return False
+
+    mapdl = None
+    try:
+        from ansys.mapdl.core import launch_mapdl
+
+        mapdl = launch_mapdl(
+            exec_file=EXEC_FILE,
+            jobname=JOBNAME,
+            run_location=str(DESKTOP),
+            nproc=1,
+            port=MAPDL_PORT,
+            override=True,
+        )
+        pred = extract_predictions(mapdl)
+    except Exception:
+        return False
+    finally:
+        if mapdl is not None:
+            try:
+                mapdl.exit()
+            except Exception:
+                pass
+
+    for name, truth in GROUND_TRUTH.items():
+        if name not in pred:
+            return False
+        if not within_tolerance(name, truth, pred[name]):
+            return False
+    return True
+
+
+def main() -> None:
+    print("True" if evaluate() else "False")
+
+
+if __name__ == "__main__":
+    main()

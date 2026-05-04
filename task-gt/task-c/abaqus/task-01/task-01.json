@@ -1,18 +1,13 @@
 {
   "id": "c-abaqus-task-01-windows",
   "snapshot": "abaqus-2025",
-  "instruction": "You are given an incomplete base input file `C:\\Users\\Administrator\\Desktop\\cantilever_base.inp`.\nComplete the full workflow from the command line:\n\n1. Use Python or a shell script to generate three input files from the template:\n   - `C:\\Users\\Administrator\\Desktop\\cantilever_100.inp` (load: 100 N)\n   - `C:\\Users\\Administrator\\Desktop\\cantilever_200.inp` (load: 200 N)\n   - `C:\\Users\\Administrator\\Desktop\\cantilever_300.inp` (load: 300 N)\n\n2. Submit all jobs in batch (serial submission is acceptable).\n\n3. Write a Python post-processing script `C:\\Users\\Administrator\\Desktop\\extract.py`:\n   - Read the last frame of each ODB\n   - Extract the global maximum Mises stress\n   - Extract the maximum U2 displacement at the free end (`x≈100, y≈10`)\n   - Print in this format: `job_name, max_mises, tip_u2`\n\n4. Run the post-processing from the command line and save the log to `C:\\Users\\Administrator\\Desktop\\summary.txt`.\n5. Ensure all generated files are under `C:\\Users\\Administrator\\Desktop\\`, and do not use the Abaqus/CAE GUI.\n\n[Strict Output Format]\n- Target file: `summary.txt`\n- Required column order: `load, max_mises, tip_u2 (one case per line; loads 100/200/300)`\n- Use ASCII comma `,` as delimiter.\n- Numeric fields should be plain numbers only (no units, no extra prose).\n- Keep exactly one data line for single-case outputs; for multi-case tasks, keep one case per line.\n- You may add `#` comment lines, but do not add other non-data lines.\n",
+  "instruction": "Use Abaqus/CAE via the Command Line Interface (CLI) to build and solve a 2D axisymmetric finite-element model of a circular plate.\n\nUse the N-mm-MPa unit system.\n\nGeometry:\nCreate a 2D axisymmetric deformable solid model of a circular plate cross-section.\nThe radial direction is from r = 0 mm to r = 50 mm.\nThe axial/thickness direction is from z = 0 mm to z = 1 mm.\n\nMaterial:\nCreate a material named Steel.\nUse Young's modulus E = 210000 MPa and Poisson's ratio ν = 0.3.\nAssign this material to the entire plate section using a homogeneous solid section.\n\nElement type and mesh:\nUse CAX4R axisymmetric solid elements.\nUse a structured mesh with a radial mesh size of 2.0 mm.\nUse one element through the thickness direction.\nCreate a node set named AXIS on the r = 0 boundary.\nCreate a node set named OUTER on the r = 50 mm boundary.\nCreate a node set named TOP on the z = 1 mm boundary.\n\nBoundary conditions:\nOn AXIS, constrain radial displacement U1 = 0.\nOn OUTER, constrain U1 = 0 and U2 = 0.\n\nLoading:\nApply a downward pressure of 0.1 N/mm² on the TOP boundary.\nRepresent this pressure as equivalent axisymmetric concentrated nodal forces on the TOP nodes.\nFor each top node at radius r_i, use the annular contribution:\nF_i = -p × 2πr_i × Δr_i\nin the U2 direction.\nFor the first and last top nodes, use half of the adjacent radial interval for Δr_i.\nFor interior top nodes, use half of the distance between the neighboring top nodes for Δr_i.\nThe node at r = 0 has zero equivalent force.\n\nAnalysis:\nCreate a static analysis step named Step-Pressure.\nRequest field output for U, RF, and S.\nCreate and run a job named Job-Plate.\nWait for the analysis to complete successfully.\n\nRequired saved files:\nSave the Abaqus/CAE model database as:\nC:\\Users\\Administrator\\Desktop\\Job-Plate.cae\n\nSave the Abaqus output database as:\nC:\\Users\\Administrator\\Desktop\\Job-Plate.odb\n\nThe final answer should only confirm that both required files have been generated.",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": [
-          {
-            "local_path": "task-01/init_file/cantilever_base.inp",
-            "path": "C:\\Users\\Administrator\\Desktop\\cantilever_base.inp"
-          }
-        ]
+        "files": []
       }
     }
   ],
@@ -32,29 +27,18 @@
             }
           ]
         }
-      },
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-01/check_and_eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\check_and_eval.py"
-            }
-          ]
-        }
       }
     ],
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\check_and_eval.py",
+      "command": "abaqus cae noGUI=C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

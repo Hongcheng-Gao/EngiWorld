@@ -1,134 +1,146 @@
-#!/usr/bin/env python3
-from __future__ import annotations
-
-import argparse
-import json
-import re
-from pathlib import Path
-
-
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return True
-    return path.exists() and path.is_file()
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?")
-SEP_RE = re.compile(r"[,\t;，；]+")
-
-
-def parse_floats(text: str) -> list[float]:
-    values: list[float] = []
-    for token in FLOAT_RE.findall(text):
-        try:
-            values.append(float(token))
-        except (TypeError, ValueError):
-            continue
-    return values
-
-
-def split_fields(line: str) -> list[str]:
-    return [p.strip() for p in SEP_RE.split(line) if p.strip()]
-
-
-def parse_number_from_field(field: str) -> float:
-    vals = parse_floats(field)
-    if not vals:
-        raise ValueError(f"no float in field: {field!r}")
-    return vals[-1]
-
-
-def parse_data_lines(path: Path) -> list[str]:
-    lines: list[str] = []
-    for raw in read_text(path).splitlines():
-        line = raw.strip()
-        if not line or line.startswith("#") or line.startswith("//"):
-            continue
-        lines.append(line)
-    return lines
-
-
-def parse_last_data_fields(path: Path, min_fields: int) -> list[str] | None:
-    for line in reversed(parse_data_lines(path)):
-        fields = split_fields(line)
-        if len(fields) >= min_fields:
-            return fields
-    return None
-
-
-def parse_summary_values(path: Path, expected_len: int) -> list[float] | None:
-    for line in reversed(parse_data_lines(path)):
-        vals: list[float] = []
-        for field in split_fields(line):
-            try:
-                vals.append(parse_number_from_field(field))
-            except ValueError:
-                continue
-        if len(vals) >= expected_len:
-            return vals[:expected_len]
-
-    all_vals = parse_floats(read_text(path))
-    if len(all_vals) >= expected_len:
-        return all_vals[-expected_len:]
-    return None
-
-
-
-
-def write_result(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
-
-
-def check_task(root: Path) -> bool:
-    required = ["ssb.inp", "results.txt"]
-    for rel in required:
-        if not is_file(root / rel):
-            return False
-
-    parts = parse_last_data_fields(root / "results.txt", 2)
-    if parts is None:
-        return False
-
-    try:
-        mises = parse_number_from_field(parts[0])
-        u2 = parse_number_from_field(parts[1])
-    except (TypeError, ValueError):
-        return False
-
-    if abs(mises - 18.75) / 18.75 > 0.05:
-        return False
-    if abs(abs(u2) - 0.0595) / 0.0595 > 0.05:
-        return False
-
-    return True
-
-def evaluate() -> int:
-    root = Path(r"C:\\Users\\Administrator\\Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
-
-
-def main() -> int:
-    result = evaluate()
-    print("true" if result == 1 else "false")
-    return 0
-
-
-if __name__ == "__main__":
-    raise SystemExit(main())
+from pathlib import Path
+import subprocess
+
+
+DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DB_FILE = DESKTOP / "apdl_plate.db"
+RESULT_FILE = DESKTOP / "apdl_plate.rst"
+REQUIRED_FILES = [DB_FILE, RESULT_FILE]
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+JOBNAME = "eval_apdl_plate"
+MAPDL_PORT = 50102
+
+GROUND_TRUTH = {
+    "center_top_uy_mm": -0.5042520626750268,
+    "max_seqv_mpa": 164.51912886716008,
+    "clamped_reaction_fy_n": -785.3994140625,
+}
+
+TOLERANCE = {
+    "default": {"rel": 0.08, "abs": 1e-4},
+    "clamped_reaction_fy_n": {"rel": 0.05, "abs": 3.0},
+}
+
+
+def is_nonempty_file(path: Path) -> bool:
+    return path.exists() and path.is_file() and path.stat().st_size > 0
+
+
+def within_tolerance(name: str, truth: float, pred: float) -> bool:
+    tol = TOLERANCE.get(name, TOLERANCE["default"])
+    rel = tol["rel"]
+    abs_tol = tol["abs"]
+    if truth == 0:
+        return abs(pred - truth) <= abs_tol
+    return abs(pred - truth) <= max(abs(truth) * rel, abs_tol)
+
+
+def allsel(mapdl) -> None:
+    mapdl.run("ALLSEL,ALL")
+
+
+def node_at(mapdl, x: float, y: float, tol: float = 1e-3) -> int:
+    allsel(mapdl)
+    mapdl.nsel("S", "LOC", "X", x - tol, x + tol)
+    mapdl.nsel("R", "LOC", "Y", y - tol, y + tol)
+    node = int(mapdl.get_value("NODE", 0, "NUM", "MIN"))
+    allsel(mapdl)
+    if node < 1:
+        raise RuntimeError("Node not found.")
+    return node
+
+
+def sort_max(mapdl, item: str, comp: str = "") -> float:
+    if comp:
+        mapdl.run(f"NSORT,{item},{comp},0,1,ALL")
+    else:
+        mapdl.run(f"NSORT,{item},,0,1,ALL")
+    return float(mapdl.get_value("SORT", 0, "MAX"))
+
+
+def reaction_fy_on_x(mapdl, x: float, tol: float = 1e-3) -> float:
+    allsel(mapdl)
+    mapdl.nsel("S", "LOC", "X", x - tol, x + tol)
+    if int(mapdl.get_value("NODE", 0, "COUNT")) < 1:
+        raise RuntimeError("No support nodes selected.")
+    mapdl.fsum()
+    fy = float(mapdl.get_value("FSUM", 0, "ITEM", "FY"))
+    allsel(mapdl)
+    return fy
+
+
+def extract_predictions(mapdl) -> dict:
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.post1()
+    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
+    mapdl.set(1, 1)
+
+    center = node_at(mapdl, x=0.0, y=1.0)
+    return {
+        "center_top_uy_mm": float(mapdl.get_value("NODE", center, "U", "Y")),
+        "max_seqv_mpa": sort_max(mapdl, "S", "EQV"),
+        "clamped_reaction_fy_n": reaction_fy_on_x(mapdl, x=50.0),
+    }
+
+
+def _kill_ansys_related() -> None:
+    for target in (
+        "ANSYS261.exe",
+        "ansys261.exe",
+        "ANSYS.exe",
+        "ansys.exe",
+        "fluent.exe",
+        "Fluent.exe",
+        "cortex.exe",
+        "Cortex.exe",
+    ):
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/IM", target],
+                capture_output=True,
+                creationflags=0x08000000,
+            )
+        except Exception:
+            pass
+
+
+def evaluate() -> bool:
+    _kill_ansys_related()
+
+    if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
+        return False
+
+    mapdl = None
+    try:
+        from ansys.mapdl.core import launch_mapdl
+
+        mapdl = launch_mapdl(
+            exec_file=EXEC_FILE,
+            jobname=JOBNAME,
+            run_location=str(DESKTOP),
+            nproc=1,
+            port=MAPDL_PORT,
+            override=True,
+        )
+        pred = extract_predictions(mapdl)
+    except Exception:
+        return False
+    finally:
+        if mapdl is not None:
+            try:
+                mapdl.exit()
+            except Exception:
+                pass
+
+    for name, truth in GROUND_TRUTH.items():
+        if name not in pred or not within_tolerance(name, truth, pred[name]):
+            return False
+    return True
+
+
+def main() -> None:
+    print("True" if evaluate() else "False")
+
+
+if __name__ == "__main__":
+    main()
