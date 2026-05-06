@@ -1,113 +1,121 @@
 from __future__ import annotations
 
-import csv
-import json
+import math
+import os
 from pathlib import Path
 
 import ezdxf
 
-STEP_SPECS = []
-DXF_SPECS = [{'path': 'autocad_result.dxf',
-  'summary': {'counts': {'LWPOLYLINE': 1, 'TEXT': 1}, 'layers': ['0'], 'texts': ['TASK 13']}}]
-JSON_SPECS = []
-CSV_SPECS = []
-TEXT_SPECS = []
-FILE_SPECS = []
-BBOX_TOL = 0.05
-VOLUME_REL_TOL = 0.01
-NUM_TOL = 0.05
-OUTPUT_ROOT = Path('C:\\Users\\Administrator\\Desktop')
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\Administrator\Desktop"))
+SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [160, 0], 'layer': 'OUTLINE'}, {'start': [160, 0], 'end': [160, 100], 'layer': 'OUTLINE'}, {'start': [160, 100], 'end': [0, 100], 'layer': 'OUTLINE'}, {'start': [0, 100], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [30, 25], 'end': [130, 25], 'layer': 'CUTOUT'}, {'start': [130, 25], 'end': [130, 75], 'layer': 'CUTOUT'}, {'start': [130, 75], 'end': [30, 75], 'layer': 'CUTOUT'}, {'start': [30, 75], 'end': [30, 25], 'layer': 'CUTOUT'}], 'circles': [{'center': [20, 50], 'radius': 10, 'layer': 'HOLE'}, {'center': [140, 50], 'radius': 10, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-13', 'layer': 'ANNOTATION'}]}
+TOL = 0.75
+ANGLE_TOL = 2.0
 
 
-def summarize_step(path: Path):
-    import cadquery as cq
-
-    wp = cq.importers.importStep(str(path))
-    solids = wp.solids().vals()
-    if not solids or any(not solid.isValid() for solid in solids):
-        raise ValueError("invalid step")
-    xs, ys, zs = [], [], []
-    volume = 0.0
-    for solid in solids:
-        bb = solid.BoundingBox()
-        xs.extend([bb.xmin, bb.xmax])
-        ys.extend([bb.ymin, bb.ymax])
-        zs.extend([bb.zmin, bb.zmax])
-        volume += solid.Volume()
-    return len(solids), [max(xs) - min(xs), max(ys) - min(ys), max(zs) - min(zs)], volume
+def _close(a, b, tol=TOL):
+    return abs(float(a) - float(b)) <= tol
 
 
-def summarize_dxf(path: Path):
-    doc = ezdxf.readfile(path)
-    counts = {}
-    layers = set()
-    texts = []
+def _angle_close(a, b, tol=ANGLE_TOL):
+    return abs(((float(a) - float(b) + 180.0) % 360.0) - 180.0) <= tol
+
+
+def _point_close(a, b, tol=TOL):
+    return _close(a[0], b[0], tol) and _close(a[1], b[1], tol)
+
+
+def _layer_ok(actual, expected):
+    return expected is None or str(actual).upper() == str(expected).upper()
+
+
+def _segments(doc):
+    out = []
     for entity in doc.modelspace():
-        dxftype = entity.dxftype()
-        counts[dxftype] = counts.get(dxftype, 0) + 1
-        if hasattr(entity.dxf, "layer"):
-            layers.add(str(entity.dxf.layer))
-        if dxftype == "TEXT":
-            texts.append(str(entity.dxf.text))
-    return {"counts": counts, "layers": sorted(layers), "texts": sorted(texts)}
+        layer = getattr(entity.dxf, "layer", "")
+        if entity.dxftype() == "LINE":
+            s, e = entity.dxf.start, entity.dxf.end
+            out.append(((float(s.x), float(s.y)), (float(e.x), float(e.y)), layer))
+        elif entity.dxftype() == "LWPOLYLINE":
+            pts = [(float(p[0]), float(p[1])) for p in entity.get_points("xy")]
+            for start, end in zip(pts, pts[1:]):
+                out.append((start, end, layer))
+            if entity.closed and len(pts) > 2:
+                out.append((pts[-1], pts[0], layer))
+    return out
 
 
-def json_matches(actual, expected):
-    if isinstance(expected, dict):
-        return isinstance(actual, dict) and all(key in actual and json_matches(actual[key], value) for key, value in expected.items())
-    if isinstance(expected, list):
-        return isinstance(actual, list) and len(actual) == len(expected) and all(json_matches(a, e) for a, e in zip(actual, expected))
-    if isinstance(expected, (int, float)):
-        try:
-            return abs(float(actual) - float(expected)) <= NUM_TOL
-        except Exception:
-            return False
-    return actual == expected
+def _has_segment(segments, start, end, layer=None):
+    start = tuple(start)
+    end = tuple(end)
+    for a, b, actual_layer in segments:
+        if not _layer_ok(actual_layer, layer):
+            continue
+        if (_point_close(a, start) and _point_close(b, end)) or (_point_close(a, end) and _point_close(b, start)):
+            return True
+    return False
 
 
-def read_csv(path: Path):
-    with path.open(newline="", encoding="utf-8") as handle:
-        return list(csv.DictReader(handle))
+def _has_circle(doc, center, radius, layer=None):
+    center = tuple(center)
+    for entity in doc.modelspace():
+        if entity.dxftype() != "CIRCLE":
+            continue
+        if not _layer_ok(getattr(entity.dxf, "layer", ""), layer):
+            continue
+        c = entity.dxf.center
+        if _point_close((c.x, c.y), center) and _close(entity.dxf.radius, radius):
+            return True
+    return False
+
+
+def _has_arc(doc, center, radius, start_angle, end_angle, layer=None):
+    center = tuple(center)
+    for entity in doc.modelspace():
+        if entity.dxftype() != "ARC":
+            continue
+        if not _layer_ok(getattr(entity.dxf, "layer", ""), layer):
+            continue
+        c = entity.dxf.center
+        if (_point_close((c.x, c.y), center)
+                and _close(entity.dxf.radius, radius)
+                and _angle_close(entity.dxf.start_angle, start_angle)
+                and _angle_close(entity.dxf.end_angle, end_angle)):
+            return True
+    return False
+
+
+def _has_text(doc, value, layer=None):
+    for entity in doc.modelspace():
+        if entity.dxftype() == "TEXT":
+            txt = str(entity.dxf.text)
+        elif entity.dxftype() == "MTEXT":
+            txt = str(entity.text)
+        else:
+            continue
+        if not _layer_ok(getattr(entity.dxf, "layer", ""), layer):
+            continue
+        if txt.strip() == str(value):
+            return True
+    return False
 
 
 def evaluate() -> bool:
-    root = OUTPUT_ROOT
-    for spec in DXF_SPECS:
-        path = root / spec["path"]
-        if not path.exists() or path.stat().st_size <= 0:
+    path = OUTPUT_ROOT / SPEC["target"]
+    if not path.exists() or path.stat().st_size <= 0:
+        return False
+    doc = ezdxf.readfile(path)
+    segments = _segments(doc)
+    for item in SPEC["segments"]:
+        if not _has_segment(segments, item["start"], item["end"], item.get("layer")):
             return False
-        if summarize_dxf(path) != spec["summary"]:
+    for item in SPEC["circles"]:
+        if not _has_circle(doc, item["center"], item["radius"], item.get("layer")):
             return False
-    for spec in STEP_SPECS:
-        path = root / spec["path"]
-        if not path.exists() or path.stat().st_size <= 0:
+    for item in SPEC["arcs"]:
+        if not _has_arc(doc, item["center"], item["radius"], item["start_angle"], item["end_angle"], item.get("layer")):
             return False
-        solid_count, bbox, volume = summarize_step(path)
-        if solid_count != spec["solid_count"]:
-            return False
-        if any(abs(float(a) - float(b)) > BBOX_TOL for a, b in zip(bbox, spec["bbox"])):
-            return False
-        if abs(volume - float(spec["volume"])) / max(1.0, abs(float(spec["volume"]))) > VOLUME_REL_TOL:
-            return False
-    for spec in JSON_SPECS:
-        path = root / spec["path"]
-        if not path.exists() or path.stat().st_size <= 0:
-            return False
-        if not json_matches(json.loads(path.read_text(encoding="utf-8")), spec["expected"]):
-            return False
-    for spec in CSV_SPECS:
-        path = root / spec["path"]
-        if not path.exists() or path.stat().st_size <= 0:
-            return False
-        if read_csv(path) != spec["expected"]:
-            return False
-    for spec in TEXT_SPECS:
-        path = root / spec["path"]
-        if not path.exists() or path.read_text(encoding="utf-8") != spec["expected"]:
-            return False
-    for spec in FILE_SPECS:
-        path = root / spec["path"]
-        if not path.exists() or path.stat().st_size < int(spec["min_size"]):
+    for item in SPEC["texts"]:
+        if not _has_text(doc, item["text"], item.get("layer")):
             return False
     return True
 

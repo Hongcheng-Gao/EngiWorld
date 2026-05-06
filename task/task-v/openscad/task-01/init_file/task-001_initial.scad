@@ -1,6 +1,8 @@
-// Generated with SolidPython2 for OpenSCAD task-001
+// Starter parameters for task-001.
 $fn = 64;
 
-translate(v = [-30.0, -17.5, 0]) {
-	cube(size = [60, 35, 8]);
-}
+width = 60;
+depth = 35;
+height = 8;
+
+cube([width, depth, height], center = true);

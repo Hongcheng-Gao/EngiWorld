@@ -1,19 +1,12 @@
-// Generated with SolidPython2 for OpenSCAD task-022
-$fn = 64;
-
-difference() {
-	union() {
-		translate(v = [0, 0, 0]) {
-			cylinder(h = 4, r = 32.0);
-		}
-		translate(v = [0, 0, 0]) {
-			cylinder(h = 48, r = 12.0);
-		}
-		translate(v = [0, 0, 44]) {
-			cylinder(h = 4, r = 32.0);
-		}
-	}
-	translate(v = [0, 0, -1]) {
-		cylinder(h = 50, r = 4.0);
-	}
+$fn = 48;
+module spool(flange_od=52, barrel_od=18, total_width=36, shaft_hole_d=6) {
+  difference() {
+    union() {
+      cylinder(h = 4, r = flange_od/2);
+      translate([0,0,total_width-4]) cylinder(h = 4, r = flange_od/2);
+      cylinder(h = total_width, r = barrel_od/2);
+    }
+    translate([0,0,-1]) cylinder(h = total_width+2, r = shaft_hole_d/2);
+  }
 }
+spool();

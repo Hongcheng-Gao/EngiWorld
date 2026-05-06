@@ -1,29 +1,5 @@
-// Generated with SolidPython2 for OpenSCAD task-034
 $fn = 64;
-
-union() {
-	translate(v = [0, 0, 0]) {
-		difference() {
-			cylinder(h = 3, r = 12);
-			cylinder(h = 4, r = 4);
-		}
-	}
-	translate(v = [0, 0, 4]) {
-		difference() {
-			cylinder(h = 3, r = 12);
-			cylinder(h = 4, r = 4);
-		}
-	}
-	translate(v = [0, 0, 8]) {
-		difference() {
-			cylinder(h = 3, r = 12);
-			cylinder(h = 4, r = 4);
-		}
-	}
-	translate(v = [0, 0, 12]) {
-		difference() {
-			cylinder(h = 3, r = 12);
-			cylinder(h = 4, r = 4);
-		}
-	}
+difference() {
+  cylinder(h = 3, r = 12);
+  translate([0, 0, -1]) cylinder(h = 5, r = 4);
 }

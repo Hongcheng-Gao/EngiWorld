@@ -1,29 +1,22 @@
-// Generated with SolidPython2 for OpenSCAD task-003
+// Starter flange for task-003.
 $fn = 64;
 
+outside_diameter = 72;
+thickness = 8;
+center_hole_diameter = 20;
+bolt_circle_radius = 26;
+bolt_hole_diameter = 4;
+bolt_hole_count = 6;
+
 difference() {
-	translate(v = [0, 0, 0]) {
-		cylinder(h = 8, r = 36.0);
-	}
-	translate(v = [0, 0, -1]) {
-		cylinder(h = 10, r = 10.0);
-	}
-	translate(v = [26.0, 0.0, -1]) {
-		cylinder(h = 10, r = 2.0);
-	}
-	translate(v = [13.000000000000004, 22.516660498395403, -1]) {
-		cylinder(h = 10, r = 2.0);
-	}
-	translate(v = [-12.999999999999995, 22.516660498395407, -1]) {
-		cylinder(h = 10, r = 2.0);
-	}
-	translate(v = [-26.0, 3.184081677783118e-15, -1]) {
-		cylinder(h = 10, r = 2.0);
-	}
-	translate(v = [-13.00000000000001, -22.5166604983954, -1]) {
-		cylinder(h = 10, r = 2.0);
-	}
-	translate(v = [13.000000000000004, -22.516660498395403, -1]) {
-		cylinder(h = 10, r = 2.0);
-	}
+  cylinder(h = thickness, r = outside_diameter / 2);
+
+  translate([0, 0, -1])
+    cylinder(h = thickness + 2, r = center_hole_diameter / 2);
+
+  for (i = [0 : bolt_hole_count - 1]) {
+    angle = 360 * i / bolt_hole_count;
+    translate([bolt_circle_radius * cos(angle), bolt_circle_radius * sin(angle), -1])
+      cylinder(h = thickness + 2, r = bolt_hole_diameter / 2);
+  }
 }

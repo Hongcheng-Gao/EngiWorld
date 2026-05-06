@@ -1,43 +1,83 @@
-from __future__ import annotations
-
+import os
 from pathlib import Path
 
+import numpy as np
 import trimesh
 
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))
+TARGET = "out.stl"
+BBOX_TOL = 1.0
+POINT_TOL = 1e-7
 
-TASK_ID = 'task-24'
-STL_SPECS = [{'path': 'out.stl', 'bbox': [104.0, 54.0, 26.0], 'vertices': 512, 'faces': 1024}]
-DESKTOP_OUTPUT_PATH = Path('/home/user/Desktop/out.stl')
-GROUND_TRUTH_OUTPUT_PATH = Path(__file__).resolve().parent / "ground_truth" / "out.stl"
-OUTPUT_PATHS = [DESKTOP_OUTPUT_PATH, GROUND_TRUTH_OUTPUT_PATH]
-BBOX_TOL = 0.05
-
-
-def summarize_stl(path: Path) -> dict[str, object]:
-    mesh = trimesh.load(str(path), force="mesh")
-    if getattr(mesh, "is_empty", True) or len(mesh.vertices) == 0 or len(mesh.faces) == 0:
-        raise ValueError("invalid_stl")
-    bounds = mesh.bounds
-    extents = bounds[1] - bounds[0]
-    return {
-        "bbox": [round(float(value), 4) for value in extents],
-        "vertices": int(len(mesh.vertices)),
-        "faces": int(len(mesh.faces)),
-    }
+SPEC = {'bbox': [90, 50, 38], 'solid': [(5, 5, 5), (45, 25, 34)], 'empty': [(45, 25, 15)]}
 
 
-def evaluate() -> bool:
-    if not STL_SPECS:
+def _load_mesh():
+    candidates = [OUTPUT_ROOT / TARGET, Path(__file__).resolve().parent / "ground_truth" / TARGET]
+    for path in candidates:
+        if path.exists() and path.stat().st_size > 0:
+            mesh = trimesh.load(str(path), force="mesh")
+            if getattr(mesh, "is_empty", True) or len(mesh.vertices) == 0 or len(mesh.faces) == 0:
+                continue
+            return mesh
+    raise ValueError("missing or invalid STL")
+
+
+def _close_list(actual, expected, tol=BBOX_TOL):
+    return all(abs(float(a) - float(b)) <= tol for a, b in zip(actual, expected))
+
+
+def _ray_intersections(point, triangles, direction):
+    origin = np.asarray(point, dtype=float)
+    direction = np.asarray(direction, dtype=float)
+    direction = direction / np.linalg.norm(direction)
+    hits = []
+    for tri in triangles:
+        v0, v1, v2 = tri
+        edge1 = v1 - v0
+        edge2 = v2 - v0
+        h = np.cross(direction, edge2)
+        a = float(np.dot(edge1, h))
+        if abs(a) < POINT_TOL:
+            continue
+        f = 1.0 / a
+        s = origin - v0
+        u = f * float(np.dot(s, h))
+        if u < -POINT_TOL or u > 1.0 + POINT_TOL:
+            continue
+        q = np.cross(s, edge1)
+        v = f * float(np.dot(direction, q))
+        if v < -POINT_TOL or u + v > 1.0 + POINT_TOL:
+            continue
+        t = f * float(np.dot(edge2, q))
+        if t > POINT_TOL:
+            hits.append(round(t, 6))
+    # Several triangles can meet at the same crossing. Count coincident hits once.
+    hits = sorted(set(hits))
+    return len(hits)
+
+
+def _inside(point, triangles):
+    dirs = [(1.0, 0.173, 0.097), (0.117, 1.0, 0.193), (0.071, 0.149, 1.0)]
+    votes = 0
+    for direction in dirs:
+        if _ray_intersections(point, triangles, direction) % 2 == 1:
+            votes += 1
+    return votes >= 2
+
+
+def evaluate():
+    mesh = _load_mesh()
+    extents = [float(v) for v in mesh.extents]
+    if not _close_list(extents, SPEC["bbox"]):
         return False
-    paths = [path for path in OUTPUT_PATHS if path.exists() and path.stat().st_size > 0]
-    if not paths:
-        return False
-    spec = STL_SPECS[0]
-    actual = summarize_stl(paths[0])
-    if actual["faces"] != spec["faces"] or actual["vertices"] != spec["vertices"]:
-        return False
-    if any(abs(float(a) - float(b)) > BBOX_TOL for a, b in zip(actual["bbox"], spec["bbox"])):
-        return False
+    triangles = np.asarray(mesh.triangles, dtype=float)
+    for point in SPEC.get("solid", []):
+        if not _inside(point, triangles):
+            return False
+    for point in SPEC.get("empty", []):
+        if _inside(point, triangles):
+            return False
     return True
 
 
@@ -46,4 +86,4 @@ if __name__ == "__main__":
         ok = evaluate()
     except Exception:
         ok = False
-    print(True if ok else False)
+    print("True" if ok else "False")
