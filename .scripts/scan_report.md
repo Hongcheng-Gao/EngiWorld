@@ -1,0 +1,1067 @@
+# Engiworld task scan report (READ-ONLY, no files modified)
+
+
+## Summary
+
+- total tasks scanned: **796**
+- with eval.py: **796**
+- without eval.py: **0**
+- instructions with GUI/CLI phrases: **394**
+- instructions with eval mismatch: **57**
+
+## A. GUI/CLI phrases in instruction (problem 2)
+
+These instructions mention the way to invoke the tool (GUI/CLI/Workbench/etc.) and should be cleaned. Grouped by app.
+
+### task-c/abaqus (20 tasks)
+
+- `task-c/abaqus/task-01` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to build and solve a 2D axisymmetric finite-element model of a circular plate.
+- `task-c/abaqus/task-02` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to build and solve a 2D axisymmetric finite-element model of an internally pressurized thick-walled cylinder.
+- `task-c/abaqus/task-03` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a tensile analysis of a thin rectangular shell plate with a central circular hole.
+- `task-c/abaqus/task-04` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to complete the following task.
+- `task-c/abaqus/task-05` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a tensile analysis of a rectangular solid block:
+- `task-c/abaqus/task-06` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a steady-state heat conduction analysis:
+- `task-c/abaqus/task-07` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a torsion analysis of a circular shaft (Variant A):
+- `task-c/abaqus/task-08` — abaqus CLI prefix, CLI mention, GUI annotation
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to build a contact analysis assembly from scratch:
+- `task-c/abaqus/task-09` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a simply supported beam analysis under a uniformly distributed load:
+- `task-c/abaqus/task-10` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a torsion analysis of a circular shaft (Variant B):
+- `task-c/abaqus/task-11` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a simply supported beam analysis under a uniformly distributed load:
+- `task-c/abaqus/task-12` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a linear buckling analysis of a thin plate (Variant A):
+- `task-c/abaqus/task-13` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a modal analysis of a cantilever beam (Variant A):
+- `task-c/abaqus/task-14` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a constrained thermal stress analysis (Case A):
+- `task-c/abaqus/task-15` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a constrained thermal stress analysis (Case B):
+- `task-c/abaqus/task-16` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a transient heat-transfer analysis of a rectangular solid block (Variant A):
+- `task-c/abaqus/task-17` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a thermal stress analysis:
+- `task-c/abaqus/task-18` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a modal analysis of a cantilever beam (Variant B):
+- `task-c/abaqus/task-19` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a linear buckling analysis of a thin plate (Variant B):
+- `task-c/abaqus/task-20` — abaqus CLI prefix, CLI mention
+  - first line: Use Abaqus/CAE via the Command Line Interface (CLI) to perform a static tensile analysis of a thin rectangular shell plate with a central circular hole (Variant A):
+
+### task-c/ansys (14 tasks)
+
+- `task-c/ansys/task-01` — ansys CLI prefix, CLI mention
+  - first line: Use ANSYS via the Command Line Interface (CLI) to build and solve a 3D solid cantilever beam model.
+- `task-c/ansys/task-07` — CLI mention
+  - first line: Use ANSYS Mechanical APDL via the Command Line Interface (CLI) to build and solve a 3D solid cantilever beam model.
+- `task-c/ansys/task-09` — CLI mention
+  - first line: Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 2D lid-driven cavity flow analysis.
+- `task-c/ansys/task-10` — CLI mention
+  - first line: Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 2D laminar channel-flow analysis.
+- `task-c/ansys/task-11` — CLI mention
+  - first line: Use ANSYS Workbench via the Command Line Interface (CLI) to complete a nonlinear Static Structural contact analysis.
+- `task-c/ansys/task-12` — CLI mention
+  - first line: Use ANSYS Workbench via the Command Line Interface (CLI) to complete a Transient Structural analysis.
+- `task-c/ansys/task-13` — CLI mention
+  - first line: Use ANSYS Mechanical APDL via the Command Line Interface (CLI) to complete a nonlinear static structural analysis.
+- `task-c/ansys/task-14` — CLI mention
+  - first line: Use ANSYS Mechanical APDL via the Command Line Interface (CLI) to complete a harmonic response analysis.
+- `task-c/ansys/task-15` — CLI mention
+  - first line: Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 3D laminar pipe-flow analysis.
+- `task-c/ansys/task-16` — CLI mention
+  - first line: Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 2D laminar channel-flow analysis.
+- `task-c/ansys/task-17` — CLI mention
+  - first line: Use ANSYS Fluent via the Command Line Interface (CLI) to complete a 2D laminar Couette-flow analysis.
+- `task-c/ansys/task-18` — CLI mention
+  - first line: Use ANSYS Workbench via the Command Line Interface (CLI) to complete a Static Structural analysis.
+- `task-c/ansys/task-19` — CLI mention
+  - first line: Use ANSYS Workbench via the Command Line Interface (CLI) to complete a linear eigenvalue buckling analysis.
+- `task-c/ansys/task-20` — CLI mention
+  - first line: Use ANSYS Workbench via the Command Line Interface (CLI) to complete a Steady-State Thermal analysis.
+
+### task-c/autocad (20 tasks)
+
+- `task-c/autocad/task-21` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\cli_blank_seed.dxf. Recreate the target 2D C
+- `task-c/autocad/task-22` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\inspect_me.dxf. Recreate the target 2D CAD d
+- `task-c/autocad/task-23` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\plate_raw.dxf. Recreate the target 2D CAD dr
+- `task-c/autocad/task-24` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\inch_valve.dxf. Recreate the target 2D CAD d
+- `task-c/autocad/task-25` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\bracket_seed.dxf. Recreate the target 2D CAD
+- `task-c/autocad/task-26` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\sli
+- `task-c/autocad/task-27` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\surface_leak.dxf. Recreate the target 2D CAD
+- `task-c/autocad/task-28` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\profile_seed.dxf. Recreate the target 2D CAD
+- `task-c/autocad/task-29` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\segmented_flange.dxf. Recreate the target 2D
+- `task-c/autocad/task-30` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\nozzle_seed.dxf. Recreate the target 2D CAD 
+- `task-c/autocad/task-31` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\housing.dxf. Recreate the target 2D CAD draw
+- `task-c/autocad/task-32` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\family_seed.dxf. Recreate the target 2D CAD 
+- `task-c/autocad/task-33` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\arm
+- `task-c/autocad/task-34` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base_mm.dxf, C:\Users\Administrator\Desktop\
+- `task-c/autocad/task-35` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\volume_seed.dxf. Recreate the target 2D CAD 
+- `task-c/autocad/task-36` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\cast_part.dxf. Recreate the target 2D CAD dr
+- `task-c/autocad/task-37` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\panel_layout.dxf. Recreate the target 2D CAD
+- `task-c/autocad/task-38` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\sli
+- `task-c/autocad/task-39` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\part1.dxf, C:\Users\Administrator\Desktop\pa
+- `task-c/autocad/task-40` — autocad CLI prefix, autocad core console
+  - first line: Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base_bad.dxf, C:\Users\Administrator\Desktop
+
+### task-c/calculix (20 tasks)
+
+- `task-c/calculix/task-01` — fenics/floris CLI prefix
+  - first line: You are given a CalculiX beam-element template `/home/user/Desktop/beam_rect.inp`.
+- `task-c/calculix/task-02` — fenics/floris CLI prefix
+  - first line: You are given a composite laminate template `/home/user/Desktop/laminate_base.inp`.
+- `task-c/calculix/task-03` — fenics/floris CLI prefix
+  - first line: You are given a solid block template `/home/user/Desktop/rigid_base.inp`.
+- `task-c/calculix/task-04` — fenics/floris CLI prefix
+  - first line: You are given a two-part template `/home/user/Desktop/tie_base.inp` (`Part_A` and `Part_B` touch at `X=50` but are not connected).
+- `task-c/calculix/task-05` — fenics/floris CLI prefix
+  - first line: You are given a solid block template `/home/user/Desktop/equation_base.inp`.
+- `task-c/calculix/task-06` — fenics/floris CLI prefix
+  - first line: You are given an axisymmetric cylinder template `/home/user/Desktop/cylinder_transform.inp`.
+- `task-c/calculix/task-07` — fenics/floris CLI prefix
+  - first line: You are given a static template `/home/user/Desktop/dynamic_base.inp`.
+- `task-c/calculix/task-08` — fenics/floris CLI prefix
+  - first line: You are given a template with completed modal analysis `/home/user/Desktop/modal_dynamic_base.inp`.
+- `task-c/calculix/task-09` — fenics/floris CLI prefix
+  - first line: You are given a template with completed modal analysis `/home/user/Desktop/ssd_base.inp`.
+- `task-c/calculix/task-10` — fenics/floris CLI prefix
+  - first line: You are given a `90°` sector annulus template `/home/user/Desktop/cyclic_base.inp`.
+- `task-c/calculix/task-11` — fenics/floris CLI prefix
+  - first line: You are given a heat-conduction template `/home/user/Desktop/thermal_bc_base.inp`.
+- `task-c/calculix/task-12` — fenics/floris CLI prefix
+  - first line: You are given a template with completed modal analysis `/home/user/Desktop/earthquake_base.inp`.
+- `task-c/calculix/task-13` — fenics/floris CLI prefix
+  - first line: You are given a template where a beam and a solid are disconnected: `/home/user/Desktop/mpc_base.inp`.
+- `task-c/calculix/task-14` — fenics/floris CLI prefix
+  - first line: You are given an assembly template missing contact definitions: `/home/user/Desktop/friction_base.inp`.
+- `task-c/calculix/task-15` — fenics/floris CLI prefix
+  - first line: You are given an orthotropic material template `/home/user/Desktop/aniso_base.inp`.
+- `task-c/calculix/task-16` — fenics/floris CLI prefix
+  - first line: You are given a template with damping already defined: `/home/user/Desktop/complex_base.inp`.
+- `task-c/calculix/task-17` — fenics/floris CLI prefix
+  - first line: You are given a solid block template `/home/user/Desktop/gravity_base.inp`.
+- `task-c/calculix/task-18` — fenics/floris CLI prefix
+  - first line: You are given a solid block template `/home/user/Desktop/pretension_base.inp`.
+- `task-c/calculix/task-19` — fenics/floris CLI prefix
+  - first line: You are given a base template `/home/user/Desktop/print_base.inp`.
+- `task-c/calculix/task-20` — fenics/floris CLI prefix
+  - first line: You are given a base template `/home/user/Desktop/restart_base.inp`.
+
+### task-c/fenics (16 tasks)
+
+- `task-c/fenics/task-01` — fenics/floris CLI prefix, negative GUI mention
+  - first line: You are given an incomplete FEniCS Python script `/home/user/Desktop/poisson_base.py`.
+- `task-c/fenics/task-02` — fenics/floris CLI prefix
+  - first line: You are given an incomplete template `/home/user/Desktop/neumann_base.py`.
+- `task-c/fenics/task-03` — fenics/floris CLI prefix
+  - first line: You are given an incomplete solid-mechanics template `/home/user/Desktop/elasticity_base.py`.
+- `task-c/fenics/task-04` — fenics/floris CLI prefix
+  - first line: You are given a heat-conduction template `/home/user/Desktop/thermal_subdomain_base.py`.
+- `task-c/fenics/task-05` — fenics/floris CLI prefix
+  - first line: You are given an incomplete modal-analysis template `/home/user/Desktop/eigenvalue_base.py`.
+- `task-c/fenics/task-06` — fenics/floris CLI prefix
+  - first line: You are given a nonlinear Poisson-equation template `/home/user/Desktop/nonlinear_base.py`.
+- `task-c/fenics/task-07` — fenics/floris CLI prefix
+  - first line: You are given a transient heat-conduction template `/home/user/Desktop/transient_heat_base.py`.
+- `task-c/fenics/task-08` — fenics/floris CLI prefix
+  - first line: You are given a Stokes-flow template `/home/user/Desktop/stokes_base.py` (2D pipe).
+- `task-c/fenics/task-09` — fenics/floris CLI prefix
+  - first line: You are given a very coarse-mesh template `/home/user/Desktop/plate_hole_base.py`.
+- `task-c/fenics/task-10` — fenics/floris CLI prefix
+  - first line: You are given a Poisson-equation template `/home/user/Desktop/adaptive_base.py` whose exact solution has a high-gradient peak at the center.
+- `task-c/fenics/task-11` — fenics/floris CLI prefix
+  - first line: You are given an incomplete Navier-Stokes template `/home/user/Desktop/navier_stokes_base.py`.
+- `task-c/fenics/task-12` — fenics/floris CLI prefix
+  - first line: You are given a template `/home/user/Desktop/thermomech_base.py` with completed thermal analysis.
+- `task-c/fenics/task-14` — fenics/floris CLI prefix
+  - first line: You are given an incomplete DG template `/home/user/Desktop/dg_base.py`.
+- `task-c/fenics/task-15` — fenics/floris CLI prefix
+  - first line: You are given a hyperelastic template `/home/user/Desktop/hyperelastic_base.py`.
+- `task-c/fenics/task-18` — fenics/floris CLI prefix
+  - first line: You are given an incomplete template `/home/user/Desktop/mixed_dim_base.py`.
+- `task-c/fenics/task-19` — fenics/floris CLI prefix
+  - first line: You are given a post-processing template `/home/user/Desktop/lift_drag_base.py`.
+
+### task-c/floris (16 tasks)
+
+- `task-c/floris/task-01` — fenics/floris CLI prefix, negative GUI mention
+  - first line: You are given a FLORIS configuration file `/home/user/Desktop/two_turbine.yaml` and an incomplete script `/home/user/Desktop/wake_base.py`.
+- `task-c/floris/task-02` — fenics/floris CLI prefix
+  - first line: You are given an incomplete script `/home/user/Desktop/yaw_base.py`.
+- `task-c/floris/task-03` — fenics/floris CLI prefix
+  - first line: You are given a script template `/home/user/Desktop/model_compare.py`.
+- `task-c/floris/task-04` — fenics/floris CLI prefix
+  - first line: You are given an incomplete script `/home/user/Desktop/aep_base.py`.
+- `task-c/floris/task-05` — fenics/floris CLI prefix
+  - first line: You are given a yaw-optimization template `/home/user/Desktop/yaw_opt_base.py`.
+- `task-c/floris/task-06` — fenics/floris CLI prefix
+  - first line: You are given a template `/home/user/Desktop/loss_base.py`.
+- `task-c/floris/task-07` — fenics/floris CLI prefix
+  - first line: You are given a post-processing template `/home/user/Desktop/flow_plane_base.py`.
+- `task-c/floris/task-09` — fenics/floris CLI prefix
+  - first line: You are given a layout-optimization template `/home/user/Desktop/layout_opt_base.py`.
+- `task-c/floris/task-10` — fenics/floris CLI prefix
+  - first line: You are given a three-turbine in-line template.
+- `task-c/floris/task-11` — fenics/floris CLI prefix
+  - first line: You are given a parallel-computation template `/home/user/Desktop/parallel_base.py`.
+- `task-c/floris/task-12` — fenics/floris CLI prefix
+  - first line: You are given an uncertainty-analysis template `/home/user/Desktop/uncertain_base.py`.
+- `task-c/floris/task-13` — fenics/floris CLI prefix
+  - first line: You are given a heterogeneous-farm configuration `/home/user/Desktop/heterogeneous.yaml`.
+- `task-c/floris/task-14` — fenics/floris CLI prefix
+  - first line: You are given a custom turbine definition `/home/user/Desktop/custom_turbine.yaml`.
+- `task-c/floris/task-18` — fenics/floris CLI prefix
+  - first line: You are given a parameter-scan template `/home/user/Desktop/spacing_scan_base.py`.
+- `task-c/floris/task-19` — fenics/floris CLI prefix
+  - first line: You are given a template `/home/user/Desktop/curve_base.py`.
+- `task-c/floris/task-20` — fenics/floris CLI prefix
+  - first line: You are given a template `/home/user/Desktop/wind_sector_base.py`.
+
+### task-c/freecad-path (20 tasks)
+
+- `task-c/freecad-path/task-21` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/cli_plate.step. Create a FreeCAD Path/CAM Job an
+- `task-c/freecad-path/task-22` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/slot_plate.step. Create a center slot toolpath i
+- `task-c/freecad-path/task-23` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/p1.step, /home/user/Desktop/p2.step, /home/user/
+- `task-c/freecad-path/task-24` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/hole_table_plate.step, /home/user/Desktop/hole_t
+- `task-c/freecad-path/task-25` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/multi_feature.step, /home/user/Desktop/tool_libr
+- `task-c/freecad-path/task-26` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/job_input.step. Complete a FreeCAD Path/CAM Job 
+- `task-c/freecad-path/task-27` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/variant_template.step, /home/user/Desktop/varian
+- `task-c/freecad-path/task-28` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/rest_shape.step. Create FreeCAD Path/CAM rest ma
+- `task-c/freecad-path/task-29` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/four_parts.step. Create four FreeCAD Path/CAM Jo
+- `task-c/freecad-path/task-30` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/part.step, /home/user/Desktop/fixture.step. Use 
+- `task-c/freecad-path/task-31` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/plate_A.step, /home/user/Desktop/plate_B.step, /
+- `task-c/freecad-path/task-32` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/post_test_part.step, /home/user/Desktop/post_con
+- `task-c/freecad-path/task-33` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/hole_group_part.step. Identify and group twenty-
+- `task-c/freecad-path/task-34` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/broken_boundary_pocket.step. Repair or rebuild t
+- `task-c/freecad-path/task-35` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/risky_setup.step. Machine all safe holes and mai
+- `task-c/freecad-path/task-36` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/revision_A.step, /home/user/Desktop/revision_B.s
+- `task-c/freecad-path/task-37` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/two_sided_part.step. Create A-side and B-side Fr
+- `task-c/freecad-path/task-38` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/relief_surface.step. Create FreeCAD Path/CAM 3D 
+- `task-c/freecad-path/task-39` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/complex_pockets.step, /home/user/Desktop/tool_ca
+- `task-c/freecad-path/task-40` — FreeCADCmd
+  - first line: Use FreeCADCmd or a FreeCAD Python automation workflow with the Path/CAM modules. Read the initial file(s) from the Desktop path(s): /home/user/Desktop/final_benchmark.step, /home/user/Desktop/params.
+
+### task-c/fusion360 (20 tasks)
+
+- `task-c/fusion360/task-21` — fusion360 API/CLI, CLI workflow
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\cli_plate.step, 
+- `task-c/fusion360/task-22` — fusion360 API/CLI, CLI workflow
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\slot_plate.step,
+- `task-c/fusion360/task-23` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\p1.step, C:\User
+- `task-c/fusion360/task-24` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\hole_table_plate
+- `task-c/fusion360/task-25` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\multi_feature.st
+- `task-c/fusion360/task-26` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\job_input.step, 
+- `task-c/fusion360/task-27` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\variant_template
+- `task-c/fusion360/task-28` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\rest_shape.step,
+- `task-c/fusion360/task-29` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\four_parts.step,
+- `task-c/fusion360/task-30` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\part.step, C:\Us
+- `task-c/fusion360/task-31` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\shaft_family.ste
+- `task-c/fusion360/task-32` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\quality_part.ste
+- `task-c/fusion360/task-33` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\hole_recognition
+- `task-c/fusion360/task-34` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\post_test_part.s
+- `task-c/fusion360/task-35` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\risky_setup.step
+- `task-c/fusion360/task-36` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\revision_A.step,
+- `task-c/fusion360/task-37` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\two_sided_part.s
+- `task-c/fusion360/task-38` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\impeller_test.st
+- `task-c/fusion360/task-39` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\complex_pockets.
+- `task-c/fusion360/task-40` — fusion360 API/CLI
+  - first line: Use a Fusion 360 API script or command-line automation workflow for Fusion-compatible CAM generation. Read the initial file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\final_benchmark.
+
+### task-c/openfoam (1 tasks)
+
+- `task-c/openfoam/task-01` — negative GUI mention
+  - first line: You are given an incomplete OpenFOAM case in `/home/user/Desktop/cavity_base/`.
+
+### task-c/openscad (2 tasks)
+
+- `task-c/openscad/task-21` — openscad CLI prefix
+  - first line: In a command-line environment, operate on /home/user/Desktop/task-021_initial.scad. Use OpenSCAD command-line parameters or edit the source so width=90, depth=70, back_height=80, and slot_width=12. Ex
+- `task-c/openscad/task-28` — openscad CLI prefix
+  - first line: Modify /home/user/Desktop/task-028_initial.scad in a command-line environment. Apply offset(r=4) to the 2D profile to create a rounded outside outline, then linear_extrude(height=4). Add three diamete
+
+### task-c/ptc-creo (20 tasks)
+
+- `task-c/ptc-creo/task-21` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to call PTC Creo and open C:\Users\Administrator\Desktop\task-21_initial.step. Uniformly scale the entire solid by a factor of 1.2 about the model origin. Do n
+- `task-c/ptc-creo/task-22` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-22_initial.step in Creo. Create a 4 column by 3 row through-hole pattern. The hole diameter must be 7 mm. The first
+- `task-c/ptc-creo/task-23` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-23_initial.step in Creo. On the top surface, create a 3 by 2 set of blind rectangular lightening pockets. Each pock
+- `task-c/ptc-creo/task-24` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-24_initial.step. Add R4 mm rounds to the four vertical edges of the lower outside outline. Add 2 mm equal-distance 
+- `task-c/ptc-creo/task-25` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-25_initial.step. Convert it into an open-top box by removing the top face and shelling to a uniform 4 mm wall thick
+- `task-c/ptc-creo/task-26` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-26_initial.step. Place three sliders on the top surface of the guide rail. Each slider bottom face must touch the g
+- `task-c/ptc-creo/task-27` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-27_initial.step. Copy the locating pin and washer to create four locating assemblies. In each set, the washer must 
+- `task-c/ptc-creo/task-28` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-28_initial.step. Create a central diameter 40 mm through hole. Add a coaxial top circular counterbore or step with 
+- `task-c/ptc-creo/task-29` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-29_initial.step. Create an internal grid of reinforcing ribs: two ribs in the X direction and three ribs in the Y d
+- `task-c/ptc-creo/task-30` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-30_initial.step. Create a rectangular sealing groove on the bottom face, centered on the cover. The groove outside 
+- `task-c/ptc-creo/task-31` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-31_initial.step. Create six equally spaced shallow straight grooves on the outside cylindrical surface of the handl
+- `task-c/ptc-creo/task-32` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-32_initial.step. Use the plate YZ mid-plane as the mirror plane and mirror the three holes from the left half to th
+- `task-c/ptc-creo/task-33` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-33_initial.step. Replace the original short spacers with spacer geometry of height 20 mm while keeping each spacer 
+- `task-c/ptc-creo/task-34` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-34_initial.step. Create four diameter 10 mm base mounting holes with each hole center 20 mm from the nearest plate 
+- `task-c/ptc-creo/task-35` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-35_initial.step. Create sixteen equally spaced rectangular radial notches around the outside circumference. Each no
+- `task-c/ptc-creo/task-36` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-36_initial.step. Install the two bearing blocks at the left and right ends of the frame so the two bearing holes ar
+- `task-c/ptc-creo/task-37` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-37_initial.step. Machine the cylinder into a three-step shaft: left segment diameter 50 mm and length 40 mm, middle
+- `task-c/ptc-creo/task-38` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-38_initial.step. Insert the inner shaft into the outer sleeve and place them coaxially. The inner shaft must extend
+- `task-c/ptc-creo/task-39` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-39_initial.step. Create a central diameter 52 mm bearing through hole. On the top surface, create a circular locati
+- `task-c/ptc-creo/task-40` — creo CLI workflow
+  - first line: Use the command-line evaluation workflow to open C:\Users\Administrator\Desktop\task-40_initial.step and complete the full assembly. Place the cover plate above the base and align their outside-outlin
+
+### task-v/abaqus (20 tasks)
+
+- `task-v/abaqus/task-01` — abaqus GUI prefix
+  - first line: Use Abaqus/CAE through the graphical user interface to build and solve a 2D axisymmetric finite-element model of a circular plate.
+- `task-v/abaqus/task-02` — abaqus GUI prefix
+  - first line: Use Abaqus/CAE through the graphical user interface to build and solve a 2D axisymmetric finite-element model of an internally pressurized thick-walled cylinder.
+- `task-v/abaqus/task-03` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a tensile analysis of a thin rectangular shell plate with a central circular hole.
+- `task-v/abaqus/task-04` — abaqus GUI mode
+  - first line: Use Abaqus/CAE in GUI mode to complete the following task.
+- `task-v/abaqus/task-05` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a tensile analysis of a rectangular solid block:
+- `task-v/abaqus/task-06` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a steady-state heat conduction analysis:
+- `task-v/abaqus/task-07` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a torsion analysis of a circular shaft (Variant A):
+- `task-v/abaqus/task-08` — abaqus GUI prefix, GUI annotation
+  - first line: Use the Abaqus/CAE GUI to build a contact analysis assembly from scratch:
+- `task-v/abaqus/task-09` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a simply supported beam analysis under a uniformly distributed load:
+- `task-v/abaqus/task-10` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a torsion analysis of a circular shaft (Variant B):
+- `task-v/abaqus/task-11` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a simply supported beam analysis under a uniformly distributed load:
+- `task-v/abaqus/task-12` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a linear buckling analysis of a thin plate (Variant A):
+- `task-v/abaqus/task-13` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a modal analysis of a cantilever beam (Variant A):
+- `task-v/abaqus/task-14` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a constrained thermal stress analysis (Case A):
+- `task-v/abaqus/task-15` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a constrained thermal stress analysis (Case B):
+- `task-v/abaqus/task-16` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a transient heat-transfer analysis of a rectangular solid block (Variant A):
+- `task-v/abaqus/task-17` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a thermal stress analysis:
+- `task-v/abaqus/task-18` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a modal analysis of a cantilever beam (Variant B):
+- `task-v/abaqus/task-19` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a linear buckling analysis of a thin plate (Variant B):
+- `task-v/abaqus/task-20` — abaqus GUI prefix
+  - first line: Use the Abaqus/CAE GUI to perform a static tensile analysis of a thin rectangular shell plate with a central circular hole (Variant A):
+
+### task-v/altium-designer (11 tasks)
+
+- `task-v/altium-designer/task-26` — task-v 'look at' lead
+  - first line: look at the native Altium schematic `C:\Users\Administrator\Desktop\broken_spiritlevel_top.SchDoc` in Altium Designer, repair the broken sheet-symbol target filenames, and save the repaired document a
+- `task-v/altium-designer/task-30` — task-v 'look at' lead
+  - first line: look at `C:\Users\Administrator\Desktop\base.SchDot` in Altium Designer's Schematic Template Editor. Starting from that template, create a custom title-block template with six auto-populated fields an
+- `task-v/altium-designer/task-31` — task-v 'look at' lead
+  - first line: look at the native Altium schematic `C:\Users\Administrator\Desktop\broken_harness_sheet.SchDoc` in Altium Designer, repair the target harness-sheet component fields, and save the repaired document as
+- `task-v/altium-designer/task-33` — task-v 'look at' lead
+  - first line: look at the native Altium project `C:\Users\Administrator\Desktop\project.PrjPcb` in Altium Designer. Using `C:\Users\Administrator\Desktop\add_list.csv`, append 8 new source-document entries to the p
+- `task-v/altium-designer/task-36` — task-v 'look at' lead
+  - first line: look at `C:\Users\Administrator\Desktop\template.OutJob` in Altium Designer and build a fabrication OutJob according to `C:\Users\Administrator\Desktop\spec.yaml`. Save the result as `C:\Users\Adminis
+- `task-v/altium-designer/task-39` — task-v 'look at' lead
+  - first line: look at `C:\Users\Administrator\Desktop\template.OutJob` in Altium Designer. Using `C:\Users\Administrator\Desktop\spec_list.json`, build a batch PDF publishing OutJob and save it as `C:\Users\Adminis
+- `task-v/altium-designer/task-40` — task-v 'look at' lead
+  - first line: look at `C:\Users\Administrator\Desktop\template.OutJob` in Altium Designer. Following `C:\Users\Administrator\Desktop\spec.txt`, create a JLCPCB-style Pick and Place OutJob and save it as `C:\Users\A
+- `task-v/altium-designer/task-41` — task-v 'look at' lead
+  - first line: look at the native Altium schematic library `C:\Users\Administrator\Desktop\broken_harness_symbols.SCHLIB` in Altium Designer, repair the target harness-symbol comments, and save the repaired library 
+- `task-v/altium-designer/task-42` — task-v 'look at' lead
+  - first line: look at the native Altium schematic `C:\Users\Administrator\Desktop\broken_frequency_stage.SchDoc` in Altium Designer, repair the target component values and source comment, and save the repaired docu
+- `task-v/altium-designer/task-45` — task-v 'look at' lead
+  - first line: look at `C:\Users\Administrator\Desktop\base.PrjPcb` in Altium Designer. Using `C:\Users\Administrator\Desktop\variants.json`, create three project variants in Variant Manager - `Standard`, `Lite`, an
+- `task-v/altium-designer/task-48` — task-v 'look at' lead
+  - first line: look at `C:\Users\Administrator\Desktop\prod_design.PrjPcb` in Altium Designer, add two variants to the project, and save the result as `C:\Users\Administrator\Desktop\prod_design.PrjPcb`. The exact v
+
+### task-v/ansys (10 tasks)
+
+- `task-v/ansys/task-09` — ansys GUI prefix
+  - first line: Use the ANSYS Fluent GUI to complete a 2D lid-driven cavity flow analysis.
+- `task-v/ansys/task-10` — ansys GUI prefix
+  - first line: Use the ANSYS Fluent GUI to complete a 2D laminar channel-flow analysis.
+- `task-v/ansys/task-11` — ansys GUI prefix
+  - first line: Use the ANSYS Workbench GUI to complete a nonlinear Static Structural contact analysis.
+- `task-v/ansys/task-12` — ansys GUI prefix
+  - first line: Use the ANSYS Workbench GUI to complete a Transient Structural analysis.
+- `task-v/ansys/task-15` — ansys GUI prefix
+  - first line: Use the ANSYS Fluent GUI to complete a 3D laminar pipe-flow analysis.
+- `task-v/ansys/task-16` — ansys GUI prefix
+  - first line: Use the ANSYS Fluent GUI to complete a 2D laminar channel-flow analysis.
+- `task-v/ansys/task-17` — ansys GUI prefix
+  - first line: Use the ANSYS Fluent GUI to complete a 2D laminar Couette-flow analysis.
+- `task-v/ansys/task-18` — ansys GUI prefix
+  - first line: Use the ANSYS Workbench GUI to complete a Static Structural analysis.
+- `task-v/ansys/task-19` — ansys GUI prefix
+  - first line: Use the ANSYS Workbench GUI to complete a linear eigenvalue buckling analysis.
+- `task-v/ansys/task-20` — ansys GUI prefix
+  - first line: Use the ANSYS Workbench GUI to complete a Steady-State Thermal analysis.
+
+### task-v/autocad (20 tasks)
+
+- `task-v/autocad/task-01` — task-v 'look at' lead
+  - first line: look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 01 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-02` — task-v 'look at' lead
+  - first line: look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 02 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-03` — task-v 'look at' lead
+  - first line: look at plate_base.dxf. Recreate the target 2D CAD drawing for task 03 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-04` — task-v 'look at' lead
+  - first line: look at tilted_block.dxf. Recreate the target 2D CAD drawing for task 04 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, 
+- `task-v/autocad/task-05` — task-v 'look at' lead
+  - first line: look at bracket_input.dxf. Recreate the target 2D CAD drawing for task 05 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment,
+- `task-v/autocad/task-06` — task-v 'look at' lead
+  - first line: look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 06 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-07` — task-v 'look at' lead
+  - first line: look at support.dxf. Recreate the target 2D CAD drawing for task 07 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symme
+- `task-v/autocad/task-08` — task-v 'look at' lead
+  - first line: look at unit_inch_geometry.dxf. Recreate the target 2D CAD drawing for task 08 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, align
+- `task-v/autocad/task-09` — task-v 'look at' lead
+  - first line: look at open_shell_box.dxf. Recreate the target 2D CAD drawing for task 09 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment
+- `task-v/autocad/task-10` — task-v 'look at' lead
+  - first line: look at split_box.dxf. Recreate the target 2D CAD drawing for task 10 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sym
+- `task-v/autocad/task-11` — task-v 'look at' lead
+  - first line: look at base.dxf, pin.dxf, cover.dxf. Recreate the target 2D CAD drawing for task 11 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots,
+- `task-v/autocad/task-12` — task-v 'look at' lead
+  - first line: look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 12 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-13` — task-v 'look at' lead
+  - first line: look at housing_simple.dxf. Recreate the target 2D CAD drawing for task 13 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment
+- `task-v/autocad/task-14` — task-v 'look at' lead
+  - first line: look at counterbore_plate.dxf. Recreate the target 2D CAD drawing for task 14 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignm
+- `task-v/autocad/task-15` — task-v 'look at' lead
+  - first line: look at valve_body.dxf. Recreate the target 2D CAD drawing for task 15 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-16` — task-v 'look at' lead
+  - first line: look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 16 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, sy
+- `task-v/autocad/task-17` — task-v 'look at' lead
+  - first line: look at clamp_input.dxf. Recreate the target 2D CAD drawing for task 17 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, s
+- `task-v/autocad/task-18` — task-v 'look at' lead
+  - first line: look at bracket.dxf, shaft.dxf, spacer.dxf, cap.dxf. Recreate the target 2D CAD drawing for task 18 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines
+- `task-v/autocad/task-19` — task-v 'look at' lead
+  - first line: look at segmented_flange_gui.dxf. Recreate the target 2D CAD drawing for task 19 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, ali
+- `task-v/autocad/task-20` — task-v 'look at' lead
+  - first line: look at pump_housing_rotated.dxf. Recreate the target 2D CAD drawing for task 20 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, ali
+
+### task-v/eagle (16 tasks)
+
+- `task-v/eagle/task-31` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/design.sch` and generate a grouped Bill of Materials using EAGLE's bundled `bom.ulp`, then save the output as `/home/user/Desktop/answer.csv`.
+- `task-v/eagle/task-33` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/loose.brd` in EAGLE, execute the shipped `/home/user/Desktop/apply_jlcpcb_2layer.scr` script to load the JLCPCB 2-layer design-rule preset from `/home/user/Desktop/jlcpcb_2
+- `task-v/eagle/task-34` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/board.brd` in the EAGLE board editor. The board has one 8-pin IC (IC1) placed at coordinate (30, 15) mm with rotation R0, plus three 100 nF decoupling capacitors (C3, C4, C
+- `task-v/eagle/task-35` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/loose.brd`, tighten its design rules in the EAGLE DRC dialog, and save the updated board as `/home/user/Desktop/answer.brd`.
+- `task-v/eagle/task-37` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/bus.sch`, remove the existing `ADDR[2..0]` bus, and replace it with three individual nets so that `ADDR0` on `U1` connects to `ADDR0` on `U2`, `ADDR1` on `U1` connects to `
+- `task-v/eagle/task-39` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/topside.brd` in EAGLE. Every SMD component currently sits on the Top side. Flip the entire board to the Bottom side and save the result as `/home/user/Desktop/answer.brd`.
+- `task-v/eagle/task-40` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/review.sch`, run EAGLE's Electrical Rule Check on it, and export the resulting plain-text ERC report as `/home/user/Desktop/answer.erc`.
+- `task-v/eagle/task-41` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/blank.sch`, add a landscape `DINA4_L` frame from the `frames` library, and populate its title block using the values provided in `/home/user/Desktop/info.txt`. Save the res
+- `task-v/eagle/task-42` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/multi.sch` in EAGLE's schematic editor. It's a two-sheet project:
+- `task-v/eagle/task-43` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/bare.sch`, load the bundled `linear.lbr` into the project, place a 555 timer from that library on the sheet as part `U1`, and save the schematic as `/home/user/Desktop/answ
+- `task-v/eagle/task-45` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/amp1.sch`, duplicate the existing `U1` / `R1` / `C1` channel on the same sheet, and save the result as `/home/user/Desktop/answer.sch`.
+- `task-v/eagle/task-46` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/prototype.brd`, update only the following element values, and save the board as `/home/user/Desktop/answer.brd`:
+- `task-v/eagle/task-47` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/board.brd`, use the bundled `/home/user/Desktop/testpad.lbr` to add test-point elements, save the updated board as `/home/user/Desktop/answer.brd`, and write the added-test
+- `task-v/eagle/task-48` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/mixed.sch`, add a zero-ohm resistor named `R_TIE` that bridges `AGND` and `DGND`, and save the result as `/home/user/Desktop/answer.sch`.
+- `task-v/eagle/task-49` — task-v 'look at' lead
+  - first line: look at assign.sch in EAGLE's schematic editor. The <classes> block already defines HSPEED as class number 3. Five nets are present (VCC, GND, CLK, DATA, RESET), all initially at class="0".
+- `task-v/eagle/task-50` — task-v 'look at' lead
+  - first line: look at `/home/user/Desktop/vias.brd` in the EAGLE board editor. The board contains 8 vias, all drilled to `0.3 mm`. Shrink the three vias listed in `/home/user/Desktop/targets.txt` to `0.2 mm` drill 
+
+### task-v/freecad (20 tasks)
+
+- `task-v/freecad/task-01` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-1_input.step in the FreeCAD GUI. Keep the rectangular plate outer size, thickness, and coordinate frame unchanged. Create one vertical through hole at the geometric center of the 
+- `task-v/freecad/task-02` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-2_input.step in the FreeCAD GUI. Keep the L-shaped bracket base plate and vertical plate dimensions unchanged. Add two horizontal through holes in the vertical plate with axes alo
+- `task-v/freecad/task-03` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-3_input.step in the FreeCAD GUI. Add four vertical cylindrical mounting posts on the top face of the base plate. Each post must have diameter 10 mm and height 16 mm, with its bott
+- `task-v/freecad/task-04` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-4_input.step in the FreeCAD GUI. Preserve the circular flange outside diameter, thickness, and existing center bore. On a bolt circle of radius 38 mm around the flange center, cre
+- `task-v/freecad/task-05` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-5_input.step in the FreeCAD GUI. Add 5 mm fillets or equivalent rounded edges to the four vertical outside edges of the rectangular base. Add 3 mm fillets or equivalent rounded ed
+- `task-v/freecad/task-06` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-6_input.step in the FreeCAD GUI. Add two coaxial cylindrical collars to the shaft and fuse them to the original shaft. The left collar center is at X=30 mm, the right collar cente
+- `task-v/freecad/task-07` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-7_input.step in the FreeCAD GUI. Create four vertical through holes of diameter 6 mm in the thin cover plate. The hole centers must be 15 mm from the adjacent outside edges, at (1
+- `task-v/freecad/task-08` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-8_input.step in the FreeCAD GUI. From the top face, cut a centered rectangular pocket opening of size 80 x 40 mm. The pocket center is at (60,40), the cut depth is 45 mm, and the 
+- `task-v/freecad/task-09` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-9_input.step in the FreeCAD GUI. Add three triangular reinforcing ribs on the top face of the base and fuse them to the base. Each rib is a right-triangular prism, 6 mm thick alon
+- `task-v/freecad/task-10` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-10_input.step in the FreeCAD GUI. In the annular ring, cut a rectangular side notch on the +X side. The notch is 18 mm wide along Y, extends from X=20 mm to X=40 mm, and cuts thro
+- `task-v/freecad/task-11` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-11_input.step in the FreeCAD GUI. Create one vertical through hole of diameter 18 mm at the center of the semicircular mounting ear. Create two additional vertical through holes o
+- `task-v/freecad/task-12` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-12_input.step in the FreeCAD GUI. Keep the original cube and create a 3 column by 2 row array of identical 12 mm cubes. The center spacing is 20 mm in X and 20 mm in Y, all cube b
+- `task-v/freecad/task-13` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-13_input.step in the FreeCAD GUI. Keep the first cylindrical pin fixed. Move the second pin by +25 mm along Y. Rotate the third pin 90 degrees about its own Z axis and move it so 
+- `task-v/freecad/task-14` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-14_input.step in the FreeCAD GUI. Add a horizontal cylindrical crossbar between the tops of the two posts and fuse it with the posts. The crossbar axis is along X, its center heig
+- `task-v/freecad/task-15` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-15_input.step in the FreeCAD GUI. Add one coaxial circular flange to each pipe end and fuse both flanges to the bent pipe. Each flange must have outside diameter 50 mm and thickne
+- `task-v/freecad/task-16` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-16_input.step in the FreeCAD GUI. For each support post, create one coaxial blind hole from the top face downward. Each blind hole has diameter 3 mm and depth 8 mm and must not pa
+- `task-v/freecad/task-17` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-17_input.step in the FreeCAD GUI. Cut a rectangular keyway along the top of the shaft from X=20 mm to X=80 mm. The keyway is 8 mm wide along Y, 5 mm deep along Z, and centered on 
+- `task-v/freecad/task-18` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-18_input.step in the FreeCAD GUI. Cut a dovetail slot through the full 80 mm length along X. The slot is centered at Y=20 mm on the top face, has top opening width 26 mm, bottom w
+- `task-v/freecad/task-19` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-19_input.step in the FreeCAD GUI. Add two rectangular mounting ears to the two ends of the straight bottom edge of the guard and fuse them to the guard. Each ear is 20 x 18 x 6 mm
+- `task-v/freecad/task-20` — freecad GUI, task-v 'look at' lead
+  - first line: look at freecad_task-20_input.step in the FreeCAD GUI. Move the upright support to the center of the base plate top face so the support bottom touches the base top, with the support center at (60,30).
+
+### task-v/freecad-path (20 tasks)
+
+- `task-v/freecad-path/task-01` — task-v 'look at' lead
+  - first line: look at plate_100x60x12.step. Create a FreeCAD Path/CAM Job. Define rectangular stock with 2 mm extension on all X/Y sides and 1 mm extension above Z. Place the Job origin at the stock top-face center
+- `task-v/freecad-path/task-02` — task-v 'look at' lead
+  - first line: look at outer_plate.step. Create a FreeCAD Path/CAM Job. Set the Job origin to the part top-face center. Use T1 to create a Profile operation on the outside contour, cutting along the outer boundary d
+- `task-v/freecad-path/task-03` — task-v 'look at' lead
+  - first line: look at drill_plate.step. Create a FreeCAD Path/CAM Job. Identify the four shallow circular mark locations on the top face at (±25, ±15). Use T1 for spot drilling and T2 for 5 mm through drilling. The
+- `task-v/freecad-path/task-04` — task-v 'look at' lead
+  - first line: look at rect_pocket_block.step. Create a FreeCAD Path/CAM Job. Use T1 to create a Pocket Shape operation for the centered 50 x 30 mm pocket. The pocket floor must be Z=8.000 mm, maximum stepdown must 
+- `task-v/freecad-path/task-05` — task-v 'look at' lead
+  - first line: look at chamfer_plate.step. Create a FreeCAD Path/CAM Job. Use T2, the 90 degree chamfer mill, to create chamfer or deburring toolpaths on the top outside contour and all four hole mouths. The target 
+- `task-v/freecad-path/task-06` — task-v 'look at' lead
+  - first line: look at simple_cam_job.step. Create a basic FreeCAD Path/CAM Job containing Face, Drilling, and Profile operations. Use a linuxcnc or grbl postprocessor. Tool definitions: T1 is a 10 mm end mill for F
+- `task-v/freecad-path/task-07` — task-v 'look at' lead
+  - first line: look at dual_pocket_bracket.step. Create a FreeCAD Path/CAM Job. Use T1 for Adaptive or Pocket Shape roughing on the two top pockets. Use T2 for pocket finish passes and an outside Profile finishing o
+- `task-v/freecad-path/task-08` — task-v 'look at' lead
+  - first line: look at bore_plate.step. Create a FreeCAD Path/CAM Job. Spot drill and drill the four through holes. Machine the two stepped holes with Pocket, Profile, or Helix operations. Through holes must break t
+- `task-v/freecad-path/task-09` — task-v 'look at' lead
+  - first line: look at cross_rest_pocket.step. Create a FreeCAD Path/CAM Job. First use T1 to clear the main cross-shaped pocket. Then use T2 to create rest-machining toolpaths for all inside corners and narrow slot
+- `task-v/freecad-path/task-10` — task-v 'look at' lead
+  - first line: look at sheet_panel.step. Create a FreeCAD Path/CAM 2D Profile cutting Job. Machine the internal rectangular windows and circular holes as inside profiles before cutting the outside profile. Approxima
+- `task-v/freecad-path/task-11` — task-v 'look at' lead
+  - first line: look at part_with_vise.step. Create a FreeCAD Path/CAM Job. Keep the vise jaws visible in the project as check geometry. Create machining boundaries for the two top pockets that avoid the fixture regi
+- `task-v/freecad-path/task-12` — task-v 'look at' lead
+  - first line: look at library_part.step. Manually create the required FreeCAD Path ToolBit and ToolController objects, then use them to complete Face, Drilling, and Profile operations on library_part.step. Tool def
+- `task-v/freecad-path/task-13` — task-v 'look at' lead
+  - first line: look at twin_fixture.step. Create two FreeCAD Path Jobs or two equivalent machining coordinate groups for the two parts. Both parts must receive Face and Profile operations. The first machining region
+- `task-v/freecad-path/task-14` — task-v 'look at' lead
+  - first line: look at collision_drill.step. Create a FreeCAD Path/CAM Job. Plan drilling for all twelve candidate holes. The two holes with toolholder collision risk must be skipped and must not be written to the f
+- `task-v/freecad-path/task-15` — task-v 'look at' lead
+  - first line: look at dome_pocket.step. Create a FreeCAD Path/CAM Job. Use T1 for 3D Pocket roughing and use T2, a ball end mill, for 3D Surface or equivalent surface finishing on the spherical region. Roughing mus
+- `task-v/freecad-path/task-16` — task-v 'look at' lead
+  - first line: look at nameplate.step. Create a top-face text engraving path in FreeCAD Path/CAM. Engrave the text FREECAD-CAM at 8 mm text height, centered at X=0 and Y=0, to a depth of 0.3 mm using T1. Tool defini
+- `task-v/freecad-path/task-17` — task-v 'look at' lead
+  - first line: look at vcarve_sign.step, vcarve_text.svg. Create a FreeCAD Path/CAM V-Carve operation. Use the SVG closed double-line OPEN text, keep its center position unchanged, and carve it into the top face wit
+- `task-v/freecad-path/task-18` — task-v 'look at' lead
+  - first line: look at dogbone_slots.step. Create a FreeCAD Path/CAM Job. Machine the four rectangular joinery slots using Slot or Pocket operations, add dogbone compensation at every internal corner so an 8 mm wide
+- `task-v/freecad-path/task-19` — task-v 'look at' lead
+  - first line: look at tagged_cutout.step. Create a FreeCAD Path/CAM Job. Create an outside Profile cutting operation and add six holding tags uniformly around the outer contour. Each tag must be 4 mm wide and 1 mm 
+- `task-v/freecad-path/task-20` — task-v 'look at' lead
+  - first line: look at full_gui_benchmark.step. Create a complete FreeCAD Path/CAM Job. Complete Face machining of the top, two pockets, eight holes, outside Profile, and top-face Engrave. The toolpaths must keep at
+
+### task-v/fusion360 (20 tasks)
+
+- `task-v/fusion360/task-01` — task-v 'look at' lead
+  - first line: look at plate_100x60x12.step. Create a 3-axis milling setup in Fusion 360 Manufacture for the plate. Set the WCS origin at the stock top-face center, expand stock 2 mm on X/Y sides and 1 mm above the 
+- `task-v/fusion360/task-02` — task-v 'look at' lead
+  - first line: look at outer_plate.step. Create a 2D Contour operation for the outside boundary of the plate. Set the WCS origin at the top-face center, machine the outside boundary down to Z=0.000 mm, leave 0.2 mm 
+- `task-v/fusion360/task-03` — task-v 'look at' lead
+  - first line: look at drill_plate.step. Create spot drilling and through drilling operations at the four hole centers (+25,+15), (+25,-15), (-25,+15), and (-25,-15). The drilling operation must break through the bo
+- `task-v/fusion360/task-04` — task-v 'look at' lead
+  - first line: look at rect_pocket_block.step. Create a 2D Pocket operation for the centered 50 x 30 mm pocket. Machine the pocket floor to Z=8.000 mm, use maximum stepover 3.2 mm, maximum stepdown 2 mm, leave 0.1 m
+- `task-v/fusion360/task-05` — task-v 'look at' lead
+  - first line: look at chamfer_plate.step. Create chamfer toolpaths for the top outside contour and all four 6 mm hole mouths. The finished chamfer width must be 0.5 mm and the chamfer path must cover both the outer
+- `task-v/fusion360/task-06` — task-v 'look at' lead
+  - first line: look at simple_cam_job.step. Create a complete basic manufacturing program containing Face, Drill, and 2D Contour operations for the provided part. Configure the setup WCS, stock, operations, tool num
+- `task-v/fusion360/task-07` — task-v 'look at' lead
+  - first line: look at dual_pocket_bracket.step. Create a multi-operation milling program. Rough and finish both top pockets with 2D Pocket operations, then finish the outside profile using 2D Contour. Pocket floors
+- `task-v/fusion360/task-08` — task-v 'look at' lead
+  - first line: look at bore_plate.step. Create drilling and bore/circular-pocket operations. Spot and drill the four through holes, breaking through the bottom by 1 mm, then machine the two stepped bore holes to bot
+- `task-v/fusion360/task-09` — task-v 'look at' lead
+  - first line: look at cross_rest_pocket.step. Create rest-machining toolpaths. Clear the main cross pocket first, then machine the inside corners and narrow remaining regions with a smaller tool. The target pocket 
+- `task-v/fusion360/task-10` — task-v 'look at' lead
+  - first line: look at sheet_panel.step. Create a 2D Profile cutting program for the sheet panel. Cut all internal windows and holes before the outside contour, apply 0.15 mm kerf compensation, and post with a GRBL-
+- `task-v/fusion360/task-11` — task-v 'look at' lead
+  - first line: look at part_with_vise.step. Create a setup using the two vise jaws already modeled in the STEP file as fixtures. Machine the two top pockets while keeping every low-level tool position at least 3 mm 
+- `task-v/fusion360/task-12` — task-v 'look at' lead
+  - first line: look at library_part.step. Create Face, Drill, and 2D Contour operations for the library part. Manually define the required tools in the Fusion 360 tool library rather than importing a CSV file throug
+- `task-v/fusion360/task-13` — task-v 'look at' lead
+  - first line: look at twin_fixture.step. Create identical Face and 2D Contour operations for the two identical parts in the fixture. Use separate WCS offsets for the two parts, G54 and G55 or Fusion-equivalent offs
+- `task-v/fusion360/task-14` — task-v 'look at' lead
+  - first line: look at collision_drill.step. Plan drilling for the twelve candidate holes. Skip the two holes with holder collision risk near the 30 mm wall and post only the safe drilling operations. Tool definitio
+- `task-v/fusion360/task-15` — task-v 'look at' lead
+  - first line: look at dome_pocket.step. Create 3D Adaptive roughing and ball-end 3D finishing operations for the dome pocket. Roughing leaves 0.3 mm stock and finishing uses zero stock. Tool definitions: T1 is a 10
+- `task-v/fusion360/task-16` — task-v 'look at' lead
+  - first line: look at turned_shaft.step. Create a turning setup for the shaft with the turning axis along Z. Generate OD rough turning, OD finish turning, grooving, and center drilling operations. Tool definitions:
+- `task-v/fusion360/task-17` — task-v 'look at' lead
+  - first line: look at fixture_complex.step. Create a fixture-aware milling setup. Register all four fixture blocks from the STEP model, machine the central island pocket and outside contour, and maintain at least 4
+- `task-v/fusion360/task-18` — task-v 'look at' lead
+  - first line: look at thread_plate.step. Create drilling and thread-milling operations for the six M8 tapped holes. Drill the pilot holes, then thread mill each hole to Z=0.000 mm using arcs or a helical approximat
+- `task-v/fusion360/task-19` — task-v 'look at' lead
+  - first line: look at rotary_flute.step. Create a rotary contour or equivalent multi-axis toolpath for the cylindrical flute part. Use the X-axis cylinder setup, post rotary motion as the A axis, and machine four h
+- `task-v/fusion360/task-20` — task-v 'look at' lead
+  - first line: look at two_sided_housing.step. Create two independent setups for the two-sided housing. Setup A machines the A-face pocket and four holes. Setup B machines the two B-face counterbores. The WCS Z axes
+
+### task-v/librecad (20 tasks)
+
+- `task-v/librecad/task-01` — librecad GUI, task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui01_room_outline_seed.dxf in the LibreCAD graphical interface. Use the four guide corner points in the file to draw a 6000 mm by 4000 mm room outside outline as a closed r
+- `task-v/librecad/task-02` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui02_bolt_plate_seed.dxf in LibreCAD. On layer HOLE, draw four diameter 10 mm circular holes centered at (20,20), (100,20), (100,60), and (20,60). Preserve the existing cen
+- `task-v/librecad/task-03` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui03_layer_cleanup_seed.dxf. Do not change any geometry coordinates. Only standardize layers and attributes: move all long wall lines to layer WALL with color set to ByLaye
+- `task-v/librecad/task-04` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui04_trim_extend_seed.dxf. Use trim and extend operations to trim all segments that overshoot their true corner intersections and extend all 5 mm gaps closed. The final res
+- `task-v/librecad/task-05` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui05_bracket_dimension_seed.dxf. Do not move the existing outline or holes. Add complete dimension annotation: overall length 160 mm, overall height 90 mm, left hole distan
+- `task-v/librecad/task-06` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui06_title_text_seed.dxf. Fill the title block on layer TEXT with four text fields: at (30,18) write PART NAME: GUIDE PLATE; at (30,10) write MATERIAL: AL6061; at (150,18) 
+- `task-v/librecad/task-07` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui07_hatch_section_seed.dxf. On layer HATCH, add section hatch fill inside the outer rectangular region while keeping the two circular holes empty and not covered by hatch.
+- `task-v/librecad/task-08` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui08_mirror_bracket_seed.dxf. Use x=0 as the mirror centerline and copy the left half bracket to the right side. Keep the original left half unchanged. Place the mirrored r
+- `task-v/librecad/task-09` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui09_polar_holes_seed.dxf. Use (0,0) as the rotation center and copy the existing hole into a six-hole circular pattern. The final drawing must contain six holes at angles 
+- `task-v/librecad/task-10` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui10_symbol_scale_seed.dxf. Scale the positioning symbol on layer SYMBOL uniformly by factor 0.5, then move the scaled symbol so its center point is at (100,50). Do not cha
+- `task-v/librecad/task-11` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui11_polyline_seed.dxf. Following the GUIDE points in order, create one closed polyline or a closed outline made from line segments. The vertices must be (0,0), (60,0), (70
+- `task-v/librecad/task-12` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui12_fillet_chamfer_seed.dxf. Apply R8 mm fillets at the upper-left and upper-right corners. Apply 6 mm by 6 mm 45 degree chamfers at the lower-left and lower-right corners
+- `task-v/librecad/task-13` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui13_block_insert_seed.dxf. Create or use a block named M6_HOLE containing one diameter 6 mm circle and one pair of orthogonal centerlines. Insert this block at the eight G
+- `task-v/librecad/task-14` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui14_clean_guides_seed.dxf. Delete only all construction lines and construction points on layer GUIDE. Preserve every entity on layers OUTLINE, HOLE, DIM, and TEXT exactly 
+- `task-v/librecad/task-15` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui15_linetype_units_seed.dxf. Set the drawing unit to millimeters. Configure layer OUTLINE as continuous line with 0.25 mm lineweight; CENTER as centerline or dashed line w
+- `task-v/librecad/task-16` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui16_leader_notes_seed.dxf. On layer NOTE, add one leader note for the middle hole. The leader arrow must point to the circle center (75,40), and the note text must read DR
+- `task-v/librecad/task-17` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui17_centerline_seed.dxf. For every circular hole and the outer circle, add one horizontal centerline and one vertical centerline. Each centerline must extend 4 mm beyond t
+- `task-v/librecad/task-18` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui18_wall_openings_seed.dxf. Create a 900 mm wide door opening in the wall with opening center x=1200. Create a 1200 mm wide window opening with opening center x=3300. At t
+- `task-v/librecad/task-19` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui19_layout_copy_seed.dxf. Copy the complete existing part into a 3 column by 2 row array. Column spacing must be 60 mm and row spacing must be 45 mm. Keep the original par
+- `task-v/librecad/task-20` — task-v 'look at' lead
+  - first line: look at /home/user/Desktop/gui20_fixture_edit_seed.dxf. Change the center slot width from 12 mm to 18 mm while keeping slot length 80 mm and slot center at (90,45). Change the four corner holes from d
+
+### task-v/openscad (20 tasks)
+
+- `task-v/openscad/task-01` — openscad GUI editor, GUI keyboard shortcut, GUI menu path, task-v 'look at' lead
+  - first line: look at task-001_initial.scad in the OpenSCAD GUI editor. Change the base parameters to width=80, depth=50, and height=10, and keep the model centered at the origin. Press F5 to preview and confirm th
+- `task-v/openscad/task-02` — task-v 'look at' lead
+  - first line: look at task-002_initial.scad. Set hole_diameter to 6 mm and edge_offset to 12 mm. Use difference() to subtract four vertical through holes from the mounting plate corners. The hole centers must be (+
+- `task-v/openscad/task-03` — task-v 'look at' lead
+  - first line: look at task-003_initial.scad. Set the center hole to diameter 28 mm. On a bolt circle radius of 26 mm, create six equally spaced through holes of diameter 5 mm. Keep the outside diameter 72 mm and th
+- `task-v/openscad/task-04` — task-v 'look at' lead
+  - first line: look at task-004_initial.scad. Modify the connector into a stepped pipe fitting. The lower section from z=0 to z=18 must have outside diameter 42 mm. The upper section from z=18 to z=40 must have outs
+- `task-v/openscad/task-05` — task-v 'look at' lead
+  - first line: look at task-005_initial.scad. Keep the base plate and back plate. Add one triangular gusset rib at each end: rib thickness 6 mm, X positions x=-30 and x=30, rib height 38 mm, and rib depth 24 mm. Add
+- `task-v/openscad/task-06` — task-v 'look at' lead
+  - first line: look at task-006_initial.scad. Make the cable channel a semicircular opening with diameter 18 mm. The clamp outside width must be 42 mm, total height 24 mm, and thickness 12 mm. Add one vertical botto
+- `task-v/openscad/task-07` — task-v 'look at' lead
+  - first line: look at task-007_initial.scad. In the center of the panel, create a 3 row by 5 column array of rounded slots. Each slot target outline is 10 mm by 3 mm, column pitch is 15 mm, and row pitch is 12 mm. 
+- `task-v/openscad/task-08` — task-v 'look at' lead
+  - first line: look at task-008_initial.scad. Add raised text OPENSCAD on the top surface of the nameplate. Use text height 7 mm, font size 8 mm, raised extrusion thickness 1.2 mm, and horizontally center the text. 
+- `task-v/openscad/task-09` — task-v 'look at' lead
+  - first line: look at task-009_initial.scad. In the 2D sketch, add two circular holes of diameter 8 mm centered at (-40,0) and (40,0). Add one centered rectangular window 60 mm by 20 mm. Do not use linear_extrude; 
+- `task-v/openscad/task-10` — task-v 'look at' lead
+  - first line: look at task-010_initial.scad. Set the 2D rounded rectangle to width 90 mm, height 32 mm, and corner radius 6 mm, then use linear_extrude(height=5) to make a 5 mm thick rounded nameplate. Add four dia
+- `task-v/openscad/task-11` — task-v 'look at' lead
+  - first line: look at task-011_initial.scad. Use rotate_extrude() to generate a circular knob with outside diameter 44 mm and height 18 mm. Add a central through shaft hole of diameter 8 mm. Add twelve equally spac
+- `task-v/openscad/task-12` — task-v 'look at' lead
+  - first line: look at task-012_initial.scad. Change the model into a hollow tapered nozzle. Total height must be 38 mm, bottom outside diameter 30 mm, and top outside diameter 14 mm. The internal bore must transiti
+- `task-v/openscad/task-13` — task-v 'look at' lead
+  - first line: look at task-013_initial.scad. Change the foot pad to a tapered frustum with larger bottom and smaller top: bottom diameter 34 mm, top diameter 26 mm, and height 12 mm. Add one centered through hole o
+- `task-v/openscad/task-14` — task-v 'look at' lead
+  - first line: look at task-014_initial.scad. Modify the support pin into two coaxial sections: an insertion section of diameter 5 mm and length 18 mm, plus an exposed shoulder of diameter 12 mm and thickness 4 mm. 
+- `task-v/openscad/task-15` — task-v 'look at' lead
+  - first line: look at task-015_initial.scad. Create a simplified hinge leaf. Keep the leaf plate and add three coaxial hinge barrels along one long edge. Each barrel must have outside diameter 8 mm, inside hole dia
+- `task-v/openscad/task-16` — task-v 'look at' lead
+  - first line: look at task-016_initial.scad. Add an inside locating lip on the underside of the cover plate. The lip outside outline must be 78 x 48 mm, inside outline 70 x 40 mm, height 3 mm, located under the cov
+- `task-v/openscad/task-17` — task-v 'look at' lead
+  - first line: look at task-017_initial.scad. Make a semicircular pipe clamp with inside radius 15 mm, outside radius 23 mm, and clamp width 18 mm. Add one mounting ear on each side; each ear must be 14 mm wide, 8 m
+- `task-v/openscad/task-18` — task-v 'look at' lead
+  - first line: look at task-018_initial.scad. Generate a standard simplified hex nut. The hex outside across-flats distance must be 24 mm, height 10 mm, and the centered vertical through hole diameter must be 10 mm.
+- `task-v/openscad/task-19` — task-v 'look at' lead
+  - first line: look at task-019_initial.scad. Change the model into a three-level step calibration block. Level 1 is 40 x 20 x 5 mm. Level 2 is 30 x 20 x 5 mm and centered on level 1. Level 3 is 20 x 20 x 5 mm and c
+- `task-v/openscad/task-20` — task-v 'look at' lead
+  - first line: look at task-020_initial.scad. Instantiate the complete small frame assembly: a base plate 80 x 50 x 4 mm; four corner posts of diameter 8 mm and height 35 mm with centers at (+/-32,+/-17); and a top 
+
+### task-v/sketchup (19 tasks)
+
+- `task-v/sketchup/task-01` — sketchup GUI, sketchup GUI tool
+  - first line: Turned-Leg Dining Table
+- `task-v/sketchup/task-02` — sketchup GUI
+  - first line: Curved Wall From Arc
+- `task-v/sketchup/task-03` — sketchup GUI
+  - first line: Three-Arm Pendant Light Fixture
+- `task-v/sketchup/task-04` — sketchup GUI
+  - first line: L-Shaped Stair with Intermediate Landing
+- `task-v/sketchup/task-05` — sketchup GUI
+  - first line: Chair Frame With Drilled Stretcher Joints
+- `task-v/sketchup/task-06` — sketchup GUI
+  - first line: Hollow Vase (Revolved Shell)
+- `task-v/sketchup/task-07` — sketchup GUI
+  - first line: Perforated Screen Panel
+- `task-v/sketchup/task-08` — sketchup GUI
+  - first line: Kitchen Cabinet Layout Along a 3 m Wall
+- `task-v/sketchup/task-09` — sketchup GUI
+  - first line: Office Furniture Set as Reusable Component in a 2x2 Array
+- `task-v/sketchup/task-10` — sketchup GUI
+  - first line: Stair Railing with Balusters as Component Instances
+- `task-v/sketchup/task-13` — sketchup GUI
+  - first line: Brick Wall with Correctly-Scaled Texture
+- `task-v/sketchup/task-15` — sketchup GUI
+  - first line: Garden with Flat Patio and Curved Path (SketchUp Sandbox)
+- `task-v/sketchup/task-16` — sketchup GUI
+  - first line: Terraced Amphitheater Seating
+- `task-v/sketchup/task-17` — sketchup GUI
+  - first line: Bay Window with Framing
+- `task-v/sketchup/task-18` — sketchup GUI
+  - first line: Greenhouse with Gable Roof
+- `task-v/sketchup/task-19` — sketchup GUI
+  - first line: Covered Deck with Pergola
+- `task-v/sketchup/task-20` — sketchup GUI
+  - first line: Mansard Roof over Rectangular Building
+- `task-v/sketchup/task-22` — sketchup GUI
+  - first line: Hand Tool Kit (hammer + screwdriver + wrench on a board)
+- `task-v/sketchup/task-23` — sketchup GUI
+  - first line: OBJ Import and Edge Softening
+
+### task-v/zbrush (29 tasks)
+
+- `task-v/zbrush/task-01` — task-v 'look at' lead
+  - first line: Sculpt a Weathered Rock with DynaMesh + ClayBuildup + DamStandard + TrimDynamic
+- `task-v/zbrush/task-02` — task-v 'look at' lead
+  - first line: Sculpt an Adaptively-Tessellated Bent Tentacle with Sculptris Pro + SnakeHook
+- `task-v/zbrush/task-03` — task-v 'look at' lead
+  - first line: Record Two 3D Layers on a Sphere and Export Three Toggle States
+- `task-v/zbrush/task-04` — task-v 'look at' lead
+  - first line: ZRemesher with Polygroup Guide Curves (Curve Strength = 60)
+- `task-v/zbrush/task-05` — task-v 'look at' lead
+  - first line: Generate FiberMesh Hair on a Head
+- `task-v/zbrush/task-06` — task-v 'look at' lead
+  - first line: Decimation Master to STL for 3D printing
+- `task-v/zbrush/task-07` — task-v 'look at' lead
+  - first line: Split a Multi-Polygroup Mesh into Named SubTools
+- `task-v/zbrush/task-08` — task-v 'look at' lead
+  - first line: Live Boolean - Drill a Cylindrical Hole Through a Sphere
+- `task-v/zbrush/task-10` — task-v 'look at' lead
+  - first line: Create Polygroups from UV Tiles (UDIMs)
+- `task-v/zbrush/task-11` — task-v 'look at' lead
+  - first line: UV Master Unwrap of a Head Mesh
+- `task-v/zbrush/task-12` — task-v 'look at' lead
+  - first line: UV Master Work-On-Clone Workflow
+- `task-v/zbrush/task-13` — task-v 'look at' lead
+  - first line: Cavity Mask + Invert + Dark-Gray Polypaint Fill
+- `task-v/zbrush/task-14` — task-v 'look at' lead
+  - first line: Bake Polypaint to a 1024x1024 diffuse texture
+- `task-v/zbrush/task-15` — task-v 'look at' lead
+  - first line: Model a Hammer with ShadowBox (Mask 3 Views) + DynaMesh Clean
+- `task-v/zbrush/task-16` — task-v 'look at' lead
+  - first line: Mask by Cavity + Invert + Inflate (peaks-only displacement)
+- `task-v/zbrush/task-17` — task-v 'look at' lead
+  - first line: Extract Clothing Shell From a Masked Region (thickness 0.05)
+- `task-v/zbrush/task-18` — task-v 'look at' lead
+  - first line: Transpose Rotate - Rotate an Arm About the Shoulder Pivot
+- `task-v/zbrush/task-19` — task-v 'look at' lead
+  - first line: Transpose Bend - Curl a Tapered Tail into a 180 deg C-Shape
+- `task-v/zbrush/task-20` — task-v 'look at' lead
+  - first line: Flatten One Side of a Sphere Using ClipCurve
+- `task-v/zbrush/task-21` — task-v 'look at' lead
+  - first line: SliceCurve + Panel Loops on a Helmet Dome
+- `task-v/zbrush/task-22` — task-v 'look at' lead
+  - first line: Bake Surface Noise into Sphere Geometry
+- `task-v/zbrush/task-23` — task-v 'look at' lead
+  - first line: Morph Target Three-State Export
+- `task-v/zbrush/task-24` — task-v 'look at' lead
+  - first line: Radial Symmetry Sculpting (6-petal Flower Depression)
+- `task-v/zbrush/task-25` — task-v 'look at' lead
+  - first line: ZModeler Inset + Extrude (Sunken Pocket + Raised Base)
+- `task-v/zbrush/task-26` — task-v 'look at' lead
+  - first line: Make Alpha from Mesh (z-height map)
+- `task-v/zbrush/task-27` — task-v 'look at' lead
+  - first line: ArrayMesh Circular Array (12 columns around a colonnade)
+- `task-v/zbrush/task-28` — task-v 'look at' lead
+  - first line: Project All High-Frequency Detail From HighDetail onto a Subdivided LowBase
+- `task-v/zbrush/task-29` — task-v 'look at' lead
+  - first line: BPR Render to Beauty + Depth PNGs
+- `task-v/zbrush/task-30` — task-v 'look at' lead
+  - first line: Multi-SubTool Character export + Multi Map Exporter
+
+## B. Instruction <-> eval mismatches (problem 1)
+
+Heuristic flags. Each task may have one or more issues. Categories:
+
+- `PLACEHOLDER_EVAL`: eval is the autocad 'one polyline + one TASK NN text' stub
+- `TRIVIAL_STL_EVAL`: eval requires vertices=8, faces=12 (a cube), but instruction describes multiple parts/features
+- `DIM_MISMATCH`: instruction mentions mm dimensions that do not appear in eval bbox
+- `OUTPUT_FILE_MISMATCH`: instruction's output filename is not referenced in eval
+- `JSON_PARSE_ERROR`: malformed task json
+
+### task-c/autocad (20 tasks)
+
+- **task-c/autocad/task-21**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 21' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\cli_blank_seed.dxf. Recreate the target 2D CAD drawing for task 21 from the provided
+- **task-c/autocad/task-22**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 22' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\inspect_me.dxf. Recreate the target 2D CAD drawing for task 22 from the provided DXF
+- **task-c/autocad/task-23**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 23' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\plate_raw.dxf. Recreate the target 2D CAD drawing for task 23 from the provided DXF 
+- **task-c/autocad/task-24**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 24' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\inch_valve.dxf. Recreate the target 2D CAD drawing for task 24 from the provided DXF
+- **task-c/autocad/task-25**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 25' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\bracket_seed.dxf. Recreate the target 2D CAD drawing for task 25 from the provided D
+- **task-c/autocad/task-26**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 26' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\slider.dxf, C:\Users\Administrator\Desktop\
+- **task-c/autocad/task-27**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 27' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\surface_leak.dxf. Recreate the target 2D CAD drawing for task 27 from the provided D
+- **task-c/autocad/task-28**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 28' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\profile_seed.dxf. Recreate the target 2D CAD drawing for task 28 from the provided D
+- **task-c/autocad/task-29**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 29' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\segmented_flange.dxf. Recreate the target 2D CAD drawing for task 29 from the provid
+- **task-c/autocad/task-30**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 30' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\nozzle_seed.dxf. Recreate the target 2D CAD drawing for task 30 from the provided DX
+- **task-c/autocad/task-31**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 31' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\housing.dxf. Recreate the target 2D CAD drawing for task 31 from the provided DXF in
+- **task-c/autocad/task-32**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 32' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\family_seed.dxf. Recreate the target 2D CAD drawing for task 32 from the provided DX
+- **task-c/autocad/task-33**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 33' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\arm.dxf, C:\Users\Administrator\Desktop\bra
+- **task-c/autocad/task-34**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 34' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base_mm.dxf, C:\Users\Administrator\Desktop\cover_inch.dxf, C:\Users\Administrator\D
+- **task-c/autocad/task-35**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 35' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\volume_seed.dxf. Recreate the target 2D CAD drawing for task 35 from the provided DX
+- **task-c/autocad/task-36**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 36' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\cast_part.dxf. Recreate the target 2D CAD drawing for task 36 from the provided DXF 
+- **task-c/autocad/task-37**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 37' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\panel_layout.dxf. Recreate the target 2D CAD drawing for task 37 from the provided D
+- **task-c/autocad/task-38**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 38' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\slider.dxf, C:\Users\Administrator\Desktop\
+- **task-c/autocad/task-39**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 39' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\part1.dxf, C:\Users\Administrator\Desktop\part2.dxf, C:\Users\Administrator\Desktop\
+- **task-c/autocad/task-40**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 40' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): Use AutoCAD command line, Core Console, or an AutoCAD automation script. Open only the DXF file(s) from the Desktop path(s): C:\Users\Administrator\Desktop\base_bad.dxf, C:\Users\Administrator\Desktop\arm_bad.dxf, C:\Users\Administrator\Des
+
+### task-c/brl-cad (5 tasks)
+
+- **task-c/brl-cad/task-23**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['cap', 'hole', 'rib', 'ribs']
+  - instruction (first 240 chars): Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/base.step, /home/user/Desktop/cap.step, /home/user/Desktop/rib1.step, /home/user/Desktop/rib2.step. Read /home/user/Desktop/base.step, /home/user/Deskto
+- **task-c/brl-cad/task-25**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['boss', 'tool']
+  - instruction (first 240 chars): Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/body.step, /home/user/Desktop/drill.step. Read /home/user/Desktop/body.step and /home/user/Desktop/drill.step. Use the same cylindrical tool for two cut
+- **task-c/brl-cad/task-29**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['hole', 'holes']
+  - instruction (first 240 chars): Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/lower.step, /home/user/Desktop/upper.step. Read /home/user/Desktop/lower.step and /home/user/Desktop/upper.step. Place the upper block at the center of 
+- **task-c/brl-cad/task-35**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['cover', 'holes']
+  - instruction (first 240 chars): Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/base_ref.step. Read /home/user/Desktop/base_ref.step. Generate only a matching cover plate: outer size 124 x 84 x 6 mm; four mounting holes must be stri
+- **task-c/brl-cad/task-37**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['cylinder', 'hole']
+  - instruction (first 240 chars): Use BRL-CAD to read the STEP input file(s) from the Desktop path(s): /home/user/Desktop/assy.step. Read /home/user/Desktop/assy.step, which contains two separated solids. Move the cylinder to the center of the right end face of the block, w
+
+### task-c/openscad (5 tasks)
+
+- **task-c/openscad/task-32**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['cylinder', 'hole']
+  - instruction (first 240 chars): Modify /home/user/Desktop/task-032_initial.scad from the command line. Use hull() between two cylinders to create a smooth capsule-shaped mounting base. Subtract a through hole of diameter 5 mm at the center of each cylinder. Export /home/u
+- **task-c/openscad/task-36**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['boss', 'hole']
+  - instruction (first 240 chars): Edit /home/user/Desktop/task-036_initial.scad from the command line. On the base plate, create a centered 3 by 2 cylindrical boss array. Each boss must be diameter 14 mm and height 10 mm, and each boss must contain a centered through hole o
+- **task-c/openscad/task-38**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['bracket', 'rib', 'ribs']
+  - instruction (first 240 chars): Edit /home/user/Desktop/task-038_initial.scad from the command line. Add five equally spaced triangular reinforcing ribs to the right-angle bracket. Each rib must be 3 mm thick, 32 mm high, and 28 mm deep, distributed along the X direction.
+- **task-c/openscad/task-39**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['cover', 'holes']
+  - instruction (first 240 chars): Modify /home/user/Desktop/task-039_initial.scad from the command line. Use difference() between guard_blank() and the imported motor shape /home/user/Desktop/task-039_motor.stl to create a protective cover that fits around the motor. Target
+- **task-c/openscad/task-40**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['hole', 'holes']
+  - instruction (first 240 chars): Complete the parametric adapter plate in /home/user/Desktop/task-040_initial.scad from the command line. The outside shape is a 96 x 72 x 8 mm rounded rectangle plate with corner radius 6 mm. Add a centered through hole of diameter 32 mm. A
+
+### task-v/autocad (20 tasks)
+
+- **task-v/autocad/task-01**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 01' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 01 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-02**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 02' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 02 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-03**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 03' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at plate_base.dxf. Recreate the target 2D CAD drawing for task 03 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-04**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 04' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at tilted_block.dxf. Recreate the target 2D CAD drawing for task 04 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should 
+- **task-v/autocad/task-05**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 05' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at bracket_input.dxf. Recreate the target 2D CAD drawing for task 05 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should
+- **task-v/autocad/task-06**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 06' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 06 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-07**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 07' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at support.dxf. Recreate the target 2D CAD drawing for task 07 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be re
+- **task-v/autocad/task-08**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 08' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at unit_inch_geometry.dxf. Recreate the target 2D CAD drawing for task 08 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels s
+- **task-v/autocad/task-09**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 09' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at open_shell_box.dxf. Recreate the target 2D CAD drawing for task 09 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels shoul
+- **task-v/autocad/task-10**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 10' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at split_box.dxf. Recreate the target 2D CAD drawing for task 10 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be 
+- **task-v/autocad/task-11**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 11' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at base.dxf, pin.dxf, cover.dxf. Recreate the target 2D CAD drawing for task 11 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and la
+- **task-v/autocad/task-12**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 12' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 12 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-13**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 13' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at housing_simple.dxf. Recreate the target 2D CAD drawing for task 13 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels shoul
+- **task-v/autocad/task-14**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 14' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at counterbore_plate.dxf. Recreate the target 2D CAD drawing for task 14 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels sh
+- **task-v/autocad/task-15**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 15' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at valve_body.dxf. Recreate the target 2D CAD drawing for task 15 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-16**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 16' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at blank_seed.dxf. Recreate the target 2D CAD drawing for task 16 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should be
+- **task-v/autocad/task-17**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 17' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at clamp_input.dxf. Recreate the target 2D CAD drawing for task 17 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels should b
+- **task-v/autocad/task-18**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 18' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at bracket.dxf, shaft.dxf, spacer.dxf, cap.dxf. Recreate the target 2D CAD drawing for task 18 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dim
+- **task-v/autocad/task-19**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 19' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at segmented_flange_gui.dxf. Recreate the target 2D CAD drawing for task 19 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels
+- **task-v/autocad/task-20**
+  - PLACEHOLDER_EVAL: eval only checks 1 LWPOLYLINE + 1 TEXT='TASK 20' on layer 0, but instruction asks to recreate a complex 2D drawing
+  - instruction (first 240 chars): look at pump_housing_rotated.dxf. Recreate the target 2D CAD drawing for task 20 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slots, alignment, symmetry, dimensions, and labels
+
+### task-v/openscad (7 tasks)
+
+- **task-v/openscad/task-02**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['hole', 'holes']
+  - instruction (first 240 chars): look at task-002_initial.scad. Set hole_diameter to 6 mm and edge_offset to 12 mm. Use difference() to subtract four vertical through holes from the mounting plate corners. The hole centers must be (+/-38 mm, +/-18 mm), and each hole must c
+- **task-v/openscad/task-05**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['holes', 'rib']
+  - instruction (first 240 chars): look at task-005_initial.scad. Keep the base plate and back plate. Add one triangular gusset rib at each end: rib thickness 6 mm, X positions x=-30 and x=30, rib height 38 mm, and rib depth 24 mm. Add two diameter 6 mm through holes in the 
+- **task-v/openscad/task-06**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['hole']
+  - instruction (first 240 chars): look at task-006_initial.scad. Make the cable channel a semicircular opening with diameter 18 mm. The clamp outside width must be 42 mm, total height 24 mm, and thickness 12 mm. Add one vertical bottom mounting hole of diameter 5 mm at the 
+- **task-v/openscad/task-07**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['slots']
+  - instruction (first 240 chars): look at task-007_initial.scad. In the center of the panel, create a 3 row by 5 column array of rounded slots. Each slot target outline is 10 mm by 3 mm, column pitch is 15 mm, and row pitch is 12 mm. Use difference() so all slots cut throug
+- **task-v/openscad/task-10**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['hole', 'holes']
+  - instruction (first 240 chars): look at task-010_initial.scad. Set the 2D rounded rectangle to width 90 mm, height 32 mm, and corner radius 6 mm, then use linear_extrude(height=5) to make a 5 mm thick rounded nameplate. Add four diameter 4 mm through holes near the corner
+- **task-v/openscad/task-15**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['hole', 'holes']
+  - instruction (first 240 chars): look at task-015_initial.scad. Create a simplified hinge leaf. Keep the leaf plate and add three coaxial hinge barrels along one long edge. Each barrel must have outside diameter 8 mm, inside hole diameter 3 mm, and segment length 14 mm, wi
+- **task-v/openscad/task-16**
+  - TRIVIAL_STL_EVAL: eval expects vertices=8, faces=12 (a single box), but instruction mentions multiple parts/features: ['cover']
+  - instruction (first 240 chars): look at task-016_initial.scad. Add an inside locating lip on the underside of the cover plate. The lip outside outline must be 78 x 48 mm, inside outline 70 x 40 mm, height 3 mm, located under the cover and centered. Keep the cover plate th

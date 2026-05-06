@@ -1,0 +1,85 @@
+# Pilot instruction-vs-eval mismatch report
+
+
+_Total mismatches: 40_
+
+- **task-c/autocad/task-21**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 21'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\cli_blank_seed.dxf. Recreate the target 2D CAD drawing for task 21 from the provided DXF input. Preserve the task's main geometry intent from
+- **task-c/autocad/task-22**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 22'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\inspect_me.dxf. Recreate the target 2D CAD drawing for task 22 from the provided DXF input. Preserve the task's main geometry intent from the
+- **task-c/autocad/task-23**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 23'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\plate_raw.dxf. Recreate the target 2D CAD drawing for task 23 from the provided DXF input. Preserve the task's main geometry intent from the 
+- **task-c/autocad/task-24**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 24'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\inch_valve.dxf. Recreate the target 2D CAD drawing for task 24 from the provided DXF input. Preserve the task's main geometry intent from the
+- **task-c/autocad/task-25**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 25'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\bracket_seed.dxf. Recreate the target 2D CAD drawing for task 25 from the provided DXF input. Preserve the task's main geometry intent from t
+- **task-c/autocad/task-26**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 26'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\slider.dxf, C:\Users\Administrator\Desktop\pin.dxf, C:\Users\Administrator\Desktop\cover.dxf. Recrea
+- **task-c/autocad/task-27**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 27'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\surface_leak.dxf. Recreate the target 2D CAD drawing for task 27 from the provided DXF input. Preserve the task's main geometry intent from t
+- **task-c/autocad/task-28**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 28'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\profile_seed.dxf. Recreate the target 2D CAD drawing for task 28 from the provided DXF input. Preserve the task's main geometry intent from t
+- **task-c/autocad/task-29**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 29'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\segmented_flange.dxf. Recreate the target 2D CAD drawing for task 29 from the provided DXF input. Preserve the task's main geometry intent fr
+- **task-c/autocad/task-30**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 30'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\nozzle_seed.dxf. Recreate the target 2D CAD drawing for task 30 from the provided DXF input. Preserve the task's main geometry intent from th
+- **task-c/autocad/task-31**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 31'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\housing.dxf. Recreate the target 2D CAD drawing for task 31 from the provided DXF input. Preserve the task's main geometry intent from the so
+- **task-c/autocad/task-32**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 32'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\family_seed.dxf. Recreate the target 2D CAD drawing for task 32 from the provided DXF input. Preserve the task's main geometry intent from th
+- **task-c/autocad/task-33**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 33'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\arm.dxf, C:\Users\Administrator\Desktop\bracket.dxf, C:\Users\Administrator\Desktop\pin.dxf, C:\User
+- **task-c/autocad/task-34**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 34'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\base_mm.dxf, C:\Users\Administrator\Desktop\cover_inch.dxf, C:\Users\Administrator\Desktop\pin_mirrored.dxf. Recreate the target 2D CAD drawi
+- **task-c/autocad/task-35**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 35'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\volume_seed.dxf. Recreate the target 2D CAD drawing for task 35 from the provided DXF input. Preserve the task's main geometry intent from th
+- **task-c/autocad/task-36**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 36'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\cast_part.dxf. Recreate the target 2D CAD drawing for task 36 from the provided DXF input. Preserve the task's main geometry intent from the 
+- **task-c/autocad/task-37**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 37'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\panel_layout.dxf. Recreate the target 2D CAD drawing for task 37 from the provided DXF input. Preserve the task's main geometry intent from t
+- **task-c/autocad/task-38**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 38'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\base.dxf, C:\Users\Administrator\Desktop\slider.dxf, C:\Users\Administrator\Desktop\stop1.dxf, C:\Users\Administrator\Desktop\stop2.dxf, C:\U
+- **task-c/autocad/task-39**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 39'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\part1.dxf, C:\Users\Administrator\Desktop\part2.dxf, C:\Users\Administrator\Desktop\part3.dxf, C:\Users\Administrator\Desktop\part4.dxf. Recr
+- **task-c/autocad/task-40**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 40'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s): C:\Users\Administrator\Desktop\base_bad.dxf, C:\Users\Administrator\Desktop\arm_bad.dxf, C:\Users\Administrator\Desktop\pin_bad.dxf, C:\Users\Administrator\Desktop\cap_bad.
+- **task-v/autocad/task-01**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 01'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) blank_seed.dxf. Recreate the target 2D CAD drawing for task 01 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-02**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 02'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) blank_seed.dxf. Recreate the target 2D CAD drawing for task 02 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-03**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 03'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) plate_base.dxf. Recreate the target 2D CAD drawing for task 03 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-04**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 04'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) tilted_block.dxf. Recreate the target 2D CAD drawing for task 04 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes,
+- **task-v/autocad/task-05**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 05'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) bracket_input.dxf. Recreate the target 2D CAD drawing for task 05 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes
+- **task-v/autocad/task-06**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 06'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) blank_seed.dxf. Recreate the target 2D CAD drawing for task 06 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-07**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 07'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) support.dxf. Recreate the target 2D CAD drawing for task 07 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, slot
+- **task-v/autocad/task-08**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 08'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) unit_inch_geometry.dxf. Recreate the target 2D CAD drawing for task 08 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, 
+- **task-v/autocad/task-09**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 09'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) open_shell_box.dxf. Recreate the target 2D CAD drawing for task 09 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, hole
+- **task-v/autocad/task-10**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 10'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) split_box.dxf. Recreate the target 2D CAD drawing for task 10 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, sl
+- **task-v/autocad/task-11**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 11'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) base.dxf, pin.dxf, cover.dxf. Recreate the target 2D CAD drawing for task 11 from the provided DXF input. Preserve the task's main geometry intent from the source case: outl
+- **task-v/autocad/task-12**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 12'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) blank_seed.dxf. Recreate the target 2D CAD drawing for task 12 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-13**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 13'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) housing_simple.dxf. Recreate the target 2D CAD drawing for task 13 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, hole
+- **task-v/autocad/task-14**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 14'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) counterbore_plate.dxf. Recreate the target 2D CAD drawing for task 14 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, h
+- **task-v/autocad/task-15**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 15'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) valve_body.dxf. Recreate the target 2D CAD drawing for task 15 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-16**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 16'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) blank_seed.dxf. Recreate the target 2D CAD drawing for task 16 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, s
+- **task-v/autocad/task-17**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 17'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) clamp_input.dxf. Recreate the target 2D CAD drawing for task 17 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines, holes, 
+- **task-v/autocad/task-18**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 18'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) bracket.dxf, shaft.dxf, spacer.dxf, cap.dxf. Recreate the target 2D CAD drawing for task 18 from the provided DXF input. Preserve the task's main geometry intent from the so
+- **task-v/autocad/task-19**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 19'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) segmented_flange_gui.dxf. Recreate the target 2D CAD drawing for task 19 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines
+- **task-v/autocad/task-20**: Eval is placeholder (LWPOLYLINE:1 + TEXT:1, layer 0, text='TASK 20'); instruction asks to recreate a complex 2D drawing
+  - instruction (first 200 chars): Read the DXF input file(s) pump_housing_rotated.dxf. Recreate the target 2D CAD drawing for task 20 from the provided DXF input. Preserve the task's main geometry intent from the source case: outlines
