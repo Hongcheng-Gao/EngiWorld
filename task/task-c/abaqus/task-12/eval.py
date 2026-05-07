@@ -148,19 +148,30 @@ def max_mises_midspan(s_field_values, inst, x_target, tol=3.0):
     return max(vals)
 
 
+def parse_eigen_from_description(desc):
+    try:
+        tokens = str(desc).replace(',', ' ').replace(':', ' ').replace('=', ' ').split()
+    except Exception:
+        return None
+
+    for i, tok in enumerate(tokens):
+        if str(tok).lower().startswith('eigenvalue'):
+            for j in range(i + 1, len(tokens)):
+                try:
+                    return float(tokens[j])
+                except Exception:
+                    pass
+            return None
+    return None
+
+
 def parse_first_eigen(step):
-    for frame in step.frames[1:]:
+    for i in range(1, len(step.frames)):
+        frame = step.frames[i]
         desc = frame.description or ''
-        try:
-            tokens = desc.replace(',', ' ').replace(':', ' ').split()
-            for i, tok in enumerate(tokens):
-                if tok.lower().startswith('eigenvalue') and i + 1 < len(tokens):
-                    try:
-                        return float(tokens[i + 1])
-                    except Exception:
-                        pass
-        except Exception:
-            pass
+        ev = parse_eigen_from_description(desc)
+        if ev is not None:
+            return ev
         try:
             if frame.frameValue is not None and float(frame.frameValue) > 0.0:
                 return float(frame.frameValue)
@@ -326,20 +337,11 @@ def collect_task_specific(category, inst, step, last_frame, fields):
     elif category == 'buckle_plate':
         out['first_buckle_eigenvalue'] = parse_first_eigen(step)
         vals = []
-        for frame in step.frames[1:]:
+        for i in range(1, len(step.frames)):
+            frame = step.frames[i]
             ev = None
             desc = frame.description or ''
-            try:
-                tokens = desc.replace(',', ' ').replace(':', ' ').split()
-                for i, tok in enumerate(tokens):
-                    if tok.lower().startswith('eigenvalue') and i + 1 < len(tokens):
-                        try:
-                            ev = float(tokens[i + 1])
-                        except Exception:
-                            ev = None
-                        break
-            except Exception:
-                ev = None
+            ev = parse_eigen_from_description(desc)
             if ev is None:
                 try:
                     if frame.frameValue is not None and float(frame.frameValue) > 0.0:

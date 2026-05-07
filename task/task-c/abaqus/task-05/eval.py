@@ -220,7 +220,45 @@ def detect_category():
 def collect_task_specific(category, inst, step, last_frame, fields):
     out = {}
 
-    if category == 'heat_steady':
+    if category == 'solid_tension':
+        s_field = repo_get_field(fields, 'S')
+        u_field = repo_get_field(fields, 'U')
+
+        out['avg_s11_mid_x60'] = None
+        out['u1_free_end_center'] = None
+
+        if s_field is not None:
+            s11_vals = []
+            x_target = float(METRICS['mid_x'])
+            for v in s_field.values:
+                if v.elementLabel is None:
+                    continue
+                try:
+                    inst_ref = v.instance if v.instance is not None else inst
+                    elem = inst_ref.getElementFromLabel(v.elementLabel)
+                    xs = [inst_ref.getNodeFromLabel(nid).coordinates[0] for nid in elem.connectivity]
+                    if len(xs) == 0:
+                        continue
+                    cx = sum(xs) / float(len(xs))
+                    if abs(float(cx) - x_target) <= 3.0:
+                        s11 = safe_data_component(v.data, 0)
+                        if s11 is not None:
+                            s11_vals.append(float(s11))
+                except Exception:
+                    pass
+            if s11_vals:
+                out['avg_s11_mid_x60'] = sum(s11_vals) / float(len(s11_vals))
+
+        if u_field is not None:
+            out['u1_free_end_center'] = nearest_node_value(
+                u_field.values,
+                inst,
+                METRICS['u_pt'],
+                comp_idx=0,
+                use_abs=True
+            )
+
+    elif category == 'heat_steady':
         t_field = repo_get_field(fields, 'NT11')
         if t_field is not None:
             vals = []
