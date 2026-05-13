@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-SPEC = {'files': {'task-30.nc': {'tools': [1], 'kind': 'nc'}}}
+SPEC = {'files': {'task-30.nc': {'tools': [1], 'z': [0], 'points': [(-30, -20), (30, 20)], 'fixture_rects': [[-60, 39, 60, 51]], 'min_clearance': 3, 'clearance_z_below': 20, 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 TOL = 0.5
 
