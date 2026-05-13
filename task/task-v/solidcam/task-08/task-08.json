@@ -1,0 +1,59 @@
+{
+  "id": "v-solidcam-task-08",
+  "snapshot": "",
+  "instruction": "Open or import the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\bore_plate.step. Spot drill and drill the four through holes in C:\\Users\\User\\Desktop\\bore_plate.step. Machine the two stepped holes using Bore, Profile, or Pocket operations. Through holes must break through the bottom by 1 mm and stepped holes must bottom at Z=9.000 mm. Tool definitions: T1 is a spot drill, T2 is a 6 mm drill, and T3 is a 10 mm flat end mill for bore/profile/pocket operations. Use the SolidCAM CAM-Part, Coordinate System, Stock, Tool Table, operation, simulation/verify, and post-processing dialogs as needed, then save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-8.nc.",
+  "source": "SolidCAM \u6a21\u5757\u603b\u89c8\u542b 2.5D Milling\u3001AFRM\u3001Turning\u3001Mill-Turn \u7b49\u6a21\u5757\uff1ahttps://solidcam.com/cam-modules/modules-overview/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/bore_plate.step",
+            "path": "C:\\Users\\User\\Desktop\\bore_plate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

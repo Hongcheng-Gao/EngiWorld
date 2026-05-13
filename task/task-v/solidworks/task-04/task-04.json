@@ -1,0 +1,59 @@
+{
+  "id": "v-solidworks-task-04-windows",
+  "snapshot": "",
+  "instruction": "Open C:\\Users\\User\\Desktop\\gui_004_electronics_cover.step, a closed 100 x 70 x 18 mm plastic cover. Convert it to a downward-opening thin shell with 2 mm wall thickness. On the top face, cut eight through ventilation slots, each 40 x 3 mm, centered on X=0 and equally spaced in Y from -24 to +24. Add 3 mm fillets to the four inside corners. Export C:\\Users\\User\\Desktop\\gui_004_cover_vented_out.step while preserving the 100 x 70 x 18 mm outer size.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Fillets.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/gui_004_electronics_cover.step",
+            "path": "C:\\Users\\User\\Desktop\\gui_004_electronics_cover.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,81 @@
+%
+G21
+G90
+M3
+(OPERATION T1)
+T1 M6
+S7000 M3
+F500
+(face)
+(pocket)
+(drill)
+(counterbore)
+(spherical finishing)
+(contour)
+G1 X-50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y-30.000 Z0.000 F500
+(OPERATION T2)
+T2 M6
+S7000 M3
+F500
+(face)
+(pocket)
+(drill)
+(counterbore)
+(spherical finishing)
+(contour)
+G1 X-50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y-30.000 Z0.000 F500
+(OPERATION T3)
+T3 M6
+S7000 M3
+F500
+(face)
+(pocket)
+(drill)
+(counterbore)
+(spherical finishing)
+(contour)
+G1 X-50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y-30.000 Z0.000 F500
+(OPERATION T4)
+T4 M6
+S7000 M3
+F500
+(face)
+(pocket)
+(drill)
+(counterbore)
+(spherical finishing)
+(contour)
+G1 X-50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y-30.000 Z0.000 F500
+(OPERATION T5)
+T5 M6
+S7000 M3
+F500
+(face)
+(pocket)
+(drill)
+(counterbore)
+(spherical finishing)
+(contour)
+G1 X-50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y-30.000 Z0.000 F500
+G1 X50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y30.000 Z0.000 F500
+G1 X-50.000 Y-30.000 Z0.000 F500
+M30
+%

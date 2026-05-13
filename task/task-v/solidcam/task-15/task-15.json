@@ -1,0 +1,59 @@
+{
+  "id": "v-solidcam-task-15",
+  "snapshot": "",
+  "instruction": "Open or import the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\dome_pocket.step. Create 3D iMachining or HSR roughing for C:\\Users\\User\\Desktop\\dome_pocket.step, then finish the spherical region using HSM, HSS, or ball-end finishing. Roughing must leave 0.3 mm stock and finishing must target zero stock. Tool definitions: T1 is a 10 mm end mill for 3D iMachining/HSR roughing leaving 0.3 mm stock; T2 is a 6 mm ball end mill for HSM/HSS finishing. Use the SolidCAM CAM-Part, Coordinate System, Stock, Tool Table, operation, simulation/verify, and post-processing dialogs as needed, then save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-15.nc.",
+  "source": "SolidCAM iMachining 3D\uff1ahttps://solidcam.com/imachining/imachining-3d/ (SolidCAM)\uff1bHSR/HSM \u6a21\u5757\u6765\u6e90\uff1ahttps://solidcam.com/cam-modules/modules-overview/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/dome_pocket.step",
+            "path": "C:\\Users\\User\\Desktop\\dome_pocket.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "v-nx-cam-task-03",
+  "snapshot": "",
+  "instruction": "Open or import the initial CAD geometry file(s) from the Desktop path(s): C:\\Users\\User\\Desktop\\drill_plate.step. Recognize the four marked hole locations on C:\\Users\\User\\Desktop\\drill_plate.step. Use T1 for Center Drill or Spot Drill, and use T2 for Drill. All holes must break through the bottom by 1 mm. Use T1 at S8000 rpm and F250 mm/min, and T2 at S5000 rpm and F180 mm/min. Tool definitions: T1 is a 90 degree spot drill at S8000 rpm and F250 mm/min; T2 is a 5 mm drill at S5000 rpm and F180 mm/min. Use the Manufacturing setup, MCS, blank/stock, tool, operation, toolpath verification, and post-processing dialogs as needed. Post or save the required NC/G-code output file(s) using exactly these Desktop path(s): C:\\Users\\User\\Desktop\\task-3.nc.",
+  "source": "NX CAM 的 Feature Based Machining（FBM）可自动创建 holes、pockets、slots 等棱柱类零件加工操作。(community.sw.siemens.com) https://community.sw.siemens.com/s/article/Feature-Based-Machining-Configurator-in-NX-CAM?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/drill_plate.step",
+            "path": "C:\\Users\\User\\Desktop\\drill_plate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

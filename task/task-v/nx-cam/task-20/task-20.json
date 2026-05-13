@@ -1,0 +1,59 @@
+{
+  "id": "v-nx-cam-task-20",
+  "snapshot": "",
+  "instruction": "Open or import the initial CAD geometry file(s) from the Desktop path(s): C:\\Users\\User\\Desktop\\two_sided_housing.step. Create two independent MCSs or setups for C:\\Users\\User\\Desktop\\two_sided_housing.step. Side A machines the pocket and four holes; side B machines the two counterbores. The two setup Z axes must point in opposite directions. Tool definitions: T1 is a 12 mm end mill, T2 is a 6 mm end mill, and T3 is a 5 mm drill/counterbore tool as needed. Use the Manufacturing setup, MCS, blank/stock, tool, operation, toolpath verification, and post-processing dialogs as needed. Post or save the required NC/G-code output file(s) using exactly these Desktop path(s): C:\\Users\\User\\Desktop\\task-20_sideA.nc, C:\\Users\\User\\Desktop\\task-20_sideB.nc.",
+  "source": "Siemens 社区文章说明可用 FBM 编程双面特征；NX CAM 支持多方向特征识别和自动编程。(community.sw.siemens.com) https://community.sw.siemens.com/s/article/Program-two-sided-features-using-Feature-Based-Machining?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/two_sided_housing.step",
+            "path": "C:\\Users\\User\\Desktop\\two_sided_housing.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "v-solidcam-task-11",
+  "snapshot": "",
+  "instruction": "Open or import the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\part_with_vise.step. Set the two vise jaws in C:\\Users\\User\\Desktop\\part_with_vise.step as fixture or avoidance geometry. Machine the two top pockets using iMachining or Pocket toolpaths while maintaining at least 3 mm clearance from the fixtures on all low-level toolpath points. Tool definition: T1 is an 8 mm end mill for the two top pockets. Use the SolidCAM CAM-Part, Coordinate System, Stock, Tool Table, operation, simulation/verify, and post-processing dialogs as needed, then save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-11.nc.",
+  "source": "SolidCAM 2.5D Milling \u9875\u9762\u8bf4\u660e\u53ef\u5feb\u901f\u653e\u7f6e fixtures/components \u7528\u4e8e\u53ef\u89c6\u5316\uff1ahttps://solidcam.com/cam-modules/25d-milling/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/part_with_vise.step",
+            "path": "C:\\Users\\User\\Desktop\\part_with_vise.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

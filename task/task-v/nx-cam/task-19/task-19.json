@@ -1,0 +1,59 @@
+{
+  "id": "v-nx-cam-task-19",
+  "snapshot": "",
+  "instruction": "Open or import the initial CAD geometry file(s) from the Desktop path(s): C:\\Users\\User\\Desktop\\rotary_flute.step. Use NX CAM Simultaneous 5X or an indexed/rotary workflow for C:\\Users\\User\\Desktop\\rotary_flute.step. Use the A axis as the rotary axis and machine four helical flutes. Tool definition: T1 is a 6 mm ball end mill for the rotary or simultaneous 5-axis flute toolpath. Use the Manufacturing setup, MCS, blank/stock, tool, operation, toolpath verification, and post-processing dialogs as needed. Post or save the required NC/G-code output file(s) using exactly these Desktop path(s): C:\\Users\\User\\Desktop\\task-19.nc.",
+  "source": "NX CAM Premium 支持 5-axis milling、rotary machining；NX Advanced 5-Axis Machining 面向最多 5 轴同时运动加工。(Siemens) https://www.siemens.com/en-us/products/nx-manufacturing/?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/rotary_flute.step",
+            "path": "C:\\Users\\User\\Desktop\\rotary_flute.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,67 @@
+{
+  "id": "v-solidcam-task-36",
+  "snapshot": "",
+  "instruction": "Read the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\revision_A.step, C:\\Users\\User\\Desktop\\revision_B.step, C:\\Users\\User\\Desktop\\tools.csv. Compare C:\\Users\\User\\Desktop\\revision_A.step and C:\\Users\\User\\Desktop\\revision_B.step for pocket-size and hole-position changes. Generate the final CAM program only for revision_B. Tool definitions: use the supplied end mill and drill to program revision_B only. Write the required output file(s) to the Desktop using exactly these absolute paths: C:\\Users\\User\\Desktop\\task-36_B.nc.",
+  "source": "SolidCAM \u4e0e CAD \u5355\u7a97\u53e3\u96c6\u6210\u3001\u652f\u6301\u5728 CAD \u73af\u5883\u5185\u5b9a\u4e49/\u8ba1\u7b97/\u9a8c\u8bc1\u64cd\u4f5c\uff1ahttps://us.solidcam.com/cad-integration/ (SolidCAM USA)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/init_file/revision_A.step",
+            "path": "C:\\Users\\User\\Desktop\\revision_A.step"
+          },
+          {
+            "local_path": "task-36/init_file/revision_B.step",
+            "path": "C:\\Users\\User\\Desktop\\revision_B.step"
+          },
+          {
+            "local_path": "task-36/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

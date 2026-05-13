@@ -1,0 +1,63 @@
+{
+  "id": "v-nx-cam-task-38",
+  "snapshot": "",
+  "instruction": "Read the initial file(s) from the Desktop path(s): C:\\Users\\User\\Desktop\\millturn_part.step, C:\\Users\\User\\Desktop\\tools.txt. Use NX CAM Mill-Turn to create a complete job for C:\\Users\\User\\Desktop\\millturn_part.step. Complete OD turning, grooving, end-face hole machining, and a side C/Y-axis milling slot. Tool definitions: use OD turning, grooving, live drill, and live end mill tools from C:\\Users\\User\\Desktop\\tools.txt. Write the required output file(s) using exactly these Desktop path(s): C:\\Users\\User\\Desktop\\task-38.nc.",
+  "source": "NX CAM for Machinery 支持 milling、drilling、turning、mill-turn 等高级加工；NX CAM 可用同步和机床仿真验证复杂机器运动。(plm.automation.siemens.com) https://www.plm.automation.siemens.com/ru_ru/Images/Siemens-PLM-NX-CAM-for-Machinery-fs_tcm802-128968.pdf?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-38/init_file/millturn_part.step",
+            "path": "C:\\Users\\User\\Desktop\\millturn_part.step"
+          },
+          {
+            "local_path": "task-38/init_file/tools.txt",
+            "path": "C:\\Users\\User\\Desktop\\tools.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-38/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

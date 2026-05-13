@@ -1,0 +1,67 @@
+{
+  "id": "v-nx-cam-task-40",
+  "snapshot": "",
+  "instruction": "Read the initial file(s) from the Desktop path(s): C:\\Users\\User\\Desktop\\final_benchmark.step, C:\\Users\\User\\Desktop\\tools.txt, C:\\Users\\User\\Desktop\\params.json. Complete the full CAM delivery for C:\\Users\\User\\Desktop\\final_benchmark.step. Configure blank, MCS, and fixtures; machine the outside profile, three pockets, sixteen through holes, two counterbores, and one spherical region; use at least five tool classes. Tool rule: use at least five tool classes covering facing, pocketing, drilling, counterboring, spherical finishing, and profiling. Write the required output file(s) using exactly this Desktop path: C:\\Users\\User\\Desktop\\task-40.nc.",
+  "source": "NX for Manufacturing 覆盖 CNC machining、advanced 3/2.5-axis milling、turning、5-axis、simulation、postprocessing；G-code 评测参考 LinuxCNC。(Siemens) https://www.siemens.com/en-us/products/nx-manufacturing/?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/init_file/final_benchmark.step",
+            "path": "C:\\Users\\User\\Desktop\\final_benchmark.step"
+          },
+          {
+            "local_path": "task-40/init_file/tools.txt",
+            "path": "C:\\Users\\User\\Desktop\\tools.txt"
+          },
+          {
+            "local_path": "task-40/init_file/params.json",
+            "path": "C:\\Users\\User\\Desktop\\params.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-40/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

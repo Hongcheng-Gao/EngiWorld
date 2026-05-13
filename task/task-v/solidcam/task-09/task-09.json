@@ -1,0 +1,59 @@
+{
+  "id": "v-solidcam-task-09",
+  "snapshot": "",
+  "instruction": "Open or import the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\cross_rest_pocket.step. Rough the C:\\Users\\User\\Desktop\\cross_rest_pocket.step pocket first with T1 using iMachining 2D, iRough, or Pocket. Then use T2 for iRest or Rest Machining to clear inside corners and narrow leftover regions. The pocket floor target is Z=8.000 mm. Tool definitions: T1 is a 12 mm end mill for iRough/Pocket clearing; T2 is a 4 mm end mill for iRest/Rest Machining. Use the SolidCAM CAM-Part, Coordinate System, Stock, Tool Table, operation, simulation/verify, and post-processing dialogs as needed, then save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-9.nc.",
+  "source": "SolidCAM iMachining 2D \u63d0\u5230 iRough\u3001iRest\u3001iFinish\u3001Multi-Tool Technologies\uff1ahttps://solidcam.com/imachining/imachining-2d/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/cross_rest_pocket.step",
+            "path": "C:\\Users\\User\\Desktop\\cross_rest_pocket.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "v-solidworks-task-08-windows",
+  "snapshot": "",
+  "instruction": "Open C:\\Users\\User\\Desktop\\gui_008_sensor_mount.step, a 60 x 40 x 20 mm sensor mount spanning X=-30 to X=30, Y=-20 to Y=20, and Z=0 to Z=20. It has a centered 30 x 20 mm top rectangular recess that is initially 2 mm deep. Deepen the recess to 5 mm so the recessed floor is at Z=15, add R3 fillets to its four vertical corners, and cut a centered through cable hole of diameter 12 mm through the recess along Z. Add 1 mm chamfers to the four bottom outside perimeter edges. Export C:\\Users\\User\\Desktop\\gui_008_sensor_mount_out.step.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Hole_Wizard_Overview.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Fillets.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/gui_008_sensor_mount.step",
+            "path": "C:\\Users\\User\\Desktop\\gui_008_sensor_mount.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

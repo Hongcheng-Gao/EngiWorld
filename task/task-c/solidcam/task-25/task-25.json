@@ -1,0 +1,63 @@
+{
+  "id": "v-solidcam-task-25",
+  "snapshot": "",
+  "instruction": "Read the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\multi_feature.step, C:\\Users\\User\\Desktop\\tool_library.csv. Use only the tools listed in C:\\Users\\User\\Desktop\\tool_library.csv to complete Face, Pocket or iMachining, Drill, and Profile operations on C:\\Users\\User\\Desktop\\multi_feature.step. Do not use any tool outside the CSV. Tool rule: use only tools listed in C:\\Users\\User\\Desktop\\tool_library.csv. Write the required output file(s) to the Desktop using exactly these absolute paths: C:\\Users\\User\\Desktop\\task-25.nc.",
+  "source": "SolidCAM Professor\uff1aiDatabase\u3001holders\u3001tools \u76f8\u5173\u6559\u7a0b\u6761\u76ee\uff1ahttps://solidcam.com/professor-video/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/multi_feature.step",
+            "path": "C:\\Users\\User\\Desktop\\multi_feature.step"
+          },
+          {
+            "local_path": "task-25/init_file/tool_library.csv",
+            "path": "C:\\Users\\User\\Desktop\\tool_library.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-25/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

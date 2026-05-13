@@ -1,0 +1,59 @@
+{
+  "id": "v-solidcam-task-16",
+  "snapshot": "",
+  "instruction": "Open or import the initial file(s) from the Desktop: C:\\Users\\User\\Desktop\\turned_shaft.step. Create a Turning CAM-Part for C:\\Users\\User\\Desktop\\turned_shaft.step. Complete OD rough turning, OD finish turning, grooving, and center drilling. Tool definitions: T1 is an OD rough turning tool, T2 is an OD finish turning tool, T3 is a grooving tool, and T4 is a center drill. Use the SolidCAM CAM-Part, Coordinate System, Stock, Tool Table, operation, simulation/verify, and post-processing dialogs as needed, then save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-16.nc.",
+  "source": "SolidCAM \u6a21\u5757\u603b\u89c8\u542b Turning\uff1ahttps://solidcam.com/cam-modules/modules-overview/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/turned_shaft.step",
+            "path": "C:\\Users\\User\\Desktop\\turned_shaft.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

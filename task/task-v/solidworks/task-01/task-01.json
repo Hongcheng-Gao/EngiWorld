@@ -1,0 +1,59 @@
+{
+  "id": "v-solidworks-task-01-windows",
+  "snapshot": "",
+  "instruction": "Open C:\\Users\\User\\Desktop\\gui_001_mounting_plate.step in SolidWorks. The input is one 120 x 80 x 10 mm mounting plate centered at the origin with thickness along Z. Add four fully through round holes on the top face at centers (45,25), (45,-25), (-45,25), and (-45,-25), each with diameter 8 mm. Add 2 mm chamfers to the eight outside perimeter edges. Keep the plate center, thickness, and scale unchanged. Save the modified single-body part as C:\\Users\\User\\Desktop\\gui_001_mounting_plate_out.step.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Hole_Wizard_Overview.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Fillets.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/gui_001_mounting_plate.step",
+            "path": "C:\\Users\\User\\Desktop\\gui_001_mounting_plate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

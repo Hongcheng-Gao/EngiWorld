@@ -1,0 +1,59 @@
+{
+  "id": "v-solidworks-task-09-windows",
+  "snapshot": "",
+  "instruction": "Open C:\\Users\\User\\Desktop\\gui_009_hinge_leaf.step, a hinge leaf with a 90 x 32 x 3 mm flat plate spanning X=-45 to X=45, Y=-16 to Y=16, and Z=0 to Z=3. Three existing hinge knuckles lie along the Y=16 long edge; they have outside diameter 8 mm, axis along X, centerline at Y=12 and Z=6.8, and X spans -45 to -20, -10 to 10, and 20 to 45. Add four countersunk mounting holes on the leaf plate at X=-33, -11, 11, and 33 with Y=0. Each hole has a 4.5 mm through diameter, 8.5 mm countersink top diameter, and 90 degree countersink angle. Also adjust the hinge pin bore through all knuckles to diameter 4.2 mm. Export C:\\Users\\User\\Desktop\\gui_009_hinge_leaf_out.step.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Hole_Wizard_Overview.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/gui_009_hinge_leaf.step",
+            "path": "C:\\Users\\User\\Desktop\\gui_009_hinge_leaf.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

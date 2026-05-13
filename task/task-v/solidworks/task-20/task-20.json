@@ -1,0 +1,59 @@
+{
+  "id": "v-solidworks-task-20-windows",
+  "snapshot": "",
+  "instruction": "Open C:\\Users\\User\\Desktop\\gui_020_two_part_alignment.step, a STEP assembly with base_block and sliding_block. The base block is 100 x 40 x 10 mm and the sliding block is 30 x 30 x 12 mm. Move the sliding_block to the center of the base_block top face so the sliding_block bottom face touches the base_block top face and their XY centers coincide. Do not change either part size. Export C:\\Users\\User\\Desktop\\gui_020_two_part_aligned_out.step as an assembly or multi-body STEP retaining two independent solids.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Assemblies.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Mates.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/hidd_interference_detection.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/gui_020_two_part_alignment.step",
+            "path": "C:\\Users\\User\\Desktop\\gui_020_two_part_alignment.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
