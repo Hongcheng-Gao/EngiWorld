@@ -1,0 +1,283 @@
+{
+  "id": "c-sowfa-task-16-ubuntu",
+  "snapshot": "",
+  "instruction": "You are given a SOWFA mesoscale-forcing template `/home/user/Desktop/mesoscale_base/`.\nRun WRF-driven boundary-layer simulation from the command line:\n\n1. Modify and create `/home/user/Desktop/mesoscale/`:\n- Configure mesoscale forcing-data path (`forcing/` directory)\n- Set boundary conditions as time-varying mapped inflow\n- Run the ABL solver for at least one full diurnal cycle\n\n2. Write a post-processing script to extract mean wind speed and temperature at reference height, and save `/home/user/Desktop/summary.txt` in format: `u_ref, t_ref`.\n\n3. Do not use GUI tools.",
+  "source": "https://github.com/NatLabRockies/SOWFA",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/Rwall",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/Rwall"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/T",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/T"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/U",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/U"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/k",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/k"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/kappat",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/kappat"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/nuSgs",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/nuSgs"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/p_rgh",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/p_rgh"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/43200.original/qwall",
+            "path": "/home/user/Desktop/mesoscale_base/43200.original/qwall"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/constant/ABLProperties",
+            "path": "/home/user/Desktop/mesoscale_base/constant/ABLProperties"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/constant/LESProperties",
+            "path": "/home/user/Desktop/mesoscale_base/constant/LESProperties"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/constant/g",
+            "path": "/home/user/Desktop/mesoscale_base/constant/g"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/constant/polyMesh/blockMeshDict",
+            "path": "/home/user/Desktop/mesoscale_base/constant/polyMesh/blockMeshDict"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/constant/transportProperties",
+            "path": "/home/user/Desktop/mesoscale_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/mesoscale_base/constant/turbulenceProperties"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/fieldTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/fieldTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/forcingTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/forcingTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/initialValues",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/initialValues"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/surface2mPotentialTemperatureTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/surface2mPotentialTemperatureTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/surface2mTemperatureTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/surface2mTemperatureTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/surfaceSkinPotentialTemperatureTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/surfaceSkinPotentialTemperatureTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/surfaceSkinTemperatureTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/surfaceSkinTemperatureTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/forcing/surfaceTemperatureFluxTable",
+            "path": "/home/user/Desktop/mesoscale_base/forcing/surfaceTemperatureFluxTable"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/runscript.preprocess",
+            "path": "/home/user/Desktop/mesoscale_base/runscript.preprocess"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/runscript.solve.1",
+            "path": "/home/user/Desktop/mesoscale_base/runscript.solve.1"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/setUp",
+            "path": "/home/user/Desktop/mesoscale_base/setUp"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.cyclic",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.cyclic"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.east",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.east"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.north",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.north"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.northeast",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.northeast"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.northwest",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.northwest"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.south",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.south"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.southeast",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.southeast"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.southwest",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.southwest"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/changeDictionaryDict.updateBCs.west",
+            "path": "/home/user/Desktop/mesoscale_base/system/changeDictionaryDict.updateBCs.west"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/controlDict",
+            "path": "/home/user/Desktop/mesoscale_base/system/controlDict"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/controlDict.1",
+            "path": "/home/user/Desktop/mesoscale_base/system/controlDict.1"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/decomposeParDict",
+            "path": "/home/user/Desktop/mesoscale_base/system/decomposeParDict"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/fvSchemes",
+            "path": "/home/user/Desktop/mesoscale_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/fvSolution",
+            "path": "/home/user/Desktop/mesoscale_base/system/fvSolution"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/refineMeshDict.local",
+            "path": "/home/user/Desktop/mesoscale_base/system/refineMeshDict.local"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/boundaryDataPre",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/boundaryDataPre"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/fieldAverages",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/fieldAverages"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData1",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData1"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData1S",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData1S"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData2",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData2"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData2S",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData2S"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData3",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData3"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData3S",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData3S"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData4",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData4"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData4S",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData4S"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData5",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData5"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/probeData5S",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/probeData5S"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/sampling/sliceDataInstantaneous",
+            "path": "/home/user/Desktop/mesoscale_base/system/sampling/sliceDataInstantaneous"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/setFieldsABLDict",
+            "path": "/home/user/Desktop/mesoscale_base/system/setFieldsABLDict"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/topoSetDict.local.1",
+            "path": "/home/user/Desktop/mesoscale_base/system/topoSetDict.local.1"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/system/topoSetDict.local.2",
+            "path": "/home/user/Desktop/mesoscale_base/system/topoSetDict.local.2"
+          },
+          {
+            "local_path": "task-16/init_file/mesoscale_base/tendencyRead.py",
+            "path": "/home/user/Desktop/mesoscale_base/tendencyRead.py"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sowfa"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

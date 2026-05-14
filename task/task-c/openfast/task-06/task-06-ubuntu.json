@@ -1,0 +1,375 @@
+{
+  "id": "c-openfast-task-06-ubuntu",
+  "snapshot": "",
+  "instruction": "You are given a semisubmersible platform template with MoorDyn: `/home/user/Desktop/moordyn_base.fst`.\nComplete the following from the command line:\n\n1. Modify the MoorDyn input file `/home/user/Desktop/moordyn.dat`:\n- Configure 3 mooring lines with reasonable anchor locations (e.g., radius 837 m, 120° spacing)\n- Set line density, axial stiffness, and unstretched length\n- Enable outputs: `FairTen1`, `FairTen2`, `FairTen3` (fairlead tensions)\n\n2. Set steady wind to 8 m/s and no waves (`CompHydro=0` or `WaveMod=0`).\n3. Run for 120 s and discard the first 60 s as transient.\n\n4. Write a post-processing script using the last 60 s:\n- Mean `FairTen1` (kN)\n- Maximum standard deviation among the three line tensions\n- Save to `/home/user/Desktop/summary.txt` in this format: `mean_fairten1_kn, max_std_kn`\n\n5. Do not use GUI tools.\n\n[Init Package Note]\n- Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` (or `C:\\\\Users\\\\User\\\\Desktop` on Windows) with relative structure preserved.\n- Continue following the original task workflow: generate/modify required files and compute outputs yourself.\n- Only initialization inputs are included; no answer/result artifacts are preloaded.\n",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/Cylinder1.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/Cylinder1.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/Cylinder2.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/Cylinder2.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/DU21_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/DU21_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/DU25_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/DU25_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/DU30_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/DU30_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/DU35_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/DU35_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/DU40_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/DU40_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/AeroData/NACA64_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/AeroData/NACA64_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/Cylinder1.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/Cylinder1.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/Cylinder1_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/Cylinder1_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/Cylinder2.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/Cylinder2.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/Cylinder2_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/Cylinder2_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU21_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU21_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU21_A17_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU21_A17_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU25_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU25_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU25_A17_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU25_A17_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU30_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU30_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU30_A17_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU30_A17_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU35_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU35_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU35_A17_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU35_A17_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU40_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU40_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/DU40_A17_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/DU40_A17_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/NACA64_A17.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/NACA64_A17.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Airfoils/NACA64_A17_coords.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/Airfoils/NACA64_A17_coords.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Barge.1",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Barge.1"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Barge.3",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Barge.3"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Barge.hst",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Barge.hst"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Barge.ss",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Barge.ss"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Spar.1",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Spar.1"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Spar.3",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Spar.3"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/Spar.hst",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/Spar.hst"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.1",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.1"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.12d",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.12d"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.12s",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.12s"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.3",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.3"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.hst",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.hst"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.ss",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.ss"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/marin_semi.ssexctn",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/marin_semi.ssexctn"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/tlpmit.1",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/tlpmit.1"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/tlpmit.3",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/tlpmit.3"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/HydroData/tlpmit.hst",
+            "path": "/home/user/Desktop/5MW_Baseline/HydroData/tlpmit.hst"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/IceDyn_Input.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/IceDyn_Input.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/IceFloe_IEC_Crushing.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/IceFloe_IEC_Crushing.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_AeroDyn_blade.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_AeroDyn_blade.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_BeamDyn.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_BeamDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_BeamDyn_Blade.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_BeamDyn_Blade.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_Blade.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_Blade.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_InflowWind_12mps.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_InflowWind_12mps.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_InflowWind_Steady13mps.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_InflowWind_Steady13mps.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_InflowWind_Steady8mps.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_InflowWind_Steady8mps.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_Monopile_IEC_Crushing.inp",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_Monopile_IEC_Crushing.inp"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_Onshore_ElastoDyn_Tower.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_Onshore_ElastoDyn_Tower.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/NRELOffshrBsline5MW_ServoDyn_StC.dat",
+            "path": "/home/user/Desktop/5MW_Baseline/NRELOffshrBsline5MW_ServoDyn_StC.dat"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/README.rst",
+            "path": "/home/user/Desktop/5MW_Baseline/README.rst"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON/CMakeLists.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON/CMakeLists.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON/DISCON.F90",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON/DISCON.F90"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON.dll",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON.dll"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON_ITI/CMakeLists.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON_ITI/CMakeLists.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON_ITI/DISCON_ITIBarge.F90",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON_ITI/DISCON_ITIBarge.F90"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON_OC3/CMakeLists.txt",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON_OC3/CMakeLists.txt"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/DISCON_OC3/DISCON_OC3Hywind.F90",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/DISCON_OC3/DISCON_OC3Hywind.F90"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/libgfortran.so.3",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/libgfortran.so.3"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/ServoData/libgfortran.so.4.0.0",
+            "path": "/home/user/Desktop/5MW_Baseline/ServoData/libgfortran.so.4.0.0"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Wind/90m_12mps_twr.bts",
+            "path": "/home/user/Desktop/5MW_Baseline/Wind/90m_12mps_twr.bts"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Wind/90m_12mps_twr.inp",
+            "path": "/home/user/Desktop/5MW_Baseline/Wind/90m_12mps_twr.inp"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_Baseline/Wind/NoShr_12.wnd",
+            "path": "/home/user/Desktop/5MW_Baseline/Wind/NoShr_12.wnd"
+          },
+          {
+            "local_path": "task-06/init_file/5MW_OC4Semi_WSt_WavesWN.fst",
+            "path": "/home/user/Desktop/5MW_OC4Semi_WSt_WavesWN.fst"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC3Hywind_AeroDyn.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC3Hywind_AeroDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn_Tower.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_ElastoDyn_Tower.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_FEAMooring.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_FEAMooring.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_HydroDyn.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_HydroDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_MAP.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_MAP.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_MoorDyn.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_MoorDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4DeepCwindSemi_ServoDyn.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4DeepCwindSemi_ServoDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/NRELOffshrBsline5MW_OC4Semi_MoorDyn.dat",
+            "path": "/home/user/Desktop/NRELOffshrBsline5MW_OC4Semi_MoorDyn.dat"
+          },
+          {
+            "local_path": "task-06/init_file/README.md",
+            "path": "/home/user/Desktop/README.md"
+          },
+          {
+            "local_path": "task-06/init_file/SeaState.dat",
+            "path": "/home/user/Desktop/SeaState.dat"
+          },
+          {
+            "local_path": "task-06/init_file/moordyn_base.fst",
+            "path": "/home/user/Desktop/moordyn_base.fst"
+          },
+          {
+            "local_path": "task-06/init_file/moordyn_oc4_base.dat",
+            "path": "/home/user/Desktop/moordyn_oc4_base.dat"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

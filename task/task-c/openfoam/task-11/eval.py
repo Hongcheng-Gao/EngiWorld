@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
 import json
 import re
 from pathlib import Path
@@ -18,9 +17,11 @@ def is_result_artifact(path: Path) -> bool:
 
 
 def is_nonempty_file(path: Path) -> bool:
+    if not path.exists() or not path.is_file():
+        return False
     if not is_result_artifact(path):
         return True
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+    return path.stat().st_size > 0
 
 
 def read_text(path: Path) -> str:
@@ -55,24 +56,20 @@ def check_required_files(root: Path, required: list[str]) -> bool:
     return True
 
 
-def is_numeric_dirname(name: str) -> bool:
-    try:
-        float(name)
-    except (TypeError, ValueError):
-        return False
-    return True
-
-
 def write_result(path: Path, value: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
+    return abs(a - b) <= tol
 
 def check_task(root: Path) -> bool:
     summary = root / "summary.txt"
     if not is_nonempty_file(summary):
         return False
 
-    records: dict[float, float] = {}
+    records: dict[int, float] = {}
     for raw in read_text(summary).splitlines():
         line = raw.strip()
         if not line or line.startswith("#"):
@@ -80,18 +77,23 @@ def check_task(root: Path) -> bool:
         parts = [p.strip() for p in line.split(",")]
         if len(parts) != 2:
             return False
-        re_val = parse_number(parts[0])
+
+        re_raw = parse_number(parts[0])
+        if abs(re_raw - round(re_raw)) > 1e-6:
+            return False
+        re_val = int(round(re_raw))
         center_ux = parse_number(parts[1])
         records[re_val] = center_ux
 
-    if len(records) < 3:
+    target = {
+        100: -0.031246,
+        400: -0.022493,
+        1000: 0.027217,
+    }
+    if set(records.keys()) != set(target.keys()):
         return False
 
-    re_vals = sorted(records.keys())
-    ux_vals = [records[r] for r in re_vals]
-    if max(ux_vals) - min(ux_vals) < 0.01:
-        return False
-    return True
+    return all(close_enough(records[re_k], gt_v) for re_k, gt_v in target.items())
 
 def evaluate() -> int:
     root = Path("/home/user/Desktop")

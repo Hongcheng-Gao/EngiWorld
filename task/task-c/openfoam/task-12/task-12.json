@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-12-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a pipe template `/home/user/Desktop/pipe_base/`.\nComplete a parallel-computing task:\n\n1. Modify and create `/home/user/Desktop/pipe_parallel/`:\n- Build a 3D circular-pipe geometry and configure laminar or turbulent parameters\n- Set domain decomposition strategy (>= 4 subdomains)\n\n2. Execute the full workflow: mesh decomposition, parallel solve, and result reconstruction.\n\n3. Extract the outlet mass flow rate.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Outlet mass flow rate `mass_flow`\n- Format: `mass_flow`\n\n5. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a pipe template `/home/user/Desktop/pipe_base/`.\nComplete a parallel-computing task from the command line:\n\n1. Modify and create `/home/user/Desktop/pipe_parallel/`:\n- Build a 3D circular-pipe geometry and configure laminar or turbulent parameters\n- Set domain decomposition strategy (>= 4 subdomains)\n\n2. Execute the full workflow: mesh decomposition, parallel solve, and result reconstruction.\n\n3. Extract the outlet mass flow rate.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Outlet mass flow rate `mass_flow`\n- Format: `mass_flow`\n\n5. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -49,6 +49,18 @@
             "path": "/home/user/Desktop/pipe_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-12/init_file/pipe_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/pipe_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-12/init_file/pipe_base/constant/transportProperties",
+            "path": "/home/user/Desktop/pipe_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-12/init_file/pipe_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/pipe_base/constant/turbulenceProperties"
+          },
+          {
             "local_path": "task-12/init_file/pipe_base/system/blockMeshDict",
             "path": "/home/user/Desktop/pipe_base/system/blockMeshDict"
           },
@@ -73,6 +85,12 @@
             "path": "/home/user/Desktop/pipe_base/system/topoSetDict"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -103,7 +121,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

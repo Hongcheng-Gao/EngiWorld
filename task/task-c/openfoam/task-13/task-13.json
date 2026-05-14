@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-13-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a cylinder crossflow template `/home/user/Desktop/cylinder_base/`.\nImplement online force-coefficient monitoring during the solve:\n\n1. Modify and create `/home/user/Desktop/cylinder_fo/`:\n- Build cylinder crossflow geometry and boundary conditions\n- Embed a `functionObject` in `controlDict` to output cylinder force coefficients in real time\n- Run to convergence or fully developed state\n\n2. Extract time-averaged lift and drag coefficients.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Time-averaged lift coefficient `avg_cl`\n- Time-averaged drag coefficient `avg_cd`\n- Format: `avg_cl, avg_cd`\n\n4. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a cylinder crossflow template `/home/user/Desktop/cylinder_base/`.\nImplement online force-coefficient monitoring during the solve from the command line:\n\n1. Modify and create `/home/user/Desktop/cylinder_fo/`:\n- Build cylinder crossflow geometry and boundary conditions\n- Embed a `functionObject` in `controlDict` to output cylinder force coefficients in real time\n- Run to convergence or fully developed state\n\n2. Extract time-averaged lift and drag coefficients.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Time-averaged lift coefficient `avg_cl`\n- Time-averaged drag coefficient `avg_cd`\n- Format: `avg_cl, avg_cd`\n\n4. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -29,6 +29,18 @@
             "path": "/home/user/Desktop/cylinder_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-13/init_file/cylinder_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/cylinder_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-13/init_file/cylinder_base/constant/transportProperties",
+            "path": "/home/user/Desktop/cylinder_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-13/init_file/cylinder_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/cylinder_base/constant/turbulenceProperties"
+          },
+          {
             "local_path": "task-13/init_file/cylinder_base/system/blockMeshDict",
             "path": "/home/user/Desktop/cylinder_base/system/blockMeshDict"
           },
@@ -45,6 +57,12 @@
             "path": "/home/user/Desktop/cylinder_base/system/fvSolution"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -75,7 +93,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

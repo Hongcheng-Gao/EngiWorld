@@ -14,7 +14,7 @@ FoamFile
 }
 // * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * * //
 
-application     pimpleDyMFoam;
+application     pimpleFoam;
 
 startFrom       startTime;
 
@@ -46,3 +46,16 @@ runTimeModifiable true;
 
 
 // ************************************************************************* //
+
+functions
+{
+  forcesGT
+  {
+    type forces;
+    libs ("libforces.so");
+    patches (cylinder);
+    rho rhoInf;
+    rhoInf 1;
+    CofR (0 0 0);
+  }
+}

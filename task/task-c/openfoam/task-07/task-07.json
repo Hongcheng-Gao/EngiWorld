@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-07-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a cylinder crossflow template `/home/user/Desktop/cylinder_base/`.\nComplete a transient vortex-shedding analysis:\n\n1. Modify and create `/home/user/Desktop/cylinder/`:\n- Complete boundary conditions on the cylinder surface\n- Set inflow conditions and properties so Reynolds number is in the vortex-shedding range\n- Configure transient solver parameters\n\n2. Run the solver.\n\n3. Monitor the lift time history on the cylinder surface and verify periodic vortex shedding.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Peak lift coefficient `cl_max`\n- Format: `cl_max`\n\n5. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a cylinder crossflow template `/home/user/Desktop/cylinder_base/`.\nComplete a transient vortex-shedding analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/cylinder/`:\n- Complete boundary conditions on the cylinder surface\n- Set inflow conditions and properties so Reynolds number is in the vortex-shedding range\n- Configure transient solver parameters\n\n2. Run the solver.\n\n3. Monitor the lift time history on the cylinder surface and verify periodic vortex shedding.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Peak lift coefficient `cl_max`\n- Format: `cl_max`\n\n5. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -29,6 +29,18 @@
             "path": "/home/user/Desktop/cylinder_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-07/init_file/cylinder_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/cylinder_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-07/init_file/cylinder_base/constant/transportProperties",
+            "path": "/home/user/Desktop/cylinder_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-07/init_file/cylinder_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/cylinder_base/constant/turbulenceProperties"
+          },
+          {
             "local_path": "task-07/init_file/cylinder_base/system/blockMeshDict",
             "path": "/home/user/Desktop/cylinder_base/system/blockMeshDict"
           },
@@ -45,6 +57,12 @@
             "path": "/home/user/Desktop/cylinder_base/system/fvSolution"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -75,7 +93,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

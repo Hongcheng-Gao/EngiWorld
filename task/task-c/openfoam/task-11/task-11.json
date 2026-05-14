@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-11-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a cavity template `/home/user/Desktop/cavity_base/`.\nComplete a parametric Reynolds-number sweep:\n\n1. Write an automation script to generate 3 cases (low/medium/high Reynolds number) from the template.\nEach case must set properties, mesh, and solver parameters independently.\n\n2. Run all cases in serial until convergence.\n\n3. Extract the geometric-center velocity component for each case.\n\n4. Summarize results in `/home/user/Desktop/summary.txt` with format:\n`Re, center_ux`\n(one case per line)\n\n5. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a cavity template `/home/user/Desktop/cavity_base/`.\nComplete a parametric Reynolds-number sweep from the command line:\n\n1. Write an automation script to generate 3 cases (low/medium/high Reynolds number) from the template.\nEach case must set properties, mesh, and solver parameters independently.\n\n2. Run all cases in serial until convergence.\n\n3. Extract the geometric-center velocity component for each case.\n\n4. Summarize results in `/home/user/Desktop/summary.txt` with format:\n`Re, center_ux`\n(one case per line)\n\n5. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -25,6 +25,14 @@
             "path": "/home/user/Desktop/cavity_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-11/init_file/cavity_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/cavity_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-11/init_file/cavity_base/constant/transportProperties",
+            "path": "/home/user/Desktop/cavity_base/constant/transportProperties"
+          },
+          {
             "local_path": "task-11/init_file/cavity_base/system/blockMeshDict",
             "path": "/home/user/Desktop/cavity_base/system/blockMeshDict"
           },
@@ -41,6 +49,12 @@
             "path": "/home/user/Desktop/cavity_base/system/fvSolution"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -71,7 +85,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

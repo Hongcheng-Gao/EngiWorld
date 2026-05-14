@@ -1,0 +1,243 @@
+{
+  "id": "c-sowfa-task-12-ubuntu",
+  "snapshot": "",
+  "instruction": "You are given a SOWFA UAE Phase VI wind-tunnel template `/home/user/Desktop/uae_phasevi_base/`.\nRun the NREL UAE Phase VI turbine case and extract aerodynamic metrics from the command line:\n\n1. Modify and create `/home/user/Desktop/uae_alm/`:\n- Confirm UAE Phase VI turbine parameters (blade length, airfoil tables, hub height)\n- Set wind-tunnel-like uniform inflow conditions\n- Run the solver until aeroelastic behavior is stable\n\n2. Write a post-processing script to extract time-averaged power and thrust, and save `/home/user/Desktop/summary.txt` in format: `power_kw, thrust_n`.\n\n3. Do not use GUI tools.",
+  "source": "https://github.com/NatLabRockies/SOWFA",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/0.original/U",
+            "path": "/home/user/Desktop/uae_phasevi_base/0.original/U"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/0.original/k",
+            "path": "/home/user/Desktop/uae_phasevi_base/0.original/k"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/0.original/nuSgs",
+            "path": "/home/user/Desktop/uae_phasevi_base/0.original/nuSgs"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/0.original/p",
+            "path": "/home/user/Desktop/uae_phasevi_base/0.original/p"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/LESProperties",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/LESProperties"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_129",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_129"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_185",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_185"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_242",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_242"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_298",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_298"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_354",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_354"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_410",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_410"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_600",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_600"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_800",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_800"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/Mod_S809_Outboard",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/Mod_S809_Outboard"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/cylinder",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/cylinder"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/airfoilProperties/cylinder_tower",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/airfoilProperties/cylinder_tower"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/polyMesh/blockMeshDict",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/polyMesh/blockMeshDict"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/transportProperties",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/turbineArrayProperties",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/turbineArrayProperties"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/turbineProperties/NREL_Phase_VI_Ames",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/turbineProperties/NREL_Phase_VI_Ames"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/uae_phasevi_base/constant/turbulenceProperties"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/runscript.preprocess",
+            "path": "/home/user/Desktop/uae_phasevi_base/runscript.preprocess"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/runscript.solve.1",
+            "path": "/home/user/Desktop/uae_phasevi_base/runscript.solve.1"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/setUp",
+            "path": "/home/user/Desktop/uae_phasevi_base/setUp"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.cyclic",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.cyclic"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.east",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.east"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.north",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.north"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.northeast",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.northeast"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.northwest",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.northwest"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.south",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.south"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.southeast",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.southeast"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.southwest",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.southwest"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/changeDictionaryDict.updateBCs.west",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/changeDictionaryDict.updateBCs.west"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/controlDict",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/controlDict"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/controlDict.1",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/controlDict.1"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/controlDict.foam",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/controlDict.foam"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/decomposeParDict",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/decomposeParDict"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/fvSchemes",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/fvSchemes"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/fvSolution",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/fvSolution"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/refineMeshDict.local",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/refineMeshDict.local"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/setFieldsABLDict",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/setFieldsABLDict"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/topoSetDict.local.1",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/topoSetDict.local.1"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/topoSetDict.local.2",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/topoSetDict.local.2"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/topoSetDict.local.3",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/topoSetDict.local.3"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/topoSetDict.local.4",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/topoSetDict.local.4"
+          },
+          {
+            "local_path": "task-12/init_file/uae_phasevi_base/system/topoSetDict.local.5",
+            "path": "/home/user/Desktop/uae_phasevi_base/system/topoSetDict.local.5"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sowfa"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

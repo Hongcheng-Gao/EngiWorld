@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-19-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a porous-medium template `/home/user/Desktop/porous_base/`.\nComplete porous-zone flow analysis:\n\n1. Modify and create `/home/user/Desktop/porous/`:\n- Build packed-bed geometry and define porous region\n- Set porous resistance coefficients and inflow conditions\n- Run to convergence\n\n2. Extract pressure drop between inlet and outlet.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Inlet-outlet pressure drop `delta_p`\n- Format: `delta_p`\n\n4. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a porous-medium template `/home/user/Desktop/porous_base/`.\nComplete porous-zone flow analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/porous/`:\n- Build packed-bed geometry and define porous region\n- Set porous resistance coefficients and inflow conditions\n- Run to convergence\n\n2. Extract pressure drop between inlet and outlet.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Inlet-outlet pressure drop `delta_p`\n- Format: `delta_p`\n\n4. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -53,6 +53,18 @@
             "path": "/home/user/Desktop/porous_base/constant/porosityProperties"
           },
           {
+            "local_path": "task-19/init_file/porous_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/porous_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-19/init_file/porous_base/constant/transportProperties",
+            "path": "/home/user/Desktop/porous_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-19/init_file/porous_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/porous_base/constant/turbulenceProperties"
+          },
+          {
             "local_path": "task-19/init_file/porous_base/system/blockMeshDict",
             "path": "/home/user/Desktop/porous_base/system/blockMeshDict"
           },
@@ -77,6 +89,12 @@
             "path": "/home/user/Desktop/porous_base/system/topoSetDict"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -107,7 +125,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

@@ -75,9 +75,9 @@ ABS_TOL_COORD = 1.0e-8
 
 def output_result(value):
     if value:
-        sys.stdout.write('true\n')
+        sys.stdout.write('True\n')
     else:
-        sys.stdout.write('false\n')
+        sys.stdout.write('False\n')
     sys.stdout.flush()
 
 def close_enough(obs, exp, rel_tol=REL_TOL, abs_tol=ABS_TOL_SMALL):

@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-10-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a buoyancy-driven template `/home/user/Desktop/buoyant_base/`.\nComplete a natural-convection cavity analysis:\n\n1. Modify and create `/home/user/Desktop/buoyant/`:\n- Build a rectangular cavity geometry\n- Set a wall temperature difference on two sides; configure buoyancy model and properties\n- Run to quasi-steady state\n\n2. Extract the temperature at the geometric center.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Geometric-center temperature `center_temp`\n- Format: `center_temp`\n\n4. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a buoyancy-driven template `/home/user/Desktop/buoyant_base/`.\nComplete a natural-convection cavity analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/buoyant/`:\n- Build a rectangular cavity geometry\n- Set a wall temperature difference on two sides; configure buoyancy model and properties\n- Run to quasi-steady state\n\n2. Extract the temperature at the geometric center.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Geometric-center temperature `center_temp`\n- Format: `center_temp`\n\n4. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -41,6 +41,18 @@
             "path": "/home/user/Desktop/buoyant_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-10/init_file/buoyant_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/buoyant_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/constant/transportProperties",
+            "path": "/home/user/Desktop/buoyant_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-10/init_file/buoyant_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/buoyant_base/constant/turbulenceProperties"
+          },
+          {
             "local_path": "task-10/init_file/buoyant_base/system/blockMeshDict",
             "path": "/home/user/Desktop/buoyant_base/system/blockMeshDict"
           },
@@ -57,6 +69,12 @@
             "path": "/home/user/Desktop/buoyant_base/system/fvSolution"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -87,7 +105,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

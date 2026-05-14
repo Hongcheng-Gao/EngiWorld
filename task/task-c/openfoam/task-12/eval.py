@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
 import json
 import re
 from pathlib import Path
@@ -18,9 +17,11 @@ def is_result_artifact(path: Path) -> bool:
 
 
 def is_nonempty_file(path: Path) -> bool:
+    if not path.exists() or not path.is_file():
+        return False
     if not is_result_artifact(path):
         return True
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+    return path.stat().st_size > 0
 
 
 def read_text(path: Path) -> str:
@@ -55,17 +56,13 @@ def check_required_files(root: Path, required: list[str]) -> bool:
     return True
 
 
-def is_numeric_dirname(name: str) -> bool:
-    try:
-        float(name)
-    except (TypeError, ValueError):
-        return False
-    return True
-
-
 def write_result(path: Path, value: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
+    return abs(a - b) <= tol
 
 def check_task(root: Path) -> bool:
     required = [
@@ -78,8 +75,9 @@ def check_task(root: Path) -> bool:
     if not check_required_files(root, required):
         return False
 
-    (mass_flow,) = parse_single_line_csv_numbers(root / "summary.txt", 1)
-    return mass_flow > 0.0
+    values = parse_single_line_csv_numbers(root / "summary.txt", 1)
+    target = [0.192532]
+    return all(close_enough(v, t) for v, t in zip(values, target))
 
 def evaluate() -> int:
     root = Path("/home/user/Desktop")

@@ -1,0 +1,59 @@
+{
+  "id": "c-openfast-task-02-ubuntu",
+  "snapshot": "",
+  "instruction": "You are given the TurbSim input template `/home/user/Desktop/turbsim_base.inp`.\nComplete the following from the command line:\n\n1. Modify and generate `/home/user/Desktop/turbsim.inp`:\n- Set IEC turbulence class B (`IECturbc=B`)\n- Set reference wind speed to 8 m/s and `RefHt=90 m`\n- Run TurbSim to generate `/home/user/Desktop/wind_8ms.bts`\n\n2. Create the OpenFAST main file `/home/user/Desktop/case_turb.fst`:\n- In InflowWind, use `WindType=3` (TurbSim binary), and set `Filename` to `wind_8ms.bts`\n- Set simulation time to 60 s\n\n3. Execute `turbsim turbsim.inp` and `openfast case_turb`.\n\n4. Write a post-processing script to parse `case_turb.out`:\n- Extract the `GenPwr` time series and compute mean and standard deviation\n- Save to `/home/user/Desktop/summary.txt` in this format: `mean_pwr_kw, std_pwr_kw`\n\n5. Do not use GUI tools.\n\n[Init Package Note]\n- Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` (or `C:\\\\Users\\\\User\\\\Desktop` on Windows) with relative structure preserved.\n- Continue following the original task workflow: generate/modify required files and compute outputs yourself.\n- Only initialization inputs are included; no answer/result artifacts are preloaded.\n",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/turbsim_base.inp",
+            "path": "/home/user/Desktop/turbsim_base.inp"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -24,16 +24,8 @@ boundaryField
 
     inlet
     {
-        type            codedFixedValue;
-        name            swirl;
-        code
-        #{
-            const vector axis(1, 0, 0);
-            vectorField v(2*this->patch().Cf() ^ axis);
-            v.replace(vector::X, 1);
-            operator==(v);
-        #};
-        value           $internalField;
+        type            fixedValue;
+        value           uniform (1 0 0);
     }
     outlet
     {

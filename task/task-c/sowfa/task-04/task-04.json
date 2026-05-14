@@ -1,0 +1,447 @@
+{
+  "id": "c-sowfa-task-04-ubuntu",
+  "snapshot": "",
+  "instruction": "You are given a SOWFA ABL template `/home/user/Desktop/heatflux_base/` containing two skeleton cases: `stable/` and `unstable/`.\nCompare different thermal stratification conditions from the command line:\n\n1. Modify and create `/home/user/Desktop/unstable/`:\n- Configure surface heating to produce unstable stratification\n- Run the ABL solver\n\n2. Modify and create `/home/user/Desktop/stable/`:\n- Configure surface cooling to produce stable stratification\n- Use the same mesh and initial conditions, then run the ABL solver\n\n3. Write a post-processing script to extract near-surface temperature for both cases, and summarize in `/home/user/Desktop/summary.txt` with format: `unstable_t, stable_t`.\n\n4. Do not use GUI tools.",
+  "source": "https://github.com/NatLabRockies/SOWFA",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/Rwall",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/Rwall"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/T",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/T"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/U",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/U"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/k",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/k"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/kappat",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/kappat"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/nuSgs",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/nuSgs"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/p_rgh",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/p_rgh"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/0.original/qwall",
+            "path": "/home/user/Desktop/heatflux_base/stable/0.original/qwall"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/ABLProperties",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/ABLProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/LESProperties",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/LESProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/forcingTable",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/forcingTable"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/g",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/g"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/polyMesh/blockMeshDict",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/polyMesh/blockMeshDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/transportProperties",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/transportProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/heatflux_base/stable/constant/turbulenceProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/runscript.preprocess",
+            "path": "/home/user/Desktop/heatflux_base/stable/runscript.preprocess"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/runscript.solve.1",
+            "path": "/home/user/Desktop/heatflux_base/stable/runscript.solve.1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/setUp",
+            "path": "/home/user/Desktop/heatflux_base/stable/setUp"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.cyclic",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.cyclic"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.east",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.east"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.north",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.north"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.northeast",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.northeast"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.northwest",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.northwest"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.south",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.south"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.southeast",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.southeast"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.southwest",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.southwest"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/changeDictionaryDict.updateBCs.west",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/changeDictionaryDict.updateBCs.west"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/controlDict",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/controlDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/controlDict.1",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/controlDict.1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/decomposeParDict",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/decomposeParDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/fvSchemes",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/fvSchemes"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/fvSolution",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/fvSolution"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/refineMeshDict.local",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/refineMeshDict.local"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/boundaryDataPre",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/boundaryDataPre"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/fieldAverages",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/fieldAverages"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData1",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData1S",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData1S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData2",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData2"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData2S",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData2S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData3",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData3"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData3S",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData3S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData4",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData4"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData4S",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData4S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData5",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData5"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/probeData5S",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/probeData5S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/sampling/sliceDataInstantaneous",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/sampling/sliceDataInstantaneous"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/setFieldsABLDict",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/setFieldsABLDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/topoSetDict.local.1",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/topoSetDict.local.1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/stable/system/topoSetDict.local.2",
+            "path": "/home/user/Desktop/heatflux_base/stable/system/topoSetDict.local.2"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/Rwall",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/Rwall"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/T",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/T"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/U",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/U"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/k",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/k"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/kappat",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/kappat"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/nuSgs",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/nuSgs"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/p_rgh",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/p_rgh"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/0.original/qwall",
+            "path": "/home/user/Desktop/heatflux_base/unstable/0.original/qwall"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/ABLProperties",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/ABLProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/LESProperties",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/LESProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/forcingTable",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/forcingTable"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/g",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/g"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/polyMesh/blockMeshDict",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/polyMesh/blockMeshDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/transportProperties",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/transportProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/heatflux_base/unstable/constant/turbulenceProperties"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/runscript.preprocess",
+            "path": "/home/user/Desktop/heatflux_base/unstable/runscript.preprocess"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/runscript.solve.1",
+            "path": "/home/user/Desktop/heatflux_base/unstable/runscript.solve.1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/setUp",
+            "path": "/home/user/Desktop/heatflux_base/unstable/setUp"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.cyclic",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.cyclic"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.east",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.east"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.north",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.north"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.northeast",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.northeast"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.northwest",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.northwest"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.south",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.south"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.southeast",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.southeast"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.southwest",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.southwest"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.west",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/changeDictionaryDict.updateBCs.west"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/controlDict",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/controlDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/controlDict.1",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/controlDict.1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/decomposeParDict",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/decomposeParDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/fvSchemes",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/fvSchemes"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/fvSolution",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/fvSolution"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/refineMeshDict.local",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/refineMeshDict.local"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/boundaryDataPre",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/boundaryDataPre"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/fieldAverages",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/fieldAverages"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData1",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData1S",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData1S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData2",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData2"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData2S",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData2S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData3",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData3"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData3S",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData3S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData4",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData4"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData4S",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData4S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData5",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData5"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/probeData5S",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/probeData5S"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/sampling/sliceDataInstantaneous",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/sampling/sliceDataInstantaneous"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/setFieldsABLDict",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/setFieldsABLDict"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/topoSetDict.local.1",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/topoSetDict.local.1"
+          },
+          {
+            "local_path": "task-04/init_file/heatflux_base/unstable/system/topoSetDict.local.2",
+            "path": "/home/user/Desktop/heatflux_base/unstable/system/topoSetDict.local.2"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sowfa"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

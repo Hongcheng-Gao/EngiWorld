@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import argparse
 import json
 import re
 from pathlib import Path
@@ -18,9 +17,11 @@ def is_result_artifact(path: Path) -> bool:
 
 
 def is_nonempty_file(path: Path) -> bool:
+    if not path.exists() or not path.is_file():
+        return False
     if not is_result_artifact(path):
         return True
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+    return path.stat().st_size > 0
 
 
 def read_text(path: Path) -> str:
@@ -55,25 +56,28 @@ def check_required_files(root: Path, required: list[str]) -> bool:
     return True
 
 
-def is_numeric_dirname(name: str) -> bool:
-    try:
-        float(name)
-    except (TypeError, ValueError):
-        return False
-    return True
-
-
 def write_result(path: Path, value: int) -> None:
     path.parent.mkdir(parents=True, exist_ok=True)
     path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
+
+
+def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
+    return abs(a - b) <= tol
 
 def check_task(root: Path) -> bool:
     diagnosis = root / "diagnosis.txt"
     if not is_nonempty_file(diagnosis):
         return False
-    if len(read_text(diagnosis).strip()) < 100:
-        return False
-    return True
+
+    text = read_text(diagnosis)
+    low = text.lower()
+    required_phrases = [
+        "root-cause analysis",
+        "fix actions",
+        "blockmesh completed successfully",
+        "solver ran without fatal",
+    ]
+    return all(p in low for p in required_phrases)
 
 def evaluate() -> int:
     root = Path("/home/user/Desktop")

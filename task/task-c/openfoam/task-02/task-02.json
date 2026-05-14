@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-02-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given an incomplete cavity template `/home/user/Desktop/cavity_base/`.\nComplete a lid-driven cavity analysis:\n\n1. Modify and create `/home/user/Desktop/cavity/`:\n- Build a square-cavity geometry and set mesh density and properties appropriate for `Re ≈ 1000`\n- Set lid-driven boundary conditions; all other walls are no-slip\n- Configure transient solver parameters until the flow stabilizes\n\n2. Run the solver to convergence.\n\n3. Extract the velocity component at the geometric center and verify the main vortex rotation direction.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Geometric-center `Ux`\n- Format: `center_ux`\n\n5. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given an incomplete cavity template `/home/user/Desktop/cavity_base/`.\nComplete a lid-driven cavity analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/cavity/`:\n- Build a square-cavity geometry and set mesh density and properties appropriate for `Re ≈ 1000`\n- Set lid-driven boundary conditions; all other walls are no-slip\n- Configure transient solver parameters until the flow stabilizes\n\n2. Run the solver to convergence.\n\n3. Extract the velocity component at the geometric center and verify the main vortex rotation direction.\n\n4. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Geometric-center `Ux`\n- Format: `center_ux`\n\n5. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -25,6 +25,14 @@
             "path": "/home/user/Desktop/cavity_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-02/init_file/cavity_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/cavity_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-02/init_file/cavity_base/constant/transportProperties",
+            "path": "/home/user/Desktop/cavity_base/constant/transportProperties"
+          },
+          {
             "local_path": "task-02/init_file/cavity_base/system/blockMeshDict",
             "path": "/home/user/Desktop/cavity_base/system/blockMeshDict"
           },
@@ -41,6 +49,12 @@
             "path": "/home/user/Desktop/cavity_base/system/fvSolution"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -71,7 +85,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },

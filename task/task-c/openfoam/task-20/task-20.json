@@ -1,7 +1,7 @@
 {
   "id": "c-openfoam-task-20-ubuntu",
-  "snapshot": "OpenFOAM9",
-  "instruction": "You are given a dynamic-mesh template `/home/user/Desktop/dynamic_base/`.\nComplete rigid-body-motion dynamic-mesh analysis:\n\n1. Modify and create `/home/user/Desktop/dynamic/`:\n- Build flow-field geometry with an internal body\n- Configure rigid-body motion law (oscillation or rotation)\n- Set dynamic-mesh solver and boundary conditions\n- Run to the specified time\n\n2. Extract body-surface forces.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Final-time surface drag `final_fx`\n- Format: `final_fx`\n\n4. Do not use GUI tools.",
+  "snapshot": "",
+  "instruction": "You are given a dynamic-mesh template `/home/user/Desktop/dynamic_base/`.\nComplete rigid-body-motion dynamic-mesh analysis from the command line:\n\n1. Modify and create `/home/user/Desktop/dynamic/`:\n- Build flow-field geometry with an internal body\n- Configure rigid-body motion law (oscillation or rotation)\n- Set dynamic-mesh solver and boundary conditions\n- Run to the specified time\n\n2. Extract body-surface forces.\n\n3. Write a post-processing script to output `/home/user/Desktop/summary.txt`:\n- Final-time surface drag `final_fx`\n- Format: `final_fx`\n\n4. Do not use GUI tools.",
   "source": "https://github.com/openfoam/openfoam-dev",
   "config": [
     {
@@ -33,6 +33,38 @@
             "path": "/home/user/Desktop/dynamic_base/constant/physicalProperties"
           },
           {
+            "local_path": "task-20/init_file/dynamic_base/constant/polyMesh/boundary",
+            "path": "/home/user/Desktop/dynamic_base/constant/polyMesh/boundary"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/polyMesh/faces",
+            "path": "/home/user/Desktop/dynamic_base/constant/polyMesh/faces"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/polyMesh/neighbour",
+            "path": "/home/user/Desktop/dynamic_base/constant/polyMesh/neighbour"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/polyMesh/owner",
+            "path": "/home/user/Desktop/dynamic_base/constant/polyMesh/owner"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/polyMesh/points",
+            "path": "/home/user/Desktop/dynamic_base/constant/polyMesh/points"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/thermophysicalProperties",
+            "path": "/home/user/Desktop/dynamic_base/constant/thermophysicalProperties"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/transportProperties",
+            "path": "/home/user/Desktop/dynamic_base/constant/transportProperties"
+          },
+          {
+            "local_path": "task-20/init_file/dynamic_base/constant/turbulenceProperties",
+            "path": "/home/user/Desktop/dynamic_base/constant/turbulenceProperties"
+          },
+          {
             "local_path": "task-20/init_file/dynamic_base/system/blockMeshDict",
             "path": "/home/user/Desktop/dynamic_base/system/blockMeshDict"
           },
@@ -49,6 +81,12 @@
             "path": "/home/user/Desktop/dynamic_base/system/fvSolution"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
       }
     }
   ],
@@ -79,7 +117,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "True\\n"
       }
     }
   },
