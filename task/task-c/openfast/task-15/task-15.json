@@ -1,0 +1,54 @@
+{
+  "id": "c-openfast-task-15",
+  "snapshot": "",
+  "instruction": "Build a minimal runnable OpenFAST model from scratch using only the command line:\n\n1. Create main file `/home/user/Desktop/minimal.fst`:\n- Call ElastoDyn, AeroDyn v15, InflowWind, and ServoDyn\n- Use NREL 5MW parameters (or a simplified rigid turbine)\n- Time step `0.0125 s`, total duration `30 s`\n\n2. Create module input files:\n- `/home/user/Desktop/minimal_elasto.dat`: rigid tower, 3 blades, initial rotor speed 9 rpm\n- `/home/user/Desktop/minimal_inflow.dat`: steady wind 8 m/s\n- `/home/user/Desktop/minimal_aero.dat`: BEMT, no tower shadow, no yaw misalignment\n- `/home/user/Desktop/minimal_servo.dat`: simple pitch control or fixed speed\n\n3. Run: `openfast minimal`\n\n4. Write a post-processing script to extract `GenPwr` from `minimal.out`, and save to `/home/user/Desktop/summary.txt` in this format:\n`mean_pwr_kw, max_rotor_thrust_kn`\n(use `RotThrust` or `RtAeroFxh`)\n\n5. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
