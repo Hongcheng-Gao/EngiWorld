@@ -1,5 +1,5 @@
 {
-  "id": "v-blender-task-24-windows",
+  "id": "v-blender-task-24-ubuntu",
   "snapshot": "blender-5.1",
   "instruction": "Color Ramp Banding Driven by Object Info > Location.z\n\n`scene.blend` contains a vertical stack of 5 cubes `Cube_00`, `Cube_01`, `Cube_02`, `Cube_03`, `Cube_04` at world Z positions 0, 1, 2, 3, 4 (spacing 1 BU). All 5 cubes share a single material `BandMat`, which is currently a plain grey Principled BSDF (no banding). A camera at (8, -8, 3) looks at the stack, and an area light illuminates the scene. The render engine is Cycles CPU (samples=32, seed=0, 256x256, denoiser on).\n\nmodify `BandMat` so its shader graph uses a `ShaderNodeObjectInfo` node to read each object's Z location and drive a `ShaderNodeValToRGB` (Color Ramp). Each cube, sharing the SAME material datablock, should render in a distinct color determined by its own world Z position.\n\nConcretely:\n- Use `ShaderNodeObjectInfo` to read the per-object Location vector.\n- Use `ShaderNodeSeparateXYZ` (or any equivalent) to pull out the Z component.\n- Use Math nodes (e.g. SUBTRACT and\\or DIVIDE) to remap Z in [0, 4] -> ramp input in [0, 1]. The simplest mapping is a single DIVIDE by 4.\n- Feed that remapped value into a `ShaderNodeValToRGB` (Color Ramp) with EXACTLY 5 stops at positions {0.0, 0.25, 0.5, 0.75, 1.0} (tolerance +\\-0.02) and colors:\n- position 0.00 -> RED (1, 0, 0)\n- position 0.25 -> ORANGE (1, 0.5, 0)\n- position 0.50 -> YELLOW (1, 1, 0)\n- position 0.75 -> GREEN (0, 1, 0)\n- position 1.00 -> BLUE (0, 0, 1)\n- Set the Color Ramp's interpolation mode to `CONSTANT` so each Z-band is a distinct flat color rather than a gradient.\n- Wire the ramp's Color output into the Principled BSDF's Base Color, and the BSDF into Material Output's Surface.\n\nBecause all 5 cubes share the SAME material datablock, their individual colors come from Object Info's per-object Location output, not from distinct materials.\n\nSave the result to `answer.blend`.\n\nRequirements:\n1. `answer.blend` opens as a valid Blender file.\n2. 5 mesh objects named `Cube_00`... `Cube_04` exist, each at the expected world Z (0, 1, 2, 3, 4 respectively).\n3. Material `BandMat` exists and uses nodes.\n4. `BandMat`'s node tree contains both a `ShaderNodeObjectInfo` and a `ShaderNodeValToRGB`.\n5. The Color Ramp has exactly 5 stops at positions {0.0, 0.25, 0.5, 0.75, 1.0} within tolerance 0.02.\n6. The Color Ramp's interpolation mode is `CONSTANT`.\n7. When rendered with a deterministic Cycles CPU configuration (seed=0, samples=32, 256x256, denoiser on), each cube projects to a pixel ROI in the image whose dominant color matches the expected band:\n- Cube at Z=0 -> RED (mean R > G, R > B, R > 0.5)\n- Cube at Z=1 -> ORANGE (R high, G medium, B low)\n- Cube at Z=2 -> YELLOW (R and G both high, B low)\n- Cube at Z=3 -> GREEN (G > R, G > B)\n- Cube at Z=4 -> BLUE (B > R, B > G)",
   "source": "human_craft",
@@ -10,7 +10,7 @@
         "files": [
           {
             "local_path": "task-24/init_file/scene.blend",
-            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+            "path": "/home/user/Desktop/scene.blend"
           }
         ]
       }
@@ -19,8 +19,8 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
-          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          "blender",
+          "/home/user/Desktop/scene.blend"
         ]
       }
     }
@@ -37,7 +37,7 @@
           "files": [
             {
               "local_path": "task-24/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+              "path": "/home/user/Desktop/eval.py"
             }
           ]
         }
@@ -46,7 +46,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
