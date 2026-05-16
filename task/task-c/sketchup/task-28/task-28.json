@@ -1,0 +1,41 @@
+{
+  "id": "c-sketchup-task-28-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Product Presentation Board\n\nUsing SketchUp's GUI, build a simple chair product and produce a 5-scene presentation board: a hero 3/4 view, a front orthographic view, a side orthographic view, an exploded view (parts pulled apart along the chair's local +Z axis), and a dimensioned view showing the chair's major dimensions.\n\nThere is no initial file - model the chair from scratch.\n\nChair specification (metres; world origin at centre of chair footprint, floor at Z = 0):\n- **Seat**: rectangular slab 0.50 x 0.50 x 0.05 m. Top face at Z = 0.45 m (bottom at Z = 0.40 m). Centred on X/Y.\n- **Backrest**: thin board 0.50 x 0.04 x 0.55 m, placed along the rear edge (-Y side). Bottom at Z = 0.45 m.\n- **4 Legs**: 0.05 x 0.05 x 0.45 m cuboid prisms at the 4 corners of the seat footprint, rising from Z = 0 to Z = 0.45 m.\n- **2 Armrests**: horizontal pads 0.05 x 0.50 x 0.03 m on each side (+X and -X), top at Z = 0.68 m (0.20 m above the seat top).\n\nTotal distinct rigid parts in the assembly: **at least 6** (seat, backrest, 4 legs; armrests count as 2 more = 8).\n\nDeliverables (produce all):\n\n1. **`C:\\Users\\Administrator\\Desktop\\output.dae`** - the assembled chair. Every part is a separate scene node.\n2. **`C:\\Users\\Administrator\\Desktop\\output_exploded.dae`** - an exploded version of the same chair. Each part's local frame is translated **at least 0.30 m along +Z** so the parts visibly pull apart. Different parts should have different explosion offsets so the parts don't overlap: e.g. legs stay at +0.3 m, seat at +0.8 m, armrests at +1.3 m, backrest at +1.8 m. The total Z extent of the exploded assembly must be **at least 1 m greater** than the assembled chair.\n3. **`C:\\Users\\Administrator\\Desktop\\scenes.json`** - a JSON file describing the 5 scenes:\n\n{\n\"scenes\": [\n{\"name\": \"S_Main\", \"kind\": \"hero_3_4\", \"position\": [x, y, z], \"look_at\": [x, y, z], \"up\": [0, 0, 1], \"fov_deg\": 45.0},\n{\"name\": \"S_Front\", \"kind\": \"ortho_front\",...},\n{\"name\": \"S_Side\", \"kind\": \"ortho_side\",...},\n{\"name\": \"S_Exploded\", \"kind\": \"exploded\",...},\n{\"name\": \"S_Dims\", \"kind\": \"dimensioned\",...}\n]\n}\n\nScene names must be exactly `S_Main`, `S_Front`, `S_Side`, `S_Exploded`, `S_Dims`.\n\n4. **5 scene-render PNGs** under `C:\\Users\\Administrator\\Desktop\\scenes/`:\n`C:\\Users\\Administrator\\Desktop\\scenes/S_Main.png`, `C:\\Users\\Administrator\\Desktop\\scenes/S_Front.png`, `C:\\Users\\Administrator\\Desktop\\scenes/S_Side.png`, `C:\\Users\\Administrator\\Desktop\\scenes/S_Exploded.png`, `C:\\Users\\Administrator\\Desktop\\scenes/S_Dims.png`.\nEach is a simple offline perspective (or orthographic) projection rendered from the corresponding camera - a black silhouette on a white background is acceptable, but every frame must visibly differ from every other frame (different camera -> different silhouette; the exploded view should render the exploded DAE; the dims view can draw dimension lines).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` and `C:\\Users\\Administrator\\Desktop\\output_exploded.dae` both parse as valid COLLADA and contain at least 6 scene nodes each (seat + backrest + 4 legs + 2 armrests = 8 parts).\n2. The exploded DAE has Z extent >= assembled Z extent + 1.0 m (parts visibly pulled apart).\n3. `C:\\Users\\Administrator\\Desktop\\scenes.json` parses and contains exactly 5 scenes with names `S_Main`, `S_Front`, `S_Side`, `S_Exploded`, `S_Dims`.\n4. All 5 PNGs exist under `C:\\Users\\Administrator\\Desktop\\scenes/`, each >= 64x64 px.\n5. The 5 PNGs are pairwise distinct - every scene's silhouette centroid or fill-pixel count differs from every other scene's by a clear margin.",
+  "source": "MasterSketchUp presentation scenes; Tadros Workshop on presentation output; SU-Help Scenes Manager; COLLADA 1.5 multi-scene",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-28/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

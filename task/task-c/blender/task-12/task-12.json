@@ -1,0 +1,54 @@
+{
+  "id": "blender-12",
+  "instruction": "Three-Point Studio Lighting\n\n`init_file/character.blend` contains a simple humanoid stand-in at the origin built from primitives (cube torso, UV-sphere head, cylinder arms and legs) on a dark ground plane. A Camera is set at (0, -3, 1.0) aimed at (0, 0, 1.0) and the render settings are Cycles, 512x512, 64 samples, denoise ON, view_transform='Standard'. Only a single weak ambient AREA light exists in the scene -- the scene is intentionally too dim to pass the checks. Your job is to add a proper three-point lighting rig and render a 512x512 RGBA beauty pass.\n\n## Required actions\n\n1. Open `init_file/character.blend`.\n2. Remove any pre-existing weak/ambient light.\n3. Add three AREA lights following the classic three-point convention:\n\n     Key  -- the main, brightest light. Place on the camera-right side at a strong angle so the right side of the subject is clearly brighter than the left. Suggested: location ~(5, 0, 1.5), energy ~1500W, size ~1.5, color (1, 1, 1), shape 'SQUARE'. Point the light at the subject's torso center (world (0, 0, 1.0)).\n\n     Fill -- opposite side of the key, much dimmer (~5-30 W, at least 3x dimmer than key). Suggested: location ~(-5, 0, 1.5), energy ~5W, size ~2.0, color slightly warm (1, 0.95, 0.85), shape 'SQUARE'. Also aimed at the torso center.\n\n     Rim  -- behind and above the subject so it grazes the top of the head and shoulders back toward the camera. Suggested: location ~(0, 1.5, 3.5), energy ~500W, size ~0.8, color slightly cool (0.9, 0.95, 1.0), shape 'SQUARE'. Aimed at the torso center.\n\n   For each light, set `light.data.shape='SQUARE'`, `light.data.size=<value>`, `light.data.energy=<value>`, `light.data.color=<rgb>`. Orient each light toward the subject using a track quaternion, e.g.:\n```python\nfrom mathutils import Vector\nfor light_obj, tgt in ((key, Vector((0,0,1.0))), (fill, Vector((0,0,1.0))), (rim, Vector((0,0,1.0)))):\n    direction = tgt - Vector(light_obj.location)\n    light_obj.rotation_mode = 'QUATERNION'\n    light_obj.rotation_quaternion = direction.to_track_quat('-Z', 'Y')\n```\n4. Name the three lights (and/or their data-blocks) `Key`, `Fill`, `Rim` for clarity (not strictly required by eval, but helpful).\n5. Render: set `scene.render.filepath` to an absolute path pointing at `ground_truth/output/beauty.png` (or `output/beauty.png` relative to your saved blend's directory) and call `bpy.ops.render.render(write_still=True)`. Ensure `scene.render.image_settings.file_format = 'PNG'`, `color_mode='RGBA'`, `resolution_x=resolution_y=512`, and `scene.view_settings.view_transform = 'Standard'`.\n6. Save the .blend to `ground_truth/answer.blend`.\n\n## Pass conditions\n\n1. `ground_truth/answer.blend` exists and opens.\n2. The saved scene has at least 3 AREA lights (objects with `type=='LIGHT'` whose `data.type=='AREA'`).\n3. A 512x512 RGBA PNG is present at `output/beauty.png` (relative to the blend's directory).\n4. A subject mask built from pixels whose luma exceeds the background-strip luma by more than 0.10 produces a non-trivial subject. Within that mask, the brighter of (left-half mean, right-half mean) -- the \"key side\" -- must fall in [0.45, 0.85], and the dimmer side -- the \"fill side\" -- must be at least 0.08 below the key side (BT.601 luma: `0.299*R + 0.587*G + 0.114*B`).\n5. Rim check: a thin band near the top of the head (image coords x in [215, 300], y in [405, 440]) has mean luma at least 0.04 greater than a band just below it (same x, y in [440, 475]). This demonstrates that a rim light from above/behind is catching the top of the subject's silhouette more than the under-chin area.\n\n## Tips\n\n- The humanoid stand-in in the init blend consists of `Torso`, `Head`, `Arm_L`, `Arm_R`, `Leg_L`, `Leg_R` meshes -- don't modify these.\n- Keep view_transform = 'Standard' so the luma-range checks are deterministic (AgX would compress highlights).\n- The key light wants to be very bright and on one side so the left/right half luma delta comfortably exceeds 0.08. Bouncing light from the ground can wash out the fill/key contrast, so keep the ground dark (already done in init) and avoid adding reflective surfaces.\n- Energies suggested above are tuned for the scene's dimensions; you may adjust values but keep the brighter half's mean luma in [0.45, 0.85] (no clipping or under-exposure).\n- For rim placement, put the light BEHIND the subject (in +Y from origin) and ABOVE (z > 2.5) and aim back at the torso center. That makes the top of the head catch a bright crescent while the front of the head/chin stays dimmer.",
+  "source": "3drender.com Three-Point Lighting, Blender Studio Light Types",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-12/initial_files/character.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-12/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-12/initial_files/character.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-12/",
+      "expected_files": [
+        "./blender/output/blender-12/answer.blend",
+        "./blender/output/blender-12/output/beauty.png"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-12/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

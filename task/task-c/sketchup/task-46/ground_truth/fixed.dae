@@ -1,0 +1,93 @@
+<COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
+  <asset>
+    <created>2026-04-23T23:11:30.458914</created>
+    <modified>2026-04-23T23:11:30.458916</modified>
+    <up_axis>Y_UP</up_axis>
+  </asset>
+  <library_effects>
+    <effect id="eff-default" name="eff-default">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0.0 0.0 0.0 1.0</color>
+            </emission>
+            <ambient>
+              <color>0.0 0.0 0.0 1.0</color>
+            </ambient>
+            <diffuse>
+              <color>0.7 0.7 0.7 1.0</color>
+            </diffuse>
+            <specular>
+              <color>0.0 0.0 0.0 1.0</color>
+            </specular>
+            <shininess>
+              <float>0.0</float>
+            </shininess>
+            <reflective>
+              <color>0.0 0.0 0.0 1.0</color>
+            </reflective>
+            <reflectivity>
+              <float>0.0</float>
+            </reflectivity>
+            <transparent>
+              <color>0.0 0.0 0.0 1.0</color>
+            </transparent>
+            <transparency>
+              <float>1.0</float>
+            </transparency>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>0</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+    </effect>
+  </library_effects>
+  <library_geometries>
+    <geometry id="geom-bldg" name="BadlyScaledBuilding">
+      <mesh>
+        <source id="geom-bldg-verts-array">
+          <float_array count="138" id="geom-bldg-verts-array-array">0 0 0 7 0 0 7 5 0 0 5 0 0 0 0.1 7 0 0.1 7 5 0.1 0 5 0.1 0 0 0.1 7 0 0.1 7 0.2 0.1 0 0.2 0.1 0 0 2.4 7 0 2.4 7 0.2 2.4 0 0.2 2.4 0 4.8 0.1 7 4.8 0.1 7 5 0.1 0 5 0.1 0 4.8 2.4 7 4.8 2.4 7 5 2.4 0 5 2.4 0 0 0.1 0.2 0 0.1 0.2 5 0.1 0 5 0.1 0 0 2.4 0.2 0 2.4 0.2 5 2.4 0 5 2.4 6.8 0 0.1 7 0 0.1 7 5 0.1 6.8 5 0.1 6.8 0 2.4 7 0 2.4 7 5 2.4 6.8 5 2.4 0 0 2.4 7 0 2.4 7 5 2.4 0 5 2.4 0 2.5 3 7 2.5 3</float_array>
+          <technique_common>
+            <accessor count="46" source="#geom-bldg-verts-array-array" stride="3">
+              <param type="float" name="X" />
+              <param type="float" name="Y" />
+              <param type="float" name="Z" />
+            </accessor>
+          </technique_common>
+        </source>
+        <vertices id="geom-bldg-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-bldg-verts-array" />
+        </vertices>
+        <triangles count="66" material="matref">
+          <input offset="0" semantic="VERTEX" source="#geom-bldg-verts-array-vertices" />
+          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0 8 9 10 8 10 11 12 14 13 12 15 14 8 12 13 8 13 9 9 13 14 9 14 10 10 14 15 10 15 11 11 15 12 11 12 8 16 17 18 16 18 19 20 22 21 20 23 22 16 20 21 16 21 17 17 21 22 17 22 18 18 22 23 18 23 19 19 23 20 19 20 16 24 25 26 24 26 27 28 30 29 28 31 30 24 28 29 24 29 25 25 29 30 25 30 26 26 30 31 26 31 27 27 31 28 27 28 24 32 33 34 32 34 35 36 38 37 36 39 38 32 36 37 32 37 33 33 37 38 33 38 34 34 38 39 34 39 35 35 39 36 35 36 32 40 41 45 40 45 44 43 44 45 43 45 42 40 44 43 41 42 45</p>
+        </triangles>
+      </mesh>
+    </geometry>
+  </library_geometries>
+  <library_materials>
+    <material id="mat-default" name="Default">
+      <instance_effect url="#eff-default" />
+    </material>
+  </library_materials>
+  <library_visual_scenes>
+    <visual_scene id="scene">
+      <node id="BadlyScaledBuildingNode" name="BadlyScaledBuildingNode">
+        <instance_geometry url="#geom-bldg">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref" target="#mat-default" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+    </visual_scene>
+  </library_visual_scenes>
+  <scene>
+    <instance_visual_scene url="#scene" />
+  </scene>
+</COLLADA>

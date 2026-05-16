@@ -1,0 +1,54 @@
+{
+  "id": "blender-44",
+  "instruction": "Procedural city USD export.\n\n`init_file/scene.blend` contains an empty 20 x 20 BU ground plane at Z=0 (with a grey Principled BSDF material `Mat_Ground`), a camera at (15, -15, 20) aimed at the origin, and a sun light. No buildings yet. Units: METRIC / METERS.\n\nYour job: open `init_file/scene.blend`, procedurally add 10 buildings, then export the whole scene to an ASCII USD file at `output/city.usda` (relative to the current working directory) with each building's \"material ID\" encoded as a `custom string material:purpose = \"<value>\"` attribute on its USD Material prim.\n\n## City layout\n- 5 x 2 grid: X in {-8, -4, 0, 4, 8} and Y in {-4, +4} -> 10 plots.\n- Name the buildings `Building_00` ... `Building_09`. Column = i%5, row = i//5 (so Building_00 is at (-8, -4), Building_05 is at (-8, +4), etc.).\n- Each building is a scaled cube:\n  - width = depth = 2.0 BU;\n  - height from this list, indexed by building number: (3, 6, 9, 12, 4, 7, 10, 5, 8, 11) meters;\n  - base sits on the ground (Z=0); center therefore at Z = height/2; top at Z = height.\n- Apply scale so the mesh carries real dimensions (not a unit cube with a scale modifier).\n\n## Materials\n- Each `Building_XX` gets its own Principled BSDF material `Mat_Building_XX`.\n- Base colors are 10 distinct hues. A simple recipe: `HSV((i/10), 0.7, 0.9)` for i in 0..9 (Object Info -> Random -> ColorRamp is also fine if you want a procedural scheme; the evaluator only checks that each material has a UsdPreviewSurface shader emitted).\n- Tag each material with a custom property `material_purpose`:\n  - even i (0, 2, 4, 6, 8) -> `\"residential\"`\n  - odd  i (1, 3, 5, 7, 9) -> `\"commercial\"`\n\n## Vertex colors\n- Each `Building_XX` mesh has a POINT-domain FLOAT_COLOR attribute named `Col`, with every vertex painted a discrete material-ID color:\n  - residential -> (0.2, 0.6, 0.3, 1) greenish\n  - commercial  -> (0.6, 0.3, 0.2, 1) brownish\n\n## USD export\n- File path: `output/city.usda`. The `.usda` suffix forces Blender to write ASCII USD.\n- Use `bpy.ops.wm.usd_export(filepath='output/city.usda', export_materials=True, export_mesh_colors=True, generate_preview_surface=True, selected_objects_only=False)`.\n\n## Post-process: inject material:purpose into the USDA\nBlender's USD exporter doesn't automatically map custom properties on `bpy.types.Material` to USDA attributes, so you must post-process the emitted text file to inject the purpose tags. After export, for each `def Material \"Mat_Building_XX\"` block, insert a line `custom string material:purpose = \"<residential|commercial>\"` immediately inside the block's opening brace. A regex pass is sufficient:\n\n```python\nimport re\npurposes = {i: ('residential' if i % 2 == 0 else 'commercial') for i in range(10)}\nwith open('output/city.usda') as fh: text = fh.read()\nfor i in range(10):\n    mat = f'Mat_Building_{i:02d}'\n    pat = re.compile(rf'(def\\s+Material\\s+\"{mat}\"(?:[^{{]*?))(\\{{)', re.DOTALL)\n    m = pat.search(text)\n    inject = m.group(1) + m.group(2) + f'\\n        custom string material:purpose = \"{purposes[i]}\"'\n    text = text[:m.start()] + inject + text[m.end():]\nwith open('output/city.usda', 'w') as fh: fh.write(text)\n```\n\n## Pass conditions\n1. `output/city.usda` exists.\n2. First line starts with `#usda` (ASCII USD, not binary `.usdc`).\n3. The file contains 10 `def Xform \"Building_XX\"` prims, with indices 00-09.\n4. The file contains 10 `def Material \"Mat_Building_XX\"` prims, with indices 00-09.\n5. `info:id = \"UsdPreviewSurface\"` appears at least 10 times (one per material).\n6. `material:purpose` appears at least 10 times.\n7. Parsing all `material:purpose` string values yields at least 2 distinct entries (e.g. `{residential, commercial}`).\n8. `primvars:displayColor` is present (Blender emits this when `export_mesh_colors=True`).\n9. Building height variation: parsing the `extent = [...]` blocks gives a set of Z-extents whose standard deviation is at least 2.0 -- or, as a fallback, the file carries at least 10 distinct `xformOp:scale` triplets.\n",
+  "source": "Parish, Müller 2001 — \"Procedural Modeling of Cities\", SIGGRAPH; Pixar USD Specification",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-44/initial_files/scene.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-44/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-44/initial_files/scene.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-44/",
+      "expected_files": [
+        "./blender/output/blender-44/answer.blend",
+        "./blender/output/blender-44/output/city.usda"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-44/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

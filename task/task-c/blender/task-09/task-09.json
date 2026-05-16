@@ -1,0 +1,53 @@
+{
+  "id": "blender-9",
+  "instruction": "bmesh Boolean Welder\n\n`init_file/parts.blend` contains 12 disjoint mesh objects `Part01..Part12`, each a differently-sized cuboid. The parts are arranged in an overlapping cluster so adjacent boxes share real volume. Weld all 12 into a single manifold mesh object named `Welded` and save the result as `output/answer.blend`.\n\n## Pass conditions\n1. `output/answer.blend` exists.\n2. The scene contains exactly one mesh object, named `Welded`; none of the 12 original `Part*` objects remain.\n3. `Welded.modifiers` is empty — the boolean result must be baked into the mesh, not left as a live modifier stack.\n4. `Welded` is closed-manifold: every edge is shared by exactly two faces.\n5. `Welded` is a single connected component (BFS over face adjacency yields one group).\n6. `Welded`'s face count is in [40, 200].\n7. `Welded`'s world-space axis-aligned bounding box matches the AABB of the union of all 12 input parts to within 0.01 BU per axis.\n\nCanonical approach: union the 12 parts with bmesh (`bmesh.ops.boolean_solver`) or by chaining object-level Boolean UNION modifiers and applying them. The final mesh must be baked geometry with a clean modifier stack.",
+  "source": "Blender Python API — bmesh module; Requicha 1980 — Boolean Operations on Solids",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-9/initial_files/parts.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-9/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-9/initial_files/parts.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-9/",
+      "expected_files": [
+        "./blender/output/blender-9/answer.blend"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-9/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

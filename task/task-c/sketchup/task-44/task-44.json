@@ -1,0 +1,53 @@
+{
+  "id": "c-sketchup-task-44-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Reversed-Faces Fix\n\nThe file `C:\\Users\\Administrator\\Desktop\\flipped.dae` contains a closed solid triangle mesh whose vertex winding is inconsistent: roughly half of the triangles have been reversed so their outward-pointing normal actually points INWARD toward the mesh centroid, while the other half are oriented correctly (normal points away from centroid). In SketchUp's convention this corresponds to faces whose blue (back) side is showing on the outside rather than the white (front) side.\n\nYour task is to detect every reversed face and flip it so that every face normal points outward. The detection rule is purely geometric: for each triangle `t` with vertices `(v0, v1, v2)`:\n\nface_centroid = (v0 + v1 + v2) / 3\nface_normal = normalize(cross(v1 - v0, v2 - v0))\noutward_dir = face_centroid - mesh_centroid\ndot(face_normal, outward_dir) < 0 -> face is reversed; flip it\n\nwhere `mesh_centroid` is the mean of all unique mesh vertices.\n\n\"Flipping\" a triangle means reversing its vertex winding, e.g. `(v0, v1, v2)` becomes `(v0, v2, v1)`. This changes the sign of the face normal without moving any vertex.\n\nDeliverables:\n\n1. `C:\\Users\\Administrator\\Desktop\\corrected.dae` - a valid COLLADA file containing the same geometry as the input (identical vertex positions and identical unordered set of triangles), but with every face oriented so that `dot(face_normal, face_centroid - mesh_centroid) > 0`. Preserve the ORIGINAL triangle ordering: a triangle that appears at index `i` in the input must still appear at index `i` in the output, only its vertex-index winding may differ.\n\n2. `C:\\Users\\Administrator\\Desktop\\report.json` - a JSON object with the schema:\n\n{\n\"flipped_face_ids\": [<int>,...], // 0-based triangle indices that were reversed in the input and were flipped by the agent\n\"n_flipped\": <int>, // == len(flipped_face_ids)\n\"n_faces_total\": <int> // total triangle count of the mesh\n}\n\n`flipped_face_ids` must be sorted ascending. It must list exactly those triangle indices whose winding in the input file had `dot(normal, centroid - mesh_centroid) < 0`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\corrected.dae` is a parseable COLLADA file with the same vertex count and triangle count as the input.\n2. The unordered set of triangles (as frozensets of vertex indices) in the corrected DAE equals that of the input DAE (i.e. no geometry was added, removed, or re-vertexed).\n3. For EVERY triangle in `C:\\Users\\Administrator\\Desktop\\corrected.dae`, `dot(face_normal, face_centroid - mesh_centroid) > 0` (strict; tolerance 1e-9).\n4. `C:\\Users\\Administrator\\Desktop\\report.json` parses as valid JSON with the 3 required keys.\n5. `report.json.flipped_face_ids` (as a set) equals the ground-truth set of reversed face indices in the input.\n6. `report.json.n_flipped` equals `len(flipped_face_ids)` and `report.json.n_faces_total` equals the mesh triangle count.",
+  "source": "SU-Help Reverse Faces (white-outside / blue-inside convention); ThomasThomassen face-orientation repair heuristics; COLLADA 1.4 triangle winding",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-44/init_file/flipped.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\flipped.dae"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-44/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

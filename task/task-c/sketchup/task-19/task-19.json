@@ -1,0 +1,64 @@
+{
+  "id": "c-sketchup-task-19-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "UV Texture Positioning with Exact Tile Repetition\n\nThe file `C:\\Users\\Administrator\\Desktop\\wall_blank.dae` contains a single flat 8.0 m wide x 3.0 m tall quad face. The face has position data only - no UVs, no material. The file `C:\\Users\\Administrator\\Desktop\\tex/brick.png` is a tileable running-bond brick texture; one tile of the image represents one running-bond course-pair.\n\n1. Load `C:\\Users\\Administrator\\Desktop\\wall_blank.dae`.\n2. Create a material referencing `C:\\Users\\Administrator\\Desktop\\tex/brick.png` (relative path) and apply it to the wall face.\n3. Assign UV coordinates to the face such that the brick texture repeats **exactly 16 times along the long (8 m) edge and 6 times along the short (3 m) edge**, starting with a full tile at one corner (UV (0, 0) must coincide with one geometric corner of the face). No extra partial tiles at either edge of the UV rectangle.\n4. Export the result as `C:\\Users\\Administrator\\Desktop\\output.dae`, keeping the texture reference relative so the bundle is portable. Copy (or otherwise include) `brick.png` at `output_dir/tex/brick.png` alongside the DAE.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. The wall's two largest bounding-box extents are 8.0 m and 3.0 m within +/-20 mm.\n3. `<library_images>` in the DAE references a `brick*.png` file via a relative path under a `C:\\Users\\Administrator\\Desktop\\tex/` sub-directory.\n4. The referenced PNG file exists on disk at the resolved relative path and is a real image (>= 32 x 32 px).\n5. At least one primitive carries a TEXCOORD input. The per-face UV quad has Delta-U = 16.0 and Delta-V = 6.0 within +/-0.5 repeats - either axis orientation is accepted (U <-> V swap allowed for a rotated texture).\n6. The UV rectangle is axis-aligned and the UV (0, 0) corner coincides with a geometric corner of the wall face within 20 mm.",
+  "source": "SU-Help Texture Position / fixed pins; COLLADA 1.5 TEXCOORD inputs; Ruby API `Sketchup::UVHelper`",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/tex/brick.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex/brick.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/wall_blank.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\wall_blank.dae"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

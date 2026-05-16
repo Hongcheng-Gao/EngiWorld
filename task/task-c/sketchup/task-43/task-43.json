@@ -1,0 +1,64 @@
+{
+  "id": "c-sketchup-task-43-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Cost Takeoff by Material\n\nThe file `C:\\Users\\Administrator\\Desktop\\project.dae` contains a SketchUp-exported COLLADA scene with 4 flat rectangular panels, each of which uses a different named material: `Wall_Brick`, `Floor_Concrete`, `Roof_Shingle`, `Window_Glass`. The file `C:\\Users\\Administrator\\Desktop\\unit_costs.csv` lists the unit cost per square meter for each material:\n\nmaterial_name,cost_per_m2_usd\nWall_Brick,50.00\nFloor_Concrete,30.00\nRoof_Shingle,40.00\nWindow_Glass,200.00\n\nFor each material, compute the **total face area** (sum of triangle areas) of all triangles bound to that material in the scene, multiply by the per-m^2 unit cost, and write a takeoff CSV with the following schema:\n\nmaterial,area_m2,unit_cost,total_usd\n<mat1>,<area>,<unit>,<total>...\nTOTAL,,,<grand_total>\n\nRequirements:\n- Data rows are sorted alphabetically by `material` (ASCII / default Python `sorted`).\n- A final row begins with the literal string `TOTAL`; its `material` field is exactly `TOTAL`, its `area_m2` and `unit_cost` columns are empty, and its `total_usd` column is the sum of all material totals.\n- Numeric formatting: `area_m2` uses 3 decimal places, `unit_cost` and `total_usd` use 2 decimal places.\n\nSave the CSV to `C:\\Users\\Administrator\\Desktop\\output.csv`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.csv` is a valid CSV with the exact header `material,area_m2,unit_cost,total_usd`.\n2. There are exactly 4 data rows plus 1 `TOTAL` row.\n3. Data rows appear in alphabetical order by material name.\n4. For each material, `area_m2` is within +/-0.01 m^2 of the ground-truth face-area sum.\n5. For each material, `total_usd` equals `area_m2 x unit_cost` within +/-$0.01.\n6. The `TOTAL` row's `total_usd` equals the sum of the 4 material totals within +/-$0.01.",
+  "source": "SU-Ruby Face#area iteration; SU-Help Generate Report for quantity takeoff; O'Connor — SketchUp for Architects Ch. 9 (quantity takeoff)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43/init_file/project.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\project.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43/init_file/unit_costs.csv",
+            "path": "C:\\Users\\Administrator\\Desktop\\unit_costs.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-43/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

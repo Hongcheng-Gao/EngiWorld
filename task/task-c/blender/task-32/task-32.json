@@ -1,0 +1,53 @@
+{
+  "id": "blender-32",
+  "instruction": "Boolean Multi-Hole Plate\n\n`init_file/scene.blend` contains a single mesh object `Plate`: a rectangular slab of dimensions 4.0 x 2.0 x 0.2 BU centred on the world origin (so its z extent is [-0.1, +0.1]).\n\nProduce `output/answer.blend` containing a single mesh object `Plate` that has been carved in two ways:\n\n- A 3x2 grid of cylindrical through-bores, axis along +Z, radius 0.15 BU. Bore centres lie at (x_i, y_j) with x_i in {-1.2, 0.0, +1.2} and y_j in {-0.4, +0.4} — six bores total.\n- A rectangular pocket cut into the top (+Z) face only: dimensions 2.0 x 0.8 x 0.08 BU, centred on the top face at (0, 0, +0.06). The pocket floor therefore sits at z = +0.02; the plate beneath the pocket remains intact.\n\n## Pass conditions\n1. `output/answer.blend` exists.\n2. The scene contains exactly one mesh object named `Plate`, located at the world origin, with an empty modifier stack.\n3. The mesh is closed-manifold — no non-manifold edges.\n4. The mesh has no loose vertices and no loose edges.\n5. The outer axis-aligned bounding box is unchanged: x in [-2, +2], y in [-1, +1], z in [-0.1, +0.1], each within tolerance 1e-3.\n6. Each of the six bore centres is a true through-bore: a ray cast straight down at (x_i, y_j) from z = +1 finds no surface within z in [-0.2, +0.2].\n7. At six sample points on the top face that avoid both the pocket and the bores, a downward ray from z = +1 hits the plate top at z = +0.1 within tolerance 1e-3.\n8. At the pocket centre (0, 0), a downward ray from z = +1 hits the pocket floor at z = +0.02 (within tolerance 1e-3), not the original top at z = +0.1.\n9. Face count of the final `Plate` mesh is between 40 and 400 (inclusive).\n\nClean up after cutting: no cutter objects may remain in the scene.",
+  "source": "Hoffmann 1989 — Geometric and Solid Modeling (CSG Boolean primer); Blender Manual — Boolean Modifier",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-32/initial_files/scene.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-32/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-32/initial_files/scene.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-32/",
+      "expected_files": [
+        "./blender/output/blender-32/answer.blend"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-32/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

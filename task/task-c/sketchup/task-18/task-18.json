@@ -1,0 +1,119 @@
+{
+  "id": "c-sketchup-task-18-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Procedural Material Library and Rule-Based Application\n\nThe file `C:\\Users\\Administrator\\Desktop\\materials.json` defines a small material library with 5 entries. The file `C:\\Users\\Administrator\\Desktop\\rooms.dae` contains 5 separate named geometries representing different parts of a room, each named with a `Group<Part>_<MaterialKey>` suffix convention, for example `GroupFloor_Oak` is the floor mesh that should receive the `Oak` material.\n\nMaterials (read exactly from `C:\\Users\\Administrator\\Desktop\\materials.json`):\n- `Oak`: diffuse texture `C:\\Users\\Administrator\\Desktop\\tex/oak.png`, UV scale 0.5 m (one tile spans 0.5 m in world space), lambert (matte wood).\n- `Marble`: diffuse texture `C:\\Users\\Administrator\\Desktop\\tex/marble.png`, UV scale 2.0 m (one tile spans 2 m), lambert.\n- `Brass`: diffuse texture `C:\\Users\\Administrator\\Desktop\\tex/brass.png`, tint colour `#b5a04a`, phong, shininess 80, glossy.\n- `Glass_50`: diffuse texture `C:\\Users\\Administrator\\Desktop\\tex/glass.png`, tint colour `#eef6ff`, phong, transparency 0.5 (alpha half).\n- `Concrete`: diffuse texture `C:\\Users\\Administrator\\Desktop\\tex/concrete.png`, tint colour `#a2a2a2`, lambert, matte (no shininess).\n\n1. Parse `C:\\Users\\Administrator\\Desktop\\materials.json`.\n2. For each `<geometry>` in `C:\\Users\\Administrator\\Desktop\\rooms.dae`, read its name and extract the material key from the `_<Key>` suffix (e.g. the `Oak` in `GroupFloor_Oak`).\n3. Apply the material defined in `C:\\Users\\Administrator\\Desktop\\materials.json` to that geometry, producing a COLLADA effect with the correct shading type, diffuse texture reference, and - where applicable - transparency, shininess, and tint colour. UV coordinates on each geometry must scale so that one texture tile spans exactly the declared UV-scale metres in world space.\n4. Export `C:\\Users\\Administrator\\Desktop\\output.dae`, bundling the referenced textures in a `C:\\Users\\Administrator\\Desktop\\tex/` subdirectory (relative paths, e.g. `C:\\Users\\Administrator\\Desktop\\tex/oak.png`).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. `<library_effects>` contains exactly 5 effects (one per material).\n3. Each of the 5 geometries (`GroupFloor_Oak`, `GroupCountertop_Marble`, `GroupFaucet_Brass`, `GroupWindow_Glass_50`, `GroupWall_Concrete`) is present and bound via its scene node to the correctly-named material.\n4. Each effect's diffuse input references the declared PNG file name, and that PNG exists on disk under `C:\\Users\\Administrator\\Desktop\\tex/` next to `C:\\Users\\Administrator\\Desktop\\output.dae`.\n5. The `Glass_50` effect has `<transparency>` = 0.5 within 0.01.\n6. The `Brass` effect is phong with shininess >= 40.\n7. UV coordinates on the Oak floor repeat at 0.5 m per tile (+/- 0.1) and on the Marble countertop at 2.0 m per tile (+/- 0.3).",
+  "source": "SU-Help Materials; COLLADA 1.5 profile_COMMON effects; pycollada library_effects",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/materials.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\materials.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/rooms.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\rooms.dae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/tex/brass.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex/brass.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/tex/concrete.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex/concrete.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/tex/glass.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex/glass.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/tex/marble.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex/marble.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/tex/oak.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\tex/oak.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

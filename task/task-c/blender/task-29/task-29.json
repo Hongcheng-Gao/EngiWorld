@@ -1,0 +1,53 @@
+{
+  "id": "blender-29",
+  "instruction": "Weight-Selective Bevel\n\n`init_file/scene.blend` contains a single mesh object `Block` (a cube of dimensions 2x2x2 centred on the origin). The mesh carries an edge-domain float attribute `bevel_weight_edge`. Bevel only the edges flagged by that attribute (value > 0.5), leaving the rest sharp; the bevel must be applied (baked) so no modifier remains.\n\nSave the result as `output/answer.blend`.\n\n## Bevel parameters\n- Width (offset-mode distance): 0.10 BU.\n- Segments: 2.\n- Profile shape: 0.5 (circular arc).\n- Limited so only edges with weight > 0 are affected.\n\n## Pass conditions\n1. Output scene contains exactly one mesh object, named `Block`, at world origin.\n2. `Block`'s modifier stack is empty.\n3. `Block`'s mesh is closed-manifold (every edge shared by exactly two faces).\n4. Overall bounding box is unchanged (x,y,z each still span ±1 within tol 5e-3).\n5. All 8 original corner vertices at (±1, ±1, ±1) have been replaced (no vertex coincides with any corner).\n6. For each of the 8 corners, two bevel-endpoint vertices exist on the adjacent horizontal face: at (sx, sy ∓ 0.10, sz) and (sx ∓ 0.10, sy, sz).\n7. The top face at z=+1 has exactly 12 vertices, and the bottom face at z=-1 has exactly 12 vertices — i.e. only the 4 vertical edges were beveled.\n\nInspect the `bevel_weight_edge` attribute to discover which edges are flagged — do not infer from geometry alone.",
+  "source": "Blender Manual — Bevel Modifier with Vertex Group / Weight",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-29/initial_files/scene.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-29/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-29/initial_files/scene.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-29/",
+      "expected_files": [
+        "./blender/output/blender-29/answer.blend"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-29/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

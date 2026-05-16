@@ -1,0 +1,58 @@
+{
+  "id": "blender-16",
+  "instruction": "Normal Bake High → Low\n\n`init_file/hi_low.blend` contains two mesh objects:\n  • `HighPoly` — a subdivided, noise-displaced cube with clear surface detail.\n  • `LowPoly`  — a slightly larger cage cube that encloses HighPoly. It is UV-unwrapped with a Smart UV projection and carries a material `LowPolyMat` whose Image Texture node references a blank 1024×1024 image datablock called `BakeNormal`. That Image Texture node is already selected and set as the material's active node so bake operations target it. The render engine is Cycles (CPU).\n\nYour task is to bake a tangent-space normal map from `HighPoly` onto `LowPoly` using Cycles “selected-to-active” baking, then save the baked image to `output/normal_bake.png`.\n\n## Required steps\n1. Deselect everything, then select `HighPoly`, then select `LowPoly` and make `LowPoly` the ACTIVE object (Ctrl-click semantics: `lowpoly.select_set(True); bpy.context.view_layer.objects.active = lowpoly`).\n2. Ensure the Image Texture node referencing `BakeNormal` on `LowPolyMat` is the active node.\n3. Configure bake settings:\n     - `scene.render.engine = 'CYCLES'`, `scene.cycles.device = 'CPU'`\n     - `scene.render.bake.use_selected_to_active = True`\n     - `scene.render.bake.cage_extrusion = 0.08`\n     - `scene.render.bake.normal_space = 'TANGENT'`\n4. Run the bake with `bpy.ops.object.bake(type='NORMAL', use_selected_to_active=True, cage_extrusion=0.08, normal_space='TANGENT')`.\n5. Save the `BakeNormal` image to `output/normal_bake.png` (`image.filepath_raw = <abs_path>; image.file_format = 'PNG'; image.save()`).\n\n## Pass conditions\n1. Output PNG exists at `output/normal_bake.png`.\n2. The image is exactly 1024×1024.\n3. Mean of the B channel ≥ 0.80 (tangent-space normals point mostly outward, B ≈ 1).\n4. Mean of the R channel is in [0.40, 0.60] (centered around 0.5).\n5. Standard deviation of the R channel ≥ 0.03 (HighPoly detail was captured).\n6. Mean of the G channel is in [0.40, 0.60].\n7. Standard deviation of the G channel ≥ 0.03.\n8. At least 95% of pixels have B > 100/255.\n\nBake in background mode requires: the LowPoly object to be the active, selected object with HighPoly also selected; HighPoly must fit inside LowPoly plus the cage extrusion; `LowPoly` must have a UV layer; and the Image Texture node referencing `BakeNormal` must be the active node on the material's node tree.",
+  "source": "Cignoni, Montani, Scopigno 1998 — \"A general method for preserving attribute values on simplified meshes\", IEEE Visualization",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-16/initial_files/hi_low.blend",
+        "./blender/blender-16/initial_files/stub_black.png"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-16/initial_files",
+      "open_with_app": [
+        "/home/user/workspace/blender/blender-16/initial_files/hi_low.blend",
+        "/home/user/workspace/blender/blender-16/initial_files/stub_black.png"
+      ]
+    },
+    "output": {
+      "dir": "./blender/output/blender-16/",
+      "expected_files": [
+        "./blender/output/blender-16/answer.blend",
+        "./blender/output/blender-16/normal_bake.png"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-16/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

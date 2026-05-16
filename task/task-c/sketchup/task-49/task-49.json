@@ -1,0 +1,75 @@
+{
+  "id": "c-sketchup-task-49-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Site design: terrain + buildings + roads (composite)\n\nThis task combines SketchUp Sandbox workflows into a single site-design pipeline. You are given three input artifacts under `C:\\Users\\Administrator\\Desktop\\`:\n\n1. `C:\\Users\\Administrator\\Desktop\\contours.dxf` -- 10 elevation-labelled LWPOLYLINE contours on layer `CONTOURS`. Each polyline has >= 8 vertices and a distinct elevation stored in its DXF `elevation` attribute. The contours trace an analytic rolling-hills terrain over an X in [0, 120] m, Y in [0, 90] m domain.\n\n2. `C:\\Users\\Administrator\\Desktop\\footprints.json` -- three axis-aligned building specifications:\n{\n\"buildings\": [\n{\"name\":..., \"x\":..., \"y\":..., \"w\":..., \"d\":...,\n\"height\":..., \"pad_z\":...},...\n],\n\"transition_m\": 3.0\n}\nwhere (x, y) is the lower-left corner, (w, d) are the footprint\nwidth (along X) and depth (along Y), `height` is the building's\nheight above its pad, and `pad_z` is the flattened pad elevation.\n\n3. `C:\\Users\\Administrator\\Desktop\\roads.json` -- two 2D road centerlines at Z = 0:\n{\n\"z_plane\": 0.0,\n\"roads\": [\n{\"name\":..., \"points\": [[x0, y0], [x1, y1],...]},...\n]\n}\n\nYour task is the complete SketchUp Sandbox site-design workflow:\n\nStep 1. Build a TIN terrain from the DXF contours (2D Delaunay of\nthe contour vertices; lift each vertex back to its contour's\nZ). The TIN is an open surface that covers the convex hull\nof the contour vertices.\n\nStep 2. For each building, stamp its pad into the TIN. For every\nTIN vertex (x, y), compute the 2D signed distance `d` to the\nfootprint rectangle (negative inside, zero on edge, positive\noutside):\nd <= 0 -> z := pad_z\n0 < d < transition_m -> z := pad_z + (z_terrain - pad_z) * (d / transition_m)\nd >= transition_m -> z := z_terrain (untouched)\nApply the stamp in place so only vertex Z's change.\n\nStep 3. For each building, emit an extruded rectangular box: the\nfootprint (x, y, w, d) extruded from pad_z up to\npad_z + height. Add the box as a separate named geometry\nunder a scene node whose name matches the building's `name`.\n\nStep 4. Drape each road centerline onto the STAMPED terrain mesh\n(raycast each (x, y) straight down, take the hit Z). Emit\nthe draped road as a thin triangulated ribbon (or any\ntriangulated geometry whose centerline XY matches the\ninput polyline within 1.5 m and whose Z equals the\nterrain-drape Z within 0.1 m) under a scene node whose name\nmatches the road's `name`.\n\nStep 5. Write a COLLADA file `C:\\Users\\Administrator\\Desktop\\output.dae` containing the terrain\nmesh, the 3 building extrusions, and the 2 road geometries\nas distinct named scene nodes. Also write\n`C:\\Users\\Administrator\\Desktop\\site_summary.json`:\n{\n\"terrain_tri_count\": <int >= 200>,\n\"n_buildings\": 3,\n\"building_heights_m\": [h1, h2, h3],\n\"n_roads\": 2,\n\"road_lengths_m\": [L1, L2]\n}\nwhere `road_lengths_m` are the 3D lengths of the draped\ncenterlines (sum of segment lengths after drape).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA; `C:\\Users\\Administrator\\Desktop\\site_summary.json` parses.\n2. The bounding box of the DAE's world-space vertices matches the\nterrain + building extents: XY equal to the contour extents\nwithin 1 m, and Z from min(terrain_z, pad_z) to max(pad_z + height,\nterrain_z) within 0.1 m.\n3. For each building, the DAE contains a vertex cluster inside that\nfootprint whose Z range spans [pad_z, pad_z + height] within\n50 mm on both ends and whose XY extent matches the footprint\nwithin 30 mm.\n4. For each road, every input centerline point has at least one DAE\nvertex with matching XY (within 1.5 m) and matching terrain-drape\nZ within 0.1 m (verified by raycasting on the reconstructed\nstamped terrain TIN).\n5. `C:\\Users\\Administrator\\Desktop\\site_summary.json` has correct values: `terrain_tri_count`\nbetween 200 and 3x the raw-Delaunay count, `n_buildings` = 3,\n`building_heights_m` matches the spec (order-insensitive, within\n1 mm), `n_roads` = 2, `road_lengths_m` matches the draped\ncenterline lengths (order-insensitive, within 0.05 m).",
+  "source": "SketchUp SU-Sandbox 'From Contours', 'Stamp', and 'Drape' tools chained into a complete site-design pipeline (Chopra, 'SketchUp for Architects')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49/init_file/contours.dxf",
+            "path": "C:\\Users\\Administrator\\Desktop\\contours.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49/init_file/footprints.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\footprints.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49/init_file/roads.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\roads.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-49/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

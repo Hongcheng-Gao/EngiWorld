@@ -1,0 +1,64 @@
+{
+  "id": "blender-36",
+  "instruction": "Texture-Link Repair\n\n`init_file/scene.blend` contains three mesh planes `Plane_R`, `Plane_G`, `Plane_B` at x=-2, 0, +2. Each plane has a material with an Image Texture node whose image datablock has a BROKEN `filepath` (pointing at a path that does not exist on disk). The correct 16x16 solid-colour PNGs are on disk at `init_file/textures/red.png`, `init_file/textures/green.png`, and `init_file/textures/blue.png`. The image datablocks are named `red_diffuse`, `green_diffuse`, `blue_diffuse` (one per plane).\n\nYour task is to re-point each broken image's filepath to the correct PNG in `init_file/textures/` and save the result to `output/answer.blend` (relative to the working directory).\n\n## What to do\n1. Open `init_file/scene.blend`.\n2. Ensure the three PNGs are reachable from the location of the new blend. The simplest way is to copy `init_file/textures/*.png` into `output/textures/` so Blender-relative `//textures/<color>.png` paths resolve next to `output/answer.blend`.\n3. Save-as `output/answer.blend` first (so `//` anchors at the output/ directory).\n4. For each broken image datablock, use the image name (contains `red`, `green`, or `blue`) to determine which colour it wants, then set `image.filepath = '//textures/<color>.png'` (and `image.filepath_raw` to the same value), call `image.reload()` to re-bind, and optionally `image.pack()` so the pixels survive save-close-reopen.\n5. Save the blend.\n\n## Pass conditions\n1. `output/answer.blend` exists and opens as a valid Blender file.\n2. The three planes `Plane_R`, `Plane_G`, `Plane_B` all still exist as mesh objects, each with a material whose node tree contains an Image Texture node with an assigned image.\n3. Every disk-backed image datablock (excluding `Render Result` / `Viewer Node`) resolves to a real file on disk (or is packed) AND loads successfully after reopen - i.e. no image is missing.\n4. Rendering the scene (Eevee, 256x256) succeeds.\n5. In the rendered image, the ROI at each plane's projected world centre shows the correct dominant colour channel: Plane_R shows red, Plane_G shows green, Plane_B shows blue. This proves both the path repair AND that the correct texture was assigned to each plane.\n\nDo not rename objects, materials, or image datablocks; do not alter the shader graphs; only the image filepaths (and the texture files' location on disk) should change.",
+  "source": "human_craft",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-36/initial_files/scene.blend",
+        "./blender/blender-36/initial_files/textures/blue.png",
+        "./blender/blender-36/initial_files/textures/green.png",
+        "./blender/blender-36/initial_files/textures/red.png"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-36/initial_files",
+      "open_with_app": [
+        "/home/user/workspace/blender/blender-36/initial_files/scene.blend",
+        "/home/user/workspace/blender/blender-36/initial_files/blue.png",
+        "/home/user/workspace/blender/blender-36/initial_files/green.png",
+        "/home/user/workspace/blender/blender-36/initial_files/red.png"
+      ]
+    },
+    "output": {
+      "dir": "./blender/output/blender-36/",
+      "expected_files": [
+        "./blender/output/blender-36/answer.blend",
+        "./blender/output/blender-36/textures/blue.png",
+        "./blender/output/blender-36/textures/green.png",
+        "./blender/output/blender-36/textures/red.png"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-36/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

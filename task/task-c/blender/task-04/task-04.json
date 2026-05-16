@@ -1,0 +1,53 @@
+{
+  "id": "blender-4",
+  "instruction": "Procedural Tree with LOD.\n\n`init_file/scene.blend` contains a single mesh object named `Tree` sitting at the world origin with a minimal (one-vertex) mesh datablock. A Geometry-Nodes modifier named `GN_Tree` is already attached as a pass-through placeholder (its node tree only wires Group Input straight to Group Output with no LOD input, and there are no sub-node-groups).\n\nYour task is to rebuild that Geometry Nodes setup on `Tree` so that a single integer input named `LOD` (range 0..3) on the modifier controls how much geometry the tree shows, with the 3 stages cleanly delegated to 3 named inner node groups.\n\nSave the result as `ground_truth/answer.blend`.\n\n## Required setup\n1. Keep the object `Tree` (type MESH) in place. Do NOT apply any modifier; the Geometry-Nodes modifier must remain live so graders can flip its `LOD` input.\n2. Make sure `Tree` has exactly one modifier of type `NODES` (you may rename/replace the placeholder). Its node group becomes the TOP-LEVEL procedural tree graph; a natural name is `TreeLOD`.\n3. The top-level group must expose an integer interface input socket named `LOD` (default 3), and a Geometry input and Geometry output socket.\n4. Inside `bpy.data.node_groups` there must exist THREE separate Geometry-Node groups, each referenced by the top-level group via `GeometryNodeGroup` nodes:\n   - `Trunk`     - emits the trunk geometry (self-seeded, e.g. a tube built from Mesh Line -> Mesh to Curve -> Curve to Mesh with a circle profile).\n   - `Branches`  - takes the trunk geometry as input and outputs trunk + several branch tubes joined together.\n   - `Leaves`    - takes trunk+branches and outputs trunk+branches + a foliage cloud (e.g. Distribute Points on Faces -> Instance on Points a small cube -> Realize Instances -> Join).\n5. Inside the top-level group, gate the three inner groups with Switch nodes (`GeometryNodeSwitch`, input_type GEOMETRY) driven by Compare-Integer nodes on the `LOD` input, so that:\n   - LOD = 0 -> only the `Trunk` sub-group contributes; evaluated vertex count is between 50 and 400.\n   - LOD = 1 -> trunk + branches (small set of branches is fine).\n   - LOD = 2 -> trunk + branches (at least as many verts as LOD=1).\n   - LOD = 3 -> trunk + branches + leaves; evaluated vertex count grows by at least 100 over LOD=0.\n6. The evaluated bounding box of `Tree` at LOD=3 must span at least 1 Blender Unit in Z (so the tree is actually tree-shaped, not flat).\n\n## Pass conditions\n1. `ground_truth/answer.blend` exists and opens in Blender 4.1.\n2. Mesh object named `Tree` exists in the scene.\n3. `Tree` has a live `NODES` modifier; its node group exposes an integer interface input socket named exactly `LOD`.\n4. `bpy.data.node_groups` contains node groups named exactly `Trunk`, `Branches`, `Leaves`, AND the top-level group references all three via `GeometryNodeGroup` nodes.\n5. With the modifier's `LOD` input set to 0, the evaluated mesh (via `obj.evaluated_get(depsgraph).to_mesh()`) has between 50 and 400 vertices (trunk only).\n6. With `LOD` set to 3, evaluated vertex count is at least 100 more than at LOD=0 (leaves are present).\n7. Monotonic growth across LOD sweep: vcount(LOD=0) < vcount(LOD=1) <= vcount(LOD=2) < vcount(LOD=3).\n8. At LOD=3 the evaluated bounding-box Z-span is at least 1.0 BU.\n9. The Geometry-Nodes modifier must NOT be applied - graders toggle the LOD input at evaluation time.",
+  "source": "Erindale — Procedural Design with Blender; BCITY procedural city",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-4/initial_files/scene.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-4/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-4/initial_files/scene.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-4/",
+      "expected_files": [
+        "./blender/output/blender-4/answer.blend"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-4/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

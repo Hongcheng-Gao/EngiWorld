@@ -1,0 +1,53 @@
+{
+  "id": "blender-48",
+  "instruction": "Purge Orphan Datablocks\n\n`init_file/scene.blend` contains one mesh object `Cube` whose sole material `Mat_InUse` (in slot 0) references an image `Img_InUse` via an Image Texture node. The file is cluttered with 20 unused materials (named `Mat_Orphan_00` .. `Mat_Orphan_19`) and 5 unused images (named `Img_Orphan_0` .. `Img_Orphan_4`). These orphans are not assigned to any object, material, texture, or node — they are kept alive only by a fake-user flag. Remove every orphan material and image from the file without disturbing `Cube` or any datablock that is actually in use, and save the result to `output/answer.blend` (relative to the working directory).\n\n## Pass conditions\n1. `output/answer.blend` exists and opens as a valid Blender file.\n2. A mesh object named `Cube` still exists in the scene.\n3. `Cube`'s first material slot still holds a material named `Mat_InUse`.\n4. A material named `Mat_InUse` exists in `bpy.data.materials`.\n5. An image named `Img_InUse` exists in `bpy.data.images`.\n6. No material whose name starts with `Mat_Orphan_` exists in `bpy.data.materials`.\n7. No image whose name starts with `Img_Orphan_` exists in `bpy.data.images`.\n8. `len(bpy.data.materials)` equals exactly 1.\n9. The number of user-created images in `bpy.data.images` — excluding Blender's auto-created `Render Result` and `Viewer Node` entries — equals exactly 1.\n\nDo not delete or rename `Cube`, its mesh, its material slot, or any in-use datablock.",
+  "source": "Blender Manual — Outliner Orphan Data and Purge",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-48/initial_files/scene.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-48/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-48/initial_files/scene.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-48/",
+      "expected_files": [
+        "./blender/output/blender-48/answer.blend"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-48/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}

@@ -1,0 +1,64 @@
+{
+  "id": "c-sketchup-task-22-windows",
+  "snapshot": "sketchup2026",
+  "instruction": "Building Pad via Stamp (SketchUp Sandbox)\n\nInput files:\n- `C:\\Users\\Administrator\\Desktop\\terrain.obj` - a rolling terrain surface on a 25x25 regular grid covering a 50 m x 50 m domain in the XY plane (approx 625 vertices, 1152 triangles). Z varies smoothly across the domain (peak-to-peak range >= 2 m).\n- `C:\\Users\\Administrator\\Desktop\\pad_spec.json` - rectangular building pad specification:\n{\n\"pad_center_xy\": [cx, cy], # XY centre of the pad (m)\n\"pad_w\": w, # width along X (m)\n\"pad_d\": d, # depth along Y (m)\n\"pad_z\": z, # target flattened elevation (m)\n\"transition_m\": t # outward blend-ring width (m)\n}\n\nOperation (matches the SketchUp Sandbox \"Stamp\" tool):\nFor each terrain vertex at planar position (x, y) with original\nheight z_terrain(x, y), let d be the signed 2D distance from (x, y)\nto the pad's axis-aligned rectangular footprint (negative inside,\npositive outside, zero on the edge). The new Z is:\n\nd <= 0 -> z_new = pad_z (flattened)\n0 < d < transition_m -> z_new = pad_z + (z_terrain - pad_z) * (d / transition_m) (linear blend)\nd >= transition_m -> z_new = z_terrain (untouched)\n\nKeep mesh topology (vertex count, triangle indices) identical - only\nthe Z coordinate of each vertex changes. Write the result to\n`C:\\Users\\Administrator\\Desktop\\answer.skp` (Wavefront OBJ, 1-based face indices).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\answer.skp` parses and has the same vertex/triangle counts as the input terrain.\n2. Every vertex whose (x, y) lies strictly inside the footprint has Z = pad_z within +/-10 mm.\n3. Every vertex whose (x, y) lies strictly beyond the transition ring retains its original terrain height within +/-10 mm.\n4. Every vertex in the transition band has Z strictly between pad_z and its terrain Z, and matches the linear blend formula within +/-10 mm (this is equivalent to being monotonic in the radial distance).\n5. All three vertex categories (inside, transition, outside) are non-empty, confirming the pad and ring were both applied.",
+  "source": "SU-Help Sandbox \"Stamp\" tool; Wavefront OBJ specification",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/pad_spec.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\pad_spec.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/terrain.obj",
+            "path": "C:\\Users\\Administrator\\Desktop\\terrain.obj"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-22/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

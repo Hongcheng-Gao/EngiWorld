@@ -1,0 +1,55 @@
+{
+  "id": "blender-15",
+  "instruction": "Compositor Glare (Fog Glow) vs raw.\n\n`init_file/scene.blend` contains:\n  - A tiny bright emissive sphere (radius 0.1) at the origin. Its material is a Principled/Emission shader with color white and strength ~50, so the final render has a single intensely bright point near the image center on an otherwise pitch-black frame.\n  - A `Camera` at (0, -3, 0) rotated +90 degrees around X so it looks along +Y (the sphere is centered in frame).\n  - A pitch-black world background (`Background` color = (0,0,0), strength 0).\n  - Render engine CYCLES at 512x512, 32 samples, denoising OFF.\n  - `scene.use_nodes = False` (compositor NOT built yet).\n\nTask: build a compositor node graph that produces two PNG outputs side by side -- a 'raw' render and a 'glare' render where the glare comes from a Fog Glow filter applied to the same Render Layers image. Both PNGs go into the `output/` directory next to your saved .blend.\n\n1. Enable the compositor:\n     - `scene.use_nodes = True`\n     - `tree = scene.node_tree`\n     - Clear default nodes: `for n in list(tree.nodes): tree.nodes.remove(n)`\n2. Add nodes:\n     - `render_layers = tree.nodes.new('CompositorNodeRLayers')`\n     - `glare = tree.nodes.new('CompositorNodeGlare')`\n         - `glare.glare_type = 'FOG_GLOW'`\n         - `glare.size = 9` (maximum FOG_GLOW spread; valid range 2..9)\n         - `glare.threshold = 0.5`\n         - `glare.mix = 1.0` (output is pure-glare, no original image mixed in)\n         - `glare.quality = 'HIGH'`\n     - `file_out = tree.nodes.new('CompositorNodeOutputFile')`\n         - `file_out.base_path` = absolute path to your `output/` dir\n         - `file_out.format.file_format = 'PNG'`, color_mode='RGBA', color_depth='8'\n         - Two slots:\n             - Rename default slot 0 path to `'raw'`: `file_out.file_slots[0].path = 'raw'`\n             - Add slot 1: `file_out.file_slots.new('glare')`\n     - (Optional but recommended) a `CompositorNodeComposite` wired to `render_layers.Image` so the default render result is also populated.\n3. Wire the links:\n     - `render_layers.outputs['Image']` -> `file_out.inputs[0]` (raw slot)\n     - `render_layers.outputs['Image']` -> `glare.inputs['Image']`\n     - `glare.outputs['Image']` -> `file_out.inputs[1]` (glare slot)\n4. Render so File Output writes to disk:\n     - `scene.frame_start = scene.frame_end = 1`\n     - `bpy.ops.render.render(write_still=True)` -- this produces e.g. `raw0001.png` and `glare0001.png` in `file_out.base_path`.\n     - Optionally rename those to `raw.png` and `glare.png` (spec form) using `os.replace`.\n5. Save the .blend to `ground_truth/answer.blend`.\n\n## Pass conditions\n1. The .blend exists and opens.\n2. The scene contains an emissive source -- either a light object with energy >= 500, OR a mesh with an Emission-shader material (pure Emission strength > 0, OR Principled with Emission Strength > 0 and non-black Emission Color).\n3. The scene contains a `Camera` object.\n4. `scene.use_nodes == True`.\n5. The compositor node tree contains a `CompositorNodeGlare`.\n6. That glare node has `glare_type == 'FOG_GLOW'`.\n7. After re-rendering with File Output, a `raw*.png` exists in the output dir.\n8. A `glare*.png` exists alongside it.\n9. The glare PNG's annulus-ROI luma energy (BT.601 luma summed over pixels whose distance from the image center is in [40, 100] px on a 512x512 image) is at least 2.0x the raw PNG's annulus-ROI luma energy. (The inner annulus is set large enough to exclude the direct bright source, so the ratio measures the broad halo that FOG_GLOW produces.)",
+  "source": "Glare Node docs",
+  "trajectory": "engiworld/trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "func": "engiworld_eval",
+    "expected": null,
+    "result": null,
+    "postconfig": []
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "engiworld": {
+    "execution": {
+      "channel": "c"
+    },
+    "software_version": "4.1.0",
+    "docker": {
+      "image": "",
+      "workspace_root": "/workspace"
+    },
+    "vm": {
+      "snapshot_name": "init_state",
+      "guest_workspace": "/home/user/workspace"
+    },
+    "init": {
+      "files": [
+        "./blender/blender-15/initial_files/scene.blend"
+      ],
+      "guest_input_dir": "/home/user/workspace/blender/blender-15/initial_files",
+      "open_with_app": "/home/user/workspace/blender/blender-15/initial_files/scene.blend"
+    },
+    "output": {
+      "dir": "./blender/output/blender-15/",
+      "expected_files": [
+        "./blender/output/blender-15/answer.blend",
+        "./blender/output/blender-15/output/glare.png",
+        "./blender/output/blender-15/output/raw.png"
+      ]
+    },
+    "context_files": [],
+    "evaluation": {
+      "eval_type": "cadquery_geometry_and_report",
+      "eval_script": "./blender/blender-15/eval.py",
+      "eval_entry": "eval_outputs",
+      "timeout_seconds": 300,
+      "ground_truth": []
+    }
+  }
+}
