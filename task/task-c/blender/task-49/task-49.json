@@ -1,6 +1,6 @@
 {
-  "id": "blender-49",
-  "instruction": "Rename Armature Bones to Restore Skinning\n\n`init_file/scene.blend` contains an armature object `Rig` (a 4-bone chain) and a mesh object `Skin` with an Armature modifier bound to `Rig`. The mesh's vertex groups expect bones named `Bone.Root`, `Bone.A`, `Bone.B`, `Bone.Tip` arranged root-to-tip along the chain, but the armature's bones currently carry generic auto-numbered names, so the Armature modifier does not deform the mesh. Rename the bones so the vertex groups resolve against the rig, and save the result to `output/answer.blend`.\n\n## Pass conditions\n1. `output/answer.blend` opens as a valid Blender file.\n2. An armature object named `Rig` exists (type `ARMATURE`).\n3. `Rig`'s armature has exactly 4 bones.\n4. The bone names on `Rig` are exactly the set `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`.\n5. The parent chain is `Bone.Root` (no parent) → `Bone.A` → `Bone.B` → `Bone.Tip`.\n6. A mesh object named `Skin` exists and has an `ARMATURE` modifier whose `object` is `Rig`.\n7. `Skin`'s vertex groups are exactly `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`.\n8. Every vertex-group name on `Skin` corresponds to a bone that exists on `Rig` (no missing-bone references).\n\nDo not add, remove, or reparent bones; only their names should change.",
+  "id": "c-blender-task-49-ubuntu",
+  "instruction": "Rename Armature Bones to Restore Skinning `init_file/scene.blend` contains an armature object `Rig` (a 4-bone chain) and a mesh object `Skin` with an Armature modifier bound to `Rig`. The mesh's vertex groups expect bones named `Bone.Root`, `Bone.A`, `Bone.B`, `Bone.Tip` arranged root-to-tip along the chain, but the armature's bones currently carry generic auto-numbered names, so the Armature modifier does not deform the mesh. Rename the bones so the vertex groups resolve against the rig, and save the result to `output/answer.blend`. 1. `output/answer.blend` opens as a valid Blender file. 2. An armature object named `Rig` exists (type `ARMATURE`). 3. `Rig`'s armature has exactly 4 bones. 4. The bone names on `Rig` are exactly the set `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`. 5. The parent chain is `Bone.Root` (no parent) → `Bone.A` → `Bone.B` → `Bone.Tip`. 6. A mesh object named `Skin` exists and has an `ARMATURE` modifier whose `object` is `Rig`. 7. `Skin`'s vertex groups are exactly `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`. 8. Every vertex-group name on `Skin` corresponds to a bone that exists on `Rig` (no missing-bone references). Do not add, remove, or reparent bones; only their names should change.",
   "source": "Blender Manual — Armature Bone Naming and Vertex Group Binding",
   "trajectory": "engiworld/trajectories/",
   "related_apps": [
@@ -49,5 +49,6 @@
       "timeout_seconds": 300,
       "ground_truth": []
     }
-  }
+  },
+  "snapshot": "Blender-4.2.3"
 }

@@ -1,7 +1,7 @@
 {
   "id": "v-blender-task-17-ubuntu",
-  "snapshot": "blender-5.1",
-  "instruction": "Bouncing Cube Keyframes\n\n`scene.blend` contains a single unit-cube mesh object `Ball` located at the world origin with no animation data. The scene frame range is 1..240.\n\nkeyframe a bouncing animation on `Ball.location.z` that depicts 10 bounces with diminishing height. Each successive peak must be 80% of the previous peak.\n\nBounce schedule\n===============\n- Base peak height: `H = 5.0 BU`.\n- Each bounce has a period of 24 frames (12 frames up + 12 frames down).\n- Impact frames (cube touches `z = 0`): frames 1, 25, 49, 73, 97, 121, 145, 169, 193, 217, 241 (11 keyframes).\n- Peak frames (cube at apex of each bounce): frames 13, 37, 61, 85, 109, 133, 157, 181, 205, 229 (10 keyframes).\n- Peak heights: the i-th peak (0-indexed, i = 0..9) has `z = H * 0.8**i`.\n- Bounce 1 apex (frame 13): z = 5.0000\n- Bounce 2 apex (frame 37): z = 4.0000\n- Bounce 3 apex (frame 61): z = 3.2000\n- Bounce 4 apex (frame 85): z = 2.5600\n- Bounce 5 apex (frame 109): z = 2.0480\n- Bounce 6 apex (frame 133): z = 1.6384\n- Bounce 7 apex (frame 157): z = 1.3107\n- Bounce 8 apex (frame 181): z = 1.0486\n- Bounce 9 apex (frame 205): z = 0.8389\n- Bounce 10 apex (frame 229): z = 0.6711\n\nConcretely, you must insert exactly 21 keyframes on `Ball.location.z` (`data_path='location'`, `array_index=2`) at the 11 impact frames (value 0) and the 10 peak frames (value `H * 0.8**i`).\n\nF-curve handles may use BEZIER interpolation. Only keyframe positions and values matter.\n\nExtend `scene.frame_end` to at least 241 so the full animation fits inside the scene range.\n\nSave the result as `answer.blend`.\n\nRequirements:\n===============\n1. A single mesh object named `Ball` exists at the world origin, is a unit cube (8 verts), and has no modifiers.\n2. `Ball.animation_data.action` exists.\n3. The action has an f-curve with `data_path='location'` and `array_index=2` containing exactly 21 keyframes.\n4. The 21 keyframe frames exactly match {1, 13, 25, 37, 49, 61, 73, 85, 97, 109, 121, 133, 145, 157, 169, 181, 193, 205, 217, 229, 241}.\n5. At each of the 11 impact frames, z = 0 (tol 1e-3).\n6. At each of the 10 peak frames, z = H * 0.8**i (tol 1e-3).\n7. `scene.frame_end >= 241`.",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Bouncing Cube Keyframes `scene.blend` contains a single unit-cube mesh object `Ball` located at the world origin with no animation data. The scene frame range is 1..240. Keyframe a bouncing animation on `Ball.location.z` that depicts 10 bounces with diminishing height. Each successive peak must be 80% of the previous peak. Bounce schedule =============== - Base peak height: `H = 5.0 BU`. - Each bounce has a period of 24 frames (12 frames up + 12 frames down). - Impact frames (cube touches `z = 0`): frames 1, 25, 49, 73, 97, 121, 145, 169, 193, 217, 241 (11 keyframes). - Peak frames (cube at apex of each bounce): frames 13, 37, 61, 85, 109, 133, 157, 181, 205, 229 (10 keyframes). - Peak heights: the i-th peak (0-indexed, i = 0..9) has `z = H * 0.8**i`. - Bounce 1 apex (frame 13): z = 5.0000 - Bounce 2 apex (frame 37): z = 4.0000 - Bounce 3 apex (frame 61): z = 3.2000 - Bounce 4 apex (frame 85): z = 2.5600 - Bounce 5 apex (frame 109): z = 2.0480 - Bounce 6 apex (frame 133): z = 1.6384 - Bounce 7 apex (frame 157): z = 1.3107 - Bounce 8 apex (frame 181): z = 1.0486 - Bounce 9 apex (frame 205): z = 0.8389 - Bounce 10 apex (frame 229): z = 0.6711 Concretely, you must insert exactly 21 keyframes on `Ball.location.z` (`data_path='location'`, `array_index=2`) at the 11 impact frames (value 0) and the 10 peak frames (value `H * 0.8**i`). F-curve handles may use BEZIER interpolation. Only keyframe positions and values matter. Extend `scene.frame_end` to at least 241 so the full animation fits inside the scene range. Save the result as `answer.blend`. Requirements: =============== 1. A single mesh object named `Ball` exists at the world origin, is a unit cube (8 verts), and has no modifiers. 2. `Ball.animation_data.action` exists. 3. The action has an f-curve with `data_path='location'` and `array_index=2` containing exactly 21 keyframes. 4. The 21 keyframe frames exactly match {1, 13, 25, 37, 49, 61, 73, 85, 97, 109, 121, 133, 145, 157, 169, 181, 193, 205, 217, 229, 241}. 5. At each of the 11 impact frames, z = 0 (tol 1e-3). 6. At each of the 10 peak frames, z = H * 0.8**i (tol 1e-3). 7. `scene.frame_end >= 241`.",
   "source": "Lasseter 1987 — \"Principles of Traditional Animation Applied to 3D Computer Animation\", SIGGRAPH",
   "config": [
     {
@@ -46,13 +46,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
+      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

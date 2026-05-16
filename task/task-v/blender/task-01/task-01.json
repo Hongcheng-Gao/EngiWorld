@@ -1,7 +1,7 @@
 {
   "id": "v-blender-task-01-ubuntu",
-  "snapshot": "blender-5.1",
-  "instruction": "Parametric Running-Bond Brick Wall (Geometry Nodes)\n\n`scene.blend` contains an empty mesh object `Wall` at the origin.\n\nAdd a live Geometry Nodes modifier to `Wall` and save the result as `answer.blend`. Do not apply the modifier; `Wall.data` must stay empty.\n\nThe node group must expose modifier inputs `Rows=6`, `Cols=8`, `Brick Dimensions=(0.2, 0.1, 0.05)` in meters, and `Gap=0.01`. The evaluated mesh must be a 6x8 running-bond wall of 48 disjoint cuboid bricks, each brick remaining an 8-vertex\\6-face cuboid. The wall must have the expected overall dimensions, with the bottom at `z=0`, the left edge at `x=0`, and every odd row shifted by `(brick.x + gap) \\ 2` relative to the row below.",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Parametric Running-Bond Brick Wall (Geometry Nodes) `scene.blend` contains an empty mesh object `Wall` at the origin. Add a live Geometry Nodes modifier to `Wall` and save the result as `answer.blend`. Do not apply the modifier; `Wall.data` must stay empty. The node group must expose modifier inputs `Rows=6`, `Cols=8`, `Brick Dimensions=(0.2, 0.1, 0.05)` in meters, and `Gap=0.01`. The evaluated mesh must be a 6x8 running-bond wall of 48 disjoint cuboid bricks, each brick remaining an 8-vertex/6-face cuboid. The wall must have the expected overall dimensions, with the bottom at `z=0`, the left edge at `x=0`, and every odd row shifted by `(brick.x + gap) / 2` relative to the row below.",
   "source": "human_craft",
   "config": [
     {
@@ -46,13 +46,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
+      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

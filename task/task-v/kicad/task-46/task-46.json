@@ -1,83 +1,83 @@
 {
-    "id":  "v-kicad-task-46-ubuntu",
-    "snapshot":  "kicad-10.0.1",
-    "instruction":  "ESD Protection Placement\n\nThe file board.kicad_pcb has 4 external connectors (J1-J4) each protected by an ESD array (D1-D4). The ESD arrays are currently placed far from their connectors. The file esd_map.csv maps each connector pad to its ESD signal pad and net.\n\nMove each ESD array so its signal pin (as listed in esd_map.csv column esd_signal_pad) is within 5 mm of the corresponding connector pad. Do not change connector positions. Preserve the ESD footprint rotation.\n\nRequirements:\n1. Each ESD signal pad is \u003c= 5 mm from its connector pad (per esd_map.csv).\n2. Connector footprint positions unchanged.\n3. ESD footprint rotation preserved.\n\nWrite /home/user/Desktop/answer.kicad_pcb.",
-    "source":  "TI / Analog Devices / Nordic / Microchip PCB layout app notes (TESD5V5U4LC TDK app note), IPC-A-610H Acceptability of Electronic Assemblies",
-    "config":  [
-                   {
-                       "type":  "upload_file",
-                       "parameters":  {
-                                          "files":  [
-                                                        {
-                                                            "local_path":  "task-46/init_file/board.kicad_pcb",
-                                                            "path":  "/home/user/Desktop/board.kicad_pcb"
-                                                        }
-                                                    ]
-                                      }
-                   },
-                   {
-                       "type":  "upload_file",
-                       "parameters":  {
-                                          "files":  [
-                                                        {
-                                                            "local_path":  "task-46/init_file/esd_map.csv",
-                                                            "path":  "/home/user/Desktop/esd_map.csv"
-                                                        }
-                                                    ]
-                                      }
-                   },
-                   {
-                       "type":  "launch",
-                       "parameters":  {
-                                          "command":  [
-                                                          "kicad",
-                                                          "/home/user/Desktop/board.kicad_pcb"
-                                                      ]
-                                      }
-                   },
-                   {
-                       "type":  "execute",
-                       "parameters":  {
-                                          "command":  [
-                                                          "python",
-                                                          "-c",
-                                                          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
-                                                      ]
-                                      }
-                   }
-               ],
-    "trajectory":  "trajectories/",
-    "related_apps":  [
-                         "kicad"
-                     ],
-    "evaluator":  {
-                      "postconfig":  [
-                                         {
-                                             "type":  "upload_file",
-                                             "parameters":  {
-                                                                "files":  [
-                                                                              {
-                                                                                  "local_path":  "task-46/eval.py",
-                                                                                  "path":  "/home/user/Desktop/eval.py"
-                                                                              }
-                                                                          ]
-                                                            }
-                                         }
-                                     ],
-                      "func":  "exact_match",
-                      "result":  {
-                                     "type":  "vm_command_line",
-                                     "command":  "python /home/user/Desktop/eval.py",
-                                     "shell":  "true"
-                                 },
-                      "expected":  {
-                                       "type":  "rule",
-                                       "rules":  {
-                                                     "expected":  "True\n"
-                                                 }
-                                   }
-                  },
-    "proxy":  false,
-    "fixed_ip":  false,
-    "possibility_of_env_change":  "low"
+  "id": "v-kicad-task-46-ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "ESD Protection Placement The file board.kicad_pcb has 4 external connectors (J1-J4) each protected by an ESD array (D1-D4). The ESD arrays are currently placed far from their connectors. The file esd_map.csv maps each connector pad to its ESD signal pad and net. Move each ESD array so its signal pin (as listed in esd_map.csv column esd_signal_pad) is within 5 mm of the corresponding connector pad. Do not change connector positions. Preserve the ESD footprint rotation. Requirements: 1. Each ESD signal pad is <= 5 mm from its connector pad (per esd_map.csv). 2. Connector footprint positions unchanged. 3. ESD footprint rotation preserved. Write /home/user/Desktop/answer.kicad_pcb.",
+  "source": "TI / Analog Devices / Nordic / Microchip PCB layout app notes (TESD5V5U4LC TDK app note), IPC-A-610H Acceptability of Electronic Assemblies",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-46/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-46/init_file/esd_map.csv",
+            "path": "/home/user/Desktop/esd_map.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-46/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

@@ -1,6 +1,6 @@
 {
-  "id": "blender-28",
-  "instruction": "Rotate Middle Arm, Preserve End-Effector World Position\n\n`init_file/scene.blend` contains three mesh objects `Arm1` ← `Arm2` ← `Arm3` in a parent chain, all at zero rotation. Rotate `Arm2` by +30° about its own local Z axis and counter-adjust `Arm3.location` so that `Arm3`'s world-space position is unchanged.\n\nSave the result as `output/answer.blend`.\n\n## Pass conditions\n1. `Arm1`, `Arm2`, `Arm3` all exist as mesh objects in the output.\n2. Parent chain is intact: `Arm1` has no parent, `Arm2.parent == Arm1`, `Arm3.parent == Arm2`.\n3. `Arm1`'s world transform is unchanged (position ≈ (0,0,0), rotation ≈ (0,0,0); tol 5e-3).\n4. `Arm2`'s world position is unchanged (≈ (0, 0.5, 0); tol 5e-3).\n5. `Arm2.rotation_euler.z == π/6` (tol 5e-3 rad); its world-frame X/Y rotations remain zero.\n6. `Arm3`'s world position matches its original world position (0, 1, 0) to within Euclidean distance 5e-3.",
+  "id": "c-blender-task-28-ubuntu",
+  "instruction": "Rotate Middle Arm, Preserve End-Effector World Position `init_file/scene.blend` contains three mesh objects `Arm1` ← `Arm2` ← `Arm3` in a parent chain, all at zero rotation. Rotate `Arm2` by +30° about its own local Z axis and counter-adjust `Arm3.location` so that `Arm3`'s world-space position is unchanged. Save the result as `output/answer.blend`. 1. `Arm1`, `Arm2`, `Arm3` all exist as mesh objects in the output. 2. Parent chain is intact: `Arm1` has no parent, `Arm2.parent == Arm1`, `Arm3.parent == Arm2`. 3. `Arm1`'s world transform is unchanged (position ≈ (0,0,0), rotation ≈ (0,0,0); tol 5e-3). 4. `Arm2`'s world position is unchanged (≈ (0, 0.5, 0); tol 5e-3). 5. `Arm2.rotation_euler.z == π/6` (tol 5e-3 rad); its world-frame X/Y rotations remain zero. 6. `Arm3`'s world position matches its original world position (0, 1, 0) to within Euclidean distance 5e-3.",
   "source": "human_craft",
   "trajectory": "engiworld/trajectories/",
   "related_apps": [
@@ -49,5 +49,6 @@
       "timeout_seconds": 300,
       "ground_truth": []
     }
-  }
+  },
+  "snapshot": "Blender-4.2.3"
 }

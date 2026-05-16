@@ -1,6 +1,6 @@
 {
-  "id": "blender-9",
-  "instruction": "bmesh Boolean Welder\n\n`init_file/parts.blend` contains 12 disjoint mesh objects `Part01..Part12`, each a differently-sized cuboid. The parts are arranged in an overlapping cluster so adjacent boxes share real volume. Weld all 12 into a single manifold mesh object named `Welded` and save the result as `output/answer.blend`.\n\n## Pass conditions\n1. `output/answer.blend` exists.\n2. The scene contains exactly one mesh object, named `Welded`; none of the 12 original `Part*` objects remain.\n3. `Welded.modifiers` is empty — the boolean result must be baked into the mesh, not left as a live modifier stack.\n4. `Welded` is closed-manifold: every edge is shared by exactly two faces.\n5. `Welded` is a single connected component (BFS over face adjacency yields one group).\n6. `Welded`'s face count is in [40, 200].\n7. `Welded`'s world-space axis-aligned bounding box matches the AABB of the union of all 12 input parts to within 0.01 BU per axis.\n\nCanonical approach: union the 12 parts with bmesh (`bmesh.ops.boolean_solver`) or by chaining object-level Boolean UNION modifiers and applying them. The final mesh must be baked geometry with a clean modifier stack.",
+  "id": "c-blender-task-09-ubuntu",
+  "instruction": "Bmesh Boolean Welder `init_file/parts.blend` contains 12 disjoint mesh objects `Part01..Part12`, each a differently-sized cuboid. The parts are arranged in an overlapping cluster so adjacent boxes share real volume. Weld all 12 into a single manifold mesh object named `Welded` and save the result as `output/answer.blend`. 1. `output/answer.blend` exists. 2. The scene contains exactly one mesh object, named `Welded`; none of the 12 original `Part*` objects remain. 3. `Welded.modifiers` is empty — the boolean result must be baked into the mesh, not left as a live modifier stack. 4. `Welded` is closed-manifold: every edge is shared by exactly two faces. 5. `Welded` is a single connected component (BFS over face adjacency yields one group). 6. `Welded`'s face count is in [40, 200]. 7. `Welded`'s world-space axis-aligned bounding box matches the AABB of the union of all 12 input parts to within 0.01 BU per axis. Canonical approach: union the 12 parts with bmesh (`bmesh.ops.boolean_solver`) or by chaining object-level Boolean UNION modifiers and applying them. The final mesh must be baked geometry with a clean modifier stack.",
   "source": "Blender Python API — bmesh module; Requicha 1980 — Boolean Operations on Solids",
   "trajectory": "engiworld/trajectories/",
   "related_apps": [
@@ -49,5 +49,6 @@
       "timeout_seconds": 300,
       "ground_truth": []
     }
-  }
+  },
+  "snapshot": "Blender-4.2.3"
 }

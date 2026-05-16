@@ -1,125 +1,250 @@
-from __future__ import annotations
-
-import base64
-import importlib.util
-import shutil
-import tempfile
-import zlib
-from pathlib import Path
-
-
-DESKTOP = Path('C:\\Users\\Administrator\\Desktop')
-BUNDLE = {'eval_inner.py': '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', 'collada.py': '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'}
-CALL_FUNC = 'eval_outputs'
-CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = []
-
-
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
-
-
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
-
-
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
-
-
-
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
-
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
-    try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        score = result.get("score")
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    if hasattr(result, "score"):
-        try:
-            return float(getattr(result, "score")) == 1.0
-        except Exception:
-            pass
-    return False
-
-
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    return spec
-
-
-def _run() -> bool:
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        module = _load_module(root)
-        func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
-        return _is_pass(result)
-    except Exception:
-        return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
-if __name__ == "__main__":
-    print("true" if _run() else "false")
+from __future__ import annotations
+
+
+
+import base64
+
+import importlib.util
+
+import shutil
+
+import tempfile
+
+import zlib
+
+from pathlib import Path
+
+
+
+
+
+DESKTOP = Path('C:\\Users\\Administrator\\Desktop')
+
+BUNDLE = {'eval_inner.py': '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', 'collada.py': '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'}
+
+CALL_FUNC = 'eval_outputs'
+
+CALL_ARGS = ['__DESKTOP_DIR__']
+
+INIT_MAP = []
+
+
+
+
+
+def _decode(payload: str) -> bytes:
+
+    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
+
+
+
+
+
+def _materialize_bundle(root: Path) -> None:
+
+    for rel, payload in BUNDLE.items():
+
+        path = root / rel
+
+        path.parent.mkdir(parents=True, exist_ok=True)
+
+        path.write_bytes(_decode(payload))
+
+    for dirname in ("init_file", "ground_truth", "_internal"):
+
+        (root / dirname).mkdir(parents=True, exist_ok=True)
+
+    for rel, desktop_path in INIT_MAP:
+
+        src = Path(desktop_path)
+
+        dst = root / "init_file" / rel
+
+        if src.exists():
+
+            dst.parent.mkdir(parents=True, exist_ok=True)
+
+            shutil.copy2(src, dst)
+
+
+
+
+
+def _bundle_python_paths(root: Path) -> list[str]:
+
+    paths: list[str] = []
+
+    seen: set[str] = set()
+
+
+
+    def add(path: Path) -> None:
+
+        text = str(path)
+
+        if text not in seen:
+
+            seen.add(text)
+
+            paths.append(text)
+
+
+
+    add(root)
+
+    for rel in BUNDLE:
+
+        rel_path = Path(rel)
+
+        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
+
+            add(root / rel_path.parent)
+
+    return paths
+
+
+
+
+
+
+
+def _load_module(root: Path):
+
+    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
+
+    if spec is None or spec.loader is None:
+
+        raise RuntimeError("unable to load eval_inner.py")
+
+    module = importlib.util.module_from_spec(spec)
+
+    import sys
+
+
+
+    sys.modules["eval_inner"] = module
+
+    added_paths = _bundle_python_paths(root)
+
+    for path in reversed(added_paths):
+
+        sys.path.insert(0, path)
+
+    try:
+
+        spec.loader.exec_module(module)
+
+    finally:
+
+        for path in added_paths:
+
+            try:
+
+                sys.path.remove(path)
+
+            except ValueError:
+
+                pass
+
+    return module
+
+def _is_pass(result) -> bool:
+
+    if isinstance(result, bool):
+
+        return result
+
+    if isinstance(result, dict):
+
+        if "pass" in result:
+
+            return bool(result["pass"])
+
+        if "passed" in result:
+
+            return bool(result["passed"])
+
+        score = result.get("score")
+
+        if isinstance(score, (int, float)):
+
+            return float(score) == 1.0
+
+    for attr in ("all_passed", "passed"):
+
+        if hasattr(result, attr):
+
+            value = getattr(result, attr)
+
+            if isinstance(value, bool):
+
+                return value
+
+    if hasattr(result, "score"):
+
+        try:
+
+            return float(getattr(result, "score")) == 1.0
+
+        except Exception:
+
+            pass
+
+    return False
+
+
+
+
+
+def _resolve_arg(spec: str):
+
+    if spec == "__DESKTOP_DIR__":
+
+        return str(DESKTOP)
+
+    return spec
+
+
+
+
+
+def _run() -> bool:
+
+    import uuid
+
+
+
+    runtime_base = Path(__file__).resolve().parent / "_runtime"
+
+    runtime_base.mkdir(parents=True, exist_ok=True)
+
+    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
+
+    root.mkdir(parents=True, exist_ok=False)
+
+    try:
+
+        _materialize_bundle(root)
+
+        module = _load_module(root)
+
+        func = getattr(module, CALL_FUNC)
+
+        args = [_resolve_arg(arg) for arg in CALL_ARGS]
+
+        result = func(*args)
+
+        return _is_pass(result)
+
+    except Exception:
+
+        return False
+
+    finally:
+
+        shutil.rmtree(root, ignore_errors=True)
+
+if __name__ == "__main__":
+
+    print("True" if _run() else "False")
+

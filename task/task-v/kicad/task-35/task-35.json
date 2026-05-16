@@ -1,72 +1,72 @@
 {
-    "id":  "v-kicad-task-35-ubuntu",
-    "snapshot":  "kicad-10.0.1",
-    "instruction":  "PCB Routing Completion\n\nYou are given an unrouted KiCad PCB file `/home/user/Desktop/unrouted.kicad_pcb` with 8 placed components (4 resistors, 3 capacitors, 1 connector) and 5 nets (GND, VCC, SIG_A, SIG_B, SIG_C). No traces have been routed yet.\n\nProduce a fully-routed version of the board. Every net with 2 or more pads must be connected by copper tracks (segments). The component placement must remain exactly as in the input file.\n\nRequirements:\n1. All 5 signal nets are fully connected - every pad in a net must be reachable from every other pad in the same net via segments and/or vias.\n2. The routed.kicad_pcb file preserves all footprint positions (at coordinates) from the input.\n3. At least one (segment...) block exists per signal net.\n4. All segments reference valid net numbers from the board\u0027s net declarations.\n5. The output is a valid KiCad 9 PCB s-expression file.\n\nWrite `/home/user/Desktop/routed.kicad_pcb`.",
-    "source":  "human_craft",
-    "config":  [
-                   {
-                       "type":  "upload_file",
-                       "parameters":  {
-                                          "files":  [
-                                                        {
-                                                            "local_path":  "task-35/init_file/unrouted.kicad_pcb",
-                                                            "path":  "/home/user/Desktop/unrouted.kicad_pcb"
-                                                        }
-                                                    ]
-                                      }
-                   },
-                   {
-                       "type":  "launch",
-                       "parameters":  {
-                                          "command":  [
-                                                          "kicad",
-                                                          "/home/user/Desktop/unrouted.kicad_pcb"
-                                                      ]
-                                      }
-                   },
-                   {
-                       "type":  "execute",
-                       "parameters":  {
-                                          "command":  [
-                                                          "python",
-                                                          "-c",
-                                                          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
-                                                      ]
-                                      }
-                   }
-               ],
-    "trajectory":  "trajectories/",
-    "related_apps":  [
-                         "kicad"
-                     ],
-    "evaluator":  {
-                      "postconfig":  [
-                                         {
-                                             "type":  "upload_file",
-                                             "parameters":  {
-                                                                "files":  [
-                                                                              {
-                                                                                  "local_path":  "task-35/eval.py",
-                                                                                  "path":  "/home/user/Desktop/eval.py"
-                                                                              }
-                                                                          ]
-                                                            }
-                                         }
-                                     ],
-                      "func":  "exact_match",
-                      "result":  {
-                                     "type":  "vm_command_line",
-                                     "command":  "python /home/user/Desktop/eval.py",
-                                     "shell":  "true"
-                                 },
-                      "expected":  {
-                                       "type":  "rule",
-                                       "rules":  {
-                                                     "expected":  "True\n"
-                                                 }
-                                   }
-                  },
-    "proxy":  false,
-    "fixed_ip":  false,
-    "possibility_of_env_change":  "low"
+  "id": "v-kicad-task-35-ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "PCB Routing Completion You are given an unrouted KiCad PCB file `/home/user/Desktop/unrouted.kicad_pcb` with 8 placed components (4 resistors, 3 capacitors, 1 connector) and 5 nets (GND, VCC, SIG_A, SIG_B, SIG_C). No traces have been routed yet. Produce a fully-routed version of the board. Every net with 2 or more pads must be connected by copper tracks (segments). The component placement must remain exactly as in the input file. Requirements: 1. All 5 signal nets are fully connected - every pad in a net must be reachable from every other pad in the same net via segments and/or vias. 2. The routed.kicad_pcb file preserves all footprint positions (at coordinates) from the input. 3. At least one (segment...) block exists per signal net. 4. All segments reference valid net numbers from the board's net declarations. 5. The output is a valid KiCad PCB s-expression file. Write `/home/user/Desktop/routed.kicad_pcb`.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/unrouted.kicad_pcb",
+            "path": "/home/user/Desktop/unrouted.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/unrouted.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

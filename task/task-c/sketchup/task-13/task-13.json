@@ -1,7 +1,7 @@
 {
   "id": "c-sketchup-task-13-windows",
-  "snapshot": "sketchup2026",
-  "instruction": "Component Grid Array with Alternating Rotation\n\nThe file `C:\\Users\\Administrator\\Desktop\\cell.dae` contains a single rectangular bar (500 x 100 x 100 mm) centered on the X-Y origin with its base at Z=0 (so it spans X in [-0.25, 0.25] m, Y in [-0.05, 0.05] m, Z in [0, 0.10] m).\n\n1. Import `C:\\Users\\Administrator\\Desktop\\cell.dae` and promote the bar to a single reusable ComponentDefinition (or equivalent COLLADA `<library_geometries>` referenced by multiple `<node>` instances).\n2. Create a 10 x 10 grid of 100 instances, one per (i, j) for i, j in 0..9. Each instance's local origin is placed at world position (i x 0.7, j x 0.7, 0) - the grid spacing is 700 mm.\n3. For every instance where (i + j) is **odd**, rotate the bar by 90 deg around the world Z axis through the instance's own local origin. Instances where (i + j) is even are not rotated.\n\nSave the native SketchUp model to `C:\\Users\\Administrator\\Desktop\\answer.skp`. The DAE must reference a single shared geometry definition, not 100 independent copies of the mesh.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\answer.skp` can be opened and inspected as a native SketchUp model.\n2. Exactly one geometry definition is referenced (instanced 100 times).\n3. All 100 expected cell centers are covered - for every (i, j) with i, j in 0..9, some vertex lies within 5 mm of (i*0.7, j*0.7).\n4. For every cell, the world-space AABB of that cell's vertices matches the expected shape:\n- Even (i+j): X-span 500 mm, Y-span 100 mm, Z-span 100 mm (no rotation)\n- Odd (i+j): X-span 100 mm, Y-span 500 mm, Z-span 100 mm (90 deg about Z)\nwithin 5 mm of the expected extents.",
+  "snapshot": "SketchUp2026",
+  "instruction": "Component Grid Array with Alternating Rotation The file `C:\\Users\\Administrator\\Desktop\\cell.dae` contains a single rectangular bar (500 x 100 x 100 mm) centered on the X-Y origin with its base at Z=0 (so it spans X in [-0.25, 0.25] m, Y in [-0.05, 0.05] m, Z in [0, 0.10] m). 1. Import `C:\\Users\\Administrator\\Desktop\\cell.dae` and promote the bar to a single reusable ComponentDefinition (or equivalent COLLADA `<library_geometries>` referenced by multiple `<node>` instances). 2. Create a 10 x 10 grid of 100 instances, one per (i, j) for i, j in 0..9. Each instance's local origin is placed at world position (i x 0.7, j x 0.7, 0) - the grid spacing is 700 mm. 3. For every instance where (i + j) is **odd**, rotate the bar by 90 deg around the world Z axis through the instance's own local origin. Instances where (i + j) is even are not rotated. Save the native SketchUp model to `C:\\Users\\Administrator\\Desktop\\answer.skp`. The DAE must reference a single shared geometry definition, not 100 independent copies of the mesh. Requirements: 1. `C:\\Users\\Administrator\\Desktop\\answer.skp` can be opened and inspected as a native SketchUp model. 2. Exactly one geometry definition is referenced (instanced 100 times). 3. All 100 expected cell centers are covered - for every (i, j) with i, j in 0..9, some vertex lies within 5 mm of (i*0.7, j*0.7). 4. For every cell, the world-space AABB of that cell's vertices matches the expected shape: - Even (i+j): X-span 500 mm, Y-span 100 mm, Z-span 100 mm (no rotation) - Odd (i+j): X-span 100 mm, Y-span 500 mm, Z-span 100 mm (90 deg about Z) within 5 mm of the expected extents.",
   "source": "SU-Help Move + Ctrl-Copy array, ComponentDefinition + ComponentInstance; COLLADA 1.5 library_nodes / instance_node",
   "config": [
     {
@@ -43,7 +43,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

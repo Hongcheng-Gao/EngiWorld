@@ -1,6 +1,6 @@
 {
-  "id": "blender-46",
-  "instruction": "Modifier-Order Bug\n\n`init_file/scene.blend` contains a mesh object `Body` with two unapplied modifiers (a Boolean difference against `Cutter` and a Subdivision Surface). The modifier stack is in the wrong order: the cut edge is jagged and the evaluated mesh is non-manifold because one modifier is run on the output of the other in the wrong sequence. Fix the stack so the evaluated result is a clean smoothed body with a through-hole — without applying either modifier and without changing their parameters — and save the result to `output/answer.blend`.\n\n## Pass conditions\n1. `output/answer.blend` opens as a valid Blender file.\n2. The scene contains a mesh object named `Body` and a mesh object named `Cutter`.\n3. `Body` has exactly 2 modifiers.\n4. The modifier at stack index 0 is of type `SUBSURF` (Subdivision Surface).\n5. The modifier at stack index 1 is of type `BOOLEAN`.\n6. Both modifiers are enabled for viewport and render (`show_viewport` and `show_render` both true).\n7. The Subdivision Surface modifier has viewport subdivision level ≥ 1.\n8. The Boolean modifier uses operation `DIFFERENCE` with `object` set to `Cutter`.\n9. `Body`'s evaluated mesh (after the modifier stack) has a polygon count between 200 and 5000 inclusive.\n10. `Body`'s evaluated mesh is closed-manifold (no non-manifold edges, no loose vertices, no loose edges).\n\nDo not apply, delete, or duplicate modifiers; only their order in the stack should change.",
+  "id": "c-blender-task-46-ubuntu",
+  "instruction": "Modifier-Order Bug `init_file/scene.blend` contains a mesh object `Body` with two unapplied modifiers (a Boolean difference against `Cutter` and a Subdivision Surface). The modifier stack is in the wrong order: the cut edge is jagged and the evaluated mesh is non-manifold because one modifier is run on the output of the other in the wrong sequence. Fix the stack so the evaluated result is a clean smoothed body with a through-hole — without applying either modifier and without changing their parameters — and save the result to `output/answer.blend`. 1. `output/answer.blend` opens as a valid Blender file. 2. The scene contains a mesh object named `Body` and a mesh object named `Cutter`. 3. `Body` has exactly 2 modifiers. 4. The modifier at stack index 0 is of type `SUBSURF` (Subdivision Surface). 5. The modifier at stack index 1 is of type `BOOLEAN`. 6. Both modifiers are enabled for viewport and render (`show_viewport` and `show_render` both true). 7. The Subdivision Surface modifier has viewport subdivision level ≥ 1. 8. The Boolean modifier uses operation `DIFFERENCE` with `object` set to `Cutter`. 9. `Body`'s evaluated mesh (after the modifier stack) has a polygon count between 200 and 5000 inclusive. 10. `Body`'s evaluated mesh is closed-manifold (no non-manifold edges, no loose vertices, no loose edges). Do not apply, delete, or duplicate modifiers; only their order in the stack should change.",
   "source": "human_craft",
   "trajectory": "engiworld/trajectories/",
   "related_apps": [
@@ -49,5 +49,6 @@
       "timeout_seconds": 300,
       "ground_truth": []
     }
-  }
+  },
+  "snapshot": "Blender-4.2.3"
 }

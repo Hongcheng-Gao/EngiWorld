@@ -1,7 +1,7 @@
 {
   "id": "v-blender-task-34-ubuntu",
-  "snapshot": "blender-5.1",
-  "instruction": "Reference-File Path Normalization\n\n`scene.blend` contains three mesh objects `Plane_R`, `Plane_G`, and `Plane_B`. Each plane has a material with an Image Texture node bound to a 16x16 PNG (`red.png`, `green.png`, `blue.png`, stored in `textures/`). Crucially, each image datablock was loaded from an ABSOLUTE filesystem path, so `bpy.data.images[name].filepath` does NOT start with the Blender-relative `\\\\` prefix.\n\nYour task is to make every image path blend-relative and save the result to `answer.blend` (relative to the working directory).\n\nWhat to do\n1. Open `scene.blend`.\n2. Save the blend to `answer.blend` FIRST (because `bpy.ops.file.make_paths_relative()` requires the.blend to already have a filepath on disk - that's what anchors the `\\\\` prefix).\n3. Ensure the PNG assets are reachable from the new blend's location (e.g., copy `textures/*.png` into `textures/`).\n4. Run `bpy.ops.file.make_paths_relative()`. This rewrites every absolute filepath (images, libraries, caches, etc.) into a blend-relative path starting with `\\\\`.\n5. Save the blend again.\n\nRequirements:\n1. `answer.blend` exists and opens as a valid Blender file.\n2. There are at least three disk-backed (`source == 'FILE'`) image datablocks, excluding `Render Result` and `Viewer Node`.\n3. Every such image's `filepath` starts with `\\\\` (blend-relative).\n4. `bpy.path.abspath(image.filepath)` resolves to an existing file on disk for every image.\n5. Every image loads (non-zero size, pixels accessible) after the blend is reopened - no missing images.\n6. The three mesh objects `Plane_R`, `Plane_G`, `Plane_B` still exist, each with a material whose node tree includes an Image Texture node with an assigned image.\n\nDo not rename any object, material, or image datablock, and do not alter the shader graphs - only the image filepaths (and the location of the texture files on disk) should change.",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Reference-File Path Normalization `scene.blend` contains three mesh objects `Plane_R`, `Plane_G`, and `Plane_B`. Each plane has a material with an Image Texture node bound to a 16x16 PNG (`red.png`, `green.png`, `blue.png`, stored in `textures/`). Crucially, each image datablock was loaded from an ABSOLUTE filesystem path, so `bpy.data.images[name].filepath` does NOT start with the Blender-relative `\\\\` prefix. Your task is to make every image path blend-relative and save the result to `answer.blend` (relative to the working directory). What to do 1. Open `scene.blend`. 2. Save the blend to `answer.blend` FIRST (because `bpy.ops.file.make_paths_relative()` requires the.blend to already have a filepath on disk - that's what anchors the `\\\\` prefix). 3. Ensure the PNG assets are reachable from the new blend's location (e.g., copy `textures/*.png` into `textures/`). 4. Run `bpy.ops.file.make_paths_relative()`. This rewrites every absolute filepath (images, libraries, caches, etc.) into a blend-relative path starting with `\\\\`. 5. Save the blend again. Requirements: 1. `answer.blend` exists and opens as a valid Blender file. 2. There are at least three disk-backed (`source == 'FILE'`) image datablocks, excluding `Render Result` and `Viewer Node`. 3. Every such image's `filepath` starts with `\\\\` (blend-relative). 4. `bpy.path.abspath(image.filepath)` resolves to an existing file on disk for every image. 5. Every image loads (non-zero size, pixels accessible) after the blend is reopened - no missing images. 6. The three mesh objects `Plane_R`, `Plane_G`, `Plane_B` still exist, each with a material whose node tree includes an Image Texture node with an assigned image. Do not rename any object, material, or image datablock, and do not alter the shader graphs - only the image filepaths (and the location of the texture files on disk) should change.",
   "source": "Blender Manual — File Paths (Absolute vs Relative) and Remap",
   "config": [
     {
@@ -79,13 +79,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
+      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

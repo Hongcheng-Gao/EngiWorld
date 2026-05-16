@@ -1,6 +1,6 @@
 {
-  "id": "blender-30",
-  "instruction": "Parametric Row of Through-Holes\n\n`init_file/scene.blend` holds a single mesh object named `Plate`: a rectangular slab aligned to the world axes. Dimensions and origin are NOT repeated here — you must inspect the scene to read them.\n\nDrill through-bores in the plate so that the saved output file satisfies every pass condition below. Save to `$BLEND_OUTPUT_PATH` (falls back to `output.blend` in the current working directory if the variable is unset).\n\n## Pass conditions\n1. Scene contains exactly one mesh object, still named `Plate`, with its world location and rotation unchanged from the input.\n2. The plate's outer envelope (top face, bottom face, four side faces) is preserved; only internal material is removed.\n3. Five cylindrical through-bores of diameter 0.20 BU pierce the plate vertically (bore axis ‖ world Z), from top face to bottom face.\n4. All five bore axes lie on the plate's mid-span Y line (Y = plate_center_Y).\n5. The five bore centers are equispaced along X and leave equal end margins on both sides of the plate's X extent.\n6. The final mesh is closed and manifold: every edge bounded by exactly two faces; no loose vertices; no non-manifold edges.\n\nInspect before acting — the plate's exact X length determines where the bores go.",
+  "id": "c-blender-task-30-ubuntu",
+  "instruction": "Parametric Row of Through-Holes `init_file/scene.blend` holds a single mesh object named `Plate`: a rectangular slab aligned to the world axes. Dimensions and origin are NOT repeated here — you must inspect the scene to read them. Drill through-bores in the plate so that the saved output file satisfies every pass condition below. Save to `$BLEND_OUTPUT_PATH` (falls back to `output.blend` in the current working directory if the variable is unset). 1. Scene contains exactly one mesh object, still named `Plate`, with its world location and rotation unchanged from the input. 2. The plate's outer envelope (top face, bottom face, four side faces) is preserved; only internal material is removed. 3. Five cylindrical through-bores of diameter 0.20 BU pierce the plate vertically (bore axis ‖ world Z), from top face to bottom face. 4. All five bore axes lie on the plate's mid-span Y line (Y = plate_center_Y). 5. The five bore centers are equispaced along X and leave equal end margins on both sides of the plate's X extent. 6. The final mesh is closed and manifold: every edge bounded by exactly two faces; no loose vertices; no non-manifold edges. Inspect before acting — the plate's exact X length determines where the bores go.",
   "source": "human_craft",
   "trajectory": "engiworld/trajectories/",
   "related_apps": [
@@ -49,5 +49,6 @@
       "timeout_seconds": 300,
       "ground_truth": []
     }
-  }
+  },
+  "snapshot": "Blender-4.2.3"
 }
