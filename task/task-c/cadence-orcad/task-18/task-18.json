@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-18-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\active_filter.cir` in native PSpice. Keep the native simulator artifacts as `C:\\\\Users\\\\User\\\\Desktop\\\\active_filter.out`, `C:\\\\Users\\\\User\\\\Desktop\\\\active_filter_measure.txt`, and `C:\\\\Users\\\\User\\\\Desktop\\\\active_filter.dat`. The native run contains one baseline case and six single-parameter `+1%` perturbation cases. From those 1 kHz gain measurements, write `C:\\\\Users\\\\User\\\\Desktop\\\\sens.csv` with header `Component,Sensitivity,Relative` and list all six perturbed components sorted by descending `|Relative|`.",
+  "source": "PSpice native finite-difference sensitivity ranking from stepped active-filter gain measurements",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18\\init_file\\active_filter.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\active_filter.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

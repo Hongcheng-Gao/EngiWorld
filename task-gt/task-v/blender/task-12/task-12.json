@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-12-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "Single Scattering Sky at Sun Elevation 15 deg\n\n`scene.blend` contains:\n- An equirectangular panoramic camera `Camera` at world origin with zero rotation. Because it is a Cycles equirectangular panorama, the rendered image spans the full sphere: top of the image is the zenith, the middle row is the horizon.\n- No geometry. The only thing the render sees is the World background.\n- The World background is currently a plain white `ShaderNodeBackground` node - there is no atmosphere, so every rendered pixel is white.\n- Render settings are already CYCLES CPU, samples=32, 256x128, seed=0, denoiser on, threads=1.\n\nTask: edit the scene so the World background is a Blender 5.1 Single Scattering sky with the sun 15 degrees above the horizon.\n\n1. Replace the World's Background Color input with the output of a `ShaderNodeTexSky` node whose:\n- `sky_type = 'SINGLE_SCATTERING'`\n- `sun_elevation = radians(15)` (approx 0.2618 rad)\n- `sun_rotation = 0`\n- altitude \\ air_density \\ dust_density \\ ozone_density at their defaults.\nThe node graph should be: Sky Texture Color -> Background Color -> World Output Surface.\n2. Leave the render settings as CYCLES, samples=32, 256x128, seed=0, denoiser on. Keep the camera EQUIRECTANGULAR panorama.\n\nSave the result to `answer.blend`.\n\nRequirements:\n1. `scene.render.engine == 'CYCLES'`.\n2. `scene.camera.data.type == 'PANO'` and `scene.camera.data.panorama_type == 'EQUIRECTANGULAR'`.\n3. The World's node tree contains a `ShaderNodeTexSky` node with `sky_type == 'SINGLE_SCATTERING'`.\n4. A fresh Cycles CPU render (256x128, seed=0, samples=32, denoiser on, threads=1) produces a sky whose top rows (zenith band, rows 0..13 top-down) are bluer than the middle rows (horizon band, rows 58..71 top-down): mean B of the zenith band exceeds mean B of the horizon band by at least 0.04.\n5. The horizon band is warm: mean(R) + mean(G) of the horizon band exceeds mean(B) of the horizon band by at least 0.05.",
+  "source": "Blender 5.1 Sky Texture - atmospheric scattering",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "v-cadence-orcad-task-32-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\custom.OLB` in Capture's Part Editor. Create a new Package named `QUAD_OPAMP` in that library and set its `Multiple-Part Package Type` to `Heterogeneous`. place any pin graphics is not required.\n\nSave the modified `C:\\Users\\User\\Desktop\\custom.OLB`.",
+  "source": "task.md #32 (OrCAD Capture User's Guide 'Part Editor / Heterogeneous Parts'; FlowCAD Library Builder AN)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-32\\init_file\\CUSTOM.OLB",
+            "path": "C:\\Users\\User\\Desktop\\CUSTOM.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-32\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

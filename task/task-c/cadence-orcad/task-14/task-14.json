@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-14-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\sallen_key.cir` in native PSpice. Keep the native simulator artifacts as `C:\\\\Users\\\\User\\\\Desktop\\\\sallen_key.out`, `C:\\\\Users\\\\User\\\\Desktop\\\\sallen_key_measure.txt`, and `C:\\\\Users\\\\User\\\\Desktop\\\\sallen_key.dat`. Then read the nine corner measurement blocks from `C:\\\\Users\\\\User\\\\Desktop\\\\sallen_key_measure.txt` and write `C:\\\\Users\\\\User\\\\Desktop\\\\wc.json` with `BW_nominal`, `BW_min`, `BW_max`, `corner_min`, and `corner_max`, where each `BW_*` value is the highest sampled frequency that remains within 3 dB of that corner's peak sample.",
+  "source": "PSpice native nonideal stepped-corner sample-grid cutoff analysis for a Sallen-Key filter",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14\\init_file\\sallen_key.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\sallen_key.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

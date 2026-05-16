@@ -1,0 +1,59 @@
+{
+  "id": "v-cadence-orcad-task-52-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\HSD_FPGA_final.brd` in Allegro PCB Editor and export the real cross-section report from the GUI as `C:\\Users\\User\\Desktop\\x-section.txt`. Submit the native report text emitted by Allegro.",
+  "source": "Cadence Allegro cross-section reporting workflow; local OrCAD operation notes for native Allegro tasks.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-52\\init_file\\HSD_FPGA_final.brd",
+            "path": "C:\\Users\\User\\Desktop\\HSD_FPGA_final.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-52\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

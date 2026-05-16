@@ -1,0 +1,92 @@
+{
+  "id": "v-cadence-orcad-task-48-win",
+  "snapshot": "",
+  "instruction": "Read `C:\\Users\\User\\Desktop\\TUTOR2.DSN`. For every component whose reference designator matches `^([URCQ])(\\d+)$`, renumber it by prefix as follows: `U<n>` becomes `U<100+n>`, `R<n>` becomes `R<200+n>`, `C<n>` becomes `C<300+n>`, and `Q<n>` becomes `Q<400+n>`. Other prefixes such as `D`, `S`, and `BT` must remain unchanged. Multipart components belonging to the same package must still share the same reference designator after renumbering. Write the modified `C:\\Users\\User\\Desktop\\C:\\Users\\User\\Desktop\\TUTOR2.DSN` together with its dependency files to `C:\\Users\\User\\Desktop\\`.",
+  "source": "task.md #6 (OrCAD Capture Tcl/Tk AN 'Annotation API')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\TUTOR2.DSN",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-48\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-48\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

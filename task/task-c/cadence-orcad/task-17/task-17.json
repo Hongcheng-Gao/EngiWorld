@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-17-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\opt_target.cir` in native PSpice. Keep the native simulator artifacts as `C:\\\\Users\\\\User\\\\Desktop\\\\tune.out`, `C:\\\\Users\\\\User\\\\Desktop\\\\tune_measure.txt`, and `C:\\\\Users\\\\User\\\\Desktop\\\\tune.dat`. Then inspect the stepped transient results at `5 us` and write `C:\\\\Users\\\\User\\\\Desktop\\\\tune_result.json`. The JSON must contain `best_R_FB`, `best_R_GAIN`, `V_OUT_at_5us`, `abs_error_mV`, `meets_20mV_spec`, and `n_candidates` for the candidate closest to the `3.30 V` target.",
+  "source": "PSpice native dynamic transient tuning task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17\\init_file\\opt_target.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\opt_target.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

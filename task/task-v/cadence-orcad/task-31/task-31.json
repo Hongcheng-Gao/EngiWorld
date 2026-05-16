@@ -1,0 +1,70 @@
+{
+  "id": "v-cadence-orcad-task-31-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\FULLADD.DSN` in Capture. The design currently contains two schematic folders: `HALFADD` and the root folder `FULLADD`. Add a new hierarchical build block with the following structure:\n\n- Create a new schematic folder named `PADD`.\n- Under `PADD`, create two new blank pages: `PADD_PAGE1` and `PADD_PAGE2`.\n- Leave the existing `HALFADD` and `FULLADD` folders, along with their pages, components, and wiring, unchanged.\n\nSave the modified design as `C:\\Users\\User\\Desktop\\FULLADD.DSN` and place `C:\\Users\\User\\Desktop\\FULLADD.OPJ`.",
+  "source": "task.md #31 (Studocu 'OrCAD PSpice Hierarchical Design: Full Adder Creation Guide'; OrCAD Capture User's Guide 'Schematic Folder / Hierarchical Block' chapter)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-31\\init_file\\FULLADD.DSN",
+            "path": "C:\\Users\\User\\Desktop\\FULLADD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-31\\init_file\\FULLADD.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\FULLADD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-31\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

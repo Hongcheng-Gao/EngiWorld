@@ -1,0 +1,292 @@
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+* Run the native PSpice AC sweep, keep the generated .out/.dat/.measure
+* artifacts, and derive the sensitivity ranking from the 1 kHz gain
+* changes caused by single-parameter 1% perturbations.
+
+.PARAM CASE = 1
+.PARAM R1S = {TABLE(CASE, 1,1.00, 2,1.01, 3,1.00, 4,1.00, 5,1.00, 6,1.00, 7,1.00)}
+.PARAM R2S = {TABLE(CASE, 1,1.00, 2,1.00, 3,1.01, 4,1.00, 5,1.00, 6,1.00, 7,1.00)}
+.PARAM R3S = {TABLE(CASE, 1,1.00, 2,1.00, 3,1.00, 4,1.01, 5,1.00, 6,1.00, 7,1.00)}
+.PARAM C1S = {TABLE(CASE, 1,1.00, 2,1.00, 3,1.00, 4,1.00, 5,1.01, 6,1.00, 7,1.00)}
+.PARAM C2S = {TABLE(CASE, 1,1.00, 2,1.00, 3,1.00, 4,1.00, 5,1.00, 6,1.01, 7,1.00)}
+.PARAM RLS = {TABLE(CASE, 1,1.00, 2,1.00, 3,1.00, 4,1.00, 5,1.00, 6,1.00, 7,1.01)}
+
+VIN  IN   0    AC 1 0
+R1   IN   N1   {10k*R1S}
+R2   NOUT N1   {100k*R2S}
+C1   N1   N2   {10n*C1S}
+C2   N2   NOUT {10n*C2S}
+R3   N2   0    {100*R3S}
+RL   NOUT 0    {10k*RLS}
+EA   OP   0    LAPLACE {V(0,N2)} {1e5/((1+s/6.283e4)*(1+s/1.2566e7))}
+ROUT OP   NOUT 25
+
+.AC DEC 20 100 100k
+.STEP PARAM CASE LIST 1 2 3 4 5 6 7
+.MEAS AC R1VAL PARAM {10k*R1S}
+.MEAS AC R2VAL PARAM {100k*R2S}
+.MEAS AC R3VAL PARAM {100*R3S}
+.MEAS AC C1VAL PARAM {10n*C1S}
+.MEAS AC C2VAL PARAM {10n*C2S}
+.MEAS AC RLVAL PARAM {10k*RLS}
+.MEAS AC GAIN_1K FIND DB(V(NOUT)) AT=1k
+.PROBE
+.END
+
+INFO(ORPSIM-16573): AC analysis does not support expression evaluation at each frequency. ABM devices with non-linear operations will be evaluated only at bias point.
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    1     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    2     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    3     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    4     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    5     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    6     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    7     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   OP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+
+          JOB CONCLUDED
+
+**** 04/27/26 22:34:45 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native finite-difference sensitivity task.
+
+
+ ****     JOB STATISTICS SUMMARY
+
+ ****     CURRENT STEP                     PARAM CASE =    7     
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =         .38
+

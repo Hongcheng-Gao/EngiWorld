@@ -1,0 +1,92 @@
+{
+  "id": "v-cadence-orcad-task-42-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\TUTOR2.DSN` in Capture. Correct the `Value` property of these components:\n- `R1 = 10k`\n- `R2 = 4.7k`\n- `C1 = 100nF`\n- `C2 = 10uF`\n\nDo not modify any other component. Save the modified `C:\\Users\\User\\Desktop\\TUTOR2.DSN` together with its dependency files.",
+  "source": "task.md #42 (Protoexpress 'Schematic and Netlist Checks'; Cadence Design Rule Check blog)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-42\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-42\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-42\\init_file\\TUTOR2.DSN",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-42\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-42\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

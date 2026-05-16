@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-12-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\noninv_amp.cir` in native PSpice. Save the native simulator output as `C:\\\\Users\\\\User\\\\Desktop\\\\noninv_amp.out`, then inspect the stepped 1 kHz gain results in that `.out` and write `C:\\\\Users\\\\User\\\\Desktop\\\\result.json`. The JSON must contain `Rf_found`, `Av_dB`, and `Rg`, where `Rf_found` is the smallest stepped `RF_VAL` whose native measured gain reaches at least 20 dB.",
+  "source": "PSpice native parametric gain sweep using stepped measurement artifacts",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12\\init_file\\noninv_amp.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\noninv_amp.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

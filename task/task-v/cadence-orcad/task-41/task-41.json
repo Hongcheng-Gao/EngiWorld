@@ -1,0 +1,103 @@
+{
+  "id": "v-cadence-orcad-task-41-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\TUTOR2.DSN` in Capture and read `C:\\Users\\User\\Desktop\\parts_db.csv`. For every RefDes listed in the CSV, set the three properties `Mfr`, `Mfr PN`, and `Datasheet URL` to the values from the corresponding row. Only components that appear in the CSV need to be updated; leave all other components unchanged. Save the modified `C:\\Users\\User\\Desktop\\TUTOR2.DSN` together with its dependency files.",
+  "source": "task.md #41 (EMA 'Zero-Touch BOM with OrCAD Capture CIS'; referencedesigner BOM tutorial)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-41\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-41\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-41\\init_file\\TUTOR2.DSN",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-41\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-41\\init_file\\parts_db.csv",
+            "path": "C:\\Users\\User\\Desktop\\parts_db.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-41\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

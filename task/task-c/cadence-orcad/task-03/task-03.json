@@ -1,0 +1,70 @@
+{
+  "id": "c-cadence-orcad-task-03-ubuntu",
+  "snapshot": "",
+  "instruction": "`C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN` is the built-in two-level hierarchical full-adder example from OrCAD Capture. Extract its flattened structural information and write `C:\\\\Users\\\\User\\\\Desktop\\\\flat.json` with these fields:\n- `root_schematic`: the name of the root schematic.\n- `total_primitive_parts`: the total number of primitive part instances after recursively expanding the hierarchy. Hierarchical blocks themselves do not count. Each child schematic contributes once per instance.\n- `hier_block_expansions`: an array of objects of the form `{\"parent\": <parent_schematic>, \"ref\": <inst_refdes>, \"child\": <referenced_schematic>}` listing every hierarchical-block instance referenced from a schematic. Order is arbitrary.\n\nDo not modify `C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN`; only generate `C:\\\\Users\\\\User\\\\Desktop\\\\flat.json`.",
+  "source": "task.md #3 (OrCAD Capture User's Guide 'Flat vs Hierarchical'; FULLADD sample)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03\\init_file\\FULLADD.DSN",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03\\init_file\\FULLADD.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

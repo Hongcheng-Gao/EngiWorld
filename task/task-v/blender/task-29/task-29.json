@@ -1,0 +1,74 @@
+{
+  "id": "v-blender-task-29-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "FBX for Unity (Y-up, meters, animation on)\n\n`scene.blend` contains a single animated mesh object named `Cube` at the origin (unit cube, 1 x 1 x 1 m). The object has a location animation: at frame 1 the location is (0, 0, 0); at frame 30 the location is (0, 0, 2), so the cube rises 2 m along the Z axis over 30 frames. The scene uses Metric units with length = METERS and `unit_scale = 1.0`. Scene frame range is 1 to 30.\n\nYour job: export the scene as a binary FBX file to `part.fbx` (path relative to the current working directory) using the canonical Unity-friendly settings, with the baked animation embedded, so the file can be dropped into a Unity project unchanged.\n\nExport requirements\n- **File path**: `part.fbx`. Overwrite any existing file there.\n- **Exporter**: Blender's built-in `bpy.ops.export_scene.fbx(...)`.\n- **Units**: meters. Use `apply_scale_options='FBX_SCALE_UNITS'` so the FBX `UnitScaleFactor` embeds 100.0 (cm per meter), which Unity consumes as \"1 Blender unit = 1 meter\".\n- **Axis orientation**: Y-up for Unity. Use `axis_forward='-Z'` and `axis_up='Y'`.\n- **Animation**: enabled and baked into curves. Use `bake_anim=True`, `bake_anim_use_all_actions=False`, `bake_anim_use_nla_strips=False`, `bake_anim_force_startend_keying=True` so the Cube's location keyframes at frames 1 and 30 survive as AnimationStack curves.\n- **Scope**: export all objects, not just the selection. Use `use_selection=False` and `object_types={'MESH', 'ARMATURE', 'EMPTY'}` so meshes, armatures, and empties are included.\n- **Format**: BINARY FBX (the default for `export_scene.fbx`). The file must start with the magic header `Kaydara FBX Binary \\x00\\x1a\\x00` followed by a little-endian uint32 version (>= 7100).\n\nRequirements:\n1. `part.fbx` exists and is readable.\n2. The file starts with the ASCII string `Kaydara FBX Binary` (FBX binary magic).\n3. The FBX version stored at bytes [23:27] is >= 7100 (FBX 2014 or newer).\n4. File size is greater than 1024 bytes (non-empty FBX).\n5. The `UpAxis` property inside `GlobalSettings` is `1` (Y-axis up).\n6. The `UnitScaleFactor` property is approximately `100.0` (cm per meter), matching `apply_scale_options='FBX_SCALE_UNITS'` with the scene in meters.\n7. At least one `AnimationStack` node is present and animation curve data (`AnimationCurve`, `AnimCurve`, or `KeyTime` tokens) appears in the file, proving the cube's location keyframes were baked into the FBX.",
+  "source": "Autodesk — FBX SDK Documentation; Unity Manual — Model Import (Y-up, Meters)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-29/init_file/dummy.fbx",
+            "path": "C:\\Users\\Administrator\\Desktop\\dummy.fbx"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-29/init_file/scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\dummy.fbx",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-29/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

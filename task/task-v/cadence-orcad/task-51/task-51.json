@@ -1,0 +1,59 @@
+{
+  "id": "v-cadence-orcad-task-51-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\fulladd.brd` in Allegro PCB Editor, run the placement flow from the GUI, and save the placed board database as `C:\\Users\\User\\Desktop\\fulladd_placed.brd`. Submit the real Allegro `.brd` produced by the placer.",
+  "source": "Cadence Allegro placement workflow; local OrCAD operation notes for native Allegro tasks.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-51\\init_file\\fulladd.brd",
+            "path": "C:\\Users\\User\\Desktop\\fulladd.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-51\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

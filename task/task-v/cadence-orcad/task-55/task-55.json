@@ -1,0 +1,59 @@
+{
+  "id": "v-cadence-orcad-task-55-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\demo.brd` in Allegro PCB Editor and export the real DRC report from the GUI as `C:\\Users\\User\\Desktop\\drc.txt`. Submit the native Allegro report text.",
+  "source": "task.md #24 (Allegro DRC reporting)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-55\\init_file\\demo.brd",
+            "path": "C:\\Users\\User\\Desktop\\demo.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-55\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

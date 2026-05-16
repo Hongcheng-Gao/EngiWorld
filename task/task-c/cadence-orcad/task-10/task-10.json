@@ -1,0 +1,70 @@
+{
+  "id": "c-cadence-orcad-task-10-ubuntu",
+  "snapshot": "",
+  "instruction": "Parse the hierarchy of `C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN` and write `C:\\\\Users\\\\User\\\\Desktop\\\\hierarchy.json`.\n\nJSON format:\n- Top-level field `root`: the name of the root schematic.\n- Top-level field `schematics`: a dictionary keyed by schematic name.\n- Each schematic entry must contain:\n- `page_count`: number of pages inside that schematic.\n- `total_parts`: total number of part instances across all pages in that schematic.\n- `referenced_hier_blocks`: a list of schematic names referenced by hierarchical blocks from that schematic. Repeated references must be listed repeatedly, and order is arbitrary.",
+  "source": "task.md #10 (ScienceDirect 'Schematic Folder / Hierarchical Port'; Studocu 'OrCAD PSpice Hierarchical Design: Full Adder')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10\\init_file\\FULLADD.DSN",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10\\init_file\\FULLADD.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,92 @@
+{
+  "id": "c-cadence-orcad-task-08-ubuntu",
+  "snapshot": "",
+  "instruction": "`C:\\\\Users\\\\User\\\\Desktop\\\\TUTOR2.DSN` is a schematic. Traverse all primitive part instances in it and export `C:\\\\Users\\\\User\\\\Desktop\\\\pin_map.json`.\n\nThe top-level JSON fields must be `total_parts`, `total_pins`, and `parts`. The `parts` array must be sorted ascending by `ref`, and each element must have the form `{ref, pin_count, pin_numbers}`.\n\nRequirements:\n- Multipart instances that share the same refdes must be merged into one entry.\n- `pin_numbers` must be merged, deduplicated, and sorted lexicographically.\n- `total_parts` must equal the length of the `parts` array.\n- `total_pins` must equal the sum of all `pin_count` values.",
+  "source": "task.md #8 (Cadence 'OrCAD X DRC / ERC' blog; adapted to a pin-enumeration task since DBO-driven NoConnect placement is unreliable from a worker)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08\\init_file\\TUTOR2.DSN",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

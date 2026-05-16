@@ -1,0 +1,92 @@
+{
+  "id": "v-cadence-orcad-task-49-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\TUTOR2.DSN` in OrCAD Capture and export a parts report to `C:\\Users\\User\\Desktop\\parts_report.csv`.\n\nCSV requirements:\n- The header must be exactly `Reference,Value`.\n- Include one row for each primitive placed part instance.\n- Sort the rows ascending by `Reference`.\n- Each row must report that primitive instance's current `Reference` and `Value`.",
+  "source": "task.md #7 (Capture netlist/report workflow; GUI-native parts report CSV adaptation)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49\\init_file\\TUTOR2.DSN",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-49\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

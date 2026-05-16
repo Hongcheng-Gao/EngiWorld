@@ -1,0 +1,81 @@
+{
+  "id": "c-cadence-orcad-task-20-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\pulse.cir` together with `C:\\\\Users\\\\User\\\\Desktop\\\\diode.lib` and `C:\\\\Users\\\\User\\\\Desktop\\\\custom.stl` in native PSpice. Save the native simulator output as `C:\\\\Users\\\\User\\\\Desktop\\\\pulse.out`, then write `C:\\\\Users\\\\User\\\\Desktop\\\\diode_answer.json` with `V_IN_at_50us`, `V_diode_at_50us`, `I_diode_at_50us`, `t`, `Rs_ohms`, `model`, and `model_params` for model `DCUSTOM`.",
+  "source": "PSpice native transient diode operating-point task with external waveform and model files",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20\\init_file\\custom.stl",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\custom.stl"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20\\init_file\\diode.lib",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\diode.lib"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20\\init_file\\pulse.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\pulse.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,92 @@
+{
+  "id": "v-cadence-orcad-task-35-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\TUTOR2.DSN` in Capture. Delete all six TIL309 display parts in the design; their reference designators match the pattern `^D\\d+$`. Leave every other component, connection, and page layout unchanged. Save the modified `C:\\Users\\User\\Desktop\\TUTOR2.DSN` together with its dependency files.",
+  "source": "task.md #35 (tutorial 'TIL309 seven-segment display' in TUTOR2 sample; workflow-level reference to EMA 'How to Remove/Replace Components')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35\\init_file\\TUTOR2.DSN",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

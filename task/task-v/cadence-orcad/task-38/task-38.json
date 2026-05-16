@@ -1,0 +1,48 @@
+{
+  "id": "v-cadence-orcad-task-38-win",
+  "snapshot": "",
+  "instruction": "Create an OrCAD library file `C:\\Users\\User\\Desktop\\custom_lib.OLB` containing three custom Packages: `TPS62130A`, `MCU_STM32F103`, and `SENSOR_BMP280`.\n\nRequirements:\n- All three Package names must exist in the library exactly as written.\n- For each Package, `Multiple-Part Package Type` must be `Homogeneous`.\n- You do not need to draw pin graphics, place footprints, or edit PSpice models.\n\nSave `C:\\Users\\User\\Desktop\\custom_lib.OLB`.",
+  "source": "task.md #38 (EMA 'How to Create Schematic Symbols in OrCAD X Capture'; Cadence 'OrCAD X: Create Symbol Capabilities')",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-38\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

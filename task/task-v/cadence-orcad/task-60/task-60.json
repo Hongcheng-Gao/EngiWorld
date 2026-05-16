@@ -1,0 +1,70 @@
+{
+  "id": "v-cadence-orcad-task-60-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\demo.brd` in Allegro PCB Editor, run the NC drill generation flow from the GUI with `C:\\Users\\User\\Desktop\\nc_param.txt`, and write the resulting outputs to `C:\\Users\\User\\Desktop\\demo-1-4.drl` and `C:\\Users\\User\\Desktop\\ncdrill.log`. Submit the real Allegro drill outputs.",
+  "source": "task.md #27 (Allegro NC drill generation)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-60\\init_file\\demo.brd",
+            "path": "C:\\Users\\User\\Desktop\\demo.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-60\\init_file\\nc_param.txt",
+            "path": "C:\\Users\\User\\Desktop\\nc_param.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-60\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

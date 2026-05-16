@@ -1,0 +1,92 @@
+{
+  "id": "c-cadence-orcad-task-26-ubuntu",
+  "snapshot": "",
+  "instruction": "Use Allegro's batch report utility on `C:\\\\Users\\\\User\\\\Desktop\\\\HSD_FPGA_final.brd` to export real via usage reports, and write them to `C:\\\\Users\\\\User\\\\Desktop\\\\vialist_net.txt` and `C:\\\\Users\\\\User\\\\Desktop\\\\vialist_netlayer.txt`. The intended commands are `report -v vialist_net C:\\\\Users\\\\User\\\\Desktop\\\\HSD_FPGA_final.brd C:\\\\Users\\\\User\\\\Desktop\\\\vialist_net.txt` and `report -v vialist_netlayer C:\\\\Users\\\\User\\\\Desktop\\\\HSD_FPGA_final.brd C:\\\\Users\\\\User\\\\Desktop\\\\vialist_netlayer.txt`.",
+  "source": "task.md #26 (Allegro via audit / stitching-adjacent reporting)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26\\init_file\\HSD_FPGA_final.brd",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\HSD_FPGA_final.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26\\init_file\\README.md",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\README.md"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26\\init_file\\design.brd",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\design.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26\\init_file\\design_meta.json",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\design_meta.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

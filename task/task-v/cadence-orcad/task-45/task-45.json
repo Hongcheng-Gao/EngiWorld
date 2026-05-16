@@ -1,0 +1,70 @@
+{
+  "id": "v-cadence-orcad-task-45-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\BCD.DSN` in Capture. Set `Markup=REVIEW_NEEDED` for `U30`, `U33`, `U38`, `U42`, and `U47`. Also set the design-level properties `Review Status=In Review` and `Reviewer=J. Smith`. Leave every other component and property unchanged. Save the modified `C:\\Users\\User\\Desktop\\BCD.DSN`.",
+  "source": "task.md #45 (Cadence 'OrCAD X Markup'; EMA Capture 23.1 course)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-45\\init_file\\BCD.DSN",
+            "path": "C:\\Users\\User\\Desktop\\BCD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-45\\init_file\\BCD.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\BCD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-45\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,114 @@
+{
+  "id": "c-cadence-orcad-task-05-ubuntu",
+  "snapshot": "",
+  "instruction": "`C:\\\\Users\\\\User\\\\Desktop\\\\rev_a.DSN` and `C:\\\\Users\\\\User\\\\Desktop\\\\rev_b.DSN` are two revisions of the same design, where `C:\\\\Users\\\\User\\\\Desktop\\\\rev_b.DSN` evolved from `C:\\\\Users\\\\User\\\\Desktop\\\\rev_a.DSN`. Produce a structured comparison and write `C:\\\\Users\\\\User\\\\Desktop\\\\diff.json` with these three array fields:\n- `value_changes`: each element is `{\"ref\": <refdes>, \"before\": <old Value>, \"after\": <new Value>}` for components whose `Value` property differs between the two revisions.\n- `refdes_added`: a list of refdes that appear only in `C:\\\\Users\\\\User\\\\Desktop\\\\rev_b.DSN`.\n- `refdes_removed`: a list of refdes that appear only in `C:\\\\Users\\\\User\\\\Desktop\\\\rev_a.DSN`.\n\nMultipart components may appear multiple times while traversing the design; deduplicate by refdes before comparing. Order is arbitrary.",
+  "source": "task.md #5 (EMA 'OrCAD Capture Walk-through Netlisting'; OrCAD Design Comparison tool)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05\\init_file\\rev_a.DSN",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\rev_a.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05\\init_file\\rev_a.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\rev_a.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05\\init_file\\rev_b.DSN",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\rev_b.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05\\init_file\\rev_b.OPJ",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\rev_b.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

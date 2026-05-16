@@ -1,0 +1,103 @@
+{
+  "id": "v-cadence-orcad-task-50-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\TUTOR2.DSN` in OrCAD Capture and read `C:\\Users\\User\\Desktop\\variants.json`, which defines DNP lists for the variants `standard`, `lite`, and `medical`. Export three BOM CSV files: `C:\\Users\\User\\Desktop\\bom_standard.csv`, `C:\\Users\\User\\Desktop\\bom_lite.csv`, and `C:\\Users\\User\\Desktop\\bom_medical.csv`.\n\nCSV requirements for every BOM:\n- The header must be exactly `Reference,Value`.\n- Use one BOM row per unique reference designator.\n- Sort rows ascending by `Reference`.\n- References marked as DNP for that variant must be omitted from the corresponding BOM.\n- Multipart sections that share the same reference designator must appear only once in the BOM.",
+  "source": "task.md #9 (Cadence variant BOM workflow; GUI-exported BOM CSV)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-50\\init_file\\DCLOCK2.OLB",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-50\\init_file\\DCLOCK2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-50\\init_file\\TUTOR2.DSN",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-50\\init_file\\TUTOR2.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-50\\init_file\\variants.json",
+            "path": "C:\\Users\\User\\Desktop\\variants.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-50\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

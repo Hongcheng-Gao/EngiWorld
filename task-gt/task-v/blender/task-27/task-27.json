@@ -1,0 +1,62 @@
+{
+  "id": "v-blender-task-27-windows",
+  "snapshot": "blender-5.1",
+  "instruction": "Involute Spur Gear\n\n`scene.blend` contains a single mesh object `ReferenceTooth`: one angular-pitch slab of a spur gear, centred about the world Z axis, carrying its full involute tooth with tip arc, flanks, and adjacent half root arcs. Build the complete gear by revolving this tooth around the Z axis, so the final mesh is a single closed-manifold disc of equispaced teeth. Save the result to `answer.blend`.\n\nRequirements:\n1. The scene contains exactly one mesh object named `SpurGear`, with an empty modifier stack and world location and rotation both at (0, 0, 0).\n2. The mesh is closed-manifold (every edge shared by exactly two faces).\n3. The mesh's axial extent matches the reference tooth's axial extent, centred on Z = 0 (top and bottom caps are flat).\n4. The maximum radial distance of the mesh equals the reference tooth's tip circle radius.\n5. The minimum radial distance of the mesh equals the reference tooth's root circle radius.\n6. The teeth are equispaced in angle and the total tooth count matches 360 deg divided by the reference tooth's angular pitch.\n7. All tooth spacings are uniform (same angular pitch between every neighbouring pair of tip centres).\n8. Every tooth flank is a true involute curve generated from the same base circle as the reference tooth - circular arcs, cosine approximations, or straight flanks are not accepted.\n\nInspect the reference tooth to read off the module, pitch radius, tooth count, pressure angle, and face width - do not hardcode values the reference geometry does not endorse.",
+  "source": "Shigley 2015 — Mechanical Engineering Design Ch. 13 (Spur Gears); ISO 21771:2007 — Gears — Cylindrical involute gears",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-27/init_file/scene.blend",
+            "path": "C:\\Users\\Administrator\\Desktop\\scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Blender Foundation\\Blender5.1\\blender.exe",
+          "C:\\Users\\Administrator\\Desktop\\scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-27/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-19-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\mixed.cir` in native PSpice. Save the native simulator output as `C:\\\\Users\\\\User\\\\Desktop\\\\mixed.out`. Read the 1 ms measurement results `Q_AT_1MS` and `QBAR_AT_1MS` from that `.out`, infer each logic state with a 2.5 V threshold (`>= 2.5 V` => `HI`, otherwise `LO`), and write `C:\\\\Users\\\\User\\\\Desktop\\\\mixed.json` with keys `t`, `Q`, `QBAR`, `V_Q`, and `V_QBAR`.",
+  "source": "PSpice native mixed-signal transient measurement task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19\\init_file\\mixed.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\mixed.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

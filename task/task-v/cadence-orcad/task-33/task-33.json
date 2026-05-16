@@ -1,0 +1,70 @@
+{
+  "id": "v-cadence-orcad-task-33-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\BCD.DSN` in Capture. Set `BusTag` for `U30..U37` as follows: `U30=DATA0`, `U31=DATA1`, `U32=DATA2`, `U33=DATA3`, `U34=DATA4`, `U35=DATA5`, `U36=DATA6`, `U37=DATA7`. Do not set this property on any other component, or leave it empty for all others. Also set the design-level `Bus Definition` to `DATA[7:0]`. Save the modified `C:\\Users\\User\\Desktop\\BCD.DSN`.",
+  "source": "task.md #33 (OrCAD Capture User Guide 'Buses / Bus Entries'; EdaBoard 'Off-page connector and Bus')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33\\init_file\\BCD.DSN",
+            "path": "C:\\Users\\User\\Desktop\\BCD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33\\init_file\\BCD.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\BCD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-33\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

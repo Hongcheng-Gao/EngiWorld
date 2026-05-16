@@ -1,0 +1,70 @@
+{
+  "id": "v-cadence-orcad-task-43-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\BCD.DSN` in Capture. Set three groups of Variant properties for `U30`, `U31`, and `U32`:\n- For `U30`: `VariantA_Value=1k`, `VariantB_Value=10k`, `VariantC_Value=100k`\n- For `U31`: `VariantA_Value=10k`, `VariantB_Value=20k`, `VariantC_Value=40k`\n- For `U32`: `VariantA_Value=1k`, `VariantB_Value=2k`, `VariantC_Value=4k`\n\nSave the modified `C:\\Users\\User\\Desktop\\BCD.DSN`.",
+  "source": "task.md #43 (Rashid 'Introduction to PSpice' Ch.7 strain bridge; Cadence Variant BOM blog)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43\\init_file\\BCD.DSN",
+            "path": "C:\\Users\\User\\Desktop\\BCD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43\\init_file\\BCD.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\BCD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-43\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

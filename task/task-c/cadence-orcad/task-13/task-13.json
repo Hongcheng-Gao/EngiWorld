@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-13-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\ref_5v.cir` in native PSpice. Keep the native simulator artifacts as `C:\\\\Users\\\\User\\\\Desktop\\\\ref_5v.out`, `C:\\\\Users\\\\User\\\\Desktop\\\\ref_5v_measure.txt`, and `C:\\\\Users\\\\User\\\\Desktop\\\\ref_5v.dat`. Then write `C:\\\\Users\\\\User\\\\Desktop\\\\yield.json` with `runs`, `passing`, and `yield` for the stepped corners whose `V(OUT)` stays within `5.050 V +/- 0.008 V`. The JSON must be derived from the native stepped measurements in `C:\\\\Users\\\\User\\\\Desktop\\\\ref_5v_measure.txt`.",
+  "source": "PSpice native nonlinear shunt-reference corner-yield analysis",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13\\init_file\\ref_5v.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\ref_5v.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

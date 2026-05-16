@@ -1,0 +1,59 @@
+{
+  "id": "c-cadence-orcad-task-11-ubuntu",
+  "snapshot": "",
+  "instruction": "Run `C:\\\\Users\\\\User\\\\Desktop\\\\rlc_bp.cir` in native PSpice. Keep the native simulator artifacts as `C:\\\\Users\\\\User\\\\Desktop\\\\rlc_bp.out`, `C:\\\\Users\\\\User\\\\Desktop\\\\rlc_bp_measure.txt`, and `C:\\\\Users\\\\User\\\\Desktop\\\\rlc_bp.dat`. Then read the sampled dB measurements from `C:\\\\Users\\\\User\\\\Desktop\\\\rlc_bp_measure.txt` and write `C:\\\\Users\\\\User\\\\Desktop\\\\metrics.json` with `f0`, `Q`, and `BW_3dB`, where `f0` is the peak sample frequency and `BW_3dB` is the sample-grid width between the lowest and highest frequencies that stay within 3 dB of that peak.",
+  "source": "PSpice native sampled AC sweep of a nonideal loaded resonant response",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11\\init_file\\rlc_bp.cir",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\rlc_bp.cir"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

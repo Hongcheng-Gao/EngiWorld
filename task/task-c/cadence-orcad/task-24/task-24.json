@@ -1,0 +1,114 @@
+{
+  "id": "c-cadence-orcad-task-24-ubuntu",
+  "snapshot": "",
+  "instruction": "Use Allegro's batch report utility on `C:\\\\Users\\\\User\\\\Desktop\\\\demo.brd` to export the real DRC report, and write it to `C:\\\\Users\\\\User\\\\Desktop\\\\drc.txt`.",
+  "source": "task.md #24 (Allegro batch DRC reporting)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\README.md",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\README.md"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\demo.brd",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\demo.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\design.brd",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\design.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\plane_spec.json",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\plane_spec.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\silkscreen.cnv",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\silkscreen.cnv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-24\\init_file\\soldermask.cnv",
+            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\soldermask.cnv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-24\\eval.py",
+              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

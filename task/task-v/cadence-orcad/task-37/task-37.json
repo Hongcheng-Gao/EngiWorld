@@ -1,0 +1,70 @@
+{
+  "id": "v-cadence-orcad-task-37-win",
+  "snapshot": "",
+  "instruction": "Open `C:\\Users\\User\\Desktop\\BCD.DSN` in Capture. Set the `Install` property as follows: `U30=Y`, `U31=Y`, `U32=N`, `U33=Y`, `U34=N`. Do not set this property on `U35..U49`, or leave it empty for those components. Save the modified `C:\\Users\\User\\Desktop\\BCD.DSN`.",
+  "source": "task.md #37 (Cadence 'How To Create BOM Variants | OrCAD Capture'; EMA 'How to Efficiently Communicate Design Variants')",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-37\\init_file\\BCD.DSN",
+            "path": "C:\\Users\\User\\Desktop\\BCD.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-37\\init_file\\BCD.OPJ",
+            "path": "C:\\Users\\User\\Desktop\\BCD.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": []
+      }
+    }
+  ],
+  "trajectory": "trajectories\\",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-37\\eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "true\r\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
