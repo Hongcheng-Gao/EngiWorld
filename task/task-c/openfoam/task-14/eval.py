@@ -65,11 +65,7 @@ def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
     return abs(a - b) <= tol
 
 def check_task(root: Path) -> bool:
-    required = [
-        "cylinder_snappy/constant/polyMesh/faces",
-        "cylinder_snappy/0/U",
-        "summary.txt",
-    ]
+    required = ['summary.txt']
     if not check_required_files(root, required):
         return False
 

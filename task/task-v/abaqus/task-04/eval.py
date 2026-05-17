@@ -81,6 +81,27 @@ ABS_TOL_COORD = 1.0e-8
 # 4. Utility functions
 # ============================================================
 
+def has_forbidden_py_file(desktop_path):
+    try:
+        entries = os.listdir(desktop_path)
+    except Exception:
+        return True
+
+    for name in entries:
+        try:
+            full_path = os.path.join(desktop_path, name)
+            if not os.path.isfile(full_path):
+                continue
+        except Exception:
+            return True
+
+        lower_name = name.lower()
+        if lower_name.endswith('.py') and lower_name != 'eval.py':
+            return True
+
+    return False
+
+
 def output_result(value):
     text = 'True\n' if value else 'False\n'
     try:
@@ -526,6 +547,10 @@ def check_odb_file():
 # ============================================================
 
 def main():
+    if has_forbidden_py_file(desktop):
+        output_result(False)
+        return
+
     try:
         passed = check_cae_file() and check_odb_file()
     except Exception:

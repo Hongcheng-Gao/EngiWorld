@@ -126,6 +126,27 @@ def collect_labels(nodeset_obj):
 # 5. CAE check
 # ============================================================
 
+def has_forbidden_py_file(desktop_path):
+    try:
+        entries = os.listdir(desktop_path)
+    except:
+        return True
+
+    for name in entries:
+        try:
+            full_path = os.path.join(desktop_path, name)
+            if not os.path.isfile(full_path):
+                continue
+        except:
+            return True
+
+        lower_name = name.lower()
+        if lower_name.endswith('.py') and lower_name != 'eval.py':
+            return True
+
+    return False
+
+
 def check_cae_file():
     if not os.path.exists(cae_path):
         return False
@@ -377,7 +398,7 @@ def check_odb_file():
 result_file = r'C:\Users\Administrator\Desktop\eval_result.txt'
 
 try:
-    passed = check_cae_file() and check_odb_file()
+    passed = (not has_forbidden_py_file(desktop)) and check_cae_file() and check_odb_file()
 except:
     passed = False
 

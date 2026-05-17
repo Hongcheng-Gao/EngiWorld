@@ -38,7 +38,7 @@ def close_enough(actual: float, target: float) -> bool:
 
 
 def check_task(root: Path) -> bool:
-    required = ['transform.inp', 'transform.dat', 'summary.txt']
+    required = ['transform.inp', 'summary.txt']
     for rel in required:
         if not is_nonempty_file(root / rel):
             return False

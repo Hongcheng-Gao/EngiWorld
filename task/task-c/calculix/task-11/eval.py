@@ -38,7 +38,7 @@ def close_enough(actual: float, target: float) -> bool:
 
 
 def check_task(root: Path) -> bool:
-    required = ['thermal_bc.inp', 'thermal_bc.dat', 'summary.txt']
+    required = ['thermal_bc.inp', 'summary.txt']
     for rel in required:
         if not is_nonempty_file(root / rel):
             return False

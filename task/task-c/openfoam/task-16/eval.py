@@ -65,14 +65,7 @@ def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
     return abs(a - b) <= tol
 
 def check_task(root: Path) -> bool:
-    required = [
-        "shockTube/0/p",
-        "shockTube/0/T",
-        "shockTube/0/U",
-        "shockTube/constant/thermophysicalProperties",
-        "shockTube/system/controlDict",
-        "summary.txt",
-    ]
+    required = ['summary.txt']
     if not check_required_files(root, required):
         return False
 

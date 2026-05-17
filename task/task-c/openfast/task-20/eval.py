@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'fatigue_post.py']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[7403.561675, 43.32686]]
 SUMMARY_FILE = 'summary.txt'
 

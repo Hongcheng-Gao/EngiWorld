@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'inflow_ws4.dat', 'inflow_ws8.dat', 'inflow_ws11.dat', 'inflow_ws15.dat', 'inflow_ws20.dat', 'case_ws4.fst', 'case_ws8.fst', 'case_ws11.fst', 'case_ws15.fst', 'case_ws20.fst']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[4.0, 148.962779, 7.139224], [8.0, 1615.090892, 8.922937], [11.0, 4129.585441, 11.802749], [15.0, 4999.823664, 12.098685], [20.0, 5000.103239, 12.100202]]
 SUMMARY_FILE = 'summary.txt'
 

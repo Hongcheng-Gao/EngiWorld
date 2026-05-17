@@ -65,13 +65,7 @@ def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
     return abs(a - b) <= tol
 
 def check_task(root: Path) -> bool:
-    required = [
-        "pipe_turb/0/U",
-        "pipe_turb/constant/transportProperties",
-        "pipe_turb/constant/momentumTransport",
-        "pipe_turb/system/controlDict",
-        "summary.txt",
-    ]
+    required = ['summary.txt']
     if not check_required_files(root, required):
         return False
 

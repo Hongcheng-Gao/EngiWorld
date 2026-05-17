@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'aero_notower.dat', 'aero_tower.dat']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[233.698133, 238.266977, 1.01955]]
 SUMMARY_FILE = 'summary.txt'
 

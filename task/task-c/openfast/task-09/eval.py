@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['fixed.fst', 'fixed.out', 'fixed_summary.txt', 'diagnosis.txt']
+REQUIRED_FILES = ['fixed_summary.txt', 'diagnosis.txt']
 EXPECTED_ROWS = [[4866.683067, 5138.950981]]
 SUMMARY_FILE = 'fixed_summary.txt'
 

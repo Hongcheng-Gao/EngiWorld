@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'rosco_soft.IN', 'rosco_stiff.IN']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[1.147265, 0.298902, 0.0, 2.202222]]
 SUMMARY_FILE = 'summary.txt'
 

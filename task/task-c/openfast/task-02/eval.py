@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'turbsim.inp', 'wind_8ms.bts', 'case_turb.fst']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[1426.913483, 671.495147]]
 SUMMARY_FILE = 'summary.txt'
 

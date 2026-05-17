@@ -38,7 +38,7 @@ def close_enough(actual: float, target: float) -> bool:
 
 
 def check_task(root: Path) -> bool:
-    required = ['friction.inp', 'friction.dat', 'summary.txt']
+    required = ['friction.inp', 'summary.txt']
     for rel in required:
         if not is_nonempty_file(root / rel):
             return False

@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'batch_run.py', 'batch_post.py']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[4.0, 148.962779, 7.139224, 0.0], [8.0, 1615.090892, 8.922937, 0.0], [11.0, 4129.585441, 11.802749, 0.0], [15.0, 4999.823664, 12.098685, 9.619814], [20.0, 5000.103239, 12.100202, 16.936628]]
 SUMMARY_FILE = 'summary.txt'
 

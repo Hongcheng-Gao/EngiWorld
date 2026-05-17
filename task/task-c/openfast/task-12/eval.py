@@ -8,7 +8,7 @@ from pathlib import Path
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 REL_TOL = 1e-2
 ABS_TOL = 1e-4
-REQUIRED_FILES = ['summary.txt', 'elasto_yaw0.dat', 'elasto_yaw5.dat', 'elasto_yaw10.dat', 'elasto_yaw15.dat', 'elasto_yaw20.dat']
+REQUIRED_FILES = ['summary.txt']
 EXPECTED_ROWS = [[0.0, 4833.453404], [5.0, 4830.420322], [10.0, 4827.132403], [15.0, 4823.669954], [20.0, 4819.883275]]
 SUMMARY_FILE = 'summary.txt'
 

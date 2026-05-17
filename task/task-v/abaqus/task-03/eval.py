@@ -62,6 +62,27 @@ detail_file = os.path.join(desktop, 'eval_detail.txt')
 DETAILS = []
 
 
+def has_forbidden_py_file(desktop_path):
+    try:
+        entries = os.listdir(desktop_path)
+    except:
+        return True
+
+    for name in entries:
+        try:
+            full_path = os.path.join(desktop_path, name)
+            if not os.path.isfile(full_path):
+                continue
+        except:
+            return True
+
+        lower_name = name.lower()
+        if lower_name.endswith('.py') and lower_name != 'eval.py':
+            return True
+
+    return False
+
+
 def log(msg):
     DETAILS.append(str(msg))
 
@@ -745,11 +766,14 @@ def check_odb_file():
 # 7. Main
 # ============================================================
 
-try:
-    passed = check_cae_file() and check_odb_file()
-except Exception as e:
-    log('Top-level exception: ' + str(e))
-    log(traceback.format_exc())
+if has_forbidden_py_file(desktop):
     passed = False
+else:
+    try:
+        passed = check_cae_file() and check_odb_file()
+    except Exception as e:
+        log('Top-level exception: ' + str(e))
+        log(traceback.format_exc())
+        passed = False
 
 output_result(passed)
