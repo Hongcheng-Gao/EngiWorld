@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-49-ubuntu",
-  "instruction": "Rename Armature Bones to Restore Skinning `init_file/scene.blend` contains an armature object `Rig` (a 4-bone chain) and a mesh object `Skin` with an Armature modifier bound to `Rig`. The mesh's vertex groups expect bones named `Bone.Root`, `Bone.A`, `Bone.B`, `Bone.Tip` arranged root-to-tip along the chain, but the armature's bones currently carry generic auto-numbered names, so the Armature modifier does not deform the mesh. Rename the bones so the vertex groups resolve against the rig, and save the result to `output/answer.blend`. 1. `output/answer.blend` opens as a valid Blender file. 2. An armature object named `Rig` exists (type `ARMATURE`). 3. `Rig`'s armature has exactly 4 bones. 4. The bone names on `Rig` are exactly the set `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`. 5. The parent chain is `Bone.Root` (no parent) → `Bone.A` → `Bone.B` → `Bone.Tip`. 6. A mesh object named `Skin` exists and has an `ARMATURE` modifier whose `object` is `Rig`. 7. `Skin`'s vertex groups are exactly `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`. 8. Every vertex-group name on `Skin` corresponds to a bone that exists on `Rig` (no missing-bone references). Do not add, remove, or reparent bones; only their names should change.",
-  "source": "Blender Manual — Armature Bone Naming and Vertex Group Binding",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Rename Armature Bones to Restore Skinning\n\n`/home/user/Desktop/scene.blend` contains an armature object `Rig` (a 4-bone chain) and a mesh object `Skin` with an Armature modifier bound to `Rig`. The mesh's vertex groups expect bones named `Bone.Root`, `Bone.A`, `Bone.B`, `Bone.Tip` arranged root-to-tip along the chain, but the armature's bones currently carry generic auto-numbered names, so the Armature modifier does not deform the mesh. Rename the bones so the vertex groups resolve against the rig, and save the result to `/home/user/Desktop/answer.blend`.\n\n## Requirements\n1. `/home/user/Desktop/answer.blend` opens as a valid Blender file.\n2. An armature object named `Rig` exists (type `ARMATURE`).\n3. `Rig`'s armature has exactly 4 bones.\n4. The bone names on `Rig` are exactly the set `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`.\n5. The parent chain is `Bone.Root` (no parent) → `Bone.A` → `Bone.B` → `Bone.Tip`.\n6. A mesh object named `Skin` exists and has an `ARMATURE` modifier whose `object` is `Rig`.\n7. `Skin`'s vertex groups are exactly `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`.\n8. Every vertex-group name on `Skin` corresponds to a bone that exists on `Rig` (no missing-bone references).\n\nDo not add, remove, or reparent bones; only their names should change.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-49/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-49/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-49/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-49/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-49/",
-      "expected_files": [
-        "./blender/output/blender-49/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-49/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

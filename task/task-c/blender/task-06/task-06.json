@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-06-ubuntu",
-  "instruction": "Field-Driven Instance Rotation. `init_file/scene.blend` contains two mesh objects: - `Globe`: a UV sphere at the origin, radius 1.5, 32 segments * 16 rings. No modifiers. - `Spike`: a small cone (radius = 0.05, depth = 0.3) whose base sits at its own origin (local z = 0) and whose tip is at local z = +0.3. When instanced with its local +Z axis aligned to a surface normal, the spike points outward from the surface. Scene units are meters. Add a Geometry Nodes modifier on `Globe` that scatters approximately 500 `Spike` instances across the sphere's surface. Every spike's local +Z axis must align to the surface normal at its base, and each instance must receive a small per-instance random twist (+/- 5 degrees) AROUND that normal, seeded by `Seed = 42` so the result is deterministic. ## Required node graph 1. `Group Input` (Geometry) -> `Distribute Points on Faces` in POISSON_DISK mode with `Seed = 42`. Pick `Distance Min` / `Density Max` so the resulting instance count lands near 500 (anywhere in [450, 550] is acceptable). 2. Use `Align Euler to Vector` with `axis = 'Z'`, `Factor = 1.0`, and `Vector` wired from the distribute node's `Normal` output. This rotation aligns each spike's local +Z to the surface normal. 3. Use `Random Value` (data type FLOAT) with `Min = -5 deg (in radians)`, `Max = +5 deg (in radians)`, `Seed = 42` to produce a per-instance tilt angle. 4. Use `Rotate Euler` in AXIS_ANGLE mode to tilt the aligned rotation around the normal by that random angle. (Rotating around the normal does not change the +Z direction.) 5. `Instance on Points` with `Points` = distribute output, `Instance` = `Object Info(Spike)` geometry, and `Rotation` wired from the Rotate Euler output. 6. `Group Output` (Geometry) = Instance on Points output. Do NOT realize the instances - leave them as true instances so the depsgraph exposes their transforms. Save your result as `output/answer.blend`. The GN modifier must remain on `Globe` - do not apply it. 1. `output/answer.blend` exists and opens. 2. `Globe` exists as a mesh, and `Spike` exists as a mesh. 3. `Globe` has exactly one modifier of type NODES with a non-empty node group. 4. The node tree contains a `GeometryNodeDistributePointsOnFaces` node whose `Seed` resolves to 42. 5. The node tree contains a `GeometryNodeInstanceOnPoints` node. 6. The node tree contains a `FunctionNodeAlignEulerToVector` node with `axis = 'Z'`. 7. Iterating `bpy.context.evaluated_depsgraph_get().object_instances` with `obj_inst.parent.original == Globe` and `obj_inst.is_instance == True` yields between 450 and 550 instances. 8. For every instance, the angle between the instance's world +Z axis and the face normal of the nearest Globe face is at most 5 degrees. 9. Determinism: re-evaluating the depsgraph yields bit-exact identical instance positions (max difference below 1e-5 m).",
-  "source": "Align Rotation to Vector node",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Field-Driven Instance Rotation.\n\n`/home/user/Desktop/scene.blend` contains two mesh objects:\n\n- `Globe`: a UV sphere at the origin, radius 1.5, 32 segments * 16 rings. No modifiers.\n- `Spike`: a small cone (radius = 0.05, depth = 0.3) whose base sits at its own origin (local z = 0) and whose tip is at local z = +0.3. When instanced with its local +Z axis aligned to a surface normal, the spike points outward from the surface.\n\nScene units are meters.\n\nAdd a Geometry Nodes modifier on `Globe` that scatters approximately 500 `Spike` instances across the sphere's surface. Every spike's local +Z axis must align to the surface normal at its base, and each instance must receive a small per-instance random twist (+/- 5 degrees) AROUND that normal, seeded by `Seed = 42` so the result is deterministic.\n\n## Required node graph\n\n1. `Group Input` (Geometry) -> `Distribute Points on Faces` in POISSON_DISK mode with `Seed = 42`. Pick `Distance Min` / `Density Max` so the resulting instance count lands near 500 (anywhere in [450, 550] is acceptable).\n2. Use `Align Euler to Vector` with `axis = 'Z'`, `Factor = 1.0`, and `Vector` wired from the distribute node's `Normal` output. This rotation aligns each spike's local +Z to the surface normal.\n3. Use `Random Value` (data type FLOAT) with `Min = -5 deg (in radians)`, `Max = +5 deg (in radians)`, `Seed = 42` to produce a per-instance tilt angle.\n4. Use `Rotate Euler` in AXIS_ANGLE mode to tilt the aligned rotation around the normal by that random angle. (Rotating around the normal does not change the +Z direction.)\n5. `Instance on Points` with `Points` = distribute output, `Instance` = `Object Info(Spike)` geometry, and `Rotation` wired from the Rotate Euler output.\n6. `Group Output` (Geometry) = Instance on Points output.\n\nDo NOT realize the instances - leave them as true instances so the depsgraph exposes their transforms.\n\nSave your result as `/home/user/Desktop/answer.blend`. The GN modifier must remain on `Globe` - do not apply it.\n\n## Requirements\n1. `/home/user/Desktop/answer.blend` exists and opens.\n2. `Globe` exists as a mesh, and `Spike` exists as a mesh.\n3. `Globe` has exactly one modifier of type NODES with a non-empty node group.\n4. The node tree contains a `GeometryNodeDistributePointsOnFaces` node whose `Seed` resolves to 42.\n5. The node tree contains a `GeometryNodeInstanceOnPoints` node.\n6. The node tree contains a `FunctionNodeAlignEulerToVector` node with `axis = 'Z'`.\n7. Iterating `bpy.context.evaluated_depsgraph_get().object_instances` with `obj_inst.parent.original == Globe` and `obj_inst.is_instance == True` yields between 450 and 550 instances.\n8. For every instance, the angle between the instance's world +Z axis and the face normal of the nearest Globe face is at most 5 degrees.\n9. Determinism: re-evaluating the depsgraph yields bit-exact identical instance positions (max difference below 1e-5 m).\n",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-6/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-6/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-6/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-6/",
-      "expected_files": [
-        "./blender/output/blender-6/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-6/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

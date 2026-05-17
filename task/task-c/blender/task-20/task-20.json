@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-20-ubuntu",
-  "instruction": "FK/IK Switch via Driver `init_file/scene.blend` contains an armature object `Rig` at the origin with 3 connected bones `Upper` -> `Lower` -> `Tip` along +Z (each 1 BU long), an empty `IKTarget` at (1, 0, 2.5), and a float custom property `ik_blend` in [0, 1] (default 0.0) on the Rig object. There is no IK constraint yet and no driver. Using the Blender Python API, wire up an FK/IK switch and save the result as `output/answer.blend`. ## What to build 1. Add an IK constraint (`type='IK'`) on pose bone `Tip` of `Rig` with: - `target = IKTarget` (the empty object). - `chain_count = 3` (so the whole chain is solved). - `influence = 0.0` initially (the driver will override it). 2. Add a `SCRIPTED` driver on the IK constraint's `.influence` property: - Create an F-curve via `ik_constraint.driver_add('influence')`. - Driver `type = 'SCRIPTED'`, `expression = 'var'` (pass through). - Create a driver variable of `type = 'SINGLE_PROP'` whose target id is the armature object `Rig` (`id_type='OBJECT'`) and whose `data_path = '[\"ik_blend\"]'` (reads the custom property). 3. Set a FK baseline rotation on the `Upper` pose bone so the FK tip position is clearly distinguishable from the IK tip position: - E.g. Set `rotation_mode='QUATERNION'` and apply a rotation corresponding to Euler (0, 0.5, 0). Optionally keyframe the rotation. 4. Leave `Rig['ik_blend']` at 0.0 in the saved file. The driver must allow flipping between FK (`ik_blend=0`) and IK (`ik_blend=1`) behaviors at runtime. 1. The saved file opens as a valid Blender file. 2. Object `Rig` exists as an ARMATURE with exactly 3 bones named `Upper`, `Lower`, `Tip`. 3. Object `IKTarget` exists with `type == 'EMPTY'`. 4. Custom property `ik_blend` on `Rig` exists with a numeric value in `[0, 1]`. 5. Pose bone `Tip` carries an IK constraint with `target == IKTarget`. 6. The IK constraint's `.influence` property is controlled by a driver whose first variable reads `Rig['ik_blend']` (variable `id` is `Rig`, `data_path` contains `ik_blend`). 7. Setting `Rig['ik_blend'] = 0.0` (FK) vs. `Rig['ik_blend'] = 1.0` (IK) yields tip-tail world positions that differ by more than 0.1 BU. 8. At `Rig['ik_blend'] = 0.5` the tip-tail world position lies within 0.3 BU of the linear interpolation of the FK and IK positions. Save the result as `output/answer.blend`.",
-  "source": "Blender Manual — Armature Constraints; Rigify FK/IK switch convention",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "FK/IK Switch via Driver\n\n`/home/user/Desktop/scene.blend` contains an armature object `Rig` at the origin with 3 connected bones `Upper` -> `Lower` -> `Tip` along +Z (each 1 BU long), an empty `IKTarget` at (1, 0, 2.5), and a float custom property `ik_blend` in [0, 1] (default 0.0) on the Rig object. There is no IK constraint yet and no driver. wire up an FK/IK switch and save the result as `/home/user/Desktop/answer.blend`.\n\n## Requirements\n\n1. Add an IK constraint (`type='IK'`) on pose bone `Tip` of `Rig` with:\n   - `target = IKTarget` (the empty object).\n   - `chain_count = 3` (so the whole chain is solved).\n   - `influence = 0.0` initially (the driver will override it).\n\n2. Add a `SCRIPTED` driver on the IK constraint's `.influence` property:\n   - Create an F-curve via `ik_constraint.driver_add('influence')`.\n   - Driver `type = 'SCRIPTED'`, `expression = 'var'` (pass through).\n   - Create a driver variable of `type = 'SINGLE_PROP'` whose target id is the armature object `Rig` (`id_type='OBJECT'`) and whose `data_path = '[\"ik_blend\"]'` (reads the custom property).\n\n3. Set a FK baseline rotation on the `Upper` pose bone so the FK tip position is clearly distinguishable from the IK tip position:\n   - E.g. set `rotation_mode='QUATERNION'` and apply a rotation corresponding to Euler (0, 0.5, 0). Optionally keyframe the rotation.\n\n4. Leave `Rig['ik_blend']` at 0.0 in the saved file. The driver must allow flipping between FK (`ik_blend=0`) and IK (`ik_blend=1`) behaviors at runtime.\n\n## Requirements\n1. The saved file opens as a valid Blender file.\n2. Object `Rig` exists as an ARMATURE with exactly 3 bones named `Upper`, `Lower`, `Tip`.\n3. Object `IKTarget` exists with `type == 'EMPTY'`.\n4. Custom property `ik_blend` on `Rig` exists with a numeric value in `[0, 1]`.\n5. Pose bone `Tip` carries an IK constraint with `target == IKTarget`.\n6. The IK constraint's `.influence` property is controlled by a driver whose first variable reads `Rig['ik_blend']` (variable `id` is `Rig`, `data_path` contains `ik_blend`).\n7. Setting `Rig['ik_blend'] = 0.0` (FK) vs. `Rig['ik_blend'] = 1.0` (IK) yields tip-tail world positions that differ by more than 0.1 BU.\n8. At `Rig['ik_blend'] = 0.5` the tip-tail world position lies within 0.3 BU of the linear interpolation of the FK and IK positions.\n\nSave the result as `/home/user/Desktop/answer.blend`.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-20/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-20/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-20/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-20/",
-      "expected_files": [
-        "./blender/output/blender-20/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-20/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

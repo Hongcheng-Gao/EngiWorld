@@ -1,8 +1,8 @@
 {
   "id": "v-blender-task-15-ubuntu",
   "snapshot": "Blender-4.2.3",
-  "instruction": "UV Cross-Seam Unwrap `scene.blend` contains mesh `Cube` with no UV layer and no seams. Mark a seam layout that unfolds the cube into a cross-style unwrap, unwrap it with the Angle-Based method, pack the islands, and save the scene as `answer.blend`. Requirements: `Cube` must end up with at least one UV layer; between 5 and 9 edges must be marked as seams; all UV coordinates must lie within `[0,1]^2` within epsilon `0.01`; the UV bounding box must span at least `0.60` in one dimension and `0.40` in the other; UV overlap must remain below 1% on the required grid test; and the island count must be between 1 and 6.",
-  "source": "Lévy, Petitjean, Ray, Maillot 2002 — \"Least Squares Conformal Maps for Automatic Texture Atlas Generation\", SIGGRAPH",
+  "instruction": "UV Cross-Seam Unwrap\n\n`scene.blend` contains mesh `Cube` with no UV layer and no seams.\n\nMark a seam layout that unfolds the cube into a cross-style unwrap, unwrap it with the Angle-Based method, pack the islands, and save the scene as `answer.blend`.\n\nRequirements: `Cube` must end up with at least one UV layer; between 5 and 9 edges must be marked as seams; all UV coordinates must lie within `[0,1]^2` within epsilon `0.01`; the UV bounding box must span at least `0.60` in one dimension and `0.40` in the other; UV overlap must remain below 1% on the required grid test; and the island count must be between 1 and 6.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/",
   "config": [
     {
       "type": "upload_file",
@@ -46,13 +46,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "true\n"
       }
     }
   },

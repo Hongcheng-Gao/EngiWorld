@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-45-ubuntu",
-  "instruction": "Non-Manifold Repair `init_file/scene.blend` contains a single mesh object `Part` with geometric defects — missing faces and duplicate/loose vertices. Repair the mesh so it is closed-manifold while preserving the object's overall shape, and save the result to `output/repaired.blend` (relative to the working directory). 1. `output/repaired.blend` opens as a valid Blender file containing exactly one mesh object, named `Part`. 2. `Part.location` matches the input's value to within 1e-5 per axis. 3. No edge of `Part` is non-manifold — every edge is shared by exactly two faces. 4. `Part` has no loose vertices (every vertex is incident to at least one edge). 5. `Part` has no loose edges (every edge bounds at least one face). 6. `Part`'s signed volume is positive, i.e. Face normals are outward-consistent. 7. The axis-aligned bounding box of `Part`'s vertex coordinates matches the input's bbox to within 1% relative difference per axis. 8. `Part`'s unsigned volume differs from its AABB volume by less than 2% (the shape fully fills its bounding box). Do not remesh, decimate, or rescale — the repair should touch only the defective regions.",
-  "source": "Blender Manual — Mesh Analysis and Cleanup (Make Manifold)",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Non-Manifold Repair\n\n`/home/user/Desktop/scene.blend` contains a single mesh object `Part` with geometric defects — missing faces and duplicate/loose vertices. Repair the mesh so it is closed-manifold while preserving the object's overall shape, and save the result to `output/repaired.blend` (relative to the working directory).\n\n## Requirements\n1. `output/repaired.blend` opens as a valid Blender file containing exactly one mesh object, named `Part`.\n2. `Part.location` matches the input's value to within 1e-5 per axis.\n3. No edge of `Part` is non-manifold — every edge is shared by exactly two faces.\n4. `Part` has no loose vertices (every vertex is incident to at least one edge).\n5. `Part` has no loose edges (every edge bounds at least one face).\n6. `Part`'s signed volume is positive, i.e. face normals are outward-consistent.\n7. The axis-aligned bounding box of `Part`'s vertex coordinates matches the input's bbox to within 1% relative difference per axis.\n8. `Part`'s unsigned volume differs from its AABB volume by less than 2% (the shape fully fills its bounding box).\n\nDo not remesh, decimate, or rescale — the repair should touch only the defective regions.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-45/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-45/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-45/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-45/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-45/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-45/",
-      "expected_files": [
-        "./blender/output/blender-45/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-45/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

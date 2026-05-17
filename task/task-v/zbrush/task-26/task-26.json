@@ -1,8 +1,8 @@
 {
   "id": "v-zbrush-task-26-windows",
-  "snapshot": "ZBrush-2024",
-  "instruction": "Make Alpha from Mesh (z-height map) Look at `C:\\Users\\Administrator\\Desktop\\scene.obj`. It is a button-shaped SubTool named 'Button': a flat disk of radius 0.5 BU and thickness 0.1 BU with a slight central dome of height 0.04 BU (total peak z = 0.14 BU). The disk sits with its flat bottom at z=0 and circular axis along +Z. Load this mesh into ZBrush, orient the view looking straight down the +Z axis at the button's top surface, and use Alpha > MakeAlphaFromMesh to bake a grayscale height map. Export it as a 512x512 single-channel PNG `C:\\Users\\Administrator\\Desktop\\Button.png`, encoding the top-surface z-height per pixel (bright = tall, dark = no button). Pass criteria: - `C:\\Users\\Administrator\\Desktop\\Button.png` exists, is parseable as a PNG of size 512x512. - Single-channel (grayscale) with bit-depth >= 8 (16-bit preferred). - Nonzero-pixel ratio (button footprint) in [0.30, 0.85]. - Foreground brightness std >= 10\\255 (non-degenerate). - Pearson correlation between the PNG values and the synthetic z-heightfield >= 0.9.",
-  "source": "human_craft",
+  "snapshot": "zbrush",
+  "instruction": "Make Alpha from Mesh (z-height map)\n\nLook at `C:\\Users\\Administrator\\Desktop\\scene.obj`. It is a button-shaped SubTool named 'Button': a flat disk of radius 0.5 BU and thickness 0.1 BU with a slight central dome of height 0.04 BU (total peak z = 0.14 BU). The disk sits with its flat bottom at z=0 and circular axis along +Z.\n\nLoad this mesh into ZBrush, orient the view looking straight down the +Z axis at the button's top surface, and use Alpha > MakeAlphaFromMesh to bake a grayscale height map. Export it as a 512x512 single-channel PNG `C:\\Users\\Administrator\\Desktop\\Button.png`, encoding the top-surface z-height per pixel (bright = tall, dark = no button).\n\nRequirements:\n- `C:\\Users\\Administrator\\Desktop\\Button.png` exists, is parseable as a PNG of size 512x512.\n- Single-channel (grayscale) with bit-depth >= 8 (16-bit preferred).\n- Nonzero-pixel ratio (button footprint) in [0.30, 0.85].\n- Foreground brightness std >= 10\\255 (non-degenerate).\n- Pearson correlation between the PNG values and the synthetic z-heightfield >= 0.9.",
+  "source": "https://help.maxon.net/zbr/en-us/\nhttps://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -19,7 +19,7 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
+          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
           "C:\\Users\\Administrator\\Desktop\\scene.obj"
         ]
       }

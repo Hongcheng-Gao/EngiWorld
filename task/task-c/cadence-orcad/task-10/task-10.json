@@ -1,16 +1,16 @@
 {
   "id": "c-cadence-orcad-task-10-windows",
   "snapshot": "OrCAD24.1",
-  "instruction": "Parse the hierarchy of `C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN` and write `C:\\\\Users\\\\User\\\\Desktop\\\\hierarchy.json`. JSON format: - Top-level field `root`: the name of the root schematic. - Top-level field `schematics`: a dictionary keyed by schematic name. - Each schematic entry must contain: - `page_count`: number of pages inside that schematic. - `total_parts`: total number of part instances across all pages in that schematic. - `referenced_hier_blocks`: a list of schematic names referenced by hierarchical blocks from that schematic. Repeated references must be listed repeatedly, and order is arbitrary.",
-  "source": "task.md #10 (ScienceDirect 'Schematic Folder / Hierarchical Port'; Studocu 'OrCAD PSpice Hierarchical Design: Full Adder')",
+  "instruction": "Parse the hierarchy of `C:\\Users\\Administrator\\Desktop\\FULLADD.DSN` and write `C:\\Users\\Administrator\\Desktop\\hierarchy.json`.\n\nJSON format:\n- Top-level field `root`: the name of the root schematic.\n- Top-level field `schematics`: a dictionary keyed by schematic name.\n- Each schematic entry must contain:\n- `page_count`: number of pages inside that schematic.\n- `total_parts`: total number of part instances across all pages in that schematic.\n- `referenced_hier_blocks`: a list of schematic names referenced by hierarchical blocks from that schematic. Repeated references must be listed repeatedly, and order is arbitrary.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html\nhttps://www.cadence.com/en_US/home/resources/datasheets/pspice-advanced-circuit-simulation-ds.html\nhttps://support1.cadence.com/public/docs/content/20469530.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-10\\init_file\\FULLADD.DSN",
-            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.DSN"
+            "local_path": "task-10/init_file/FULLADD.DSN",
+            "path": "C:\\Users\\Administrator\\Desktop\\FULLADD.DSN"
           }
         ]
       }
@@ -20,14 +20,14 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-10\\init_file\\FULLADD.OPJ",
-            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\FULLADD.OPJ"
+            "local_path": "task-10/init_file/FULLADD.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\FULLADD.OPJ"
           }
         ]
       }
     }
   ],
-  "trajectory": "trajectories\\",
+  "trajectory": "trajectories/",
   "related_apps": [
     "cadence-orcad"
   ],
@@ -38,8 +38,8 @@
         "parameters": {
           "files": [
             {
-              "local_path": "task-10\\eval.py",
-              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
             }
           ]
         }
@@ -48,13 +48,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\r\n"
+        "expected": "true\r\n"
       }
     }
   },

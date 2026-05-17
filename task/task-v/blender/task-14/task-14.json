@@ -1,8 +1,8 @@
 {
   "id": "v-blender-task-14-ubuntu",
   "snapshot": "Blender-4.2.3",
-  "instruction": "Ambient Occlusion Bake `scene.blend` contains mesh `Surface` and a 512x512 image datablock `AO_Bake` already prepared as the material's bake target. Bake ambient occlusion into `AO_Bake`, pack the image into the blend, and save the scene as `answer.blend`. Requirements: `AO_Bake` must remain a packed 512x512 image; the baked image must have mean gray in `[0.45, 0.90]`; the fraction of pixels below `0.3` must be in `[0.03, 0.35]`; and the image must not be flat, with gray-channel standard deviation at least `0.05`.",
-  "source": "Zhukov, Iones, Kronin 1998 — \"An Ambient Light Illumination Model\", EGWR (obscurance \\ AO bake)",
+  "instruction": "Ambient Occlusion Bake\n\n`scene.blend` contains mesh `Surface` and a 512x512 image datablock `AO_Bake` already prepared as the material's bake target.\n\nBake ambient occlusion into `AO_Bake`, pack the image into the blend, and save the scene as `answer.blend`.\n\nRequirements: `AO_Bake` must remain a packed 512x512 image; the baked image must have mean gray in `[0.45, 0.90]`; the fraction of pixels below `0.3` must be in `[0.03, 0.35]`; and the image must not be flat, with gray-channel standard deviation at least `0.05`.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/",
   "config": [
     {
       "type": "upload_file",
@@ -46,13 +46,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "true\n"
       }
     }
   },

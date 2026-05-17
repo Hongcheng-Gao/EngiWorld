@@ -1,8 +1,8 @@
 {
   "id": "v-blender-task-38-ubuntu",
   "snapshot": "Blender-4.2.3",
-  "instruction": "Relocate Broken Image Path `scene.blend` contains a single mesh object `Panel` with a material `PanelMat` whose shader uses an Image Texture node. The image datablock's filepath is an absolute path to a file that does not exist, so the texture fails to load. The correct asset is at `textures/panel_diffuse.png` (a 32x32 PNG). Fix the image's filepath so it resolves to that real file, store the filepath as a blend-relative path (beginning with Blender's `\\\\` prefix), and save the result to `answer.blend` (relative to the working directory). Requirements: 1. `answer.blend` exists and opens as a valid Blender file. 2. The image datablock referenced by `PanelMat`'s Image Texture node has `filepath_raw` starting with `\\\\` (Blender-relative). 3. The image's resolved absolute filepath points to an existing file on disk. 4. After the file is opened, the image loads successfully: `image.reload()` does not raise and `image.size[0] > 0` with pixel data accessible. 5. The loaded image has `size == (32, 32)`, matching the intended asset. 6. A mesh object named `Panel` still exists and still has `PanelMat` in material slot 0. 7. `PanelMat`'s node tree still has an Image Texture node whose Color output feeds a Principled BSDF's Base Color input. Do not rename the object, material, or replace the material graph - only the image's path needs to change.",
-  "source": "Blender Manual — External Files and Find Missing Files",
+  "instruction": "Relocate Broken Image Path\n\n`scene.blend` contains a single mesh object `Panel` with a material `PanelMat` whose shader uses an Image Texture node. The image datablock's filepath is an absolute path to a file that does not exist, so the texture fails to load. The correct asset is at `textures/panel_diffuse.png` (a 32x32 PNG). Fix the image's filepath so it resolves to that real file, store the filepath as a blend-relative path (beginning with Blender's `\\\\` prefix), and save the result to `answer.blend` (relative to the working directory).\n\nRequirements:\n1. `answer.blend` exists and opens as a valid Blender file.\n2. The image datablock referenced by `PanelMat`'s Image Texture node has `filepath_raw` starting with `\\\\` (Blender-relative).\n3. The image's resolved absolute filepath points to an existing file on disk.\n4. After the file is opened, the image loads successfully: `image.reload()` does not raise and `image.size[0] > 0` with pixel data accessible.\n5. The loaded image has `size == (32, 32)`, matching the intended asset.\n6. A mesh object named `Panel` still exists and still has `PanelMat` in material slot 0.\n7. `PanelMat`'s node tree still has an Image Texture node whose Color output feeds a Principled BSDF's Base Color input.\n\nDo not rename the object, material, or replace the material graph - only the image's path needs to change.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -57,13 +57,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "true\n"
       }
     }
   },

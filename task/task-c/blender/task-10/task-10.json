@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-10-ubuntu",
-  "instruction": "Geometry Nodes Tree Built From Python `init_file/scene.blend` contains a single mesh object named `Array` at the world origin whose mesh data is empty (0 vertices, 0 faces). The scene contains nothing else. Your task is to author a Python script that, starting from this scene, constructs a Geometry Nodes setup on `Array` entirely through the Python API (`bpy.data.node_groups.new(...)`, `tree.nodes.new(...)`, `tree.links.new(...)`, `tree.interface.new_socket(...)`), so that the object, although its base mesh stays empty, evaluates to a line of 20 cube instances along the Z axis. Save the result as `output/answer.blend`. ## Required setup 1. Add a Geometry Nodes modifier (type `NODES`) to `Array`. 2. Create a new Geometry-Nodes node tree with a Geometry input socket and a Geometry output socket (via `tree.interface.new_socket(...)`), and assign it to the modifier. 3. Into that tree add EXACTLY these three nodes (on top of the default Group Input / Group Output): - `GeometryNodeMeshLine` — Mesh Line - `GeometryNodeInstanceOnPoints` — Instance on Points - `GeometryNodeRealizeInstances` — Realize Instances You may add a Mesh Cube primitive (`GeometryNodeMeshCube`) as the instance source; this 4th node is permitted. 4. Configure the Mesh Line: - `Count = 20` - Vertices spaced along the Z axis with offset `(0, 0, 0.2)` (so points land at z = 0, 0.2, 0.4, …, 3.8). 5. Use a Mesh Cube primitive with `Size = 0.1` (uniform) as the instance source. 6. Wire the links: - Mesh Line `Mesh` (geometry) → Instance on Points `Points` - Mesh Cube `Mesh` → Instance on Points `Instance` - Instance on Points `Instances` → Realize Instances `Geometry` - Realize Instances `Geometry` → Group Output `Geometry` 7. Do NOT apply the modifier. The modifier must remain on the object with the three (or four, including the Mesh Cube) added nodes visible in its node tree. The base mesh on `Array.data` must still have 0 vertices. 1. Output scene contains exactly one mesh object named `Array`. 2. `Array` has exactly one modifier and its type is `NODES` (Geometry Nodes). 3. The Geometry-Nodes tree on that modifier contains one `GeometryNodeMeshLine`, one `GeometryNodeInstanceOnPoints`, and one `GeometryNodeRealizeInstances` node (added nodes). 4. The Mesh Line’s `Count` input is 20. 5. Links are wired in the order Mesh Line → Instance on Points (Points socket) → Realize Instances (Geometry socket) → Group Output (Geometry socket). A Mesh-Cube-style source feeds Instance on Points' `Instance` socket. 6. `Array.data` still has 0 vertices (modifier NOT applied). 7. The evaluated mesh (via `obj.evaluated_get(depsgraph).to_mesh()`) has exactly 160 vertices (20 cubes × 8 verts) and its Z extent spans at least from ~0.0 to ~3.8 BU.",
-  "source": "Blender Python API — bpy.data.node_groups; Geometry Nodes Python docs",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Geometry Nodes Tree Built From Python\n\n`/home/user/Desktop/scene.blend` contains a single mesh object named `Array` at the world origin whose mesh data is empty (0 vertices, 0 faces). The scene contains nothing else.\n\nYour task is to author a Python script that, starting from this scene, constructs a Geometry Nodes setup on `Array` entirely through the Python API (`bpy.data.node_groups.new(...)`, `tree.nodes.new(...)`, `tree.links.new(...)`, `tree.interface.new_socket(...)`), so that the object, although its base mesh stays empty, evaluates to a line of 20 cube instances along the Z axis.\n\nSave the result as `/home/user/Desktop/answer.blend`.\n\n## Required setup\n1. Add a Geometry Nodes modifier (type `NODES`) to `Array`.\n2. Create a new Geometry-Nodes node tree with a Geometry input socket and a Geometry output socket (via `tree.interface.new_socket(...)`), and assign it to the modifier.\n3. Into that tree add EXACTLY these three nodes (on top of the default Group Input / Group Output):\n   - `GeometryNodeMeshLine` — Mesh Line\n   - `GeometryNodeInstanceOnPoints` — Instance on Points\n   - `GeometryNodeRealizeInstances` — Realize Instances\n   You may add a Mesh Cube primitive (`GeometryNodeMeshCube`) as the instance source; this 4th node is permitted.\n4. Configure the Mesh Line:\n   - `Count = 20`\n   - Vertices spaced along the Z axis with offset `(0, 0, 0.2)` (so points land at z = 0, 0.2, 0.4, …, 3.8).\n5. Use a Mesh Cube primitive with `Size = 0.1` (uniform) as the instance source.\n6. Wire the links:\n   - Mesh Line `Mesh` (geometry) → Instance on Points `Points`\n   - Mesh Cube `Mesh` → Instance on Points `Instance`\n   - Instance on Points `Instances` → Realize Instances `Geometry`\n   - Realize Instances `Geometry` → Group Output `Geometry`\n7. Do NOT apply the modifier. The modifier must remain on the object with the three (or four, including the Mesh Cube) added nodes visible in its node tree. The base mesh on `Array.data` must still have 0 vertices.\n\n## Requirements\n1. Output scene contains exactly one mesh object named `Array`.\n2. `Array` has exactly one modifier and its type is `NODES` (Geometry Nodes).\n3. The Geometry-Nodes tree on that modifier contains one `GeometryNodeMeshLine`, one `GeometryNodeInstanceOnPoints`, and one `GeometryNodeRealizeInstances` node (added nodes).\n4. The Mesh Line’s `Count` input is 20.\n5. Links are wired in the order Mesh Line → Instance on Points (Points socket) → Realize Instances (Geometry socket) → Group Output (Geometry socket). A Mesh-Cube-style source feeds Instance on Points' `Instance` socket.\n6. `Array.data` still has 0 vertices (modifier NOT applied).\n7. The evaluated mesh (via `obj.evaluated_get(depsgraph).to_mesh()`) has exactly 160 vertices (20 cubes × 8 verts) and its Z extent spans at least from ~0.0 to ~3.8 BU.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-10/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-10/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-10/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-10/",
-      "expected_files": [
-        "./blender/output/blender-10/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-10/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

@@ -1,55 +1,53 @@
 {
   "id": "c-blender-task-43-ubuntu",
-  "instruction": "Camera Silhouette Optimization. `init_file/scene.blend` contains: - A single asymmetric mesh object named `Target` centered at the world origin. Its bounding box is roughly 3.0 (X) x 0.5 (Y) x 2.0 (Z), with a small bump that breaks symmetry. The Y-axis is the shortest, so viewing the object along +/-Y reveals the widest cross-section (approximately X*Z = 6 square units in world space). - A `Camera` named `Camera`, configured ORTHOGRAPHIC with `cam.data.ortho_scale = 5.0` and placed at distance 5.0 from the origin at some arbitrary initial angle (e.g. Azimuth 30 deg, elevation 15 deg). It is NOT currently at the optimum orientation. - A pure-white World background. - Render engine: Cycles CPU, 4 samples, denoising off. - Resolution 256x256, RGBA PNG, `scene.render.film_transparent = True` so the render's alpha is 1.0 where the object is visible and 0.0 elsewhere. - View Transform: Standard. Task: find the camera orientation (azimuth, elevation) on a sphere of radius 5 around the origin that MAXIMIZES the silhouette area of `Target` in the rendered image (the silhouette area is the count of pixels whose alpha > 0.5). Then set the camera to that optimum orientation, render once to `ground_truth/output/optimal.png` at 256x256, and save the.blend to `ground_truth/answer.blend`. ## Required steps 1. Open `init_file/scene.blend`. 2. Brute-force search: iterate azimuth over [0, 360) in steps of 10 degrees and elevation over [-80, +80] in steps of 10 degrees (you may refine on a finer grid afterward). For each (az, el): - Position the Camera at `(r*cos(el)*cos(az), r*cos(el)*sin(az), r*sin(el))` with `r = 5.0`. - Orient it to look at the origin. The standard recipe is: `from mathutils import Vector` `direction = Vector((0,0,0)) - cam.location` `cam.rotation_mode = 'QUATERNION'` `cam.rotation_quaternion = direction.to_track_quat('-Z', 'Y')` - Render to a temp file, load the PNG with `bpy.data.images.load(...)`, count pixels whose alpha > 0.5, then remove the image datablock. 3. Keep the (az*, el*) that gives the largest silhouette area. 4. Set the camera to (az*, el*), render the final image to `ground_truth/output/optimal.png` (256x256, RGBA), and save the.blend as `ground_truth/answer.blend`. ## Hints / gotchas - Camera is orthographic so the silhouette area does NOT depend on distance. - `scene.render.film_transparent = True` is already set; preserve it. - Keep the Cycles sample count low (4) for speed; 36*17 = 612 renders at 256x256 is still tractable in a few minutes. - Count alpha-positive pixels using Blender's own image API so you do not need numpy: `img.pixels[3::4]` gives alpha values. 1. `ground_truth/answer.blend` exists and opens in Blender. 2. Scene contains a `Target` object (mesh) centered near the origin. 3. Scene contains a `Camera` object (type CAMERA) as the active `scene.camera`. 4. `ground_truth/output/optimal.png` exists. 5. The rendered PNG is exactly 256x256. 6. The submitted render has silhouette area (alpha > 0.5 pixel count) >= 1000 pixels (object is visible, not edge-on). 7. The submitted camera orientation yields a silhouette area within 2% of the true analytical optimum: the eval renders ONE image at the camera's current orientation and ONE image at the known optimum (camera on the +Y axis at distance 5, looking at origin, orthographic) and requires `submitted_area >= 0.98 * optimum_area`.",
-  "source": "Vázquez, Feixas, Sbert, Heidrich 2001 — \"Viewpoint Selection using Viewpoint Entropy\", VMV",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Camera Silhouette Optimization.\n\n`/home/user/Desktop/scene.blend` contains:\n  - A single asymmetric mesh object named `Target` centered at the world origin. Its bounding box is roughly 3.0 (X) x 0.5 (Y) x 2.0 (Z), with a small bump that breaks symmetry. The Y-axis is the shortest, so viewing the object along +/-Y reveals the widest cross-section (approximately X*Z = 6 square units in world space).\n  - A `Camera` named `Camera`, configured ORTHOGRAPHIC with `cam.data.ortho_scale = 5.0` and placed at distance 5.0 from the origin at some arbitrary initial angle (e.g. azimuth 30 deg, elevation 15 deg). It is NOT currently at the optimum orientation.\n  - A pure-white World background.\n  - Render engine: Cycles CPU, 4 samples, denoising off.\n  - Resolution 256x256, RGBA PNG, `scene.render.film_transparent = True` so the render's alpha is 1.0 where the object is visible and 0.0 elsewhere.\n  - View Transform: Standard.\n\nTask: find the camera orientation (azimuth, elevation) on a sphere of radius 5 around the origin that MAXIMIZES the silhouette area of `Target` in the rendered image (the silhouette area is the count of pixels whose alpha > 0.5). Then set the camera to that optimum orientation, render once to `/home/user/Desktop/output/optimal.png` at 256x256, and save the .blend to `/home/user/Desktop/answer.blend`.\n\n## Required steps\n1. Open `/home/user/Desktop/scene.blend`.\n2. Brute-force search: iterate azimuth over [0, 360) in steps of 10 degrees and elevation over [-80, +80] in steps of 10 degrees (you may refine on a finer grid afterward). For each (az, el):\n     - Position the Camera at `(r*cos(el)*cos(az), r*cos(el)*sin(az), r*sin(el))` with `r = 5.0`.\n     - Orient it to look at the origin. The standard recipe is:\n         `from mathutils import Vector`\n         `direction = Vector((0,0,0)) - cam.location`\n         `cam.rotation_mode = 'QUATERNION'`\n         `cam.rotation_quaternion = direction.to_track_quat('-Z', 'Y')`\n     - Render to a temp file, load the PNG with `bpy.data.images.load(...)`, count pixels whose alpha > 0.5, then remove the image datablock.\n3. Keep the (az*, el*) that gives the largest silhouette area.\n4. Set the camera to (az*, el*), render the final image to `/home/user/Desktop/output/optimal.png` (256x256, RGBA), and save the .blend as `/home/user/Desktop/answer.blend`.\n\n## Requirements\n1. `/home/user/Desktop/answer.blend` exists and opens in Blender.\n2. Scene contains a `Target` object (mesh) centered near the origin.\n3. Scene contains a `Camera` object (type CAMERA) as the active `scene.camera`.\n4. `/home/user/Desktop/output/optimal.png` exists.\n5. The rendered PNG is exactly 256x256.\n6. The submitted render has silhouette area (alpha > 0.5 pixel count) >= 1000 pixels (object is visible, not edge-on).\n7. The submitted camera orientation yields a silhouette area within 2% of the true analytical optimum: the eval renders ONE image at the camera's current orientation and ONE image at the known optimum (camera on the +Y axis at distance 5, looking at origin, orthographic) and requires `submitted_area >= 0.98 * optimum_area`.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-43/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-43/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-43/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-43/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-43/",
-      "expected_files": [
-        "./blender/output/blender-43/answer.blend",
-        "./blender/output/blender-43/output/optimal.png"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-43/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

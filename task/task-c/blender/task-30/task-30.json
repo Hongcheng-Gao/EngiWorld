@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-30-ubuntu",
-  "instruction": "Parametric Row of Through-Holes `init_file/scene.blend` holds a single mesh object named `Plate`: a rectangular slab aligned to the world axes. Dimensions and origin are NOT repeated here — you must inspect the scene to read them. Drill through-bores in the plate so that the saved output file satisfies every pass condition below. Save to `$BLEND_OUTPUT_PATH` (falls back to `output.blend` in the current working directory if the variable is unset). 1. Scene contains exactly one mesh object, still named `Plate`, with its world location and rotation unchanged from the input. 2. The plate's outer envelope (top face, bottom face, four side faces) is preserved; only internal material is removed. 3. Five cylindrical through-bores of diameter 0.20 BU pierce the plate vertically (bore axis ‖ world Z), from top face to bottom face. 4. All five bore axes lie on the plate's mid-span Y line (Y = plate_center_Y). 5. The five bore centers are equispaced along X and leave equal end margins on both sides of the plate's X extent. 6. The final mesh is closed and manifold: every edge bounded by exactly two faces; no loose vertices; no non-manifold edges. Inspect before acting — the plate's exact X length determines where the bores go.",
-  "source": "human_craft",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Parametric Row of Through-Holes\n\n`/home/user/Desktop/scene.blend` holds a single mesh object named `Plate`: a rectangular slab aligned to the world axes. Dimensions and origin are NOT repeated here — you must inspect the scene to read them.\n\nDrill through-bores in the plate so that the saved output file satisfies every pass condition below. Save to `$BLEND_OUTPUT_PATH` (falls back to `output.blend` in the current working directory if the variable is unset).\n\n## Requirements\n1. Scene contains exactly one mesh object, still named `Plate`, with its world location and rotation unchanged from the input.\n2. The plate's outer envelope (top face, bottom face, four side faces) is preserved; only internal material is removed.\n3. Five cylindrical through-bores of diameter 0.20 BU pierce the plate vertically (bore axis ‖ world Z), from top face to bottom face.\n4. All five bore axes lie on the plate's mid-span Y line (Y = plate_center_Y).\n5. The five bore centers are equispaced along X and leave equal end margins on both sides of the plate's X extent.\n6. The final mesh is closed and manifold: every edge bounded by exactly two faces; no loose vertices; no non-manifold edges.\n\nInspect before acting — the plate's exact X length determines where the bores go.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-30/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-30/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-30/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-30/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-30/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-30/",
-      "expected_files": [
-        "./blender/output/blender-30/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-30/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

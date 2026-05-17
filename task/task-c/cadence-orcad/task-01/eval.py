@@ -8,11 +8,11 @@ import zlib
 from pathlib import Path
 
 
-DESKTOP = Path('/home/user/Desktop')
+DESKTOP = Path(r'C:\Users\Administrator\Desktop')
 BUNDLE = {'eval_inner.py': 'eNqNVc1u3DYQvvMpJuxFKrxK0lOxqAI4QNocjcLtxTG4XGkksdaSAkmlaxgG+hB9wj5Jh6S0K9mJkz2Jw29mvvnZj5xz/Cz7YriHxljw0t1t3ryF//75Fw5oW4QanWq1kCB1PR/2YLGhb+iV865g7E+0qlFk8J30sDOjH0YvamVfxyC1SPjCH/1uywB+hMpoL5V2gLLqAI8DVh5r2F1ufyHsu11Mt3s/n/AoK9/fg9EVRv9eaUonLYIzljy3cLmFfW+qO9gjVYLwfjpfgOyHTm4SDvb3M/m/le+UZpxz1lhzACGa0Y8WhQB1GAhNHLTx0iujHWOT7S9n9Pzt7l1yHaTverWf/a7oyNjHD79/gDIeMoqteoqcFxad6T9jlhcDsdee/QB/OITWmpEq9nb0HQQsSAdO6bYPFY62QjBNuma/XYury+uPFDumeA08eYt4zYPhWds5Y6zGBkRvZC1i97JhG8nlsHkXJ3njvL0N4wFQDVDpMBR4DCPO8mQOP4vUJA03t2x5ChELSwHUkPFP9pPmeVyoYAelKZJFSuzx6DPUlamptJKPvtn8zPPCDb3yiVQecsdoKVh+OzEPayrSZrnsvGGRfa0qnxieL+bWL6Dn5kespPUrlx5fblwqMw62hAc+SOf4Fn6VvcML4Gd3MhLlZb7HZS8p2xe7GQLfcOoOLRa/pRQNPygXRr+FB3J65E9bn3xYNJ/+OeVqtNOKpDpb459cU9icLdPPYURFi+QjjR51NpvXYIr3BEeWnC2LnR2/Uag268Un8XiYqL9cNqVx6GNeeFXG7xPXc86pj5Qq/fmzFQ42pxj5yYX208q1Q0yyWefIX6qLEzTkPkhfdfwZcmIVodP3M0ykERHx6xutCAN+VX5f07mxNdoTPchOuuk6M/Y1DBYrrL+qn6TZqsb8xenMaeNfJSS9tiOubqoOq7t0d3OK1HDZ9/CwWrzHWa1JKm14YRLr1dbMj0OmdNWPQVkgFjmRXAnVTJNR24TQ8hDkvqS2CHGg90gIPgng9ALYlmTaJfJyILqzpbi07XggVlfhZGdJGQpZ10JOd9lSHiaEbYPqEDCGCVA3OQfJWqlcuCsWehJRg1UUODxDRT0eBpfZCxpKTdnKny6oTS48YdJVSpVRo6ZdpbcqyI/P3oSNsUVL65wGlAMSDN7m7H/MY5rL', 'ground_truth/merged_refdes.txt': 'eNplzL0KgCAAReE96F1Sb39u+g7OIkg09P5z1iEQWu7HXU7wyU3jEBoGLDgQzLDAChvsL6IiKqIiKqIiKqIiKqKiVon+LNdRas2hP/E5yXRrf+u+vQGk5ynS'}
 CALL_FUNC = 'eval_outputs'
 CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('design_a.DSN', '/home/user/Desktop/design_a.DSN'), ('design_a.OPJ', '/home/user/Desktop/design_a.OPJ'), ('design_b.DSN', '/home/user/Desktop/design_b.DSN'), ('design_b.OPJ', '/home/user/Desktop/design_b.OPJ')]
+INIT_MAP = [('design_a.DSN', r'C:\Users\Administrator\Desktop\design_a.DSN'), ('design_a.OPJ', r'C:\Users\Administrator\Desktop\design_a.OPJ'), ('design_b.DSN', r'C:\Users\Administrator\Desktop\design_b.DSN'), ('design_b.OPJ', r'C:\Users\Administrator\Desktop\design_b.OPJ')]
 
 
 def _decode(payload: str) -> bytes:

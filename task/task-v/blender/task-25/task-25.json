@@ -1,8 +1,8 @@
 {
   "id": "v-blender-task-25-ubuntu",
   "snapshot": "Blender-4.2.3",
-  "instruction": "Profile Loft `scene.blend` contains two closed 2D poly curves `Profile_Bottom` (at Z=0) and `Profile_Top` (at Z=1) with the same number of control points. Build a single lofted mesh named `Lofted` that connects corresponding control points one-to-one between the two profiles, with flat n-gon caps on top and bottom, then remove the two source curves. Save the result as `answer.blend`. Requirements: 1. Scene contains a mesh object named `Lofted`. 2. `Profile_Bottom` is removed from the scene. 3. `Profile_Top` is removed from the scene. 4. Scene contains exactly one mesh object. 5. `Lofted` is closed-manifold (every edge shared by exactly two faces). 6. `Lofted` has no loose vertices. 7. Vertex count equals 2*N, where N is the per-profile control-point count. 8. Exactly N vertices of `Lofted` sit at z=0 (matching `Profile_Bottom`'s world positions). 9. Exactly N vertices of `Lofted` sit at z=1 (matching `Profile_Top`'s world positions). 10. The N vertices at z=0 lie at `Profile_Bottom`'s world-space ring radius. 11. The N vertices at z=1 lie at `Profile_Top`'s world-space ring radius. 12. Exactly one n-gon face (N sides) caps the top with normal pointing +Z. 13. Exactly one n-gon face (N sides) caps the bottom with normal pointing -Z. 14. The side skin consists of exactly N quad faces (one per profile edge).",
-  "source": "Piegl, Tiller 1997 — The NURBS Book, Ch. 10 (Skinning \\ Lofting through Profiles)",
+  "instruction": "Profile Loft\n\n`scene.blend` contains two closed 2D poly curves `Profile_Bottom` (at Z=0) and `Profile_Top` (at Z=1) with the same number of control points. Build a single lofted mesh named `Lofted` that connects corresponding control points one-to-one between the two profiles, with flat n-gon caps on top and bottom, then remove the two source curves.\n\nSave the result as `answer.blend`.\n\nRequirements:\n1. Scene contains a mesh object named `Lofted`.\n2. `Profile_Bottom` is removed from the scene.\n3. `Profile_Top` is removed from the scene.\n4. Scene contains exactly one mesh object.\n5. `Lofted` is closed-manifold (every edge shared by exactly two faces).\n6. `Lofted` has no loose vertices.\n7. Vertex count equals 2*N, where N is the per-profile control-point count.\n8. Exactly N vertices of `Lofted` sit at z=0 (matching `Profile_Bottom`'s world positions).\n9. Exactly N vertices of `Lofted` sit at z=1 (matching `Profile_Top`'s world positions).\n10. The N vertices at z=0 lie at `Profile_Bottom`'s world-space ring radius.\n11. The N vertices at z=1 lie at `Profile_Top`'s world-space ring radius.\n12. Exactly one n-gon face (N sides) caps the top with normal pointing +Z.\n13. Exactly one n-gon face (N sides) caps the bottom with normal pointing -Z.\n14. The side skin consists of exactly N quad faces (one per profile edge).",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -46,13 +46,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "blender --background --python \"/home/user/Desktop/eval.py\"",
+      "command": "python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\n"
+        "expected": "true\n"
       }
     }
   },

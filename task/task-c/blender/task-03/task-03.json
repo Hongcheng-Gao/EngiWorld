@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-03-ubuntu",
-  "instruction": "Menger Sponge via Geometry Nodes (Repeat Zone) `init_file/scene.blend` contains a single mesh object `Sponge` at the world origin. Its mesh data is empty (0 verts / 0 edges / 0 faces) and the modifier stack is empty. Your job is to add a **Geometry Nodes** modifier to `Sponge` that procedurally builds a **depth-3 Menger sponge** using a **Repeat Zone** (`GeometryNodeRepeatInput` + `GeometryNodeRepeatOutput`). Save your result as `output/answer.blend`. The GN modifier must remain on `Sponge` -- do **not** apply it. The base mesh stays empty; only the evaluated mesh (via depsgraph) contains the sponge. ## Construction spec The Menger sponge construction starts from a unit cube occupying the axis-aligned box `[0, 1]^3`. Each iteration subdivides every current cube into a `3 x 3 x 3` grid of 27 sub-cubes and removes the 7 that sit at (a) the volume-center position and (b) the 6 face-center positions of the parent cube, keeping the 20 that sit on parent edges/corners. Child cubes have side length `parent_size / 3`. Counts per iteration (number of remaining cubes): - Iter 0: 1 - Iter 1: 20 - Iter 2: 400 - Iter 3: 8000 At depth 3 each cube has side length `1/27` and the 8000 cubes together fill `[0, 1]^3`. ## Required architecture - The GN tree must expose an integer Group Input socket named `Iterations` with default value `3`. Its value is consumed by the Repeat Zone. - The zone body must execute N times (where N = `Iterations`). On each iteration, each current cube becomes 20 sub-cubes (a 3x3x3 grid minus the 7 center/face-centers), scaled to 1/3 of the current size. - A clean and correct pattern: 1. Before the Repeat Zone, seed the geometry with a single point at `(0.5, 0.5, 0.5)` carrying a float attribute `size = 1.0`. 2. Inside the zone: build a 20-point \"sub-grid\" (the valid Menger offsets at `(i-1, j-1, k-1) / 3` for i,j,k in {0,1,2} excluding the 7 bad offsets), instance it on the current point cloud via `Instance on Points` with `Scale` set to the `size` attribute, `Realize Instances`, and write `size = old size / 3` back to the attribute. 3. After the zone, instance a unit `Mesh Cube` on each final point with `Scale` = `size`, and `Realize Instances`. - Connect the final realized geometry to the Group Output. You may build the 20-point sub-grid any way you like (pure-GN with `Mesh Line` + `Instance on Points` + `Delete Geometry`, or as an auxiliary mesh data-block referenced via `Object Info`, or explicit `from_pydata`). The sub-grid only needs to have 20 vertices at the correct Menger offsets. 1. `output/answer.blend` exists and opens. 2. Scene contains mesh object `Sponge` at the world origin with exactly one modifier, of type `NODES`, referencing a non-empty node group. 3. The node group contains a `GeometryNodeRepeatInput` (Repeat Zone); its effective iteration count is `3`. - Either the RepeatInput's `Iterations` input socket is driven by a Group Input socket whose default (or modifier override) is `3`, or the RepeatInput's `Iterations` default is `3`. 4. `Sponge.data` (the base mesh) is empty -- the modifier is **not** applied. 5. The evaluated mesh (via depsgraph) has: - vertex count in `[10000, 200000]` - face count in `[5000, 150000]` - bounding box (in world space) equal to `[0, 1]^3` within tolerance `1e-3` 6. At least 95% of evaluated edges are 2-faced (\"manifold-ish\" interior). ## Tips - Use `bpy.data.node_groups.new(name=..., type=\"GeometryNodeTree\")` and `tree.interface.new_socket(...)` for the `Geometry` and `Iterations` sockets. - The Repeat Zone API: `ri = tree.nodes.new(\"GeometryNodeRepeatInput\")`, `ro = tree.nodes.new(\"GeometryNodeRepeatOutput\")`, then `ri.pair_with_output(ro)`. Pairing wires up a default `Geometry` item; add more items via `ro.repeat_items.new(socket_type=\"GEOMETRY\", name=\"Extra\")` if you need them (not required here). - The `Iterations` socket lives on the `RepeatInput` node (not the output). Link the `Iterations` Group Input socket to it. - When you instance the 20-point sub-grid on the current points with `Instance on Points.Scale = (size,size,size)`, each child vertex ends up at `parent_position + size * offset`, which is exactly what the Menger subdivision requires. - The `size` attribute is propagated per-parent-point through `Instance on Points` + `Realize Instances`, so after realizing you can read and update it via `Input Named Attribute` + `Store Named Attribute` with `data_type = 'FLOAT'` and `domain = 'POINT'`.",
-  "source": "Repeat Zone docs; Toolify \"Repeat Zone Blender 4.0 Menger Sponge\"",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Menger Sponge via Geometry Nodes (Repeat Zone)\n\n`/home/user/Desktop/scene.blend` contains a single mesh object `Sponge` at the world origin. Its mesh data is empty (0 verts / 0 edges / 0 faces) and the modifier stack is empty. Your job is to add a **Geometry Nodes** modifier to `Sponge` that procedurally builds a **depth-3 Menger sponge** using a **Repeat Zone** (`GeometryNodeRepeatInput` + `GeometryNodeRepeatOutput`).\n\nSave your result as `/home/user/Desktop/answer.blend`. The GN modifier must remain on `Sponge` -- do **not** apply it. The base mesh stays empty; only the evaluated mesh (via depsgraph) contains the sponge.\n\n## Construction spec\n\nThe Menger sponge construction starts from a unit cube occupying the axis-aligned box `[0, 1]^3`. Each iteration subdivides every current cube into a `3 x 3 x 3` grid of 27 sub-cubes and removes the 7 that sit at (a) the volume-center position and (b) the 6 face-center positions of the parent cube, keeping the 20 that sit on parent edges/corners. Child cubes have side length `parent_size / 3`.\n\nCounts per iteration (number of remaining cubes):\n- Iter 0: 1\n- Iter 1: 20\n- Iter 2: 400\n- Iter 3: 8000\n\nAt depth 3 each cube has side length `1/27` and the 8000 cubes together fill `[0, 1]^3`.\n\n## Required architecture\n\n- The GN tree must expose an integer Group Input socket named `Iterations` with default value `3`. Its value is consumed by the Repeat Zone.\n- The zone body must execute N times (where N = `Iterations`). On each iteration, each current cube becomes 20 sub-cubes (a 3x3x3 grid minus the 7 center/face-centers), scaled to 1/3 of the current size.\n- A clean and correct pattern:\n    1. Before the Repeat Zone, seed the geometry with a single point at `(0.5, 0.5, 0.5)` carrying a float attribute `size = 1.0`.\n    2. Inside the zone: build a 20-point \"sub-grid\" (the valid Menger offsets at `(i-1, j-1, k-1) / 3` for i,j,k in {0,1,2} excluding the 7 bad offsets), instance it on the current point cloud via `Instance on Points` with `Scale` set to the `size` attribute, `Realize Instances`, and write `size = old size / 3` back to the attribute.\n    3. After the zone, instance a unit `Mesh Cube` on each final point with `Scale` = `size`, and `Realize Instances`.\n- Connect the final realized geometry to the Group Output.\n\nYou may build the 20-point sub-grid any way you like (pure-GN with `Mesh Line` + `Instance on Points` + `Delete Geometry`, or as an auxiliary mesh data-block referenced via `Object Info`, or explicit `from_pydata`). The sub-grid only needs to have 20 vertices at the correct Menger offsets.\n\n## Requirements\n\n1. `/home/user/Desktop/answer.blend` exists and opens.\n2. Scene contains mesh object `Sponge` at the world origin with exactly one modifier, of type `NODES`, referencing a non-empty node group.\n3. The node group contains a `GeometryNodeRepeatInput` (Repeat Zone); its effective iteration count is `3`.\n   - Either the RepeatInput's `Iterations` input socket is driven by a Group Input socket whose default (or modifier override) is `3`, or the RepeatInput's `Iterations` default is `3`.\n4. `Sponge.data` (the base mesh) is empty -- the modifier is **not** applied.\n5. The evaluated mesh (via depsgraph) has:\n   - vertex count in `[10000, 200000]`\n   - face count in `[5000, 150000]`\n   - bounding box (in world space) equal to `[0, 1]^3` within tolerance `1e-3`\n6. At least 95% of evaluated edges are 2-faced (\"manifold-ish\" interior).",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-3/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-3/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-3/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-3/",
-      "expected_files": [
-        "./blender/output/blender-3/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-3/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

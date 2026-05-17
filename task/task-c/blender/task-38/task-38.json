@@ -1,58 +1,57 @@
 {
   "id": "c-blender-task-38-ubuntu",
-  "instruction": "Append asset-library material `init_file/scene.blend` is a scene containing a single mesh object `Target` (a cube at the origin) with NO material assigned - `Target.material_slots` is empty. `init_file/materials.blend` is a small asset-library file that contains one Material datablock named `StudioBrass` (a Principled-BSDF material with Base Color (0.8, 0.6, 0.2, 1.0), Metallic 1.0, Roughness 0.3); it has no objects. Starting from the scene, you must: 1. APPEND (NOT link) the material named `StudioBrass` from `init_file/materials.blend`. Use `bpy.data.libraries.load(filepath, link=False)`, which copies the datablock into the current file. Use an absolute path for the library filepath. Append semantics means the resulting `bpy.data.materials['StudioBrass'].library` MUST be None - do not leave it as a linked reference. 2. Assign the appended `StudioBrass` material to `Target.material_slots[0]`. Use `target.data.materials.append(mat)` (adding it to the mesh datablock's material list creates slot 0 automatically). 3. Save the result to `output/answer.blend` (relative to the current working directory). 1. `output/answer.blend` exists. 2. The object `Target` exists and is a MESH. 3. `bpy.data.materials.get('StudioBrass')` is not None. 4. `bpy.data.materials['StudioBrass'].library is None` (appended, not linked). 5. `Target.material_slots[0].material.name == 'StudioBrass'`. 6. The `StudioBrass` Principled BSDF has Metallic == 1.0 and Base Color with R > 0.7, G > 0.5, B < 0.3. Do not rename the `Target` object or the `StudioBrass` material.",
-  "source": "Blender Manual — Asset Browser and Append / Link",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Append asset-library material\n\n`/home/user/Desktop/scene.blend` is a scene containing a single mesh object `Target` (a cube at the origin) with NO material assigned - `Target.material_slots` is empty. `/home/user/Desktop/materials.blend` is a small asset-library file that contains one Material datablock named `StudioBrass` (a Principled-BSDF material with Base Color (0.8, 0.6, 0.2, 1.0), Metallic 1.0, Roughness 0.3); it has no objects.\n\nStarting from the scene, you must:\n1. APPEND (NOT link) the material named `StudioBrass` from `/home/user/Desktop/materials.blend`. Use `bpy.data.libraries.load(filepath, link=False)`, which copies the datablock into the current file. Use an absolute path for the library filepath. Append semantics means the resulting `bpy.data.materials['StudioBrass'].library` MUST be None - do not leave it as a linked reference.\n2. Assign the appended `StudioBrass` material to `Target.material_slots[0]`. Use `target.data.materials.append(mat)` (adding it to the mesh datablock's material list creates slot 0 automatically).\n3. Save the result to `/home/user/Desktop/answer.blend` (relative to the current working directory).\n\n## Requirements\n1. `/home/user/Desktop/answer.blend` exists.\n2. The object `Target` exists and is a MESH.\n3. `bpy.data.materials.get('StudioBrass')` is not None.\n4. `bpy.data.materials['StudioBrass'].library is None` (appended, not linked).\n5. `Target.material_slots[0].material.name == 'StudioBrass'`.\n6. The `StudioBrass` Principled BSDF has Metallic == 1.0 and Base Color with R > 0.7, G > 0.5, B < 0.3.\n\nDo not rename the `Target` object or the `StudioBrass` material.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-38/init_file/materials.blend",
+            "path": "/home/user/Desktop/materials.blend"
+          },
+          {
+            "local_path": "task-38/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-38/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-38/initial_files/materials.blend",
-        "./blender/blender-38/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-38/initial_files",
-      "open_with_app": [
-        "/home/user/workspace/blender/blender-38/initial_files/materials.blend",
-        "/home/user/workspace/blender/blender-38/initial_files/scene.blend"
-      ]
-    },
-    "output": {
-      "dir": "./blender/output/blender-38/",
-      "expected_files": [
-        "./blender/output/blender-38/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-38/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

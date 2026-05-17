@@ -1,54 +1,53 @@
 {
   "id": "c-blender-task-11-ubuntu",
-  "instruction": "IK Chain + Driver Rigger `init_file/scene.blend` is an empty Blender scene (just the default camera + light) — no armature, no empty named `IK_Target`. Using the Blender Python API, build a small rigging setup and save the result as `output/answer.blend`. ## What to build 1. An armature object named `Rig` containing a 3-bone chain aligned along +Y: - `BoneA`: head (0,0,0), tail (0,1,0) - `BoneB`: head (0,1,0), tail (0,2,0), parented to `BoneA` (use_connect=True) - `BoneC`: head (0,2,0), tail (0,3,0), parented to `BoneB` (use_connect=True) `BoneC` is the tip of the chain. `rig.data.bones` must contain exactly these three. 2. An `EMPTY` object named `IK_Target` located at world position (0, 3, 0), placed approximately at the tip of the chain. 3. On pose bone `BoneC`, an IK constraint (`type='IK'`) with: - `target = IK_Target` (the empty object; the evaluator also accepts `target=Rig` with a suitable `subtarget`). - `chain_count = 3` (so the whole chain is solved). 4. On pose bone `BoneB`, a `COPY_LOCATION` constraint targeting `IK_Target`, with a Python `SCRIPTED` driver on its `.influence` property: - The driver's expression is non-empty and references a variable that reads `IK_Target.location.x` (e.g. `max(0, min(1, x))` with a variable named `x`). - The variable must be a SINGLE_PROP targeting the `IK_Target` object with a data path containing `location` (e.g. `location.x`). 1. The file `output/answer.blend` opens as a valid Blender file. 2. Object `Rig` exists and is an ARMATURE with exactly 3 bones whose names are `BoneA`, `BoneB`, `BoneC`. 3. Object `IK_Target` exists and has `type == 'EMPTY'`. 4. Pose bone `BoneC` has at least one constraint of type `IK` with `chain_count == 3` and a target wired to either `IK_Target` directly, or to `Rig` with a non-empty `subtarget`. 5. Pose bone `BoneB` carries at least one constraint whose `influence` property is controlled by a driver. 6. That driver is `SCRIPTED`, has a non-empty `expression`, and has at least one variable whose target id is `IK_Target` and whose `data_path` contains `location`.",
-  "source": "human_craft",
-  "trajectory": "engiworld/trajectories/",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "IK Chain + Driver Rigger\n\n`/home/user/Desktop/scene.blend` is an empty Blender scene (just the default camera + light) — no armature, no empty named `IK_Target`. build a small rigging setup and save the result as `/home/user/Desktop/answer.blend`.\n\n## Requirements\n\n1. An armature object named `Rig` containing a 3-bone chain aligned along +Y:\n   - `BoneA`: head (0,0,0), tail (0,1,0)\n   - `BoneB`: head (0,1,0), tail (0,2,0), parented to `BoneA` (use_connect=True)\n   - `BoneC`: head (0,2,0), tail (0,3,0), parented to `BoneB` (use_connect=True)\n   `BoneC` is the tip of the chain. `rig.data.bones` must contain exactly these three.\n\n2. An `EMPTY` object named `IK_Target` located at world position (0, 3, 0), placed approximately at the tip of the chain.\n\n3. On pose bone `BoneC`, an IK constraint (`type='IK'`) with:\n   - `target = IK_Target` (the empty object).\n   - `chain_count = 3` (so the whole chain is solved).\n\n4. On pose bone `BoneB`, a `COPY_LOCATION` constraint targeting `IK_Target`, with a Python `SCRIPTED` driver on its `.influence` property:\n   - The driver's expression is non-empty and references a variable that reads `IK_Target.location.x` (e.g. `max(0, min(1, x))` with a variable named `x`).\n   - The variable must be a SINGLE_PROP targeting the `IK_Target` object with a data path containing `location` (e.g. `location.x`).\n\n## Requirements\n1. The file `/home/user/Desktop/answer.blend` opens as a valid Blender file.\n2. Object `Rig` exists and is an ARMATURE with exactly 3 bones whose names are `BoneA`, `BoneB`, `BoneC`.\n3. Object `IK_Target` exists and has `type == 'EMPTY'`.\n4. Pose bone `BoneC` has at least one constraint of type `IK` with `chain_count == 3` and a target set to either `IK_Target`, or to `Rig` with a non-empty `subtarget`.\n5. Pose bone `BoneB` carries at least one constraint whose `influence` property is controlled by a driver.\n6. That driver is `SCRIPTED`, has a non-empty `expression`, and has at least one variable whose target id is `IK_Target` and whose `data_path` contains `location`.",
+  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
   "related_apps": [
     "blender"
   ],
   "evaluator": {
-    "func": "engiworld_eval",
-    "expected": null,
-    "result": null,
-    "postconfig": []
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "engiworld": {
-    "execution": {
-      "channel": "c"
-    },
-    "software_version": "4.1.0",
-    "docker": {
-      "image": "",
-      "workspace_root": "/workspace"
-    },
-    "vm": {
-      "snapshot_name": "init_state",
-      "guest_workspace": "/home/user/workspace"
-    },
-    "init": {
-      "files": [
-        "./blender/blender-11/initial_files/scene.blend"
-      ],
-      "guest_input_dir": "/home/user/workspace/blender/blender-11/initial_files",
-      "open_with_app": "/home/user/workspace/blender/blender-11/initial_files/scene.blend"
-    },
-    "output": {
-      "dir": "./blender/output/blender-11/",
-      "expected_files": [
-        "./blender/output/blender-11/answer.blend"
-      ]
-    },
-    "context_files": [],
-    "evaluation": {
-      "eval_type": "cadquery_geometry_and_report",
-      "eval_script": "./blender/blender-11/eval.py",
-      "eval_entry": "eval_outputs",
-      "timeout_seconds": 300,
-      "ground_truth": []
-    }
-  },
-  "snapshot": "Blender-4.2.3"
+  "possibility_of_env_change": "low"
 }

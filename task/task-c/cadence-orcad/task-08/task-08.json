@@ -1,16 +1,16 @@
 {
   "id": "c-cadence-orcad-task-08-windows",
   "snapshot": "OrCAD24.1",
-  "instruction": "`C:\\\\Users\\\\User\\\\Desktop\\\\TUTOR2.DSN` is a schematic. Traverse all primitive part instances in it and export `C:\\\\Users\\\\User\\\\Desktop\\\\pin_map.json`. The top-level JSON fields must be `total_parts`, `total_pins`, and `parts`. The `parts` array must be sorted ascending by `ref`, and each element must have the form `{ref, pin_count, pin_numbers}`. Requirements: - Multipart instances that share the same refdes must be merged into one entry. - `pin_numbers` must be merged, deduplicated, and sorted lexicographically. - `total_parts` must equal the length of the `parts` array. - `total_pins` must equal the sum of all `pin_count` values.",
-  "source": "task.md #8 (Cadence 'OrCAD X DRC / ERC' blog; adapted to a pin-enumeration task since DBO-driven NoConnect placement is unreliable from a worker)",
+  "instruction": "`C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN` is a schematic. Traverse all primitive part instances in it and export `C:\\Users\\Administrator\\Desktop\\pin_map.json`.\n\nThe top-level JSON fields must be `total_parts`, `total_pins`, and `parts`. The `parts` array must be sorted ascending by `ref`, and each element must have the form `{ref, pin_count, pin_numbers}`.\n\nRequirements:\n- Multipart instances that share the same refdes must be merged into one entry.\n- `pin_numbers` must be merged, deduplicated, and sorted lexicographically.\n- `total_parts` must equal the length of the `parts` array.\n- `total_pins` must equal the sum of all `pin_count` values.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html\nhttps://www.cadence.com/en_US/home/resources/datasheets/pspice-advanced-circuit-simulation-ds.html\nhttps://support1.cadence.com/public/docs/content/20469530.html\nhttps://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html\nhttps://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-08\\init_file\\DCLOCK2.OLB",
-            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\DCLOCK2.OLB"
+            "local_path": "task-08/init_file/DCLOCK2.OLB",
+            "path": "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OLB"
           }
         ]
       }
@@ -20,8 +20,8 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-08\\init_file\\DCLOCK2.OPJ",
-            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\DCLOCK2.OPJ"
+            "local_path": "task-08/init_file/DCLOCK2.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OPJ"
           }
         ]
       }
@@ -31,8 +31,8 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-08\\init_file\\TUTOR2.DSN",
-            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\TUTOR2.DSN"
+            "local_path": "task-08/init_file/TUTOR2.DSN",
+            "path": "C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN"
           }
         ]
       }
@@ -42,14 +42,14 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-08\\init_file\\TUTOR2.OPJ",
-            "path": "C:\\\\Users\\\\User\\\\Desktop\\\\TUTOR2.OPJ"
+            "local_path": "task-08/init_file/TUTOR2.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\TUTOR2.OPJ"
           }
         ]
       }
     }
   ],
-  "trajectory": "trajectories\\",
+  "trajectory": "trajectories/",
   "related_apps": [
     "cadence-orcad"
   ],
@@ -60,8 +60,8 @@
         "parameters": {
           "files": [
             {
-              "local_path": "task-08\\eval.py",
-              "path": "C:\\\\Users\\\\User\\\\Desktop\\\\eval.py"
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
             }
           ]
         }
@@ -70,13 +70,13 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\\\Users\\\\User\\\\Desktop\\\\eval.py",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "True\r\n"
+        "expected": "true\r\n"
       }
     }
   },
