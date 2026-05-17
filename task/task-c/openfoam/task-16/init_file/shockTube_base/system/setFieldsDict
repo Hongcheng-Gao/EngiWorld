@@ -1,0 +1,26 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    location "system";
+    object setFieldsDict;
+}
+defaultFieldValues
+(
+    volVectorFieldValue U (0 0 0)
+    volScalarFieldValue T 300 // TODO_RIGHT_T
+    volScalarFieldValue p 10000 // TODO_RIGHT_P
+);
+
+regions
+(
+    boxToCell
+    {
+        box (0 0 0) (0.5 0.01 0.01); // TODO_SHOCK_DISCONTINUITY_POSITION
+        fieldValues
+        (
+            volScalarFieldValue T 300 // TODO_LEFT_T
+            volScalarFieldValue p 100000 // TODO_LEFT_P
+        );
+    }
+);
