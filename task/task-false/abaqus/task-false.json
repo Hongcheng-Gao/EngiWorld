@@ -1,0 +1,48 @@
+{
+  "id": "c-abaqus-windows",
+  "snapshot": "Abaqus-2023",
+  "instruction": "Using only Abaqus/CAE native material GUI (no user subroutines, no external plugins, no Python scripting), define an isotropic linear elastic solid with Young's modulus E = 200000 MPa and Poisson's ratio nu = 0.5 exactly, then run a static general step and expect a converged linear stiffness without singularities. Judgment: If and only if the above is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), create the UTF-8 text file `C:\\Users\\Administrator\\Desktop\\engiworld_infeasible_verdict.txt` whose entire content is exactly one line: false (ASCII lowercase, no quotes). If you judge the task feasible, do not fabricate the impossible deliverable; do not write a misleading verdict.",
+  "source": "engiworld synthetic benchmark; routing=task-c; kind=fictional_ui",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-false/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "v-cadence-orcad-windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "Environment note: this task profile performs no file pre-upload (empty upload list); the input paths below are therefore not provisioned for you. There are two independent OrCAD designs in `C:\\Users\\User\\Desktop\\`: `C:\\Users\\User\\Desktop\\design_a.DSN` (a BCD sample containing 20 components `U30..U49`) and `C:\\Users\\User\\Desktop\\design_b.DSN` (a FULLADD sample containing the schematic folders `HALFADD` and `FULLADD`). Open the two designs in Capture, extract every Part reference designator, and write a merged list to `C:\\Users\\User\\Desktop\\merged_refdes.txt`. Requirements: - One refdes per line. - Prefix every refdes from `C:\\Users\\User\\Desktop\\design_a.DSN` with `A:`, for example `A:U30`. - Prefix every refdes from `C:\\Users\\User\\Desktop\\design_b.DSN` with `B:`, for example `B:U1` and `B:U2`. - Sort first by prefix (`A` before `B`), then lexicographically by the original refdes. - Use `\\n` line endings; a trailing blank line is optional. Only output the merged refdes list. Do not output modified DSN files. Judgment: If and only if the above is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), create the UTF-8 text file `C:\\Users\\User\\Desktop\\engiworld_infeasible_verdict.txt` whose entire content is exactly one line: false (ASCII lowercase, no quotes). If you judge the task feasible, do not fabricate the impossible deliverable; do not write a misleading verdict.",
+  "source": "engiworld synthetic benchmark; routing=task-v; kind=missing_init",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-false/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

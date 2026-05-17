@@ -1,0 +1,48 @@
+{
+  "id": "c-calculix-ubuntu",
+  "snapshot": "CalculiX-2.21",
+  "instruction": "In a CalculiX `.inp` deck using only documented CalculiX material models (no user subroutines), define `*HYPERELASTIC, NEO-HOOKE` with a single constant `C10 = sqrt(-1)` MPa and obtain a real-valued converged displacement field. Judgment: If and only if the above is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), create the UTF-8 text file `/home/user/Desktop/engiworld_infeasible_verdict.txt` whose entire content is exactly one line: false (ASCII lowercase, no quotes). If you judge the task feasible, do not fabricate the impossible deliverable; do not write a misleading verdict.",
+  "source": "engiworld synthetic benchmark; routing=task-c; kind=fictional_ui",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-false/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

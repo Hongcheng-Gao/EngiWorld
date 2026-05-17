@@ -1,0 +1,48 @@
+{
+  "id": "v-ansys-windows",
+  "snapshot": "ANSYS-2024R1",
+  "instruction": "Complete the entire workflow below using only ANSYS Mechanical 2024R1 interactive GUI objects (no Siemens NX, no NX CAM sessions, no external CAM post unrelated to Mechanical). Read the initial file(s) from the Desktop path(s): C:\\Users\\User\\Desktop\\cli_plate.step, C:\\Users\\User\\Desktop\\tools.txt. Create a Milling CAM setup and Face Milling operation for C:\\Users\\User\\Desktop\\cli_plate.step. Set the MCS origin at the blank top-face center. Use T1 to machine the top face to Z=10.000 mm with S6000 rpm and F750 mm/min. Tool definition: T1 is a 12 mm face mill, S6000 rpm, F750 mm/min. Write the required output file(s) using exactly this Desktop path: C:\\Users\\User\\Desktop\\task-21.nc. Judgment: If and only if the above is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), create the UTF-8 text file `C:\\Users\\Administrator\\Desktop\\engiworld_infeasible_verdict.txt` whose entire content is exactly one line: false (ASCII lowercase, no quotes). If you judge the task feasible, do not fabricate the impossible deliverable; do not write a misleading verdict.",
+  "source": "engiworld synthetic benchmark; routing=task-v; kind=cross_domain",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-false/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
