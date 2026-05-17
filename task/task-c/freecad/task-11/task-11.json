@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-task-11-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Open /home/user/Desktop/freecad_task-11_input.step. On the 145 x 85 x 10 mm base plate, add and fuse two locating pins and one rectangular key. The first pin is diameter 10 mm, height 24 mm, centered at (35,25), starting on Z=10. The second pin is diameter 14 mm, height 18 mm, centered at (110,60), starting on Z=10. The rectangular key spans X=66..82, Y=12..24, Z=10..20. Cut vertical through holes in the base at (35,60) with diameter 6 mm and at (110,25) with diameter 7 mm. Cut a through obround lightening slot centered at (72,45), length 54 mm along X and width 16 mm. Export /home/user/Desktop/freecad_task-11_output.step. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/freecad_task-11_input.step",
+            "path": "/home/user/Desktop/freecad_task-11_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

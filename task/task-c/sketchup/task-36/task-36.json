@@ -1,53 +1,53 @@
 {
-    "id":  "c-sketchup-task-36-windows",
-    "snapshot":  "SketchUp2026",
-    "instruction":  "DAE roundtrip fidelity.\n\nThe input file `C:\\Users\\Administrator\\Desktop\\orig.dae` is a COLLADA scene generated as if it had been exported from SketchUp. It contains:\n\n- 20 component instances (scene `\u003cnode\u003e` elements that each carry one `\u003cinstance_geometry\u003e`).\n- 5 shared `\u003cgeometry\u003e` definitions in `\u003clibrary_geometries\u003e` (component instances re-use them, mimicking SketchUp\u0027s ComponentDefinition/ComponentInstance model): `geom-chair`, `geom-table`, `geom-shelf`, `geom-lamp`, `geom-bench`.\n- 3 `\u003cmaterial\u003e` entries (`mat-wood`, `mat-metal`, `mat-fabric`) bound to different subsets of the 20 instances via the per-instance `\u003cbind_material\u003e` symbol `matref`.\n- 5 SketchUp-style tags (\"layers\") encoded inside group `\u003cnode\u003e` `\u003cextra\u003e` blocks: `Structure`, `RoomA`, `RoomB`, `Fixtures`, `Misc`.\n- A 2-level nested group hierarchy: the scene root contains a `Floors` container, which contains `Floor_01` and `Floor_02` group nodes, each of which contains multiple `Room_*` group nodes, each of which contains the leaf component instance nodes. So the deepest named-node chain is `Floors \u003e Floor_XX \u003e Room_Y \u003e Inst_ZZ` (depth 4).\n\nYour task mimics the SketchUp roundtrip test: export the scene to DAE, import that DAE back into a fresh empty scene, then re-export it a second time. Concretely:\n\n1. Use `C:\\Users\\Administrator\\Desktop\\orig.dae` as the initial scene.\n2. Save it to an intermediate DAE (e.g. `tmp_a.dae`).\n3. Load the intermediate DAE from disk and re-save it to `C:\\Users\\Administrator\\Desktop\\output.dae`.\n4. Compare `C:\\Users\\Administrator\\Desktop\\orig.dae` with `C:\\Users\\Administrator\\Desktop\\output.dae` and write `C:\\Users\\Administrator\\Desktop\\report.json` with EXACTLY these four keys:\n\n```\n{\n\"vertex_count_preserved\": \u003cbool\u003e, // total vertex entries in \u003cgeometry\u003e/\u003cfloat_array\u003e is identical\n\"material_count_preserved\": \u003cbool\u003e, // number of \u003cmaterial\u003e entries is identical\n\"hierarchy_depth_preserved\": \u003cbool\u003e, // deepest named-node chain depth is identical\n\"total_instances\": \u003cint\u003e // count of scene \u003cnode\u003es carrying an \u003cinstance_geometry\u003e in C:\\Users\\Administrator\\Desktop\\output.dae\n}\n```\n\nThe three booleans MUST be computed from actually measuring both DAEs - do not hardcode `true`. `total_instances` is an integer count measured on `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` exists and parses via `pycollada`.\n2. `C:\\Users\\Administrator\\Desktop\\report.json` exists, is valid JSON, and has exactly the four keys above with the correct types (3 booleans + 1 integer).\n3. `C:\\Users\\Administrator\\Desktop\\output.dae` has the same total `\u003cgeometry\u003e` vertex count as `C:\\Users\\Administrator\\Desktop\\orig.dae`.\n4. `C:\\Users\\Administrator\\Desktop\\output.dae` has the same number of `\u003cmaterial\u003e` entries as `C:\\Users\\Administrator\\Desktop\\orig.dae`.\n5. `C:\\Users\\Administrator\\Desktop\\output.dae`\u0027s scene-graph depth (deepest named-node chain) equals `C:\\Users\\Administrator\\Desktop\\orig.dae`\u0027s.\n6. `C:\\Users\\Administrator\\Desktop\\output.dae` carries exactly 20 instance nodes (scene `\u003cnode\u003e`s with at least one `\u003cinstance_geometry\u003e`).\n7. The three `*_preserved` flags in `C:\\Users\\Administrator\\Desktop\\report.json` equal the actual comparison between the input and output files; `total_instances` equals the actual instance count in `C:\\Users\\Administrator\\Desktop\\output.dae`.",
-    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://help.sketchup.com/en/sketchup/solid-tools; https://www.khronos.org/collada/",
-    "config":  [
-                   {
-                       "type":  "upload_file",
-                       "parameters":  {
-                                          "files":  [
-                                                        {
-                                                            "local_path":  "task-36/init_file/orig.dae",
-                                                            "path":  "C:\\Users\\Administrator\\Desktop\\orig.dae"
-                                                        }
-                                                    ]
-                                      }
-                   }
-               ],
-    "trajectory":  "trajectories/",
-    "related_apps":  [
-                         "sketchup"
-                     ],
-    "evaluator":  {
-                      "postconfig":  [
-                                         {
-                                             "type":  "upload_file",
-                                             "parameters":  {
-                                                                "files":  [
-                                                                              {
-                                                                                  "local_path":  "task-36/eval.py",
-                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
-                                                                              }
-                                                                          ]
-                                                            }
-                                         }
-                                     ],
-                      "func":  "exact_match",
-                      "result":  {
-                                     "type":  "vm_command_line",
-                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
-                                     "shell":  "true"
-                                 },
-                      "expected":  {
-                                       "type":  "rule",
-                                       "rules":  {
-                                                     "expected":  "True\n"
-                                                 }
-                                   }
-                  },
-    "proxy":  false,
-    "fixed_ip":  false,
-    "possibility_of_env_change":  "low"
+  "id": "c-sketchup-task-36-windows",
+  "snapshot": "SketchUp2026",
+  "instruction": "DAE roundtrip fidelity. The input file `C:\\Users\\Administrator\\Desktop\\orig.dae` is a COLLADA scene generated as if it had been exported from SketchUp. It contains: - 20 component instances (scene `<node>` elements that each carry one `<instance_geometry>`). - 5 shared `<geometry>` definitions in `<library_geometries>` (component instances re-use them, mimicking SketchUp's ComponentDefinition/ComponentInstance model): `geom-chair`, `geom-table`, `geom-shelf`, `geom-lamp`, `geom-bench`. - 3 `<material>` entries (`mat-wood`, `mat-metal`, `mat-fabric`) bound to different subsets of the 20 instances via the per-instance `<bind_material>` symbol `matref`. - 5 SketchUp-style tags (\"layers\") encoded inside group `<node>` `<extra>` blocks: `Structure`, `RoomA`, `RoomB`, `Fixtures`, `Misc`. - A 2-level nested group hierarchy: the scene root contains a `Floors` container, which contains `Floor_01` and `Floor_02` group nodes, each of which contains multiple `Room_*` group nodes, each of which contains the leaf component instance nodes. So the deepest named-node chain is `Floors > Floor_XX > Room_Y > Inst_ZZ` (depth 4). Your task mimics the SketchUp roundtrip test: export the scene to DAE, import that DAE back into a fresh empty scene, then re-export it a second time. Concretely: 1. Use `C:\\Users\\Administrator\\Desktop\\orig.dae` as the initial scene. 2. Save it to an intermediate DAE (e.g. `tmp_a.dae`). 3. Load the intermediate DAE from disk and re-save it to `C:\\Users\\Administrator\\Desktop\\output.dae`. 4. Compare `C:\\Users\\Administrator\\Desktop\\orig.dae` with `C:\\Users\\Administrator\\Desktop\\output.dae` and write `C:\\Users\\Administrator\\Desktop\\report.json` with EXACTLY these four keys: ``` { \"vertex_count_preserved\": <bool>, // total vertex entries in <geometry>/<float_array> is identical \"material_count_preserved\": <bool>, // number of <material> entries is identical \"hierarchy_depth_preserved\": <bool>, // deepest named-node chain depth is identical \"total_instances\": <int> // count of scene <node>s carrying an <instance_geometry> in C:\\Users\\Administrator\\Desktop\\output.dae } ``` The three booleans MUST be computed from actually measuring both DAEs - do not hardcode `true`. `total_instances` is an integer count measured on `C:\\Users\\Administrator\\Desktop\\output.dae`. Requirements: 1. `C:\\Users\\Administrator\\Desktop\\output.dae` exists and parses via `pycollada`. 2. `C:\\Users\\Administrator\\Desktop\\report.json` exists, is valid JSON, and has exactly the four keys above with the correct types (3 booleans + 1 integer). 3. `C:\\Users\\Administrator\\Desktop\\output.dae` has the same total `<geometry>` vertex count as `C:\\Users\\Administrator\\Desktop\\orig.dae`. 4. `C:\\Users\\Administrator\\Desktop\\output.dae` has the same number of `<material>` entries as `C:\\Users\\Administrator\\Desktop\\orig.dae`. 5. `C:\\Users\\Administrator\\Desktop\\output.dae`'s scene-graph depth (deepest named-node chain) equals `C:\\Users\\Administrator\\Desktop\\orig.dae`'s. 6. `C:\\Users\\Administrator\\Desktop\\output.dae` carries exactly 20 instance nodes (scene `<node>`s with at least one `<instance_geometry>`). 7. The three `*_preserved` flags in `C:\\Users\\Administrator\\Desktop\\report.json` equal the actual comparison between the input and output files; `total_instances` equals the actual instance count in `C:\\Users\\Administrator\\Desktop\\output.dae`. [Software] Launch SketchUp with `C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe` (adjust if your install differs).",
+  "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://help.sketchup.com/en/sketchup/solid-tools; https://www.khronos.org/collada/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-36/init_file/orig.dae",
+            "path": "C:\\Users\\Administrator\\Desktop\\orig.dae"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-36/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

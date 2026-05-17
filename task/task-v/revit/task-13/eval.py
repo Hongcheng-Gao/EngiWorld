@@ -28,24 +28,26 @@ SPEC = {
         "IfcProject": 1,
         "IfcSite": 1,
         "IfcBuilding": 1,
-        "IfcBuildingStorey": 1,
-        "IfcSpace": 1,
-        "IfcWall": 4,
-        "IfcSlab": 1,
-        "IfcDoor": 1,
-        "IfcWindow": 4,
+        "IfcBuildingStorey": 2,
+        "IfcSpace": 2,
+        "IfcWall": 8,
+        "IfcSlab": 2,
     },
     "forbidden_counts": {
         "IfcRoof": 0,
+        "IfcDoor": 0,
+        "IfcWindow": 0,
         "IfcStair": 0,
         "IfcColumn": 0,
         "IfcBeam": 0,
         "IfcCurtainWall": 0,
         "IfcBuildingElementProxy": 0,
     },
-    "required_space_names": ["retail space"],
+    "bbox_tolerance": 0.35,
+    "bbox": {"IfcWall": [0, 0, 0, 24, 16, 6.2], "IfcSlab": [0, 0, 0, 24, 16, 3.65], "IfcSpace": [0.5, 0.5, 0, 23, 15, 5.9]},
+    "space_token_counts": {"warehouse": 1, "area": 1},
     "pdf_pages": 1,
-    "pdf_tokens": ["STOREFRONT ELEVATION", "Main street facade"],
+    "pdf_tokens": ["WAREHOUSE UPGRADE", "Principal upgrade sheet"],
 }
 
 
@@ -113,7 +115,7 @@ def check_counts(model):
 
 def check_spaces(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    return all(norm(required) in names for required in SPEC["required_space_names"])
+    return all(sum(1 for name in names if token in name) >= minimum for token, minimum in SPEC["space_token_counts"].items())
 
 
 def check_pdf(pdf_path):

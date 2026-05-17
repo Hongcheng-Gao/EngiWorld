@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-task-13-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Open /home/user/Desktop/freecad_task-13_input.step. In the 160 x 90 x 14 mm plate, create six vertical through holes. The holes at (30,25), (130,25), (30,65), and (130,65) are diameter 6 mm; the holes at (80,25) and (80,65) are diameter 8 mm. The two left holes at X=30 have top counterbores of diameter 16 mm and depth 5 mm. The two right holes at X=130 have bottom counterbores of diameter 14 mm and depth 4 mm. The two center holes at X=80 remain ordinary through holes without counterbores. Export /home/user/Desktop/freecad_task-13_output.step. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/freecad_task-13_input.step",
+            "path": "/home/user/Desktop/freecad_task-13_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

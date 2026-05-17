@@ -9,6 +9,8 @@ Design (per user request):
   prefixed with incompatible-tool constraints only (large CAD/CAM/EDA/BIM/CFD crosses); no other-task id names.
 - missing_init: same instruction text as a real EngiWorld task that normally uploads init files,
   but this JSON uses an empty upload list.
+- Evaluator matches OSWorld infeasible tasks: `"evaluator": {"func": "infeasible"}` only (no `eval.py`,
+  no `exact_match`). Success is decided by the runtime/OSWorld harness: final trajectory action must be FAIL.
 """
 from __future__ import annotations
 
@@ -18,43 +20,24 @@ from pathlib import Path
 ROOT = Path(__file__).resolve().parents[1]
 OUT = ROOT / "task" / "task-false"
 
-EVAL_TEMPLATE = '''# -*- coding: utf-8 -*-
-# Infeasible verdict check. Stdout must be exactly True\\n or False\\n.
-import sys
 
-VERDICT_FILE = r"{verdict_file}"
-
-def main() -> None:
-    try:
-        raw = open(VERDICT_FILE, encoding="utf-8", errors="replace").read()
-    except OSError:
-        raw = ""
-    ok = raw.strip().lower() == "false"
-    sys.stdout.write("True\\n" if ok else "False\\n")
-
-if __name__ == "__main__":
-    main()
-'''
-
-
-def judgment_tail(path_hint: str) -> str:
+def osworld_infeasible_tail() -> str:
     return (
-        " Judgment: If and only if the above is impossible under the stated constraints "
-        "(no undocumented workarounds that violate the constraint text), create the UTF-8 text file `{p}` "
-        "whose entire content is exactly one line: false (ASCII lowercase, no quotes). "
-        "If you judge the task feasible, do not fabricate the impossible deliverable; "
-        "do not write a misleading verdict."
-    ).format(p=path_hint)
+        " Evaluation: this task uses OSWorld-style infeasible scoring (`evaluator.func` is `infeasible`). "
+        "If and only if the goal is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), "
+        "end the trajectory with action FAIL as the **final** step. "
+        "If you judge the task feasible, complete it normally and do **not** use FAIL as the final action."
+    )
 
 
-def build_instruction(body: str, path_hint: str, kind: str) -> str:
+def build_instruction(body: str, kind: str) -> str:
     prefix = ""
     if kind == "missing_init":
         prefix = (
             "Environment note: this task profile performs no file pre-upload (empty upload list); "
             "the input paths below are therefore not provisioned for you. "
         )
-    return prefix + body + judgment_tail(path_hint)
+    return prefix + body + osworld_infeasible_tail()
 
 
 # --- Verbatim-style bodies from real benchmark tasks (see task/task-c and task/task-v). ---
@@ -354,10 +337,6 @@ SPECS: list[dict] = [
         "kind": "fictional_ui",
         "snapshot": "Abaqus-2023",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": (
             "Using only Abaqus/CAE native material GUI (no user subroutines, no external plugins, no Python scripting), "
             "define an isotropic linear elastic solid with Young's modulus E = 200000 MPa and Poisson's ratio nu = 0.5 exactly, "
@@ -370,10 +349,6 @@ SPECS: list[dict] = [
         "kind": "fictional_ui",
         "snapshot": "CalculiX-2.21",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": (
             "In a CalculiX `.inp` deck using only documented CalculiX material models (no user subroutines), "
             "define `*HYPERELASTIC, NEO-HOOKE` with a single constant `C10 = sqrt(-1)` MPa and obtain a real-valued converged displacement field."
@@ -385,10 +360,6 @@ SPECS: list[dict] = [
         "kind": "fictional_ui",
         "snapshot": "SolidCAM-2025",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\User\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\User\Desktop\eval.py",
-        "path_hint": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
         "body": (
             "Select technology `HSM-Warp-9X` from SolidCAM 2025 stock Technology Database entries only "
             "(no importing XML technology tables)."
@@ -401,10 +372,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "ANSYS-2024R1",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_ANSYS,
     },
     {
@@ -413,10 +380,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "Blender-4.2.3",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_BLENDER,
     },
     {
@@ -425,10 +388,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "FEniCS",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_FENICS,
     },
     {
@@ -437,10 +396,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "FLORIS4.6.4",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_FLORIS,
     },
     {
@@ -449,10 +404,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "OpenFOAM11",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_OPENFOAM,
     },
     {
@@ -461,10 +412,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "openfast5",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_OPENFAST,
     },
     {
@@ -473,10 +420,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "freecad-path0.21.2",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_FREECADPATH,
     },
     {
@@ -485,10 +428,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "OpenSCAD2021.01",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_OPENSCAD,
     },
     {
@@ -497,10 +436,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "SketchUp2026",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_SKETCHUP,
     },
     {
@@ -509,10 +444,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "LibreCAD2.2.0.2",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_LIBRECAD,
     },
     {
@@ -521,10 +452,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "solvespace3.1ds1-3.1build2",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_SOLVESPACE,
     },
     {
@@ -533,10 +460,6 @@ SPECS: list[dict] = [
         "kind": "cross_domain",
         "snapshot": "ZBrush-2024",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": CROSS_BODY_ZBRUSH,
     },
     # ---- missing_init (~13): aligned with real tasks; empty upload ----
@@ -546,10 +469,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "SolidWorks-2025",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\User\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\User\Desktop\eval.py",
-        "path_hint": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
         "body": SOLIDWORKS_T21,
     },
     {
@@ -558,10 +477,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "FreeCAD0.21.2",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": FREECAD_T21,
     },
     {
@@ -570,10 +485,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "kicad-10.0.2",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": KICAD_T21,
     },
     {
@@ -582,10 +493,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "OrCAD24.1",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\User\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\User\Desktop\eval.py",
-        "path_hint": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
         "body": CADENCE_ORCAD_T01,
     },
     {
@@ -594,10 +501,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "altium-designer",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": ALTIUM_T02,
     },
     {
@@ -606,10 +509,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "BRL-CAD7.32.2",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": BRLCAD_T21,
     },
     {
@@ -618,10 +517,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "NX-CAM",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\User\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\User\Desktop\eval.py",
-        "path_hint": r"C:\Users\User\Desktop\engiworld_infeasible_verdict.txt",
         "body": NXCAM_T21,
     },
     {
@@ -630,10 +525,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "eagle-7.7.0",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": EAGLE_T02,
     },
     {
@@ -642,10 +533,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "Revit2025",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": REVIT_T13,
     },
     {
@@ -654,10 +541,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "ArchiCAD-27",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": ARCHICAD_T18,
     },
     {
@@ -666,10 +549,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "AutoCAD2024",
         "os_suffix": "windows",
-        "verdict_file": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
-        "upload_path": r"C:\Users\Administrator\Desktop\eval.py",
-        "vm_cmd": r"python C:\Users\Administrator\Desktop\eval.py",
-        "path_hint": r"C:\Users\Administrator\Desktop\engiworld_infeasible_verdict.txt",
         "body": AUTOCAD_T21,
     },
     {
@@ -678,10 +557,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "OpenStudio-1.11.0",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": OPENSTUDIO_T18,
     },
     {
@@ -690,10 +565,6 @@ SPECS: list[dict] = [
         "kind": "missing_init",
         "snapshot": "Bonsai-0.8.5",
         "os_suffix": "ubuntu",
-        "verdict_file": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
-        "upload_path": "/home/user/Desktop/eval.py",
-        "vm_cmd": "python /home/user/Desktop/eval.py",
-        "path_hint": "/home/user/Desktop/engiworld_infeasible_verdict.txt",
         "body": BONSAI_T20,
     },
 ]
@@ -708,10 +579,6 @@ def main() -> None:
         kind = spec["kind"]
         snapshot = spec["snapshot"]
         os_suffix = spec["os_suffix"]
-        verdict_file = spec["verdict_file"]
-        upload_path = spec["upload_path"]
-        vm_cmd = spec["vm_cmd"]
-        path_hint = spec["path_hint"]
         body = spec["body"]
 
         if folder in seen_folders:
@@ -720,42 +587,20 @@ def main() -> None:
 
         app_dir = OUT / folder
         app_dir.mkdir(parents=True, exist_ok=True)
-        (app_dir / "eval.py").write_text(EVAL_TEMPLATE.format(verdict_file=verdict_file), encoding="utf-8")
 
         slug = folder.replace("/", "-")
         task_id = f"{ch}-{slug}-{os_suffix}"
-        instruction = build_instruction(body, path_hint, kind)
+        instruction = build_instruction(body, kind)
 
         data = {
             "id": task_id,
             "snapshot": snapshot,
             "instruction": instruction,
-            "source": f"engiworld synthetic benchmark; routing=task-{ch}; kind={kind}",
+            "source": f"engiworld synthetic benchmark; routing=task-{ch}; kind={kind}; evaluator=osworld_infeasible",
             "config": [{"type": "upload_file", "parameters": {"files": []}}],
             "trajectory": "trajectories/",
             "related_apps": [folder],
-            "evaluator": {
-                "postconfig": [
-                    {
-                        "type": "upload_file",
-                        "parameters": {
-                            "files": [
-                                {
-                                    "local_path": "task-false/eval.py",
-                                    "path": upload_path,
-                                }
-                            ]
-                        },
-                    }
-                ],
-                "func": "exact_match",
-                "result": {
-                    "type": "vm_command_line",
-                    "command": vm_cmd,
-                    "shell": "true",
-                },
-                "expected": {"type": "rule", "rules": {"expected": "True\n"}},
-            },
+            "evaluator": {"func": "infeasible"},
             "proxy": False,
             "fixed_ip": False,
             "possibility_of_env_change": "low",

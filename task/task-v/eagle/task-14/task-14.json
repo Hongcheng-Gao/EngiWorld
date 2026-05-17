@@ -1,0 +1,83 @@
+{
+  "id": "v-eagle-task-14-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Look at `blank.sch`, add a landscape `DINA4_L` frame from the `frames` library, and populate its title block using the values provided in `/home/user/Desktop/info.txt`. Save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. The file must parse as EAGLE XML. 2. At least one `<part>` must use library `frames` and deviceset `DINA4_L`. 3. That frame part must also be placed on the sheet via an `<instance>`. 4. The strings `My Title`, `John Doe`, `2026`, and `v1.0` must appear in the schematic. 5. The sheet must contain at least 4 visible `<text>` elements.",
+  "source": "https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-make-customized-title-blocks-and-frames-for-documentation-purposes-in-Fusion-360-or-EAGLE.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/blank.sch",
+            "path": "/home/user/Desktop/blank.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/info.txt",
+            "path": "/home/user/Desktop/info.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/blank.sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; time.sleep(15); pyautogui.hotkey('shift', 'tab'); time.sleep(0.5); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

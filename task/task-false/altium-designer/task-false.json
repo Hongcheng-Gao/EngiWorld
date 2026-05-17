@@ -1,8 +1,8 @@
 {
   "id": "v-altium-designer-windows",
   "snapshot": "altium-designer",
-  "instruction": "Environment note: this task profile performs no file pre-upload (empty upload list); the input paths below are therefore not provisioned for you. Fix the native Altium rigid-flex board `C:\\Users\\Administrator\\Desktop\\broken_bluetooth_rigidflex.PcbDoc` and save the repaired document as `C:\\Users\\Administrator\\Desktop\\bluetooth_rigidflex.PcbDoc`. The repaired document must restore the rigid/flex substack naming fragments, the flex dielectric material and dielectric-height fragments, and the bend-line region fragment. Judgment: If and only if the above is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), create the UTF-8 text file `C:\\Users\\Administrator\\Desktop\\engiworld_infeasible_verdict.txt` whose entire content is exactly one line: false (ASCII lowercase, no quotes). If you judge the task feasible, do not fabricate the impossible deliverable; do not write a misleading verdict.",
-  "source": "engiworld synthetic benchmark; routing=task-v; kind=missing_init",
+  "instruction": "Environment note: this task profile performs no file pre-upload (empty upload list); the input paths below are therefore not provisioned for you. Fix the native Altium rigid-flex board `C:\\Users\\Administrator\\Desktop\\broken_bluetooth_rigidflex.PcbDoc` and save the repaired document as `C:\\Users\\Administrator\\Desktop\\bluetooth_rigidflex.PcbDoc`. The repaired document must restore the rigid/flex substack naming fragments, the flex dielectric material and dielectric-height fragments, and the bend-line region fragment. Evaluation: this task uses OSWorld-style infeasible scoring (`evaluator.func` is `infeasible`). If and only if the goal is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), end the trajectory with action FAIL as the **final** step. If you judge the task feasible, complete it normally and do **not** use FAIL as the final action.",
+  "source": "engiworld synthetic benchmark; routing=task-v; kind=missing_init; evaluator=osworld_infeasible",
   "config": [
     {
       "type": "upload_file",
@@ -16,31 +16,7 @@
     "altium-designer"
   ],
   "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-false/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
+    "func": "infeasible"
   },
   "proxy": false,
   "fixed_ip": false,

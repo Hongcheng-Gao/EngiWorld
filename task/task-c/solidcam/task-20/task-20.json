@@ -1,0 +1,61 @@
+{
+  "id": "c-solidcam-task-20-windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Open C:\\Users\\User\\Desktop\\final_benchmark.step, C:\\Users\\User\\Desktop\\tools.csv, C:\\Users\\User\\Desktop\\params.json in SolidCAM. Complete the full CAM delivery for C:\\Users\\User\\Desktop\\final_benchmark.step. Configure stock, Coordinate System, and fixtures; machine the outside profile, three pockets, sixteen through holes, two counterbores, and one spherical region; use at least five tool classes. Tool rule: use at least five tool classes covering facing, pocketing, drilling, counterboring, spherical finishing, and profiling. Write the required output file(s) to the Desktop using exactly these absolute paths: C:\\Users\\User\\Desktop\\task-20.nc. [Software] SolidCAM runs inside SOLIDWORKS; start SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` first (adjust path).",
+  "source": "https://solidcam.com/cam-modules/modules-overview/; https://linuxcnc.org/docs/html/gcode/overview.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/final_benchmark.step",
+            "path": "C:\\Users\\User\\Desktop\\final_benchmark.step"
+          },
+          {
+            "local_path": "task-20/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          },
+          {
+            "local_path": "task-20/init_file/params.json",
+            "path": "C:\\Users\\User\\Desktop\\params.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

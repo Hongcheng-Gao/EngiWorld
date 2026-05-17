@@ -1,48 +1,48 @@
 {
-    "id": "c-bonsai-task-09-ubuntu",
-    "snapshot": "Bonsai-0.8.5",
-    "instruction": "Office Shell With Quantity Schedule\n\nUse the opened Bonsai IFC authoring environment to create a new metric IFC4 office shell from a blank model and export a matching quantity schedule. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC must contain one project, one site, one building, and one storey named Level 00; two spaces; five walls; one slab; two doors; three windows; five openings; five void relationships; and five fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named Open Office and Meeting. Open Office must be 6.60 m by 5.60 m in clear plan size, Meeting must be 2.70 m by 5.60 m, and both spaces must be 3.00 m high. Name the slab Ground Slab and make it 10.00 m by 6.00 m by 0.20 m. Name the walls South Wall, East Wall, North Wall, West Wall, and Meeting Partition, with quantity lengths 10.00, 6.00, 10.00, 6.00, and 5.60 respectively. Name the doors Entry Door and Meeting Door, give them OverallWidth values 0.90 m and 0.85 m, and make each fill one wall opening. Name the windows North Window, Meeting Window, and East Window, give them OverallWidth values 1.50 m, 1.20 m, and 1.30 m, and make each fill one wall opening. Assign all spaces, walls, slab, doors, and windows to Level 00.\n\nThe CSV must use the exact headers GlobalId, Class, Name, Storey, QuantityValue. It must contain one row for each of the five walls, the slab, two doors, and three windows, matched to the IFC product by GlobalId. Class and Name must match the IFC entity, Storey must be Level 00, and QuantityValue must be South Wall 10.00, East Wall 6.00, North Wall 10.00, West Wall 6.00, Meeting Partition 5.60, Ground Slab 60.00, Entry Door 0.90, Meeting Door 0.85, North Window 1.50, Meeting Window 1.20, and East Window 1.30. Other representation details may vary.",
-    "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/creating_walls.html",
-    "config": [
-        {
-            "type": "upload_file",
-            "parameters": {
-                "files": []
-            }
-        }
-    ],
-    "trajectory": "trajectories/",
-    "related_apps": [
-        "bonsai"
-    ],
-    "evaluator": {
-        "postconfig": [
+  "id": "c-bonsai-task-09-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Office Shell With Quantity Schedule Use the opened Bonsai IFC authoring environment to create a new metric IFC4 office shell from a blank model and export a matching quantity schedule. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC must contain one project, one site, one building, and one storey named Level 00; two spaces; five walls; one slab; two doors; three windows; five openings; five void relationships; and five fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Create spaces named Open Office and Meeting. Open Office must be 6.60 m by 5.60 m in clear plan size, Meeting must be 2.70 m by 5.60 m, and both spaces must be 3.00 m high. Name the slab Ground Slab and make it 10.00 m by 6.00 m by 0.20 m. Name the walls South Wall, East Wall, North Wall, West Wall, and Meeting Partition, with quantity lengths 10.00, 6.00, 10.00, 6.00, and 5.60 respectively. Name the doors Entry Door and Meeting Door, give them OverallWidth values 0.90 m and 0.85 m, and make each fill one wall opening. Name the windows North Window, Meeting Window, and East Window, give them OverallWidth values 1.50 m, 1.20 m, and 1.30 m, and make each fill one wall opening. Assign all spaces, walls, slab, doors, and windows to Level 00. The CSV must use the exact headers GlobalId, Class, Name, Storey, QuantityValue. It must contain one row for each of the five walls, the slab, two doors, and three windows, matched to the IFC product by GlobalId. Class and Name must match the IFC entity, Storey must be Level 00, and QuantityValue must be South Wall 10.00, East Wall 6.00, North Wall 10.00, West Wall 6.00, Meeting Partition 5.60, Ground Slab 60.00, Entry Door 0.90, Meeting Door 0.85, North Window 1.50, Meeting Window 1.20, and East Window 1.30. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
+  "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/creating_walls.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
             {
-                "type": "upload_file",
-                "parameters": {
-                    "files": [
-                        {
-                            "local_path": "task-09/eval.py",
-                            "path": "/home/user/Desktop/eval.py"
-                        }
-                    ]
-                }
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
             }
-        ],
-        "func": "exact_match",
-        "result": {
-            "type": "vm_command_line",
-            "command": "python /home/user/Desktop/eval.py",
-            "shell": "true"
-        },
-        "expected": {
-            "type": "rule",
-            "rules": {
-                "expected": "True\n"
-            }
+          ]
         }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
     },
-    "proxy": false,
-    "fixed_ip": false,
-    "possibility_of_env_change": "low"
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

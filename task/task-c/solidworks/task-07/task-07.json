@@ -1,0 +1,53 @@
+{
+  "id": "c-solidworks-task-07-windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Open C:\\Users\\User\\Desktop\\cli_027_mass_target_bracket.step in SolidWorks. Using SolidWorks command-line automation, use that input file. The bracket has a 100 x 60 x 8 mm main plate and a 100 x 6 x 32 mm reinforcing rib centered on Y=0 above the plate. Without changing the outer bounding box, add four evenly distributed 6 mm diameter through lightening holes in the main plate at (X,Y)=(-30,-20), (30,-20), (-30,20), and (30,20). These holes keep the theoretical aluminum mass at density 2.70 g/cm3 within 180 +/- 2 g, pass through the main plate only, and do not cut through the reinforcing rib. Export C:\\Users\\User\\Desktop\\cli_027_mass_reduced_out.step and C:\\Users\\User\\Desktop\\cli_027_massprops.txt. [Software] Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut).",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/hidd_mass_properties.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/cli_027_mass_target_bracket.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_027_mass_target_bracket.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

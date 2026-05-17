@@ -1,57 +1,57 @@
 {
-    "id": "c-bonsai-task-12-ubuntu",
-    "snapshot": "Bonsai-0.8.5",
-    "instruction": "Mezzanine Layout Addition\n\nUse the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc by adding a mezzanine layout. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed IFC4 model as /home/user/Desktop/result.ifc. The final hierarchy must have one project, one site, and one building with two storeys named Ground Floor and Mezzanine. Model three spaces, four walls, two slabs, one door, two openings, two void relationships, and one fill relationship. Do not include windows, proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate Ground Storage and Ground Entry on Ground Floor, with clear plan dimensions of 9.20 m by 7.40 m and 2.10 m by 2.20 m. Create Mezzanine Office on Mezzanine with clear plan dimensions of 9.40 m by 3.70 m. All spaces must be 3.00 m high. Name the slabs Ground Slab and Mezzanine Slab; Ground Slab belongs to Ground Floor and must be 12.00 m by 8.00 m by 0.25 m, while Mezzanine Slab belongs to Mezzanine and must be 10.00 m by 8.00 m by 0.20 m. Name the single door Entry Door and make it fill an opening in South Wall with dimensions 1.00 m by 0.20 m by 2.10 m. Include one unfilled opening named Stair Void that voids Mezzanine Slab. Other representation details may vary.",
-    "source": "https://docs.bonsaibim.org/tutorials/project3.html",
-    "config": [
-        {
-            "type": "upload_file",
-            "parameters": {
-                "files": [
-                    {
-                        "local_path": "task-12/init_file/init.ifc",
-                        "path": "/home/user/Desktop/init.ifc"
-                    },
-                    {
-                        "local_path": "task-12/init_image/init_plan.png",
-                        "path": "/home/user/Desktop/init_plan.png"
-                    }
-                ]
-            }
-        }
-    ],
-    "trajectory": "trajectories/",
-    "related_apps": [
-        "bonsai"
-    ],
-    "evaluator": {
-        "postconfig": [
+  "id": "c-bonsai-task-12-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Mezzanine Layout Addition Use the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc by adding a mezzanine layout. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed IFC4 model as /home/user/Desktop/result.ifc. The final hierarchy must have one project, one site, and one building with two storeys named Ground Floor and Mezzanine. Model three spaces, four walls, two slabs, one door, two openings, two void relationships, and one fill relationship. Do not include windows, proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Create Ground Storage and Ground Entry on Ground Floor, with clear plan dimensions of 9.20 m by 7.40 m and 2.10 m by 2.20 m. Create Mezzanine Office on Mezzanine with clear plan dimensions of 9.40 m by 3.70 m. All spaces must be 3.00 m high. Name the slabs Ground Slab and Mezzanine Slab; Ground Slab belongs to Ground Floor and must be 12.00 m by 8.00 m by 0.25 m, while Mezzanine Slab belongs to Mezzanine and must be 10.00 m by 8.00 m by 0.20 m. Name the single door Entry Door and make it fill an opening in South Wall with dimensions 1.00 m by 0.20 m by 2.10 m. Include one unfilled opening named Stair Void that voids Mezzanine Slab. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
+  "source": "https://docs.bonsaibim.org/tutorials/project3.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-12/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
             {
-                "type": "upload_file",
-                "parameters": {
-                    "files": [
-                        {
-                            "local_path": "task-12/eval.py",
-                            "path": "/home/user/Desktop/eval.py"
-                        }
-                    ]
-                }
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
             }
-        ],
-        "func": "exact_match",
-        "result": {
-            "type": "vm_command_line",
-            "command": "python /home/user/Desktop/eval.py",
-            "shell": "true"
-        },
-        "expected": {
-            "type": "rule",
-            "rules": {
-                "expected": "True\n"
-            }
+          ]
         }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
     },
-    "proxy": false,
-    "fixed_ip": false,
-    "possibility_of_env_change": "low"
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

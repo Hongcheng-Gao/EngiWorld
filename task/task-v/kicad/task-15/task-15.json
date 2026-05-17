@@ -1,0 +1,83 @@
+{
+  "id": "v-kicad-task-15-ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Teardrop Generation The file `board.kicad_pcb` is a routed PCB with 3 footprints (R1, R2, C1), each with 2 SMD pads, and one via. No teardrops are present. The file `/home/user/Desktop/NO_TEAR.txt` lists one net name per line that must be excluded from teardrop generation. Add teardrops to every pad and via whose net is NOT listed in /home/user/Desktop/NO_TEAR.txt. Represent each teardrop as a (zone...) block with a (teardrop yes) attribute and a (filled_polygon...) child defining the teardrop shape. The teardrop geometry should approximate: length approx 1.5 x pad/via radius along the track direction, with width at the pad end matching the pad size and narrowing to the track width. Requirements: 1. The output contains at least 7 teardrop zone blocks (6 pads + 1 via, minus any pads on excluded nets - NC1 has 0 pads in this board). 2. Teardrop zones exist for nets SIG_A, GND, and VCC. 3. No teardrop zones for any net listed in /home/user/Desktop/NO_TEAR.txt. 4. Each teardrop zone has a (teardrop yes) attribute and a (filled_polygon...) with at least 3 (xy...) points. 5. The original via count (1) and pad count (6) must remain unchanged. Write /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/NO_TEAR.txt",
+            "path": "/home/user/Desktop/NO_TEAR.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

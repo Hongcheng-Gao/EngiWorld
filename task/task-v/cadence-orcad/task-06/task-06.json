@@ -1,0 +1,95 @@
+{
+  "id": "v-cadence-orcad-task-06-windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "In the opened project, edit `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN`. This task simulates ERC waiver registration: for several reviewed and approved ERC violations, record the waivers as design-level properties. Add these three properties at the Design level: - `WAIVER:floating_pin_U1 = Approved-2026Q1` - `WAIVER:output_to_output_S1 = Approved-2026Q1` - `WAIVER:bus_width_mismatch_P1 = Deferred-NextRev` Keep all existing design-level properties unchanged. Save the modified `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN` together with its dependency files.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://support1.cadence.com/public/docs/content/20469530.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/DCLOCK2.OLB",
+            "path": "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/DCLOCK2.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/TUTOR2.DSN",
+            "path": "C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/TUTOR2.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Cadence\\SPB_24.1\\tools\\bin\\capture.exe",
+          "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OPJ"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

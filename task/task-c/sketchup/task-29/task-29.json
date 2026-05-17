@@ -1,43 +1,41 @@
 {
-    "id":  "c-sketchup-task-29-windows",
-    "snapshot":  "SketchUp2026",
-    "instruction":  "Small Garden Shed - End-to-End Build with Scenes\n\nModel a complete 3 x 3 m garden shed from scratch and export it as COLLADA DAE. No initial file.\n\nSpecification (all dimensions in metres unless noted):\n- **Concrete pad / slab**: at the base (Z \u003c 0). Footprint covers the shed plan with a small lip - X in [-0.05, 3.05], Y in [-0.05, 3.05], Z in [-0.10, 0.00]. Thickness 100 mm.\n- **Wall plan**: square 3 x 3 m, X in [0, 3], Y in [0, 3]. Wall top (eave) at Z = 2.4 m.\n- **Corner studs**: 4 vertical timber posts, each 100 x 100 mm in plan, from Z = 0 to Z = 2.4. Placed flush with the outer corners of the wall plan.\n- **OSB wall sheathing**: 16 mm thick. Four walls sitting between the corner studs (inner faces flush with the stud inner edges). Treat the OSB panel thickness as the wall envelope. Front wall (Y approx 0) contains a door opening; right-side wall (X approx 3) contains a window opening. Back wall and left-side wall are solid.\n- **Door opening**: on the front wall (Y approx 0 plane), 800 x 2000 mm, centered at X = 1.5. Opening spans X in [1.1, 1.9], Z in [0, 2.0]. A recessed door panel (wood) sits inside the opening.\n- **Window opening**: on the right wall (X approx 3 plane), 900 x 600 mm. Opening centered at Y = 1.5, Z = 1.3. Spans Y in [1.05, 1.95], Z in [1.00, 1.60]. A glass pane sits inside the opening.\n- **Gable roof**: ridge runs parallel to the Y axis (N-S), centered at X = 1.5. Slope = 30 deg -\u003e rise over a 1.5 m horizontal half-span approx 0.866 m above eave level (peak Z approx 3.266 m).\n- **Roof overhang**: 300 mm on all four sides - roof planes and gables extend from X in [-0.3, 3.3] and Y in [-0.3, 3.3].\n- **Asphalt shingle cladding**: applied as a thin dark layer on the two sloped roof planes (distinct from the structural roof material is optional - but the roof surfaces must carry a shingle-style material distinct from the wood/OSB).\n- **Materials** (\u003e= 5 distinct effects in the exported DAE):\n- Concrete (grey) - slab.\n- Wood (warm brown) - corner studs + door panel.\n- OSB (tan) - wall sheathing + gables.\n- Shingle (dark grey/black) - roof planes.\n- Glass (translucent light blue) - window pane.\n\nAlso produce a sidecar `C:\\Users\\Administrator\\Desktop\\scenes.json` listing 3 named scenes: `S_Front`, `S_Side`, `S_Iso`. Each scene lists the visible tag groups (the per-element tags used in this model).\n\nOutputs:\n- `C:\\Users\\Administrator\\Desktop\\output.dae` - the full shed as COLLADA.\n- `C:\\Users\\Administrator\\Desktop\\scenes.json` - sidecar describing the 3 scenes.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Bounding box is 3.6 x 3.6 x ~3.37 m (3.0 m plan + 2 x 0.30 m overhang; 2.4 m walls + slab depth 0.10 m + gable rise approx 0.866 m). Tolerance 50 mm.\n3. At least 5 distinct material effects appear in `\u003clibrary_effects\u003e`.\n4. A door opening is detectable on the front wall (Y approx 0): vertices at the four door-jamb corners X in {1.1, 1.9}, Z in {0, 2.0}.\n5. A window opening is detectable on the right wall (X approx 3): vertices at the four window-jamb corners Y in {1.05, 1.95}, Z in {1.0, 1.6}.\n6. Gable ridge line is detectable: vertices at Z \u003e= 3.2 m span the full roof Y extent ([-0.3, 3.3]) with mean X approx 1.5.\n7. `C:\\Users\\Administrator\\Desktop\\scenes.json` lists exactly the 3 scenes S_Front, S_Side, S_Iso, each with a non-empty `visible` list.",
-    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://help.sketchup.com/en/sketchup/solid-tools; https://www.khronos.org/collada/",
-    "config":  [
-
-               ],
-    "trajectory":  "trajectories/",
-    "related_apps":  [
-                         "sketchup"
-                     ],
-    "evaluator":  {
-                      "postconfig":  [
-                                         {
-                                             "type":  "upload_file",
-                                             "parameters":  {
-                                                                "files":  [
-                                                                              {
-                                                                                  "local_path":  "task-29/eval.py",
-                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
-                                                                              }
-                                                                          ]
-                                                            }
-                                         }
-                                     ],
-                      "func":  "exact_match",
-                      "result":  {
-                                     "type":  "vm_command_line",
-                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
-                                     "shell":  "true"
-                                 },
-                      "expected":  {
-                                       "type":  "rule",
-                                       "rules":  {
-                                                     "expected":  "True\n"
-                                                 }
-                                   }
-                  },
-    "proxy":  false,
-    "fixed_ip":  false,
-    "possibility_of_env_change":  "low"
+  "id": "c-sketchup-task-29-windows",
+  "snapshot": "SketchUp2026",
+  "instruction": "Small Garden Shed - End-to-End Build with Scenes Model a complete 3 x 3 m garden shed from scratch and export it as COLLADA DAE. No initial file. Specification (all dimensions in metres unless noted): - **Concrete pad / slab**: at the base (Z < 0). Footprint covers the shed plan with a small lip - X in [-0.05, 3.05], Y in [-0.05, 3.05], Z in [-0.10, 0.00]. Thickness 100 mm. - **Wall plan**: square 3 x 3 m, X in [0, 3], Y in [0, 3]. Wall top (eave) at Z = 2.4 m. - **Corner studs**: 4 vertical timber posts, each 100 x 100 mm in plan, from Z = 0 to Z = 2.4. Placed flush with the outer corners of the wall plan. - **OSB wall sheathing**: 16 mm thick. Four walls sitting between the corner studs (inner faces flush with the stud inner edges). Treat the OSB panel thickness as the wall envelope. Front wall (Y approx 0) contains a door opening; right-side wall (X approx 3) contains a window opening. Back wall and left-side wall are solid. - **Door opening**: on the front wall (Y approx 0 plane), 800 x 2000 mm, centered at X = 1.5. Opening spans X in [1.1, 1.9], Z in [0, 2.0]. A recessed door panel (wood) sits inside the opening. - **Window opening**: on the right wall (X approx 3 plane), 900 x 600 mm. Opening centered at Y = 1.5, Z = 1.3. Spans Y in [1.05, 1.95], Z in [1.00, 1.60]. A glass pane sits inside the opening. - **Gable roof**: ridge runs parallel to the Y axis (N-S), centered at X = 1.5. Slope = 30 deg -> rise over a 1.5 m horizontal half-span approx 0.866 m above eave level (peak Z approx 3.266 m). - **Roof overhang**: 300 mm on all four sides - roof planes and gables extend from X in [-0.3, 3.3] and Y in [-0.3, 3.3]. - **Asphalt shingle cladding**: applied as a thin dark layer on the two sloped roof planes (distinct from the structural roof material is optional - but the roof surfaces must carry a shingle-style material distinct from the wood/OSB). - **Materials** (>= 5 distinct effects in the exported DAE): - Concrete (grey) - slab. - Wood (warm brown) - corner studs + door panel. - OSB (tan) - wall sheathing + gables. - Shingle (dark grey/black) - roof planes. - Glass (translucent light blue) - window pane. Also produce a sidecar `C:\\Users\\Administrator\\Desktop\\scenes.json` listing 3 named scenes: `S_Front`, `S_Side`, `S_Iso`. Each scene lists the visible tag groups (the per-element tags used in this model). Outputs: - `C:\\Users\\Administrator\\Desktop\\output.dae` - the full shed as COLLADA. - `C:\\Users\\Administrator\\Desktop\\scenes.json` - sidecar describing the 3 scenes. Requirements: 1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA. 2. Bounding box is 3.6 x 3.6 x ~3.37 m (3.0 m plan + 2 x 0.30 m overhang; 2.4 m walls + slab depth 0.10 m + gable rise approx 0.866 m). Tolerance 50 mm. 3. At least 5 distinct material effects appear in `<library_effects>`. 4. A door opening is detectable on the front wall (Y approx 0): vertices at the four door-jamb corners X in {1.1, 1.9}, Z in {0, 2.0}. 5. A window opening is detectable on the right wall (X approx 3): vertices at the four window-jamb corners Y in {1.05, 1.95}, Z in {1.0, 1.6}. 6. Gable ridge line is detectable: vertices at Z >= 3.2 m span the full roof Y extent ([-0.3, 3.3]) with mean X approx 1.5. 7. `C:\\Users\\Administrator\\Desktop\\scenes.json` lists exactly the 3 scenes S_Front, S_Side, S_Iso, each with a non-empty `visible` list. [Software] Launch SketchUp with `C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe` (adjust if your install differs).",
+  "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://help.sketchup.com/en/sketchup/solid-tools; https://www.khronos.org/collada/",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-29/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

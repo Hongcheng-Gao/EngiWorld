@@ -1,0 +1,53 @@
+{
+  "id": "c-brl-cad-task-20-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Open /home/user/Desktop/part_ref.step in BRL-CAD. Generate an inspection fixture block from the reference part: create an envelope block that adds 4 mm total clearance in X, Y, and Z around the 110 x 56 x 18 mm reference bounding box; subtract the reference-body cavity while adding 2 mm total clamping clearance; cut one guide hole of diameter 8 mm on each side, with hole axes along Y. The two guide hole centerlines are on the reference height midplane at Z=9 mm and Y=28 mm, located 15 mm from the reference part X end faces, so their X positions are X=15 mm and X=95 mm. Save the completed STL mesh as /home/user/Desktop/out.stl. [Software] Run `mged` from a terminal (use the full path if it is not on PATH).",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/part_ref.step",
+            "path": "/home/user/Desktop/part_ref.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

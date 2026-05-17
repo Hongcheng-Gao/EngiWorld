@@ -1,48 +1,48 @@
 {
-    "id": "c-bonsai-task-04-ubuntu",
-    "snapshot": "Bonsai-0.8.5",
-    "instruction": "Two-Storey Townhouse Shell\n\nUse the opened Bonsai IFC authoring environment to create a new metric IFC4 two-storey townhouse shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The model must contain one project, one site, and one building with two storeys: Ground Floor at elevation 0.00 m and First Floor at elevation 3.20 m. Model four spaces, eight walls, three slabs, one door, four windows, six openings, six void relationships, and five fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nOn Ground Floor, create GF Living at 3.60 m by 3.20 m and GF Kitchen at 2.40 m by 3.20 m. On First Floor, create FF Bedroom at 3.60 m by 4.00 m and FF Bath at 2.40 m by 2.00 m. All spaces must be 2.80 m high. Name the slabs Ground Slab, First Floor Slab, and Roof Slab; Ground Slab belongs to Ground Floor, while First Floor Slab and Roof Slab belong to First Floor. Each slab must be 6.40 m by 4.40 m by 0.20 m. Use walls that are 3.00 m high and 0.20 m thick. The door must have OverallWidth 0.90 m and fill one wall opening, and each window must have OverallWidth 1.20 m and fill one wall opening. Include one additional unfilled opening voiding the First Floor Slab. Spatially assign every modeled space, wall, slab, door, and window to one of the two storeys. Other representation details may vary.",
-    "source": "https://docs.bonsaibim.org/tutorials/project3.html",
-    "config": [
-        {
-            "type": "upload_file",
-            "parameters": {
-                "files": []
-            }
-        }
-    ],
-    "trajectory": "trajectories/",
-    "related_apps": [
-        "bonsai"
-    ],
-    "evaluator": {
-        "postconfig": [
+  "id": "c-bonsai-task-04-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Two-Storey Townhouse Shell Use the opened Bonsai IFC authoring environment to create a new metric IFC4 two-storey townhouse shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The model must contain one project, one site, and one building with two storeys: Ground Floor at elevation 0.00 m and First Floor at elevation 3.20 m. Model four spaces, eight walls, three slabs, one door, four windows, six openings, six void relationships, and five fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. On Ground Floor, create GF Living at 3.60 m by 3.20 m and GF Kitchen at 2.40 m by 3.20 m. On First Floor, create FF Bedroom at 3.60 m by 4.00 m and FF Bath at 2.40 m by 2.00 m. All spaces must be 2.80 m high. Name the slabs Ground Slab, First Floor Slab, and Roof Slab; Ground Slab belongs to Ground Floor, while First Floor Slab and Roof Slab belong to First Floor. Each slab must be 6.40 m by 4.40 m by 0.20 m. Use walls that are 3.00 m high and 0.20 m thick. The door must have OverallWidth 0.90 m and fill one wall opening, and each window must have OverallWidth 1.20 m and fill one wall opening. Include one additional unfilled opening voiding the First Floor Slab. Spatially assign every modeled space, wall, slab, door, and window to one of the two storeys. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
+  "source": "https://docs.bonsaibim.org/tutorials/project3.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
             {
-                "type": "upload_file",
-                "parameters": {
-                    "files": [
-                        {
-                            "local_path": "task-04/eval.py",
-                            "path": "/home/user/Desktop/eval.py"
-                        }
-                    ]
-                }
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
             }
-        ],
-        "func": "exact_match",
-        "result": {
-            "type": "vm_command_line",
-            "command": "python /home/user/Desktop/eval.py",
-            "shell": "true"
-        },
-        "expected": {
-            "type": "rule",
-            "rules": {
-                "expected": "True\n"
-            }
+          ]
         }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
     },
-    "proxy": false,
-    "fixed_ip": false,
-    "possibility_of_env_change": "low"
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

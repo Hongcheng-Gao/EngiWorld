@@ -1,0 +1,57 @@
+{
+  "id": "c-solidcam-task-19-windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Open C:\\Users\\User\\Desktop\\impeller_test.step, C:\\Users\\User\\Desktop\\tools.csv in SolidCAM. Use SolidCAM Simultaneous 5X to create a multi-axis finishing toolpath for C:\\Users\\User\\Desktop\\impeller_test.step. The simplified impeller has six blades; use A-axis rotary output for the multi-axis motion, and make the tool axis follow the blade channels while avoiding holder collision. Tool definition: use the supplied simultaneous 5-axis finishing tool and holder settings. Write the required output file(s) to the Desktop using exactly these absolute paths: C:\\Users\\User\\Desktop\\task-19.nc. [Software] SolidCAM runs inside SOLIDWORKS; start SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` first (adjust path).",
+  "source": "SolidCAM Simultaneous 5X Milling：https://solidcam.com/cam-modules/simultaneous-5x-milling/ (SolidCAM)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/impeller_test.step",
+            "path": "C:\\Users\\User\\Desktop\\impeller_test.step"
+          },
+          {
+            "local_path": "task-19/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

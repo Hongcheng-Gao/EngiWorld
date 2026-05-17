@@ -1,0 +1,57 @@
+{
+  "id": "c-nx-cam-task-04-windows",
+  "snapshot": "NX-CAM",
+  "instruction": "Open C:\\Users\\User\\Desktop\\hole_table_plate.step, C:\\Users\\User\\Desktop\\hole_table.csv in NX CAM. Read C:\\Users\\User\\Desktop\\hole_table.csv and machine all ten holes in C:\\Users\\User\\Desktop\\hole_table_plate.step using the listed coordinates, diameters, and depths. Through holes must break through the bottom by 1 mm; blind holes must follow the table depth. Tool definitions are driven by C:\\Users\\User\\Desktop\\hole_table.csv and should match each listed hole diameter/depth. Write the required output file(s) using exactly these Desktop path(s): C:\\Users\\User\\Desktop\\task-04.nc. [Software] Launch Siemens NX with `C:\\Program Files\\Siemens\\NX2306\\NXBIN\\ugraf.exe -nx` (adjust version/path).",
+  "source": "https://www.siemens.com/en-us/products/nx-manufacturing/offerings/cam-standard/?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/hole_table_plate.step",
+            "path": "C:\\Users\\User\\Desktop\\hole_table_plate.step"
+          },
+          {
+            "local_path": "task-04/init_file/hole_table.csv",
+            "path": "C:\\Users\\User\\Desktop\\hole_table.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

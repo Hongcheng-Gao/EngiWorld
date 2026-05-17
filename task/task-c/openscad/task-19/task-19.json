@@ -1,0 +1,57 @@
+{
+  "id": "c-openscad-task-19-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Open /home/user/Desktop/task-039_initial.scad, /home/user/Desktop/task-039_motor.stl in OpenSCAD. Modify /home/user/Desktop/task-039_initial.scad. Use difference() between guard_blank() and the imported motor shape /home/user/Desktop/task-039_motor.stl to create a protective cover that fits around the motor. Target wall thickness is 2.5 mm. Add six diameter 3 mm ventilation holes through the side face, with hole centers at x=-24, -14, -4, 6, 16, and 26 mm and z=20 mm. Export /home/user/Desktop/task-039_output.stl. [Software] To use OpenSCAD, run `openscad` from a terminal.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Importing_Geometry; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/task-039_initial.scad",
+            "path": "/home/user/Desktop/task-039_initial.scad"
+          },
+          {
+            "local_path": "task-19/init_file/task-039_motor.stl",
+            "path": "/home/user/Desktop/task-039_motor.stl"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

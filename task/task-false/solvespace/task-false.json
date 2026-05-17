@@ -1,8 +1,8 @@
 {
   "id": "v-solvespace-ubuntu",
   "snapshot": "solvespace3.1ds1-3.1build2",
-  "instruction": "Complete the entire workflow below using only SolveSpace (no OpenFOAM, no `blockMesh`, no `icoFoam`/`simpleFoam` incompressible CFD below). You are given an incomplete cavity template `/home/user/Desktop/cavity_base/`. Complete a lid-driven cavity analysis from the command line: 1. Modify and create `/home/user/Desktop/cavity/`: - Build a square-cavity geometry and set mesh density and properties appropriate for `Re ≈ 1000` - Set lid-driven boundary conditions; all other walls are no-slip - Configure transient solver parameters until the flow stabilizes 2. Run the solver to convergence. 3. Extract the velocity component at the geometric center and verify the main vortex rotation direction. 4. Write a post-processing script to output `/home/user/Desktop/summary.txt`: - Geometric-center `Ux` - Format: `center_ux` 5. Do not use GUI tools. Judgment: If and only if the above is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), create the UTF-8 text file `/home/user/Desktop/engiworld_infeasible_verdict.txt` whose entire content is exactly one line: false (ASCII lowercase, no quotes). If you judge the task feasible, do not fabricate the impossible deliverable; do not write a misleading verdict.",
-  "source": "engiworld synthetic benchmark; routing=task-v; kind=cross_domain",
+  "instruction": "Complete the entire workflow below using only SolveSpace (no OpenFOAM, no `blockMesh`, no `icoFoam`/`simpleFoam` incompressible CFD below). You are given an incomplete cavity template `/home/user/Desktop/cavity_base/`. Complete a lid-driven cavity analysis from the command line: 1. Modify and create `/home/user/Desktop/cavity/`: - Build a square-cavity geometry and set mesh density and properties appropriate for `Re ≈ 1000` - Set lid-driven boundary conditions; all other walls are no-slip - Configure transient solver parameters until the flow stabilizes 2. Run the solver to convergence. 3. Extract the velocity component at the geometric center and verify the main vortex rotation direction. 4. Write a post-processing script to output `/home/user/Desktop/summary.txt`: - Geometric-center `Ux` - Format: `center_ux` 5. Do not use GUI tools. Evaluation: this task uses OSWorld-style infeasible scoring (`evaluator.func` is `infeasible`). If and only if the goal is impossible under the stated constraints (no undocumented workarounds that violate the constraint text), end the trajectory with action FAIL as the **final** step. If you judge the task feasible, complete it normally and do **not** use FAIL as the final action.",
+  "source": "engiworld synthetic benchmark; routing=task-v; kind=cross_domain; evaluator=osworld_infeasible",
   "config": [
     {
       "type": "upload_file",
@@ -16,31 +16,7 @@
     "solvespace"
   ],
   "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-false/eval.py",
-              "path": "/home/user/Desktop/eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
+    "func": "infeasible"
   },
   "proxy": false,
   "fixed_ip": false,

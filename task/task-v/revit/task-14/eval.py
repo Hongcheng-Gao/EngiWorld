@@ -1,5 +1,4 @@
 #!/usr/bin/env python3
-import csv
 import re
 from pathlib import Path
 DESKTOP = Path("C:/Users/Administrator/Desktop")
@@ -10,40 +9,30 @@ import ifcopenshell.geom
 
 SPEC = {
     "required_ifc": "result.ifc",
-    "required_csv": "result.csv",
     "min_ifc_bytes": 500,
-    "min_csv_bytes": 20,
     "schema": "IFC4",
     "counts": {
         "IfcProject": 1,
         "IfcSite": 1,
         "IfcBuilding": 1,
-        "IfcBuildingStorey": 2,
-        "IfcSpace": 5,
+        "IfcBuildingStorey": 1,
+        "IfcSpace": 6,
         "IfcWall": 8,
         "IfcSlab": 2,
-        "IfcStair": 2,
+        "IfcRoof": 2,
+        "IfcWindow": 8,
     },
     "forbidden_counts": {
-        "IfcRoof": 0,
         "IfcDoor": 0,
-        "IfcWindow": 0,
+        "IfcStair": 0,
         "IfcColumn": 0,
         "IfcBeam": 0,
         "IfcCurtainWall": 0,
         "IfcBuildingElementProxy": 0,
     },
     "bbox_tolerance": 0.35,
-    "bbox": {"IfcWall": [0, 0, 0, 24, 10, 6.6], "IfcSlab": [0, 0, 0, 24, 10, 3.65], "IfcStair": [1, 2.5, 0, 23, 6.5, 6.5], "IfcSpace": [4.5, 0.5, 0, 19.5, 9.5, 6.4]},
-    "space_token_counts": {"classroom": 4, "support": 1},
-    "csv_headers": ["Room Name", "Area"],
-    "csv_expected": {
-        "Classroom 1": 26.0,
-        "Classroom 2": 26.0,
-        "Classroom 3": 26.0,
-        "Classroom 4": 26.0,
-        "Support Room": 36.0,
-    },
+    "bbox": {"IfcWall": [0, 0, 0.25, 18.2, 14.2, 3.45], "IfcSlab": [0, 0, 0, 18, 14, 0.25], "IfcRoof": [0, 0, 3.25, 18, 14, 3.43], "IfcSpace": [1, 1, 0.25, 17, 13.2, 3]},
+    "space_token_counts": {"lobby": 1, "classroom": 2, "nap": 1, "kitchen": 1, "toilet": 1},
 }
 
 
@@ -66,27 +55,6 @@ def unique_global_ids(model):
     return len(gids) == len(set(gids))
 
 
-def parse_float(value):
-    return float(str(value).strip().replace(",", ""))
-
-
-def parse_csv_rows(path):
-    rows = list(csv.reader(path.read_text(encoding="utf-8-sig").splitlines()))
-    if not rows:
-        return None
-    if [cell.strip() for cell in rows[0]] != SPEC["csv_headers"]:
-        return None
-    body = [row for row in rows[1:] if any(cell.strip() for cell in row)]
-    if len(body) != len(SPEC["csv_expected"]):
-        return None
-    parsed = {}
-    for row in body:
-        if len(row) != 2:
-            return None
-        parsed[row[0].strip()] = parse_float(row[1])
-    return parsed
-
-
 def check_counts(model):
     for ifc_class, expected in SPEC["counts"].items():
         if entity_count(model, ifc_class) != expected:
@@ -100,10 +68,6 @@ def check_counts(model):
 def check_spaces(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
     return all(sum(1 for name in names if token in name) >= minimum for token, minimum in SPEC["space_token_counts"].items())
-
-
-def check_csv(csv_path):
-    return parse_csv_rows(csv_path) == SPEC["csv_expected"]
 
 
 
@@ -143,12 +107,8 @@ def check_geometry(model):
     return True
 
 def evaluate(result_dir):
-    root = Path(result_dir)
-    ifc_path = root / SPEC["required_ifc"]
-    csv_path = root / SPEC["required_csv"]
+    ifc_path = Path(result_dir) / SPEC["required_ifc"]
     if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
-        return False
-    if not csv_path.is_file() or csv_path.stat().st_size < SPEC["min_csv_bytes"]:
         return False
     model = ifcopenshell.open(str(ifc_path))
     return (
@@ -157,7 +117,6 @@ def evaluate(result_dir):
         and check_counts(model)
         and check_spaces(model)
         and check_geometry(model)
-        and check_csv(csv_path)
     )
 
 

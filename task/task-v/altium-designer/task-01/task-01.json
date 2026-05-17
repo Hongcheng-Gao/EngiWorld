@@ -1,0 +1,62 @@
+{
+  "id": "v-altium-designer-task-01-windows",
+  "snapshot": "altium-designer",
+  "instruction": "The opened file `broken_spiritlevel_top.SchDoc` is a native Altium schematic. Repair the broken sheet-symbol target filenames, and save the repaired document as `C:\\Users\\Administrator\\Desktop\\spiritlevel_top.SchDoc`. The repaired schematic must restore the four sheet-symbol target filenames: `SL_Config_2E.SchDoc`, `SL_LCD_SW_LED_2E.SchDoc`, `SL_FPGA_Auto_2E.SchDoc`, and `SL_Power.SchDoc`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/components-libraries/file-based-libraries/schematic",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/broken_spiritlevel_top.SchDoc",
+            "path": "C:\\Users\\Administrator\\Desktop\\broken_spiritlevel_top.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\Administrator\\Desktop\\broken_spiritlevel_top.SchDoc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

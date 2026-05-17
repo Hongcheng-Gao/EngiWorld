@@ -1,70 +1,70 @@
 {
-    "id": "v-archicad-task-17-windows",
-    "snapshot": "ArchiCAD-27",
-    "instruction": "School Zone Repair and Occupancy Schedule\n\nStart from the provided init.ifc in Archicad and use init_plan.png and init_section.png only as references for the intended cleanup. The init model is a relevant but unfinished predecessor: it contains 1 storey, spaces currently named UNNAMED, CLASSROOM, CLASSROOM, COMMON, and WC. Clean, complete, or reclassify it as needed rather than replacing it with unrelated geometry. Build or edit the model using Archicad BIM elements, not visual-only placeholder geometry. Save the completed deliverables in the output folder as result.ifc, result.pdf, and result.txt.\n\nCreate a single-storey BIM model for the named project. Keep the shaped model within 0.5 m of horizontal extents about X 0 to 18 and Y 0 to 10, with vertical extents about Z 0 to 3. Export result.ifc as an IFC4 model with unique GlobalId values for IFC root objects. It must contain exactly 1 building storey and exactly 8 IfcSpace zones named CLASSROOM-1, CLASSROOM-2, CLASSROOM-3, COMMON, STAFF, WC-CHILD, WC-STAFF, and STORE. Assign every listed space to the single building storey.\n\nModel the required construction as real BIM element classes, including at least 4 wall-like IfcWall or IfcWallStandardCase elements, and at least 1 IfcSlab element. If an equivalent exporter writes IfcWallStandardCase for walls, that is acceptable. Do not count IfcBuildingElementProxy or other generic proxy objects as satisfying required walls, slabs, roofs, stairs, doors, windows, or spaces.\n\nExport result.txt from the Archicad schedule/list workflow as a tab-delimited schedule text file. The header row must be RoomNumber, RoomName, OccupancyCategory, OccupancyLoad, Area in that order. Include these rows in order: (RoomNumber=R01, RoomName=CLASSROOM-1, OccupancyCategory=Teaching, OccupancyLoad=12, Area=30); (RoomNumber=R02, RoomName=CLASSROOM-2, OccupancyCategory=Teaching, OccupancyLoad=12, Area=30); (RoomNumber=R03, RoomName=CLASSROOM-3, OccupancyCategory=Teaching, OccupancyLoad=12, Area=30); (RoomNumber=R04, RoomName=COMMON, OccupancyCategory=Common, OccupancyLoad=12, Area=30); (RoomNumber=R05, RoomName=STAFF, OccupancyCategory=Support, OccupancyLoad=2, Area=12); (RoomNumber=R06, RoomName=WC-CHILD, OccupancyCategory=Support, OccupancyLoad=2, Area=6); (RoomNumber=R07, RoomName=WC-STAFF, OccupancyCategory=Support, OccupancyLoad=2, Area=6); (RoomNumber=R08, RoomName=STORE, OccupancyCategory=Support, OccupancyLoad=2, Area=8).\n\nPublish result.pdf as a 2-page drawing set. The visible sheet text must include A101, A201, SCHOOL ZONE REPAIR AND OCCUPANCY SCHEDULE, CLASSROOM-1, COMMON, and STORE so the title, drawing type, and key rooms or zones are identifiable.\n\nOther materials, colors, object names, property sets, layer names, relationship nesting, and IFC representation details may vary as long as the required BIM elements, spatial relationships, geometry ranges, schedules, and sheet text are present.",
-    "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
-    "config": [
-        {
-            "type": "upload_file",
-            "parameters": {
-                "files": [
-                    {
-                        "local_path": "task-17/init_file/init.ifc",
-                        "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
-                    },
-                    {
-                        "local_path": "task-17/init_image/init_plan.png",
-                        "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
-                    },
-                    {
-                        "local_path": "task-17/init_image/init_section.png",
-                        "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
-                    }
-                ]
-            }
-        },
-        {
-            "type": "launch",
-            "parameters": {
-                "command": [
-                    "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
-                    "C:\\Users\\Administrator\\Desktop\\init.ifc"
-                ]
-            }
-        }
-    ],
-    "trajectory": "trajectories/",
-    "related_apps": [
-        "archicad"
-    ],
-    "evaluator": {
-        "postconfig": [
-            {
-                "type": "upload_file",
-                "parameters": {
-                    "files": [
-                        {
-                            "local_path": "task-17/eval.py",
-                            "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-                        }
-                    ]
-                }
-            }
-        ],
-        "func": "exact_match",
-        "result": {
-            "type": "vm_command_line",
-            "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-            "shell": "true"
-        },
-        "expected": {
-            "type": "rule",
-            "rules": {
-                "expected": "True\n"
-            }
-        }
+  "id": "v-archicad-task-17-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "School Zone Repair and Occupancy Schedule Start from the provided init.ifc in Archicad and use init_plan.png and init_section.png only as references for the intended cleanup. The init model is a relevant but unfinished predecessor: it contains 1 storey, spaces currently named UNNAMED, CLASSROOM, CLASSROOM, COMMON, and WC. Clean, complete, or reclassify it as needed rather than replacing it with unrelated geometry. Build or edit the model using Archicad BIM elements, not visual-only placeholder geometry. Save the completed deliverables in the output folder as result.ifc, result.pdf, and result.txt. Create a single-storey BIM model for the named project. Keep the shaped model within 0.5 m of horizontal extents about X 0 to 18 and Y 0 to 10, with vertical extents about Z 0 to 3. Export result.ifc as an IFC4 model with unique GlobalId values for IFC root objects. It must contain exactly 1 building storey and exactly 8 IfcSpace zones named CLASSROOM-1, CLASSROOM-2, CLASSROOM-3, COMMON, STAFF, WC-CHILD, WC-STAFF, and STORE. Assign every listed space to the single building storey. Model the required construction as real BIM element classes, including at least 4 wall-like IfcWall or IfcWallStandardCase elements, and at least 1 IfcSlab element. If an equivalent exporter writes IfcWallStandardCase for walls, that is acceptable. Do not count IfcBuildingElementProxy or other generic proxy objects as satisfying required walls, slabs, roofs, stairs, doors, windows, or spaces. Export result.txt from the Archicad schedule/list workflow as a tab-delimited schedule text file. The header row must be RoomNumber, RoomName, OccupancyCategory, OccupancyLoad, Area in that order. Include these rows in order: (RoomNumber=R01, RoomName=CLASSROOM-1, OccupancyCategory=Teaching, OccupancyLoad=12, Area=30); (RoomNumber=R02, RoomName=CLASSROOM-2, OccupancyCategory=Teaching, OccupancyLoad=12, Area=30); (RoomNumber=R03, RoomName=CLASSROOM-3, OccupancyCategory=Teaching, OccupancyLoad=12, Area=30); (RoomNumber=R04, RoomName=COMMON, OccupancyCategory=Common, OccupancyLoad=12, Area=30); (RoomNumber=R05, RoomName=STAFF, OccupancyCategory=Support, OccupancyLoad=2, Area=12); (RoomNumber=R06, RoomName=WC-CHILD, OccupancyCategory=Support, OccupancyLoad=2, Area=6); (RoomNumber=R07, RoomName=WC-STAFF, OccupancyCategory=Support, OccupancyLoad=2, Area=6); (RoomNumber=R08, RoomName=STORE, OccupancyCategory=Support, OccupancyLoad=2, Area=8). Publish result.pdf as a 2-page drawing set. The visible sheet text must include A101, A201, SCHOOL ZONE REPAIR AND OCCUPANCY SCHEDULE, CLASSROOM-1, COMMON, and STORE so the title, drawing type, and key rooms or zones are identifiable. Other materials, colors, object names, property sets, layer names, relationship nesting, and IFC representation details may vary as long as the required BIM elements, spatial relationships, geometry ranges, schedules, and sheet text are present.",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/init.ifc",
+            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-17/init_image/init_plan.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+          },
+          {
+            "local_path": "task-17/init_image/init_section.png",
+            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+          }
+        ]
+      }
     },
-    "proxy": false,
-    "fixed_ip": false,
-    "possibility_of_env_change": "low"
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\Administrator\\Desktop\\init.ifc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

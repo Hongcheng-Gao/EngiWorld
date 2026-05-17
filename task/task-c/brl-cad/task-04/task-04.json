@@ -1,0 +1,57 @@
+{
+  "id": "c-brl-cad-task-04-ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Open /home/user/Desktop/housing.step and /home/user/Desktop/tool.step in BRL-CAD. Place the 50 x 25 x 20 mm tool solid inside the 90 x 50 x 30 mm housing so their centers coincide, subtract the tool from the housing, and add a top center cylindrical boss of diameter 20 mm and height 8 mm. Save the completed STL mesh as /home/user/Desktop/out.stl. [Software] Run `mged` from a terminal (use the full path if it is not on PATH).",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/housing.step",
+            "path": "/home/user/Desktop/housing.step"
+          },
+          {
+            "local_path": "task-04/init_file/tool.step",
+            "path": "/home/user/Desktop/tool.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

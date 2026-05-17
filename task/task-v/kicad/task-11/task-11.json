@@ -1,0 +1,72 @@
+{
+  "id": "v-kicad-task-11-ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "RF Front-End Chain Along a Straight Line The file design.kicad_pcb contains a PCB with 8 RF chain components (U1=ANT, U2=LNA, U3=BPF, U4=MIX, U5=AMP, U6=LPF, U7=ADC, U8=DAQ) placed randomly. These components form a signal chain in the listed order. Reposition all 8 components along a straight horizontal line in signal order and write the result as design.kicad_pcb. Requirements: 1. All 8 components must be placed such that all their Y coordinates are within +/-0.5 mm of the mean Y of the group. 2. X coordinates must be strictly increasing in signal order (U1 leftmost, U8 rightmost). 3. Centre-to-centre spacing between adjacent components must be at least 6 mm. 4. All rotation angles must be multiples of 90 deg. 5. No component may be rotated exactly 180 deg (connector polarity preservation). 6. No component may be added or removed. Write /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/design.kicad_pcb",
+            "path": "/home/user/Desktop/design.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad",
+          "/home/user/Desktop/design.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; RATIO_X = 0.589; RATIO_Y = 0.726; time.sleep(5); screen_w, screen_h = pyautogui.size(); x = int(screen_w * RATIO_X); y = int(screen_h * RATIO_Y); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y); time.sleep(0.5); pyautogui.click(x, y)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

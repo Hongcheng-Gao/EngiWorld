@@ -1,0 +1,106 @@
+{
+  "id": "v-cadence-orcad-task-17-windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "In the opened project, `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN` already contains several resistors. Using `C:\\Users\\Administrator\\Desktop\\value_spec.json` (a JSON dictionary whose keys are refdes and whose values are the new `Value` strings), change the `Value` property of every listed refdes to the specified value; components not listed in the JSON must keep their original Value. In addition, for every refdes that was modified, add `Tolerance=1%`. Do not add a `Tolerance` property to components that are not listed. Save the modified `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN`, together with its dependency files (`C:\\Users\\Administrator\\Desktop\\DCLOCK2.OLB`, `C:\\Users\\Administrator\\Desktop\\TUTOR2.OPJ`, `DCLOCK2.OPJ`, etc.).",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://www.cadence.com/en_US/home/resources/datasheets/pspice-advanced-circuit-simulation-ds.html; https://support1.cadence.com/public/docs/content/20469530.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/DCLOCK2.OLB",
+            "path": "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/DCLOCK2.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/TUTOR2.DSN",
+            "path": "C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/TUTOR2.OPJ",
+            "path": "C:\\Users\\Administrator\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/value_spec.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\value_spec.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Cadence\\SPB_24.1\\tools\\bin\\capture.exe",
+          "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OPJ"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

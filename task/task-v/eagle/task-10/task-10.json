@@ -1,0 +1,72 @@
+{
+  "id": "v-eagle-task-10-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Look at `bus.sch`, remove the existing `ADDR[2..0]` bus, and replace it with three individual nets so that `ADDR0` on `U1` connects to `ADDR0` on `U2`, `ADDR1` on `U1` connects to `ADDR1` on `U2`, and `ADDR2` on `U1` connects to `ADDR2` on `U2`. Save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. The file must parse as EAGLE XML. 2. No `<bus>` element may remain. 3. Three `<net>` elements named `ADDR0`, `ADDR1`, and `ADDR2` must be present. 4. Each of those three nets must have at least 2 `<pinref>` entries. 5. Parts `U1` and `U2` must remain present.",
+  "source": "https://learn.sparkfun.com/tutorials/using-eagle-schematic/all",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/bus.sch",
+            "path": "/home/user/Desktop/bus.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/bus.sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui; import time; time.sleep(15); pyautogui.hotkey('shift', 'tab'); time.sleep(0.5); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

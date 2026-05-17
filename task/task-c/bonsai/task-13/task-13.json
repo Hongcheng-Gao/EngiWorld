@@ -1,57 +1,57 @@
 {
-    "id": "c-bonsai-task-13-ubuntu",
-    "snapshot": "Bonsai-0.8.5",
-    "instruction": "Unified Two-Wing Project Hierarchy\n\nUse the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc so the two building wings share one clean project hierarchy. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed IFC4 model as /home/user/Desktop/result.ifc. The final model must contain exactly one IfcProject named Unified Project, one IfcSite named Unified Site, one IfcBuilding named Unified Building, two storeys named Ground Floor and First Floor, eight walls, and two slabs. Do not include spaces, doors, windows, proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nKeep the wall names WingA South Wall, WingA East Wall, WingA North Wall, WingA West Wall, WingB South Wall, WingB East Wall, WingB North Wall, and WingB West Wall. Each wall must be either 8.00 m by 0.20 m by 3.00 m or 0.20 m by 6.00 m by 3.00 m. Name the slabs WingA Slab and WingB Slab, each 8.00 m by 6.00 m by 0.20 m. Spatially assign every wall and slab to either Ground Floor or First Floor. Arrange the combined product geometry so the overall bounding box has minimum coordinates -0.20 m, 0.00 m, 0.00 m and maximum coordinates 22.00 m, 6.00 m, 6.20 m. Other representation details may vary.",
-    "source": "https://docs.ifcopenshell.org/autoapi/ifcpatch/recipes/MergeProjects/index.html",
-    "config": [
-        {
-            "type": "upload_file",
-            "parameters": {
-                "files": [
-                    {
-                        "local_path": "task-13/init_file/init.ifc",
-                        "path": "/home/user/Desktop/init.ifc"
-                    },
-                    {
-                        "local_path": "task-13/init_image/init_plan.png",
-                        "path": "/home/user/Desktop/init_plan.png"
-                    }
-                ]
-            }
-        }
-    ],
-    "trajectory": "trajectories/",
-    "related_apps": [
-        "bonsai"
-    ],
-    "evaluator": {
-        "postconfig": [
+  "id": "c-bonsai-task-13-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Unified Two-Wing Project Hierarchy Use the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc so the two building wings share one clean project hierarchy. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed IFC4 model as /home/user/Desktop/result.ifc. The final model must contain exactly one IfcProject named Unified Project, one IfcSite named Unified Site, one IfcBuilding named Unified Building, two storeys named Ground Floor and First Floor, eight walls, and two slabs. Do not include spaces, doors, windows, proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Keep the wall names WingA South Wall, WingA East Wall, WingA North Wall, WingA West Wall, WingB South Wall, WingB East Wall, WingB North Wall, and WingB West Wall. Each wall must be either 8.00 m by 0.20 m by 3.00 m or 0.20 m by 6.00 m by 3.00 m. Name the slabs WingA Slab and WingB Slab, each 8.00 m by 6.00 m by 0.20 m. Spatially assign every wall and slab to either Ground Floor or First Floor. Arrange the combined product geometry so the overall bounding box has minimum coordinates -0.20 m, 0.00 m, 0.00 m and maximum coordinates 22.00 m, 6.00 m, 6.20 m. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
+  "source": "https://docs.ifcopenshell.org/autoapi/ifcpatch/recipes/MergeProjects/index.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-13/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
             {
-                "type": "upload_file",
-                "parameters": {
-                    "files": [
-                        {
-                            "local_path": "task-13/eval.py",
-                            "path": "/home/user/Desktop/eval.py"
-                        }
-                    ]
-                }
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
             }
-        ],
-        "func": "exact_match",
-        "result": {
-            "type": "vm_command_line",
-            "command": "python /home/user/Desktop/eval.py",
-            "shell": "true"
-        },
-        "expected": {
-            "type": "rule",
-            "rules": {
-                "expected": "True\n"
-            }
+          ]
         }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python /home/user/Desktop/eval.py",
+      "shell": "true"
     },
-    "proxy": false,
-    "fixed_ip": false,
-    "possibility_of_env_change": "low"
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

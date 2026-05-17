@@ -1,0 +1,53 @@
+{
+  "id": "c-solidworks-task-15-windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Open C:\\Users\\User\\Desktop\\cli_035_flat_pattern_bracket.step in SolidWorks. Using SolidWorks command-line automation, use that input file, a 2 mm thick U-shaped sheet metal bracket that is 60 mm long in Y, has a 40 mm bottom web in X, and has two 35 mm high side flanges. Generate a flat pattern using bend inside radius 2 mm and K-factor 0.5. The unfolded 2 mm thick flat sheet should be about 119.42 mm long by 60 mm wide. Export the flat sheet as C:\\Users\\User\\Desktop\\cli_035_flat_pattern_out.step and also export the original bent part as C:\\Users\\User\\Desktop\\cli_035_bent_original.step. [Software] Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut).",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/cli_035_flat_pattern_bracket.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_035_flat_pattern_bracket.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

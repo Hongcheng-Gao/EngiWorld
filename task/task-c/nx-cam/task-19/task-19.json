@@ -1,0 +1,57 @@
+{
+  "id": "c-nx-cam-task-19-windows",
+  "snapshot": "NX-CAM",
+  "instruction": "Open C:\\Users\\User\\Desktop\\impeller_test.step, C:\\Users\\User\\Desktop\\tools.txt in NX CAM. Use NX CAM Simultaneous 5X to create a multi-axis finishing toolpath for C:\\Users\\User\\Desktop\\impeller_test.step. The simplified impeller has six blades; the tool axis must follow the blade channels and avoid holder collision. Tool definition: use the supplied simultaneous 5-axis finishing tool and holder settings. Write the required output file(s) using exactly these Desktop path(s): C:\\Users\\User\\Desktop\\task-19.nc. [Software] Launch Siemens NX with `C:\\Program Files\\Siemens\\NX2306\\NXBIN\\ugraf.exe -nx` (adjust version/path).",
+  "source": "https://majentaplm.com/wp-content/uploads/NX_CAM_5_Axis_Milling_.pdf?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/impeller_test.step",
+            "path": "C:\\Users\\User\\Desktop\\impeller_test.step"
+          },
+          {
+            "local_path": "task-19/init_file/tools.txt",
+            "path": "C:\\Users\\User\\Desktop\\tools.txt"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

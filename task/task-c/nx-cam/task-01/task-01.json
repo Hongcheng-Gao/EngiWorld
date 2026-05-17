@@ -1,0 +1,57 @@
+{
+  "id": "c-nx-cam-task-01-windows",
+  "snapshot": "NX-CAM",
+  "instruction": "Open C:\\Users\\User\\Desktop\\cli_plate.step, C:\\Users\\User\\Desktop\\tools.txt in NX CAM. Create a Milling CAM setup and Face Milling operation for C:\\Users\\User\\Desktop\\cli_plate.step. Set the MCS origin at the blank top-face center. Use T1 to machine the top face to Z=10.000 mm with S6000 rpm and F750 mm/min. Tool definition: T1 is a 12 mm face mill, S6000 rpm, F750 mm/min. Write the required output file(s) using exactly this Desktop path: C:\\Users\\User\\Desktop\\task-01.nc. [Software] Launch Siemens NX with `C:\\Program Files\\Siemens\\NX2306\\NXBIN\\ugraf.exe -nx` (adjust version/path).",
+  "source": "https://www.ciimarketplace.in/media/product_attachment/1706000483_siemensswnxcamfoundationfactsheet.pdf?utm_source=chatgpt.com",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/cli_plate.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_plate.step"
+          },
+          {
+            "local_path": "task-01/init_file/tools.txt",
+            "path": "C:\\Users\\User\\Desktop\\tools.txt"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "nx-cam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

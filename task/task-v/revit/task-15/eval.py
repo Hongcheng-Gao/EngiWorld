@@ -1,16 +1,5 @@
 #!/usr/bin/env python3
 import re
-try:
-    import fitz
-except ImportError:
-    import pymupdf as fitz
-try:
-    from pdfminer.high_level import extract_text as _pdfminer_extract_text
-    from pdfminer.pdfpage import PDFPage as _PDFPage
-    _HAS_PDFMINER = True
-except ImportError:
-    _HAS_PDFMINER = False
-
 from pathlib import Path
 DESKTOP = Path("C:/Users/Administrator/Desktop")
 
@@ -20,18 +9,17 @@ import ifcopenshell.geom
 
 SPEC = {
     "required_ifc": "result.ifc",
-    "required_pdf": "result.pdf",
     "min_ifc_bytes": 500,
-    "min_pdf_bytes": 200,
     "schema": "IFC4",
     "counts": {
         "IfcProject": 1,
         "IfcSite": 1,
         "IfcBuilding": 1,
         "IfcBuildingStorey": 2,
-        "IfcSpace": 2,
-        "IfcWall": 8,
-        "IfcSlab": 2,
+        "IfcSpace": 5,
+        "IfcWall": 12,
+        "IfcSlab": 3,
+        "IfcCurtainWall": 5,
     },
     "forbidden_counts": {
         "IfcRoof": 0,
@@ -40,14 +28,12 @@ SPEC = {
         "IfcStair": 0,
         "IfcColumn": 0,
         "IfcBeam": 0,
-        "IfcCurtainWall": 0,
         "IfcBuildingElementProxy": 0,
     },
     "bbox_tolerance": 0.35,
-    "bbox": {"IfcWall": [0, 0, 0, 24, 16, 6.2], "IfcSlab": [0, 0, 0, 24, 16, 3.65], "IfcSpace": [0.5, 0.5, 0, 23, 15, 5.9]},
-    "space_token_counts": {"warehouse": 1, "area": 1},
-    "pdf_pages": 1,
-    "pdf_tokens": ["WAREHOUSE UPGRADE", "Principal upgrade sheet"],
+    "bbox": {"IfcWall": [0, 0, 0.25, 28.2, 14.2, 7.05], "IfcSlab": [0, 0, 0, 28, 14, 3.85], "IfcCurtainWall": [1, 0.02, 0.7, 26.4, 0.18, 3.1], "IfcSpace": [1.2, 1.2, 0.25, 26, 9.4, 6.8]},
+    "space_token_counts": {"lobby": 1, "meeting": 4},
+    "required_space_names": ["central lobby"],
 }
 
 
@@ -70,39 +56,6 @@ def unique_global_ids(model):
     return len(gids) == len(set(gids))
 
 
-def page_count(path):
-    try:
-        doc = fitz.open(str(path))
-        n = doc.page_count
-        doc.close()
-        return n
-    except Exception:
-        pass
-    if _HAS_PDFMINER:
-        try:
-            with open(str(path), "rb") as f:
-                return sum(1 for _ in _PDFPage.get_pages(f))
-        except Exception:
-            pass
-    raise RuntimeError("cannot determine page count")
-
-
-def extract_pdf_text(path):
-    try:
-        doc = fitz.open(str(path))
-        text = "".join(page.get_text("text") for page in doc)
-        doc.close()
-        return text
-    except Exception:
-        pass
-    if _HAS_PDFMINER:
-        try:
-            return _pdfminer_extract_text(str(path))
-        except Exception:
-            pass
-    raise RuntimeError("cannot extract PDF text")
-
-
 def check_counts(model):
     for ifc_class, expected in SPEC["counts"].items():
         if entity_count(model, ifc_class) != expected:
@@ -115,14 +68,9 @@ def check_counts(model):
 
 def check_spaces(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    return all(sum(1 for name in names if token in name) >= minimum for token, minimum in SPEC["space_token_counts"].items())
-
-
-def check_pdf(pdf_path):
-    if page_count(pdf_path) != SPEC["pdf_pages"]:
+    if not all(sum(1 for name in names if token in name) >= minimum for token, minimum in SPEC["space_token_counts"].items()):
         return False
-    text = re.sub(r"\s+", " ", extract_pdf_text(pdf_path).lower()).strip()
-    return all(token.lower() in text for token in SPEC["pdf_tokens"])
+    return all(norm(required) in names for required in SPEC["required_space_names"])
 
 
 
@@ -162,12 +110,8 @@ def check_geometry(model):
     return True
 
 def evaluate(result_dir):
-    root = Path(result_dir)
-    ifc_path = root / SPEC["required_ifc"]
-    pdf_path = root / SPEC["required_pdf"]
+    ifc_path = Path(result_dir) / SPEC["required_ifc"]
     if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
-        return False
-    if not pdf_path.is_file() or pdf_path.stat().st_size < SPEC["min_pdf_bytes"]:
         return False
     model = ifcopenshell.open(str(ifc_path))
     return (
@@ -176,7 +120,6 @@ def evaluate(result_dir):
         and check_counts(model)
         and check_spaces(model)
         and check_geometry(model)
-        and check_pdf(pdf_path)
     )
 
 

@@ -1,0 +1,74 @@
+{
+  "id": "v-altium-designer-task-12-windows",
+  "snapshot": "altium-designer",
+  "instruction": "The opened files `assembly.OutJob` and `fabrication.OutJob` are Altium OutJob files. `assembly.OutJob` has 2 `[OutputGroupN]` sections and `VariantName=Std`; `fabrication.OutJob` has 3 `[OutputGroupN]` sections and `VariantName=Mfg`. Merge them into a single `C:\\Users\\Administrator\\Desktop\\release.OutJob` with the following rules: - Keep only one `[OutputJobFile]` header section. You may reuse the version from `assembly.OutJob`. - Concatenate all `[OutputGroupN]` sections in order: first the 2 sections from `assembly`, then the 3 sections from `fabrication`. After concatenation, renumber them continuously as `OutputGroup1..OutputGroup5`. - Preserve every internal `key=value` line inside each group exactly as-is, including fields such as `Name`, `TargetOutputMedium`, `VariantName`, `OutputMediumN...`, and `OutputTypeN...`. Only the section numbers may change. - Each group's `VariantName` must stay as it was in its original source file; do not overwrite them with a single common value. Write the merged result to `C:\\Users\\Administrator\\Desktop\\release.OutJob`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/design-variants; https://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/assembly.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\assembly.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/fabrication.OutJob",
+            "path": "C:\\Users\\Administrator\\Desktop\\fabrication.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\Administrator\\Desktop\\assembly.OutJob",
+          "C:\\Users\\Administrator\\Desktop\\fabrication.OutJob"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
