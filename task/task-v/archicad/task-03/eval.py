@@ -93,6 +93,23 @@ def parse_pdf(path):
         return pages, text.upper()
     except Exception:
         pass
+    try:
+        import fitz
+
+        doc = fitz.open(str(path))
+        text = "\n".join(page.get_text("text") for page in doc)
+        return doc.page_count, text.upper()
+    except Exception:
+        pass
+    try:
+        from pdfminer.high_level import extract_text
+        from pdfminer.pdfpage import PDFPage
+
+        with path.open("rb") as f:
+            pages = sum(1 for _ in PDFPage.get_pages(f))
+        return pages, extract_text(str(path)).upper()
+    except Exception:
+        pass
     if _HAS_PDFMINER:
         try:
             with open(str(path), "rb") as f:
