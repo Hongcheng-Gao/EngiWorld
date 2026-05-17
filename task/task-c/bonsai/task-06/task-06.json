@@ -1,48 +1,48 @@
 {
-  "id": "c-bonsai-task-06-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Georeferenced Office IFC Shell This task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 georeferenced small office shell and save the required output as /home/user/Desktop/result.ifc. 1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 2 IfcSpace entities, 5 IfcWall entities, 1 IfcSlab, 1 IfcDoor, 2 IfcWindow entities, 3 IfcOpeningElement entities, 3 IfcRelVoidsElement relationships, 3 IfcRelFillsElement relationships, 1 IfcProjectedCRS, and 1 IfcMapConversion. 4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Level 00, ignoring leading and trailing whitespace only. 7. The IfcSpace names are exactly Office and WC, ignoring leading and trailing whitespace only; Office has clear plan dimensions 5.60 m by 4.60 m and WC has clear plan dimensions 1.70 m by 2.20 m, each in either X/Y orientation with tolerance +/-0.08 m. 8. Each IfcSpace has geometry height 3.00 m with tolerance +/-0.05 m. 9. The slab is named exactly Floor Slab, ignoring leading and trailing whitespace only, and has plan dimensions 8.00 m by 5.00 m in either X/Y orientation and thickness 0.20 m, each with tolerance +/-0.08 m for plan dimensions and +/-0.05 m for thickness. 10. The door has OverallWidth 0.80 m with tolerance +/-0.08 m and fills exactly one IfcOpeningElement that voids an IfcWall. 11. The 2 windows have OverallWidth values 1.00 m and 1.40 m, each with tolerance +/-0.08 m, and each window fills exactly one IfcOpeningElement that voids an IfcWall. 12. Each wall has height 3.00 m with tolerance +/-0.05 m and plan thickness either 0.12 m or 0.20 m with tolerance +/-0.04 m. 13. All spaces, walls, the slab, door, and windows are spatially assigned to Level 00. 14. The IfcProjectedCRS name is exactly EPSG:3857, ignoring leading and trailing whitespace only. 15. The IfcMapConversion has Eastings 501234.000, Northings 6843210.000, OrthogonalHeight 35.000, XAxisAbscissa 1.000, XAxisOrdinate 0.000, and Scale 1.000, each with tolerance +/-0.001. 16. The absolute value of every generated product bounding-box coordinate is no greater than 100.00 m in the model local coordinate system. Any item not explicitly required may vary.",
-  "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/georeferencing.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-06/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-06-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "Georeferenced Small Office Shell\n\nUse the opened Bonsai IFC authoring environment to create a new metric IFC4 georeferenced small office shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The model must contain one project, one site, one building, one storey named Level 00, two spaces, five walls, one slab, one door, two windows, three openings, three void relationships, three fill relationships, one IfcProjectedCRS, and one IfcMapConversion. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named Office and WC. Office must be 5.60 m by 4.60 m in clear plan size, WC must be 1.70 m by 2.20 m, and both spaces must be 3.00 m high. Name the slab Floor Slab and make it 8.00 m by 5.00 m by 0.20 m. Walls must be 3.00 m high with a plan thickness of either 0.12 m or 0.20 m. The door must have OverallWidth 0.80 m and fill one wall opening. The two windows must have OverallWidth values of 1.00 m and 1.40 m, each filling one wall opening. Assign all spaces, walls, slab, door, and windows to Level 00. Set the projected CRS name to EPSG:3857 and the map conversion values to Eastings 501234.000, Northings 6843210.000, OrthogonalHeight 35.000, XAxisAbscissa 1.000, XAxisOrdinate 0.000, and Scale 1.000. Keep all product bounding-box coordinates within 100.00 m of the local origin. Other representation details may vary.",
+    "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/georeferencing.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": []
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-06/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

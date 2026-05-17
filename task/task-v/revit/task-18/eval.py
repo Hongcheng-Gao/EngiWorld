@@ -4,6 +4,7 @@ from pathlib import Path
 DESKTOP = Path("C:/Users/Administrator/Desktop")
 
 import ifcopenshell
+import ifcopenshell.geom
 
 
 SPEC = {
@@ -29,6 +30,8 @@ SPEC = {
         "IfcCurtainWall": 0,
         "IfcBuildingElementProxy": 0,
     },
+    "bbox_tolerance": 0.35,
+    "bbox": {"IfcWall": [0, 0, 0.25, 20.2, 18.2, 7.05], "IfcSlab": [0, 0, 0, 20, 18, 3.85], "IfcStair": [8.2, 7.2, 0.25, 11.8, 10.8, 6.8], "IfcSpace": [1, 1, 0.25, 19, 17, 6.8]},
     "space_token_counts": {"living kitchen": 8, "bedroom": 8, "bath": 8},
 }
 
@@ -67,6 +70,42 @@ def check_spaces(model):
     return all(sum(1 for name in names if token in name) >= minimum for token, minimum in SPEC["space_token_counts"].items())
 
 
+
+
+def geometry_settings():
+    settings = ifcopenshell.geom.settings()
+    settings.set(settings.USE_WORLD_COORDS, True)
+    return settings
+
+
+def combined_bbox(model, ifc_class):
+    xs, ys, zs = [], [], []
+    settings = geometry_settings()
+    for element in model.by_type(ifc_class):
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, element)
+            verts = shape.geometry.verts
+        except Exception:
+            continue
+        xs.extend(verts[0::3])
+        ys.extend(verts[1::3])
+        zs.extend(verts[2::3])
+    if not xs:
+        return None
+    return [min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)]
+
+
+def bbox_close(actual, expected, tolerance):
+    return actual is not None and all(abs(a - e) <= tolerance for a, e in zip(actual, expected))
+
+
+def check_geometry(model):
+    tolerance = SPEC.get("bbox_tolerance", 0.35)
+    for ifc_class, expected in SPEC.get("bbox", {}).items():
+        if not bbox_close(combined_bbox(model, ifc_class), expected, tolerance):
+            return False
+    return True
+
 def evaluate(result_dir):
     ifc_path = Path(result_dir) / SPEC["required_ifc"]
     if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
@@ -77,6 +116,7 @@ def evaluate(result_dir):
         and unique_global_ids(model)
         and check_counts(model)
         and check_spaces(model)
+        and check_geometry(model)
     )
 
 

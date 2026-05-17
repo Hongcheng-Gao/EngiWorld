@@ -1,57 +1,57 @@
 {
-  "id": "c-bonsai-task-19-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Subdivide Apartment Plate And Export Zone Areas This task starts from /home/user/Desktop/init.ifc and may use /home/user/Desktop/init_plan.png as a local reference image. Modify the provided floor plate and save the required outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. 1. The output folder contains /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv; /home/user/Desktop/result.ifc is at least 500 bytes and /home/user/Desktop/result.csv is not empty. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 10 IfcSpace entities, 12 IfcWall entities, 1 IfcSlab, 8 IfcDoor entities, 8 IfcOpeningElement entities, 8 IfcRelVoidsElement relationships, and 8 IfcRelFillsElement relationships. 4. The IFC model contains 0 IfcWindow, 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Level 1, ignoring leading and trailing whitespace only. 7. The IfcSpace names are exactly A Living, A Bed, B Living, B Bed, C Living, C Bed, D Living, D Bed, South Corridor, and North Corridor, ignoring leading and trailing whitespace only. 8. A Living, A Bed, B Living, C Living, C Bed, and D Living each have bounding-box dimensions 4.60 m by 4.60 m by 2.80 m; B Bed and D Bed each have 4.40 m by 4.60 m by 2.80 m; South Corridor has 19.40 m by 1.60 m by 2.80 m; and North Corridor has 19.40 m by 1.40 m by 2.80 m; each in any axis order with tolerance +/-0.08 m. 9. All spaces are spatially assigned to Level 1. 10. /home/user/Desktop/result.csv has exactly these headers in this order: SpaceName, Zone, Level, NetFloorArea. 11. /home/user/Desktop/result.csv has exactly 10 data rows, one row for each final space name. 12. The CSV rows for A Bed and A Living have Zone A, Level Level 1, and NetFloorArea 21.16; B Bed and B Living have Zone B, Level Level 1, and NetFloorArea 20.24 and 21.16 respectively; C Bed and C Living have Zone C, Level Level 1, and NetFloorArea 21.16 each; D Bed and D Living have Zone D, Level Level 1, and NetFloorArea 20.24 and 21.16 respectively; North Corridor and South Corridor have Zone Corridor, Level Level 1, and NetFloorArea 27.16 and 31.04 respectively, each numeric value with tolerance +/-0.02. Any item not explicitly required may vary.",
-  "source": "https://docs.bonsaibim.org/tutorials/project5.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-19/init_file/init.ifc",
-            "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-19/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
-          }
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-19/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-19-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "Apartment Floor Plate Subdivision\n\nUse the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc by subdividing the apartment floor plate and exporting zone areas. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC4 model must contain one project, one site, one building, and one storey named Level 1; ten spaces; twelve walls; one slab; eight doors; eight openings; eight void relationships; and eight fill relationships. Do not include windows, proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named A Living, A Bed, B Living, B Bed, C Living, C Bed, D Living, D Bed, South Corridor, and North Corridor. A Living, A Bed, B Living, C Living, C Bed, and D Living must each be 4.60 m by 4.60 m by 2.80 m. B Bed and D Bed must each be 4.40 m by 4.60 m by 2.80 m. South Corridor must be 19.40 m by 1.60 m by 2.80 m, and North Corridor must be 19.40 m by 1.40 m by 2.80 m. Assign all spaces to Level 1.\n\nThe CSV must use the exact headers SpaceName, Zone, Level, NetFloorArea and contain one row for each final space. Report A Bed and A Living in Zone A with NetFloorArea 21.16 each; B Bed and B Living in Zone B with NetFloorArea 20.24 and 21.16; C Bed and C Living in Zone C with NetFloorArea 21.16 each; D Bed and D Living in Zone D with NetFloorArea 20.24 and 21.16; and North Corridor and South Corridor in Zone Corridor with NetFloorArea 27.16 and 31.04. Every row must use Level 1. Other representation details may vary.",
+    "source": "https://docs.bonsaibim.org/tutorials/project5.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-19/init_file/init.ifc",
+                        "path": "/home/user/Desktop/init.ifc"
+                    },
+                    {
+                        "local_path": "task-19/init_image/init_plan.png",
+                        "path": "/home/user/Desktop/init_plan.png"
+                    }
+                ]
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-19/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

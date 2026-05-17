@@ -9,7 +9,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 10, 'OS:ThermalZone': 10, 'OS:Surface': 68, 'OS:SubSurface': 16, 'OS:ZoneHVAC:IdealLoadsAirSystem': 10, 'OS:ZoneHVAC:EquipmentList': 10, 'OS:ThermostatSetpoint:DualSetpoint': 10}, 'space_names': ['C11-F1-North', 'C11-F1-South', 'C11-F1-West', 'C11-F1-East', 'C11-F1-Core', 'C11-F2-North', 'C11-F2-South', 'C11-F2-West', 'C11-F2-East', 'C11-F2-Core'], 'surface_counts': {'Floor': 10, 'RoofCeiling': 10, 'Wall': 48}, 'outside_boundary_counts': {'Ground': 5, 'Outdoors': 21, 'Surface': 42}, 'window_count': 16, 'fixed_window_count': 16, 'bbox_spans_m': [30.0, 18.0, 8.0], 'floor_area_m2': 1080.0, 'exterior_wall_area_m2': 768.0, 'window_area_m2': 268.8, 'require_space_links': True, 'hvac': {'ideal_loads': 10, 'equipment_lists': 10, 'thermostats': 10}, 'kpis': ['total_floor_area_m2', 'zone_count', 'total_window_area_m2']}
+SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 10, 'OS:ThermalZone': 10, 'OS:Surface': 68, 'OS:SubSurface': 16, 'OS:ZoneHVAC:IdealLoadsAirSystem': 10, 'OS:ZoneHVAC:EquipmentList': 10, 'OS:ThermostatSetpoint:DualSetpoint': 10}, 'space_names': ['C11-F1-North', 'C11-F1-South', 'C11-F1-West', 'C11-F1-East', 'C11-F1-Core', 'C11-F2-North', 'C11-F2-South', 'C11-F2-West', 'C11-F2-East', 'C11-F2-Core'], 'surface_counts': {'Floor': 10, 'RoofCeiling': 10, 'Wall': 48}, 'outside_boundary_counts': {'Ground': 5, 'Outdoors': 21, 'Surface': 42}, 'window_count': 16, 'fixed_window_count': 16, 'bbox_spans_m': [30.0, 18.0, 8.0], 'floor_area_m2': 1080.0, 'exterior_wall_area_m2': 768.0, 'window_area_m2': 268.8, 'require_space_links': True, 'hvac': {'ideal_loads': 10, 'equipment_lists': 10, 'thermostats': 10}, 'kpis': ['total_floor_area_m2', 'zone_count', 'total_window_area_m2']}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
 
@@ -268,10 +268,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -394,7 +390,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

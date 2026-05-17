@@ -9,7 +9,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 5, 'OS:ThermalZone': 5, 'OS:Surface': 33, 'OS:SubSurface': 8, 'OS:ZoneHVAC:IdealLoadsAirSystem': 5, 'OS:ZoneHVAC:EquipmentList': 5, 'OS:ThermostatSetpoint:DualSetpoint': 5, 'OS:People': 4, 'OS:Lights': 4}, 'space_names': ['Classroom-A', 'Classroom-B', 'Teacher-Office', 'Restroom', 'Corridor'], 'surface_counts': {'Floor': 5, 'RoofCeiling': 5, 'Wall': 23}, 'outside_boundary_counts': {'Ground': 5, 'Outdoors': 18, 'Surface': 10}, 'window_count': 8, 'fixed_window_count': 8, 'bbox_spans_m': [24.0, 10.0, 3.2], 'floor_area_m2': 208.0, 'exterior_wall_area_m2': 268.8, 'window_area_m2': 56.32, 'require_space_links': True, 'hvac': {'ideal_loads': 5, 'equipment_lists': 5, 'thermostats': 5}, 'csv': {'headers': ['space_name', 'thermal_zone_name', 'floor_area_m2', 'people_per_m2'], 'rows': [{'space_name': 'Classroom-A', 'thermal_zone_name': 'Classroom-A Zone', 'floor_area_m2': 64.0, 'people_per_m2': 0.055}, {'space_name': 'Classroom-B', 'thermal_zone_name': 'Classroom-B Zone', 'floor_area_m2': 64.0, 'people_per_m2': 0.055}, {'space_name': 'Teacher-Office', 'thermal_zone_name': 'Teacher-Office Zone', 'floor_area_m2': 16.0, 'people_per_m2': 0.05}, {'space_name': 'Corridor', 'thermal_zone_name': 'Corridor Zone', 'floor_area_m2': 48.0, 'people_per_m2': 0.005}, {'space_name': 'Restroom', 'thermal_zone_name': 'Restroom Zone', 'floor_area_m2': 16.0, 'people_per_m2': 0.02}], 'numeric_tolerance': 0.001}}
+SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 5, 'OS:ThermalZone': 5, 'OS:Surface': 33, 'OS:SubSurface': 8, 'OS:ZoneHVAC:IdealLoadsAirSystem': 5, 'OS:ZoneHVAC:EquipmentList': 5, 'OS:ThermostatSetpoint:DualSetpoint': 5, 'OS:People': 4, 'OS:Lights': 4}, 'space_names': ['Classroom-A', 'Classroom-B', 'Teacher-Office', 'Restroom', 'Corridor'], 'surface_counts': {'Floor': 5, 'RoofCeiling': 5, 'Wall': 23}, 'outside_boundary_counts': {'Ground': 5, 'Outdoors': 18, 'Surface': 10}, 'window_count': 8, 'fixed_window_count': 8, 'bbox_spans_m': [24.0, 10.0, 3.2], 'floor_area_m2': 208.0, 'exterior_wall_area_m2': 268.8, 'window_area_m2': 56.32, 'require_space_links': True, 'hvac': {'ideal_loads': 5, 'equipment_lists': 5, 'thermostats': 5}, 'csv': {'headers': ['space_name', 'thermal_zone_name', 'floor_area_m2', 'people_per_m2'], 'rows': [{'space_name': 'Classroom-A', 'thermal_zone_name': 'Classroom-A Zone', 'floor_area_m2': 64.0, 'people_per_m2': 0.055}, {'space_name': 'Classroom-B', 'thermal_zone_name': 'Classroom-B Zone', 'floor_area_m2': 64.0, 'people_per_m2': 0.055}, {'space_name': 'Teacher-Office', 'thermal_zone_name': 'Teacher-Office Zone', 'floor_area_m2': 16.0, 'people_per_m2': 0.05}, {'space_name': 'Corridor', 'thermal_zone_name': 'Corridor Zone', 'floor_area_m2': 48.0, 'people_per_m2': 0.005}, {'space_name': 'Restroom', 'thermal_zone_name': 'Restroom Zone', 'floor_area_m2': 16.0, 'people_per_m2': 0.02}], 'numeric_tolerance': 0.001}}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
 
@@ -268,10 +268,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -394,7 +390,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

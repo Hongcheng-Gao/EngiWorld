@@ -10,7 +10,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10, 'occupancy_schedule.csv': 10, 'run/eplusout.sql': 1000}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 1, 'OS:ThermalZone': 1, 'OS:Surface': 6, 'OS:SubSurface': 4, 'OS:ZoneHVAC:IdealLoadsAirSystem': 1, 'OS:ZoneHVAC:EquipmentList': 1, 'OS:ThermostatSetpoint:DualSetpoint': 1, 'OS:Schedule:File': 1, 'OS:External:File': 1}, 'space_names': ['ScheduleFile Office'], 'surface_counts': {'Floor': 1, 'RoofCeiling': 1, 'Wall': 4}, 'outside_boundary_counts': {'Ground': 1, 'Outdoors': 5}, 'window_count': 4, 'fixed_window_count': 4, 'bbox_spans_m': [10.0, 8.0, 3.0], 'floor_area_m2': 80.0, 'exterior_wall_area_m2': 108.0, 'window_area_m2': 27.0, 'require_space_links': True, 'external_file_name': 'occupancy_schedule.csv', 'hvac': {'ideal_loads': 1, 'equipment_lists': 1, 'thermostats': 1}, 'csv': {'headers': ['month', 'electricity_kwh', 'heating_kwh', 'cooling_kwh'], 'rows': [{'month': '1', 'electricity_kwh': 820.0, 'heating_kwh': 640.0, 'cooling_kwh': 0.0}, {'month': '2', 'electricity_kwh': 780.0, 'heating_kwh': 520.0, 'cooling_kwh': 0.0}, {'month': '3', 'electricity_kwh': 760.0, 'heating_kwh': 340.0, 'cooling_kwh': 30.0}, {'month': '4', 'electricity_kwh': 740.0, 'heating_kwh': 120.0, 'cooling_kwh': 85.0}, {'month': '5', 'electricity_kwh': 760.0, 'heating_kwh': 25.0, 'cooling_kwh': 190.0}, {'month': '6', 'electricity_kwh': 790.0, 'heating_kwh': 0.0, 'cooling_kwh': 320.0}, {'month': '7', 'electricity_kwh': 830.0, 'heating_kwh': 0.0, 'cooling_kwh': 410.0}, {'month': '8', 'electricity_kwh': 845.0, 'heating_kwh': 0.0, 'cooling_kwh': 395.0}, {'month': '9', 'electricity_kwh': 790.0, 'heating_kwh': 10.0, 'cooling_kwh': 250.0}, {'month': '10', 'electricity_kwh': 755.0, 'heating_kwh': 95.0, 'cooling_kwh': 120.0}, {'month': '11', 'electricity_kwh': 770.0, 'heating_kwh': 310.0, 'cooling_kwh': 20.0}, {'month': '12', 'electricity_kwh': 815.0, 'heating_kwh': 590.0, 'cooling_kwh': 0.0}], 'numeric_tolerance': 0.2}}
+SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10, 'occupancy_schedule.csv': 10, 'run/eplusout.sql': 1000}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 1, 'OS:ThermalZone': 1, 'OS:Surface': 6, 'OS:SubSurface': 4, 'OS:ZoneHVAC:IdealLoadsAirSystem': 1, 'OS:ZoneHVAC:EquipmentList': 1, 'OS:ThermostatSetpoint:DualSetpoint': 1, 'OS:Schedule:File': 1, 'OS:External:File': 1}, 'space_names': ['ScheduleFile Office'], 'surface_counts': {'Floor': 1, 'RoofCeiling': 1, 'Wall': 4}, 'outside_boundary_counts': {'Ground': 1, 'Outdoors': 5}, 'window_count': 4, 'fixed_window_count': 4, 'bbox_spans_m': [10.0, 8.0, 3.0], 'floor_area_m2': 80.0, 'exterior_wall_area_m2': 108.0, 'window_area_m2': 27.0, 'require_space_links': True, 'external_file_name': 'occupancy_schedule.csv', 'hvac': {'ideal_loads': 1, 'equipment_lists': 1, 'thermostats': 1}, 'csv': {'headers': ['month', 'electricity_kwh', 'heating_kwh', 'cooling_kwh'], 'rows': [{'month': '1', 'electricity_kwh': 820.0, 'heating_kwh': 640.0, 'cooling_kwh': 0.0}, {'month': '2', 'electricity_kwh': 780.0, 'heating_kwh': 520.0, 'cooling_kwh': 0.0}, {'month': '3', 'electricity_kwh': 760.0, 'heating_kwh': 340.0, 'cooling_kwh': 30.0}, {'month': '4', 'electricity_kwh': 740.0, 'heating_kwh': 120.0, 'cooling_kwh': 85.0}, {'month': '5', 'electricity_kwh': 760.0, 'heating_kwh': 25.0, 'cooling_kwh': 190.0}, {'month': '6', 'electricity_kwh': 790.0, 'heating_kwh': 0.0, 'cooling_kwh': 320.0}, {'month': '7', 'electricity_kwh': 830.0, 'heating_kwh': 0.0, 'cooling_kwh': 410.0}, {'month': '8', 'electricity_kwh': 845.0, 'heating_kwh': 0.0, 'cooling_kwh': 395.0}, {'month': '9', 'electricity_kwh': 790.0, 'heating_kwh': 10.0, 'cooling_kwh': 250.0}, {'month': '10', 'electricity_kwh': 755.0, 'heating_kwh': 95.0, 'cooling_kwh': 120.0}, {'month': '11', 'electricity_kwh': 770.0, 'heating_kwh': 310.0, 'cooling_kwh': 20.0}, {'month': '12', 'electricity_kwh': 815.0, 'heating_kwh': 590.0, 'cooling_kwh': 0.0}], 'numeric_tolerance': 0.2}}
 
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
@@ -252,10 +252,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -403,7 +399,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

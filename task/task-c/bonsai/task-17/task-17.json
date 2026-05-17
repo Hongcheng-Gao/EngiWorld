@@ -1,57 +1,57 @@
 {
-  "id": "c-bonsai-task-17-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Reconnect Supply Air System And Export Connectivity CSV This task starts from /home/user/Desktop/init.ifc and may use /home/user/Desktop/init_plan.png as a local reference image. Modify the provided MEP model and save the required outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. 1. The output folder contains /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv; /home/user/Desktop/result.ifc is at least 500 bytes and /home/user/Desktop/result.csv is not empty. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 3 IfcDuctSegment entities, 2 IfcDuctFitting entities, 2 IfcAirTerminal entities, 1 IfcDistributionSystem, 1 IfcRelAssignsToGroup relationship, 13 IfcDistributionPort entities, and 12 IfcRelConnectsPorts relationships. 4. The IFC model contains 0 IfcSpace, 0 IfcWall, 0 IfcSlab, 0 IfcDoor, 0 IfcWindow, 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, and 0 IfcStair entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Ground Floor, ignoring leading and trailing whitespace only. 7. The single IfcDistributionSystem is named exactly Supply Air, ignoring leading and trailing whitespace only, and its single IfcRelAssignsToGroup relationship assigns exactly these 7 products: Bend Fitting, Branch Segment, Main Segment 1, Main Segment 2, Terminal East, Terminal North, and Transition Fitting. 8. Main Segment 1, Main Segment 2, and Branch Segment are IfcDuctSegment entities; Bend Fitting and Transition Fitting are IfcDuctFitting entities; Terminal East and Terminal North are IfcAirTerminal entities. 9. All listed products are spatially assigned to Ground Floor. 10. /home/user/Desktop/result.csv has exactly these headers in this order: GlobalId, Class, Name, SystemName, PortCount, ConnectedToCount. 11. /home/user/Desktop/result.csv has exactly 7 data rows, one row for each assigned product by matching GlobalId. 12. The CSV row for Bend Fitting has Class IfcDuctFitting, Name Bend Fitting, SystemName Supply Air, PortCount 2, and ConnectedToCount 4. 13. The CSV row for Branch Segment has Class IfcDuctSegment, Name Branch Segment, SystemName Supply Air, PortCount 2, and ConnectedToCount 4. 14. The CSV row for Main Segment 1 has Class IfcDuctSegment, Name Main Segment 1, SystemName Supply Air, PortCount 2, and ConnectedToCount 2. 15. The CSV row for Main Segment 2 has Class IfcDuctSegment, Name Main Segment 2, SystemName Supply Air, PortCount 2, and ConnectedToCount 4. 16. The CSV rows for Terminal East and Terminal North each have Class IfcAirTerminal, SystemName Supply Air, PortCount 1, and ConnectedToCount 2. 17. The CSV row for Transition Fitting has Class IfcDuctFitting, Name Transition Fitting, SystemName Supply Air, PortCount 3, and ConnectedToCount 6. Any item not explicitly required may vary.",
-  "source": "https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/system/connect_port/index.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-17/init_file/init.ifc",
-            "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-17/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
-          }
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-17/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-17-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "Reconnected Supply Air System\n\nUse the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc by reconnecting the supply air system and exporting a connectivity summary. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC4 model must contain one project, one site, one building, and one storey named Ground Floor; three IfcDuctSegment entities; two IfcDuctFitting entities; two IfcAirTerminal entities; one IfcDistributionSystem; one IfcRelAssignsToGroup; thirteen IfcDistributionPort entities; and twelve IfcRelConnectsPorts relationships. Do not include spaces, walls, slabs, doors, windows, proxies, furniture, roofs, columns, beams, or stairs, and keep every IfcRoot GlobalId unique.\n\nName the distribution system Supply Air and assign exactly these products to it: Bend Fitting, Branch Segment, Main Segment 1, Main Segment 2, Terminal East, Terminal North, and Transition Fitting. Main Segment 1, Main Segment 2, and Branch Segment must be IfcDuctSegment entities; Bend Fitting and Transition Fitting must be IfcDuctFitting entities; Terminal East and Terminal North must be IfcAirTerminal entities. Assign all listed products to Ground Floor.\n\nThe CSV must use the exact headers GlobalId, Class, Name, SystemName, PortCount, ConnectedToCount and contain one row for each assigned product, matched by GlobalId. Report Bend Fitting as IfcDuctFitting with PortCount 2 and ConnectedToCount 4; Branch Segment as IfcDuctSegment with 2 and 4; Main Segment 1 as IfcDuctSegment with 2 and 2; Main Segment 2 as IfcDuctSegment with 2 and 4; Terminal East and Terminal North as IfcAirTerminal with 1 and 2 each; and Transition Fitting as IfcDuctFitting with 3 and 6. Every row must use SystemName Supply Air. Other representation details may vary.",
+    "source": "https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/system/connect_port/index.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-17/init_file/init.ifc",
+                        "path": "/home/user/Desktop/init.ifc"
+                    },
+                    {
+                        "local_path": "task-17/init_image/init_plan.png",
+                        "path": "/home/user/Desktop/init_plan.png"
+                    }
+                ]
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-17/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

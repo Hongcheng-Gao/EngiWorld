@@ -1,70 +1,70 @@
 {
-  "id": "v-archicad-task-11-windows",
-  "snapshot": "ArchiCAD-27",
-  "instruction": "Hotel Room Book Issue Set This task starts from init.ifc. Reference images are provided on the Desktop: init_plan.png, init_section.png. Modify the Archicad model as needed and save the required outputs as result.txt, result.ifc, result.pdf. Export result.txt as a tab-delimited room book schedule text file from the Archicad schedule/list workflow. 1. The output folder contains result.ifc with size at least 500 bytes, result.pdf with size at least 500 bytes, and result.txt with size at least 20 bytes. 2. Result.ifc uses an IFC4 schema. 3. All IfcRoot GlobalId values are unique. 4. The IFC model contains exactly 2 IfcBuildingStorey entities and exactly 10 IfcSpace entities. 5. The IFC model contains at least 8 IfcWall entities, at least 2 IfcSlab entities, and at least 1 IfcRoof entity. 6. The IFC model contains spaces with exactly these normalized names: LOBBY, BACK-OFFICE, GUEST-1, GUEST-2, GUEST-3, GUEST-4, GUEST-5, GUEST-6, GUEST-7, GUEST-8. 7. LOBBY, BACK-OFFICE, GUEST-1, GUEST-2, GUEST-3, GUEST-4 are assigned to one storey; and GUEST-5, GUEST-6, GUEST-7, GUEST-8 are assigned to a second storey. 8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [20.0, 4.0, 6.6]. 9. Result.txt is tab-delimited and has exactly these headers in this order: ZoneNumber, ZoneName, Area. 10. Result.txt has exactly 10 data rows in this order: Z01 LOBBY 20.0, Z02 BACK-OFFICE 20.0, Z03 GUEST-1 20.0, Z04 GUEST-2 20.0, Z05 GUEST-3 20.0, Z06 GUEST-4 20.0, Z07 GUEST-5 20.0, Z08 GUEST-6 20.0, Z09 GUEST-7 20.0, Z10 GUEST-8 20.0, with numeric values matching within tolerance +/-0.10. 11. Result.pdf has exactly 3 pages and extracted text contains at least these case-insensitive tokens: A101, A201, HOTEL ROOM BOOK, LOBBY, BACK-OFFICE, GUEST-1, GUEST-8. Any item not explicitly required may vary.",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-11/init_file/init.ifc",
-            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-11/init_image/init_plan.png",
-            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
-          },
-          {
-            "local_path": "task-11/init_image/init_section.png",
-            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
-          }
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
-          "C:\\Users\\Administrator\\Desktop\\init.ifc"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "archicad"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-11/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+    "id": "v-archicad-task-11-windows",
+    "snapshot": "ArchiCAD-27",
+    "instruction": "Hotel Room Book Issue Set\n\nStart from the provided init.ifc in Archicad and use init_plan.png and init_section.png only as references for the intended cleanup. The init model is a relevant but unfinished predecessor: it contains 2 storeys, spaces currently named APT-1, APT-2, APT-3, APT-4, APT-5, APT-6, APT-7, and APT-8. Clean, complete, or reclassify it as needed rather than replacing it with unrelated geometry. Build or edit the model using Archicad BIM elements, not visual-only placeholder geometry. Save the completed deliverables in the output folder as result.ifc, result.pdf, and result.txt.\n\nCreate a two-storey BIM model for the named project. Keep the shaped model within 0.5 m of horizontal extents about X 0 to 20 and Y 0 to 4, with vertical extents about Z 0 to 6.6. Export result.ifc as an IFC4 model with unique GlobalId values for IFC root objects. It must contain exactly 2 building storeys and exactly 10 IfcSpace zones named LOBBY, BACK-OFFICE, GUEST-1, GUEST-2, GUEST-3, GUEST-4, GUEST-5, GUEST-6, GUEST-7, and GUEST-8. Assign LOBBY, BACK-OFFICE, GUEST-1, GUEST-2, GUEST-3, and GUEST-4 on the lower storey; and GUEST-5, GUEST-6, GUEST-7, and GUEST-8 on the upper storey.\n\nModel the required construction as real BIM element classes, including at least 8 wall-like IfcWall or IfcWallStandardCase elements, at least 2 IfcSlab elements, and at least 1 IfcRoof element. If an equivalent exporter writes IfcWallStandardCase for walls, that is acceptable. Do not count IfcBuildingElementProxy or other generic proxy objects as satisfying required walls, slabs, roofs, stairs, doors, windows, or spaces.\n\nExport result.txt from the Archicad schedule/list workflow as a tab-delimited schedule text file. The header row must be ZoneNumber, ZoneName, Area in that order. Include these rows in order: (ZoneNumber=Z01, ZoneName=LOBBY, Area=20); (ZoneNumber=Z02, ZoneName=BACK-OFFICE, Area=20); (ZoneNumber=Z03, ZoneName=GUEST-1, Area=20); (ZoneNumber=Z04, ZoneName=GUEST-2, Area=20); (ZoneNumber=Z05, ZoneName=GUEST-3, Area=20); (ZoneNumber=Z06, ZoneName=GUEST-4, Area=20); (ZoneNumber=Z07, ZoneName=GUEST-5, Area=20); (ZoneNumber=Z08, ZoneName=GUEST-6, Area=20); (ZoneNumber=Z09, ZoneName=GUEST-7, Area=20); (ZoneNumber=Z10, ZoneName=GUEST-8, Area=20).\n\nPublish result.pdf as a 3-page drawing set. The visible sheet text must include A101, A201, HOTEL ROOM BOOK, LOBBY, BACK-OFFICE, GUEST-1, and GUEST-8 so the title, drawing type, and key rooms or zones are identifiable.\n\nOther materials, colors, object names, property sets, layer names, relationship nesting, and IFC representation details may vary as long as the required BIM elements, spatial relationships, geometry ranges, schedules, and sheet text are present.",
+    "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-11/init_file/init.ifc",
+                        "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+                    },
+                    {
+                        "local_path": "task-11/init_image/init_plan.png",
+                        "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+                    },
+                    {
+                        "local_path": "task-11/init_image/init_section.png",
+                        "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+                    }
+                ]
             }
-          ]
+        },
+        {
+            "type": "launch",
+            "parameters": {
+                "command": [
+                    "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+                    "C:\\Users\\Administrator\\Desktop\\init.ifc"
+                ]
+            }
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "archicad"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-11/eval.py",
+                            "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }
