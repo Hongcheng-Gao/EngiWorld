@@ -1,50 +1,50 @@
 {
-    "id":  "v-sketchup-task-19-windows",
-    "snapshot":  "SketchUp2026",
-    "instruction":  "Mansard Roof over Rectangular Building\n\nUsing SketchUp, model a classic mansard roof over a rectangular 10 m x 6 m building and export it as COLLADA DAE. No initial file.\n\nSpecification (all dimensions in metres; long axis = X, short axis = Y):\n- **Footprint**: 10 x 6 m. Place the building so it occupies X in [0, 10], Y in [0, 6]. Wall height = 3 m (ground Z = 0, eave Z = 3).\n- **Mansard roof** consists of three tiers sitting on top of the eave line at Z = 3.0:\n- **Lower (steep) slope**: 4 trapezoidal roof planes, one per side of the footprint, each at **70 degrees from horizontal** (steep). Each lower plane rises 1.5 m vertically (so its transition edge is at Z = 4.5 m). The horizontal inset from eave to transition = 1.5 / tan(70 deg) approx 0.5459 m on every side.\n- **Transition rectangle** at Z = 4.5 m: X in [0.5459, 9.4541], Y in [0.5459, 5.4541], i.e. 8.908 x 4.908 m.\n- **Upper (shallow) slope**: 4 trapezoidal roof planes, one per side, each at **10 degrees from horizontal** (shallow). They rise from the transition rectangle up to the flat top edge.\n- **Flat top rectangle**: centered at (5, 3), dimensions **5.0 x 1.0 m**, i.e. X in [2.5, 7.5], Y in [2.5, 3.5]. With the 10 deg upper slope this yields a flat-top Z of 4.5 + (2.454 - 0.5) * tan(10 deg) approx 4.8446 m, so total roof height approx 1.845 m.\n- Model the three roof tiers only (no walls are required). The lower eave rectangle, transition rectangle, and flat top rectangle all lie strictly above Z = 3 - no geometry is required below the eave.\n\nNote: the 70 deg and 10 deg slopes are measured from the horizontal plane (0 deg = flat, 90 deg = vertical).\n\nExport as `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Mesh bounding box XY extents equal 10.0 x 6.0 m within 20 mm; Z min = 3.0 m (eave) and Z max approx 4.8446 m (flat top) within 20 mm, so total roof height approx 1.845 m.\n3. **Exactly 9 distinct planar roof surfaces** are detected by normal+offset clustering: 4 steep lower planes, 4 shallow upper planes, and 1 flat top cap.\n4. **Two distinct slope-angle clusters** appear in the planes: a steep group at 70 deg +/- 1 deg (4 planes) and a shallow group at 10 deg +/- 1 deg (4 planes); the remaining plane is the flat top.\n5. **Flat top cap**: exactly one plane has its normal equal to (0, 0, +1) (within 0.01), with horizontal extents 5.0 x 1.0 m centered at (5, 3) within 20 mm and Z approx 4.8446 m within 20 mm.\n6. For every lower and upper roof plane the outward normal has a positive Z component (all roof planes face upward) and its horizontal projection points away from the building centerline (4 planes facing +/- X, 4 planes facing +/- Y).",
-    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://www.khronos.org/collada/",
-    "config":  [
-                   {
-                       "type":  "launch",
-                       "parameters":  {
-                                          "command":  [
-                                                          "C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe"
-                                                      ]
-                                      }
-                   }
-               ],
-    "trajectory":  "trajectories/",
-    "related_apps":  [
-                         "sketchup"
-                     ],
-    "evaluator":  {
-                      "postconfig":  [
-                                         {
-                                             "type":  "upload_file",
-                                             "parameters":  {
-                                                                "files":  [
-                                                                              {
-                                                                                  "local_path":  "task-19/eval.py",
-                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
-                                                                              }
-                                                                          ]
-                                                            }
-                                         }
-                                     ],
-                      "func":  "exact_match",
-                      "result":  {
-                                     "type":  "vm_command_line",
-                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
-                                     "shell":  "true"
-                                 },
-                      "expected":  {
-                                       "type":  "rule",
-                                       "rules":  {
-                                                     "expected":  "True\n"
-                                                 }
-                                   }
-                  },
-    "proxy":  false,
-    "fixed_ip":  false,
-    "possibility_of_env_change":  "low"
+  "id": "v-sketchup-task-19-windows",
+  "snapshot": "SketchUp2026",
+  "instruction": "Mansard Roof over Rectangular Building\n\nUsing SketchUp, model a classic mansard roof over a rectangular 10 m x 6 m building and export it as COLLADA DAE. No initial file.\n\nSpecification (all dimensions in metres; long axis = X, short axis = Y):\n- **Footprint**: 10 x 6 m. Place the building so it occupies X in [0, 10], Y in [0, 6]. Wall height = 3 m (ground Z = 0, eave Z = 3).\n- **Mansard roof** consists of three tiers sitting on top of the eave line at Z = 3.0:\n- **Lower (steep) slope**: 4 trapezoidal roof planes, one per side of the footprint, each at **70 degrees from horizontal** (steep). Each lower plane rises 1.5 m vertically (so its transition edge is at Z = 4.5 m). The horizontal inset from eave to transition = 1.5 / tan(70 deg) approx 0.5459 m on every side.\n- **Transition rectangle** at Z = 4.5 m: X in [0.5459, 9.4541], Y in [0.5459, 5.4541], i.e. 8.908 x 4.908 m.\n- **Upper (shallow) slope**: 4 trapezoidal roof planes, one per side, each at **10 degrees from horizontal** (shallow). They rise from the transition rectangle up to the flat top edge.\n- **Flat top rectangle**: centered at (5, 3), dimensions **5.0 x 1.0 m**, i.e. X in [2.5, 7.5], Y in [2.5, 3.5]. With the 10 deg upper slope this yields a flat-top Z of 4.5 + (2.454 - 0.5) * tan(10 deg) approx 4.8446 m, so total roof height approx 1.845 m.\n- Model the three roof tiers only (no walls are required). The lower eave rectangle, transition rectangle, and flat top rectangle all lie strictly above Z = 3 - no geometry is required below the eave.\n\nNote: the 70 deg and 10 deg slopes are measured from the horizontal plane (0 deg = flat, 90 deg = vertical).\n\nExport as `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Mesh bounding box XY extents equal 10.0 x 6.0 m within 20 mm; Z min = 3.0 m (eave) and Z max approx 4.8446 m (flat top) within 20 mm, so total roof height approx 1.845 m.\n3. **Exactly 9 distinct planar roof surfaces** are detected by normal+offset clustering: 4 steep lower planes, 4 shallow upper planes, and 1 flat top cap.\n4. **Two distinct slope-angle clusters** appear in the planes: a steep group at 70 deg +/- 1 deg (4 planes) and a shallow group at 10 deg +/- 1 deg (4 planes); the remaining plane is the flat top.\n5. **Flat top cap**: exactly one plane has its normal equal to (0, 0, +1) (within 0.01), with horizontal extents 5.0 x 1.0 m centered at (5, 3) within 20 mm and Z approx 4.8446 m within 20 mm.\n6. For every lower and upper roof plane the outward normal has a positive Z component (all roof planes face upward) and its horizontal projection points away from the building centerline (4 planes facing +/- X, 4 planes facing +/- Y).",
+  "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://www.khronos.org/collada/",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "sketchup"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }
