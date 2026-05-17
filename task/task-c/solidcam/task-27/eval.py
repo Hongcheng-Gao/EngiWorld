@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-SPEC = {'files': {'variant_01.nc': {'tools': [1], 'z': [7.5], 'kind': 'nc'}, 'variant_02.nc': {'tools': [1], 'z': [7.0], 'kind': 'nc'}, 'variant_03.nc': {'tools': [1], 'z': [6.5], 'kind': 'nc'}, 'variant_04.nc': {'tools': [1], 'z': [6.0], 'kind': 'nc'}, 'variant_05.nc': {'tools': [1], 'z': [5.5], 'kind': 'nc'}}}
+SPEC = {'files': {'variant_01.nc': {'tools': [1], 'z': [7.5], 'program': 2701, 'bbox': [-17, 17, -8, 8], 'tool_diameter': 7, 'kind': 'nc'}, 'variant_02.nc': {'tools': [1], 'z': [7.0], 'program': 2702, 'bbox': [-19, 19, -9, 9], 'tool_diameter': 8, 'kind': 'nc'}, 'variant_03.nc': {'tools': [1], 'z': [6.5], 'program': 2703, 'bbox': [-21, 21, -10, 10], 'tool_diameter': 9, 'kind': 'nc'}, 'variant_04.nc': {'tools': [1], 'z': [6.0], 'program': 2704, 'bbox': [-23, 23, -11, 11], 'tool_diameter': 10, 'kind': 'nc'}, 'variant_05.nc': {'tools': [1], 'z': [5.5], 'program': 2705, 'bbox': [-25, 25, -12, 12], 'tool_diameter': 11, 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 TOL = 0.5
 
@@ -86,6 +86,15 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
         if not has_num(zvalues, z):
             return False
     xy = pairs(src)
+    bbox = rule.get("bbox")
+    if bbox:
+        xs = [x for x, _ in xy]
+        ys = [y for _, y in xy]
+        if not xs or not ys:
+            return False
+        xmin, xmax, ymin, ymax = map(float, bbox)
+        if min(xs) > xmin + TOL or max(xs) < xmax - TOL or min(ys) > ymin + TOL or max(ys) < ymax - TOL:
+            return False
     for point in rule.get("points", []):
         if not has_pair(xy, point):
             return False
@@ -109,6 +118,8 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
     if rule.get("min_motion") and len(re.findall(r"\bG0?[123]\b", src)) < int(rule["min_motion"]):
         return False
     if rule.get("program") and str(int(rule["program"])) not in src:
+        return False
+    if rule.get("tool_diameter") and re.search(rf"TOOL\s*DIAMETER\s*{float(rule['tool_diameter']):g}\b", src) is None:
         return False
     if rule.get("sequence"):
         ns = [int(m.group(1)) for m in re.finditer(r"\bN(\d+)\b", src)]

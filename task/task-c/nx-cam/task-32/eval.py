@@ -4,7 +4,7 @@ import os
 import re
 from pathlib import Path
 
-SPEC = {'required': ['task-32.nc'], 'tools': [1, 2, 3, 4]}
+SPEC = {'required': ['task-32.nc'], 'tools': [1, 2, 3, 4], 'spindles': [7500, 7200, 5000, 6800], 'feeds': [550, 520, 180, 450], 'terms': ['circular pocket', 'rectangular pocket', 'drill', 'outer contour']}
 TARGET = Path(os.environ.get("NX_CAM_TARGET", r"C:\Users\User\Desktop"))
 TOL = 0.35
 
@@ -67,6 +67,9 @@ def check_nc(path: Path, rel: str) -> bool:
             return False
     for wcs in SPEC.get("wcs", []):
         if str(wcs).upper() not in text:
+            return False
+    for term in SPEC.get("terms", []):
+        if str(term).upper() not in text:
             return False
 
     moves = motions(text)
