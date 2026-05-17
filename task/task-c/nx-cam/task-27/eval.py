@@ -126,6 +126,8 @@ def check_nc(path: Path, rel: str) -> bool:
                 return False
             if re.search(rf"\bO\s*{int(variant['program'])}\b", text) is None:
                 return False
+            if re.search(rf"TOOL\s*DIAMETER\s*{float(variant['tool_diameter']):g}\b", text) is None:
+                return False
             pocket = variant.get("pocket")
             if pocket and not bbox_present(moves, [-float(pocket[0]) / 2, float(pocket[0]) / 2, -float(pocket[1]) / 2, float(pocket[1]) / 2]):
                 return False

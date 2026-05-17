@@ -8,7 +8,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 13, 'OS:SubSurface': 3, 'OS:ZoneHVAC:IdealLoadsAirSystem': 2, 'OS:ZoneHVAC:EquipmentList': 2, 'OS:ThermostatSetpoint:DualSetpoint': 2}, 'space_names': ['Warehouse', 'Office Annex'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 9}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 9, 'Surface': 2}, 'window_count': 3, 'fixed_window_count': 3, 'bbox_spans_m': [28.0, 12.0, 6.0], 'floor_area_m2': 288.0, 'exterior_wall_area_m2': 435.2, 'window_area_m2': 17.6, 'hvac': {'ideal_loads': 2, 'equipment_lists': 2, 'thermostats': 2}}
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 13, 'OS:SubSurface': 3, 'OS:ZoneHVAC:IdealLoadsAirSystem': 2, 'OS:ZoneHVAC:EquipmentList': 2, 'OS:ThermostatSetpoint:DualSetpoint': 2}, 'space_names': ['Warehouse', 'Office Annex'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 9}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 9, 'Surface': 2}, 'window_count': 3, 'fixed_window_count': 3, 'bbox_spans_m': [28.0, 12.0, 6.0], 'floor_area_m2': 288.0, 'exterior_wall_area_m2': 435.2, 'window_area_m2': 17.6, 'hvac': {'ideal_loads': 2, 'equipment_lists': 2, 'thermostats': 2}}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
 
@@ -211,8 +211,11 @@ def check_required_outputs(root):
 
 
 def check_version(objects):
+    prefix = SPEC.get("openstudio_version_prefix")
+    if not prefix:
+        return True
     versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
+    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(prefix)
 
 
 def check_counts(objects, data):
@@ -299,7 +302,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

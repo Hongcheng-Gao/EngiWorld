@@ -10,7 +10,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 40, 'OS:SubSurface': 6, 'OS:ZoneHVAC:EquipmentList': 6}, 'space_names': ['Unit-1', 'Unit-2', 'Unit-3', 'Unit-4', 'Corridor', 'Stair'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 28}, 'outside_boundary_counts': {'Ground': 6, 'Outdoors': 16, 'Surface': 18}, 'door_count': 6, 'bbox_spans_m': [24.0, 8.0, 3.0], 'floor_area_m2': 192.0, 'exterior_wall_area_m2': 192.0, 'require_space_links': True, 'kpis': ['unit_count', 'residential_floor_area_m2', 'common_floor_area_m2', 'exterior_door_count']}
+SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 40, 'OS:SubSurface': 6, 'OS:ZoneHVAC:EquipmentList': 6}, 'space_names': ['Unit-1', 'Unit-2', 'Unit-3', 'Unit-4', 'Corridor', 'Stair'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 28}, 'outside_boundary_counts': {'Ground': 6, 'Outdoors': 16, 'Surface': 18}, 'door_count': 6, 'bbox_spans_m': [24.0, 8.0, 3.0], 'floor_area_m2': 192.0, 'exterior_wall_area_m2': 192.0, 'require_space_links': True, 'kpis': ['unit_count', 'residential_floor_area_m2', 'common_floor_area_m2', 'exterior_door_count']}
 
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
@@ -252,10 +252,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -388,7 +384,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

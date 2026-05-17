@@ -1,48 +1,48 @@
 {
-  "id": "c-bonsai-task-02-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Small Clinic IFC Shell This task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 clinic shell and save the required output as /home/user/Desktop/result.ifc. 1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 3 IfcSpace entities, 6 IfcWall entities, 1 IfcSlab, 3 IfcDoor entities, 3 IfcWindow entities, 6 IfcOpeningElement entities, 6 IfcRelVoidsElement relationships, and 6 IfcRelFillsElement relationships. 4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Clinic Level, ignoring leading and trailing whitespace only, and has Elevation 0.00 m with tolerance +/-0.05 m. 7. The IfcSpace names are exactly Consult 1, Consult 2, and Corridor, ignoring leading and trailing whitespace only. 8. The Consult 1 and Consult 2 space geometries each have clear plan dimensions 3.20 m by 3.20 m, in either X/Y orientation, with tolerance +/-0.08 m; the Corridor space geometry has clear plan dimensions 6.40 m by 1.80 m, in either X/Y orientation, with tolerance +/-0.08 m. 9. Each IfcSpace has geometry height 2.80 m with tolerance +/-0.05 m. 10. The slab is named exactly Clinic Slab, ignoring leading and trailing whitespace only, and has plan dimensions 6.80 m by 5.40 m in either X/Y orientation and thickness 0.20 m, each with tolerance +/-0.08 m for plan dimensions and +/-0.05 m for thickness. 11. The 3 doors each have OverallWidth 0.90 m with tolerance +/-0.08 m, and each door fills exactly one IfcOpeningElement that voids an IfcWall. 12. The 3 windows each have OverallWidth 1.20 m with tolerance +/-0.08 m, and each window fills exactly one IfcOpeningElement that voids an IfcWall. 13. Each wall has height 3.00 m with tolerance +/-0.05 m and plan thickness either 0.15 m or 0.20 m with tolerance +/-0.04 m. 14. All spaces, walls, the slab, doors, and windows are spatially assigned to Clinic Level. Any item not explicitly required may vary.",
-  "source": "https://docs.bonsaibim.org/tutorials/project1.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-02/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-02-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "One-Storey Clinic Shell\n\nUse the opened Bonsai IFC authoring environment to create a new metric IFC4 clinic shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The hierarchy must contain one project, one site, one building, and one storey named Clinic Level with elevation 0.00 m. Use real BIM entities for three IfcSpace elements, six IfcWall elements, one IfcSlab, three IfcDoor elements, three IfcWindow elements, six wall openings, six matching void relationships, and six matching fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named Consult 1, Consult 2, and Corridor, all assigned to Clinic Level and 2.80 m high. Consult 1 and Consult 2 each require clear plan dimensions of 3.20 m by 3.20 m, while Corridor requires 6.40 m by 1.80 m. Name the slab Clinic Slab, make it 6.80 m by 5.40 m by 0.20 m, and assign it to Clinic Level. Each wall must be 3.00 m high with a plan thickness of either 0.15 m or 0.20 m. Each door must have OverallWidth 0.90 m and fill one wall opening, and each window must have OverallWidth 1.20 m and fill one wall opening. Other representation details may vary.",
+    "source": "https://docs.bonsaibim.org/tutorials/project1.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": []
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-02/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

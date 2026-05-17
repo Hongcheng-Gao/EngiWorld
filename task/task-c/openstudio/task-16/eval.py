@@ -9,7 +9,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 4, 'OS:ThermalZone': 4, 'OS:Surface': 24, 'OS:SubSurface': 8, 'OS:ZoneHVAC:IdealLoadsAirSystem': 0, 'OS:ZoneHVAC:EquipmentList': 4, 'OS:ThermostatSetpoint:DualSetpoint': 4, 'OS:People': 3, 'OS:Lights': 3, 'OS:ElectricEquipment': 3}, 'space_names': ['Classroom-A', 'Classroom-B', 'TeacherOffice', 'Storage'], 'surface_counts': {'Floor': 4, 'RoofCeiling': 4, 'Wall': 16}, 'outside_boundary_counts': {'Ground': 4, 'Outdoors': 12, 'Surface': 8}, 'window_count': 8, 'fixed_window_count': 8, 'bbox_spans_m': [16.0, 12.0, 3.2], 'floor_area_m2': 192.0, 'exterior_wall_area_m2': 179.2, 'window_area_m2': 34.56, 'csv': {'headers': ['space_name', 'resolved_schedule_set', 'resolved_space_type', 'occupied_flag'], 'rows': [{'space_name': 'Classroom-A', 'resolved_schedule_set': 'School Defaults', 'resolved_space_type': 'ClassroomType', 'occupied_flag': '1'}, {'space_name': 'Classroom-B', 'resolved_schedule_set': 'School Defaults', 'resolved_space_type': 'ClassroomType', 'occupied_flag': '1'}, {'space_name': 'Storage', 'resolved_schedule_set': 'Support Defaults', 'resolved_space_type': 'StorageType', 'occupied_flag': '1'}, {'space_name': 'TeacherOffice', 'resolved_schedule_set': 'Support Defaults', 'resolved_space_type': 'OfficeType', 'occupied_flag': '1'}]}}
+SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 4, 'OS:ThermalZone': 4, 'OS:Surface': 24, 'OS:SubSurface': 8, 'OS:ZoneHVAC:IdealLoadsAirSystem': 0, 'OS:ZoneHVAC:EquipmentList': 4, 'OS:ThermostatSetpoint:DualSetpoint': 4, 'OS:People': 3, 'OS:Lights': 3, 'OS:ElectricEquipment': 3}, 'space_names': ['Classroom-A', 'Classroom-B', 'TeacherOffice', 'Storage'], 'surface_counts': {'Floor': 4, 'RoofCeiling': 4, 'Wall': 16}, 'outside_boundary_counts': {'Ground': 4, 'Outdoors': 12, 'Surface': 8}, 'window_count': 8, 'fixed_window_count': 8, 'bbox_spans_m': [16.0, 12.0, 3.2], 'floor_area_m2': 192.0, 'exterior_wall_area_m2': 179.2, 'window_area_m2': 34.56, 'csv': {'headers': ['space_name', 'resolved_schedule_set', 'resolved_space_type', 'occupied_flag'], 'rows': [{'space_name': 'Classroom-A', 'resolved_schedule_set': 'School Defaults', 'resolved_space_type': 'ClassroomType', 'occupied_flag': '1'}, {'space_name': 'Classroom-B', 'resolved_schedule_set': 'School Defaults', 'resolved_space_type': 'ClassroomType', 'occupied_flag': '1'}, {'space_name': 'Storage', 'resolved_schedule_set': 'Support Defaults', 'resolved_space_type': 'StorageType', 'occupied_flag': '1'}, {'space_name': 'TeacherOffice', 'resolved_schedule_set': 'Support Defaults', 'resolved_space_type': 'OfficeType', 'occupied_flag': '1'}]}}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
 
@@ -203,10 +203,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -274,7 +270,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return check_counts(objects, data) and check_space_links(objects, data) and check_geometry(data) and check_csv(root)

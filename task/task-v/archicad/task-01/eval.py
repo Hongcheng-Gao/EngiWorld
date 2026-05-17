@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 import csv
 import re
+import sys
 try:
     import fitz
 except ImportError:
@@ -20,7 +21,7 @@ import ifcopenshell
 DESKTOP = Path("C:/Users/Administrator/Desktop")
 
 
-SPEC = {'title': 'Gallery Pavilion Drawing Set', 'starts_from_init': False, 'required_outputs': {'result.ifc': 500, 'result.pdf': 500}, 'schema': 'IFC4', 'storey_count': 1, 'space_names': ['FOYER', 'GALLERY', 'BACK-OF-HOUSE', 'STORE', 'WC'], 'min_counts': {'IfcWall': 20, 'IfcSlab': 1, 'IfcRoof': 1}, 'bbox_exact': {'min': [0.0, 0.0, 0.0], 'max': [12.0, 8.0, 3.6]}, 'bbox_tolerance': 0.5, 'pdf_page_count': 2, 'pdf_tokens': ['A101', 'A201', 'FLOOR PLAN', 'SECTION', 'GALLERY PAVILION', 'FOYER', 'GALLERY', 'STORE']}
+SPEC = {'title': 'Gallery Pavilion Drawing Set', 'starts_from_init': False, 'required_outputs': {'result.ifc': 500, 'result.pdf': 500}, 'schema': 'IFC4', 'storey_count': 1, 'space_names': ['FOYER', 'GALLERY', 'BACK-OF-HOUSE', 'STORE', 'WC'], 'min_wall_count': 8, 'slab_count': 1, 'roof_count': 1, 'bbox_exact': {'min': [0.0, 0.0, 0.0], 'max': [12.0, 8.0, 3.6]}, 'bbox_tolerance': 0.1, 'wall_thickness_range': [0.1, 0.2], 'wall_height_range': [3.0, 3.3], 'slab_bbox': {'min': [0.0, 0.0, 0.0], 'max': [12.0, 8.0, 0.25]}, 'slab_bbox_tolerance': 0.1, 'roof_bbox': {'min': [0.0, 0.0, 3.4], 'max': [12.0, 8.0, 3.6]}, 'roof_bbox_tolerance': 0.1, 'space_boxes': {'FOYER': {'min': [0.0, 0.0, 0.0], 'max': [4.0, 3.0, 3.0], 'area': 12.0}, 'GALLERY': {'min': [4.0, 0.0, 0.0], 'max': [12.0, 6.0, 3.0], 'area': 48.0}, 'BACK-OF-HOUSE': {'min': [0.0, 3.0, 0.0], 'max': [4.0, 6.0, 3.0], 'area': 12.0}, 'STORE': {'min': [0.0, 6.0, 0.0], 'max': [3.0, 8.0, 3.0], 'area': 6.0}, 'WC': {'min': [3.0, 6.0, 0.0], 'max': [5.0, 8.0, 3.0], 'area': 4.0}}, 'space_box_tolerance': 0.1, 'space_area_tolerance': 0.1, 'pdf_page_count': 2, 'pdf_tokens': ['A101', 'A201', 'FLOOR PLAN', 'SECTION', 'GALLERY PAVILION', 'FOYER', 'GALLERY', 'STORE']}
 
 
 def finish(ok):
@@ -79,6 +80,58 @@ def ifc_bbox(model):
     return mins.tolist(), maxs.tolist()
 
 
+def product_bbox(product):
+    import numpy as np
+    import ifcopenshell.geom
+
+    settings = ifcopenshell.geom.settings()
+    try:
+        settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception:
+        pass
+    shape = ifcopenshell.geom.create_shape(settings, product)
+    verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
+    if verts.size == 0:
+        return None
+    return verts.min(axis=0).tolist(), verts.max(axis=0).tolist()
+
+
+def combined_bbox(products):
+    import numpy as np
+
+    mins = None
+    maxs = None
+    for product in products:
+        bbox = product_bbox(product)
+        if bbox is None:
+            continue
+        pmin, pmax = bbox
+        pmin = np.array(pmin, dtype=float)
+        pmax = np.array(pmax, dtype=float)
+        mins = pmin if mins is None else np.minimum(mins, pmin)
+        maxs = pmax if maxs is None else np.maximum(maxs, pmax)
+    if mins is None or maxs is None:
+        return None
+    return mins.tolist(), maxs.tolist()
+
+
+def bbox_matches(actual_bbox, expected_bbox, tolerance):
+    if actual_bbox is None:
+        return False
+    mins, maxs = actual_bbox
+    for actual, target in zip(mins, expected_bbox["min"]):
+        if abs(float(actual) - float(target)) > tolerance:
+            return False
+    for actual, target in zip(maxs, expected_bbox["max"]):
+        if abs(float(actual) - float(target)) > tolerance:
+            return False
+    return True
+
+
+def is_wall_like(entity):
+    return entity.is_a("IfcWall") or entity.is_a("IfcWallStandardCase")
+
+
 def parse_csv(path):
     with path.open("r", encoding="utf-8-sig", newline="") as f:
         return list(csv.reader(f))
@@ -124,14 +177,55 @@ def check_ifc(model):
     expected_names = {norm(name) for name in SPEC["space_names"]}
     if len(spaces) != len(expected_names):
         return False
-    for cls, minimum in SPEC.get("min_counts", {}).items():
-        if len(model.by_type(cls)) < minimum:
-            return False
+    walls = [e for e in model.by_type("IfcProduct") if is_wall_like(e)]
+    if len(walls) < SPEC["min_wall_count"]:
+        return False
+    slabs = model.by_type("IfcSlab")
+    roofs = model.by_type("IfcRoof")
+    if len(slabs) < SPEC["slab_count"] or len(roofs) < SPEC["roof_count"]:
+        return False
+    valid_wall_count = 0
+    for wall in walls:
+        bbox = product_bbox(wall)
+        if bbox is None:
+            continue
+        mins, maxs = bbox
+        dx = abs(float(maxs[0]) - float(mins[0]))
+        dy = abs(float(maxs[1]) - float(mins[1]))
+        dz = abs(float(maxs[2]) - float(mins[2]))
+        thickness = min(dx, dy)
+        if SPEC["wall_thickness_range"][0] <= thickness <= SPEC["wall_thickness_range"][1] and SPEC["wall_height_range"][0] <= dz <= SPEC["wall_height_range"][1]:
+            valid_wall_count += 1
+    if valid_wall_count < SPEC["min_wall_count"]:
+        return False
+    if not bbox_matches(combined_bbox(slabs), SPEC["slab_bbox"], SPEC["slab_bbox_tolerance"]):
+        return False
+    if not bbox_matches(combined_bbox(roofs), SPEC["roof_bbox"], SPEC["roof_bbox_tolerance"]):
+        return False
     records = {norm(getattr(space, "Name", "")): parent_storey_id(space) for space in spaces}
     if set(records) != expected_names:
         return False
     if any(storey_id is None for storey_id in records.values()):
         return False
+    for space in spaces:
+        name = norm(getattr(space, "Name", ""))
+        if name not in SPEC.get("space_boxes", {}):
+            continue
+        bbox = product_bbox(space)
+        if bbox is None:
+            return False
+        mins, maxs = bbox
+        expected = SPEC["space_boxes"][name]
+        tol = SPEC.get("space_box_tolerance", 0.25)
+        for actual, target in zip(mins, expected["min"]):
+            if abs(float(actual) - float(target)) > tol:
+                return False
+        for actual, target in zip(maxs, expected["max"]):
+            if abs(float(actual) - float(target)) > tol:
+                return False
+        area = abs((float(maxs[0]) - float(mins[0])) * (float(maxs[1]) - float(mins[1])))
+        if abs(area - float(expected["area"])) > SPEC.get("space_area_tolerance", 0.1):
+            return False
     if SPEC.get("storey_groups"):
         group_storeys = {}
         for group, names in SPEC["storey_groups"].items():
@@ -148,13 +242,8 @@ def check_ifc(model):
     if bbox is None:
         return False
     mins, maxs = bbox
-    tol = SPEC.get("bbox_tolerance", 0.5)
-    for actual, target in zip(mins, SPEC["bbox_exact"]["min"]):
-        if abs(float(actual) - float(target)) > tol:
-            return False
-    for actual, target in zip(maxs, SPEC["bbox_exact"]["max"]):
-        if abs(float(actual) - float(target)) > tol:
-            return False
+    if not bbox_matches((mins, maxs), SPEC["bbox_exact"], SPEC.get("bbox_tolerance", 0.5)):
+        return False
     return True
 
 
@@ -192,7 +281,7 @@ def check_pdf(path):
 
 
 def evaluate():
-    root = DESKTOP
+    root = Path(sys.argv[1]) if len(sys.argv) > 1 else DESKTOP
     for rel, min_bytes in SPEC["required_outputs"].items():
         path = root / rel
         if not path.is_file() or path.stat().st_size < min_bytes:

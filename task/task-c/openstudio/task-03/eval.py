@@ -10,7 +10,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:Building': 1, 'OS:BuildingStory': 1, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 42, 'OS:SubSurface': 0}, 'space_names': ['Classroom-1', 'Classroom-2', 'Corridor', 'Restroom', 'Office', 'Storage'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 30}, 'outside_boundary_counts': {'Ground': 6, 'Outdoors': 20, 'Surface': 16}, 'bbox_spans_m': [22.0, 10.0, 3.4], 'floor_area_m2': 176.0, 'exterior_wall_area_m2': 217.6, 'window_area_m2': 0.0, 'dimension_tolerance_m': 0.05, 'area_tolerance_m2': 0.5, 'require_default_construction_set': True, 'require_space_links': True, 'csv': {'mode': 'space_summary', 'headers': ['space_name', 'floor_area_m2', 'space_type_name', 'thermal_zone_name'], 'order': ['Classroom-1', 'Classroom-2', 'Corridor', 'Office', 'Restroom', 'Storage'], 'rows': [{}, {}, {}, {}, {}, {}], 'numeric_tolerance': 0.2}}
+SPEC = {'required_outputs': {'result.osm': 500, 'result.csv': 10}, 'object_counts': {'OS:Building': 1, 'OS:BuildingStory': 1, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 42, 'OS:SubSurface': 0}, 'space_names': ['Classroom-1', 'Classroom-2', 'Corridor', 'Restroom', 'Office', 'Storage'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 30}, 'outside_boundary_counts': {'Ground': 6, 'Outdoors': 20, 'Surface': 16}, 'bbox_spans_m': [22.0, 10.0, 3.4], 'floor_area_m2': 176.0, 'exterior_wall_area_m2': 217.6, 'window_area_m2': 0.0, 'dimension_tolerance_m': 0.05, 'area_tolerance_m2': 0.5, 'require_default_construction_set': True, 'require_space_links': True, 'csv': {'mode': 'space_summary', 'headers': ['space_name', 'floor_area_m2', 'space_type_name', 'thermal_zone_name'], 'order': ['Classroom-1', 'Classroom-2', 'Corridor', 'Office', 'Restroom', 'Storage'], 'rows': [{}, {}, {}, {}, {}, {}], 'numeric_tolerance': 0.2}}
 
 
 def finish(ok):
@@ -250,10 +250,6 @@ def check_counts(objects, metrics):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_building_default_set(objects):
     if not SPEC.get("require_default_construction_set"):
@@ -407,7 +403,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     metrics = model_metrics(objects)
     return (

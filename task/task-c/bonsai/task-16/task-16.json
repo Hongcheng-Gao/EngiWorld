@@ -1,57 +1,57 @@
 {
-  "id": "c-bonsai-task-16-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Office Layout With Typed Material Export This task starts from /home/user/Desktop/init.ifc and may use /home/user/Desktop/init_plan.png as a local reference image. Modify the provided office model and save the required outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. 1. The output folder contains /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv; /home/user/Desktop/result.ifc is at least 500 bytes and /home/user/Desktop/result.csv is not empty. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 5 IfcSpace entities, 7 IfcWall entities, 1 IfcSlab, 4 IfcDoor entities, 3 IfcWindow entities, 7 IfcOpeningElement entities, 7 IfcRelVoidsElement relationships, 7 IfcRelFillsElement relationships, and 4 IfcMaterial entities. 4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Ground Floor, ignoring leading and trailing whitespace only. 7. The IfcSpace names are exactly Lobby, Office A, Office B, Meeting, and WC, ignoring leading and trailing whitespace only. 8. Lobby has clear plan dimensions 3.60 m by 2.80 m, Office A has 3.60 m by 6.40 m, Office B has 3.60 m by 9.40 m, Meeting has 3.40 m by 4.40 m, and WC has 3.40 m by 4.60 m; each may be in either X/Y orientation with tolerance +/-0.08 m. 9. Each IfcSpace has geometry height 2.80 m with tolerance +/-0.08 m. 10. The wall names are exactly Wall-S, Wall-N, Wall-W, Wall-E, Part-1, Part-2, and Part-3, ignoring leading and trailing whitespace only, with bounding-box dimensions 12.00 m by 0.20 m by 3.00 m, 12.00 m by 0.20 m by 3.00 m, 0.20 m by 10.00 m by 3.00 m, 0.20 m by 10.00 m by 3.00 m, 0.20 m by 9.60 m by 3.00 m, 0.20 m by 9.60 m by 3.00 m, and 3.80 m by 0.20 m by 3.00 m respectively, each in any axis order with tolerance +/-0.08 m. 11. The slab is named exactly Office Slab, ignoring leading and trailing whitespace only, and has bounding-box dimensions 12.00 m by 10.00 m by 0.20 m, in any axis order, with tolerance +/-0.08 m. 12. All spaces, walls, the slab, doors, and windows are spatially assigned to Ground Floor. 13. /home/user/Desktop/result.csv has exactly these headers in this order: GlobalId, Class, TypeName, MaterialSummary, NetArea, NetVolume. 14. /home/user/Desktop/result.csv has exactly 8 data rows, one row for the slab and one row for each wall, and each GlobalId matches that slab or wall in /home/user/Desktop/result.ifc. 15. The CSV row for Office Slab has Class IfcSlab, TypeName OfficeSlabType, MaterialSummary Concrete:0.200m, NetArea 120.0, and NetVolume 24.0. 16. The CSV rows for Wall-S, Wall-N, Wall-W, Wall-E, Part-1, Part-2, and Part-3 each have Class IfcWall, TypeName OfficeWallType, MaterialSummary Brick:0.120m | Insulation:0.050m | Gypsum:0.015m, and NetArea/NetVolume values 36.0/7.2, 36.0/7.2, 30.0/6.0, 30.0/6.0, 5.76/5.76, 5.76/5.76, and 2.28/2.28 respectively, each numeric value with tolerance +/-0.02. Any item not explicitly required may vary.",
-  "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/material_assignment.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-16/init_file/init.ifc",
-            "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-16/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
-          }
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-16/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-16-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "Typed Office Layout With Material Quantities\n\nUse the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc into a typed office layout and export a material quantity table. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC4 model must contain one project, one site, one building, and one storey named Ground Floor; five spaces; seven walls; one slab; four doors; three windows; seven openings; seven void relationships; seven fill relationships; and four materials. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named Lobby, Office A, Office B, Meeting, and WC with clear plan sizes 3.60 m by 2.80 m, 3.60 m by 6.40 m, 3.60 m by 9.40 m, 3.40 m by 4.40 m, and 3.40 m by 4.60 m respectively; all spaces must be 2.80 m high. Name the walls Wall-S, Wall-N, Wall-W, Wall-E, Part-1, Part-2, and Part-3 with dimensions 12.00 m by 0.20 m by 3.00 m, 12.00 m by 0.20 m by 3.00 m, 0.20 m by 10.00 m by 3.00 m, 0.20 m by 10.00 m by 3.00 m, 0.20 m by 9.60 m by 3.00 m, 0.20 m by 9.60 m by 3.00 m, and 3.80 m by 0.20 m by 3.00 m. Name the slab Office Slab and make it 12.00 m by 10.00 m by 0.20 m. Assign all spaces, walls, slab, doors, and windows to Ground Floor.\n\nThe CSV must use the exact headers GlobalId, Class, TypeName, MaterialSummary, NetArea, NetVolume and contain one row for Office Slab plus one row for each wall, matched by GlobalId. Office Slab must report Class IfcSlab, TypeName OfficeSlabType, MaterialSummary Concrete:0.200m, NetArea 120.0, and NetVolume 24.0. Each wall must report Class IfcWall, TypeName OfficeWallType, and MaterialSummary Brick:0.120m | Insulation:0.050m | Gypsum:0.015m. NetArea/NetVolume must be Wall-S 36.0/7.2, Wall-N 36.0/7.2, Wall-W 30.0/6.0, Wall-E 30.0/6.0, Part-1 5.76/5.76, Part-2 5.76/5.76, and Part-3 2.28/2.28. Other representation details may vary.",
+    "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/material_assignment.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-16/init_file/init.ifc",
+                        "path": "/home/user/Desktop/init.ifc"
+                    },
+                    {
+                        "local_path": "task-16/init_image/init_plan.png",
+                        "path": "/home/user/Desktop/init_plan.png"
+                    }
+                ]
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-16/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

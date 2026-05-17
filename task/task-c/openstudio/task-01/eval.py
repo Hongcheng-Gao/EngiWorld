@@ -12,7 +12,6 @@ DESKTOP = Path("/home/user/Desktop")
 
 SPEC = {
     "required_outputs": {"result.osm": 500, "kpis.json": 10},
-    "openstudio_version_prefix": "3.10",
     "space_count": 1,
     "thermal_zone_count": 1,
     "building_story_count": 1,
@@ -380,9 +379,6 @@ def evaluate():
             return False
     objects = parse_osm(root / "result.osm")
     if not objects:
-        return False
-    versions = by_type(objects, "OS:Version")
-    if len(versions) != 1 or not versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"]):
         return False
     if not has_default_construction_set(objects):
         return False

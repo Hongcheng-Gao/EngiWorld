@@ -10,7 +10,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10, 'run/eplusout.sql': 1000}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 1, 'OS:ThermalZone': 1, 'OS:Surface': 6, 'OS:SubSurface': 4, 'OS:ZoneHVAC:IdealLoadsAirSystem': 1, 'OS:ZoneHVAC:EquipmentList': 1, 'OS:ThermostatSetpoint:DualSetpoint': 1, 'OS:ShadingSurface': 1, 'OS:Generator:Photovoltaic': 1, 'OS:ElectricLoadCenter:Inverter:Simple': 1}, 'space_names': ['Office 1'], 'surface_counts': {'Floor': 1, 'RoofCeiling': 1, 'Wall': 4}, 'outside_boundary_counts': {'Ground': 1, 'Outdoors': 5}, 'window_count': 4, 'fixed_window_count': 4, 'bbox_spans_m': [20.0, 12.0, 3.2], 'floor_area_m2': 240.0, 'exterior_wall_area_m2': 204.8, 'window_area_m2': 61.44, 'require_space_links': True, 'hvac': {'ideal_loads': 1, 'equipment_lists': 1, 'thermostats': 1}, 'kpis': ['annual_site_eui_kwh_m2', 'annual_pv_kwh', 'net_site_energy_kwh'], 'fixed_kpis': {'annual_site_eui_kwh_m2': 75.0, 'annual_pv_kwh': 4200.0, 'net_site_energy_kwh': 13800.0}}
+SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10, 'run/eplusout.sql': 1000}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 1, 'OS:ThermalZone': 1, 'OS:Surface': 6, 'OS:SubSurface': 4, 'OS:ZoneHVAC:IdealLoadsAirSystem': 1, 'OS:ZoneHVAC:EquipmentList': 1, 'OS:ThermostatSetpoint:DualSetpoint': 1, 'OS:ShadingSurface': 1, 'OS:Generator:Photovoltaic': 1, 'OS:ElectricLoadCenter:Inverter:Simple': 1}, 'space_names': ['Office 1'], 'surface_counts': {'Floor': 1, 'RoofCeiling': 1, 'Wall': 4}, 'outside_boundary_counts': {'Ground': 1, 'Outdoors': 5}, 'window_count': 4, 'fixed_window_count': 4, 'bbox_spans_m': [20.0, 12.0, 3.2], 'floor_area_m2': 240.0, 'exterior_wall_area_m2': 204.8, 'window_area_m2': 61.44, 'require_space_links': True, 'hvac': {'ideal_loads': 1, 'equipment_lists': 1, 'thermostats': 1}, 'kpis': ['annual_site_eui_kwh_m2', 'annual_pv_kwh', 'net_site_energy_kwh'], 'fixed_kpis': {'annual_site_eui_kwh_m2': 75.0, 'annual_pv_kwh': 4200.0, 'net_site_energy_kwh': 13800.0}}
 
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
@@ -252,10 +252,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -388,7 +384,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

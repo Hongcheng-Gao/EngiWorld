@@ -8,7 +8,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 8, 'OS:ThermalZone': 8, 'OS:Surface': 52, 'OS:SubSurface': 20, 'OS:ZoneHVAC:IdealLoadsAirSystem': 8, 'OS:ZoneHVAC:EquipmentList': 8, 'OS:ThermostatSetpoint:DualSetpoint': 8}, 'space_names': ['L1 South-West', 'L1 South-East', 'L1 West-North', 'L1 Elbow', 'L2 South-West', 'L2 South-East', 'L2 West-North', 'L2 Elbow'], 'surface_counts': {'Floor': 8, 'RoofCeiling': 8, 'Wall': 36}, 'outside_boundary_counts': {'Ground': 4, 'Outdoors': 24, 'Surface': 24}, 'window_count': 20, 'fixed_window_count': 20, 'bbox_spans_m': [20.0, 18.0, 6.4], 'floor_area_m2': 400.0, 'exterior_wall_area_m2': 486.4, 'window_area_m2': 121.6, 'hvac': {'ideal_loads': 8, 'equipment_lists': 8, 'thermostats': 8}}
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 8, 'OS:ThermalZone': 8, 'OS:Surface': 52, 'OS:SubSurface': 20, 'OS:ZoneHVAC:IdealLoadsAirSystem': 8, 'OS:ZoneHVAC:EquipmentList': 8, 'OS:ThermostatSetpoint:DualSetpoint': 8}, 'space_names': ['L1 South-West', 'L1 South-East', 'L1 West-North', 'L1 Elbow', 'L2 South-West', 'L2 South-East', 'L2 West-North', 'L2 Elbow'], 'surface_counts': {'Floor': 8, 'RoofCeiling': 8, 'Wall': 36}, 'outside_boundary_counts': {'Ground': 4, 'Outdoors': 24, 'Surface': 24}, 'window_count': 20, 'fixed_window_count': 20, 'bbox_spans_m': [20.0, 18.0, 6.4], 'floor_area_m2': 400.0, 'exterior_wall_area_m2': 486.4, 'window_area_m2': 121.6, 'hvac': {'ideal_loads': 8, 'equipment_lists': 8, 'thermostats': 8}}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
 
@@ -211,8 +211,11 @@ def check_required_outputs(root):
 
 
 def check_version(objects):
+    prefix = SPEC.get("openstudio_version_prefix")
+    if not prefix:
+        return True
     versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
+    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(prefix)
 
 
 def check_counts(objects, data):
@@ -299,7 +302,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

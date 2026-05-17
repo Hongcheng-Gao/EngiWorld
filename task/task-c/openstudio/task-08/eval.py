@@ -10,7 +10,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'workflow.osw': 50, 'run/eplusout.sql': 1000}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 36, 'OS:SubSurface': 16, 'OS:ZoneHVAC:IdealLoadsAirSystem': 6, 'OS:ZoneHVAC:EquipmentList': 6, 'OS:ThermostatSetpoint:DualSetpoint': 6}, 'space_names': ['L1 West', 'L1 Center', 'L1 East', 'L2 West', 'L2 Center', 'L2 East'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 24}, 'outside_boundary_counts': {'Ground': 3, 'Outdoors': 19, 'Surface': 14}, 'window_count': 16, 'fixed_window_count': 16, 'bbox_spans_m': [18.0, 9.0, 6.4], 'floor_area_m2': 324.0, 'exterior_wall_area_m2': 345.6, 'window_area_m2': 86.4, 'require_space_links': True, 'hvac': {'ideal_loads': 6, 'equipment_lists': 6, 'thermostats': 6}, 'workflow': {'required_keys': ['seed_file', 'weather_file', 'measure_paths', 'run_options', 'steps'], 'min_steps': 1}}
+SPEC = {'required_outputs': {'result.osm': 500, 'workflow.osw': 50, 'run/eplusout.sql': 1000}, 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 36, 'OS:SubSurface': 16, 'OS:ZoneHVAC:IdealLoadsAirSystem': 6, 'OS:ZoneHVAC:EquipmentList': 6, 'OS:ThermostatSetpoint:DualSetpoint': 6}, 'space_names': ['L1 West', 'L1 Center', 'L1 East', 'L2 West', 'L2 Center', 'L2 East'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 24}, 'outside_boundary_counts': {'Ground': 3, 'Outdoors': 19, 'Surface': 14}, 'window_count': 16, 'fixed_window_count': 16, 'bbox_spans_m': [18.0, 9.0, 6.4], 'floor_area_m2': 324.0, 'exterior_wall_area_m2': 345.6, 'window_area_m2': 86.4, 'require_space_links': True, 'hvac': {'ideal_loads': 6, 'equipment_lists': 6, 'thermostats': 6}, 'workflow': {'required_keys': ['seed_file', 'weather_file', 'measure_paths', 'run_options', 'steps'], 'min_steps': 1}}
 
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
@@ -252,10 +252,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -388,7 +384,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return (

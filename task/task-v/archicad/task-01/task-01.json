@@ -1,56 +1,56 @@
 {
-  "id": "v-archicad-task-01-windows",
-  "snapshot": "ArchiCAD-27",
-  "instruction": "Gallery Pavilion Drawing Set This task starts from scratch with no init_file inputs and no local reference images. Create the Archicad model as needed and save the required outputs as result.ifc, result.pdf. 1. The output folder contains result.ifc with size at least 500 bytes, and result.pdf with size at least 500 bytes. 2. Result.ifc uses an IFC4 schema. 3. All IfcRoot GlobalId values are unique. 4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 5 IfcSpace entities. 5. The IFC model contains at least 20 IfcWall entities, at least 1 IfcSlab entity, and at least 1 IfcRoof entity. 6. The IFC model contains spaces with exactly these normalized names: FOYER, GALLERY, BACK-OF-HOUSE, STORE, WC. 7. Every listed space is assigned to the single IfcBuildingStorey. 8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, 0.0] and max [12.0, 8.0, 3.6]. 9. Result.pdf has exactly 2 pages and extracted text contains at least these case-insensitive tokens: A101, A201, FLOOR PLAN, SECTION, GALLERY PAVILION, FOYER, GALLERY, STORE. Any item not explicitly required may vary.",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "archicad"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-01/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+    "id": "v-archicad-task-01-windows",
+    "snapshot": "ArchiCAD-27",
+    "instruction": "Gallery Pavilion Drawing Set\n\nStart from a blank Archicad project with no init files or local reference images. Build or edit the model using Archicad BIM elements, not visual-only placeholder geometry. Save the completed deliverables in the output folder as result.ifc and result.pdf.\n\nCreate a single-storey BIM model for the named project. Keep the shaped model within 0.1 m of horizontal extents about X 0 to 12 and Y 0 to 8, with vertical extents about Z 0 to 3.6. Export result.ifc as an IFC4 model with unique GlobalId values for IFC root objects. It must contain exactly 1 building storey and exactly 5 IfcSpace zones named FOYER, GALLERY, BACK-OF-HOUSE, STORE, and WC. Assign every listed space to the single building storey. Use the southwest exterior corner as X=0, Y=0. Place FOYER from X=0 to 4 and Y=0 to 3, target area 12 m2; GALLERY from X=4 to 12 and Y=0 to 6, target area 48 m2; BACK-OF-HOUSE from X=0 to 4 and Y=3 to 6, target area 12 m2; STORE from X=0 to 3 and Y=6 to 8, target area 6 m2; WC from X=3 to 5 and Y=6 to 8, target area 4 m2.\n\nModel the required construction as real BIM element classes, including at least 8 wall-like IfcWall or IfcWallStandardCase elements, at least 1 IfcSlab element, and at least 1 IfcRoof element. If an equivalent exporter writes IfcWallStandardCase for walls, that is acceptable. Do not count IfcBuildingElementProxy or other generic proxy objects as satisfying required walls, slabs, roofs, stairs, doors, windows, or spaces.\n\nPublish result.pdf as a 2-page drawing set. The visible sheet text must include A101, A201, FLOOR PLAN, SECTION, GALLERY PAVILION, FOYER, GALLERY, and STORE so the title, drawing type, and key rooms or zones are identifiable.\n\nOther materials, colors, object names, property sets, layer names, relationship nesting, and IFC representation details may vary as long as the required BIM elements, spatial relationships, geometry ranges, schedules, and sheet text are present.",
+    "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": []
             }
-          ]
+        },
+        {
+            "type": "launch",
+            "parameters": {
+                "command": [
+                    "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad"
+                ]
+            }
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "archicad"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-01/eval.py",
+                            "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

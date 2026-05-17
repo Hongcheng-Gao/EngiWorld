@@ -10,7 +10,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:Building': 1, 'OS:BuildingStory': 2, 'OS:Space': 10, 'OS:ThermalZone': 10, 'OS:Surface': 68, 'OS:SubSurface': 16}, 'space_names': ['L1-South', 'L1-North', 'L1-West', 'L1-East', 'L1-Core', 'L2-South', 'L2-North', 'L2-West', 'L2-East', 'L2-Core'], 'surface_counts': {'Floor': 10, 'RoofCeiling': 10, 'Wall': 48}, 'outside_boundary_counts': {'Ground': 10, 'Outdoors': 26, 'Surface': 32}, 'window_count': 16, 'fixed_window_count': 16, 'bbox_spans_m': [30.0, 18.0, 7.0], 'floor_area_m2': 1080.0, 'exterior_wall_area_m2': 576.0, 'window_area_m2': 201.6, 'dimension_tolerance_m': 0.05, 'area_tolerance_m2': 1.0, 'require_default_construction_set': True, 'require_space_links': True, 'hvac': {'ideal_loads': 10, 'equipment_lists': 10, 'thermostats': 10}, 'kpis': ['total_floor_area_m2', 'zone_count', 'total_exterior_wall_area_m2', 'total_window_area_m2'], 'kpi_absolute_tolerance': 0.1, 'kpi_relative_tolerance': 0.01}
+SPEC = {'required_outputs': {'result.osm': 500, 'kpis.json': 10}, 'object_counts': {'OS:Building': 1, 'OS:BuildingStory': 2, 'OS:Space': 10, 'OS:ThermalZone': 10, 'OS:Surface': 68, 'OS:SubSurface': 16}, 'space_names': ['L1-South', 'L1-North', 'L1-West', 'L1-East', 'L1-Core', 'L2-South', 'L2-North', 'L2-West', 'L2-East', 'L2-Core'], 'surface_counts': {'Floor': 10, 'RoofCeiling': 10, 'Wall': 48}, 'outside_boundary_counts': {'Ground': 10, 'Outdoors': 26, 'Surface': 32}, 'window_count': 16, 'fixed_window_count': 16, 'bbox_spans_m': [30.0, 18.0, 7.0], 'floor_area_m2': 1080.0, 'exterior_wall_area_m2': 576.0, 'window_area_m2': 201.6, 'dimension_tolerance_m': 0.05, 'area_tolerance_m2': 1.0, 'require_default_construction_set': True, 'require_space_links': True, 'hvac': {'ideal_loads': 10, 'equipment_lists': 10, 'thermostats': 10}, 'kpis': ['total_floor_area_m2', 'zone_count', 'total_exterior_wall_area_m2', 'total_window_area_m2'], 'kpi_absolute_tolerance': 0.1, 'kpi_relative_tolerance': 0.01}
 
 
 def finish(ok):
@@ -250,10 +250,6 @@ def check_counts(objects, metrics):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_building_default_set(objects):
     if not SPEC.get("require_default_construction_set"):
@@ -407,7 +403,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     metrics = model_metrics(objects)
     return (

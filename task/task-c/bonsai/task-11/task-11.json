@@ -1,57 +1,57 @@
 {
-  "id": "c-bonsai-task-11-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Refit Studio Into Four Rooms This task starts from /home/user/Desktop/init.ifc and may use /home/user/Desktop/init_plan.png as a local reference image. Modify the provided model into a four-room layout and save the required output as /home/user/Desktop/result.ifc. 1. The output folder contains /home/user/Desktop/result.ifc, and /home/user/Desktop/result.ifc is at least 500 bytes. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 4 IfcSpace entities, 7 IfcWall entities, 1 IfcSlab, 4 IfcDoor entities, 2 IfcWindow entities, 6 IfcOpeningElement entities, 6 IfcRelVoidsElement relationships, and 6 IfcRelFillsElement relationships. 4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Ground Floor, ignoring leading and trailing whitespace only. 7. The IfcSpace names are exactly Living, Kitchen, Bedroom, and Bath, ignoring leading and trailing whitespace only. 8. Living has clear plan dimensions 3.60 m by 3.50 m, Kitchen has 3.60 m by 1.65 m, Bedroom has 3.50 m by 2.70 m, and Bath has 2.70 m by 2.45 m; each may be in either X/Y orientation with tolerance +/-0.08 m. 9. Each IfcSpace has geometry height 3.00 m with tolerance +/-0.05 m. 10. The slab is named exactly Base Slab, ignoring leading and trailing whitespace only, and has bounding-box dimensions 8.00 m by 6.00 m by 0.20 m, in any axis order, with tolerance +/-0.08 m. 11. The wall names are exactly South Wall, East Wall, North Wall, West Wall, Partition 1, Partition 2, and Partition 3, ignoring leading and trailing whitespace only. 12. South Wall and North Wall each have bounding-box dimensions 8.00 m by 0.20 m by 3.00 m, East Wall and West Wall each have 0.20 m by 6.00 m by 3.00 m, Partition 1 has 0.15 m by 5.60 m by 3.00 m, Partition 2 has 3.80 m by 0.15 m by 3.00 m, and Partition 3 has 3.00 m by 0.15 m by 3.00 m, each in any axis order with tolerance +/-0.08 m. 13. Main Entrance fills an opening in South Wall with opening dimensions 1.00 m by 0.20 m by 2.10 m, North Window fills an opening in North Wall with opening dimensions 1.50 m by 0.20 m by 1.20 m, East Window fills an opening in East Wall with opening dimensions 1.50 m by 0.20 m by 1.20 m, Door Bedroom fills an opening in Partition 1 with opening dimensions 0.80 m by 0.15 m by 2.10 m, Door Kitchen fills an opening in Partition 2 with opening dimensions 0.80 m by 0.15 m by 2.10 m, and Door Bath fills an opening in Partition 3 with opening dimensions 0.80 m by 0.15 m by 2.10 m; each dimension may be in any axis order with tolerance +/-0.08 m. 14. All spaces, walls, the slab, doors, and windows are spatially assigned to Ground Floor. Any item not explicitly required may vary.",
-  "source": "https://docs.bonsaibim.org/tutorials/project1.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-11/init_file/init.ifc",
-            "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-11/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
-          }
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-11/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-11-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "Studio-To-Four-Room Layout\n\nUse the opened Bonsai IFC authoring environment to modify the provided /home/user/Desktop/init.ifc studio model into a four-room layout. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed IFC4 model as /home/user/Desktop/result.ifc. Keep one project, one site, one building, and one storey named Ground Floor. The final model must contain four spaces, seven walls, one slab, four doors, two windows, six openings, six void relationships, and six fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named Living, Kitchen, Bedroom, and Bath. Their clear plan sizes must be Living 3.60 m by 3.50 m, Kitchen 3.60 m by 1.65 m, Bedroom 3.50 m by 2.70 m, and Bath 2.70 m by 2.45 m, with all spaces 3.00 m high. Name the slab Base Slab and make it 8.00 m by 6.00 m by 0.20 m. Name the walls South Wall, East Wall, North Wall, West Wall, Partition 1, Partition 2, and Partition 3. Their dimensions must be 8.00 m by 0.20 m by 3.00 m for South and North, 0.20 m by 6.00 m by 3.00 m for East and West, 0.15 m by 5.60 m by 3.00 m for Partition 1, 3.80 m by 0.15 m by 3.00 m for Partition 2, and 3.00 m by 0.15 m by 3.00 m for Partition 3.\n\nAdd openings and fillings named Main Entrance in South Wall at 1.00 m by 0.20 m by 2.10 m, North Window in North Wall at 1.50 m by 0.20 m by 1.20 m, East Window in East Wall at 1.50 m by 0.20 m by 1.20 m, Door Bedroom in Partition 1 at 0.80 m by 0.15 m by 2.10 m, Door Kitchen in Partition 2 at 0.80 m by 0.15 m by 2.10 m, and Door Bath in Partition 3 at 0.80 m by 0.15 m by 2.10 m. Assign all spaces, walls, the slab, doors, and windows to Ground Floor. Other representation details may vary.",
+    "source": "https://docs.bonsaibim.org/tutorials/project1.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-11/init_file/init.ifc",
+                        "path": "/home/user/Desktop/init.ifc"
+                    },
+                    {
+                        "local_path": "task-11/init_image/init_plan.png",
+                        "path": "/home/user/Desktop/init_plan.png"
+                    }
+                ]
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-11/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

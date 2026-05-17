@@ -1,56 +1,56 @@
 {
-  "id": "v-archicad-task-07-windows",
-  "snapshot": "ArchiCAD-27",
-  "instruction": "Maker Lab Issue Set with Room Schedule This task starts from scratch with no init_file inputs and no local reference images. Create the Archicad model as needed and save the required outputs as result.txt, result.ifc, result.pdf. Export result.txt as a tab-delimited zone schedule text file from the Archicad schedule/list workflow. 1. The output folder contains result.ifc with size at least 500 bytes, result.pdf with size at least 500 bytes, and result.txt with size at least 20 bytes. 2. Result.ifc uses an IFC4 schema. 3. All IfcRoot GlobalId values are unique. 4. The IFC model contains exactly 2 IfcBuildingStorey entities and exactly 7 IfcSpace entities. 5. The IFC model contains at least 2 IfcSlab entities, at least 1 IfcRoof entity, and at least 1 IfcStair entity. 6. The IFC model contains spaces with exactly these normalized names: WORKSHOP, STORE, LOBBY, STAIR, CLASSROOM, OFFICE, WC. 7. WORKSHOP, STORE, LOBBY, STAIR are assigned to one storey; and CLASSROOM, OFFICE, WC are assigned to a second storey. 8. The shaped IFC product bounding box is within 0.5 m of min [0.0, 0.0, -0.3] and max [14.0, 12.0, 8.05]. 9. Result.txt is tab-delimited and has exactly these headers in this order: ZoneName, Area, Storey. 10. Result.txt has exactly 7 data rows in this order: WORKSHOP 80.0 GROUND, STORE 16.0 GROUND, LOBBY 24.0 GROUND, STAIR 16.0 GROUND, CLASSROOM 48.0 LEVEL-1, OFFICE 24.0 LEVEL-1, WC 8.0 LEVEL-1, with numeric values matching within tolerance +/-0.10. 11. Result.pdf has exactly 2 pages and extracted text contains at least these case-insensitive tokens: A111, PLAN, SECTION, MAKER LAB WITH ROOM SCHEDULE, WORKSHOP, CLASSROOM, OFFICE, WC. Any item not explicitly required may vary.",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-177.htm",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "archicad"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-07/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+    "id": "v-archicad-task-07-windows",
+    "snapshot": "ArchiCAD-27",
+    "instruction": "Maker Lab Issue Set with Room Schedule\n\nStart from a blank Archicad project with no init files or local reference images. Build or edit the model using Archicad BIM elements, not visual-only placeholder geometry. Save the completed deliverables in the output folder as result.ifc, result.pdf, and result.txt.\n\nCreate a two-storey BIM model for the named project. Keep the shaped model within 0.5 m of horizontal extents about X 0 to 14 and Y 0 to 12, with vertical extents about Z -0.3 to 8.05. Export result.ifc as an IFC4 model with unique GlobalId values for IFC root objects. It must contain exactly 2 building storeys and exactly 7 IfcSpace zones named WORKSHOP, STORE, LOBBY, STAIR, CLASSROOM, OFFICE, and WC. Assign WORKSHOP, STORE, LOBBY, and STAIR on the lower storey; and CLASSROOM, OFFICE, and WC on the upper storey.\n\nModel the required construction as real BIM element classes, including at least 2 IfcSlab elements, at least 1 IfcRoof element, and at least 1 IfcStair element. If an equivalent exporter writes IfcWallStandardCase for walls, that is acceptable. Do not count IfcBuildingElementProxy or other generic proxy objects as satisfying required walls, slabs, roofs, stairs, doors, windows, or spaces.\n\nExport result.txt from the Archicad schedule/list workflow as a tab-delimited schedule text file. The header row must be ZoneName, Area, Storey in that order. Include these rows in order: (ZoneName=WORKSHOP, Area=80, Storey=GROUND); (ZoneName=STORE, Area=16, Storey=GROUND); (ZoneName=LOBBY, Area=24, Storey=GROUND); (ZoneName=STAIR, Area=16, Storey=GROUND); (ZoneName=CLASSROOM, Area=48, Storey=LEVEL-1); (ZoneName=OFFICE, Area=24, Storey=LEVEL-1); (ZoneName=WC, Area=8, Storey=LEVEL-1).\n\nPublish result.pdf as a 2-page drawing set. The visible sheet text must include A111, PLAN, SECTION, MAKER LAB WITH ROOM SCHEDULE, WORKSHOP, CLASSROOM, OFFICE, and WC so the title, drawing type, and key rooms or zones are identifiable.\n\nOther materials, colors, object names, property sets, layer names, relationship nesting, and IFC representation details may vary as long as the required BIM elements, spatial relationships, geometry ranges, schedules, and sheet text are present.",
+    "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-177.htm",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": []
             }
-          ]
+        },
+        {
+            "type": "launch",
+            "parameters": {
+                "command": [
+                    "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad"
+                ]
+            }
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "archicad"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-07/eval.py",
+                            "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

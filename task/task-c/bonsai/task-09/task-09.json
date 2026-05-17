@@ -1,48 +1,48 @@
 {
-  "id": "c-bonsai-task-09-ubuntu",
-  "snapshot": "Bonsai-0.8.5",
-  "instruction": "Office Shell With Quantity CSV This task starts from scratch with no init_file inputs and no local reference images. Create a metric IFC4 office shell and a matching quantity CSV, then save the required outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. 1. The output folder contains /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv; /home/user/Desktop/result.ifc is at least 500 bytes and /home/user/Desktop/result.csv is not empty. 2. /home/user/Desktop/result.ifc uses an IFC4 schema. 3. The IFC model contains exactly 1 IfcProject, 1 IfcSite, 1 IfcBuilding, 1 IfcBuildingStorey, 2 IfcSpace entities, 5 IfcWall entities, 1 IfcSlab, 2 IfcDoor entities, 3 IfcWindow entities, 5 IfcOpeningElement entities, 5 IfcRelVoidsElement relationships, and 5 IfcRelFillsElement relationships. 4. The IFC model contains 0 IfcBuildingElementProxy, 0 IfcFurniture, 0 IfcRoof, 0 IfcColumn, 0 IfcBeam, 0 IfcStair, and 0 IfcFlowTerminal entities. 5. All IfcRoot GlobalId values are unique. 6. The single IfcBuildingStorey is named exactly Level 00, ignoring leading and trailing whitespace only. 7. The IfcSpace names are exactly Open Office and Meeting, ignoring leading and trailing whitespace only; Open Office has clear plan dimensions 6.60 m by 5.60 m and Meeting has clear plan dimensions 2.70 m by 5.60 m, each in either X/Y orientation with tolerance +/-0.08 m. 8. Each IfcSpace has geometry height 3.00 m with tolerance +/-0.05 m. 9. The slab is named exactly Ground Slab, ignoring leading and trailing whitespace only, and has plan dimensions 10.00 m by 6.00 m in either X/Y orientation and thickness 0.20 m, each with tolerance +/-0.08 m for plan dimensions and +/-0.05 m for thickness. 10. The 2 doors are named exactly Entry Door and Meeting Door, ignoring leading and trailing whitespace only; their OverallWidth values are 0.90 m and 0.85 m respectively, each with tolerance +/-0.08 m, and each door fills exactly one IfcOpeningElement that voids an IfcWall. 11. The 3 windows are named exactly North Window, Meeting Window, and East Window, ignoring leading and trailing whitespace only; their OverallWidth values are 1.50 m, 1.20 m, and 1.30 m respectively, each with tolerance +/-0.08 m, and each window fills exactly one IfcOpeningElement that voids an IfcWall. 12. All spaces, walls, the slab, doors, and windows are spatially assigned to Level 00. 13. /home/user/Desktop/result.csv has exactly these headers in this order: GlobalId, Class, Name, Storey, QuantityValue. 14. /home/user/Desktop/result.csv has exactly 11 data rows, one row for each IFC wall, slab, door, and window by matching GlobalId. 15. For every CSV row, Class equals the matched IFC entity class, Name equals the matched IFC entity name, and Storey is exactly Level 00. 16. QuantityValue matches these values with tolerance +/-0.02: South Wall 10.00, East Wall 6.00, North Wall 10.00, West Wall 6.00, Meeting Partition 5.60, Ground Slab 60.00, Entry Door 0.90, Meeting Door 0.85, North Window 1.50, Meeting Window 1.20, and East Window 1.30. Any item not explicitly required may vary.",
-  "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/creating_walls.html",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "bonsai"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-09/eval.py",
-              "path": "/home/user/Desktop/eval.py"
+    "id": "c-bonsai-task-09-ubuntu",
+    "snapshot": "Bonsai-0.8.5",
+    "instruction": "Office Shell With Quantity Schedule\n\nUse the opened Bonsai IFC authoring environment to create a new metric IFC4 office shell from a blank model and export a matching quantity schedule. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC must contain one project, one site, one building, and one storey named Level 00; two spaces; five walls; one slab; two doors; three windows; five openings; five void relationships; and five fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique.\n\nCreate spaces named Open Office and Meeting. Open Office must be 6.60 m by 5.60 m in clear plan size, Meeting must be 2.70 m by 5.60 m, and both spaces must be 3.00 m high. Name the slab Ground Slab and make it 10.00 m by 6.00 m by 0.20 m. Name the walls South Wall, East Wall, North Wall, West Wall, and Meeting Partition, with quantity lengths 10.00, 6.00, 10.00, 6.00, and 5.60 respectively. Name the doors Entry Door and Meeting Door, give them OverallWidth values 0.90 m and 0.85 m, and make each fill one wall opening. Name the windows North Window, Meeting Window, and East Window, give them OverallWidth values 1.50 m, 1.20 m, and 1.30 m, and make each fill one wall opening. Assign all spaces, walls, slab, doors, and windows to Level 00.\n\nThe CSV must use the exact headers GlobalId, Class, Name, Storey, QuantityValue. It must contain one row for each of the five walls, the slab, two doors, and three windows, matched to the IFC product by GlobalId. Class and Name must match the IFC entity, Storey must be Level 00, and QuantityValue must be South Wall 10.00, East Wall 6.00, North Wall 10.00, West Wall 6.00, Meeting Partition 5.60, Ground Slab 60.00, Entry Door 0.90, Meeting Door 0.85, North Window 1.50, Meeting Window 1.20, and East Window 1.30. Other representation details may vary.",
+    "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/creating_walls.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": []
             }
-          ]
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python /home/user/Desktop/eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "bonsai"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-09/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }

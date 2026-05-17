@@ -29,6 +29,9 @@ def check_nc(path: Path) -> bool:
     for wcs in CFG.get("wcs", []):
         if str(wcs).upper() not in text:
             return False
+    for op in CFG.get("ops", []):
+        if str(op).upper() not in text:
+            return False
     if CFG.get("sequence"):
         nums = [int(m.group(1)) for m in re.finditer(r"\bN(\d+)\b", text)]
         if len(nums) < 20 or nums[0] != 10 or any((b - a) != 5 for a, b in zip(nums, nums[1:])):

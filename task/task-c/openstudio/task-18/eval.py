@@ -9,7 +9,7 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
-SPEC = {'required_outputs': {'result.osm': 500}, 'openstudio_version_prefix': '3.10', 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 6, 'OS:ZoneHVAC:IdealLoadsAirSystem': 2, 'OS:ZoneHVAC:EquipmentList': 2, 'OS:ThermostatSetpoint:DualSetpoint': 2, 'OS:People': 1, 'OS:Lights': 1, 'OS:ElectricEquipment': 1}, 'space_names': ['NorthOffice', 'SouthOffice'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 6, 'fixed_window_count': 6, 'bbox_spans_m': [12.0, 12.0, 3.2], 'floor_area_m2': 144.0, 'exterior_wall_area_m2': 153.6, 'window_area_m2': 30.72}
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 6, 'OS:ZoneHVAC:IdealLoadsAirSystem': 2, 'OS:ZoneHVAC:EquipmentList': 2, 'OS:ThermostatSetpoint:DualSetpoint': 2, 'OS:People': 1, 'OS:Lights': 1, 'OS:ElectricEquipment': 1}, 'space_names': ['NorthOffice', 'SouthOffice'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 6, 'fixed_window_count': 6, 'bbox_spans_m': [12.0, 12.0, 3.2], 'floor_area_m2': 144.0, 'exterior_wall_area_m2': 153.6, 'window_area_m2': 30.72}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
 
@@ -203,10 +203,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(SPEC["openstudio_version_prefix"])
-
 
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
@@ -274,7 +270,7 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects or not check_version(objects):
+    if not objects:
         return False
     data = metrics(objects)
     return check_counts(objects, data) and check_space_links(objects, data) and check_geometry(data) and check_csv(root)

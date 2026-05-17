@@ -1,70 +1,70 @@
 {
-  "id": "v-archicad-task-14-windows",
-  "snapshot": "ArchiCAD-27",
-  "instruction": "Door Schedule Rehab Package This task starts from init.ifc. Reference images are provided on the Desktop: init_plan.png, init_section.png. Modify the Archicad model as needed and save the required outputs as result.txt, result.ifc, result.pdf. Export result.txt as a tab-delimited door schedule text file from the Archicad schedule/list workflow. 1. The output folder contains result.ifc with size at least 500 bytes, result.pdf with size at least 500 bytes, and result.txt with size at least 20 bytes. 2. Result.ifc uses an IFC4 schema. 3. All IfcRoot GlobalId values are unique. 4. The IFC model contains exactly 1 IfcBuildingStorey entity and exactly 6 IfcSpace entities. 5. The IFC model contains at least 4 IfcWall entities, at least 1 IfcSlab entity, at least 1 IfcRoof entity, and at least 6 IfcDoor entities. 6. The IFC model contains spaces with exactly these normalized names: ENTRY, ROOM-A, ROOM-B, ROOM-C, ROOM-D, STORE. 7. Every listed space is assigned to the single IfcBuildingStorey. 8. The shaped IFC product bounding box is within 0.5 m of min [0.0, -0.015, -0.0479] and max [24.0, 4.0, 3.2]. 9. Result.txt is tab-delimited and has exactly these headers in this order: DoorID, DoorName, Width. 10. Result.txt has exactly 6 data rows in this order: DR-01 DOOR-ENTRY 1.1, DR-02 DOOR-A 0.95, DR-03 DOOR-B 0.9, DR-04 DOOR-C 0.95, DR-05 DOOR-D 1.0, DR-06 DOOR-STORE 0.85, with numeric values matching within tolerance +/-0.10. 11. Result.pdf has exactly 1 page and extracted text contains at least these case-insensitive tokens: A101, PLAN, DOOR SCHEDULE REHAB, DOOR-ENTRY, DOOR-A, DOOR-STORE. Any item not explicitly required may vary.",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-14/init_file/init.ifc",
-            "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-14/init_image/init_plan.png",
-            "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
-          },
-          {
-            "local_path": "task-14/init_image/init_section.png",
-            "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
-          }
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
-          "C:\\Users\\Administrator\\Desktop\\init.ifc"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "archicad"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-14/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+    "id": "v-archicad-task-14-windows",
+    "snapshot": "ArchiCAD-27",
+    "instruction": "Door Schedule Rehab Package\n\nStart from the provided init.ifc in Archicad and use init_plan.png and init_section.png only as references for the intended cleanup. The init model is a relevant but unfinished predecessor: it contains 1 storey, spaces currently named ENTRY, ROOM-A, ROOM-B, ROOM-C, ROOM-D, and STORE, 5 existing doors. Clean, complete, or reclassify it as needed rather than replacing it with unrelated geometry. Build or edit the model using Archicad BIM elements, not visual-only placeholder geometry. Save the completed deliverables in the output folder as result.ifc, result.pdf, and result.txt.\n\nCreate a single-storey BIM model for the named project. Keep the shaped model within 0.5 m of horizontal extents about X 0 to 24 and Y -0.01 to 4, with vertical extents about Z -0.05 to 3.2. Export result.ifc as an IFC4 model with unique GlobalId values for IFC root objects. It must contain exactly 1 building storey and exactly 6 IfcSpace zones named ENTRY, ROOM-A, ROOM-B, ROOM-C, ROOM-D, and STORE. Assign every listed space to the single building storey.\n\nModel the required construction as real BIM element classes, including at least 4 wall-like IfcWall or IfcWallStandardCase elements, at least 1 IfcSlab element, at least 1 IfcRoof element, and at least 6 IfcDoor elements. If an equivalent exporter writes IfcWallStandardCase for walls, that is acceptable. Do not count IfcBuildingElementProxy or other generic proxy objects as satisfying required walls, slabs, roofs, stairs, doors, windows, or spaces.\n\nExport result.txt from the Archicad schedule/list workflow as a tab-delimited schedule text file. The header row must be DoorID, DoorName, Width in that order. Include these rows in order: (DoorID=DR-01, DoorName=DOOR-ENTRY, Width=1.1); (DoorID=DR-02, DoorName=DOOR-A, Width=0.95); (DoorID=DR-03, DoorName=DOOR-B, Width=0.9); (DoorID=DR-04, DoorName=DOOR-C, Width=0.95); (DoorID=DR-05, DoorName=DOOR-D, Width=1); (DoorID=DR-06, DoorName=DOOR-STORE, Width=0.85).\n\nPublish result.pdf as a 1-page drawing set. The visible sheet text must include A101, PLAN, DOOR SCHEDULE REHAB, DOOR-ENTRY, DOOR-A, and DOOR-STORE so the title, drawing type, and key rooms or zones are identifiable.\n\nOther materials, colors, object names, property sets, layer names, relationship nesting, and IFC representation details may vary as long as the required BIM elements, spatial relationships, geometry ranges, schedules, and sheet text are present.",
+    "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-14/init_file/init.ifc",
+                        "path": "C:\\Users\\Administrator\\Desktop\\init.ifc"
+                    },
+                    {
+                        "local_path": "task-14/init_image/init_plan.png",
+                        "path": "C:\\Users\\Administrator\\Desktop\\init_plan.png"
+                    },
+                    {
+                        "local_path": "task-14/init_image/init_section.png",
+                        "path": "C:\\Users\\Administrator\\Desktop\\init_section.png"
+                    }
+                ]
             }
-          ]
+        },
+        {
+            "type": "launch",
+            "parameters": {
+                "command": [
+                    "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+                    "C:\\Users\\Administrator\\Desktop\\init.ifc"
+                ]
+            }
         }
-      }
     ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "archicad"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-14/eval.py",
+                            "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
 }
