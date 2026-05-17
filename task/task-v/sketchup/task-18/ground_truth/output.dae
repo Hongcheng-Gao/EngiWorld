@@ -1,11 +1,11 @@
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
   <asset>
-    <created>2026-04-23T23:11:18.778205</created>
-    <modified>2026-04-23T23:11:18.778217</modified>
+    <created>2026-04-23T23:12:23.301616</created>
+    <modified>2026-04-23T23:12:23.301629</modified>
     <up_axis>Y_UP</up_axis>
   </asset>
   <library_effects>
-    <effect id="eff-wood" name="eff-wood">
+    <effect id="deck-eff" name="deck-eff">
       <profile_COMMON>
         <technique sid="common">
           <lambert>
@@ -16,7 +16,7 @@
               <color>0.0 0.0 0.0 1.0</color>
             </ambient>
             <diffuse>
-              <color>0.55 0.4 0.25 1.0</color>
+              <color>0.72 0.55 0.35 1.0</color>
             </diffuse>
             <specular>
               <color>0.0 0.0 0.0 1.0</color>
@@ -45,7 +45,7 @@
         </extra>
       </profile_COMMON>
     </effect>
-    <effect id="eff-glass" name="eff-glass">
+    <effect id="frame-eff" name="frame-eff">
       <profile_COMMON>
         <technique sid="common">
           <lambert>
@@ -56,7 +56,7 @@
               <color>0.0 0.0 0.0 1.0</color>
             </ambient>
             <diffuse>
-              <color>0.7 0.85 0.9 1.0</color>
+              <color>0.5 0.36 0.22 1.0</color>
             </diffuse>
             <specular>
               <color>0.0 0.0 0.0 1.0</color>
@@ -74,7 +74,7 @@
               <color>0.0 0.0 0.0 1.0</color>
             </transparent>
             <transparency>
-              <float>0.5</float>
+              <float>1.0</float>
             </transparency>
           </lambert>
         </technique>
@@ -87,253 +87,297 @@
     </effect>
   </library_effects>
   <library_geometries>
-    <geometry id="geom-front" name="FrontWall">
+    <geometry id="deck-geom" name="DeckSlab">
       <mesh>
-        <source id="geom-front-verts-array">
-          <float_array count="36" id="geom-front-verts-array-array">0 0 0 1.6 0 0 1.6 0 2 0 0 2 2.4 0 0 4 0 0 4 0 2 2.4 0 2 1.6 0 2 2.4 0 2 2.4 0 2 1.6 0 2</float_array>
+        <source id="deck-geom-pos-array">
+          <float_array count="24" id="deck-geom-pos-array-array">0 0 0 4 0 0 4 3 0 0 3 0 0 0 0.05 4 0 0.05 4 3 0.05 0 3 0.05</float_array>
           <technique_common>
-            <accessor count="12" source="#geom-front-verts-array-array" stride="3">
+            <accessor count="8" source="#deck-geom-pos-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-front-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-front-verts-array" />
+        <vertices id="deck-geom-pos-array-vertices">
+          <input semantic="POSITION" source="#deck-geom-pos-array" />
         </vertices>
-        <triangles count="6" material="matref-wood">
-          <input offset="0" semantic="VERTEX" source="#geom-front-verts-array-vertices" />
-          <p>0 1 2 0 2 3 4 5 6 4 6 7 8 9 10 8 10 11</p>
+        <triangles count="12" material="matref-deck">
+          <input offset="0" semantic="VERTEX" source="#deck-geom-pos-array-vertices" />
+          <p>0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 1 2 6 1 6 5 2 3 7 2 7 6 3 0 4 3 4 7</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-back" name="BackWall">
+    <geometry id="post-geom" name="Post">
       <mesh>
-        <source id="geom-back-verts-array">
-          <float_array count="12" id="geom-back-verts-array-array">0 3 0 4 3 0 4 3 2 0 3 2</float_array>
+        <source id="post-geom-pos-array">
+          <float_array count="24" id="post-geom-pos-array-array">-0.05 -0.05 0 0.05 -0.05 0 0.05 0.05 0 -0.05 0.05 0 -0.05 -0.05 2 0.05 -0.05 2 0.05 0.05 2 -0.05 0.05 2</float_array>
           <technique_common>
-            <accessor count="4" source="#geom-back-verts-array-array" stride="3">
+            <accessor count="8" source="#post-geom-pos-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-back-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-back-verts-array" />
+        <vertices id="post-geom-pos-array-vertices">
+          <input semantic="POSITION" source="#post-geom-pos-array" />
         </vertices>
-        <triangles count="2" material="matref-wood">
-          <input offset="0" semantic="VERTEX" source="#geom-back-verts-array-vertices" />
-          <p>0 2 1 0 3 2</p>
+        <triangles count="12" material="matref-frame">
+          <input offset="0" semantic="VERTEX" source="#post-geom-pos-array-vertices" />
+          <p>0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 1 2 6 1 6 5 2 3 7 2 7 6 3 0 4 3 4 7</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-left" name="LeftWall">
+    <geometry id="beam-geom" name="Beam">
       <mesh>
-        <source id="geom-left-verts-array">
-          <float_array count="12" id="geom-left-verts-array-array">0 0 0 0 3 0 0 3 2 0 0 2</float_array>
+        <source id="beam-geom-pos-array">
+          <float_array count="24" id="beam-geom-pos-array-array">0 0 0 4 0 0 4 0.05 0 0 0.05 0 0 0 0.15 4 0 0.15 4 0.05 0.15 0 0.05 0.15</float_array>
           <technique_common>
-            <accessor count="4" source="#geom-left-verts-array-array" stride="3">
+            <accessor count="8" source="#beam-geom-pos-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-left-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-left-verts-array" />
+        <vertices id="beam-geom-pos-array-vertices">
+          <input semantic="POSITION" source="#beam-geom-pos-array" />
         </vertices>
-        <triangles count="2" material="matref-wood">
-          <input offset="0" semantic="VERTEX" source="#geom-left-verts-array-vertices" />
-          <p>0 1 2 0 2 3</p>
+        <triangles count="12" material="matref-frame">
+          <input offset="0" semantic="VERTEX" source="#beam-geom-pos-array-vertices" />
+          <p>0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 1 2 6 1 6 5 2 3 7 2 7 6 3 0 4 3 4 7</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-right" name="RightWall">
+    <geometry id="batten-geom" name="Batten">
       <mesh>
-        <source id="geom-right-verts-array">
-          <float_array count="12" id="geom-right-verts-array-array">4 0 0 4 3 0 4 3 2 4 0 2</float_array>
+        <source id="batten-geom-pos-array">
+          <float_array count="24" id="batten-geom-pos-array-array">0 0 0 0.05 0 0 0.05 3 0 0 3 0 0 0 0.05 0.05 0 0.05 0.05 3 0.05 0 3 0.05</float_array>
           <technique_common>
-            <accessor count="4" source="#geom-right-verts-array-array" stride="3">
+            <accessor count="8" source="#batten-geom-pos-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-right-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-right-verts-array" />
+        <vertices id="batten-geom-pos-array-vertices">
+          <input semantic="POSITION" source="#batten-geom-pos-array" />
         </vertices>
-        <triangles count="2" material="matref-wood">
-          <input offset="0" semantic="VERTEX" source="#geom-right-verts-array-vertices" />
-          <p>0 2 1 0 3 2</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-fgable" name="FrontGable">
-      <mesh>
-        <source id="geom-fgable-verts-array">
-          <float_array count="9" id="geom-fgable-verts-array-array">0 0 2 4 0 2 2 0 3</float_array>
-          <technique_common>
-            <accessor count="3" source="#geom-fgable-verts-array-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-fgable-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-fgable-verts-array" />
-        </vertices>
-        <triangles count="1" material="matref-wood">
-          <input offset="0" semantic="VERTEX" source="#geom-fgable-verts-array-vertices" />
-          <p>0 2 1</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-bgable" name="BackGable">
-      <mesh>
-        <source id="geom-bgable-verts-array">
-          <float_array count="9" id="geom-bgable-verts-array-array">0 3 2 4 3 2 2 3 3</float_array>
-          <technique_common>
-            <accessor count="3" source="#geom-bgable-verts-array-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-bgable-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-bgable-verts-array" />
-        </vertices>
-        <triangles count="1" material="matref-wood">
-          <input offset="0" semantic="VERTEX" source="#geom-bgable-verts-array-vertices" />
-          <p>0 1 2</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-lroof" name="LeftRoof">
-      <mesh>
-        <source id="geom-lroof-verts-array">
-          <float_array count="12" id="geom-lroof-verts-array-array">0 0 2 2 0 3 2 3 3 0 3 2</float_array>
-          <technique_common>
-            <accessor count="4" source="#geom-lroof-verts-array-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-lroof-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-lroof-verts-array" />
-        </vertices>
-        <triangles count="2" material="matref-glass">
-          <input offset="0" semantic="VERTEX" source="#geom-lroof-verts-array-vertices" />
-          <p>0 1 2 0 2 3</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-rroof" name="RightRoof">
-      <mesh>
-        <source id="geom-rroof-verts-array">
-          <float_array count="12" id="geom-rroof-verts-array-array">4 0 2 4 3 2 2 3 3 2 0 3</float_array>
-          <technique_common>
-            <accessor count="4" source="#geom-rroof-verts-array-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-rroof-verts-array-vertices">
-          <input semantic="POSITION" source="#geom-rroof-verts-array" />
-        </vertices>
-        <triangles count="2" material="matref-glass">
-          <input offset="0" semantic="VERTEX" source="#geom-rroof-verts-array-vertices" />
-          <p>0 1 2 0 2 3</p>
+        <triangles count="12" material="matref-frame">
+          <input offset="0" semantic="VERTEX" source="#batten-geom-pos-array-vertices" />
+          <p>0 2 1 0 3 2 4 5 6 4 6 7 0 1 5 0 5 4 1 2 6 1 6 5 2 3 7 2 7 6 3 0 4 3 4 7</p>
         </triangles>
       </mesh>
     </geometry>
   </library_geometries>
   <library_materials>
-    <material id="mat-wood" name="Wood">
-      <instance_effect url="#eff-wood" />
+    <material id="deck-mat" name="Cedar">
+      <instance_effect url="#deck-eff" />
     </material>
-    <material id="mat-glass" name="Glass">
-      <instance_effect url="#eff-glass" />
+    <material id="frame-mat" name="Oak">
+      <instance_effect url="#frame-eff" />
     </material>
   </library_materials>
   <library_visual_scenes>
     <visual_scene id="scene">
-      <node id="FrontWall" name="FrontWall">
-        <instance_geometry url="#geom-front">
+      <node id="Deck_Slab" name="Deck_Slab">
+        <matrix>1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.0 0.0 0.0 1.0 0.45 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#deck-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-wood" target="#mat-wood" />
+              <instance_material symbol="matref-deck" target="#deck-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="BackWall" name="BackWall">
-        <instance_geometry url="#geom-back">
+      <node id="Post_00" name="Post_00">
+        <matrix>1.0 0.0 0.0 0.25 0.0 1.0 0.0 0.25 0.0 0.0 1.0 0.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#post-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-wood" target="#mat-wood" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="LeftWall" name="LeftWall">
-        <instance_geometry url="#geom-left">
+      <node id="Post_01" name="Post_01">
+        <matrix>1.0 0.0 0.0 2.0 0.0 1.0 0.0 0.25 0.0 0.0 1.0 0.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#post-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-wood" target="#mat-wood" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="RightWall" name="RightWall">
-        <instance_geometry url="#geom-right">
+      <node id="Post_02" name="Post_02">
+        <matrix>1.0 0.0 0.0 3.75 0.0 1.0 0.0 0.25 0.0 0.0 1.0 0.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#post-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-wood" target="#mat-wood" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="FrontGable" name="FrontGable">
-        <instance_geometry url="#geom-fgable">
+      <node id="Post_03" name="Post_03">
+        <matrix>1.0 0.0 0.0 0.25 0.0 1.0 0.0 2.75 0.0 0.0 1.0 0.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#post-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-wood" target="#mat-wood" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="BackGable" name="BackGable">
-        <instance_geometry url="#geom-bgable">
+      <node id="Post_04" name="Post_04">
+        <matrix>1.0 0.0 0.0 2.0 0.0 1.0 0.0 2.75 0.0 0.0 1.0 0.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#post-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-wood" target="#mat-wood" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="LeftRoof" name="LeftRoof">
-        <instance_geometry url="#geom-lroof">
+      <node id="Post_05" name="Post_05">
+        <matrix>1.0 0.0 0.0 3.75 0.0 1.0 0.0 2.75 0.0 0.0 1.0 0.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#post-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-glass" target="#mat-glass" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="RightRoof" name="RightRoof">
-        <instance_geometry url="#geom-rroof">
+      <node id="Beam_00" name="Beam_00">
+        <matrix>1.0 0.0 0.0 0.0 0.0 1.0 0.0 0.225 0.0 0.0 1.0 2.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#beam-geom">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-glass" target="#mat-glass" />
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Beam_01" name="Beam_01">
+        <matrix>1.0 0.0 0.0 0.0 0.0 1.0 0.0 1.475 0.0 0.0 1.0 2.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#beam-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Beam_02" name="Beam_02">
+        <matrix>1.0 0.0 0.0 0.0 0.0 1.0 0.0 2.725 0.0 0.0 1.0 2.5 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#beam-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_00" name="Batten_00">
+        <matrix>1.0 0.0 0.0 0.6250000000000001 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_01" name="Batten_01">
+        <matrix>1.0 0.0 0.0 0.9250000000000002 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_02" name="Batten_02">
+        <matrix>1.0 0.0 0.0 1.225 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_03" name="Batten_03">
+        <matrix>1.0 0.0 0.0 1.5250000000000001 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_04" name="Batten_04">
+        <matrix>1.0 0.0 0.0 1.8250000000000002 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_05" name="Batten_05">
+        <matrix>1.0 0.0 0.0 2.1250000000000004 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_06" name="Batten_06">
+        <matrix>1.0 0.0 0.0 2.4250000000000003 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_07" name="Batten_07">
+        <matrix>1.0 0.0 0.0 2.725 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_08" name="Batten_08">
+        <matrix>1.0 0.0 0.0 3.025 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
+            </technique_common>
+          </bind_material>
+        </instance_geometry>
+      </node>
+      <node id="Batten_09" name="Batten_09">
+        <matrix>1.0 0.0 0.0 3.3249999999999997 0.0 1.0 0.0 0.0 0.0 0.0 1.0 2.65 0.0 0.0 0.0 1.0</matrix>
+        <instance_geometry url="#batten-geom">
+          <bind_material>
+            <technique_common>
+              <instance_material symbol="matref-frame" target="#frame-mat" />
             </technique_common>
           </bind_material>
         </instance_geometry>

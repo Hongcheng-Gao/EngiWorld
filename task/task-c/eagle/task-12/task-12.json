@@ -1,16 +1,16 @@
 {
   "id": "c-eagle-task-12-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Open `/home/user/Desktop/drifted.brd`, snap its non-orthogonal element rotations to orthogonal values, and save the result as `/home/user/Desktop/orthogonal.brd`. Requirements: 1. `/home/user/Desktop/orthogonal.brd` must parse as well-formed XML. 2. The element count must remain unchanged. 3. Every element's `rot` attribute must be absent or one of `R0`, `R90`, `R180`, `R270`, `MR0`, `MR90`, `MR180`, `MR270`. 4. Every element's `x` and `y` attributes must remain unchanged. 5. The mirror flag must be preserved for `IC1`, `U1`, `C5`, and `Q1`. 6. `IC1`, `U1`, `C5`, and `Q1` must end up with orthogonal rotations.",
-  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/82.htm",
+  "instruction": "Given `/home/user/Desktop/fab_capability.md` - a plain-text summary of a fab's 6-layer HDI process capabilities - author `/home/user/Desktop/hdi_6layer.dru`, a static EAGLE design-rules file (INI-style key=value) encoding every applicable rule. The capability thresholds your `.dru` must satisfy: 1. The file parses as key=value (at least 10 entries). 2. Every pair-clearance key (mdWireWire, mdWirePad, mdWireVia, mdPadPad, mdPadVia, mdViaVia, mdSmdPad, mdSmdVia, mdSmdSmd) <= 0.1 mm. 3. MsWidth (minimum trace width) <= 0.09 mm. 4. MdDrill (minimum drill hole diameter) <= 0.15 mm. 5. MsMicroVia (microvia drill minimum) <= 0.1 mm. 6. LayerSetup string references layers 1..6 (e.g. `(1+(2+(3*4)+5)+6)` or any other 6-layer form). 7. MtCopper first six entries each <= 0.018 mm (0.5 oz copper). Values may use any of the units `mm`, `mil`, `um`, `inch` (e.g. `3.9mil` equals 0.0991 mm). Values are compared after unit normalisation.",
+  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/127.htm",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-12/init_file/drifted.brd",
-            "path": "/home/user/Desktop/drifted.brd"
+            "local_path": "task-12/init_file/fab_capability.md",
+            "path": "/home/user/Desktop/fab_capability.md"
           }
         ]
       }

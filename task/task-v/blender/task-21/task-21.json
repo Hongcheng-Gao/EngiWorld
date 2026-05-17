@@ -2,7 +2,7 @@
   "id": "v-blender-task-21-ubuntu",
   "snapshot": "Blender-4.2.3",
   "instruction": "Soft Body Bounce\n\n`scene.blend` contains:\n- A `Ground` plane at (0, 0, 0), XY scaled 10x (so a 20x20 BU collision floor at z = 0).\n- A `SoftCube` mesh (a subdivided 2x2x2 BU cube, 100+ verts) at (0, 0, 5) - five units above the ground.\n- Scene `frame_start = 1`, `frame_end = 100`. Scene gravity = (0, 0, -9.81).\n- No physics modifiers on either object.\n\nmake the cube fall under gravity, bounce on the ground at least twice, and settle near the ground by frame 100. Concretely:\n\n1. Add a Collision modifier to `Ground`:\ng = bpy.data.objects['Ground']\ng.modifiers.new('Collision', 'COLLISION')\n\n2. Add a Soft Body modifier to `SoftCube` and configure its settings:\nc = bpy.data.objects['SoftCube']\nc.modifiers.new('SoftBody', 'SOFT_BODY')\nsb = c.soft_body\nsb.friction = 5.0\nsb.mass = 1.0\nsb.use_goal = False\nsb.pull = 0.9\nsb.push = 0.9\nsb.damping = 0.5\nsb.plastic = 0\nsb.bend = 10\nsb.use_self_collision = False\n\n3. Bake the soft body simulation over frames 1..100 so the cube falls, bounces on the ground plane, and damps out. In headless mode the easiest recipes are (a) `bpy.ops.ptcache.bake_all(bake=True)` wrapped in a `bpy.context.temp_override(scene=scene, point_cache=cube.modifiers['SoftBody'].point_cache)`, or (b) stepping through every frame 1..100 with `scene.frame_set(f); bpy.context.view_layer.update()` to populate the cache.\n\n4. Save the scene to `answer.blend`.\n\nRequirements:\n===============\n1. The file `answer.blend` exists and opens.\n2. `SoftCube` mesh object and `Ground` mesh object are present.\n3. At frame 1 the `SoftCube` bbox center Z is >= 4.0 (the cube starts high).\n4. At frame 100 the `SoftCube` bbox center Z is < 3.0 (the cube has fallen and settled low).\n5. The per-frame bbox-center-Z trajectory over frames 1..100 has at least 2 local maxima (bouncing behavior).\n6. The second local-maximum amplitude above rest (center - 1.0) is positive, less than 1.0, and strictly less than the first local-maximum amplitude - i.e., the oscillation is damped.\n7. The cube approximately maintains its size: across all frames, the bbox Z extent stays between 1.7 and 2.3 BU.",
-  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -52,7 +52,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

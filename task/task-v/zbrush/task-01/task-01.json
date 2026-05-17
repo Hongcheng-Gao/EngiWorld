@@ -1,8 +1,8 @@
 {
   "id": "v-zbrush-task-01-windows",
   "snapshot": "zbrush",
-  "instruction": "Sculpt a Weathered Rock with DynaMesh + ClayBuildup + DamStandard + TrimDynamic\n\nLook at `C:\\Users\\Administrator\\Desktop\\scene.obj`. It contains a ZBrush Tool whose first (and only) SubTool, named StartingBall, is a smooth UV sphere of radius 0.5 BU centred at origin, with ~512 faces (lat-lon 16 x 32 tessellation). The SubTool has no polygroups beyond the default, no UVs, and no polypaint.\n\nLoad this OBJ into ZBrush, DynaMesh it to a uniform high resolution, sculpt it into a weathered rock with ClayBuildup (coarse base shape), DamStandard (sharp cracks), and TrimDynamic (flat trim planes), then export the result as `C:\\Users\\Administrator\\Desktop\\output.obj` (OBJ format). Rename the SubTool to Rock before export.\n\nThe exported `C:\\Users\\Administrator\\Desktop\\output.obj` must satisfy:\n\n- Exactly one SubTool, named Rock.\n- Face count in the range [30000, 100000] (DynaMesh produces many faces; any reasonable working resolution yields this range).\n- The mesh is manifold: every edge is shared by exactly two faces.\n- The total discrete curvature (sum over edges of (1 - <n_i, n_j>)) is clearly non-zero, confirming the mesh is not a smooth sphere anymore.\n- At least 100 vertices have low local normal variance (< 0.05), confirming the presence of the flat trim regions.\n\nNo polygroups, UVs, or polypaint are required.",
-  "source": "https://help.maxon.net/zbr/en-us/\nhttps://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "instruction": "Sculpt a Weathered Rock with DynaMesh + ClayBuildup + DamStandard + TrimDynamic\n\nThe opened `scene.obj` contains a ZBrush Tool whose first (and only) SubTool, named StartingBall, is a smooth UV sphere of radius 0.5 BU centred at origin, with ~512 faces (lat-lon 16 x 32 tessellation). The SubTool has no polygroups beyond the default, no UVs, and no polypaint.\n\nUsing the opened OBJ in ZBrush, DynaMesh it to a uniform high resolution, sculpt it into a weathered rock with ClayBuildup (coarse base shape), DamStandard (sharp cracks), and TrimDynamic (flat trim planes), then export the result as `C:\\Users\\Administrator\\Desktop\\output.obj` (OBJ format). Rename the SubTool to Rock before export.\n\nThe exported `C:\\Users\\Administrator\\Desktop\\output.obj` must satisfy:\n\n- Exactly one SubTool, named Rock.\n- Face count in the range [30000, 100000] (DynaMesh produces many faces; any reasonable working resolution yields this range).\n- The mesh is manifold: every edge is shared by exactly two faces.\n- The total discrete curvature (sum over edges of (1 - <n_i, n_j>)) is clearly non-zero, confirming the mesh is not a smooth sphere anymore.\n- At least 100 vertices have low local normal variance (< 0.05), confirming the presence of the flat trim regions.\n\nNo polygroups, UVs, or polypaint are required.",
+  "source": "https://help.maxon.net/zbr/en-us/; https://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -19,7 +19,7 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
           "C:\\Users\\Administrator\\Desktop\\scene.obj"
         ]
       }

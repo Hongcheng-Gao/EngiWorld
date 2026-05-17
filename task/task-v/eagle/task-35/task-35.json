@@ -1,27 +1,16 @@
 {
   "id": "v-eagle-task-35-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Look at `/home/user/Desktop/loose.brd`, tighten its design rules in the EAGLE DRC dialog, and save the updated board as `/home/user/Desktop/answer.brd`. Required thresholds: - `mdWireWire` >= `0.15 mm` - `mdWirePad` >= `0.15 mm` - `mdWireVia` >= `0.15 mm` - `mdDrill` >= `0.30 mm` - `msWidth` >= `0.15 mm` - `msDrill` >= `0.30 mm`",
-  "source": "https://github.com/ArduinoHannover/Eagle/blob/master/dru/PCBway.dru",
+  "instruction": "Look at `bus.sch`, remove the existing `ADDR[2..0]` bus, and replace it with three individual nets so that `ADDR0` on `U1` connects to `ADDR0` on `U2`, `ADDR1` on `U1` connects to `ADDR1` on `U2`, and `ADDR2` on `U1` connects to `ADDR2` on `U2`. Save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. The file must parse as EAGLE XML. 2. No `<bus>` element may remain. 3. Three `<net>` elements named `ADDR0`, `ADDR1`, and `ADDR2` must be present. 4. Each of those three nets must have at least 2 `<pinref>` entries. 5. Parts `U1` and `U2` must remain present.",
+  "source": "https://learn.sparkfun.com/tutorials/using-eagle-schematic/all",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-35/init_file/README.txt",
-            "path": "/home/user/Desktop/README.txt"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-35/init_file/loose.brd",
-            "path": "/home/user/Desktop/loose.brd"
+            "local_path": "task-35/init_file/bus.sch",
+            "path": "/home/user/Desktop/bus.sch"
           }
         ]
       }
@@ -31,7 +20,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/loose.brd"
+          "/home/user/Desktop/bus.sch"
         ]
       }
     },

@@ -1,16 +1,27 @@
 {
   "id": "v-altium-designer-task-44-windows",
   "snapshot": "altium-designer",
-  "instruction": "Perform pre-release height maintenance on the native Altium PCB footprint library `C:\\Users\\Administrator\\Desktop\\connector_lib.PcbLib`. Save the modified native library as `C:\\Users\\Administrator\\Desktop\\connector_lib_release.PcbLib` in Altium Designer.\n\nRequirements:\n- Change `Height` of `RESC3216X60X45ML15T20` to `25mil`.\n- Change `Height` of `51163-0500-Footprint-1` to `90mil`.\n- Change `Height` of `53375-0510-Footprint-1` to `100mil`.",
-  "source": "https://www.altium.com/documentation/altium-designer\nhttps://www.altium.com/documentation/altium-designer/3d-bodies?version=22\nhttps://www.altium.com/documentation/altium-designer/pcb",
+  "instruction": "The opened project `base.PrjPcb` is already open in Altium Designer. Using `C:\\Users\\Administrator\\Desktop\\variants.json`, create three project variants in Variant Manager - `Standard`, `Lite`, and `Medical` - and save the result as `C:\\Users\\Administrator\\Desktop\\variants.PrjPcb`.\n\nRequirements:\n- Preserve the original base project sections (`Design`, `Preferences`, and `Document1..Document3`).\n- Create variants whose names and descriptions exactly match `C:\\Users\\Administrator\\Desktop\\variants.json`.\n- For each listed component, set fitted/DNP state, alternate component, and parameter overrides so the variant behavior matches `C:\\Users\\Administrator\\Desktop\\variants.json` exactly.\n- In particular:\n- `Standard`: all components remain fitted; `R3` gets `Tolerance=1%`.\n- `Lite`: `R2`, `C2`, `U2`, and `D2` are not fitted; `R2` uses alternate component `RES-0402-10K`; `U2` uses alternate component `TL074-SOIC14`.\n- `Medical`: all components remain fitted; `U1` uses alternate component `STM32L071-LQFP64`; `Q1` uses alternate component `NMOS-SOT23-AEC`; `R1` and `R3` get `Tolerance=0.1%`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/design-variants",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-44/init_file/connector_lib.PcbLib",
-            "path": "C:\\Users\\Administrator\\Desktop\\connector_lib.PcbLib"
+            "local_path": "task-44/init_file/base.PrjPcb",
+            "path": "C:\\Users\\Administrator\\Desktop\\base.PrjPcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-44/init_file/variants.json",
+            "path": "C:\\Users\\Administrator\\Desktop\\variants.json"
           }
         ]
       }
@@ -19,8 +30,8 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Program Files\\Altium\\AD26\\X2.exe",
-          "C:\\Users\\Administrator\\Desktop\\connector_lib.PcbLib"
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\Administrator\\Desktop\\base.PrjPcb"
         ]
       }
     }

@@ -1,31 +1,9 @@
 {
   "id": "v-eagle-task-33-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "look at `/home/user/Desktop/loose.brd` in EAGLE, execute the shipped `/home/user/Desktop/apply_jlcpcb_2layer.scr` script to load the JLCPCB 2-layer design-rule preset from `/home/user/Desktop/jlcpcb_2layer.dru`, then save the board as `/home/user/Desktop/answer.brd`.\n\nRequirements:\n1. `/home/user/Desktop/answer.brd` remains a parseable EAGLE board XML file.\n2. The board contains a `<designrules>` block.\n3. `mdWireWire`, `mdWirePad`, `mdWireVia`, and `mdViaVia` are all at least `0.15 mm`.\n4. `msWidth` is at least `0.15 mm`.\n5. `mdDrill` is at least `0.30 mm`.\n6. `rlMinPadTop`, `rlMinPadInner`, and `rlMinPadBottom` are all at least `0.15 mm`.",
-  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6\nhttps://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-USER-LANG-REF.htm\nhttps://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-ULP-OBJECT-TYPES.htm",
+  "instruction": "Look at `loose.brd`, tighten its design rules in the EAGLE DRC dialog, and save the updated board as `/home/user/Desktop/answer.brd`. Required thresholds: - `mdWireWire` >= `0.15 mm` - `mdWirePad` >= `0.15 mm` - `mdWireVia` >= `0.15 mm` - `mdDrill` >= `0.30 mm` - `msWidth` >= `0.15 mm` - `msDrill` >= `0.30 mm`",
+  "source": "https://github.com/ArduinoHannover/Eagle/blob/master/dru/PCBway.dru",
   "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-33/init_file/apply_jlcpcb_2layer.scr",
-            "path": "/home/user/Desktop/apply_jlcpcb_2layer.scr"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-33/init_file/jlcpcb_2layer.dru",
-            "path": "/home/user/Desktop/jlcpcb_2layer.dru"
-          }
-        ]
-      }
-    },
     {
       "type": "upload_file",
       "parameters": {
@@ -33,6 +11,17 @@
           {
             "local_path": "task-33/init_file/loose.brd",
             "path": "/home/user/Desktop/loose.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-33/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
           }
         ]
       }

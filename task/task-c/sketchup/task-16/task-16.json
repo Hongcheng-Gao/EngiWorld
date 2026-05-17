@@ -1,41 +1,43 @@
 {
-  "id": "c-sketchup-task-16-windows",
-  "snapshot": "SketchUp2026",
-  "instruction": "Three-Room Section Plane Walkthrough\n\nUsing SketchUp's GUI, model a small three-room single-story house and author three section-plane scenes, one per room. Export the geometry as COLLADA DAE and emit a companion metadata file describing the section planes. No initial file is provided.\n\nSpecification:\n- **House footprint and outer shell**: a rectangular single-story house occupying X in [0, 6], Y in [0, 5], Z in [0, 3] m. Build the outer shell as 4 walls (at X = 0, X = 6, Y = 0, Y = 5) rising from Z = 0 to Z = 3 m. The floor slab (Z = 0) and ceiling/roof slab (Z = 3) are optional; they may be included as simple rectangles. No floor slab is strictly required for evaluation.\n- **Interior walls**: two interior partition walls perpendicular to the X axis, at X = 2 m and X = 4 m. Each interior wall spans Y in [0, 5] and Z in [0, 3], with negligible thickness (treat them as planar faces). These split the house along X into three rooms, each 2 m long along X: Kitchen (X in [0, 2]), Bedroom (X in [2, 4]), Bathroom (X in [4, 6]).\n- **Scenes and section planes**: create three scenes, one per room, each with its own active section plane oriented perpendicular to the X axis (section normal = +X, i.e. [1, 0, 0]). The section plane should sit 1.0 m into the respective room (the midpoint of the room along X):\n- Scene `Kitchen`: section plane at X = 1.0 m.\n- Scene `Bedroom`: section plane at X = 3.0 m.\n- Scene `Bathroom`: section plane at X = 5.0 m.\nThe three scene names must be distinct, and the three section-plane X values must be distinct and strictly inside the interval (0, 6).\n\nOutputs:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` - the geometry (outer shell + 2 interior walls) as COLLADA.\n2. `C:\\Users\\Administrator\\Desktop\\section_planes.json` - a JSON document describing the three scenes and their section planes, in the form:\n```json\n{\n\"scenes\": [\n{\"name\": \"Kitchen\", \"section_at_x\": 1.0, \"section_normal\": [1, 0, 0]},\n{\"name\": \"Bedroom\", \"section_at_x\": 3.0, \"section_normal\": [1, 0, 0]},\n{\"name\": \"Bathroom\", \"section_at_x\": 5.0, \"section_normal\": [1, 0, 0]}\n]\n}\n```\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. The DAE aggregate bounding box is 6.0 x 5.0 x 3.0 m (within 50 mm).\n3. The two interior walls are detectable: vertex clustering along the X axis reveals two interior X-planes at X approx 2.0 m and X approx 4.0 m (within 50 mm), in addition to the outer X-planes at X = 0 and X = 6.\n4. `C:\\Users\\Administrator\\Desktop\\section_planes.json` parses as JSON and has a top-level `scenes` list of length 3.\n5. Each scene object carries a unique `name` (non-empty string), a numeric `section_at_x` strictly in (0, 6), and a `section_normal` equal to [1, 0, 0].\n6. The three `section_at_x` values are mutually distinct (pairwise |Deltax| >= 0.1 m) so each scene frames a different room.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://www.khronos.org/collada/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
-  "config": [],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "sketchup"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-16/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "true\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "id":  "c-sketchup-task-16-windows",
+    "snapshot":  "SketchUp2026",
+    "instruction":  "Three-Room Section Plane Walkthrough\n\nCreate a small three-room single-story house model and author three section-plane scenes, one per room. Export the geometry as COLLADA DAE and emit a companion metadata file describing the section planes. No initial file is provided.\n\nSpecification:\n- **House footprint and outer shell**: a rectangular single-story house occupying X in [0, 6], Y in [0, 5], Z in [0, 3] m. Build the outer shell as 4 walls (at X = 0, X = 6, Y = 0, Y = 5) rising from Z = 0 to Z = 3 m. The floor slab (Z = 0) and ceiling/roof slab (Z = 3) are optional; they may be included as simple rectangles. No floor slab is required.\n- **Interior walls**: two interior partition walls perpendicular to the X axis, at X = 2 m and X = 4 m. Each interior wall spans Y in [0, 5] and Z in [0, 3], with negligible thickness (treat them as planar faces). These split the house along X into three rooms, each 2 m long along X: Kitchen (X in [0, 2]), Bedroom (X in [2, 4]), Bathroom (X in [4, 6]).\n- **Scenes and section planes**: create three scenes, one per room, each with its own active section plane oriented perpendicular to the X axis (section normal = +X, i.e. [1, 0, 0]). The section plane should sit 1.0 m into the respective room (the midpoint of the room along X):\n- Scene `Kitchen`: section plane at X = 1.0 m.\n- Scene `Bedroom`: section plane at X = 3.0 m.\n- Scene `Bathroom`: section plane at X = 5.0 m.\nThe three scene names must be distinct, and the three section-plane X values must be distinct and strictly inside the interval (0, 6).\n\nOutputs:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` - the geometry (outer shell + 2 interior walls) as COLLADA.\n2. `C:\\Users\\Administrator\\Desktop\\section_planes.json` - a JSON document describing the three scenes and their section planes, in the form:\n```json\n{\n\"scenes\": [\n{\"name\": \"Kitchen\", \"section_at_x\": 1.0, \"section_normal\": [1, 0, 0]},\n{\"name\": \"Bedroom\", \"section_at_x\": 3.0, \"section_normal\": [1, 0, 0]},\n{\"name\": \"Bathroom\", \"section_at_x\": 5.0, \"section_normal\": [1, 0, 0]}\n]\n}\n```\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. The DAE aggregate bounding box is 6.0 x 5.0 x 3.0 m (within 50 mm).\n3. The two interior walls are detectable: vertex clustering along the X axis reveals two interior X-planes at X approx 2.0 m and X approx 4.0 m (within 50 mm), in addition to the outer X-planes at X = 0 and X = 6.\n4. `C:\\Users\\Administrator\\Desktop\\section_planes.json` parses as JSON and has a top-level `scenes` list of length 3.\n5. Each scene object carries a unique `name` (non-empty string), a numeric `section_at_x` strictly in (0, 6), and a `section_normal` equal to [1, 0, 0].\n6. The three `section_at_x` values are mutually distinct (pairwise |Deltax| \u003e= 0.1 m) so each scene frames a different room.",
+    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://www.khronos.org/collada/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+    "config":  [
+
+               ],
+    "trajectory":  "trajectories/",
+    "related_apps":  [
+                         "sketchup"
+                     ],
+    "evaluator":  {
+                      "postconfig":  [
+                                         {
+                                             "type":  "upload_file",
+                                             "parameters":  {
+                                                                "files":  [
+                                                                              {
+                                                                                  "local_path":  "task-16/eval.py",
+                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
+                                                                              }
+                                                                          ]
+                                                            }
+                                         }
+                                     ],
+                      "func":  "exact_match",
+                      "result":  {
+                                     "type":  "vm_command_line",
+                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
+                                     "shell":  "true"
+                                 },
+                      "expected":  {
+                                       "type":  "rule",
+                                       "rules":  {
+                                                     "expected":  "True\n"
+                                                 }
+                                   }
+                  },
+    "proxy":  false,
+    "fixed_ip":  false,
+    "possibility_of_env_change":  "low"
 }

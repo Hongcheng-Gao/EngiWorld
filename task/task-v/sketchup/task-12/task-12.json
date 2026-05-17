@@ -1,73 +1,73 @@
 {
-  "id": "v-sketchup-task-12-windows",
-  "snapshot": "SketchUp2026",
-  "instruction": "Custom attribute dictionary from CSV\n\nAttach a SketchUp `AttributeDictionary` named `\"PricingData\"` to every ComponentDefinition in `C:\\Users\\Administrator\\Desktop\\products.dae`, populating each dictionary from the matching row of `C:\\Users\\Administrator\\Desktop\\prices.csv`, then export the result to `C:\\Users\\Administrator\\Desktop\\output.dae`. Store the AttributeDictionary values either inside the DAE or in an optional sidecar JSON file.\n\nInputs:\n- `C:\\Users\\Administrator\\Desktop\\products.dae` - contains 10 component definitions named `Prod_001`, `Prod_002`,..., `Prod_010`. Each definition is a closed axis-aligned box (real geometry) instantiated in the scene. The per-component name appears both as the `name` attribute of the `<geometry>` element and as the `name` attribute on its scene `<node>`.\n- `C:\\Users\\Administrator\\Desktop\\prices.csv` - 10 rows with columns `name, cost_usd, material_id, supplier`. Each row's `name` matches exactly one ComponentDefinition in `C:\\Users\\Administrator\\Desktop\\products.dae`.\n\nOperation (matches `[SU-Ruby] ComponentDefinition#attribute_dictionary`):\nFor each ComponentDefinition `<ProdName>`, set `AttributeDictionary(\"PricingData\")` with three keys drawn from the CSV row:\ncost_usd -> Float (e.g. 12.5)\nmaterial_id -> Integer (e.g. 7)\nsupplier -> String (e.g. \"Acme Industrial\")\nTypes must be preserved: `cost_usd` is a real number, `material_id` is an integer, `supplier` is a string (not quoted, not coerced to int if it happens to look numeric).\n\nSerialize the AttributeDictionary using EITHER of the following (at least one is mandatory):\n(a) A `<extra>` element inside each `<geometry>` (ComponentDefinition) or inside each scene `<node>` that instantiates it, containing `<technique profile=\"SketchUp\">` wrapping `<attribute_dictionary name=\"PricingData\">` with three `<attribute name=\"...\" type=\"...\">VALUE<\\attribute>` children. Recognised type hints: `int`, `float`, `bool`, `string`.\n(b) A sibling file `C:\\Users\\Administrator\\Desktop\\attributes.json` placed next to `C:\\Users\\Administrator\\Desktop\\output.dae`, mapping each component name to its three-key dictionary:\n{\n\"Prod_001\": {\"cost_usd\": 12.5, \"material_id\": 7, \"supplier\": \"Acme\"},...\n}\nIf both are present, their values must agree exactly.\n\nUnits \\ axes: unchanged from the input DAE (meters, Z-up). Geometry must round-trip: same 10 component definitions, same vertex counts, same scene instantiations.\n\nWrite the DAE to `C:\\Users\\Administrator\\Desktop\\output.dae`. If you use the sidecar route (b), also write `C:\\Users\\Administrator\\Desktop\\attributes.json` to the same directory.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` exists and parses as well-formed XML \\ COLLADA.\n2. The DAE contains exactly 10 ComponentDefinitions (geometries) named `Prod_001`..`Prod_010`.\n3. An `AttributeDictionary` named `PricingData` is present for all 10 components, either (a) as a `<extra>\\<technique profile=\"SketchUp\">\\<attribute_dictionary name=\"PricingData\">` block inside the DAE (attached to the `<geometry>` or its scene `<node>`), or (b) as an `C:\\Users\\Administrator\\Desktop\\attributes.json` file in the same directory with 10 entries keyed by component name.\n4. Each `PricingData` dictionary contains exactly the three keys `cost_usd`, `material_id`, `supplier`.\n5. `cost_usd` matches the CSV row within 1e-3 (float).\n6. `material_id` matches the CSV row exactly (integer - must NOT be a float).\n7. `supplier` matches the CSV row exactly (string - not stripped, not quoted).\n8. If both the DAE `<extra>` block and `C:\\Users\\Administrator\\Desktop\\attributes.json` are present, their values agree for every component.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://ruby.sketchup.com/Sketchup/ComponentDefinition.html\nhttps://www.khronos.org/collada/",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-12/init_file/prices.csv",
-            "path": "C:\\Users\\Administrator\\Desktop\\prices.csv"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-12/init_file/products.dae",
-            "path": "C:\\Users\\Administrator\\Desktop\\products.dae"
-          }
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe",
-          "C:\\Users\\Administrator\\Desktop\\products.dae"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "sketchup"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-12/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "id":  "v-sketchup-task-12-windows",
+    "snapshot":  "SketchUp2026",
+    "instruction":  "Custom attribute dictionary from CSV\n\nAttach a SketchUp `AttributeDictionary` named `\"PricingData\"` to every ComponentDefinition in the opened file `products.dae`, populating each dictionary from the matching row of `C:\\Users\\Administrator\\Desktop\\prices.csv`, then export the result to `C:\\Users\\Administrator\\Desktop\\output.dae`. Store the AttributeDictionary values either inside the DAE or in an optional sidecar JSON file.\n\nInputs:\n- `products.dae` - the opened file containing 10 component definitions named `Prod_001`, `Prod_002`,..., `Prod_010`. Each definition is a closed axis-aligned box (real geometry) instantiated in the scene. The per-component name appears both as the `name` attribute of the `\u003cgeometry\u003e` element and as the `name` attribute on its scene `\u003cnode\u003e`.\n- `C:\\Users\\Administrator\\Desktop\\prices.csv` - 10 rows with columns `name, cost_usd, material_id, supplier`. Each row\u0027s `name` matches exactly one ComponentDefinition in `products.dae`.\n\nOperation (matches `[SU-Ruby] ComponentDefinition#attribute_dictionary`):\nFor each ComponentDefinition `\u003cProdName\u003e`, set `AttributeDictionary(\"PricingData\")` with three keys drawn from the CSV row:\ncost_usd -\u003e Float (e.g. 12.5)\nmaterial_id -\u003e Integer (e.g. 7)\nsupplier -\u003e String (e.g. \"Acme Industrial\")\nTypes must be preserved: `cost_usd` is a real number, `material_id` is an integer, `supplier` is a string (not quoted, not coerced to int if it happens to look numeric).\n\nSerialize the AttributeDictionary using EITHER of the following (at least one is mandatory):\n(a) A `\u003cextra\u003e` element inside each `\u003cgeometry\u003e` (ComponentDefinition) or inside each scene `\u003cnode\u003e` that instantiates it, containing `\u003ctechnique profile=\"SketchUp\"\u003e` wrapping `\u003cattribute_dictionary name=\"PricingData\"\u003e` with three `\u003cattribute name=\"...\" type=\"...\"\u003eVALUE\u003c/attribute\u003e` children. Recognised type hints: `int`, `float`, `bool`, `string`.\n(b) A sibling file `C:\\Users\\Administrator\\Desktop\\attributes.json` placed next to `C:\\Users\\Administrator\\Desktop\\output.dae`, mapping each component name to its three-key dictionary:\n{\n\"Prod_001\": {\"cost_usd\": 12.5, \"material_id\": 7, \"supplier\": \"Acme\"},...\n}\nIf both are present, their values must agree exactly.\n\nUnits / axes: unchanged from the input DAE (meters, Z-up). Geometry must round-trip: same 10 component definitions, same vertex counts, same scene instantiations.\n\nWrite the DAE to `C:\\Users\\Administrator\\Desktop\\output.dae`. If you use the sidecar route (b), also write `C:\\Users\\Administrator\\Desktop\\attributes.json` to the same directory.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` exists and parses as well-formed XML / COLLADA.\n2. The DAE contains exactly 10 ComponentDefinitions (geometries) named `Prod_001`..`Prod_010`.\n3. An `AttributeDictionary` named `PricingData` is present for all 10 components, either (a) as a `\u003cextra\u003e\u003ctechnique profile=\"SketchUp\"\u003e\u003cattribute_dictionary name=\"PricingData\"\u003e` block inside the DAE (attached to the `\u003cgeometry\u003e` or its scene `\u003cnode\u003e`), or (b) as an `C:\\Users\\Administrator\\Desktop\\attributes.json` file in the same directory with 10 entries keyed by component name.\n4. Each `PricingData` dictionary contains exactly the three keys `cost_usd`, `material_id`, `supplier`.\n5. `cost_usd` matches the CSV row within 1e-3 (float).\n6. `material_id` matches the CSV row exactly (integer - must NOT be a float).\n7. `supplier` matches the CSV row exactly (string - not stripped, not quoted).\n8. If both the DAE `\u003cextra\u003e` block and `C:\\Users\\Administrator\\Desktop\\attributes.json` are present, their values agree for every component.",
+    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://www.khronos.org/collada/",
+    "config":  [
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-12/init_file/prices.csv",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\prices.csv"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-12/init_file/products.dae",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\products.dae"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "launch",
+                       "parameters":  {
+                                          "command":  [
+                                                          "C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe",
+                                                          "C:\\Users\\Administrator\\Desktop\\products.dae"
+                                                      ]
+                                      }
+                   }
+               ],
+    "trajectory":  "trajectories/",
+    "related_apps":  [
+                         "sketchup"
+                     ],
+    "evaluator":  {
+                      "postconfig":  [
+                                         {
+                                             "type":  "upload_file",
+                                             "parameters":  {
+                                                                "files":  [
+                                                                              {
+                                                                                  "local_path":  "task-12/eval.py",
+                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
+                                                                              }
+                                                                          ]
+                                                            }
+                                         }
+                                     ],
+                      "func":  "exact_match",
+                      "result":  {
+                                     "type":  "vm_command_line",
+                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
+                                     "shell":  "true"
+                                 },
+                      "expected":  {
+                                       "type":  "rule",
+                                       "rules":  {
+                                                     "expected":  "True\n"
+                                                 }
+                                   }
+                  },
+    "proxy":  false,
+    "fixed_ip":  false,
+    "possibility_of_env_change":  "low"
 }

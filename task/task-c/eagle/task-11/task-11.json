@@ -1,16 +1,16 @@
 {
   "id": "c-eagle-task-11-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Fan out 4 of the 8 outer-ring pads of the QFN-8 placed at `(50, 50)` mm on `/home/user/Desktop/qfn_board.brd`, and save the board as `/home/user/Desktop/fanout.brd`. Requirements: 1. `/home/user/Desktop/fanout.brd` parses as well-formed XML. 2. At least 4 new `<wire>` elements have been added relative to the starter. 3. At least 4 new `<via>` elements have been added. 4. The new fan-out wires and vias lie within `5 mm` of the QFN center at `(50, 50)` mm. 5. The `U1` / `QFN8` element is still present. 6. The total `<element>` count is unchanged.",
-  "source": "https://ww1.microchip.com/downloads/aemDocuments/documents/UNG/ApplicationNotes/ApplicationNotes/AN18.15-PCB-Design-Guide-QFN-DQFN-Packages-00001843.pdf",
+  "instruction": "The file `/home/user/Desktop/drifted.brd` is the board to repair. Snap its non-orthogonal element rotations to orthogonal values and save the result as `/home/user/Desktop/orthogonal.brd`. Requirements: 1. `/home/user/Desktop/orthogonal.brd` must parse as well-formed XML. 2. The element count must remain unchanged. 3. Every element's `rot` attribute must be absent or one of `R0`, `R90`, `R180`, `R270`, `MR0`, `MR90`, `MR180`, `MR270`. 4. Every element's `x` and `y` attributes must remain unchanged. 5. The mirror flag must be preserved for `IC1`, `U1`, `C5`, and `Q1`. 6. `IC1`, `U1`, `C5`, and `Q1` must end up with orthogonal rotations.",
+  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/82.htm",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-11/init_file/qfn_board.brd",
-            "path": "/home/user/Desktop/qfn_board.brd"
+            "local_path": "task-11/init_file/drifted.brd",
+            "path": "/home/user/Desktop/drifted.brd"
           }
         ]
       }

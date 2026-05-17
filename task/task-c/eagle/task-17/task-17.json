@@ -1,16 +1,16 @@
 {
   "id": "c-eagle-task-17-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Open `/home/user/Desktop/assembled.brd` in EAGLE and produce pick-and-place CSVs using EAGLE's bundled mountsmd.ulp. Save the outputs as `/home/user/Desktop/pnp_top.csv` and `/home/user/Desktop/pnp_bottom.csv`. Requirements: 1. Both `/home/user/Desktop/pnp_top.csv` and `/home/user/Desktop/pnp_bottom.csv` exist. 2. Header row equals `Name,Value,Package,X,Y,Rotation,Side` in each file. 3. Row count per file equals the number of top-side / bottom-side elements in `/home/user/Desktop/assembled.brd` (by mirror flag). 4. Refdes sets per file match the expected split between sides. 5. Every row's `Side` column matches the file (top/bottom).",
-  "source": "https://pcbsync.com/how-to-generate-pick-and-place-files-from-eagle/",
+  "instruction": "The file `/home/user/Desktop/board.brd` is the board to process. Export an IPC-D-356A bare-board electrical-test netlist. Save the result as `/home/user/Desktop/board.ipc`.\n\nThe IPC-D-356A format uses fixed-width ASCII:\n* `C <comment>` lines at the top\n* `P JOB...` and `P UNITS` parameter lines\n* `317<net><refdes><drill>A00<X><Y>...` test records, one per pad/via\n* `999` trailer\n\nRequirements:\n1. File exists and is non-empty.\n2. First non-empty line starts with `C`.\n3. At least one `P JOB...` line.\n4. At least one `317` test record.\n5. Every `317` record has `D<drill>A<access>` tokens.\n6. Last non-empty line is exactly `999`.",
+  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-USER-LANG-REF.htm; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-ULP-OBJECT-TYPES.htm",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-17/init_file/assembled.brd",
-            "path": "/home/user/Desktop/assembled.brd"
+            "local_path": "task-17/init_file/board.brd",
+            "path": "/home/user/Desktop/board.brd"
           }
         ]
       }

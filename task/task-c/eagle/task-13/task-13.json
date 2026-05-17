@@ -1,16 +1,16 @@
 {
   "id": "c-eagle-task-13-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Given `/home/user/Desktop/fab_capability.md` - a plain-text summary of a fab's 6-layer HDI process capabilities - author `/home/user/Desktop/hdi_6layer.dru`, a static EAGLE design-rules file (INI-style key=value) encoding every applicable rule. The capability thresholds your `.dru` must satisfy: 1. The file parses as key=value (at least 10 entries). 2. Every pair-clearance key (mdWireWire, mdWirePad, mdWireVia, mdPadPad, mdPadVia, mdViaVia, mdSmdPad, mdSmdVia, mdSmdSmd) <= 0.1 mm. 3. MsWidth (minimum trace width) <= 0.09 mm. 4. MdDrill (minimum drill hole diameter) <= 0.15 mm. 5. MsMicroVia (microvia drill minimum) <= 0.1 mm. 6. LayerSetup string references layers 1..6 (e.g. `(1+(2+(3*4)+5)+6)` or any other 6-layer form). 7. MtCopper first six entries each <= 0.018 mm (0.5 oz copper). Values may use any of the units `mm`, `mil`, `um`, `inch` (e.g. `3.9mil` equals 0.0991 mm). Values are compared after unit normalisation.",
-  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/127.htm",
+  "instruction": "Create `/home/user/Desktop/qfn8.lbr`, an EAGLE library containing exactly one package, and save it. Requirements: 1. The file must parse as XML. 2. The library must contain exactly 1 `<package>`. 3. That package must contain exactly 8 `<smd>` pads. 4. The pad names must be `1` through `8`. 5. The package must contain at least one `<wire>` or `<polygon>` on layer `21`.",
+  "source": "https://learn.sparkfun.com/tutorials/make-your-own-eagle-library/all",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-13/init_file/fab_capability.md",
-            "path": "/home/user/Desktop/fab_capability.md"
+            "local_path": "task-13/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
           }
         ]
       }

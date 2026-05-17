@@ -1,8 +1,8 @@
 {
   "id": "v-blender-task-10-ubuntu",
   "snapshot": "Blender-4.2.3",
-  "instruction": "Keyframe Retime (Halve Frame Numbers)\n\n`scene.blend` contains a mesh object `Ball` with an Action driving its `location` (x, y, z). The scene's frame range is 1..200.\n\nTask: halve the time axis of the animation. Concretely:\n1. For every f-curve in `Ball`'s Action, for every keyframe point, replace the frame number with half its original value. This applies to `keyframe_point.co.x` AND to `keyframe_point.handle_left.x` and `keyframe_point.handle_right.x`. The Y values (`.co.y`, `.handle_left.y`, `.handle_right.y`) MUST stay the same. Do not add or delete keyframes.\nExample: a keyframe at frame 80 with value 2.5 goes to frame 40 with value 2.5; a keyframe at frame 100 goes to frame 50.\n2. Set `scene.frame_end = int(original_frame_end \\ 2)` so the scene's end frame matches the retimed animation. `scene.frame_start` stays at 1.\n\nAll original frame numbers in the init file are even integers, so halving them yields exact integer frame numbers.\n\nSave the result to `answer.blend`.\n\nRequirements:\n1. A mesh object named `Ball` exists in the output with the same vertex count as the input.\n2. `Ball`'s Action still exists with the same number of f-curves as the input.\n3. The total number of keyframes is unchanged (none added, none deleted).\n4. Every keyframe's frame number (`co.x`) equals exactly half the corresponding original keyframe's frame number.\n5. Every keyframe's value (`co.y`) equals the corresponding original keyframe's value.\n6. `scene.frame_end == 100` (was 200).\n7. `scene.frame_start == 1` (unchanged).",
-  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "instruction": "Keyframe Retime (Halve Frame Numbers)\n\n`scene.blend` contains a mesh object `Ball` with an Action driving its `location` (x, y, z). The scene's frame range is 1..200.\n\nTask: halve the time axis of the animation. Concretely:\n1. For every f-curve in `Ball`'s Action, for every keyframe point, replace the frame number with half its original value. This applies to `keyframe_point.co.x` AND to `keyframe_point.handle_left.x` and `keyframe_point.handle_right.x`. The Y values (`.co.y`, `.handle_left.y`, `.handle_right.y`) MUST stay the same. Do not add or delete keyframes.\nExample: a keyframe at frame 80 with value 2.5 goes to frame 40 with value 2.5; a keyframe at frame 100 goes to frame 50.\n2. Set `scene.frame_end = int(original_frame_end / 2)` so the scene's end frame matches the retimed animation. `scene.frame_start` stays at 1.\n\nAll original frame numbers in the init file are even integers, so halving them yields exact integer frame numbers.\n\nSave the result to `answer.blend`.\n\nRequirements:\n1. A mesh object named `Ball` exists in the output with the same vertex count as the input.\n2. `Ball`'s Action still exists with the same number of f-curves as the input.\n3. The total number of keyframes is unchanged (none added, none deleted).\n4. Every keyframe's frame number (`co.x`) equals exactly half the corresponding original keyframe's frame number.\n5. Every keyframe's value (`co.y`) equals the corresponding original keyframe's value.\n6. `scene.frame_end == 100` (was 200).\n7. `scene.frame_start == 1` (unchanged).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -52,7 +52,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

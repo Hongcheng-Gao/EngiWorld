@@ -1,16 +1,60 @@
 {
   "id": "c-kicad-task-08-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "MIPI Intra-Pair Length Matching\n\nThe file `/home/user/Desktop/mipi.kicad_pcb` contains a 2-layer board with 5 MIPI D-PHY differential pairs (CLK, D0, D1, D2, D3) already routed on F.Cu. Each pair has an intra-pair skew of approximately 300 um; the `_N` trace of each pair is longer than the `_P` trace.\n\nAdd serpentine segments to the shorter trace of each pair so that the intra-pair skew (`|L_P - L_N|`) is reduced to 75 um or less. Do not modify the `_N` traces. All traces must remain on F.Cu.\n\nRequirements:\n1. For each of the 5 pairs, the absolute difference between total `_P` and `_N` routed lengths must be 75 um or less.\n2. All MIPI segments must remain on F.Cu, with no layer changes.\n3. The `_N` trace lengths must not change from the original file.\n4. The serpentine segments must maintain at least 0.1 mm clearance to adjacent segments.\n5. The output file must parse as a valid KiCad PCB s-expression.\n6. Also write `/home/user/Desktop/fcu.svg` as the native KiCad CLI F.Cu SVG export of your final board.\n\nWrite `/home/user/Desktop/mipi.kicad_pcb` and `/home/user/Desktop/fcu.svg`.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "Legacy Project Migration v5 to v9\n\nYou have a KiCad v5-era project in /home/user/Desktop/: /home/user/Desktop/legacy.pro (INI-style config), /home/user/Desktop/legacy.sch (EESchema v4 schematic), /home/user/Desktop/legacy.cache.lib (cached symbol library), and /home/user/Desktop/legacy.kicad_pcb (v4/v5 PCB). A migration mapping is provided in /home/user/Desktop/lib_map.csv (two columns: v5_lib_id, v9_lib_id).\n\nMigrate the project to KiCad 9 format. Produce four output files:\n1. /home/user/Desktop/board.kicad_pro - KiCad 9 JSON project file with top-level keys: meta (with version integer), net_settings, schematic, pcbnew.\n2. /home/user/Desktop/design.kicad_sch - KiCad 9 schematic (version 20231120) with all symbol lib_ids updated to v9 names per /home/user/Desktop/lib_map.csv.\n3. /home/user/Desktop/design.kicad_pcb - KiCad 9 PCB (version 20240108) with updated layer names and footprint structure.\n4. /home/user/Desktop/project.kicad_sym - Local symbol library (kicad_symbol_lib) freezing all 5 symbols from /home/user/Desktop/legacy.cache.lib in KiCad 9 format.\n\nRequirements:\n1. All 4 files must exist under /home/user/Desktop/.\n2. /home/user/Desktop/board.kicad_pro must be valid JSON with meta.version (integer), net_settings, schematic, and pcbnew keys.\n3. /home/user/Desktop/design.kicad_sch must parse as s-expr and contain (version 20231120).\n4. /home/user/Desktop/design.kicad_pcb must parse as s-expr and contain (version 20240108).\n5. Every symbol in /home/user/Desktop/design.kicad_sch must have a lib_id that appears in the v9_lib_id column of /home/user/Desktop/lib_map.csv.\n6. The number of named nets in /home/user/Desktop/design.kicad_sch must be >= the number in /home/user/Desktop/legacy.sch.\n7. /home/user/Desktop/project.kicad_sym must contain >= 5 symbol definitions.\n8. None of the 4 output files may contain the string 'EESchema' (v5 marker).\n\nWrite /home/user/Desktop/board.kicad_pro, /home/user/Desktop/design.kicad_sch, /home/user/Desktop/design.kicad_pcb, /home/user/Desktop/project.kicad_sym.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html; https://docs.kicad.org/9.0/en/eeschema/eeschema.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-08/init_file/mipi.kicad_pcb",
-            "path": "/home/user/Desktop/mipi.kicad_pcb"
+            "local_path": "task-08/init_file/legacy.cache.lib",
+            "path": "/home/user/Desktop/legacy.cache.lib"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.kicad_pcb",
+            "path": "/home/user/Desktop/legacy.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.pro",
+            "path": "/home/user/Desktop/legacy.pro"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.sch",
+            "path": "/home/user/Desktop/legacy.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/lib_map.csv",
+            "path": "/home/user/Desktop/lib_map.csv"
           }
         ]
       }

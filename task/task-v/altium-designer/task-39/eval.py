@@ -9,10 +9,10 @@ from pathlib import Path
 
 
 DESKTOP = Path(r'C:\Users\Administrator\Desktop')
-BUNDLE = {'eval_inner.py': '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'}
+BUNDLE = {'eval_inner.py': 'eNqVV+9u2zYQ/66nuHH7IKGKWmcdMBjQgC1LNxRdG3QdsMHzBEaiHdYSpZFUYiMzsIfYE+5JdkdRluS0cZcPdkjen98df3c8M8bELS+TZgerWoPlZnP2/Bn8+/c/8PLVxdXFd3Al880ZV8XZVclzAW9a+7K+BtOIPAmCixuRbwxIBXVrm9ZmhdRP35d5k18nXnLxxp38oOu2mS3nAcAsgsstz225g1o5i3j+bteIlHxB5+dO2htQbSW0zMG0q5XcwgzC1+ksStDGeQQXddlWyswAUvheGLlW3NY6vqirSigbv+I7oeNf49/it7XlVtYK1b6M4BclLSmRWiVL3HweoX4uK14613iYwjnuf0X7paykFZr24iB4oxC0vRFwtbM3tQJjMTNcF1DKa831DqSB1ogiCRhjwUrXFWTZqrWtFlkGsmpqbYEr5RGZIPB77w3i8/9r0f9ndqYz0nB7gy56C1e4DIIfL99eIixahOhFlugjSrQwdXkrwihpuMZEBEFQiBVkuDIik0qGVmztHKHrCM6+gULmdoGLGGMwdmHbphTdGj+WS3djAEbkDvD8pDwiut87nbzVBMC5gr/gNV126r7cMfFN8zsiDyFKTFNKW0olTBh1TumPNlALBRM0I5swOhzJFWAincQg7xzXykrVirEkSaEFrq0haoVswSK8iaI7EKrw20sWHRnrokAMJLmYzc9my4lAn5rECIuZ5m1pQ68Uw2IZnYTWe0DuuBxhXljKXGyYm08IbxNDFsOth0j3biVBCtHM4L7HufD+lglvGgw8DDd9atFI1ClogZxVBx1PImoVWVfpJhwq/sCjDudw0LNzJDrw0/txhEbOsIYbw+bwgpdGxMAGHeYYNDayD5wyVyajykD1kc+nwCYdiAUjsvQqidgieydM66AsmBYci5ERkVdMbLHRWVF4B0BVhm3DGKnWc7jvze3ZyIzLXGetw2n1bnBDXEfTByDorshoMxQqrwu0m7LWrs6+ZjEIrWttUoTUUGfylym2uWgs9lD6wtsBbkCciCN3TQfIGUyyg0GIx9EjBwzaOGogUZ9VNu7vB9aS0qOQmE/i0fvQM+5jiGhnTaJoghgXkqPFFAOWnJP7HF5ILHBeljB6WDx9IRzendejh6eLq8F1JostBb6QyoZV4ryGs2haz9B3sg0VIAbuxBJ8MioTfkS0IrmFFknFbX4TavbHACX8vXgSfYFXv4mWD7Ux3ZVrWrd9xSZlfSd0GJHJkBFs6KiCFUQrz5tlf1ulUOEhuAg+S2H26DWFoxIQ/tGePUxnDGu8d/YQ8Th0dj/1vh81p4e3rND7QXbxbBn4fvFnKzWCwY4RDJb9LHCv9tgs2CdNAywe6buhwGvjUDA5m8wGXub8SMJPCf409qe+TXl63HHlSqMPoSfJkH/KYeoZtBY23EzeOjr1T8T0PfhgwffldUjYRuyw1jd7dqR7nPfBW88xYgmB79cnvSNp0NHcIb7Hj8/03od/T5+4ZNEjKHzxXip+XSLwJ4AJIf7Z2s+KP4lCthVOgy/qshAafra6zWnGOjSlIYcr3xu8NbohLA0WjYNjM3aifR7bgKo1Fq4FzB5rVCeAZJNojmD5PhpO8sSc1Dvduvq29B39T+RTp6fjCMaW3RNNdgnC5CR3PwTc2WJUGQ8aBXAKqxBbcDdxEO0r+FNn+bGqK94UyzaezvHpeTwM8Gk8VumSAMJTjFrqQLJjVkHlkuX1l8EHkhTgVWeZ4hWN+SkyKssqLlWWeWL1k79eu1e0m17oDet3km/1uqVYr2il/dPBm4QXRcb9WTgeiryEXlPOULB7nmndj1a4PxnY6CwZTVHdS6fpeaOfH0nRVo0JcZCnC1KW0ieUoZ8u3ORSpm4y8+8f/jKhEcqGz4jl2jG8o0cEAsXwR17wH+6NZxY='}
 CALL_FUNC = 'eval_outputs'
 CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('spec_list.json', 'C:\\Users\\Administrator\\Desktop\\spec_list.json'), ('template.OutJob', 'C:\\Users\\Administrator\\Desktop\\template.OutJob')]
+INIT_MAP = [('spec.txt', 'C:\\Users\\Administrator\\Desktop\\spec.txt'), ('template.OutJob', 'C:\\Users\\Administrator\\Desktop\\template.OutJob')]
 
 
 def _decode(payload: str) -> bytes:
@@ -103,7 +103,31 @@ def _resolve_arg(spec: str):
     return spec
 
 
+
+def _has_generated_python_file() -> bool:
+    if not DESKTOP.exists():
+        return False
+    initial_python_names = {Path(rel).name for rel, _ in INIT_MAP if Path(rel).suffix.lower() == ".py"}
+    allowed_names = {"eval.py"}
+    allowed_names.update(initial_python_names)
+    try:
+        items = list(DESKTOP.iterdir())
+    except Exception:
+        return False
+    for path in items:
+        if path.name in allowed_names or path.name == "_runtime":
+            continue
+        try:
+            if path.is_file() and path.suffix.lower() == ".py":
+                return True
+        except Exception:
+            continue
+    return False
+
 def _run() -> bool:
+    if _has_generated_python_file():
+        return False
+
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

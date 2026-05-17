@@ -1,20 +1,9 @@
 {
   "id": "v-kicad-task-41-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Teardrop Generation\n\nThe file `/home/user/Desktop/board.kicad_pcb` is a routed PCB with 3 footprints (R1, R2, C1), each with 2 SMD pads, and one via. No teardrops are present. The file `/home/user/Desktop/NO_TEAR.txt` lists one net name per line that must be excluded from teardrop generation.\n\nAdd teardrops to every pad and via whose net is NOT listed in NO_TEAR.txt. Represent each teardrop as a (zone...) block with a (teardrop yes) attribute and a (filled_polygon...) child defining the teardrop shape. The teardrop geometry should approximate: length approx 1.5 x pad/via radius along the track direction, with width at the pad end matching the pad size and narrowing to the track width.\n\nRequirements:\n1. The output contains at least 7 teardrop zone blocks (6 pads + 1 via, minus any pads on excluded nets - NC1 has 0 pads in this board).\n2. Teardrop zones exist for nets SIG_A, GND, and VCC.\n3. No teardrop zones for any net listed in NO_TEAR.txt.\n4. Each teardrop zone has a (teardrop yes) attribute and a (filled_polygon...) with at least 3 (xy...) points.\n5. The original via count (1) and pad count (6) must remain unchanged.\n\nWrite /home/user/Desktop/answer.kicad_pcb.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "Zone Priority Reassignment\n\nThe file `board.kicad_pcb` is a 60x60 mm board with two overlapping copper zones on In1.Cu: GND fills the entire board and +3V3 fills the lower-left 30x30 mm quadrant. Both zones currently have equal priority (0). The +3V3 zone is supposed to have a 0.5 mm retreat clearance from GND.\n\nModify `board.kicad_pcb` so that:\n1. The +3V3 zone has a higher, nonzero priority than the GND zone so +3V3 copper wins in the overlap region.\n2. The +3V3 zone's clearance setting is 0.5 mm (reflecting the 0.5 mm GND retreat).\n3. The filled polygons are updated so the +3V3 region is filled with its own copper, and GND copper fills the rest. The GND:+3V3 area ratio of the filled polygons should be approximately 3:1 (the board minus the +3V3 quadrant vs. the +3V3 quadrant).\n\nRequirements:\n1. GND zone and +3V3 zone both exist on In1.Cu.\n2. +3V3 zone priority is strictly greater than GND zone priority and at least 1.\n3. +3V3 zone clearance >= 0.4 mm.\n4. Both zones have non-empty filled polygons (area > 0).\n5. The ratio of GND filled area to +3V3 filled area is within 15% of 3.0.\n6. No zone with (fill yes) is missing a (filled_polygon...).\n\nWrite /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
   "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-41/init_file/NO_TEAR.txt",
-            "path": "/home/user/Desktop/NO_TEAR.txt"
-          }
-        ]
-      }
-    },
     {
       "type": "upload_file",
       "parameters": {

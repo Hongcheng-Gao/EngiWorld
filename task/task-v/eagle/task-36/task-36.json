@@ -1,27 +1,16 @@
 {
   "id": "v-eagle-task-36-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Using `/home/user/Desktop/blinker.brd`, create a manufacturing-output zip named `/home/user/Desktop/answer.zip`. Requirements: 1. `/home/user/Desktop/answer.zip` must be a readable ZIP archive. 2. It must contain at least 6 Gerber files using the suffixes `.gtl`, `.gbl`, `.gto`, `.gbo`, `.gts`, and `.gbs`. 3. It must contain at least 1 drill file with suffix `.drl`, `.drd`, `.xln`, or `.nc`. 4. It must contain `README.txt`. 5. Every Gerber file must be non-empty and begin with `G04`, `G75`, `G70`, `G71`, `G01`, `G02`, `G03`, or `%`. 6. Every drill file must be non-empty and begin with `M48`, `%`, or `;`. 7. `README.txt` must mention every Gerber and drill filename in the archive.",
-  "source": "https://www.autodesk.com/products/fusion-360/blog/manufacturing-prep-pcb-layout-basics-4/",
+  "instruction": "Draw a closed `40 x 25 mm` board outline on layer `20` (`Dimension`) of `blank.brd`, and save the board as `/home/user/Desktop/answer.brd`. Rounded corners are optional. Requirements: 1. `/home/user/Desktop/answer.brd` parses as well-formed XML. 2. The file has at least 4 `<wire>` elements on layer `20`. 3. The bounding-box x-span of those layer-20 wire endpoints is `40 +/- 1 mm`. 4. The bounding-box y-span is `25 +/- 1 mm`. 5. The outline is closed: every wire endpoint, rounded to `0.001 mm`, is shared by at least 2 layer-20 wires. 6. The total `<element>` count is unchanged relative to the starter.",
+  "source": "https://learn.sparkfun.com/tutorials/using-eagle-board-layout/all",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-36/init_file/2layer.cam",
-            "path": "/home/user/Desktop/2layer.cam"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-36/init_file/blinker.brd",
-            "path": "/home/user/Desktop/blinker.brd"
+            "local_path": "task-36/init_file/blank.brd",
+            "path": "/home/user/Desktop/blank.brd"
           }
         ]
       }
@@ -31,8 +20,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/2layer.cam",
-          "/home/user/Desktop/blinker.brd"
+          "/home/user/Desktop/blank.brd"
         ]
       }
     },

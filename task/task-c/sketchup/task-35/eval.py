@@ -140,4 +140,4 @@ def _run() -> bool:
 
 
 if __name__ == "__main__":
-    print("true" if _run() else "false")
+    print("True" if _run() else "False")

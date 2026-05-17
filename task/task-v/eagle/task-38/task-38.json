@@ -1,16 +1,16 @@
 {
   "id": "v-eagle-task-38-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Draw a closed `40 x 25 mm` board outline on layer `20` (`Dimension`) of `/home/user/Desktop/blank.brd`, and save the board as `/home/user/Desktop/answer.brd`. Rounded corners are optional. Requirements: 1. `/home/user/Desktop/answer.brd` parses as well-formed XML. 2. The file has at least 4 `<wire>` elements on layer `20`. 3. The bounding-box x-span of those layer-20 wire endpoints is `40 +/- 1 mm`. 4. The bounding-box y-span is `25 +/- 1 mm`. 5. The outline is closed: every wire endpoint, rounded to `0.001 mm`, is shared by at least 2 layer-20 wires. 6. The total `<element>` count is unchanged relative to the starter.",
-  "source": "https://learn.sparkfun.com/tutorials/using-eagle-board-layout/all",
+  "instruction": "Look at `review.sch`, run EAGLE's Electrical Rule Check on it, and export the resulting plain-text ERC report as `/home/user/Desktop/answer.erc`. Requirements: 1. `/home/user/Desktop/answer.erc` must exist and be non-empty. 2. It must be readable as plain text. 3. It must clearly be an ERC report from EAGLE. 4. It must contain at least one reported issue from this schematic. 5. The report should be the actual ERC output for `review.sch`, not a hand-written summary.",
+  "source": "https://www.autodesk.com/products/fusion-360/blog/schematic-basics-part-3-erc/",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-38/init_file/blank.brd",
-            "path": "/home/user/Desktop/blank.brd"
+            "local_path": "task-38/init_file/review.sch",
+            "path": "/home/user/Desktop/review.sch"
           }
         ]
       }
@@ -20,7 +20,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/blank.brd"
+          "/home/user/Desktop/review.sch"
         ]
       }
     },

@@ -1,16 +1,16 @@
 {
   "id": "c-eagle-task-20-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Open `/home/user/Desktop/board.brd`, create a new user layer numbered `101` named `Fab_Notes`, place at least one wire and one text annotation on that layer in the board's `<plain>` section, and save the result as `/home/user/Desktop/annotated.brd`. Requirements: 1. `/home/user/Desktop/annotated.brd` must parse as well-formed XML. 2. `<layer number=\"101\" name=\"Fab_Notes\".../>` must exist under `<layers>`. 3. The board's `<plain>` block must contain at least one `<wire layer=\"101\"/>`. 4. The board's `<plain>` block must contain at least one `<text layer=\"101\"/>`. 5. Every starter layer number must remain present. 6. The element count must remain unchanged.",
-  "source": "https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-create-a-new-layer-in-EAGLE.html",
+  "instruction": "The file `/home/user/Desktop/dense.brd` is the board to clean up. Its refdes placeholders (`>NAME`) are embedded in the element bodies, cluttering the silkscreen. Reposition at least five element refdes labels as free-standing text on layer `25` (`tNames`) in the board's `<plain>` block, then save the result as `/home/user/Desktop/labeled.brd`. Requirements: 1. `/home/user/Desktop/labeled.brd` parses as well-formed XML. 2. The board's `<plain>` block contains at least 5 `<text layer=\"25\">` elements. 3. Every such layer-25 text has content equal to an existing element refdes in the board. 4. No refdes is labeled more than once. 5. The element count is unchanged relative to the starter. 6. The set of element names is identical between the starter and the output.",
+  "source": "https://learn.adafruit.com/ktowns-ultimate-creating-parts-in-eagle-tutorial/adding-%3Ename-and-%3Evalue-to-the-package",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-20/init_file/board.brd",
-            "path": "/home/user/Desktop/board.brd"
+            "local_path": "task-20/init_file/dense.brd",
+            "path": "/home/user/Desktop/dense.brd"
           }
         ]
       }

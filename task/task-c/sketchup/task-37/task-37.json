@@ -2,7 +2,7 @@
   "id": "c-sketchup-task-37-windows",
   "snapshot": "SketchUp2026",
   "instruction": "3DS export compatibility fix.\n\nThe input file `C:\\Users\\Administrator\\Desktop\\mesh.dae` is a COLLADA scene that violates two 3DS-format constraints:\n\n1. **Overlong names.** 30 of the 50 `<geometry>` elements carry names longer than 64 characters. Many of those names share an identical 64-character prefix and only differ in the suffix past char 64 - so a naive truncation to 64 characters would produce duplicates.\n2. **Quad faces.** 25 of the 50 geometries store their side faces as COLLADA `<polylist>` polygons with `<vcount>` = 4 (quads). The 3DS binary format only stores triangles, so every quad (or n-gon) must be triangulated before export.\n\n1. Read `C:\\Users\\Administrator\\Desktop\\mesh.dae` with any COLLADA parser (e.g. `pycollada`).\n2. Triangulate every non-triangular primitive by fan-triangulating each face around its first vertex.\n3. Derive a 3DS-safe name for every geometry:\n- If the original name is <=64 characters, keep it as-is.\n- Otherwise truncate to 55 characters and append `_` + the first 8 hex digits of the MD5 digest of the *original* name, producing a string exactly 64 characters long. Two long names that share the same 64-char prefix will get different hash suffixes, so uniqueness is preserved.\n- If a resulting name still collides with another (extremely rare), re-hash with a salt until unique.\n4. Write `C:\\Users\\Administrator\\Desktop\\output.3ds` - a valid 3DS binary containing one `NAMED_OBJECT` (chunk id 0x4000) per geometry, each with an `N_TRI_OBJECT` (0x4100) subchunk holding a `POINT_ARRAY` (0x4110) and `FACE_ARRAY` (0x4120). The file must start with the 3DS magic `0x4D4D` in little-endian order.\n5. Write `C:\\Users\\Administrator\\Desktop\\name_map.json` - a JSON object mapping every *original* DAE geometry name to its renamed <=64-char string. The map must have exactly 50 entries.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.3ds` exists. Its first two bytes are `0x4D 0x4D` (primary chunk magic), and the primary chunk's declared size matches the on-disk file size.\n2. The 3DS file contains a `0x3D3D` EDIT3DS chunk with at least 50 `0x4000` NAMED_OBJECT children.\n3. Every NAMED_OBJECT name is <=64 characters and all such names are unique within the file.\n4. Every NAMED_OBJECT contains an `N_TRI_OBJECT` whose `POINT_ARRAY` and `FACE_ARRAY` payloads are self-consistent (FACE_ARRAY stores exactly 4 uint16 per face - v1, v2, v3, flag - so the format itself guarantees triangles only).\n5. `C:\\Users\\Administrator\\Desktop\\name_map.json` exists, is valid JSON, and maps 50 original names to 50 <=64-char strings.\n6. All `name_map` values are unique and each value appears as a NAMED_OBJECT name in the 3DS file.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://www.khronos.org/collada/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://www.khronos.org/collada/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -43,7 +43,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

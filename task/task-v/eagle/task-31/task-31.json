@@ -1,16 +1,38 @@
 {
   "id": "v-eagle-task-31-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "look at `/home/user/Desktop/design.sch` and generate a grouped Bill of Materials using EAGLE's bundled `bom.ulp`, then save the output as `/home/user/Desktop/answer.csv`.\n\nRequirements:\n1. `/home/user/Desktop/answer.csv` is a readable CSV with at least one data row.\n2. The header row is exactly `Part,Value,Package,MPN,Datasheet`.\n3. The row count matches the number of non-DNP, non-supply, non-frame parts in the init schematic.\n4. Every non-DNP real part appears in the CSV.\n5. Parts flagged `DNP=yes` in the schematic are excluded from the CSV.\n6. The `MPN` and `Datasheet` columns are populated for at least 80% of rows.\n\nThe init schematic `/home/user/Desktop/design.sch` is a copy of EAGLE's `singlesided.sch` with `MPN` and `DATASHEET` attributes added to every real part, plus `DNP=yes` on `C6` and `Q1`.",
-  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6\nhttps://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-USER-LANG-REF.htm\nhttps://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-ULP-OBJECT-TYPES.htm",
+  "instruction": "Look at `loose.brd` in EAGLE, execute the shipped `/home/user/Desktop/apply_jlcpcb_2layer.scr` script to load the JLCPCB 2-layer design-rule preset from `/home/user/Desktop/jlcpcb_2layer.dru`, then save the board as `/home/user/Desktop/answer.brd`.\n\nRequirements:\n1. `/home/user/Desktop/answer.brd` remains a parseable EAGLE board XML file.\n2. The board contains a `<designrules>` block.\n3. `mdWireWire`, `mdWirePad`, `mdWireVia`, and `mdViaVia` are all at least `0.15 mm`.\n4. `msWidth` is at least `0.15 mm`.\n5. `mdDrill` is at least `0.30 mm`.\n6. `rlMinPadTop`, `rlMinPadInner`, and `rlMinPadBottom` are all at least `0.15 mm`.",
+  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-USER-LANG-REF.htm; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-ULP-OBJECT-TYPES.htm",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-31/init_file/design.sch",
-            "path": "/home/user/Desktop/design.sch"
+            "local_path": "task-31/init_file/apply_jlcpcb_2layer.scr",
+            "path": "/home/user/Desktop/apply_jlcpcb_2layer.scr"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-31/init_file/jlcpcb_2layer.dru",
+            "path": "/home/user/Desktop/jlcpcb_2layer.dru"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-31/init_file/loose.brd",
+            "path": "/home/user/Desktop/loose.brd"
           }
         ]
       }
@@ -20,7 +42,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/design.sch"
+          "/home/user/Desktop/loose.brd"
         ]
       }
     },

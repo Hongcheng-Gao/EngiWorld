@@ -1,16 +1,16 @@
 {
   "id": "v-eagle-task-37-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Look at `/home/user/Desktop/bus.sch`, remove the existing `ADDR[2..0]` bus, and replace it with three individual nets so that `ADDR0` on `U1` connects to `ADDR0` on `U2`, `ADDR1` on `U1` connects to `ADDR1` on `U2`, and `ADDR2` on `U1` connects to `ADDR2` on `U2`. Save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. The file must parse as EAGLE XML. 2. No `<bus>` element may remain. 3. Three `<net>` elements named `ADDR0`, `ADDR1`, and `ADDR2` must be present. 4. Each of those three nets must have at least 2 `<pinref>` entries. 5. Parts `U1` and `U2` must remain present.",
-  "source": "https://learn.sparkfun.com/tutorials/using-eagle-schematic/all",
+  "instruction": "Look at `topside.brd` in EAGLE. Every SMD component currently sits on the Top side. Flip the entire board to the Bottom side and save the result as `/home/user/Desktop/answer.brd`. Requirements: 1. `/home/user/Desktop/answer.brd` remains a parseable EAGLE board XML file. 2. The board keeps the same number of `<element>` entries as the starter. 3. Every `<element>` is mirrored to the Bottom side, so its `rot` attribute begins with `M`. 4. Each element keeps the same `x` and `y` coordinates as in the starter board. 5. The `<signals>` block keeps the same number of signals as the starter. Do not delete the `<signals>`, `<libraries>`, or `<layers>` sections.",
+  "source": "https://forums.autodesk.com/t5/eagle-forum/flip-the-board/td-p/6947268",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-37/init_file/bus.sch",
-            "path": "/home/user/Desktop/bus.sch"
+            "local_path": "task-37/init_file/topside.brd",
+            "path": "/home/user/Desktop/topside.brd"
           }
         ]
       }
@@ -20,7 +20,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/bus.sch"
+          "/home/user/Desktop/topside.brd"
         ]
       }
     },

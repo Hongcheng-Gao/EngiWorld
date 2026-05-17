@@ -1,8 +1,8 @@
 {
   "id": "v-kicad-task-45-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Clock Trace Topology: Star to Daisy Chain\n\nThe file board.kicad_pcb has a 100 MHz clock (net CLK) routed as a star topology: one source (U1) fans out to three loads (U2, U3, U4) through a common hub. A series-termination resistor footprint (R_TERM, 22R) sits in a scratch area with no net connection.\n\nRe-route CLK as a daisy chain with R_TERM inserted as a series terminator between the source and the first load. Split the net into CLK_PRE (source side) and CLK (load side). Move R_TERM to a position between U1 and the load chain.\n\nRequirements:\n1. Net CLK_PRE exists; U1 output pad is on CLK_PRE.\n2. Net CLK exists; U2, U3, U4 input pads are on CLK.\n3. R_TERM pad \"1\" is on CLK_PRE; R_TERM pad \"2\" is on CLK.\n4. CLK net topology is a chain (no node with 3+ segments meeting - no star junction).\n5. Total CLK segment length <= 100 mm.\n\nWrite /home/user/Desktop/answer.kicad_pcb.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "ESD Protection Placement\n\nThe file board.kicad_pcb has 4 external connectors (J1-J4) each protected by an ESD array (D1-D4). The ESD arrays are currently placed far from their connectors. The file /home/user/Desktop/esd_map.csv maps each connector pad to its ESD signal pad and net.\n\nMove each ESD array so its signal pin (as listed in /home/user/Desktop/esd_map.csv column esd_signal_pad) is within 5 mm of the corresponding connector pad. Do not change connector positions. Preserve the ESD footprint rotation.\n\nRequirements:\n1. Each ESD signal pad is <= 5 mm from its connector pad (per /home/user/Desktop/esd_map.csv).\n2. Connector footprint positions unchanged.\n3. ESD footprint rotation preserved.\n\nWrite /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
   "config": [
     {
       "type": "upload_file",
@@ -11,6 +11,17 @@
           {
             "local_path": "task-45/init_file/board.kicad_pcb",
             "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-45/init_file/esd_map.csv",
+            "path": "/home/user/Desktop/esd_map.csv"
           }
         ]
       }

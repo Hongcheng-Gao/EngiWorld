@@ -2,7 +2,7 @@
   "id": "c-sketchup-task-25-windows",
   "snapshot": "SketchUp2026",
   "instruction": "Hip Roof over Rectangular Footprint\n\nRead `C:\\Users\\Administrator\\Desktop\\roof_spec.json` which defines:\n- `footprint_length_m` (long axis) and `footprint_width_m` (short axis) - the building footprint in metres.\n- `slope_deg` - the uniform slope angle of every roof plane.\n- `overhang_m` - the eave overhang on all four sides (horizontal extension beyond the footprint).\n- `eave_z_m` - the Z elevation of all four eave edges.\n\nBuild a proper hip roof over the implied eave rectangle (footprint expanded by `2*overhang` in each horizontal direction). Orient the longer eave dimension along X and the shorter along Y. The roof must have:\n- Exactly 6 unique vertices: 4 eave corners at Z = `eave_z_m` and 2 ridge endpoints.\n- 4 planar roof surfaces, all at the same slope angle = `slope_deg`:\n- 2 long-side trapezoids (at Y = 0 and Y = short_dim).\n- 2 short-side triangular hips (at X = 0 and X = long_dim).\n- 1 main ridge running parallel to the long axis at Y = short_dim / 2, of length `long_dim - short_dim`, centered over the rectangle.\n- 2 hip ridges at each short end (4 total), rising diagonally from each ridge endpoint to the two adjacent eave corners.\n\nWith equal slope on all four sides, the ridge rise above the eave is `h = (short_dim / 2) * tan(slope_deg)`, so the ridge Z = `eave_z_m + h`. Each ridge endpoint's horizontal position sits `short_dim / 2` inward from the nearest short eave.\n\nSave the native SketchUp model to `C:\\Users\\Administrator\\Desktop\\answer.skp`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\answer.skp` can be opened and inspected as a native SketchUp model.\n2. The mesh has exactly 6 unique vertices (within 1 mm) - 4 eave corners + 2 ridge endpoints.\n3. Bounding-box horizontal extents equal `footprint_length + 2*overhang` (long) and `footprint_width + 2*overhang` (short) within 2 mm; Z extents match `eave_z` at the bottom and `eave_z + (short/2)*tan(slope)` at the top within 3 mm.\n4. Exactly 4 distinct planar roof faces detected by normal clustering: 2 long-side planes (normal in Y-Z plane) and 2 short-side planes (normal in X-Z plane). All four face normals have positive Z.\n5. Slope angle of every plane (angle between plane normal and vertical) equals `slope_deg` within 0.5 deg.\n6. One main ridge edge exists as the shared boundary between the two long-side planes, with length = `long_dim - short_dim` within 5 mm, and its midpoint is centered on both the long and short axes.\n7. Exactly 4 hip-ridge edges connect each ridge endpoint to the two adjacent eave corners; each hip edge is shared by one long-side plane and one short-side plane; hip edge length = `sqrt((short/2)^2 + (short/2)^2 + h^2)` within 5 mm.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/",
+  "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/",
   "config": [
     {
       "type": "upload_file",
@@ -43,7 +43,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

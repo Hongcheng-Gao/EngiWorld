@@ -1,16 +1,27 @@
 {
   "id": "v-kicad-task-35-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "PCB Routing Completion\n\nYou are given an unrouted KiCad PCB file `/home/user/Desktop/unrouted.kicad_pcb` with 8 placed components (4 resistors, 3 capacitors, 1 connector) and 5 nets (GND, VCC, SIG_A, SIG_B, SIG_C). No traces have been routed yet.\n\nProduce a fully-routed version of the board. Every net with 2 or more pads must be connected by copper tracks (segments). The component placement must remain exactly as in the input file.\n\nRequirements:\n1. All 5 signal nets are fully connected - every pad in a net must be reachable from every other pad in the same net via segments and/or vias.\n2. The routed.kicad_pcb file preserves all footprint positions (at coordinates) from the input.\n3. At least one (segment...) block exists per signal net.\n4. All segments reference valid net numbers from the board's net declarations.\n5. The output is a valid KiCad 9 PCB s-expression file.\n\nWrite `/home/user/Desktop/routed.kicad_pcb`.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "Back-Annotation of Footprint Changes\n\nThe files design.kicad_sch and design.kicad_pcb are a matched KiCad 9 schematic and board. During layout, 12 components had their footprints changed from 0603 to 0402 in the PCB file. The schematic still shows the original 0603 footprints for those components.\n\nBack-annotate the schematic so every component's Footprint field matches the footprint used in the board. Write the updated schematic as /home/user/Desktop/answer.kicad_sch.\n\nRequirements:\n1. For every refdes, the Footprint property in the output schematic must exactly match the footprint name used for that component in design.kicad_pcb.\n2. Components whose footprints were not changed in the board must retain their original Footprint field (no spurious changes).\n3. The symbol count, all reference designators, all Value fields, and all other properties must remain unchanged.\n4. No Footprint field may be empty.\n\nWrite design.kicad_sch.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html; https://docs.kicad.org/9.0/en/eeschema/eeschema.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-35/init_file/unrouted.kicad_pcb",
-            "path": "/home/user/Desktop/unrouted.kicad_pcb"
+            "local_path": "task-35/init_file/design.kicad_pcb",
+            "path": "/home/user/Desktop/design.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/design.kicad_sch",
+            "path": "/home/user/Desktop/design.kicad_sch"
           }
         ]
       }
@@ -20,7 +31,8 @@
       "parameters": {
         "command": [
           "kicad",
-          "/home/user/Desktop/unrouted.kicad_pcb"
+          "/home/user/Desktop/design.kicad_pcb",
+          "/home/user/Desktop/design.kicad_sch"
         ]
       }
     },

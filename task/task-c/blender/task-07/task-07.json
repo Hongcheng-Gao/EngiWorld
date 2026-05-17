@@ -2,7 +2,7 @@
   "id": "c-blender-task-07-ubuntu",
   "snapshot": "Blender-4.2.3",
   "instruction": "Heightmap to Terrain Mesh\n\n`/home/user/Desktop/height.png` is a 64×64 8-bit grayscale PNG. `/home/user/Desktop/template.blend` is an empty scene. Build a heightmap terrain mesh from the PNG and save the result to `/home/user/Desktop/answer.blend`.\n\n## Mesh definition\n- One vertex per pixel, so the mesh has 64×64 = 4096 vertices.\n- For pixel at column `x` and row `y` with 8-bit grayscale value `v ∈ [0, 255]`, the corresponding vertex in the object's local space is `(x, y, v / 255 * 0.5)`. (So Z = 0 at black, Z = 0.5 at white.) Columns correspond to PNG x, rows to PNG y.\n- Adjacent 2×2 pixel blocks form faces. That is, for every `0 ≤ x < 63` and `0 ≤ y < 63` there is a face whose corners are the four vertices at `(x,y)`, `(x+1,y)`, `(x+1,y+1)`, `(x,y+1)`. Faces may be kept as quads (3969 total) or triangulated (7938 total) — both are accepted.\n- The mesh object is named `Terrain`. Its object origin is at world `(0, 0, 0)` and it has no modifiers.\n- No other mesh objects may be present in the saved scene.\n\n## Requirements\n1. `/home/user/Desktop/answer.blend` exists and opens.\n2. The scene contains exactly one mesh object, named `Terrain`, with an empty modifier stack.\n3. `Terrain.location` equals `(0, 0, 0)` within 1e-5.\n4. The mesh has exactly 4096 vertices.\n5. The mesh has either 3969 polygons (quads) or 7938 polygons (triangulated).\n6. In object space, the vertex X coordinates span `[0, 63]` and the Y coordinates span `[0, 63]`, each endpoint within 1e-3.\n7. In object space, Z values are in `[0, 0.5]`, and `max(z)` is consistent with the PNG's maximum pixel value at scale 0.5 within 0.01.\n8. For each of the pixel coordinates `(0,0)`, `(0,63)`, `(63,0)`, `(31,31)` there is a vertex at the expected `(x, y, v/255 * 0.5)` within 1e-2.\n\nHow you produce `/home/user/Desktop/answer.blend` (Blender UI, a Python script, or otherwise) is up to you; only the final state matters.",
-  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -11,7 +11,14 @@
           {
             "local_path": "task-07/init_file/height.png",
             "path": "/home/user/Desktop/height.png"
-          },
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
           {
             "local_path": "task-07/init_file/template.blend",
             "path": "/home/user/Desktop/template.blend"

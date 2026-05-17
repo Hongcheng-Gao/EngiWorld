@@ -1,27 +1,16 @@
 {
   "id": "c-kicad-task-18-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Excellon NC Drill with Route-Through Slots\n\nThe file /home/user/Desktop/board.kicad_pcb contains through-hole pads. The file /home/user/Desktop/slots.csv defines four routed slots, each with start and end coordinates and a width in millimeters.\n\nModify the board so those four slots are represented in the KiCad PCB, then export the native KiCad drill file from that finished board.\n\nRequirements:\n1. The exported drill file must be a complete native KiCad Excellon output with an M48 header and an M30 trailer.\n2. It must include METRIC, FMAT,2, and G90.\n3. It must contain exactly four G85 routed-slot entries, one for each row of /home/user/Desktop/slots.csv, with coordinates matching the slot geometry within 0.01 mm in KiCad's drill export coordinate system.\n4. It must retain the round drill hits for the through-hole pads already present in /home/user/Desktop/board.kicad_pcb.\n5. The slot tool widths used in the drill file must match the widths listed in /home/user/Desktop/slots.csv.\n\nWrite /home/user/Desktop/board.kicad_pcb and /home/user/Desktop/board.drl.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "DDR3 Byte Lane Length Matching\n\nThe file `/home/user/Desktop/ddr3.kicad_pcb` contains a DDR3 byte lane with 11 nets routed on F.Cu: DQS_P, DQS_N (the reference pair at 35 mm each), DQ0-DQ7, and DM. The DQ and DM traces are currently unmatched, ranging from approximately 28 mm to 34 mm.\n\nAdd serpentine segments to the DQ0-DQ7 and DM nets to match the DQS reference length. Do NOT modify the DQS_P or DQS_N traces.\n\nRequirements:\n1. The maximum minus minimum length across all 11 nets must be <= 150 um.\n2. DQS_P and DQS_N lengths must remain within +/-0.1 mm of their input values.\n3. Serpentine bends must maintain at least 0.2 mm spacing between net traces (3H rule for 0.1 mm trace width); bends must stay within 1.5 mm of their track's y-center.\n4. All segments must remain on F.Cu.\n5. The output file must parse as a valid KiCad 9 PCB s-expression.\n6. Also write `/home/user/Desktop/fcu.svg` as the native KiCad CLI F.Cu SVG export of your final board.\n\nWrite /home/user/Desktop/ddr3.kicad_pcb and /home/user/Desktop/fcu.svg.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-18/init_file/board.kicad_pcb",
-            "path": "/home/user/Desktop/board.kicad_pcb"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-18/init_file/slots.csv",
-            "path": "/home/user/Desktop/slots.csv"
+            "local_path": "task-18/init_file/ddr3.kicad_pcb",
+            "path": "/home/user/Desktop/ddr3.kicad_pcb"
           }
         ]
       }

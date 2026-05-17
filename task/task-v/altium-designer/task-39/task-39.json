@@ -1,16 +1,16 @@
 {
   "id": "v-altium-designer-task-39-windows",
   "snapshot": "altium-designer",
-  "instruction": "look at `C:\\Users\\Administrator\\Desktop\\template.OutJob` in Altium Designer. Using `C:\\Users\\Administrator\\Desktop\\spec_list.json`, build a batch PDF publishing OutJob and save it as `C:\\Users\\Administrator\\Desktop\\pdfs.OutJob`.\n\nRequirements:\n- Add a PDF output medium whose `Name` is `PDF` and whose `Type` is `Publish`.\n- Create exactly 8 outputs in the same output group.\n- For each output, keep `OutputEnabled=1` and route it to the PDF medium.\n- The `OutputName`, `OutputType`, and distinguishing extra field (`DocumentType` or `PlotLayer`, as specified in `C:\\Users\\Administrator\\Desktop\\spec_list.json`) must match the specification exactly for all 8 outputs.",
-  "source": "https://www.altium.com/documentation/altium-designer\nhttps://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs\nhttps://www.altium.com/documentation/altium-designer/draftsman?version=19",
+  "instruction": "The opened file `template.OutJob` is the starting OutJob. Following `C:\\Users\\Administrator\\Desktop\\spec.txt`, create a JLCPCB-style Pick and Place OutJob and save it as `C:\\Users\\Administrator\\Desktop\\jlcpcb.OutJob`.\n\nRequirements:\n- In `[OutputGroup1]`, create exactly one Pick Place output.\n- Set `Columns` to `Designator,Comment,Layer,X,Y,Rotation`.\n- Set `Units` to `mil`.\n- Set `DecimalPlaces` to `2`.\n- Set `Delimiter` to `,`.\n- Keep the output enabled and route it to the `Folder Structure` output medium.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-39/init_file/spec_list.json",
-            "path": "C:\\Users\\Administrator\\Desktop\\spec_list.json"
+            "local_path": "task-39/init_file/spec.txt",
+            "path": "C:\\Users\\Administrator\\Desktop\\spec.txt"
           }
         ]
       }
@@ -30,7 +30,7 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Program Files\\Altium\\AD26\\X2.exe",
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
           "C:\\Users\\Administrator\\Desktop\\template.OutJob"
         ]
       }

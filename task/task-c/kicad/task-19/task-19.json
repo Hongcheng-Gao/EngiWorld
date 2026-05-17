@@ -1,27 +1,16 @@
 {
   "id": "c-kicad-task-19-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Multi-Board Consistency Check\n\nTwo boards, /home/user/Desktop/board_a.kicad_pcb and /home/user/Desktop/board_b.kicad_pcb, each contain a power-supply subsection (footprints carry a property \"section\" whose value is \"POWER\"). The two subsections are expected to be schematically identical because they derive from the same reusable subcircuit, but board_b has drifted and now differs from board_a in a small number of ways. The non-power portions of the two boards are intentionally different and must be preserved.\n\n1. Diff the power subsections of board_a vs board_b and enumerate every difference.\n2. Produce a corrected board_b in which the power subsection matches board_a while the non-power portion is left untouched.\n\nRequirements:\n1. Write /home/user/Desktop/delta.csv with header exactly:\nitem_type,refdes_or_net,board_a_value,board_b_value,difference_kind\nOne row per difference found. Report each difference exactly once. No spurious rows.\n2. Write /home/user/Desktop/board_b_synced.kicad_pcb: a valid KiCad PCB s-expression whose POWER-section footprints and net names agree with board_a, and whose non-POWER footprints match board_b unchanged.\n3. The synced board_b must parse as a KiCad PCB, must not reference any renamed net that was only in the drifted board_b, and must contain every component that exists in board_a's POWER section.\n\nWrite /home/user/Desktop/delta.csv and /home/user/Desktop/board_b_synced.kicad_pcb.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html\nhttps://docs.kicad.org/9.0/en/eeschema/eeschema.html",
+  "instruction": "V-Score Panel with Rail\n\nYou have a single-board design in `/home/user/Desktop/A.kicad_pcb` (50x30 mm, containing R1, C1, D1 footprints). You must create a panelized version with rails and V-score markings for depaneling.\n\nGenerate `/home/user/Desktop/panel.kicad_pcb` as a 3-column x 2-row panel of the A board.\n\nRequirements:\n1. Panel outer Edge.Cuts outline must be within a 180x120 mm bounding box.\n2. Include 6 copies of A board's footprints (refdes prefixed: A1_R1, A1_C1, A1_D1, A2_R1,... A6_D1) placed in a 3x2 grid with 50 mm horizontal spacing and 30 mm vertical spacing, plus 5 mm rails at top and bottom and 5 mm margins on left and right.\n3. Add at least 5 V-score lines on the Eco1.User layer: 2 vertical interior seams (between columns), 1 horizontal interior seam (between rows), plus top and bottom rail boundary lines.\n4. Include exactly 12 Fiducial:Fiducial_1mm_Mask2mm footprints: 3 per rail corner group (top-left, top-right, bottom-left, bottom-right corners of the panel rails).\n5. All 6 board instances must not overlap: centroid distance between instances >= 20 mm.\n6. Also write `/home/user/Desktop/edgecuts.svg` as the native KiCad CLI Edge.Cuts SVG export of your final panel.\n7. Also write `/home/user/Desktop/eco1.svg` as the native KiCad CLI Eco1.User SVG export of your final panel.\n\nWrite /home/user/Desktop/panel.kicad_pcb, /home/user/Desktop/edgecuts.svg, and /home/user/Desktop/eco1.svg.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html; https://yaqwsx.github.io/KiKit/latest/panelization/",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-19/init_file/board_a.kicad_pcb",
-            "path": "/home/user/Desktop/board_a.kicad_pcb"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-19/init_file/board_b.kicad_pcb",
-            "path": "/home/user/Desktop/board_b.kicad_pcb"
+            "local_path": "task-19/init_file/A.kicad_pcb",
+            "path": "/home/user/Desktop/A.kicad_pcb"
           }
         ]
       }

@@ -1,62 +1,117 @@
 {
-  "id": "v-sketchup-task-26-windows",
-  "snapshot": "SketchUp2026",
-  "instruction": "Bill of Materials (BOM) Extraction\n\nOpen `C:\\Users\\Administrator\\Desktop\\office.dae` in SketchUp and produce a bill of materials as `C:\\Users\\Administrator\\Desktop\\output.csv`, listing each distinct component definition and its instance count.\n\n`C:\\Users\\Administrator\\Desktop\\office.dae` contains 4 distinct named components: `Desk` (4 instances), `Chair` (4 instances), `FileCabinet` (2 instances), and `Plant` (2 instances). Each component definition name is carried by the corresponding COLLADA geometry name.\n\nWrite `C:\\Users\\Administrator\\Desktop\\output.csv` with the exact schema:\n\ncomponent_name,count\n<name1>,<n1>\n<name2>,<n2>\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.csv` parses as valid CSV.\n2. The header row is exactly `component_name,count`.\n3. Include one row per distinct component definition that has at least one instance.\n4. Rows are sorted alphabetically by `component_name`.\n5. `count` is a plain integer.\n6. The counts are `Chair = 4`, `Desk = 4`, `FileCabinet = 2`, and `Plant = 2`.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://ruby.sketchup.com/Sketchup/ComponentDefinition.html\nhttps://www.khronos.org/collada/",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-26/init_file/office.dae",
-            "path": "C:\\Users\\Administrator\\Desktop\\office.dae"
-          }
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe",
-          "C:\\Users\\Administrator\\Desktop\\office.dae"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "sketchup"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-26/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "id":  "v-sketchup-task-26-windows",
+    "snapshot":  "SketchUp2026",
+    "instruction":  "The opened file `broken_tex.dae` has 5 broken diffuse texture references; repair them so that each one points to the matching file under `C:\\Users\\Administrator\\Desktop\\textures\\`, save the repaired model as `C:\\Users\\Administrator\\Desktop\\output.dae`, keep the repaired texture files in `C:\\Users\\Administrator\\Desktop\\textures\\`, and write the report to `C:\\Users\\Administrator\\Desktop\\output\\relink_report.json`.\n\nThe 5 broken source paths are:\n- `/missing/original/tex_1.png`\n- `/missing/original/tex_2.png`\n- `/missing/original/tex_3.png`\n- `/missing/original/tex_4.png`\n- `/missing/original/tex_5.png`\n\nThe real replacement files are already provided as `textures\\tex_1.png` through `textures\\tex_5.png`. Each repaired image reference must be rewritten to the relative path `textures\\\u003cbasename\u003e`.\n\nWrite `relink_report.json` with this exact schema:\n\n{\n  \"relinked\": {\n    \"/missing/original/tex_1.png\": \"textures\\tex_1.png\",\n    \"/missing/original/tex_2.png\": \"textures\\tex_2.png\",\n    \"/missing/original/tex_3.png\": \"textures\\tex_3.png\",\n    \"/missing/original/tex_4.png\": \"textures\\tex_4.png\",\n    \"/missing/original/tex_5.png\": \"textures\\tex_5.png\"\n  },\n  \"n_relinked\": 5\n}\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` is a valid COLLADA file.\n2. `C:\\Users\\Administrator\\Desktop\\output.dae` contains exactly 5 image entries and exactly 5 material entries.\n3. Each repaired image path starts with `textures\\` and resolves to an existing file next to `output.dae`.\n4. The 5 repaired basenames are exactly `{tex_1.png, tex_2.png, tex_3.png, tex_4.png, tex_5.png}`.\n5. `C:\\Users\\Administrator\\Desktop\\output\\relink_report.json` is valid JSON with keys `relinked` and `n_relinked`, and its mapping matches the 5 repaired paths exactly.",
+    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://www.khronos.org/collada/",
+    "config":  [
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-26/init_file/broken_tex.dae",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\broken_tex.dae"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-26/init_file/textures/tex_1.png",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\textures\\tex_1.png"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-26/init_file/textures/tex_2.png",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\textures\\tex_2.png"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-26/init_file/textures/tex_3.png",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\textures\\tex_3.png"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-26/init_file/textures/tex_4.png",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\textures\\tex_4.png"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-26/init_file/textures/tex_5.png",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\textures\\tex_5.png"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "launch",
+                       "parameters":  {
+                                          "command":  [
+                                                          "C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe",
+                                                          "C:\\Users\\Administrator\\Desktop\\broken_tex.dae"
+                                                      ]
+                                      }
+                   }
+               ],
+    "trajectory":  "trajectories/",
+    "related_apps":  [
+                         "sketchup"
+                     ],
+    "evaluator":  {
+                      "postconfig":  [
+                                         {
+                                             "type":  "upload_file",
+                                             "parameters":  {
+                                                                "files":  [
+                                                                              {
+                                                                                  "local_path":  "task-26/eval.py",
+                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
+                                                                              }
+                                                                          ]
+                                                            }
+                                         }
+                                     ],
+                      "func":  "exact_match",
+                      "result":  {
+                                     "type":  "vm_command_line",
+                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
+                                     "shell":  "true"
+                                 },
+                      "expected":  {
+                                       "type":  "rule",
+                                       "rules":  {
+                                                     "expected":  "True\n"
+                                                 }
+                                   }
+                  },
+    "proxy":  false,
+    "fixed_ip":  false,
+    "possibility_of_env_change":  "low"
 }

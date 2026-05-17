@@ -1,8 +1,8 @@
 {
   "id": "v-zbrush-task-28-windows",
   "snapshot": "zbrush",
-  "instruction": "Project All High-Frequency Detail From HighDetail onto a Subdivided LowBase\n\nLook at `C:\\Users\\Administrator\\Desktop\\scene.obj`. It contains a ZBrush Tool with two SubTools:\n\n- HighDetail: a dense UV sphere of nominal radius 1.0 BU with moderate surface noise baked into its vertices (a few thousand triangles, all vertices at radius ~ 1.0 +- 0.02 BU).\n- LowBase: a low-poly icosphere (level 2, ~320 triangles) with the same overall shape but no high-frequency detail.\n\nLoad this OBJ into ZBrush, subdivide LowBase twice to give it enough resolution to capture HighDetail's surface, use Project All with LowBase selected to snap its vertices onto HighDetail's surface, and export the result as `C:\\Users\\Administrator\\Desktop\\output.obj`.\n\nThe exported `C:\\Users\\Administrator\\Desktop\\output.obj` must satisfy:\n\n- Exactly 2 SubTools: one named HighDetail and one named LowBase.\n- HighDetail has the same vertex and face counts as the input HighDetail SubTool.\n- LowBase's face count lies in [3000, 8000].\n- Every LowBase vertex lies within 0.005 BU of some HighDetail vertex.\n- LowBase's axis-aligned bounding box matches HighDetail's bounding box along each axis within 1%.",
-  "source": "https://help.maxon.net/zbr/en-us/\nhttps://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "instruction": "Project All High-Frequency Detail From HighDetail onto a Subdivided LowBase\n\nThe opened `scene.obj` contains a ZBrush Tool with two SubTools:\n\n- HighDetail: a dense UV sphere of nominal radius 1.0 BU with moderate surface noise baked into its vertices (a few thousand triangles, all vertices at radius ~ 1.0 +- 0.02 BU).\n- LowBase: a low-poly icosphere (level 2, ~320 triangles) with the same overall shape but no high-frequency detail.\n\nUsing the opened OBJ in ZBrush, subdivide LowBase twice to give it enough resolution to capture HighDetail's surface, use Project All with LowBase selected to snap its vertices onto HighDetail's surface, and export the result as `C:\\Users\\Administrator\\Desktop\\output.obj`.\n\nThe exported `C:\\Users\\Administrator\\Desktop\\output.obj` must satisfy:\n\n- Exactly 2 SubTools: one named HighDetail and one named LowBase.\n- HighDetail has the same vertex and face counts as the input HighDetail SubTool.\n- LowBase's face count lies in [3000, 8000].\n- Every LowBase vertex lies within 0.005 BU of some HighDetail vertex.\n- LowBase's axis-aligned bounding box matches HighDetail's bounding box along each axis within 1%.",
+  "source": "https://help.maxon.net/zbr/en-us/; https://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -19,7 +19,7 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\Program Files\\Maxon ZBrush 2026\\Zbrush.exe",
+          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
           "C:\\Users\\Administrator\\Desktop\\scene.obj"
         ]
       }

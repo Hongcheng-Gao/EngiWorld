@@ -1,27 +1,16 @@
 {
   "id": "c-eagle-task-23-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Open `/home/user/Desktop/test.lbr`, run the library consistency check, and save the resulting report as `/home/user/Desktop/consistency.md`. Requirements: 1. `/home/user/Desktop/consistency.md` must exist and contain at least 100 bytes of readable UTF-8 text. 2. The report must mention a missing-pad defect. 3. The report must mention a duplicate-pin defect. 4. The report must mention a missing-pin defect. 5. The report must mention an uncovered-pin or not-connected-pin defect.",
-  "source": "https://github.com/plusea/EAGLE/blob/master/ulp/exp-project-lbr.ulp",
+  "instruction": "The file `/home/user/Desktop/coin.brd` is the board to panelize. Create six prefixed copies of its element set and save the result as `/home/user/Desktop/coin_panel.brd`. Requirements: 1. The file must be valid XML. 2. The total element count must equal 6 times the original element count in `/home/user/Desktop/coin.brd`. 3. Every element refdes must start with a cell prefix matching `^[A-Z]\\d+_`. 4. All six prefixes `A1_`, `A2_`, `A3_`, `B1_`, `B2_`, and `B3_` must appear. 5. Each prefix must cover the same number of elements as the original board. 6. All refdes must be unique across the panel.",
+  "source": "https://github.com/plusea/EAGLE/blob/master/ulp/panelize.ulp",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-23/init_file/README.txt",
-            "path": "/home/user/Desktop/README.txt"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-23/init_file/test.lbr",
-            "path": "/home/user/Desktop/test.lbr"
+            "local_path": "task-23/init_file/coin.brd",
+            "path": "/home/user/Desktop/coin.brd"
           }
         ]
       }

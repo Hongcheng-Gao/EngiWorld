@@ -1,16 +1,27 @@
 {
   "id": "c-eagle-task-21-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Drop 6-8 through-hole stitching vias on a roughly uniform grid inside the pre-existing GND polygon on `/home/user/Desktop/poured.brd`, and save the board as `/home/user/Desktop/stitched.brd`. Requirements: 1. It parses as well-formed XML. 2. >= 6 new `<via>` elements appear as children of `<signal name='GND'>`. 3. Every new via sits inside the GND polygon's bounding box. 4. The new vias span at least 10 mm in x and 5 mm in y (evidence of a real grid rather than clustered in one spot). 5. The GND `<polygon layer='1'>` is still present. 6. The `<element>` count is unchanged vs. The starter.",
-  "source": "https://forums.autodesk.com/t5/eagle-forum/feature-request-via-stitching-shielding/td-p/8281895",
+  "instruction": "The file `/home/user/Desktop/test.lbr` is the library to inspect. Run the library consistency check and save the resulting report as `/home/user/Desktop/consistency.md`. Requirements: 1. `/home/user/Desktop/consistency.md` must exist and contain at least 100 bytes of readable UTF-8 text. 2. The report must mention a missing-pad defect. 3. The report must mention a duplicate-pin defect. 4. The report must mention a missing-pin defect. 5. The report must mention an uncovered-pin or not-connected-pin defect.",
+  "source": "https://github.com/plusea/EAGLE/blob/master/ulp/exp-project-lbr.ulp",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-21/init_file/poured.brd",
-            "path": "/home/user/Desktop/poured.brd"
+            "local_path": "task-21/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/test.lbr",
+            "path": "/home/user/Desktop/test.lbr"
           }
         ]
       }

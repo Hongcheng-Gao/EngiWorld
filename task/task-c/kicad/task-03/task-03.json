@@ -1,16 +1,16 @@
 {
   "id": "c-kicad-task-03-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Impedance-Controlled Trace Widths\n\nThe file `/home/user/Desktop/board.kicad_pcb` is a 4-layer board with a stackup defined in its (setup (stackup...)) section: 1 oz outer copper, 0.5 oz inner copper, Dk=4.2 FR4, 200 um prepreg between outer and inner, 400 um core between inner layers. Three net classes - USB_DP_DM (target 90 ohm differential), ETH_MDI (target 100 ohm differential), and HDMI_TMDS (target 100 ohm differential) - exist in `/home/user/Desktop/board.kicad_pro` but all currently have the wrong track widths and gaps (0.25 mm / 0.2 mm).\n\n1. Compute the correct differential-pair trace width and gap for each net class using edge-coupled microstrip formulas (Wadell) for the given stackup. The outer signal layers are referenced to the first inner plane (200 um dielectric). Update the `track_width`, `diff_pair_width`, and `diff_pair_gap` fields for each class in `/home/user/Desktop/board.kicad_pro`.\n2. In `/home/user/Desktop/board.kicad_pcb`, add GND stitching vias along the HDMI_TMDS routed pair. Via pitch must be <= 5 mm. Vias must be on net GND.\n\nRequirements:\n1. `/home/user/Desktop/board.kicad_pro`: USB_DP_DM track_width approx 0.13 mm (+/-5%), diff_pair_gap approx 0.10 mm.\n2. `/home/user/Desktop/board.kicad_pro`: ETH_MDI track_width approx 0.10 mm (+/-10%), diff_pair_gap approx 0.15 mm.\n3. `/home/user/Desktop/board.kicad_pro`: HDMI_TMDS track_width approx 0.10 mm (+/-10%), diff_pair_gap approx 0.15 mm.\n4. `/home/user/Desktop/board.kicad_pcb`: at least 4 GND vias within the HDMI trace region, with max pitch <= 5 mm.\n5. All three net classes must remain present in the.kicad_pro file.\n\nWrite /home/user/Desktop/board.kicad_pro and /home/user/Desktop/board.kicad_pcb.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html\nhttps://docs.kicad.org/9.0/en/eeschema/eeschema.html\nhttps://www.usb.org/documents",
+  "instruction": "DRC Rule Regression Detection\n\nYou have two board revisions (/home/user/Desktop/before.kicad_pcb and /home/user/Desktop/after.kicad_pcb) and a clearance ruleset (/home/user/Desktop/rules.kicad_dru, min clearance 0.2 mm). The after board was edited and may have introduced new clearance violations while fixing some existing ones.\n\n1. Determine which violations exist in before but not after (resolved) and which exist in after but not before (introduced).\n2. Produce /home/user/Desktop/diff.json enumerating introduced and resolved violations.\n3. Produce /home/user/Desktop/fixed.kicad_pcb identical to after but with only the newly introduced violations resolved (move offending segments apart to achieve >= 0.2 mm clearance). Pre-existing violations from before must remain unchanged.\n\nRequirements:\n1. /home/user/Desktop/diff.json: {\"added\": [{\"type\": \"clearance\", \"location\": [x, y]},...], \"removed\": [{\"type\": \"clearance\", \"location\": [x, y]},...]}.\n2. diff.added has exactly 2 entries; diff.removed has exactly 1 entry.\n3. /home/user/Desktop/fixed.kicad_pcb has no more clearance violations than /home/user/Desktop/before.kicad_pcb.\n4. /home/user/Desktop/fixed.kicad_pcb segment count matches /home/user/Desktop/after.kicad_pcb; net IDs preserved.\n\nWrite /home/user/Desktop/diff.json and /home/user/Desktop/fixed.kicad_pcb.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html; https://docs.kicad.org/9.0/en/eeschema/eeschema.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-03/init_file/board.kicad_pcb",
-            "path": "/home/user/Desktop/board.kicad_pcb"
+            "local_path": "task-03/init_file/after.kicad_pcb",
+            "path": "/home/user/Desktop/after.kicad_pcb"
           }
         ]
       }
@@ -20,8 +20,30 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-03/init_file/board.kicad_pro",
-            "path": "/home/user/Desktop/board.kicad_pro"
+            "local_path": "task-03/init_file/before.kicad_pcb",
+            "path": "/home/user/Desktop/before.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/rules.kicad_dru",
+            "path": "/home/user/Desktop/rules.kicad_dru"
           }
         ]
       }

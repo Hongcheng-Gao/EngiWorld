@@ -9,34 +9,35 @@
   (paper "A4")
   (layers
     (0 "F.Cu" signal)
-    (31 "B.Cu" signal)
+    (2 "B.Cu" signal)
+    (9 "F.Silkscreen" user)
+    (11 "B.Silkscreen" user)
+    (13 "F.Mask" user)
+    (15 "B.Mask" user)
     (44 "Edge.Cuts" user)
   )
   (setup
-    (pad_to_mask_clearance 0.1)
+    (pad_to_mask_clearance 0)
     (allow_soldermask_bridges_in_footprints no)
   )
   (net 0 "")
-  (net 1 "PERST#")
-  (net 2 "CLKREQ#")
-  (net 3 "WAKE#")
-  (net 4 "GND")
-
-  (segment (start 10 10) (end 60 10) (width 0.2) (layer "F.Cu") (net 1))
-
-  (segment (start 10 20) (end 90 20) (width 0.2) (layer "F.Cu") (net 2))
-
-  (segment (start 10 30) (end 130 30) (width 0.2) (layer "F.Cu") (net 3))
-
-  (zone (net 4) (net_name "GND") (layer "B.Cu") (hatch edge 0.5)
-    (connect_pads (clearance 0.5))
-    (min_thickness 0.25)
-    (polygon
-      (pts
-        (xy 0 0) (xy 150 0) (xy 150 60) (xy 0 60)
-      )
-    )
+  (net 1 "3V3")
+  (net 2 "GND")
+  ; Board outline: 80 x 60 mm
+  (gr_rect (start 0 0) (end 80 60) (layer "Edge.Cuts") (width 0.1) (fill no))
+  ; IC power pins (3V3 rail load point)
+  (footprint "SOT-23" (layer "F.Cu") (at 40 30)
+    (fp_text reference "U3" (at 0 -2) (layer "F.Silkscreen") (effects (font (size 1 1))))
+    (fp_text value "MCU" (at 0 2) (layer "F.Fab") (effects (font (size 1 1))))
+    (pad "1" smd rect (at -0.95 0.635) (size 0.9 1.4) (layers "F.Cu" "F.Mask") (net 1 "3V3"))
+    (pad "2" smd rect (at -0.95 -0.635) (size 0.9 1.4) (layers "F.Cu" "F.Mask") (net 2 "GND"))
+    (pad "3" smd rect (at 0.95 0) (size 0.9 1.4) (layers "F.Cu" "F.Mask") (net 1 "3V3"))
   )
-
-  (gr_rect (start 0 0) (end 150 60) (layer "Edge.Cuts") (width 0.1))
+  ; Initial decoupling caps — only 1, insufficient for target PDN impedance
+  (footprint "C_0402" (layer "F.Cu") (at 38 30)
+    (fp_text reference "C1" (at 0 -1) (layer "F.Silkscreen") (effects (font (size 0.5 0.5))))
+    (fp_text value "100nF" (at 0 1) (layer "F.Fab") (effects (font (size 0.5 0.5))))
+    (pad "1" smd rect (at -0.5 0) (size 0.5 0.5) (layers "F.Cu" "F.Mask") (net 1 "3V3"))
+    (pad "2" smd rect (at 0.5 0) (size 0.5 0.5) (layers "F.Cu" "F.Mask") (net 2 "GND"))
+  )
 )

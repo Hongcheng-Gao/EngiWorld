@@ -1,16 +1,27 @@
 {
   "id": "v-eagle-task-39-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Look at `/home/user/Desktop/topside.brd` in EAGLE. Every SMD component currently sits on the Top side. Flip the entire board to the Bottom side and save the result as `/home/user/Desktop/answer.brd`. Requirements: 1. `/home/user/Desktop/answer.brd` remains a parseable EAGLE board XML file. 2. The board keeps the same number of `<element>` entries as the starter. 3. Every `<element>` is mirrored to the Bottom side, so its `rot` attribute begins with `M`. 4. Each element keeps the same `x` and `y` coordinates as in the starter board. 5. The `<signals>` block keeps the same number of signals as the starter. Do not delete the `<signals>`, `<libraries>`, or `<layers>` sections.",
-  "source": "https://forums.autodesk.com/t5/eagle-forum/flip-the-board/td-p/6947268",
+  "instruction": "Look at `blank.sch`, add a landscape `DINA4_L` frame from the `frames` library, and populate its title block using the values provided in `/home/user/Desktop/info.txt`. Save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. The file must parse as EAGLE XML. 2. At least one `<part>` must use library `frames` and deviceset `DINA4_L`. 3. That frame part must also be placed on the sheet via an `<instance>`. 4. The strings `My Title`, `John Doe`, `2026`, and `v1.0` must appear in the schematic. 5. The sheet must contain at least 4 visible `<text>` elements.",
+  "source": "https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-make-customized-title-blocks-and-frames-for-documentation-purposes-in-Fusion-360-or-EAGLE.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-39/init_file/topside.brd",
-            "path": "/home/user/Desktop/topside.brd"
+            "local_path": "task-39/init_file/blank.sch",
+            "path": "/home/user/Desktop/blank.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-39/init_file/info.txt",
+            "path": "/home/user/Desktop/info.txt"
           }
         ]
       }
@@ -20,7 +31,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/topside.brd"
+          "/home/user/Desktop/blank.sch"
         ]
       }
     },

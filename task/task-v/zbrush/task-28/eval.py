@@ -129,7 +129,31 @@ def _resolve_arg(spec: str, desktop_view: Path):
     return spec
 
 
+
+def _has_generated_python_file() -> bool:
+    if not DESKTOP.exists():
+        return False
+    initial_python_names = {Path(rel).name for rel, _ in INIT_MAP if Path(rel).suffix.lower() == ".py"}
+    allowed_names = {"eval.py"}
+    allowed_names.update(initial_python_names)
+    try:
+        items = list(DESKTOP.iterdir())
+    except Exception:
+        return False
+    for path in items:
+        if path.name in allowed_names or path.name == "_runtime":
+            continue
+        try:
+            if path.is_file() and path.suffix.lower() == ".py":
+                return True
+        except Exception:
+            continue
+    return False
+
 def _run() -> bool:
+    if _has_generated_python_file():
+        return False
+
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

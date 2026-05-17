@@ -2,7 +2,7 @@
   "id": "c-sketchup-task-31-windows",
   "snapshot": "SketchUp2026",
   "instruction": "Box-joint wood joinery (5 fingers)\n\nBuild two 200 x 200 x 20 mm wood boards joined at 90 degrees along a shared corner edge via 5 interlocking box-joint fingers (each finger 40 mm wide). All units are millimetres.\n\nGeometry (world frame, units = mm):\n\n1. The shared corner edge runs along the X axis; both boards meet in the corner region Y in [0, 20], Z in [0, 20]. The shared edge is the X axis itself (Y = Z = 0).\n\n2. Along the X axis, 5 fingers of width 40 mm alternate between the two boards:\n- finger i = 0 (X in [ 0, 40]) -> belongs to Board A (A's extension into the corner)\n- finger i = 1 (X in [ 40, 80]) -> belongs to Board B (B's extension into the corner)\n- finger i = 2 (X in [ 80, 120]) -> belongs to Board A\n- finger i = 3 (X in [120, 160]) -> belongs to Board B\n- finger i = 4 (X in [160, 200]) -> belongs to Board A\nSo A contributes fingers at even i (0, 2, 4) and B contributes fingers at odd i (1, 3). A's fingers occupy the notches in B, and vice versa.\n\n3. Board A is the horizontal board (200 x 200 x 20 mm, thickness along Z):\n- bulk: X in [0, 200], Y in [ 20, 200], Z in [0, 20]\n- fingers: X in [0, 40] U [80, 120] U [160, 200], Y in [0, 20], Z in [0, 20]\nBoard A is a single solid manifold: the union of the bulk slab plus the three A-fingers.\n\n4. Board B is the vertical board (200 x 200 x 20 mm, thickness along Y):\n- bulk: X in [0, 200], Y in [0, 20], Z in [ 20, 220]\n- fingers: X in [40, 80] U [120, 160], Y in [0, 20], Z in [0, 20]\nBoard B is a single solid manifold: the union of the bulk slab plus the two B-fingers.\n\nDeliverables:\n- Export to `C:\\Users\\Administrator\\Desktop\\output.dae` at the output root.\n- The DAE must contain exactly 2 distinct ComponentDefinitions (BoardA and BoardB), each a separate geometry in `<library_geometries>`.\n- Each board must be a watertight solid manifold (no open seams in the corner, no cracks).\n- A's fingers and B's fingers must not intersect (they interlock; their AABBs are disjoint along X).\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. There are exactly 2 distinct geometry definitions referenced in the scene (Board A and Board B).\n3. The overall world-space axis-aligned bounding box is 200 mm (X) x 200 mm (Y) x 220 mm (Z) within 1 mm on each axis.\n4. In the corner region (Y < 20 mm, Z < 20 mm) there are exactly 5 distinct finger X-spans, each ~40 mm wide, and:\n- 3 of the fingers belong to one board (A's extensions at X in [0,40], [80,120], [160,200]) and\n- 2 of the fingers belong to the other board (B's extensions at X in [40,80], [120,160]).\n5. No finger of Board A overlaps with any finger of Board B (their axis-aligned bounding boxes in the corner region must be disjoint, with strictly non-overlapping X intervals).",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://ruby.sketchup.com/Sketchup/ComponentDefinition.html\nhttps://help.sketchup.com/en/sketchup/solid-tools\nhttps://www.khronos.org/collada/",
+  "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://help.sketchup.com/en/sketchup/solid-tools; https://www.khronos.org/collada/",
   "config": [
     {
       "type": "upload_file",
@@ -43,7 +43,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

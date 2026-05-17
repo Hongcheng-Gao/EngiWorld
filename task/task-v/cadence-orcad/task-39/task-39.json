@@ -1,8 +1,8 @@
 {
   "id": "v-cadence-orcad-task-39-windows",
   "snapshot": "OrCAD24.1",
-  "instruction": "Open `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN` in Capture. Some components in the design have placeholder reference designators with `?`, such as `R?`, `C?`, and `U?`, while the rest already keep complete numbering. Re-annotate every refdes that still contains `?` using these rules:\n\n- `R?` becomes `R101`, `R102`, `R103`,... in sequence.\n- `C?` becomes `C201`, `C202`,... in sequence.\n- `U?` becomes `U301`, `U302`,... in sequence.\n- Any other prefix `X?` must be renumbered continuously starting from `X901`.\n\nYou may choose the assignment order, but within each prefix the numbering must be continuous, with no gaps and no duplicates. Components that already have complete refdes must remain unchanged.\n\nRequirements:\n1. No refdes may still contain `?`.\n2. For every component whose refdes starts with a letter prefix, the numeric part must be `>= 1`.\n3. Among components that were originally `R?`, `C?`, or `U?`, there must be at least some assigned numbers `>= 100`.\n\nSave the modified `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN` together with its dependency files.",
-  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html\nhttps://support1.cadence.com/public/docs/content/20469530.html\nhttps://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html\nhttps://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "instruction": "In the opened project, edit `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN`. Some components in the design have placeholder reference designators with `?`, such as `R?`, `C?`, and `U?`, while the rest already keep complete numbering. Re-annotate every refdes that still contains `?` using these rules:\n\n- `R?` becomes `R101`, `R102`, `R103`,... in sequence.\n- `C?` becomes `C201`, `C202`,... in sequence.\n- `U?` becomes `U301`, `U302`,... in sequence.\n- Any other prefix `X?` must be renumbered continuously starting from `X901`.\n\nYou may choose the assignment order, but within each prefix the numbering must be continuous, with no gaps and no duplicates. Components that already have complete refdes must remain unchanged.\n\nRequirements:\n1. No refdes may still contain `?`.\n2. For every component whose refdes starts with a letter prefix, the numeric part must be `>= 1`.\n3. Among components that were originally `R?`, `C?`, or `U?`, there must be at least some assigned numbers `>= 100`.\n\nSave the modified `C:\\Users\\Administrator\\Desktop\\TUTOR2.DSN` together with its dependency files.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://support1.cadence.com/public/docs/content/20469530.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
   "config": [
     {
       "type": "upload_file",
@@ -51,7 +51,10 @@
     {
       "type": "launch",
       "parameters": {
-        "command": []
+        "command": [
+          "C:\\Cadence\\SPB_24.1\\tools\\bin\\capture.exe",
+          "C:\\Users\\Administrator\\Desktop\\DCLOCK2.OPJ"
+        ]
       }
     }
   ],
@@ -82,7 +85,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\r\n"
+        "expected": "True\n"
       }
     }
   },

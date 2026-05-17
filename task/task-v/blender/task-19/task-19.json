@@ -2,7 +2,7 @@
   "id": "v-blender-task-19-ubuntu",
   "snapshot": "Blender-4.2.3",
   "instruction": "Follow-path + Track-to Camera Rig\n\n`scene.blend` contains:\n- An Empty named `Target` at world location (4, 0, 2) (display type PLAIN_AXES).\n- A Bezier curve object named `CameraPath`: a closed circle in the XY plane at z = 3, radius 6, with 4 control points at (6,0,3), (0,6,3), (-6,0,3), (0,-6,3). The curve already has `use_path=True` and `path_duration=100`; the spline is marked cyclic so the camera loops smoothly.\n- A Camera object named `Camera` at the world origin (0, 0, 0) with no constraints.\n- Scene `frame_start = 1`, `frame_end = 100`.\n\nrig the Camera so it flies along `CameraPath` while always looking at `Target`. Save the result as `answer.blend`.\n\nRequirements\n\nAdd the following two object constraints to `Camera`:\n\n1. A `FOLLOW_PATH` constraint with:\n- `target = CameraPath` (the curve object).\n- `use_curve_follow = False` (so the rotation of the camera is NOT driven by the curve tangent; the Track To constraint handles rotation).\n\n2. A `TRACK_TO` constraint with:\n- `target = Target` (the empty).\n- `track_axis = 'TRACK_NEGATIVE_Z'` (the camera's negative Z points at the target, which is the default camera aim direction).\n- `up_axis = 'UP_Y'`.\n- Leave `owner_space` and `target_space` at their defaults (WORLD).\n\nDo NOT translate the Camera yourself - leave it at the origin. The Follow Path constraint will place it on the curve, and the Track To constraint will orient it toward the Target each frame.\n\nPreserve the curve's path animation: `CameraPath.data.use_path = True` and `CameraPath.data.path_duration = 100` must remain set.\n\nConstraint order is not important as long as both constraints exist and the final world rotation points the camera toward the target.\n\nRequirements:\n1. The `.blend` file exists and opens.\n2. Object `Target` exists and is an EMPTY.\n3. Object `CameraPath` exists, is a CURVE, and has `data.use_path == True`.\n4. Object `Camera` exists and is a CAMERA.\n5. `Camera` carries a `FOLLOW_PATH` constraint whose `target` is `CameraPath`.\n6. `Camera` carries a `TRACK_TO` constraint whose `target` is `Target` and whose `track_axis == 'TRACK_NEGATIVE_Z'`.\n7. For each of the 5 test frames [10, 30, 50, 70, 90]: after `scene.frame_set(frame)` and `view_layer.update()`, the camera's world-space forward axis (the `-Z` column of its world rotation matrix) aligns with the unit vector from the camera's world location to the target's world location within **1 degree**. The angle is computed as `acos(clamp(dot(forward, to_target_normalized), -1, 1))` in degrees.\n8. The camera actually moves along the path: `|cam_world_pos(frame=10) - cam_world_pos(frame=90)| > 1.0`.\n\nTolerances: angle < 1.0 deg; position delta > 1.0 BU.",
-  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
@@ -52,7 +52,7 @@
     "expected": {
       "type": "rule",
       "rules": {
-        "expected": "true\n"
+        "expected": "True\n"
       }
     }
   },

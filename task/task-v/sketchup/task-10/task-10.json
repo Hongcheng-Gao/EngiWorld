@@ -1,60 +1,60 @@
 {
-  "id": "v-sketchup-task-10-windows",
-  "snapshot": "SketchUp2026",
-  "instruction": "Stair Railing with Balusters as Component Instances\n\nUsing SketchUp, model a straight stair with railings on both sides and export as COLLADA DAE. No initial file is provided.\n\nSpecification:\n- **Staircase**: 10 treads rising along the **+X axis** from the origin. Each tread has a **run of 280 mm** along X and a **rise of 175 mm** along Z. Tread `n` (n = 0..9, n=0 is the first tread) has its top surface at **Z = (n+1)*0.175 m** and occupies **X in [n*0.280, (n+1)*0.280] m**. The stair is **1.000 m wide** along Y, spanning **Y in [0, 1] m**. Model the staircase solid (or any set of faces) so that at least one vertex is present at each tread's top-front (nosing) corner.\n- **Railings - on BOTH sides** (Y = 0 and Y = 1 m):\n- **Top rail**: a slender diagonal beam running from the top of the first baluster to the top of the last baluster, at **Z = (tread top Z) + 0.900 m** above each tread. Because tread tops rise by 175 mm per step, the rail is a single diagonal beam on each side.\n- **Bottom rail**: a second slender diagonal beam, **flush with the tread nosings** - i.e., its centerline passes through the top of each tread at each baluster's X position.\n- Each rail is a thin rectangular beam (approx 40 x 40 mm cross-section) on each side. 2 sides x 2 rails = **4 diagonal rail segments total** (also acceptable: 4 rail geometries or 2 rail geometries instanced 2x each).\n- **Balusters**:\n- **1 baluster per tread per side = 20 balusters in total.**\n- Each baluster is a slender vertical post **40 x 40 mm in cross-section, 900 mm tall**, rising from the top of its tread (Z = (n+1)*0.175) up to Z = (n+1)*0.175 + 0.900.\n- **All 20 balusters must be instances of a single shared ComponentDefinition** - one `<geometry>` in the DAE, referenced by 20 scene nodes with distinct transforms.\n- Baluster `n` on side `s` (s = 0 for Y = 0; s = 1 for Y = 1) is placed so its local origin (base centerline) is at world position **X = (n + 0.5)*0.280 m, Y = s*1.000 m, Z = (n+1)*0.175 m**. The baluster's solid extends +\\-20 mm around X and Y of this center.\n\nExport the whole assembly as `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Exactly **one** baluster geometry definition is referenced **20 times** in the scene (a single shared ComponentDefinition).\n3. Of those 20 baluster instances, **10 are at Y = 0** and **10 are at Y = 1.0 m** (within 50 mm), representing the two sides.\n4. The 10 baluster X centers on each side form the expected staircase pattern: X = (n + 0.5)*0.280 for n = 0..9, within 50 mm.\n5. Each baluster's top reaches Z = (n+1)*0.175 + 0.900 within 50 mm (top-rail height above each tread), and its base sits at Z = (n+1)*0.175 within 50 mm.\n6. The model contains rails on **both** sides (vertices near Y = 0 AND Y = 1.0 m at Z approx top-rail height of the middle treads) - at least one vertex above Z = 1.0 m on each side to confirm presence of a top rail on both sides.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://ruby.sketchup.com/Sketchup/ComponentDefinition.html\nhttps://help.sketchup.com/en/sketchup/solid-tools\nhttps://www.khronos.org/collada/",
-  "config": [
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe"
-        ]
-      }
-    },
-    {
-      "type": "execute",
-      "parameters": {
-        "command": [
-          "python",
-          "-c",
-          "import pyautogui; import time; RATIO_X = 0.455; RATIO_Y = 0.606; screen_w, screen_h = pyautogui.size(); time.sleep(0.5); pyautogui.click(int(screen_w * RATIO_X), int(screen_h * RATIO_Y))"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "sketchup"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-10/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "id":  "v-sketchup-task-10-windows",
+    "snapshot":  "SketchUp2026",
+    "instruction":  "Stair Railing with Balusters as Component Instances\n\nUsing SketchUp, model a straight stair with railings on both sides and export as COLLADA DAE. No initial file is provided.\n\nSpecification:\n- **Staircase**: 10 treads rising along the **+X axis** from the origin. Each tread has a **run of 280 mm** along X and a **rise of 175 mm** along Z. Tread `n` (n = 0..9, n=0 is the first tread) has its top surface at **Z = (n+1)*0.175 m** and occupies **X in [n*0.280, (n+1)*0.280] m**. The stair is **1.000 m wide** along Y, spanning **Y in [0, 1] m**. Model the staircase solid (or any set of faces) so that at least one vertex is present at each tread\u0027s top-front (nosing) corner.\n- **Railings - on BOTH sides** (Y = 0 and Y = 1 m):\n- **Top rail**: a slender diagonal beam running from the top of the first baluster to the top of the last baluster, at **Z = (tread top Z) + 0.900 m** above each tread. Because tread tops rise by 175 mm per step, the rail is a single diagonal beam on each side.\n- **Bottom rail**: a second slender diagonal beam, **flush with the tread nosings** - i.e., its centerline passes through the top of each tread at each baluster\u0027s X position.\n- Each rail is a thin rectangular beam (approx 40 x 40 mm cross-section) on each side. 2 sides x 2 rails = **4 diagonal rail segments total** (also acceptable: 4 rail geometries or 2 rail geometries instanced 2x each).\n- **Balusters**:\n- **1 baluster per tread per side = 20 balusters in total.**\n- Each baluster is a slender vertical post **40 x 40 mm in cross-section, 900 mm tall**, rising from the top of its tread (Z = (n+1)*0.175) up to Z = (n+1)*0.175 + 0.900.\n- **All 20 balusters must be instances of a single shared ComponentDefinition** - one `\u003cgeometry\u003e` in the DAE, referenced by 20 scene nodes with distinct transforms.\n- Baluster `n` on side `s` (s = 0 for Y = 0; s = 1 for Y = 1) is placed so its local origin (base centerline) is at world position **X = (n + 0.5)*0.280 m, Y = s*1.000 m, Z = (n+1)*0.175 m**. The baluster\u0027s solid extends +/-20 mm around X and Y of this center.\n\nExport the whole assembly as `C:\\Users\\Administrator\\Desktop\\output.dae`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` parses as valid COLLADA.\n2. Exactly **one** baluster geometry definition is referenced **20 times** in the scene (a single shared ComponentDefinition).\n3. Of those 20 baluster instances, **10 are at Y = 0** and **10 are at Y = 1.0 m** (within 50 mm), representing the two sides.\n4. The 10 baluster X centers on each side form the expected staircase pattern: X = (n + 0.5)*0.280 for n = 0..9, within 50 mm.\n5. Each baluster\u0027s top reaches Z = (n+1)*0.175 + 0.900 within 50 mm (top-rail height above each tread), and its base sits at Z = (n+1)*0.175 within 50 mm.\n6. The model contains rails on **both** sides (vertices near Y = 0 AND Y = 1.0 m at Z approx top-rail height of the middle treads) - at least one vertex above Z = 1.0 m on each side to confirm presence of a top rail on both sides.",
+    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://help.sketchup.com/en/sketchup/solid-tools; https://www.khronos.org/collada/",
+    "config":  [
+                   {
+                       "type":  "launch",
+                       "parameters":  {
+                                          "command":  [
+                                                          "C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe"
+                                                      ]
+                                      }
+                   },
+                   {
+                       "type":  "execute",
+                       "parameters":  {
+                                          "command":  [
+                                                          "python",
+                                                          "-c",
+                                                          "import pyautogui; import time; RATIO_X = 0.455; RATIO_Y = 0.606; screen_w, screen_h = pyautogui.size(); time.sleep(0.5); pyautogui.click(int(screen_w * RATIO_X), int(screen_h * RATIO_Y))"
+                                                      ]
+                                      }
+                   }
+               ],
+    "trajectory":  "trajectories/",
+    "related_apps":  [
+                         "sketchup"
+                     ],
+    "evaluator":  {
+                      "postconfig":  [
+                                         {
+                                             "type":  "upload_file",
+                                             "parameters":  {
+                                                                "files":  [
+                                                                              {
+                                                                                  "local_path":  "task-10/eval.py",
+                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
+                                                                              }
+                                                                          ]
+                                                            }
+                                         }
+                                     ],
+                      "func":  "exact_match",
+                      "result":  {
+                                     "type":  "vm_command_line",
+                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
+                                     "shell":  "true"
+                                 },
+                      "expected":  {
+                                       "type":  "rule",
+                                       "rules":  {
+                                                     "expected":  "True\n"
+                                                 }
+                                   }
+                  },
+    "proxy":  false,
+    "fixed_ip":  false,
+    "possibility_of_env_change":  "low"
 }

@@ -20,52 +20,34 @@
   (net 1 "VCC")
   (net 2 "GND")
 
-  ; HAT+ board outline: 65x56.5mm with R=3mm rounded corners
-  ; Straight edges
-  (gr_line (start 3 0) (end 62 0) (layer "Edge.Cuts") (width 0.1))
-  (gr_line (start 65 3) (end 65 53.5) (layer "Edge.Cuts") (width 0.1))
-  (gr_line (start 62 56.5) (end 3 56.5) (layer "Edge.Cuts") (width 0.1))
-  (gr_line (start 0 53.5) (end 0 3) (layer "Edge.Cuts") (width 0.1))
+  ; Shrunk board: 119x78mm to fit Hammond 1455C1201 slot
+  (gr_rect (start 0 0) (end 119 78) (layer "Edge.Cuts") (width 0.1))
 
-  ; Rounded corners (gr_arc: start, mid, end)
-  ; Bottom-left corner: center(3,3), R=3, arc from (0,3) through (0.879,0.879) to (3,0)
-  (gr_arc (start 0 3) (mid 0.879 0.879) (end 3 0) (layer "Edge.Cuts") (width 0.1))
-  ; Bottom-right corner: center(62,3), R=3, arc from (62,0) through (64.121,0.879) to (65,3)
-  (gr_arc (start 62 0) (mid 64.121 0.879) (end 65 3) (layer "Edge.Cuts") (width 0.1))
-  ; Top-right corner: center(62,53.5), R=3, arc from (65,53.5) through (64.121,55.621) to (62,56.5)
-  (gr_arc (start 65 53.5) (mid 64.121 55.621) (end 62 56.5) (layer "Edge.Cuts") (width 0.1))
-  ; Top-left corner: center(3,53.5), R=3, arc from (3,56.5) through (0.879,55.621) to (0,53.5)
-  (gr_arc (start 3 56.5) (mid 0.879 55.621) (end 0 53.5) (layer "Edge.Cuts") (width 0.1))
-
-  ; 4 M2.5 mounting holes at HAT+ spec positions
-  (footprint "MountingHole:MountingHole_2.75mm_M2.5" (layer "F.Cu") (at 3.5 3.5)
-    (reference "H1") (value "MountingHole")
-    (pad "" np_thru_hole circle (at 0 0) (size 2.75 2.75) (drill 2.75)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask"))
+  ; U1 at (20,20): dist to edges = min(20,99,20,58) = 20mm >= 3mm ✓
+  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 20 20)
+    (reference "U1") (value "OPAMP")
+    (pad "1" smd rect (at -1.2 -1.27) (size 1.55 0.6)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 1 "VCC"))
   )
 
-  (footprint "MountingHole:MountingHole_2.75mm_M2.5" (layer "F.Cu") (at 61.5 3.5)
-    (reference "H2") (value "MountingHole")
-    (pad "" np_thru_hole circle (at 0 0) (size 2.75 2.75) (drill 2.75)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask"))
+  ; R1 moved from (50,1.5) to (50,5): dist to bottom edge = 5mm >= 3mm ✓
+  (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu") (at 50 5)
+    (reference "R1") (value "4.7k")
+    (pad "1" smd rect (at -0.8 0) (size 1.0 0.8)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 1 "VCC"))
   )
 
-  (footprint "MountingHole:MountingHole_2.75mm_M2.5" (layer "F.Cu") (at 3.5 53)
-    (reference "H3") (value "MountingHole")
-    (pad "" np_thru_hole circle (at 0 0) (size 2.75 2.75) (drill 2.75)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask"))
+  ; U2 moved from (148,50) to (110,50): dist to right edge (x=119) = 9mm >= 3mm ✓
+  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 110 50)
+    (reference "U2") (value "ADC")
+    (pad "1" smd rect (at -1.2 -1.27) (size 1.55 0.6)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 2 "GND"))
   )
 
-  (footprint "MountingHole:MountingHole_2.75mm_M2.5" (layer "F.Cu") (at 61.5 53)
-    (reference "H4") (value "MountingHole")
-    (pad "" np_thru_hole circle (at 0 0) (size 2.75 2.75) (drill 2.75)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask"))
-  )
-
-  ; 2x20 GPIO header repositioned to HAT+ spec position (29.0, 52.5)
-  (footprint "Connector_PinHeader_2.54mm:PinHeader_2x20_P2.54mm_Vertical" (layer "F.Cu") (at 29.0 52.5)
-    (reference "J1") (value "GPIO_HEADER")
-    (pad "1" thru_hole circle (at 0 0) (size 1.7 1.7) (drill 1.0)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 1 "VCC"))
+  ; R2 at (80,60): dist to edges = min(80,39,60,18) = 18mm >= 3mm ✓
+  (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu") (at 80 60)
+    (reference "R2") (value "10k")
+    (pad "1" smd rect (at -0.8 0) (size 1.0 0.8)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 2 "GND"))
   )
 )

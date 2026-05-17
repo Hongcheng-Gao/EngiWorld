@@ -1,16 +1,16 @@
 {
   "id": "v-eagle-task-48-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Look at `/home/user/Desktop/mixed.sch`, add a zero-ohm resistor named `R_TIE` that bridges `AGND` and `DGND`, and save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. `/home/user/Desktop/answer.sch` must parse as well-formed XML. 2. A `<part name=\"R_TIE\">` must exist. 3. The `AGND` net must contain `<pinref part=\"R_TIE\" pin=\"1\"/>`. 4. The `DGND` net must contain `<pinref part=\"R_TIE\" pin=\"2\"/>`. 5. `C1` and `C2` must remain connected to `AGND`. 6. `R1` and `R2` must remain connected to `DGND`. 7. `AGND` and `DGND` must remain separate nets.",
-  "source": "https://forums.autodesk.com/t5/eagle-forum/pcb-with-mixed-dgnd-and-agnd/td-p/7300563",
+  "instruction": "Look at `vias.brd` in EAGLE. The board contains 8 vias, all drilled to `0.3 mm`. Shrink the three vias listed in `/home/user/Desktop/targets.txt` to `0.2 mm` drill and save the result as `/home/user/Desktop/answer.brd`. Requirements: - `/home/user/Desktop/answer.brd` remains a well-formed EAGLE 7.x board XML file. - It still has exactly 8 `<via>` elements. - The three vias at the coordinates listed in `/home/user/Desktop/targets.txt` have `drill=\"0.2\"`. - The other five vias still have `drill=\"0.3\"`. - Element, signal, and wire counts match the starter exactly; do not delete or reroute anything. Only resize vias listed in `/home/user/Desktop/targets.txt`.",
+  "source": "https://community.element14.com/products/eagle/f/eagle-user-support-english/5464/changing-drill-size-for-all-vias",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-48/init_file/README.txt",
-            "path": "/home/user/Desktop/README.txt"
+            "local_path": "task-48/init_file/targets.txt",
+            "path": "/home/user/Desktop/targets.txt"
           }
         ]
       }
@@ -20,19 +20,8 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-48/init_file/mixed.sch",
-            "path": "/home/user/Desktop/mixed.sch"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-48/init_file/rcl.lbr",
-            "path": "/home/user/Desktop/rcl.lbr"
+            "local_path": "task-48/init_file/vias.brd",
+            "path": "/home/user/Desktop/vias.brd"
           }
         ]
       }
@@ -42,8 +31,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/mixed.sch",
-          "/home/user/Desktop/rcl.lbr"
+          "/home/user/Desktop/vias.brd"
         ]
       }
     },

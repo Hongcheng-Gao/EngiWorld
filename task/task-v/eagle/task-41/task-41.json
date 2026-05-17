@@ -1,27 +1,16 @@
 {
   "id": "v-eagle-task-41-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Look at `/home/user/Desktop/blank.sch`, add a landscape `DINA4_L` frame from the `frames` library, and populate its title block using the values provided in `/home/user/Desktop/info.txt`. Save the result as `/home/user/Desktop/answer.sch`. Requirements: 1. The file must parse as EAGLE XML. 2. At least one `<part>` must use library `frames` and deviceset `DINA4_L`. 3. That frame part must also be placed on the sheet via an `<instance>`. 4. The strings `My Title`, `John Doe`, `2026`, and `v1.0` must appear in the schematic. 5. The sheet must contain at least 4 visible `<text>` elements.",
-  "source": "https://www.autodesk.com/support/technical/article/caas/sfdcarticles/sfdcarticles/How-to-make-customized-title-blocks-and-frames-for-documentation-purposes-in-Fusion-360-or-EAGLE.html",
+  "instruction": "Look at `bare.sch`, load the bundled `linear.lbr` into the project, place a 555 timer from that library on the sheet as part `U1`, and save the schematic as `/home/user/Desktop/answer.sch`. Requirements: 1. `/home/user/Desktop/answer.sch` must parse as EAGLE XML. 2. Its `<libraries>` block must contain a `<library name=\"linear\">`. 3. Its `<parts>` block must contain at least one part from library `linear` whose deviceset contains `555`. 4. At least one such 555 part must be named `U1`. 5. `U1` must be placed on the sheet via an `<instance>`.",
+  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/24.htm",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-41/init_file/blank.sch",
-            "path": "/home/user/Desktop/blank.sch"
-          }
-        ]
-      }
-    },
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-41/init_file/info.txt",
-            "path": "/home/user/Desktop/info.txt"
+            "local_path": "task-41/init_file/bare.sch",
+            "path": "/home/user/Desktop/bare.sch"
           }
         ]
       }
@@ -31,7 +20,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/blank.sch"
+          "/home/user/Desktop/bare.sch"
         ]
       }
     },

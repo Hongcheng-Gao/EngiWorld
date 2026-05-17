@@ -9,10 +9,10 @@ from pathlib import Path
 
 
 DESKTOP = Path(r'C:\Users\Administrator\Desktop')
-BUNDLE = {'eval_inner.py': 'eNqNV+tq5DYU/u+nULU/xg6OSZbSLtMGNs1O6NJbaJZQSAeh2PKMG49tJM0mw2DoQ/QJ+yQ950i+7cxADYkt6Vy+c9dwzhefZbmVttYsh7/7n84fzt9+w/79+x/2w2+/MPVqtUxtUVcJ5zzIdb1hQuRbu9VKCFZsmlpbJquqthKpTBB0e3rVSG1Ut07N5+6zNk5QJq1MS2mMMp2kfitmeaHKLAiCxR93i5tPiw/siu0DBg+/WctC8zn7OnbrD8o8j5a3Ralu5FNRKQu7b/3uXSkrv25B6vteU0D/2c1apc9zoq3kRs2ZsZpWDQLM5uyprkva2JiVOz0i5T6tNSjXmZOUolAzZ2VhLOAnk8JM5XJbWpGDY2u9u8LDKCB6OGIyy0KjyjwmHLHXH6PamJ2diciJxgfJEqcjkU2jqiwkM8IDzsgreN/oulHa7gZ1ZSkcIWkdSdcKolyR3eFIUwThzpAtTBPHSJmTsqIaAzqp0EKqlMKgo05ovEwuWJE7YQM8pkqj2EVyMbhKg8VKfymlhMgb8PYjP+fsjH37btkfHQM6MPbMnTNzztjjfnZ3fX8/Q0S9wQRldnv98edZu4TkmoiYPDnfpwkl1Pdv37UMFhCNlkfBUYUd4hPHiOd3ZSB55mwE66ijPLqT4HIeUgywrEjAKC7z5DJvoxFIHxj+Z8WTv+qiCgkWhDjAMChoIaLe2mZrTejeIiu0D4lJQUVfF2Hki8quYbs2CX45mQNnzLhbJNA1PAywE5pMz6FeoWpMiN/jgkgTLB+eQwsQjoTH7FaCQ6ChjISSrLzeYiZbtkcx7aG9JqUdq3eDipcCkENKV043k4bl0xTS9QumH5Z1CKoSrSRmaR45+eo1VY1lC3pBy0QJ6tAE4BTUQCcW0A5TWtcaUkB9pU+jPirok96SnH0JBiDQqCW83Jer9zJuHUJaSyOIuAfE1aaxO3Zz/3AUBm29YT+SA2ixpk/wDsp5vFiOkfYCuKMSkDNapZbH/UnHjsWd1jAyKlVZgeUFmGBnCy1+OZDnfAXG7B1XG4PrG5AHFfI4m3LPYjYj7tnSa/P+eKqzXYf2cu7ggkxioh6jwQhqKxrbCpGDD/XSh7rpKQ2MN+ix3TRLntXOhF1bPvAAKBQESECzFbUG/CM3jBBcDUoO7O7J2u8G0/c9fctCWTZr+aRskcoymlr+ht0pfY6EjICYoGugtAfG9oLmk/7aO2JaFegVmhzkMcBNTfGgN01qbfxU4MOisqF+vFxGBxS+qB7gLqMWVB1HhXg/Q/6j9ta5eFxfVV2dgxa1giyjQzbbo8Z2xqOjEp+gup+DE3qCExNhovyUtVesy5VHpF/GJ6RRqKtxdu+njO0RHYfGTA3BETJ14f9wHZYJpYAj6XrKqB/QuNhIaPa+aVNjwn7QXReTa73abqAu7+ikHxe4QABC+nOYlecwKgCBv09d/Qr17MiBBkvOc9EL+UzYjxJcJcA+2Jg5ELQbHLrA30/NemuLMmYWGh8Omf7cbhoQ0G0nm+cMv8PBzyt7MO/8AhSiv/q1fDL4DuGejWNMRFF8+n7B+ErjGBNWb+0au6CszAtYPUxOih7hTtK62YUrG0+BAPYvJm40cQucD5N8MuwzHx6NlQkZ4i9knt8H3l3m0oMbyiXkA5wIaiLwYwIynguB2SEEd57XsgDC+50BZy5eCxu63ImC/wAQeaa8'}
+BUNDLE = {'eval_inner.py': 'eNqtWeuO1EYW/u+nqBhpsUm3h0lCNmroVSYwSGzIgBi0Wikgp8Yud5tx247LPcOo1dI+RJ4wT7LnnLrafQEkWoKx63Lq1Hcu9Z1yGIbnN7xa877pWAH/Ln+d/mf63U/s7//9xd6Iqqyv2VXXXIua9eJjv+4Ea3m/lEkQvFnXkvEFL2vZM16zZt23657lZScykHbH+iXvWSmZ+NhCi8hZ37CsqXuYMQsCBj81Jcm5YHt+qEK/FKwTLQehOXv66uXLs2dnrCgrQfO1SvLkQdLWi0Pzr9Z1XuHyegPlii+EZBFotyrrcrVeBewzfijqkdoUPj47O2d1cwvaFaITdSZk7O3ppCPsUtC96frkg2zqgU6gQd3fl0wNY3ydlz2rmkUQvOZSIkzQUDa1JKROkwFWLe8kbIBLBqYrLS4JjPxuOHLJEX6e9dUd6P6kKq863t2lCoF/MdChK0HS2cUzN0yDYQeveC+6klfe+KipBTPtrBWdwjRGDb4HDZ6DIwmeLVlTaNjUijMte8pe9JL9AeD3adE1qz/IqZjseQfttyU8h9a2IYsAJd6XN2ICiIOvXcmmWvdqOSXuLbmJNkRODgLvMOwGtAW3A/cUH0vZl+Al1AnmyEt5zcA1RBf4Jh678XARnFzzFe0+W4JwRMLu0nm6djUcKq34CJrTU3LVJMEx6SN8iSegX64AsxLsQhBAaylyK8TYqYGdom4/JMd8buwq/758daEAVpH155oi61rcWeMwFipBIg9npikvs17Ne2S8wA2v0/GEsu7FAtxiPrf+hOg5wUrgag2pY8XbkbNYEHTmMQbXkigBsehkVUoJBj1punJR1rw6QUQvCFG0OcrKmg7coMVoAtCNG3lyyCbKz9zsJAjDMEDHZGlarLE7TcGFEVYwFfggp9gMAtPWLQho847Qm+dGmid5J5XQnPc8qyDOwTK6zzZNwPKiyq3orKkqnvMgCO6x6df7gTR2CSh/Zann/319/vTt+bP0+YuX5xdnv51fsjn7vcBgTjflFtEN6ZgpwUVYx+uFiE4n7Mf4vZv6y5tXv55fwLwN2akI9xvaiJuxIhzY0HSo2XvWCraA5s8W8YD+Z0+XIrtWMYBxN4NspBJDi4bKZ+yqaSpqWMmF6t0j5RI8TjzlXa4kZShUzlgFuQd2RKaNclHwdQWZj1OCmWNnrA5E6GI8zyMpqmJCekz0+hNcdsIePEhjF6g4LFFrJLxtRZ1HtI1oZ2asF/i57RrI1/2dW66qUjWQVvWkdwJArWnfkbdSTNkKpkVZoiYSyhmi7A87tGAP4VOlEoE6sOJp8pCVhRLm1GOikoI9TB46qCDdQ/oeS4EUA4EFfhdOQ/aA/fOn97Zrn6KzwelPkw2YRcjY75v7r88uL++jRnbDpMr952cvXt7fvocMeJhAFOEmS8ihnnz/45bBC1hjG8bB3gWNxge6g6FkBgxNgifNmKfjXtS0qmNNizAiO2Cw0TzPNrPktNjGbnw8tlL4rg6TD01ZR6Qj2DtAm6R1062iVttDj4VoiVoG4IdhnMD5VPFMROG7d+GEhSfQBP1lGxkRAs6qVJ1pMlJ/UziPtUiZgbo2ziLtZ5THkCjt8qQvzGHkXFykdDzMIX8n+KR26pQBxd1K2pyAPvITM6OUeIhHRpYft1mCUR5if0rERAISz4FjQdQWnmCSVzRrDLiebYwo338MwpnCoe/u3DpAPnAL+gxJnqq/TqNAEYpMtD07pz9wrCFZELu6qkkIqK8qtTDRdU0HXii+6far5glytMGXaFvfdmvh3opQEcf5BthQhNtJVEO8nVgC6vfaNhwQenJEUQCn8IfqFhy4EM3K78J3QSQn3iohAy8Dkp2BTXpI7I5c66riH/BolWDHvawGIr4A+4z3pjtBjN/ptrYfTpqckmLpIw9RvQowMR/XnVoAS4UNjd2qvUQyfuyomJF4YHGj3N71aSOH1vfKC60CtGwthoe08MwBFQfxR9Ia+bIrF4jeuzJREW1bGJgiQJuDeCVSWTw73ntNwD/TK567Zk1IUoxf6ZqvuCTOLlMVsraDWAgYAQ4ez84uxloYqvImjEpcaA60ModA6/rusd+QQVPddKRsIhm2WrJ5qk1UwYUTI29iPDwRBxjsUYJ4DpT1Zb0WY8001BZpqxHwc5dLWXS7hNLNT90VDJKeyhkYrgSyJbyMjIDhQ3QwRbdxPN70KDlbuaNNDyxsNu0GH9/8yA/MdLO06Y5aw8p2wkmd39rwhFhq7ONHFhrRt44fYNQBOdmK2bp0+C0DavMYCq5CUGVkh2k52xDhGjo/8Qg4vv00cI89R3ymTT0l8xKh0rmR6i+dFOnSJKsEx1oT2303XQCgiU552l9ynfes7jGU365Bq2QaB7aKPw0oLZE2dYo6DxKVWx6yFeUKhHgg34d442ZsTx7Zol9lBStL+/7jwXGkZc43A+GeiQD/4caQPXkafgMaOjdUxoFNsk+poVOii5JxRj3ffw1BpfqVoLuInTsIBqn7BkNTQskKhcQoAJSet7zu3ZDdSvGA5YwGYPLyAygFDMWzmVp3TsJ906gEbPVgGxy49U6SDc7Y7jtOfkiO3Kd8AYeEaZ/LIZEG7y52lFUa6XtYpRKxh1cOyaSRcJixDbgkHS9QytVuaWSKxTBvQh/sF7VPqoZDBfVFHFNr/jVo5o4sIpb7YFZlQh5aJ3hjbsX6pp1W4gYIAd6PaaP+icWSu8iaDK6/tgN6gLNgNM6ZQl3WI3IJNkbxAWfXSpt7OZIwSvi+cN/j8X2+0dHlLQROb5ON7vVFxNsBsQNn83tnh8qMe8zs2WYG7l0SmgQxus/TN4eJhlILQIRa4Nx95GDVd+nXaX/XYmIpJX5m4JBvIjNmQut9Ckg1lsR4QGrBPn74Pt/g/3aFOElTTB9p6mcOXHWMGQWoknkEMkqtACvsZ3SzSWftBO9o14IKtn3XljQo0bIugPzwqoSouGrw6rzMIcshz7xdlj3MhQKbnTBZcbk0gDdXUnTqcN0otnkdzzTvvIlp8jXoQLdlGoEEZK3Ai7Y6ijUEnxYwus0byqG7c0yLVqG5lf155oT4gNSQmkmeZUm2ex1fmVino1oD2YNRIt4a9xzekWBEkL54xo6kmbnzjXnyHGW+MU/esR6PDhyXO2wcKeLBF50QKpgqyrnGJRVT8oPGyz82bOphzNQTvJJXN3e1x27wcQDCUfjdQoMCD5fzI8kNm29qSNWPhzuYj2A/XN55AUT3QisOx6c+8Chpd7BLc/eenHWL9QpM+Jp6otgbhttJue6PwumUeA/TF7Hzi6b2UsH4txRVOw+xTNEfLzEmvVLlW1dfwnN4/FtieJhamHth9cHqk4Lwvm4Kkd7bb7CLDs/2tO/W/fIk1r4Au8YzSONAfxAJae7NwL3xNYH9ucyVK1ypNTD8cuYVd5dm8Zkt1DEVcdavWu8LGqPPHb5eXhGqP4os131ZjVshW7T2Ky9RkRXyCtOcrK5zfI4cCVj0OzxLv4AeVG2Zd8i5VDWmxKvTNI4nR6AOfe1Dv/T2XODJdAg+r+UtoA1djuLQPpOsae+G9eqiBwrhJoQHtBnMATRG94++Ys4d1ZfvwJOx4hCCZSejPfJshRlP1NfStLmeI22KB/fnBeZ3mI6fLUDUnt04QaOq+jgIrsJlxRGbHNMcZ+7aaE+0fS4mmp8fRuT4lvaR+i+076HaIB5EK8wI3O344AJdJ/W2gxMggtSuP5poATrHqg8u2c6Hg1NIvdBjeBCeF2GaYiJO01Bf8XMM/cs7CRF5/rHsI5Wm4+D/Qg9WQw=='}
 CALL_FUNC = 'eval_outputs'
 CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('office.dae', 'C:\\Users\\Administrator\\Desktop\\office.dae')]
+INIT_MAP = [('broken_tex.dae', 'C:\\Users\\Administrator\\Desktop\\broken_tex.dae'), ('textures\\tex_1.png', 'C:\\Users\\Administrator\\Desktop\\textures\\tex_1.png'), ('textures\\tex_2.png', 'C:\\Users\\Administrator\\Desktop\\textures\\tex_2.png'), ('textures\\tex_3.png', 'C:\\Users\\Administrator\\Desktop\\textures\\tex_3.png'), ('textures\\tex_4.png', 'C:\\Users\\Administrator\\Desktop\\textures\\tex_4.png'), ('textures\\tex_5.png', 'C:\\Users\\Administrator\\Desktop\\textures\\tex_5.png')]
 
 
 def _decode(payload: str) -> bytes:
@@ -103,7 +103,31 @@ def _resolve_arg(spec: str):
     return spec
 
 
+
+def _has_generated_python_file() -> bool:
+    if not DESKTOP.exists():
+        return False
+    initial_python_names = {Path(rel).name for rel, _ in INIT_MAP if Path(rel).suffix.lower() == ".py"}
+    allowed_names = {"eval.py"}
+    allowed_names.update(initial_python_names)
+    try:
+        items = list(DESKTOP.iterdir())
+    except Exception:
+        return False
+    for path in items:
+        if path.name in allowed_names or path.name == "_runtime":
+            continue
+        try:
+            if path.is_file() and path.suffix.lower() == ".py":
+                return True
+        except Exception:
+            continue
+    return False
+
 def _run() -> bool:
+    if _has_generated_python_file():
+        return False
+
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

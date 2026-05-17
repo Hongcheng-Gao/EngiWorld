@@ -1,20 +1,9 @@
 {
   "id": "c-kicad-task-23-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Return-Path Continuity Check\n\nThe file `/home/user/Desktop/board.kicad_pcb` is a 4-layer PCB. The In1.Cu layer has a split: GND fills the left half (x = 0..40 mm) and +3V3 fills the right half (x = 40..80 mm). A high-speed signal net HS1 runs on F.Cu and crosses this split at x = 40 mm. Two stitching capacitors (CS1, CS2, each 100 nF with pads on GND and +3V3) are currently placed far from the crossing (near x = 62 mm). The file `/home/user/Desktop/board.kicad_dru` contains only a version header.\n\n1. In `/home/user/Desktop/board.kicad_pcb`, relocate CS1 and CS2 so each is within 3 mm of the plane-split crossing point (x = 40, y = 20).\n2. In `/home/user/Desktop/board.kicad_dru`, add a custom DRC rule that detects return-path issues (high-speed signals crossing a plane split). The rule must have at least a `(condition...)` and a `(constraint...)` clause.\n3. Also write `/home/user/Desktop/drc.report` as the native KiCad CLI DRC report generated from your final board and rules file.\n\nRequirements:\n1. CS1 and CS2 footprints must exist in `/home/user/Desktop/board.kicad_pcb`.\n2. Each cap must be within 3 mm Euclidean distance of the split crossing at (40, 20).\n3. Both caps must retain GND and +3V3 pad assignments.\n4. `/home/user/Desktop/board.kicad_dru` must parse as a valid s-expression with `(version 1)` and at least one `(rule...)` block.\n5. The rule must include a `(condition...)` and a `(constraint...)` clause.\n\nWrite /home/user/Desktop/board.kicad_pcb, /home/user/Desktop/board.kicad_dru, and /home/user/Desktop/drc.report.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "USB 2.0 Length Matching\n\nThe file `/home/user/Desktop/board.kicad_pcb` has USB 2.0 D+ (`USB_DP`) and D- (`USB_DM`) routed on F.Cu at 0.15 mm width. Their lengths differ by approximately 1 mm, exceeding the USB 2.0 intra-pair skew budget.\n\nAdd a meander on the shorter differential net (D-) until `|L(USB_DP) - L(USB_DM)| <= 0.15 mm`. Preserve layer assignments (F.Cu only), track widths (0.15 mm), and introduce no new vias.\n\nRequirements:\n1. `|L(USB_DP) - L(USB_DM)| <= 0.15 mm`.\n2. Both nets have segments only on F.Cu; no layer changes.\n3. All `USB_DP` and `USB_DM` segment widths remain 0.15 mm.\n4. No new vias added on `USB_DP` or `USB_DM` vs the input.\n5. `USB_DM` has more segments than the input (meander increases segment count).\n6. Also write `/home/user/Desktop/fcu.svg` as the native KiCad CLI F.Cu SVG export of your final board.\n\nWrite /home/user/Desktop/board.kicad_pcb and /home/user/Desktop/fcu.svg.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html; https://www.usb.org/documents",
   "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-23/init_file/board.kicad_dru",
-            "path": "/home/user/Desktop/board.kicad_dru"
-          }
-        ]
-      }
-    },
     {
       "type": "upload_file",
       "parameters": {

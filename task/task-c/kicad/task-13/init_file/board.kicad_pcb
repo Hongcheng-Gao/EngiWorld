@@ -17,23 +17,26 @@
     (allow_soldermask_bridges_in_footprints no)
   )
   (net 0 "")
-  (net 1 "VCC")
-  (net 2 "GND")
-  (net 3 "SIG_A")
-  (net 4 "SIG_B")
-  (net 5 "SIG_C")
+  (net 1 "PERST#")
+  (net 2 "CLKREQ#")
+  (net 3 "WAKE#")
+  (net 4 "GND")
 
-  (segment (start 10 10) (end 30 10) (width 0.10) (layer "F.Cu") (net 1))
-  (segment (start 30 10) (end 50 10) (width 0.10) (layer "F.Cu") (net 1))
-  (segment (start 10 15) (end 30 15) (width 0.10) (layer "F.Cu") (net 2))
-  (segment (start 30 15) (end 50 15) (width 0.10) (layer "F.Cu") (net 2))
-  (segment (start 10 20) (end 30 20) (width 0.10) (layer "F.Cu") (net 3))
-  (segment (start 30 20) (end 50 20) (width 0.10) (layer "F.Cu") (net 3))
+  (segment (start 10 10) (end 60 10) (width 0.2) (layer "F.Cu") (net 1))
 
-  (via (at 55 10) (size 0.45) (drill 0.20) (layers "F.Cu" "B.Cu") (net 1))
-  (via (at 55 15) (size 0.45) (drill 0.20) (layers "F.Cu" "B.Cu") (net 2))
-  (via (at 55 20) (size 0.45) (drill 0.20) (layers "F.Cu" "B.Cu") (net 3))
-  (via (at 55 25) (size 0.45) (drill 0.20) (layers "F.Cu" "B.Cu") (net 4))
+  (segment (start 10 20) (end 90 20) (width 0.2) (layer "F.Cu") (net 2))
 
-  (gr_rect (start 0 0) (end 80 60) (layer "Edge.Cuts") (width 0.1))
+  (segment (start 10 30) (end 130 30) (width 0.2) (layer "F.Cu") (net 3))
+
+  (zone (net 4) (net_name "GND") (layer "B.Cu") (hatch edge 0.5)
+    (connect_pads (clearance 0.5))
+    (min_thickness 0.25)
+    (polygon
+      (pts
+        (xy 0 0) (xy 150 0) (xy 150 60) (xy 0 60)
+      )
+    )
+  )
+
+  (gr_rect (start 0 0) (end 150 60) (layer "Edge.Cuts") (width 0.1))
 )

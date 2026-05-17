@@ -1,11 +1,11 @@
 <COLLADA xmlns="http://www.collada.org/2005/11/COLLADASchema" version="1.4.1">
   <asset>
-    <created>2026-04-23T23:11:15.216482</created>
-    <modified>2026-04-23T23:11:15.216492</modified>
+    <created>2026-04-23T23:11:18.778205</created>
+    <modified>2026-04-23T23:11:18.778217</modified>
     <up_axis>Y_UP</up_axis>
   </asset>
   <library_effects>
-    <effect id="eff-glass" name="eff-glass">
+    <effect id="eff-wood" name="eff-wood">
       <profile_COMMON>
         <technique sid="common">
           <lambert>
@@ -16,47 +16,7 @@
               <color>0.0 0.0 0.0 1.0</color>
             </ambient>
             <diffuse>
-              <color>0.7 0.85 0.9 1.0</color>
-            </diffuse>
-            <specular>
-              <color>0.0 0.0 0.0 1.0</color>
-            </specular>
-            <shininess>
-              <float>0.0</float>
-            </shininess>
-            <reflective>
-              <color>0.0 0.0 0.0 1.0</color>
-            </reflective>
-            <reflectivity>
-              <float>0.0</float>
-            </reflectivity>
-            <transparent>
-              <color>1.0 1.0 1.0 1.0</color>
-            </transparent>
-            <transparency>
-              <float>0.5</float>
-            </transparency>
-          </lambert>
-        </technique>
-        <extra>
-          <technique profile="GOOGLEEARTH">
-            <double_sided>0</double_sided>
-          </technique>
-        </extra>
-      </profile_COMMON>
-    </effect>
-    <effect id="eff-frame" name="eff-frame">
-      <profile_COMMON>
-        <technique sid="common">
-          <lambert>
-            <emission>
-              <color>0.0 0.0 0.0 1.0</color>
-            </emission>
-            <ambient>
-              <color>0.0 0.0 0.0 1.0</color>
-            </ambient>
-            <diffuse>
-              <color>0.35 0.25 0.15 1.0</color>
+              <color>0.55 0.4 0.25 1.0</color>
             </diffuse>
             <specular>
               <color>0.0 0.0 0.0 1.0</color>
@@ -85,417 +45,283 @@
         </extra>
       </profile_COMMON>
     </effect>
+    <effect id="eff-glass" name="eff-glass">
+      <profile_COMMON>
+        <technique sid="common">
+          <lambert>
+            <emission>
+              <color>0.0 0.0 0.0 1.0</color>
+            </emission>
+            <ambient>
+              <color>0.0 0.0 0.0 1.0</color>
+            </ambient>
+            <diffuse>
+              <color>0.7 0.85 0.9 1.0</color>
+            </diffuse>
+            <specular>
+              <color>0.0 0.0 0.0 1.0</color>
+            </specular>
+            <shininess>
+              <float>0.0</float>
+            </shininess>
+            <reflective>
+              <color>0.0 0.0 0.0 1.0</color>
+            </reflective>
+            <reflectivity>
+              <float>0.0</float>
+            </reflectivity>
+            <transparent>
+              <color>0.0 0.0 0.0 1.0</color>
+            </transparent>
+            <transparency>
+              <float>0.5</float>
+            </transparency>
+          </lambert>
+        </technique>
+        <extra>
+          <technique profile="GOOGLEEARTH">
+            <double_sided>0</double_sided>
+          </technique>
+        </extra>
+      </profile_COMMON>
+    </effect>
   </library_effects>
   <library_geometries>
-    <geometry id="geom-left-sill-0" name="left-Sill">
+    <geometry id="geom-front" name="FrontWall">
       <mesh>
-        <source id="geom-left-sill-0-verts">
-          <float_array count="24" id="geom-left-sill-0-verts-array">-1.492462 0.6717514 0.9 -0.7853553 -0.03535534 0.9 -0.7146447 0.03535534 0.9 -1.421751 0.7424621 0.9 -1.492462 0.6717514 1 -0.7853553 -0.03535534 1 -0.7146447 0.03535534 1 -1.421751 0.7424621 1</float_array>
+        <source id="geom-front-verts-array">
+          <float_array count="36" id="geom-front-verts-array-array">0 0 0 1.6 0 0 1.6 0 2 0 0 2 2.4 0 0 4 0 0 4 0 2 2.4 0 2 1.6 0 2 2.4 0 2 2.4 0 2 1.6 0 2</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-left-sill-0-verts-array" stride="3">
+            <accessor count="12" source="#geom-front-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-left-sill-0-verts-vertices">
-          <input semantic="POSITION" source="#geom-left-sill-0-verts" />
+        <vertices id="geom-front-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-front-verts-array" />
         </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-left-sill-0-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
+        <triangles count="6" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#geom-front-verts-array-vertices" />
+          <p>0 1 2 0 2 3 4 5 6 4 6 7 8 9 10 8 10 11</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-left-head-1" name="left-Head">
+    <geometry id="geom-back" name="BackWall">
       <mesh>
-        <source id="geom-left-head-1-verts">
-          <float_array count="24" id="geom-left-head-1-verts-array">-1.492462 0.6717514 2.3 -0.7853553 -0.03535534 2.3 -0.7146447 0.03535534 2.3 -1.421751 0.7424621 2.3 -1.492462 0.6717514 2.4 -0.7853553 -0.03535534 2.4 -0.7146447 0.03535534 2.4 -1.421751 0.7424621 2.4</float_array>
+        <source id="geom-back-verts-array">
+          <float_array count="12" id="geom-back-verts-array-array">0 3 0 4 3 0 4 3 2 0 3 2</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-left-head-1-verts-array" stride="3">
+            <accessor count="4" source="#geom-back-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-left-head-1-verts-vertices">
-          <input semantic="POSITION" source="#geom-left-head-1-verts" />
+        <vertices id="geom-back-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-back-verts-array" />
         </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-left-head-1-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
+        <triangles count="2" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#geom-back-verts-array-vertices" />
+          <p>0 2 1 0 3 2</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-left-stileL-2" name="left-StileL">
+    <geometry id="geom-left" name="LeftWall">
       <mesh>
-        <source id="geom-left-stileL-2-verts">
-          <float_array count="24" id="geom-left-stileL-2-verts-array">-1.492462 0.6717514 1 -1.421751 0.6010408 1 -1.351041 0.6717514 1 -1.421751 0.7424621 1 -1.492462 0.6717514 2.3 -1.421751 0.6010408 2.3 -1.351041 0.6717514 2.3 -1.421751 0.7424621 2.3</float_array>
+        <source id="geom-left-verts-array">
+          <float_array count="12" id="geom-left-verts-array-array">0 0 0 0 3 0 0 3 2 0 0 2</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-left-stileL-2-verts-array" stride="3">
+            <accessor count="4" source="#geom-left-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-left-stileL-2-verts-vertices">
-          <input semantic="POSITION" source="#geom-left-stileL-2-verts" />
+        <vertices id="geom-left-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-left-verts-array" />
         </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-left-stileL-2-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-left-stileR-3" name="left-StileR">
-      <mesh>
-        <source id="geom-left-stileR-3-verts">
-          <float_array count="24" id="geom-left-stileR-3-verts-array">-0.856066 0.03535534 1 -0.7853553 -0.03535534 1 -0.7146447 0.03535534 1 -0.7853553 0.106066 1 -0.856066 0.03535534 2.3 -0.7853553 -0.03535534 2.3 -0.7146447 0.03535534 2.3 -0.7853553 0.106066 2.3</float_array>
-          <technique_common>
-            <accessor count="8" source="#geom-left-stileR-3-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-left-stileR-3-verts-vertices">
-          <input semantic="POSITION" source="#geom-left-stileR-3-verts" />
-        </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-left-stileR-3-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-left-glass-4" name="left-Glass">
-      <mesh>
-        <source id="geom-left-glass-4-verts">
-          <float_array count="12" id="geom-left-glass-4-verts-array">-1.386396 0.6363961 1 -0.8207107 0.07071068 1 -0.8207107 0.07071068 2.3 -1.386396 0.6363961 2.3</float_array>
-          <technique_common>
-            <accessor count="4" source="#geom-left-glass-4-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-left-glass-4-verts-vertices">
-          <input semantic="POSITION" source="#geom-left-glass-4-verts" />
-        </vertices>
-        <triangles count="2" material="matref-glass">
-          <input offset="0" semantic="VERTEX" source="#geom-left-glass-4-verts-vertices" />
+        <triangles count="2" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#geom-left-verts-array-vertices" />
           <p>0 1 2 0 2 3</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-center-sill-5" name="center-Sill">
+    <geometry id="geom-right" name="RightWall">
       <mesh>
-        <source id="geom-center-sill-5-verts">
-          <float_array count="24" id="geom-center-sill-5-verts-array">-0.75 -0.05 0.9 0.75 -0.05 0.9 0.75 0.05 0.9 -0.75 0.05 0.9 -0.75 -0.05 1 0.75 -0.05 1 0.75 0.05 1 -0.75 0.05 1</float_array>
+        <source id="geom-right-verts-array">
+          <float_array count="12" id="geom-right-verts-array-array">4 0 0 4 3 0 4 3 2 4 0 2</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-center-sill-5-verts-array" stride="3">
+            <accessor count="4" source="#geom-right-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-center-sill-5-verts-vertices">
-          <input semantic="POSITION" source="#geom-center-sill-5-verts" />
+        <vertices id="geom-right-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-right-verts-array" />
         </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-center-sill-5-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
+        <triangles count="2" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#geom-right-verts-array-vertices" />
+          <p>0 2 1 0 3 2</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-center-head-6" name="center-Head">
+    <geometry id="geom-fgable" name="FrontGable">
       <mesh>
-        <source id="geom-center-head-6-verts">
-          <float_array count="24" id="geom-center-head-6-verts-array">-0.75 -0.05 2.3 0.75 -0.05 2.3 0.75 0.05 2.3 -0.75 0.05 2.3 -0.75 -0.05 2.4 0.75 -0.05 2.4 0.75 0.05 2.4 -0.75 0.05 2.4</float_array>
+        <source id="geom-fgable-verts-array">
+          <float_array count="9" id="geom-fgable-verts-array-array">0 0 2 4 0 2 2 0 3</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-center-head-6-verts-array" stride="3">
+            <accessor count="3" source="#geom-fgable-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-center-head-6-verts-vertices">
-          <input semantic="POSITION" source="#geom-center-head-6-verts" />
+        <vertices id="geom-fgable-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-fgable-verts-array" />
         </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-center-head-6-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
+        <triangles count="1" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#geom-fgable-verts-array-vertices" />
+          <p>0 2 1</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-center-stileL-7" name="center-StileL">
+    <geometry id="geom-bgable" name="BackGable">
       <mesh>
-        <source id="geom-center-stileL-7-verts">
-          <float_array count="24" id="geom-center-stileL-7-verts-array">-0.75 -0.05 1 -0.65 -0.05 1 -0.65 0.05 1 -0.75 0.05 1 -0.75 -0.05 2.3 -0.65 -0.05 2.3 -0.65 0.05 2.3 -0.75 0.05 2.3</float_array>
+        <source id="geom-bgable-verts-array">
+          <float_array count="9" id="geom-bgable-verts-array-array">0 3 2 4 3 2 2 3 3</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-center-stileL-7-verts-array" stride="3">
+            <accessor count="3" source="#geom-bgable-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-center-stileL-7-verts-vertices">
-          <input semantic="POSITION" source="#geom-center-stileL-7-verts" />
+        <vertices id="geom-bgable-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-bgable-verts-array" />
         </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-center-stileL-7-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
+        <triangles count="1" material="matref-wood">
+          <input offset="0" semantic="VERTEX" source="#geom-bgable-verts-array-vertices" />
+          <p>0 1 2</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-center-stileR-8" name="center-StileR">
+    <geometry id="geom-lroof" name="LeftRoof">
       <mesh>
-        <source id="geom-center-stileR-8-verts">
-          <float_array count="24" id="geom-center-stileR-8-verts-array">0.65 -0.05 1 0.75 -0.05 1 0.75 0.05 1 0.65 0.05 1 0.65 -0.05 2.3 0.75 -0.05 2.3 0.75 0.05 2.3 0.65 0.05 2.3</float_array>
+        <source id="geom-lroof-verts-array">
+          <float_array count="12" id="geom-lroof-verts-array-array">0 0 2 2 0 3 2 3 3 0 3 2</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-center-stileR-8-verts-array" stride="3">
+            <accessor count="4" source="#geom-lroof-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-center-stileR-8-verts-vertices">
-          <input semantic="POSITION" source="#geom-center-stileR-8-verts" />
-        </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-center-stileR-8-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-center-glass-9" name="center-Glass">
-      <mesh>
-        <source id="geom-center-glass-9-verts">
-          <float_array count="12" id="geom-center-glass-9-verts-array">-0.65 0 1 0.65 0 1 0.65 0 2.3 -0.65 0 2.3</float_array>
-          <technique_common>
-            <accessor count="4" source="#geom-center-glass-9-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-center-glass-9-verts-vertices">
-          <input semantic="POSITION" source="#geom-center-glass-9-verts" />
+        <vertices id="geom-lroof-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-lroof-verts-array" />
         </vertices>
         <triangles count="2" material="matref-glass">
-          <input offset="0" semantic="VERTEX" source="#geom-center-glass-9-verts-vertices" />
+          <input offset="0" semantic="VERTEX" source="#geom-lroof-verts-array-vertices" />
           <p>0 1 2 0 2 3</p>
         </triangles>
       </mesh>
     </geometry>
-    <geometry id="geom-right-sill-10" name="right-Sill">
+    <geometry id="geom-rroof" name="RightRoof">
       <mesh>
-        <source id="geom-right-sill-10-verts">
-          <float_array count="24" id="geom-right-sill-10-verts-array">0.7853553 -0.03535534 0.9 1.492462 0.6717514 0.9 1.421751 0.7424621 0.9 0.7146447 0.03535534 0.9 0.7853553 -0.03535534 1 1.492462 0.6717514 1 1.421751 0.7424621 1 0.7146447 0.03535534 1</float_array>
+        <source id="geom-rroof-verts-array">
+          <float_array count="12" id="geom-rroof-verts-array-array">4 0 2 4 3 2 2 3 3 2 0 3</float_array>
           <technique_common>
-            <accessor count="8" source="#geom-right-sill-10-verts-array" stride="3">
+            <accessor count="4" source="#geom-rroof-verts-array-array" stride="3">
               <param type="float" name="X" />
               <param type="float" name="Y" />
               <param type="float" name="Z" />
             </accessor>
           </technique_common>
         </source>
-        <vertices id="geom-right-sill-10-verts-vertices">
-          <input semantic="POSITION" source="#geom-right-sill-10-verts" />
-        </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-right-sill-10-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-right-head-11" name="right-Head">
-      <mesh>
-        <source id="geom-right-head-11-verts">
-          <float_array count="24" id="geom-right-head-11-verts-array">0.7853553 -0.03535534 2.3 1.492462 0.6717514 2.3 1.421751 0.7424621 2.3 0.7146447 0.03535534 2.3 0.7853553 -0.03535534 2.4 1.492462 0.6717514 2.4 1.421751 0.7424621 2.4 0.7146447 0.03535534 2.4</float_array>
-          <technique_common>
-            <accessor count="8" source="#geom-right-head-11-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-right-head-11-verts-vertices">
-          <input semantic="POSITION" source="#geom-right-head-11-verts" />
-        </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-right-head-11-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-right-stileL-12" name="right-StileL">
-      <mesh>
-        <source id="geom-right-stileL-12-verts">
-          <float_array count="24" id="geom-right-stileL-12-verts-array">0.7853553 -0.03535534 1 0.856066 0.03535534 1 0.7853553 0.106066 1 0.7146447 0.03535534 1 0.7853553 -0.03535534 2.3 0.856066 0.03535534 2.3 0.7853553 0.106066 2.3 0.7146447 0.03535534 2.3</float_array>
-          <technique_common>
-            <accessor count="8" source="#geom-right-stileL-12-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-right-stileL-12-verts-vertices">
-          <input semantic="POSITION" source="#geom-right-stileL-12-verts" />
-        </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-right-stileL-12-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-right-stileR-13" name="right-StileR">
-      <mesh>
-        <source id="geom-right-stileR-13-verts">
-          <float_array count="24" id="geom-right-stileR-13-verts-array">1.421751 0.6010408 1 1.492462 0.6717514 1 1.421751 0.7424621 1 1.351041 0.6717514 1 1.421751 0.6010408 2.3 1.492462 0.6717514 2.3 1.421751 0.7424621 2.3 1.351041 0.6717514 2.3</float_array>
-          <technique_common>
-            <accessor count="8" source="#geom-right-stileR-13-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-right-stileR-13-verts-vertices">
-          <input semantic="POSITION" source="#geom-right-stileR-13-verts" />
-        </vertices>
-        <triangles count="12" material="matref-frame">
-          <input offset="0" semantic="VERTEX" source="#geom-right-stileR-13-verts-vertices" />
-          <p>0 1 2 0 2 3 4 6 5 4 7 6 0 4 5 0 5 1 1 5 6 1 6 2 2 6 7 2 7 3 3 7 4 3 4 0</p>
-        </triangles>
-      </mesh>
-    </geometry>
-    <geometry id="geom-right-glass-14" name="right-Glass">
-      <mesh>
-        <source id="geom-right-glass-14-verts">
-          <float_array count="12" id="geom-right-glass-14-verts-array">0.8207107 0.07071068 1 1.386396 0.6363961 1 1.386396 0.6363961 2.3 0.8207107 0.07071068 2.3</float_array>
-          <technique_common>
-            <accessor count="4" source="#geom-right-glass-14-verts-array" stride="3">
-              <param type="float" name="X" />
-              <param type="float" name="Y" />
-              <param type="float" name="Z" />
-            </accessor>
-          </technique_common>
-        </source>
-        <vertices id="geom-right-glass-14-verts-vertices">
-          <input semantic="POSITION" source="#geom-right-glass-14-verts" />
+        <vertices id="geom-rroof-verts-array-vertices">
+          <input semantic="POSITION" source="#geom-rroof-verts-array" />
         </vertices>
         <triangles count="2" material="matref-glass">
-          <input offset="0" semantic="VERTEX" source="#geom-right-glass-14-verts-vertices" />
+          <input offset="0" semantic="VERTEX" source="#geom-rroof-verts-array-vertices" />
           <p>0 1 2 0 2 3</p>
         </triangles>
       </mesh>
     </geometry>
   </library_geometries>
   <library_materials>
+    <material id="mat-wood" name="Wood">
+      <instance_effect url="#eff-wood" />
+    </material>
     <material id="mat-glass" name="Glass">
       <instance_effect url="#eff-glass" />
-    </material>
-    <material id="mat-frame" name="Frame">
-      <instance_effect url="#eff-frame" />
     </material>
   </library_materials>
   <library_visual_scenes>
     <visual_scene id="scene">
-      <node id="left-Sill" name="left-Sill">
-        <instance_geometry url="#geom-left-sill-0">
+      <node id="FrontWall" name="FrontWall">
+        <instance_geometry url="#geom-front">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
+              <instance_material symbol="matref-wood" target="#mat-wood" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="left-Head" name="left-Head">
-        <instance_geometry url="#geom-left-head-1">
+      <node id="BackWall" name="BackWall">
+        <instance_geometry url="#geom-back">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
+              <instance_material symbol="matref-wood" target="#mat-wood" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="left-StileL" name="left-StileL">
-        <instance_geometry url="#geom-left-stileL-2">
+      <node id="LeftWall" name="LeftWall">
+        <instance_geometry url="#geom-left">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
+              <instance_material symbol="matref-wood" target="#mat-wood" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="left-StileR" name="left-StileR">
-        <instance_geometry url="#geom-left-stileR-3">
+      <node id="RightWall" name="RightWall">
+        <instance_geometry url="#geom-right">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
+              <instance_material symbol="matref-wood" target="#mat-wood" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="left-Glass" name="left-Glass">
-        <instance_geometry url="#geom-left-glass-4">
+      <node id="FrontGable" name="FrontGable">
+        <instance_geometry url="#geom-fgable">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-glass" target="#mat-glass" />
+              <instance_material symbol="matref-wood" target="#mat-wood" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="center-Sill" name="center-Sill">
-        <instance_geometry url="#geom-center-sill-5">
+      <node id="BackGable" name="BackGable">
+        <instance_geometry url="#geom-bgable">
           <bind_material>
             <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
+              <instance_material symbol="matref-wood" target="#mat-wood" />
             </technique_common>
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="center-Head" name="center-Head">
-        <instance_geometry url="#geom-center-head-6">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="center-StileL" name="center-StileL">
-        <instance_geometry url="#geom-center-stileL-7">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="center-StileR" name="center-StileR">
-        <instance_geometry url="#geom-center-stileR-8">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="center-Glass" name="center-Glass">
-        <instance_geometry url="#geom-center-glass-9">
+      <node id="LeftRoof" name="LeftRoof">
+        <instance_geometry url="#geom-lroof">
           <bind_material>
             <technique_common>
               <instance_material symbol="matref-glass" target="#mat-glass" />
@@ -503,44 +329,8 @@
           </bind_material>
         </instance_geometry>
       </node>
-      <node id="right-Sill" name="right-Sill">
-        <instance_geometry url="#geom-right-sill-10">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="right-Head" name="right-Head">
-        <instance_geometry url="#geom-right-head-11">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="right-StileL" name="right-StileL">
-        <instance_geometry url="#geom-right-stileL-12">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="right-StileR" name="right-StileR">
-        <instance_geometry url="#geom-right-stileR-13">
-          <bind_material>
-            <technique_common>
-              <instance_material symbol="matref-frame" target="#mat-frame" />
-            </technique_common>
-          </bind_material>
-        </instance_geometry>
-      </node>
-      <node id="right-Glass" name="right-Glass">
-        <instance_geometry url="#geom-right-glass-14">
+      <node id="RightRoof" name="RightRoof">
+        <instance_geometry url="#geom-rroof">
           <bind_material>
             <technique_common>
               <instance_material symbol="matref-glass" target="#mat-glass" />

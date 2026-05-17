@@ -1,16 +1,16 @@
 {
   "id": "c-kicad-task-20-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "DDR3 Byte Lane Length Matching\n\nThe file `/home/user/Desktop/ddr3.kicad_pcb` contains a DDR3 byte lane with 11 nets routed on F.Cu: DQS_P, DQS_N (the reference pair at 35 mm each), DQ0-DQ7, and DM. The DQ and DM traces are currently unmatched, ranging from approximately 28 mm to 34 mm.\n\nAdd serpentine segments to the DQ0-DQ7 and DM nets to match the DQS reference length. Do NOT modify the DQS_P or DQS_N traces.\n\nRequirements:\n1. The maximum minus minimum length across all 11 nets must be <= 150 um.\n2. DQS_P and DQS_N lengths must remain within +/-0.1 mm of their input values.\n3. Serpentine bends must maintain at least 0.2 mm spacing between net traces (3H rule for 0.1 mm trace width); bends must stay within 1.5 mm of their track's y-center.\n4. All segments must remain on F.Cu.\n5. The output file must parse as a valid KiCad 9 PCB s-expression.\n6. Also write `/home/user/Desktop/fcu.svg` as the native KiCad CLI F.Cu SVG export of your final board.\n\nWrite /home/user/Desktop/ddr3.kicad_pcb and /home/user/Desktop/fcu.svg.",
-  "source": "https://docs.kicad.org/9.0/en/\nhttps://docs.kicad.org/9.0/en/cli/cli.html\nhttps://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
+  "instruction": "Tab-Route Panel with Mouse Bites\n\nThe file `/home/user/Desktop/A.kicad_pcb` is a small irregular PCB with an L-shaped outline using mixed straight (`gr_line`) and curved (`gr_arc`) edges on Edge.Cuts. You must panelize this board into a 3x2 array.\n\nProduce a panelized KiCad PCB file at `/home/user/Desktop/panel.kicad_pcb` containing:\n1. 6 copies of board A arranged in a 3-column x 2-row grid, with approximately 8 mm spacing between copies.\n2. 2 mm tab bridges on each straight-edge interface between adjacent copies and between copies and the panel rail. Do NOT place tabs on curved (`gr_arc`) edges.\n3. Mouse-bite perforation through each tab: an array of 4 non-plated through-holes (`np_thru_hole`) each 0.5 mm drill at 1 mm pitch, centered along the tab.\n4. One breakaway rail strip (a horizontal Edge.Cuts line) across the full panel width at the top (Y-min side).\n5. Overall panel outline <= 180x120 mm.\n6. Also write `/home/user/Desktop/edgecuts.svg` as the native KiCad CLI Edge.Cuts SVG export of your final panel.\n7. Also write `/home/user/Desktop/panel.drl` as the native KiCad CLI drill export of your final panel.\n\nWrite /home/user/Desktop/panel.kicad_pcb, /home/user/Desktop/edgecuts.svg, and /home/user/Desktop/panel.drl.",
+  "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html; https://yaqwsx.github.io/KiKit/latest/panelization/",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-20/init_file/ddr3.kicad_pcb",
-            "path": "/home/user/Desktop/ddr3.kicad_pcb"
+            "local_path": "task-20/init_file/A.kicad_pcb",
+            "path": "/home/user/Desktop/A.kicad_pcb"
           }
         ]
       }

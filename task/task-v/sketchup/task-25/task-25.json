@@ -1,62 +1,62 @@
 {
-  "id": "v-sketchup-task-25-windows",
-  "snapshot": "SketchUp2026",
-  "instruction": "Import `C:\\Users\\Administrator\\Desktop\\house.dae` into SketchUp, create the floor-plan dimension schedule described below, save the repaired model as `C:\\Users\\Administrator\\Desktop\\answer.dae`, and write the dimension table to `C:\\Users\\Administrator\\Desktop\\dimensions.csv`.\n\n`house.dae` is a single-storey 4-room house model. Named top-level nodes identify the plan entities:\n- `Wall_Ext_{N,E,S,W}`: the 4 exterior walls of a `10.0 m x 8.0 m` envelope.\n- `Wall_Int_NS`, `Wall_Int_EW`: two interior partitions that divide the plan into 4 rooms.\n- `Door_Front`, `Door_Interior`: two door openings.\n- `Window_N`, `Window_S`: two window openings.\n\nEvery wall is `0.2 m` thick and `3.0 m` tall. The floor plan lies in the XY plane.\n\nWrite `dimensions.csv` with this exact header:\n`label,length_m,start_x,start_y,end_x,end_y`\n\nDimension schedule, 16 rows total:\n- Exterior walls: `Wall_Ext_N`, `Wall_Ext_E`, `Wall_Ext_S`, `Wall_Ext_W`\n- Door widths: `Door_Front`, `Door_Interior`\n- Window widths: `Window_N`, `Window_S`\n- Interior clear dimensions: `Room_NW_W`, `Room_NW_D`, `Room_NE_W`, `Room_NE_D`, `Room_SW_W`, `Room_SW_D`, `Room_SE_W`, `Room_SE_D`\n\nFor the room labels, `_W` is the clear room width along X and `_D` is the clear room depth along Y, measured inner-face to inner-face with wall thickness excluded.\n\nEach CSV row must record the dimension endpoints at floor level `(start_x, start_y)` and `(end_x, end_y)`, and `length_m` must equal the Euclidean distance between them. Use 3 decimal places for every numeric field.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\dimensions.csv` is valid CSV with header `label,length_m,start_x,start_y,end_x,end_y`.\n2. All 16 expected labels are present, with no duplicates and no extra rows.\n3. For every row, `length_m` matches the geometry-derived value within `0.001 m`.\n4. `C:\\Users\\Administrator\\Desktop\\answer.dae` preserves the original named entities and remains a valid COLLADA file.",
-  "source": "https://help.sketchup.com/en\nhttps://ruby.sketchup.com/\nhttps://www.khronos.org/collada/",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-25/init_file/house.dae",
-            "path": "C:\\Users\\Administrator\\Desktop\\house.dae"
-          }
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\SketchUp\\SketchUp 2026\\SketchUp\\SketchUp.exe",
-          "C:\\Users\\Administrator\\Desktop\\house.dae"
-        ]
-      }
-    }
-  ],
-  "trajectory": "trajectories/",
-  "related_apps": [
-    "sketchup"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-25/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
-  "proxy": false,
-  "fixed_ip": false,
-  "possibility_of_env_change": "low"
+    "id":  "v-sketchup-task-25-windows",
+    "snapshot":  "SketchUp2026",
+    "instruction":  "Fix Reversed Faces on Imported Terrain\n\nThe opened file `bad_terrain.dae` is a terrain mesh (a height-field built on a 20x20 grid, so 21x21 vertices and 800 triangles) whose vertex winding is inconsistent: roughly 60% of the triangles have been reversed, so for those triangles the face normal\u0027s Z-component is NEGATIVE. Every triangle in this mesh represents a terrain facet that should face upward (+Z); a correctly oriented triangle has `cross(v1 - v0, v2 - v0).z \u003e 0`. Your task is to detect every reversed (downward-pointing) triangle and flip its winding so that every face normal has Z \u003e 0.\n\nDetection rule (purely geometric, per-triangle):\n\nface_normal = cross(v1 - v0, v2 - v0)\nif face_normal.z \u003c 0: face is reversed; flip it\n\nFlipping a triangle means reversing its vertex winding, e.g. `(v0, v1, v2)` becomes `(v0, v2, v1)`. This inverts the sign of the face normal (including its Z-component) without moving any vertex.\n\nDeliverables:\n\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` - a valid COLLADA file containing the same geometry as the input (identical vertex positions and identical unordered set of triangles), but with every face oriented so that `face_normal.z \u003e 0`. Preserve the ORIGINAL triangle ordering: a triangle that appears at index `i` in the input must still appear at index `i` in the output; only its vertex-index winding may differ.\n\n2. `C:\\Users\\Administrator\\Desktop\\report.json` - a JSON object with the schema:\n\n{\n\"flipped_face_ids\": [\u003cint\u003e,...], // 0-based triangle indices that were reversed in the input and were flipped by the agent\n\"n_flipped\": \u003cint\u003e, // == len(flipped_face_ids)\n\"n_faces_total\": \u003cint\u003e // total triangle count of the mesh\n}\n\n`flipped_face_ids` must be sorted ascending. It must list exactly those triangle indices whose winding in the input file had `face_normal.z \u003c 0`.\n\nRequirements:\n1. `C:\\Users\\Administrator\\Desktop\\output.dae` is a parseable COLLADA file with the same vertex count and triangle count as the input.\n2. The unordered set of triangles (as frozensets of vertex indices) in the output DAE equals that of the input DAE (no geometry was added, removed, or re-vertexed).\n3. At least 95% of triangles in `C:\\Users\\Administrator\\Desktop\\output.dae` have `face_normal.z \u003e 0` (target: 100%).\n4. `C:\\Users\\Administrator\\Desktop\\report.json` parses as valid JSON with the 3 required keys.\n5. `report.json.flipped_face_ids` (as a set) equals the ground-truth set of reversed face indices in the input.\n6. `report.json.n_flipped` equals `len(flipped_face_ids)` and `report.json.n_faces_total` equals the mesh triangle count.",
+    "source":  "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://www.khronos.org/collada/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+    "config":  [
+                   {
+                       "type":  "upload_file",
+                       "parameters":  {
+                                          "files":  [
+                                                        {
+                                                            "local_path":  "task-25/init_file/bad_terrain.dae",
+                                                            "path":  "C:\\Users\\Administrator\\Desktop\\bad_terrain.dae"
+                                                        }
+                                                    ]
+                                      }
+                   },
+                   {
+                       "type":  "launch",
+                       "parameters":  {
+                                          "command":  [
+                                                          "C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe",
+                                                          "C:\\Users\\Administrator\\Desktop\\bad_terrain.dae"
+                                                      ]
+                                      }
+                   }
+               ],
+    "trajectory":  "trajectories/",
+    "related_apps":  [
+                         "sketchup"
+                     ],
+    "evaluator":  {
+                      "postconfig":  [
+                                         {
+                                             "type":  "upload_file",
+                                             "parameters":  {
+                                                                "files":  [
+                                                                              {
+                                                                                  "local_path":  "task-25/eval.py",
+                                                                                  "path":  "C:\\Users\\Administrator\\Desktop\\eval.py"
+                                                                              }
+                                                                          ]
+                                                            }
+                                         }
+                                     ],
+                      "func":  "exact_match",
+                      "result":  {
+                                     "type":  "vm_command_line",
+                                     "command":  "python C:\\Users\\Administrator\\Desktop\\eval.py",
+                                     "shell":  "true"
+                                 },
+                      "expected":  {
+                                       "type":  "rule",
+                                       "rules":  {
+                                                     "expected":  "True\n"
+                                                 }
+                                   }
+                  },
+    "proxy":  false,
+    "fixed_ip":  false,
+    "possibility_of_env_change":  "low"
 }

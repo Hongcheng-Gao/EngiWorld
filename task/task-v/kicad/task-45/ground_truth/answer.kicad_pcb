@@ -17,62 +17,73 @@
     (allow_soldermask_bridges_in_footprints no)
   )
   (net 0 "")
-  (net 1 "CLK")
-  (net 2 "GND")
-  (net 3 "VCC")
-  (net 4 "CLK_PRE")
+  (net 1 "USB_DP")
+  (net 2 "USB_DM")
+  (net 3 "SIG_TX")
+  (net 4 "SIG_RX")
+  (net 5 "GND")
 
-  ; Source IC: U1 at (10, 30) — output pad drives CLK_PRE
-  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 10 30)
-    (reference "U1") (value "74HC04")
-    (pad "3" thru_hole circle (at 0 0) (size 1.4 1.4) (drill 0.8)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 4 "CLK_PRE"))
+  ; Connectors unchanged
+  (footprint "Connector_USB:USB_A_Molex_67643_Vertical" (layer "F.Cu") (at 5 15)
+    (reference "J1") (value "USB-A")
+    (pad "1" thru_hole circle (at 0 0) (size 1.5 1.5) (drill 0.8)
+      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 1 "USB_DP"))
   )
 
-  ; Load 1: U2 at (50, 15) — CLK net
-  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 50 15)
-    (reference "U2") (value "74HCT74")
-    (pad "1" thru_hole circle (at 0 0) (size 1.4 1.4) (drill 0.8)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 1 "CLK"))
+  (footprint "Connector_USB:USB_A_Molex_67643_Vertical" (layer "F.Cu") (at 5 30)
+    (reference "J2") (value "USB-A")
+    (pad "1" thru_hole circle (at 0 0) (size 1.5 1.5) (drill 0.8)
+      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 2 "USB_DM"))
   )
 
-  ; Load 2: U3 at (50, 30) — CLK net
-  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 50 30)
-    (reference "U3") (value "74HCT74")
-    (pad "1" thru_hole circle (at 0 0) (size 1.4 1.4) (drill 0.8)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 1 "CLK"))
+  (footprint "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" (layer "F.Cu") (at 5 45)
+    (reference "J3") (value "CONN-4P")
+    (pad "1" thru_hole circle (at 0 0) (size 1.7 1.7) (drill 1.0)
+      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 3 "SIG_TX"))
   )
 
-  ; Load 3: U4 at (50, 45) — CLK net
-  (footprint "Package_SO:SOIC-8_3.9x4.9mm_P1.27mm" (layer "F.Cu") (at 50 45)
-    (reference "U4") (value "74HCT74")
-    (pad "1" thru_hole circle (at 0 0) (size 1.4 1.4) (drill 0.8)
-      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 1 "CLK"))
+  (footprint "Connector_PinHeader_2.54mm:PinHeader_1x04_P2.54mm_Vertical" (layer "F.Cu") (at 5 60)
+    (reference "J4") (value "CONN-4P")
+    (pad "1" thru_hole circle (at 0 0) (size 1.7 1.7) (drill 1.0)
+      (layers "F.Cu" "B.Cu" "F.Mask" "B.Mask") (net 4 "SIG_RX"))
   )
 
-  ; R_TERM moved to (20, 30), between source and loads — pad1 on CLK_PRE, pad2 on CLK
-  (footprint "Resistor_SMD:R_0603_1608Metric" (layer "F.Cu") (at 20 30)
-    (reference "R_TERM") (value "22R")
-    (pad "1" smd rect (at -0.8 0) (size 1.0 0.8)
-      (layers "F.Cu" "F.Paste" "F.Mask") (net 4 "CLK_PRE"))
-    (pad "2" smd rect (at 0.8 0) (size 1.0 0.8)
-      (layers "F.Cu" "F.Paste" "F.Mask") (net 1 "CLK"))
+  ; ESD arrays moved close to connectors (within 5mm of connector pads)
+  ; D1 moved to (8, 15): D1.pad1 at (8-1.2, 15)=(6.8,15), J1.pad at (5,15), dist=1.8mm <= 5mm
+  (footprint "Package_TO_SOT_SMD:SOT-363_SC-70-6" (layer "F.Cu") (at 8 15)
+    (reference "D1") (value "PRTR5V0U2X")
+    (pad "1" smd rect (at -1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 1 "USB_DP"))
+    (pad "6" smd rect (at 1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 5 "GND"))
   )
 
-  ; CLK_PRE: U1(10,30) -> R_TERM.pad1(19.2,30): length=9.2mm
-  (segment (start 10 30) (end 19.2 30) (width 0.2) (layer "F.Cu") (net 4))
+  ; D2 moved to (8, 30): D2.pad1 at (6.8,30), J2.pad at (5,30), dist=1.8mm <= 5mm
+  (footprint "Package_TO_SOT_SMD:SOT-363_SC-70-6" (layer "F.Cu") (at 8 30)
+    (reference "D2") (value "PRTR5V0U2X")
+    (pad "1" smd rect (at -1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 2 "USB_DM"))
+    (pad "6" smd rect (at 1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 5 "GND"))
+  )
 
-  ; CLK daisy chain: R_TERM.pad2(20.8,30) -> U2(50,15) -> U3(50,30) -> U4(50,45)
-  ; Segment 1: (20.8,30) -> (50,15): length=sqrt((50-20.8)^2+(15-30)^2)=sqrt(29.2^2+15^2)=sqrt(852.64+225)=sqrt(1077.64)=32.83mm
-  (segment (start 20.8 30) (end 50 15) (width 0.2) (layer "F.Cu") (net 1))
-  ; Segment 2: U2(50,15) -> U3(50,30): length=15mm
-  (segment (start 50 15) (end 50 30) (width 0.2) (layer "F.Cu") (net 1))
-  ; Segment 3: U3(50,30) -> U4(50,45): length=15mm
-  (segment (start 50 30) (end 50 45) (width 0.2) (layer "F.Cu") (net 1))
+  ; D3 moved to (8, 45): D3.pad1 at (6.8,45), J3.pad at (5,45), dist=1.8mm <= 5mm
+  (footprint "Package_TO_SOT_SMD:SOT-363_SC-70-6" (layer "F.Cu") (at 8 45)
+    (reference "D3") (value "PRTR5V0U2X")
+    (pad "1" smd rect (at -1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 3 "SIG_TX"))
+    (pad "6" smd rect (at 1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 5 "GND"))
+  )
 
-  ; Total CLK length: 32.83+15+15=62.83mm <= 100mm (ok)
-  ; CLK_PRE length: 9.2mm
-  ; Chain: each load directly on the trunk (no stubs), so max stub=0 <= 5mm
+  ; D4 moved to (8, 60): D4.pad1 at (6.8,60), J4.pad at (5,60), dist=1.8mm <= 5mm
+  (footprint "Package_TO_SOT_SMD:SOT-363_SC-70-6" (layer "F.Cu") (at 8 60)
+    (reference "D4") (value "PRTR5V0U2X")
+    (pad "1" smd rect (at -1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 4 "SIG_RX"))
+    (pad "6" smd rect (at 1.2 0) (size 0.7 0.5)
+      (layers "F.Cu" "F.Paste" "F.Mask") (net 5 "GND"))
+  )
 
-  (gr_rect (start 0 0) (end 100 80) (layer "Edge.Cuts") (width 0.1))
+  (gr_rect (start 0 0) (end 80 80) (layer "Edge.Cuts") (width 0.1))
 )

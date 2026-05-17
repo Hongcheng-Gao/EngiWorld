@@ -1,16 +1,16 @@
 {
   "id": "v-eagle-task-47-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "look at `/home/user/Desktop/board.brd`, use the bundled `/home/user/Desktop/testpad.lbr` to add test-point elements, save the updated board as `/home/user/Desktop/answer.brd`, and write the added-test-point summary to `/home/user/Desktop/testpoint_list.txt`.\n\nRequirements:\n1. `/home/user/Desktop/answer.brd` must parse as well-formed XML.\n2. Add at least 2 new elements whose refdes starts with `TP_`.\n3. At least one `TP_` element must be connected to the `VCC` signal.\n4. At least one `TP_` element must be connected to the `GND` signal.\n5. Every starter-board element must remain present.\n6. The element-count increase must equal the number of added `TP_` elements.",
-  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6",
+  "instruction": "Look at assign.sch in EAGLE. The <classes> block already defines HSPEED as class number 3. Five nets are present (VCC, GND, CLK, DATA, RESET), all initially at class=\"0\". Task: reassign nets `CLK` and `DATA` to class HSPEED (class number 3). Leave VCC, GND, and RESET unchanged at class 0. Save the schematic as `/home/user/Desktop/answer.sch`. Requirements: * /home/user/Desktop/answer.sch parses as EAGLE.sch XML. * <net name=\"CLK\"> carries class=\"3\". * <net name=\"DATA\"> carries class=\"3\". * <net name=\"VCC\">, <net name=\"GND\">, and <net name=\"RESET\"> still carry class=\"0\" (unchanged).",
+  "source": "https://www.autodesk.com/products/fusion-360/blog/what-you-didnt-know-about-eagle-net-classes/",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-47/init_file/board.brd",
-            "path": "/home/user/Desktop/board.brd"
+            "local_path": "task-47/init_file/assign.sch",
+            "path": "/home/user/Desktop/assign.sch"
           }
         ]
       }
@@ -20,8 +20,8 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-47/init_file/testpad.lbr",
-            "path": "/home/user/Desktop/testpad.lbr"
+            "local_path": "task-47/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
           }
         ]
       }
@@ -31,8 +31,7 @@
       "parameters": {
         "command": [
           "/opt/eagle-7.7.0/bin/eagle",
-          "/home/user/Desktop/board.brd",
-          "/home/user/Desktop/testpad.lbr"
+          "/home/user/Desktop/assign.sch"
         ]
       }
     },

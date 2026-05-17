@@ -18,18 +18,26 @@
 <schematic xreflabel="%F%N/%S.%C%R" xrefpart="/%S.%C%R">
 <libraries>
 <library name="linear">
+<packages></packages>
+<symbols></symbols>
 <devicesets>
-<deviceset name="*555" prefix="U">
-<gates>
-<gate name="A" symbol="555" x="0" y="0"/>
-</gates>
-<devices>
-<device name="N">
-<technologies>
-<technology name=""/>
-</technologies>
-</device>
-</devices>
+<deviceset name="LM358" prefix="U">
+<gates><gate name="A" symbol="OPAMP" x="0" y="0"/></gates>
+<devices><device name="" package=""></device></devices>
+</deviceset>
+</devicesets>
+</library>
+<library name="rcl">
+<packages></packages>
+<symbols></symbols>
+<devicesets>
+<deviceset name="R-EU_" prefix="R" uservalue="yes">
+<gates><gate name="G$1" symbol="R-EU" x="0" y="0"/></gates>
+<devices><device name="0207/10" package=""></device></devices>
+</deviceset>
+<deviceset name="C-EU" prefix="C" uservalue="yes">
+<gates><gate name="G$1" symbol="C-EU" x="0" y="0"/></gates>
+<devices><device name="025-025X050" package=""></device></devices>
 </deviceset>
 </devicesets>
 </library>
@@ -40,16 +48,40 @@
 <class number="0" name="default" width="0" drill="0"/>
 </classes>
 <parts>
-<part name="U1" library="linear" deviceset="*555" device="N"/>
+<part name="U1" library="linear" deviceset="LM358" device=""/>
+<part name="R1" library="rcl" deviceset="R-EU_" device="0207/10" value="10k"/>
+<part name="C1" library="rcl" deviceset="C-EU" device="025-025X050" value="100n"/>
+<part name="U1_1" library="linear" deviceset="LM358" device=""/>
+<part name="R1_1" library="rcl" deviceset="R-EU_" device="0207/10" value="10k"/>
+<part name="C1_1" library="rcl" deviceset="C-EU" device="025-025X050" value="100n"/>
 </parts>
 <sheets>
 <sheet>
 <plain></plain>
 <instances>
-<instance part="U1" gate="A" x="50" y="40"/>
+<instance part="U1" gate="A" x="50.8" y="50.8"/>
+<instance part="R1" gate="G$1" x="40.64" y="45.72" rot="R90"/>
+<instance part="C1" gate="G$1" x="60.96" y="45.72"/>
+<instance part="U1_1" gate="A" x="101.6" y="50.8"/>
+<instance part="R1_1" gate="G$1" x="91.44" y="45.72" rot="R90"/>
+<instance part="C1_1" gate="G$1" x="111.76" y="45.72"/>
 </instances>
 <busses></busses>
 <nets>
+<net name="IN" class="0">
+<segment>
+<pinref part="U1" gate="A" pin="IN+"/>
+<pinref part="R1" gate="G$1" pin="1"/>
+<wire x1="40.64" y1="45.72" x2="50.8" y2="45.72" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="OUT" class="0">
+<segment>
+<pinref part="U1" gate="A" pin="OUT"/>
+<pinref part="C1" gate="G$1" pin="1"/>
+<wire x1="55.88" y1="50.8" x2="60.96" y2="50.8" width="0.1524" layer="91"/>
+</segment>
+</net>
 </nets>
 </sheet>
 </sheets>

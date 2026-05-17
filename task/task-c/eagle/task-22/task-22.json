@@ -1,16 +1,27 @@
 {
   "id": "c-eagle-task-22-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Open `/home/user/Desktop/dense.brd` in the EAGLE 7.x board editor. Its refdes placeholders (`>NAME`) are embedded in the element bodies, cluttering the silkscreen. Reposition at least five element refdes labels as free-standing text on layer `25` (`tNames`) in the board's `<plain>` block, then save the result as `/home/user/Desktop/labeled.brd`. Requirements: 1. `/home/user/Desktop/labeled.brd` parses as well-formed XML. 2. The board's `<plain>` block contains at least 5 `<text layer=\"25\">` elements. 3. Every such layer-25 text has content equal to an existing element refdes in the board. 4. No refdes is labeled more than once. 5. The element count is unchanged relative to the starter. 6. The set of element names is identical between the starter and the output.",
-  "source": "https://learn.adafruit.com/ktowns-ultimate-creating-parts-in-eagle-tutorial/adding-%3Ename-and-%3Evalue-to-the-package",
+  "instruction": "The file `/home/user/Desktop/board.sch` is the schematic to modify. Add three net classes and save the schematic as `/home/user/Desktop/classed.sch`. Required classes: - `SIG` with width about `0.15 mm` - `PWR` with width about `0.40 mm` - `HSPEED` with width about `0.20 mm` Requirements: 1. `/home/user/Desktop/classed.sch` must parse as EAGLE XML. 2. `<classes>` must contain classes named `SIG`, `PWR`, and `HSPEED`. 3. Their widths, normalized to millimetres, must be approximately `0.15`, `0.40`, and `0.20` respectively. 4. The three added classes must have distinct `number` attributes.",
+  "source": "https://www.autodesk.com/products/fusion-360/blog/what-you-didnt-know-about-eagle-net-classes/",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-22/init_file/dense.brd",
-            "path": "/home/user/Desktop/dense.brd"
+            "local_path": "task-22/init_file/board.sch",
+            "path": "/home/user/Desktop/board.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
           }
         ]
       }

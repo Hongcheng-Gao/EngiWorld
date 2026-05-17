@@ -2,7 +2,7 @@
   "id": "c-blender-task-09-ubuntu",
   "snapshot": "Blender-4.2.3",
   "instruction": "bmesh Boolean Welder\n\n`/home/user/Desktop/parts.blend` contains 12 disjoint mesh objects `Part01..Part12`, each a differently-sized cuboid. The parts are arranged in an overlapping cluster so adjacent boxes share real volume. Weld all 12 into a single manifold mesh object named `Welded` and save the result as `/home/user/Desktop/answer.blend`.\n\n## Requirements\n1. `/home/user/Desktop/answer.blend` exists.\n2. The scene contains exactly one mesh object, named `Welded`; none of the 12 original `Part*` objects remain.\n3. `Welded.modifiers` is empty — the boolean result must be baked into the mesh, not left as a live modifier stack.\n4. `Welded` is closed-manifold: every edge is shared by exactly two faces.\n5. `Welded` is a single connected component (BFS over face adjacency yields one group).\n6. `Welded`'s face count is in [40, 200].\n7. `Welded`'s world-space axis-aligned bounding box matches the AABB of the union of all 12 input parts to within 0.01 BU per axis.\n\nCanonical approach: union the 12 parts with bmesh (`bmesh.ops.boolean_solver`) or by chaining object-level Boolean UNION modifiers and applying them. The final mesh must be baked geometry with a clean modifier stack.",
-  "source": "https://docs.blender.org/manual/en/4.1/\nhttps://docs.blender.org/api/4.1/\nhttps://developer.blender.org/docs/release_notes/4.1/\nhttps://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
   "config": [
     {
       "type": "upload_file",
