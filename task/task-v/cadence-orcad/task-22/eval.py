@@ -1,7 +1,9 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import importlib.util
+import io
 import shutil
 import tempfile
 import zlib
@@ -124,6 +126,7 @@ def _has_generated_python_file() -> bool:
             continue
     return False
 
+
 def _run() -> bool:
     if _has_generated_python_file():
         return False
@@ -139,7 +142,8 @@ def _run() -> bool:
         module = _load_module(root)
         func = getattr(module, CALL_FUNC)
         args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
+        with contextlib.redirect_stdout(io.StringIO()), contextlib.redirect_stderr(io.StringIO()):
+            result = func(*args)
         return _is_pass(result)
     except Exception:
         return False

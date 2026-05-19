@@ -1,9 +1,12 @@
 from __future__ import annotations
 
 import base64
+import contextlib
 import importlib.util
+import io
 import os
 import shutil
+import sys
 import zlib
 from pathlib import Path
 
@@ -144,6 +147,26 @@ def _has_generated_python_file() -> bool:
             continue
     return False
 
+@contextlib.contextmanager
+def _suppress_output():
+    sys.stdout.flush()
+    sys.stderr.flush()
+    with open(os.devnull, "w") as devnull:
+        old_stdout_fd = os.dup(1)
+        old_stderr_fd = os.dup(2)
+        try:
+            os.dup2(devnull.fileno(), 1)
+            os.dup2(devnull.fileno(), 2)
+            with contextlib.redirect_stdout(devnull), contextlib.redirect_stderr(devnull):
+                yield
+        finally:
+            sys.stdout.flush()
+            sys.stderr.flush()
+            os.dup2(old_stdout_fd, 1)
+            os.dup2(old_stderr_fd, 2)
+            os.close(old_stdout_fd)
+            os.close(old_stderr_fd)
+
 def _run() -> bool:
     if _has_generated_python_file():
         return False
@@ -157,7 +180,9 @@ def _run() -> bool:
     try:
         _materialize_bundle(root)
         _apply_runtime_env()
-        return _is_pass(_call_inner(root))
+        with _suppress_output():
+            result = _call_inner(root)
+        return _is_pass(result)
     except Exception:
         return False
     finally:
