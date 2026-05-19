@@ -3,7 +3,7 @@ import subprocess
 
 
 DESKTOP = Path(r"C:\Users\Administrator\Desktop")
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 MAPDL_PORT = 50111
 JOBNAME = "eval_wb_hertz"
 

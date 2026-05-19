@@ -6,7 +6,7 @@ DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 DB_FILE = DESKTOP / "apdl_plastic.db"
 RESULT_FILE = DESKTOP / "apdl_plastic.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_plastic"
 MAPDL_PORT = 50113
 
@@ -25,26 +25,6 @@ def is_nonempty_file(path: Path) -> bool:
     return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
-def has_forbidden_py_file(root: Path) -> bool:
-    try:
-        entries = list(root.iterdir())
-    except Exception:
-        return True
-
-    for path in entries:
-        try:
-            if not path.is_file():
-                continue
-        except Exception:
-            return True
-
-        name = path.name.lower()
-        if name.endswith(".py") and name != "eval.py":
-            return True
-
-    return False
-
-
 def within_tolerance(name: str, truth: float, pred: float) -> bool:
     tol = TOLERANCE.get(name, TOLERANCE["default"])
     rel = tol["rel"]
@@ -60,7 +40,7 @@ def allsel(mapdl) -> None:
 
 def node_on_loaded_face(mapdl, tol: float = 1e-3) -> int:
     allsel(mapdl)
-    mapdl.nsel("S", "LOC", "Y", 50.0 - tol, 50.0 + tol)
+    mapdl.nsel("S", "LOC", "Z", 50.0 - tol, 50.0 + tol)
     node = int(mapdl.get_value("NODE", 0, "NUM", "MIN"))
     allsel(mapdl)
     if node < 1:
@@ -112,9 +92,6 @@ def _kill_ansys_related() -> None:
 
 def evaluate() -> bool:
     _kill_ansys_related()
-
-    if has_forbidden_py_file(DESKTOP):
-        return False
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
         return False

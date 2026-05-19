@@ -6,7 +6,7 @@ DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 DB_FILE = DESKTOP / "apdl_plastic.db"
 RESULT_FILE = DESKTOP / "apdl_plastic.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_plastic"
 MAPDL_PORT = 50113
 
@@ -40,7 +40,7 @@ def allsel(mapdl) -> None:
 
 def node_on_loaded_face(mapdl, tol: float = 1e-3) -> int:
     allsel(mapdl)
-    mapdl.nsel("S", "LOC", "Y", 50.0 - tol, 50.0 + tol)
+    mapdl.nsel("S", "LOC", "Z", 50.0 - tol, 50.0 + tol)
     node = int(mapdl.get_value("NODE", 0, "NUM", "MIN"))
     allsel(mapdl)
     if node < 1:

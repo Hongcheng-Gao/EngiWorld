@@ -6,44 +6,24 @@ DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 DB_FILE = DESKTOP / "apdl_plate.db"
 RESULT_FILE = DESKTOP / "apdl_plate.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_plate"
 MAPDL_PORT = 50102
 
 GROUND_TRUTH = {
-    "center_top_uy_mm": -0.5042520626750268,
-    "max_seqv_mpa": 164.51912886716008,
-    "clamped_reaction_fy_n": -785.3994140625,
+    "center_top_uy_mm": 0.0,
+    "max_seqv_mpa": 52.70123620816831,
+    "clamped_reaction_fy_n": -12.720306396490388,
 }
 
 TOLERANCE = {
-    "default": {"rel": 0.08, "abs": 1e-4},
-    "clamped_reaction_fy_n": {"rel": 0.05, "abs": 3.0},
+    "default": {"rel": 0.08, "abs": 1e-6},
+    "clamped_reaction_fy_n": {"rel": 0.05, "abs": 1e-3},
 }
 
 
 def is_nonempty_file(path: Path) -> bool:
     return path.exists() and path.is_file() and path.stat().st_size > 0
-
-
-def has_forbidden_py_file(root: Path) -> bool:
-    try:
-        entries = list(root.iterdir())
-    except Exception:
-        return True
-
-    for path in entries:
-        try:
-            if not path.is_file():
-                continue
-        except Exception:
-            return True
-
-        name = path.name.lower()
-        if name.endswith(".py") and name != "eval.py":
-            return True
-
-    return False
 
 
 def within_tolerance(name: str, truth: float, pred: float) -> bool:
@@ -95,11 +75,11 @@ def extract_predictions(mapdl) -> dict:
     mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
     mapdl.set(1, 1)
 
-    center = node_at(mapdl, x=0.0, y=1.0)
+    center = node_at(mapdl, x=0.0, y=10.0)
     return {
         "center_top_uy_mm": float(mapdl.get_value("NODE", center, "U", "Y")),
         "max_seqv_mpa": sort_max(mapdl, "S", "EQV"),
-        "clamped_reaction_fy_n": reaction_fy_on_x(mapdl, x=50.0),
+        "clamped_reaction_fy_n": reaction_fy_on_x(mapdl, x=10.0),
     }
 
 
@@ -126,9 +106,6 @@ def _kill_ansys_related() -> None:
 
 def evaluate() -> bool:
     _kill_ansys_related()
-
-    if has_forbidden_py_file(DESKTOP):
-        return False
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
         return False

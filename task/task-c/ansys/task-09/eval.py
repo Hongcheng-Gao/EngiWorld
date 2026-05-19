@@ -4,7 +4,9 @@ import subprocess
 import tempfile
 import os
 import glob
+import re
 
+FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
 
 DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 CASE_FILE = DESKTOP / "cavity.cas"
@@ -25,6 +27,10 @@ def is_nonempty_file(path: Path) -> bool:
 
 
 def find_fluent_executable() -> str:
+    explicit = Path(FLUENT_EXEC_FILE)
+    if explicit.exists() and explicit.is_file():
+        return str(explicit)
+
     cmd = which("fluent")
     if cmd:
         return cmd
@@ -54,9 +60,7 @@ def find_fluent_executable() -> str:
 def extract_predictions(root: Path) -> dict:
     jou = """
 /file/read-case-data cavity.cas
-/surface/point-surface top_lid_midpoint (0.0005 0.001 0)
-/report/surface-integrals/x-velocity top_lid_midpoint () no
-/report/surface-integrals/velocity-magnitude top_lid_midpoint () no
+/report/surface-integrals/area-weighted-avg top () x-velocity no
 /exit yes
 """
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".jou", dir=root, delete=False) as fp:
@@ -75,19 +79,14 @@ def extract_predictions(root: Path) -> dict:
         if proc.returncode != 0:
             raise RuntimeError("fluent failed")
         out = (proc.stdout or "") + "\n" + (proc.stderr or "")
-        vals = []
-        for tok in out.replace(",", " ").split():
-            try:
-                vals.append(float(tok))
-            except ValueError:
-                pass
-        if not vals:
-            raise RuntimeError("no numeric value extracted")
-        candidates = [v for v in vals if 0.0 <= v <= 2.0]
-        if not candidates:
-            raise RuntimeError("no velocity candidate extracted")
-        target = GROUND_TRUTH["lid_speed_m_s"]
-        pred = min(candidates, key=lambda v: abs(v - target))
+        m = re.search(
+            r"^\s*top\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*$",
+            out,
+            flags=re.IGNORECASE | re.MULTILINE,
+        )
+        if not m:
+            raise RuntimeError("top x-velocity value not found")
+        pred = float(m.group(1))
         return {"lid_speed_m_s": pred}
     finally:
         try:

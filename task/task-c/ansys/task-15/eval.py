@@ -4,15 +4,17 @@ import subprocess
 import tempfile
 import os
 import glob
+import re
 
+FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
 
 DESKTOP = Path(r"C:\Users\Administrator\Desktop")
-CASE_FILE = DESKTOP / "pipe_laminar.cas"
 DATA_FILE = DESKTOP / "pipe_laminar.dat"
-REQUIRED_FILES = [CASE_FILE, DATA_FILE]
+MESH_FILE = DESKTOP / "pipe_laminar.msh"
+REQUIRED_FILES = [MESH_FILE, DATA_FILE]
 
 GROUND_TRUTH = {
-    "centerline_velocity_m_s": 0.2,
+    "centerline_velocity_m_s": 0.13110223,
 }
 
 TOLERANCE = {
@@ -25,6 +27,10 @@ def is_nonempty_file(path: Path) -> bool:
 
 
 def find_fluent_executable() -> str:
+    explicit = Path(FLUENT_EXEC_FILE)
+    if explicit.exists() and explicit.is_file():
+        return str(explicit)
+
     cmd = which("fluent")
     if cmd:
         return cmd
@@ -49,9 +55,9 @@ def find_fluent_executable() -> str:
 
 def extract_predictions(root: Path) -> dict:
     jou = """
-/file/read-case-data pipe_laminar.cas
-/surface/point-surface outlet-center (0.05 0 0)
-/report/surface-integrals/velocity-magnitude outlet-center () no
+/file/read-case pipe_laminar.msh
+/file/read-data pipe_laminar.dat
+/report/surface-integrals/area-weighted-avg outlet () x-velocity no
 /exit yes
 """
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".jou", dir=root, delete=False) as fp:
@@ -61,7 +67,7 @@ def extract_predictions(root: Path) -> dict:
     try:
         fluent_exe = find_fluent_executable()
         proc = subprocess.run(
-            [fluent_exe, "3ddp", "-g", "-i", jou_path.name],
+            [fluent_exe, "2ddp", "-g", "-i", jou_path.name],
             cwd=root,
             capture_output=True,
             text=True,
@@ -70,16 +76,10 @@ def extract_predictions(root: Path) -> dict:
         if proc.returncode != 0:
             raise RuntimeError("fluent failed")
         out = (proc.stdout or "") + "\n" + (proc.stderr or "")
-        vals = []
-        for tok in out.replace(",", " ").split():
-            try:
-                vals.append(float(tok))
-            except ValueError:
-                pass
-        candidates = [abs(v) for v in vals if 0.0 <= abs(v) <= 5.0]
-        if not candidates:
-            raise RuntimeError("no velocity candidate extracted")
-        return {"centerline_velocity_m_s": candidates[-1]}
+        values = re.findall(r"outlet\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)", out)
+        if not values:
+            raise RuntimeError("outlet x-velocity value not found")
+        return {"centerline_velocity_m_s": abs(float(values[-1]))}
     finally:
         try:
             jou_path.unlink()

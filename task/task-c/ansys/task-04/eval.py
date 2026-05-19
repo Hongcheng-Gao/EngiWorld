@@ -6,7 +6,7 @@ DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 DB_FILE = DESKTOP / "apdl_transient_thermal.db"
 RESULT_FILE = DESKTOP / "apdl_transient_thermal.rth"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_transient_thermal"
 MAPDL_PORT = 50104
 

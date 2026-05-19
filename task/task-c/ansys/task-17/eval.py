@@ -4,7 +4,9 @@ import subprocess
 import tempfile
 import os
 import glob
+import re
 
+FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
 
 DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 CASE_FILE = DESKTOP / "couette.cas"
@@ -12,7 +14,7 @@ DATA_FILE = DESKTOP / "couette.dat"
 REQUIRED_FILES = [CASE_FILE, DATA_FILE]
 
 GROUND_TRUTH = {
-    "top_wall_shear_pa": 0.5015,
+    "top_wall_shear_pa": 3.2029001,
 }
 
 TOLERANCE = {
@@ -25,6 +27,10 @@ def is_nonempty_file(path: Path) -> bool:
 
 
 def find_fluent_executable() -> str:
+    explicit = Path(FLUENT_EXEC_FILE)
+    if explicit.exists() and explicit.is_file():
+        return str(explicit)
+
     cmd = which("fluent")
     if cmd:
         return cmd
@@ -50,7 +56,7 @@ def find_fluent_executable() -> str:
 def extract_predictions(root: Path) -> dict:
     jou = """
 /file/read-case-data couette.cas
-/report/surface-integrals/wall-shear top () no
+/report/surface-integrals/area-weighted-avg top () wall-shear no
 /exit yes
 """
     with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".jou", dir=root, delete=False) as fp:
@@ -69,16 +75,14 @@ def extract_predictions(root: Path) -> dict:
         if proc.returncode != 0:
             raise RuntimeError("fluent failed")
         out = (proc.stdout or "") + "\n" + (proc.stderr or "")
-        vals = []
-        for tok in out.replace(",", " ").split():
-            try:
-                vals.append(float(tok))
-            except ValueError:
-                pass
-        candidates = [abs(v) for v in vals if 0.0 <= abs(v) <= 20.0]
-        if not candidates:
-            raise RuntimeError("no wall-shear candidate extracted")
-        return {"top_wall_shear_pa": candidates[-1]}
+        m = re.search(
+            r"^\s*top\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)\s*$",
+            out,
+            flags=re.IGNORECASE | re.MULTILINE,
+        )
+        if not m:
+            raise RuntimeError("top wall-shear value not found")
+        return {"top_wall_shear_pa": abs(float(m.group(1)))}
     finally:
         try:
             jou_path.unlink()

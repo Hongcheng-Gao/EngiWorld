@@ -6,7 +6,7 @@ DESKTOP = Path(r"C:\Users\Administrator\Desktop")
 DB_FILE = DESKTOP / "apdl_thermal_stress.db"
 RESULT_FILE = DESKTOP / "apdl_thermal_stress.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_thermal_stress"
 MAPDL_PORT = 50108
 

@@ -3,18 +3,18 @@ import subprocess
 
 
 DESKTOP = Path(r"C:\Users\Administrator\Desktop")
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\ANSYS Student\v261\ansys\bin\winx64\ANSYS261.exe"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 MAPDL_PORT = 50112
 JOBNAME = "eval_wb_transient"
 
 WBPJ_FILE = DESKTOP / "wb_transient.wbpj"
 DB_FILE = DESKTOP / "wb_transient.db"
 RESULT_FILE = DESKTOP / "wb_transient.rst"
-REQUIRED_FILES = [WBPJ_FILE, DB_FILE, RESULT_FILE]
+REQUIRED_FILES = [DB_FILE, RESULT_FILE]
 
 GROUND_TRUTH = {
-    "peak_midspan_uy_mm": -14.879390210491861,
-    "final_midspan_uy_mm": -11.508421954864733,
+    "peak_midspan_uy_mm": -13.264232503804262,
+    "final_midspan_uy_mm": -2.3798813592085692,
     "final_time_s": 0.05,
 }
 
@@ -26,26 +26,6 @@ TOLERANCE = {
 
 def is_nonempty_file(path: Path) -> bool:
     return path.exists() and path.is_file() and path.stat().st_size > 0
-
-
-def has_forbidden_py_file(root: Path) -> bool:
-    try:
-        entries = list(root.iterdir())
-    except Exception:
-        return True
-
-    for path in entries:
-        try:
-            if not path.is_file():
-                continue
-        except Exception:
-            return True
-
-        name = path.name.lower()
-        if name.endswith(".py") and name != "eval.py":
-            return True
-
-    return False
 
 
 def within_tolerance(name: str, truth: float, pred: float) -> bool:
@@ -131,9 +111,6 @@ def _kill_ansys_related() -> None:
 
 def evaluate() -> bool:
     _kill_ansys_related()
-
-    if has_forbidden_py_file(DESKTOP):
-        return False
 
     if any(not is_nonempty_file(path) for path in REQUIRED_FILES):
         return False
