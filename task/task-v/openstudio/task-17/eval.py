@@ -8,6 +8,98 @@ import tempfile
 
 DESKTOP = Path("/home/user/Desktop")
 
+
+GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
+    ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
+    ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
+    ".lua", ".tcl", ".ahk", ".scr"
+}
+GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
+GUI_BYPASS_OUTPUT_TOKENS = (
+    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
+    "report.csv", "result.csv"
+)
+GUI_BYPASS_COMMAND_TOKENS = (
+    "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
+    "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+)
+
+
+def _read_text_safe(path):
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return ""
+
+
+def _desktop_script_artifacts(root):
+    if not root.exists() or not root.is_dir():
+        return True
+    try:
+        candidates = list(root.iterdir())
+        for directory in list(candidates):
+            if directory.is_dir() and directory.name not in {"__pycache__", "_runtime"}:
+                try:
+                    candidates.extend(directory.iterdir())
+                except Exception:
+                    pass
+        for path in candidates:
+            if not path.is_file():
+                continue
+            if path.name in GUI_BYPASS_ALLOWED_FILENAMES:
+                continue
+            if path.suffix.lower() in GUI_BYPASS_FORBIDDEN_EXTENSIONS:
+                return True
+    except Exception:
+        return True
+    return False
+
+
+def _history_paths(root):
+    home = Path.home()
+    paths = [
+        home / ".bash_history",
+        home / ".zsh_history",
+        home / ".python_history",
+        home / ".local/share/fish/fish_history",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
+        root / ".bash_history",
+        root / ".zsh_history",
+    ]
+    return paths
+
+
+def _history_contains_bypass(root):
+    for path in _history_paths(root):
+        if not path.is_file():
+            continue
+        text = _read_text_safe(path).lower()
+        if not text:
+            continue
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or "eval.py" in line:
+                continue
+            touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
+            runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
+            writes_file = any(token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item"))
+            if touches_output and (runs_command or writes_file):
+                return True
+            if ("/desktop/" in line or "\\desktop\\" in line) and any(ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS) and runs_command:
+                return True
+    return False
+
+
+def check_no_gui_bypass(root):
+    root = Path(root)
+    if _desktop_script_artifacts(root):
+        return False
+    if _history_contains_bypass(root):
+        return False
+    return True
+
 SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 4, 'OS:ThermalZone': 4, 'OS:Surface': 26, 'OS:SubSurface': 0, 'OS:ZoneHVAC:IdealLoadsAirSystem': 4, 'OS:ZoneHVAC:EquipmentList': 4, 'OS:ThermostatSetpoint:DualSetpoint': 4, 'OS:People': 2, 'OS:Lights': 2, 'OS:ElectricEquipment': 2}, 'space_names': ['Office-A', 'Office-B', 'Conference', 'Support'], 'surface_counts': {'Floor': 4, 'RoofCeiling': 4, 'Wall': 18}, 'outside_boundary_counts': {'Ground': 4, 'Outdoors': 12, 'Surface': 10}, 'window_count': 0, 'bbox_spans_m': [16.0, 12.0, 3.2], 'floor_area_m2': 192.0, 'exterior_wall_area_m2': 179.2, 'window_area_m2': 0.0, 'hvac': {'ideal_loads': 4, 'equipment_lists': 4, 'thermostats': 4}, 'schedule_metadata': {'OfficeType': {'schedule_set': 'Office Defaults', 'spaces': ['Office-A', 'Office-B', 'Conference']}, 'SupportType': {'schedule_set': 'Support Defaults', 'spaces': ['Support']}}}
 WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
 
@@ -333,6 +425,8 @@ def check_workflow(root):
 
 def evaluate():
     root = DESKTOP
+    if not check_no_gui_bypass(root):
+        return False
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")

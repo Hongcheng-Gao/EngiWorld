@@ -20,6 +20,98 @@ import ifcopenshell
 DESKTOP = Path("C:/Users/Administrator/Desktop")
 
 
+GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
+    ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
+    ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
+    ".lua", ".tcl", ".ahk", ".scr"
+}
+GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
+GUI_BYPASS_OUTPUT_TOKENS = (
+    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
+    "report.csv", "result.csv"
+)
+GUI_BYPASS_COMMAND_TOKENS = (
+    "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
+    "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+)
+
+
+def _read_text_safe(path):
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return ""
+
+
+def _desktop_script_artifacts(root):
+    if not root.exists() or not root.is_dir():
+        return True
+    try:
+        candidates = list(root.iterdir())
+        for directory in list(candidates):
+            if directory.is_dir() and directory.name not in {"__pycache__", "_runtime"}:
+                try:
+                    candidates.extend(directory.iterdir())
+                except Exception:
+                    pass
+        for path in candidates:
+            if not path.is_file():
+                continue
+            if path.name in GUI_BYPASS_ALLOWED_FILENAMES:
+                continue
+            if path.suffix.lower() in GUI_BYPASS_FORBIDDEN_EXTENSIONS:
+                return True
+    except Exception:
+        return True
+    return False
+
+
+def _history_paths(root):
+    home = Path.home()
+    paths = [
+        home / ".bash_history",
+        home / ".zsh_history",
+        home / ".python_history",
+        home / ".local/share/fish/fish_history",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
+        root / ".bash_history",
+        root / ".zsh_history",
+    ]
+    return paths
+
+
+def _history_contains_bypass(root):
+    for path in _history_paths(root):
+        if not path.is_file():
+            continue
+        text = _read_text_safe(path).lower()
+        if not text:
+            continue
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or "eval.py" in line:
+                continue
+            touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
+            runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
+            writes_file = any(token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item"))
+            if touches_output and (runs_command or writes_file):
+                return True
+            if ("/desktop/" in line or "\\desktop\\" in line) and any(ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS) and runs_command:
+                return True
+    return False
+
+
+def check_no_gui_bypass(root):
+    root = Path(root)
+    if _desktop_script_artifacts(root):
+        return False
+    if _history_contains_bypass(root):
+        return False
+    return True
+
+
 SPEC = {'title': 'Warehouse to Food Hall Issue Package', 'starts_from_init': True, 'required_outputs': {'result.ifc': 500, 'result.pdf': 500, 'result.txt': 20}, 'schema': 'IFC4', 'storey_count': 1, 'space_names': ['STALL-1', 'STALL-2', 'STALL-3', 'STALL-4', 'STALL-5', 'STALL-6', 'STALL-7', 'STALL-8', 'BAR', 'COMMON-SEATING', 'BACK-OF-HOUSE'], 'min_counts': {'IfcWall': 4, 'IfcSlab': 1, 'IfcRoof': 2}, 'bbox_exact': {'min': [0.0, 0.0, 0.0], 'max': [30.0, 12.0, 3.8]}, 'bbox_tolerance': 0.5, 'csv_headers': ['ZoneNumber', 'ZoneName', 'Area'], 'csv_rows': [['F01', 'STALL-1', 20.0], ['F02', 'STALL-2', 20.0], ['F03', 'STALL-3', 20.0], ['F04', 'STALL-4', 20.0], ['F05', 'STALL-5', 20.0], ['F06', 'STALL-6', 20.0], ['F07', 'STALL-7', 20.0], ['F08', 'STALL-8', 20.0], ['F09', 'BAR', 20.0], ['F10', 'COMMON-SEATING', 80.0], ['F11', 'BACK-OF-HOUSE', 40.0]], 'csv_numeric_tolerance': 0.1, 'pdf_page_count': 3, 'pdf_tokens': ['A101', 'A201', 'WAREHOUSE TO FOOD HALL ISSUE PACKAGE', 'STALL-1', 'BAR', 'COMMON-SEATING', 'BACK-OF-HOUSE']}
 
 
@@ -193,6 +285,8 @@ def check_pdf(path):
 
 def evaluate():
     root = DESKTOP
+    if not check_no_gui_bypass(root):
+        return False
     for rel, min_bytes in SPEC["required_outputs"].items():
         path = root / rel
         if not path.is_file() or path.stat().st_size < min_bytes:
