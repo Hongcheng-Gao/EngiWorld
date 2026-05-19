@@ -13,7 +13,7 @@ except ImportError:
     _HAS_PDFMINER = False
 
 from pathlib import Path
-DESKTOP = Path("C:/Users/Administrator/Desktop")
+DESKTOP = Path("C:/Users/user/Desktop")
 
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {

@@ -2,7 +2,7 @@ from pathlib import Path
 import subprocess
 
 
-DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DESKTOP = Path(r"C:\Users\user\Desktop")
 DB_FILE = DESKTOP / "apdl_fixed_beam_modal.db"
 RESULT_FILE = DESKTOP / "apdl_fixed_beam_modal.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]

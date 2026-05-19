@@ -53,7 +53,7 @@ def get_desktop(job_name):
     up = os.environ.get('USERPROFILE', None)
     if up:
         candidates.append(os.path.join(up, 'Desktop'))
-    candidates.append(r'C:\Users\Administrator\Desktop')
+    candidates.append(r'C:\Users\user\Desktop')
     candidates.append(r'C:\Users\User\Desktop')
 
     for d in candidates:
@@ -64,7 +64,7 @@ def get_desktop(job_name):
         if os.path.isdir(d):
             return d
 
-    return r'C:\Users\Administrator\Desktop'
+    return r'C:\Users\user\Desktop'
 
 
 def has_forbidden_py_file(desktop_path):

@@ -1,7 +1,7 @@
 {
   "id": "c-sketchup-task-14-windows",
   "snapshot": "SketchUp2026",
-  "instruction": "Nested Component Hierarchy from Spec The file `C:\\Users\\Administrator\\Desktop\\flat_scene.dae` contains a flat list of 20 COLLADA `<node>` elements under the visual scene root. Each node carries a full world-space transform (any combination of translation and rotation) and references one of the geometry definitions in `library_geometries`. The file `C:\\Users\\Administrator\\Desktop\\hierarchy.json` specifies how these 20 flat instances must be reorganized into a nested group hierarchy, using exactly this schema: ``` { \"groups\": [ {\"name\": \"<GroupName>\", \"children\": [\"<NodeName>\",...]},... ] } ``` There are exactly 4 groups. Every one of the 20 flat node names appears in exactly one group's `children` list (the 4 groups partition the 20 nodes, 5 each). 1. Parse `C:\\Users\\Administrator\\Desktop\\flat_scene.dae` and record the world-space transform of every named node. 2. Parse `C:\\Users\\Administrator\\Desktop\\hierarchy.json`. 3. Emit `C:\\Users\\Administrator\\Desktop\\answer.skp` whose visual scene graph has exactly 4 top-level `<node>` elements - one per group - each named as specified by `C:\\Users\\Administrator\\Desktop\\hierarchy.json`. Each group node contains as its direct children the `<node>` elements listed in `children` (keep the original child names). Group nodes may carry their own transform; child nodes carry whatever local transform is needed so that the cumulative parent*child transform reproduces the original flat-scene world transform within 1 mm. 4. Geometry definitions must not be duplicated - reuse the same `<geometry>` ids from the input file. Requirements: 1. `C:\\Users\\Administrator\\Desktop\\answer.skp` can be opened and inspected as a native SketchUp model. 2. The scene graph has exactly 4 top-level nodes with the 4 group names from `C:\\Users\\Administrator\\Desktop\\hierarchy.json`. 3. Each group node contains exactly the child node names specified, with no extras and no duplicates. 4. Node tree depth is at least 2 (groups contain nested children, not direct geometry). 5. For every one of the 20 instances, the recovered world transform (group_matrix * child_matrix applied to the local geometry origin (0,0,0)) matches the original flat-scene world position within 1 mm. 6. All 20 child nodes still reference their original geometry definition. [Software] Launch SketchUp with `C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe` (adjust if your install differs).",
+  "instruction": "Nested Component Hierarchy from Spec The file `C:\\Users\\user\\Desktop\\flat_scene.dae` contains a flat list of 20 COLLADA `<node>` elements under the visual scene root. Each node carries a full world-space transform (any combination of translation and rotation) and references one of the geometry definitions in `library_geometries`. The file `C:\\Users\\user\\Desktop\\hierarchy.json` specifies how these 20 flat instances must be reorganized into a nested group hierarchy, using exactly this schema: ``` { \"groups\": [ {\"name\": \"<GroupName>\", \"children\": [\"<NodeName>\",...]},... ] } ``` There are exactly 4 groups. Every one of the 20 flat node names appears in exactly one group's `children` list (the 4 groups partition the 20 nodes, 5 each). 1. Parse `C:\\Users\\user\\Desktop\\flat_scene.dae` and record the world-space transform of every named node. 2. Parse `C:\\Users\\user\\Desktop\\hierarchy.json`. 3. Emit `C:\\Users\\user\\Desktop\\answer.skp` whose visual scene graph has exactly 4 top-level `<node>` elements - one per group - each named as specified by `C:\\Users\\user\\Desktop\\hierarchy.json`. Each group node contains as its direct children the `<node>` elements listed in `children` (keep the original child names). Group nodes may carry their own transform; child nodes carry whatever local transform is needed so that the cumulative parent*child transform reproduces the original flat-scene world transform within 1 mm. 4. Geometry definitions must not be duplicated - reuse the same `<geometry>` ids from the input file. Requirements: 1. `C:\\Users\\user\\Desktop\\answer.skp` can be opened and inspected as a native SketchUp model. 2. The scene graph has exactly 4 top-level nodes with the 4 group names from `C:\\Users\\user\\Desktop\\hierarchy.json`. 3. Each group node contains exactly the child node names specified, with no extras and no duplicates. 4. Node tree depth is at least 2 (groups contain nested children, not direct geometry). 5. For every one of the 20 instances, the recovered world transform (group_matrix * child_matrix applied to the local geometry origin (0,0,0)) matches the original flat-scene world position within 1 mm. 6. All 20 child nodes still reference their original geometry definition. [Software] Launch SketchUp with `C:\\SketchUp 2026 26.0.429 x64 En Portable\\SketchUp.exe` (adjust if your install differs).",
   "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://ruby.sketchup.com/Sketchup/ComponentDefinition.html; https://www.khronos.org/collada/",
   "config": [
     {
@@ -10,7 +10,7 @@
         "files": [
           {
             "local_path": "task-14/init_file/flat_scene.dae",
-            "path": "C:\\Users\\Administrator\\Desktop\\flat_scene.dae"
+            "path": "C:\\Users\\user\\Desktop\\flat_scene.dae"
           }
         ]
       }
@@ -21,7 +21,7 @@
         "files": [
           {
             "local_path": "task-14/init_file/hierarchy.json",
-            "path": "C:\\Users\\Administrator\\Desktop\\hierarchy.json"
+            "path": "C:\\Users\\user\\Desktop\\hierarchy.json"
           }
         ]
       }
@@ -39,7 +39,7 @@
           "files": [
             {
               "local_path": "task-14/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
             }
           ]
         }
@@ -48,7 +48,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {

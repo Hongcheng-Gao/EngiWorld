@@ -6,7 +6,7 @@ from pathlib import Path
 
 import ezdxf
 
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\Administrator\Desktop"))
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
 SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [200, 0], 'layer': 'OUTLINE'}, {'start': [200, 0], 'end': [200, 120], 'layer': 'OUTLINE'}, {'start': [200, 120], 'end': [0, 120], 'layer': 'OUTLINE'}, {'start': [0, 120], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [130, 0], 'end': [200, 0], 'layer': 'OUTLINE'}, {'start': [200, 0], 'end': [200, 25], 'layer': 'OUTLINE'}, {'start': [200, 25], 'end': [130, 25], 'layer': 'OUTLINE'}, {'start': [130, 25], 'end': [130, 0], 'layer': 'OUTLINE'}, {'start': [130, 12.5], 'end': [200, 12.5], 'layer': 'CENTER'}, {'start': [165, 0], 'end': [165, 25], 'layer': 'CENTER'}], 'circles': [], 'arcs': [], 'texts': [{'text': 'ACAD-21', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0

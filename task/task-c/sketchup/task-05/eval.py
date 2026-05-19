@@ -8,7 +8,7 @@ import zlib
 from pathlib import Path
 
 
-DESKTOP = Path('C:\\Users\\Administrator\\Desktop')
+DESKTOP = Path('C:\\Users\\user\\Desktop')
 SKETCHUP_INSTALL_PATH = r"C:\SketchUp 2026 26.0.429 x64 En Portable\SketchUp\local\modified\@PROGRAMFILES@\SketchUp\SketchUp 2026\SketchUp"
 SKETCHUP_EXE_PATH = r"C:\SketchUp 2026 26.0.429 x64 En Portable\SketchUp.exe"
 SKETCHUP_TEMPLATE_PATH = r"C:\SketchUp 2026 26.0.429 x64 En Portable\SketchUp\local\modified\@PROGRAMFILES@\SketchUp\SketchUp 2026\SketchUp\resources\en-US\Templates\Temp02a - Vis.skp"

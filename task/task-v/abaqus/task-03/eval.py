@@ -37,7 +37,7 @@ def get_desktop():
     if userprofile:
         candidates.append(os.path.join(userprofile, 'Desktop'))
 
-    candidates.append(r'C:\Users\Administrator\Desktop')
+    candidates.append(r'C:\Users\user\Desktop')
     candidates.append(r'C:\Users\User\Desktop')
 
     # Prefer the desktop that already contains the target files.
@@ -50,7 +50,7 @@ def get_desktop():
         if os.path.isdir(d):
             return d
 
-    return r'C:\Users\Administrator\Desktop'
+    return r'C:\Users\user\Desktop'
 
 
 desktop = get_desktop()

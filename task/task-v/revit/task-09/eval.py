@@ -2,7 +2,7 @@
 import csv
 import re
 from pathlib import Path
-DESKTOP = Path("C:/Users/Administrator/Desktop")
+DESKTOP = Path("C:/Users/user/Desktop")
 
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {

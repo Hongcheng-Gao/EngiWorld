@@ -2,7 +2,7 @@ from pathlib import Path
 import subprocess
 
 
-DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DESKTOP = Path(r"C:\Users\user\Desktop")
 EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 MAPDL_PORT = 50118
 JOBNAME = "eval_wb_plate"

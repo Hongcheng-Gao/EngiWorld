@@ -1,7 +1,7 @@
 {
   "id": "v-sketchup-task-06-windows",
   "snapshot": "SketchUp2026",
-  "instruction": "Hollow Vase (Revolved Shell) Using SketchUp, model a hollow vase produced by revolving a smooth vase silhouette around the Z-axis and giving it a 5 mm wall thickness with an open top. Export the result as a binary STL. No initial file is provided. Specification: - **Silhouette profile** (outer): a smooth curve through three control points in the (radius, Z) half-plane - Base outer radius R = 80 mm at Z = 0 mm - Mid-body radius R = 120 mm at Z = 150 mm (widest point) - Rim outer radius R = 60 mm at Z = 300 mm Draw the profile as two smooth arcs (Bezier \\ freehand) blended through the mid-body so the diameter transitions smoothly from 160 mm at the base, up to 240 mm at mid-height, and back down to 120 mm at the rim. - **Revolve**: use SketchUp's `Follow Me` tool (or a 360 degree rotate-copy of the profile) to sweep the silhouette around the Z-axis. Aim for at least 64 sides so the revolved surface is smooth. - **Wall thickness**: give the vase a **5 mm uniform wall**. Leave the **top open** (the rim has no cap) and keep the **bottom closed** (a solid floor 5 mm thick). - **Axis**: place the vase standing upright with its base on the Z = 0 plane. Center it on the X and Y origin. Export the shell as `C:\\Users\\Administrator\\Desktop\\output.stl` (binary STL is acceptable). Requirements: 1. `C:\\Users\\Administrator\\Desktop\\output.stl` parses as a valid STL mesh. 2. Bounding-box extents approximately 240 x 240 x 300 mm within +/- 10 mm. 3. The mesh has at least one non-manifold (open) boundary loop, and every boundary edge lies at Z ~ 300 mm +/- 2 mm -- confirming the top is open and the rest of the vase is sealed. 4. The shell volume |V| falls within 6..18 % of the equivalent solid vase's volume -- consistent with a ~5 mm wall (the ground-truth value is ~10 %).",
+  "instruction": "Hollow Vase (Revolved Shell) Using SketchUp, model a hollow vase produced by revolving a smooth vase silhouette around the Z-axis and giving it a 5 mm wall thickness with an open top. Export the result as a binary STL. No initial file is provided. Specification: - **Silhouette profile** (outer): a smooth curve through three control points in the (radius, Z) half-plane - Base outer radius R = 80 mm at Z = 0 mm - Mid-body radius R = 120 mm at Z = 150 mm (widest point) - Rim outer radius R = 60 mm at Z = 300 mm Draw the profile as two smooth arcs (Bezier \\ freehand) blended through the mid-body so the diameter transitions smoothly from 160 mm at the base, up to 240 mm at mid-height, and back down to 120 mm at the rim. - **Revolve**: use SketchUp's `Follow Me` tool (or a 360 degree rotate-copy of the profile) to sweep the silhouette around the Z-axis. Aim for at least 64 sides so the revolved surface is smooth. - **Wall thickness**: give the vase a **5 mm uniform wall**. Leave the **top open** (the rim has no cap) and keep the **bottom closed** (a solid floor 5 mm thick). - **Axis**: place the vase standing upright with its base on the Z = 0 plane. Center it on the X and Y origin. Export the shell as `C:\\Users\\user\\Desktop\\output.stl` (binary STL is acceptable). Requirements: 1. `C:\\Users\\user\\Desktop\\output.stl` parses as a valid STL mesh. 2. Bounding-box extents approximately 240 x 240 x 300 mm within +/- 10 mm. 3. The mesh has at least one non-manifold (open) boundary loop, and every boundary edge lies at Z ~ 300 mm +/- 2 mm -- confirming the top is open and the rest of the vase is sealed. 4. The shell volume |V| falls within 6..18 % of the equivalent solid vase's volume -- consistent with a ~5 mm wall (the ground-truth value is ~10 %).",
   "source": "https://help.sketchup.com/en; https://ruby.sketchup.com/; https://help.sketchup.com/en/sketchup/solid-tools; https://www.loc.gov/preservation/digital/formats/fdd/fdd000505.shtml",
   "config": [
     {
@@ -35,7 +35,7 @@
           "files": [
             {
               "local_path": "task-06/eval.py",
-              "path": "C:\\Users\\Administrator\\Desktop\\eval.py"
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
             }
           ]
         }
@@ -44,7 +44,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python C:\\Users\\Administrator\\Desktop\\eval.py",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {

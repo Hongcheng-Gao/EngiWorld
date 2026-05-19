@@ -16,7 +16,7 @@ except ImportError:
 
 from pathlib import Path
 
-DESKTOP = Path("C:/Users/Administrator/Desktop")
+DESKTOP = Path("C:/Users/user/Desktop")
 
 
 

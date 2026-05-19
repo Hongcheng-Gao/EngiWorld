@@ -6,7 +6,7 @@ from pathlib import Path
 
 import ezdxf
 
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\Administrator\Desktop"))
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
 SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [240, 0], 'layer': 'OUTLINE'}, {'start': [240, 0], 'end': [240, 120], 'layer': 'OUTLINE'}, {'start': [240, 120], 'end': [0, 120], 'layer': 'OUTLINE'}, {'start': [0, 120], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [50, 20], 'end': [50, 100], 'layer': 'CENTER'}, {'start': [120, 20], 'end': [120, 100], 'layer': 'CENTER'}, {'start': [190, 20], 'end': [190, 100], 'layer': 'CENTER'}, {'start': [30, 40], 'end': [210, 40], 'layer': 'CENTER'}, {'start': [30, 80], 'end': [210, 80], 'layer': 'CENTER'}], 'circles': [{'center': [50, 40], 'radius': 6, 'layer': 'HOLE'}, {'center': [50, 80], 'radius': 6, 'layer': 'HOLE'}, {'center': [120, 40], 'radius': 6, 'layer': 'HOLE'}, {'center': [120, 80], 'radius': 6, 'layer': 'HOLE'}, {'center': [190, 40], 'radius': 6, 'layer': 'HOLE'}, {'center': [190, 80], 'radius': 6, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-37', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0

@@ -6,7 +6,7 @@ from pathlib import Path
 
 import ezdxf
 
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\Administrator\Desktop"))
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
 SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [260, 0], 'layer': 'OUTLINE'}, {'start': [260, 0], 'end': [260, 160], 'layer': 'OUTLINE'}, {'start': [260, 160], 'end': [0, 160], 'layer': 'OUTLINE'}, {'start': [0, 160], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [10, 10], 'end': [90, 10], 'layer': 'OUTLINE'}, {'start': [90, 10], 'end': [90, 50], 'layer': 'OUTLINE'}, {'start': [90, 50], 'end': [10, 50], 'layer': 'OUTLINE'}, {'start': [10, 50], 'end': [10, 10], 'layer': 'OUTLINE'}, {'start': [100, 10], 'end': [180, 10], 'layer': 'OUTLINE'}, {'start': [180, 10], 'end': [180, 70], 'layer': 'OUTLINE'}, {'start': [180, 70], 'end': [100, 70], 'layer': 'OUTLINE'}, {'start': [100, 70], 'end': [100, 10], 'layer': 'OUTLINE'}, {'start': [10, 70], 'end': [80, 70], 'layer': 'OUTLINE'}, {'start': [80, 70], 'end': [80, 140], 'layer': 'OUTLINE'}, {'start': [80, 140], 'end': [10, 140], 'layer': 'OUTLINE'}, {'start': [10, 140], 'end': [10, 70], 'layer': 'OUTLINE'}, {'start': [110, 90], 'end': [200, 90], 'layer': 'OUTLINE'}, {'start': [200, 90], 'end': [220, 110], 'layer': 'OUTLINE'}, {'start': [220, 110], 'end': [200, 140], 'layer': 'OUTLINE'}, {'start': [200, 140], 'end': [110, 140], 'layer': 'OUTLINE'}, {'start': [110, 140], 'end': [110, 90], 'layer': 'OUTLINE'}], 'circles': [], 'arcs': [], 'texts': [{'text': 'ACAD-39', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0

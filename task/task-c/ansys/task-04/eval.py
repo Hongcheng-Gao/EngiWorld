@@ -2,7 +2,7 @@ from pathlib import Path
 import subprocess
 
 
-DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DESKTOP = Path(r"C:\Users\user\Desktop")
 DB_FILE = DESKTOP / "apdl_transient_thermal.db"
 RESULT_FILE = DESKTOP / "apdl_transient_thermal.rth"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]

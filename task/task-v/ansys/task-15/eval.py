@@ -8,7 +8,7 @@ import re
 
 FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
 
-DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DESKTOP = Path(r"C:\Users\user\Desktop")
 DATA_FILE = DESKTOP / "pipe_laminar.dat"
 MESH_FILE = DESKTOP / "pipe_laminar.msh"
 REQUIRED_FILES = [MESH_FILE, DATA_FILE]

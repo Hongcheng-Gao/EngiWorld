@@ -22,7 +22,7 @@ import math
 # ============================================================
 
 desktop = os.path.join(
-    os.environ.get('USERPROFILE', r'C:\Users\Administrator'),
+    os.environ.get('USERPROFILE', r'C:\Users\user'),
     'Desktop'
 )
 
@@ -384,7 +384,7 @@ def check_odb_file():
 # # Main
 # # ============================================================
 
-result_file = r'C:\Users\Administrator\Desktop\eval_result.txt'
+result_file = r'C:\Users\user\Desktop\eval_result.txt'
 
 try:
     passed = check_cae_file() and check_odb_file()

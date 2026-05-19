@@ -2,7 +2,7 @@ from pathlib import Path
 import subprocess
 
 
-DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DESKTOP = Path(r"C:\Users\user\Desktop")
 DB_FILE = DESKTOP / "apdl_solid_beam.db"
 RESULT_FILE = DESKTOP / "apdl_solid_beam.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]

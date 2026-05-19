@@ -8,7 +8,7 @@ import re
 
 FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
 
-DESKTOP = Path(r"C:\Users\Administrator\Desktop")
+DESKTOP = Path(r"C:\Users\user\Desktop")
 CASE_FILE = DESKTOP / "couette.cas"
 DATA_FILE = DESKTOP / "couette.dat"
 REQUIRED_FILES = [CASE_FILE, DATA_FILE]
