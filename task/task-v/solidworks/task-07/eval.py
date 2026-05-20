@@ -5,6 +5,13 @@ from pathlib import Path
 import cadquery as cq
 from OCP.BRepAdaptor import BRepAdaptor_Surface
 from OCP.GeomAbs import GeomAbs_Cylinder, GeomAbs_Plane
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 
 OUTPUT_ROOT = Path(r"C:\Users\User\Desktop")
@@ -116,6 +123,8 @@ def volume_matches(solids) -> bool:
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(Path(r"C:\Users\User\Desktop")):
+        return False
     solids = import_solids(OUTPUT_ROOT / OUTPUT_STEP)
     if not solids:
         return False

@@ -1,6 +1,13 @@
 from pathlib import Path
 import subprocess
 
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 DESKTOP = Path(r"C:\Users\user\Desktop")
 DB_FILE = DESKTOP / "apdl_thermal_stress.db"
@@ -106,6 +113,8 @@ def _kill_ansys_related() -> None:
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(DESKTOP):
+        return False
     _kill_ansys_related()
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
@@ -114,7 +123,6 @@ def evaluate() -> bool:
     mapdl = None
     try:
         from ansys.mapdl.core import launch_mapdl
-
         mapdl = launch_mapdl(
             exec_file=EXEC_FILE,
             jobname=JOBNAME,

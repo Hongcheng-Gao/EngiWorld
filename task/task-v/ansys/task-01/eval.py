@@ -1,6 +1,5 @@
-import subprocess
 from pathlib import Path
-import traceback
+import subprocess
 import sys
 
 DESKTOP = Path(r"C:\Users\user\Desktop")
@@ -11,8 +10,10 @@ EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_solid_beam"
 MAPDL_PORT = 50110
 
-RESULT_TXT = DESKTOP / "eval_result.txt"
-ERROR_TXT = DESKTOP / "eval_error.txt"
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
 
 GROUND_TRUTH = {
     "load_point_UY_mm": -0.18762852462477883,
@@ -29,30 +30,9 @@ TOLERANCE = {
     "reaction_FY_N": {"rel": 0.01, "abs": 0.10},
 }
 
-error_log = []
-
-def log_error(msg):
-    error_log.append(str(msg))
-
-def output_result(value):
-    result_text = "True" if value else "False"
-    with open(RESULT_TXT, "w") as f:
-        f.write(result_text + "\n")
-    if not value and error_log:
-        with open(ERROR_TXT, "w") as f:
-            f.write("\n".join(error_log) + "\n")
-    try:
-        sys.__stdout__.write(result_text + "\n")
-        sys.__stdout__.flush()
-    except:
-        pass
-
 
 def is_nonempty_file(path: Path) -> bool:
-    ok = path.exists() and path.is_file() and path.stat().st_size > 0
-    if not ok:
-        log_error("Required file missing or empty: %s" % path)
-    return ok
+    return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
 def within_tolerance(name: str, truth: float, pred: float) -> bool:
@@ -60,15 +40,8 @@ def within_tolerance(name: str, truth: float, pred: float) -> bool:
     rel = tol["rel"]
     abs_tol = tol["abs"]
     if truth == 0:
-        ok = abs(pred - truth) <= abs_tol
-    else:
-        ok = abs(pred - truth) <= max(abs(truth) * rel, abs_tol)
-    if not ok:
-        log_error(
-            "  FAILED %s: expected %.12f, got %.12f, tolerance %.12f (rel=%.4f, abs=%.6f)"
-            % (name, truth, pred, max(abs(truth) * rel, abs_tol) if truth != 0 else abs_tol, rel, abs_tol)
-        )
-    return ok
+        return abs(pred - truth) <= abs_tol
+    return abs(pred - truth) <= max(abs(truth) * rel, abs_tol)
 
 
 def allsel(mapdl) -> None:
@@ -83,7 +56,6 @@ def node_at(mapdl, x: float, y: float, z: float, tol: float = 1e-3) -> int:
     node = int(mapdl.get_value("NODE", 0, "NUM", "MIN"))
     allsel(mapdl)
     if node < 1:
-        log_error("Node not found at (%.3f, %.3f, %.3f)" % (x, y, z))
         raise RuntimeError("Node not found.")
     return node
 
@@ -99,10 +71,91 @@ def sort_max(mapdl, item: str, comp: str = "") -> float:
 def reaction_fy_on_z(mapdl, z: float, tol: float = 1e-3) -> float:
     allsel(mapdl)
     mapdl.nsel("S", "LOC", "Z", z - tol, z + tol)
-    count = int(mapdl.get_value("NODE", 0, "COUNT"))
-    if count < 1:
-        log_error("No support nodes found at Z=%.3f" % z)
+    if int(mapdl.get_value("NODE", 0, "COUNT")) < 1:
         raise RuntimeError("No support nodes selected.")
     mapdl.fsum()
     fy = float(mapdl.get_value("FSUM", 0, "ITEM", "FY"))
     allsel(mapdl)
+    return fy
+
+
+def extract_predictions(mapdl) -> dict:
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.post1()
+    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
+    mapdl.set(1, 1)
+
+    load_node = node_at(mapdl, x=5.0, y=10.0, z=100.0)
+    return {
+        "load_point_UY_mm": float(mapdl.get_value("NODE", load_node, "U", "Y")),
+        "load_point_USUM_mm": float(mapdl.get_value("NODE", load_node, "U", "SUM")),
+        "max_UY_mm": sort_max(mapdl, "U", "Y"),
+        "max_USUM_mm": sort_max(mapdl, "U", "SUM"),
+        "max_von_mises_MPa": sort_max(mapdl, "S", "EQV"),
+        "reaction_FY_N": reaction_fy_on_z(mapdl, z=0.0),
+    }
+
+
+def _kill_ansys_related() -> None:
+    for target in (
+        "ANSYS261.exe",
+        "ansys261.exe",
+        "ANSYS.exe",
+        "ansys.exe",
+        "fluent.exe",
+        "Fluent.exe",
+        "cortex.exe",
+        "Cortex.exe",
+    ):
+        try:
+            subprocess.run(
+                ["taskkill", "/F", "/IM", target],
+                capture_output=True,
+                creationflags=0x08000000,
+            )
+        except Exception:
+            pass
+
+
+def evaluate() -> bool:
+    if not check_no_gui_bypass(DESKTOP):
+        return False
+    _kill_ansys_related()
+
+    if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
+        return False
+
+    mapdl = None
+    try:
+        from ansys.mapdl.core import launch_mapdl
+
+        mapdl = launch_mapdl(
+            exec_file=EXEC_FILE,
+            jobname=JOBNAME,
+            run_location=str(DESKTOP),
+            nproc=1,
+            port=MAPDL_PORT,
+            override=True,
+        )
+        pred = extract_predictions(mapdl)
+    except Exception:
+        return False
+    finally:
+        if mapdl is not None:
+            try:
+                mapdl.exit()
+            except Exception:
+                pass
+
+    for name, truth in GROUND_TRUTH.items():
+        if name not in pred or not within_tolerance(name, truth, pred[name]):
+            return False
+    return True
+
+
+def main() -> None:
+    print("True" if evaluate() else "False")
+
+
+if __name__ == "__main__":
+    main()

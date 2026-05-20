@@ -5,6 +5,13 @@ import os
 from pathlib import Path
 
 import ezdxf
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
 SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [140, 0], 'layer': 'OUTLINE'}, {'start': [140, 0], 'end': [140, 50], 'layer': 'OUTLINE'}, {'start': [140, 50], 'end': [0, 50], 'layer': 'OUTLINE'}, {'start': [0, 50], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [20, 60], 'end': [120, 60], 'layer': 'OUTLINE'}, {'start': [120, 60], 'end': [120, 95], 'layer': 'OUTLINE'}, {'start': [120, 95], 'end': [20, 95], 'layer': 'OUTLINE'}, {'start': [20, 95], 'end': [20, 60], 'layer': 'OUTLINE'}, {'start': [70, 0], 'end': [70, 100], 'layer': 'CENTER'}], 'circles': [{'center': [70, 55], 'radius': 8, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-11', 'layer': 'ANNOTATION'}]}
@@ -100,6 +107,8 @@ def _has_text(doc, value, layer=None):
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))):
+        return False
     path = OUTPUT_ROOT / SPEC["target"]
     if not path.exists() or path.stat().st_size <= 0:
         return False

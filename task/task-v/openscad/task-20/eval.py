@@ -6,6 +6,13 @@ import struct
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 
@@ -492,6 +499,8 @@ def _evaluate_csg(path: Path) -> bool:
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(OUTPUT_ROOT):
+        return False
     path = OUTPUT_ROOT / SPEC["output"]
     if not path.exists() or path.stat().st_size <= 0:
         return False

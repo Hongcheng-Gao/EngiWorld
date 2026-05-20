@@ -8,6 +8,13 @@ import os
 import re
 from pathlib import Path
 from typing import Any
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 SPEC = {'files': {'task-10.gcode': {'tools': [1], 'z': [0], 'points': [(-80, -45), (80, 45), (-35, 0), (35, 0), (-65, 35), (65, -35)], 'terms': ['INNER', 'OUTER'], 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
@@ -213,6 +220,8 @@ def check_one(path: Path, rule: dict[str, Any]) -> bool:
 
 
 def main() -> bool:
+    if not check_no_gui_bypass(TARGET):
+        return False
     for rel, rule in SPEC["files"].items():
         if not check_one(TARGET / rel, rule):
             return False

@@ -4,6 +4,13 @@ import csv
 import json
 import re
 from pathlib import Path
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 REQUIRED = ['task-7.nc']
 CFG = {'tools': [1, 2], 'z': [6.0, 0.0], 'ops': ['Job', 'Adaptive', 'Pocket', 'Profile', 'Finish Pass']}
@@ -43,6 +50,8 @@ def check_nc(path: Path) -> bool:
 
 
 def main() -> bool:
+    if not check_no_gui_bypass(DESKTOP):
+        return False
     for rel in REQUIRED:
         path = TARGET / rel
         if not path.exists() or path.stat().st_size == 0:

@@ -1,9 +1,15 @@
+import math
 import os
+import sys
 
 from pathlib import Path
 
 import ezdxf
 
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
 
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))
@@ -192,8 +198,6 @@ def _has_arc_entity(doc, center, radius, endpoints):
 
         # Endpoint angle direction may differ by exporter, so only require the geometric arc endpoints.
 
-        import math
-
         start = math.radians(float(entity.dxf.start_angle))
 
         end = math.radians(float(entity.dxf.end_angle))
@@ -247,6 +251,8 @@ def _has_obround_slot(doc):
 
 
 def evaluate():
+    if not check_no_gui_bypass(OUTPUT_ROOT):
+        return False
 
     path = OUTPUT_ROOT / TARGET
 

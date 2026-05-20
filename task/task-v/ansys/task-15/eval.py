@@ -5,6 +5,13 @@ import tempfile
 import os
 import glob
 import re
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
 
@@ -114,6 +121,8 @@ def _kill_ansys_related() -> None:
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(DESKTOP):
+        return False
     _kill_ansys_related()
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):

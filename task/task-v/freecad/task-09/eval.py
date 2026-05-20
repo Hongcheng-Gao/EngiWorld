@@ -3,6 +3,15 @@ from __future__ import annotations
 from pathlib import Path
 
 import cadquery as cq
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
+
+DESKTOP = Path("/home/user/Desktop")
 
 STEP_SPECS = [{'path': '/home/user/Desktop/freecad_task-9_output.step', 'solid_count': 1, 'bbox': [140.0, 30.0, 38.0], 'volume': 40080.0}]
 BBOX_TOL = 0.05
@@ -26,6 +35,8 @@ def summarize_step(path: Path):
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(DESKTOP):
+        return False
     for spec in STEP_SPECS:
         path = Path(spec["path"])
         if not path.exists() or path.stat().st_size <= 0:

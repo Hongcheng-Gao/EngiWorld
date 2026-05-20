@@ -5,6 +5,13 @@ import os
 from pathlib import Path
 
 import ezdxf
+import sys
+
+_TASK_V_ROOT = Path(__file__).resolve().parents[2]
+if str(_TASK_V_ROOT) not in sys.path:
+    sys.path.insert(0, str(_TASK_V_ROOT))
+from _gui_bypass import check_no_gui_bypass
+
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
 SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [110.0, 75.0], 'end': [135.0, 75.0], 'layer': 'CENTER'}, {'start': [75.0, 110.0], 'end': [75.0, 135.0], 'layer': 'CENTER'}, {'start': [40.0, 75.0], 'end': [15.0, 75.0], 'layer': 'CENTER'}, {'start': [75.0, 40.0], 'end': [75.0, 15.0], 'layer': 'CENTER'}], 'circles': [{'center': [75, 75], 'radius': 60, 'layer': 'OUTLINE'}, {'center': [75, 75], 'radius': 35, 'layer': 'CUTOUT'}, {'center': [118.422338, 92.986121], 'radius': 4, 'layer': 'HOLE'}, {'center': [92.986121, 118.422338], 'radius': 4, 'layer': 'HOLE'}, {'center': [57.013879, 118.422338], 'radius': 4, 'layer': 'HOLE'}, {'center': [31.577662, 92.986121], 'radius': 4, 'layer': 'HOLE'}, {'center': [31.577662, 57.013879], 'radius': 4, 'layer': 'HOLE'}, {'center': [57.013879, 31.577662], 'radius': 4, 'layer': 'HOLE'}, {'center': [92.986121, 31.577662], 'radius': 4, 'layer': 'HOLE'}, {'center': [118.422338, 57.013879], 'radius': 4, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-19', 'layer': 'ANNOTATION'}]}
@@ -100,6 +107,8 @@ def _has_text(doc, value, layer=None):
 
 
 def evaluate() -> bool:
+    if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))):
+        return False
     path = OUTPUT_ROOT / SPEC["target"]
     if not path.exists() or path.stat().st_size <= 0:
         return False
