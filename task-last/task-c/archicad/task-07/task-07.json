@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-07-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Compact three-storey office annex from scratch. In Archicad, create a new three-storey office annex using real BIM elements for storeys, slabs, a roof, a stair, and IfcSpace zones. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc. The IFC must contain exactly three IfcBuildingStorey objects, exactly twelve IfcSpace zones, at least three slab elements, at least one roof element, at least one stair element, and unique IFC GlobalId values for exported root objects. Assign the ground storey zones G-RECEPTION 20.0 m2, G-MEETING 20.0 m2, G-CORRIDOR 30.0 m2, and G-STAIR 9.0 m2. Assign the level-1 zones 1-OFFICE-1 20.0 m2, 1-OFFICE-2 20.0 m2, 1-CORRIDOR 30.0 m2, and 1-WC 7.5 m2. Assign the level-2 zones 2-OFFICE-3 20.0 m2, 2-OFFICE-4 20.0 m2, 2-CORRIDOR 30.0 m2, and 2-TERRACE 15.0 m2. Each area must be within +/-0.10 m2. The ground total must be between 78.0 and 80.0 m2, the level-1 total between 76.5 and 78.5 m2, and the level-2 total between 84.0 and 86.0 m2. The stair should connect the storeys, but the exact stair-flight decomposition may vary. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-179.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

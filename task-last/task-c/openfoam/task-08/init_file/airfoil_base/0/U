@@ -1,0 +1,18 @@
+FoamFile
+{
+    format ascii;
+    class volVectorField;
+    object U;
+}
+dimensions [0 1 -1 0 0 0 0];
+internalField uniform (30 0 0); // TODO_ATTACK_ANGLE_ROTATE
+boundaryField
+{
+    inlet { type fixedValue; value uniform (30 0 0); // TODO_FREESTREAM_VELOCITY
+ }
+    outlet { type zeroGradient; }
+    top { type slip; }
+    airfoil { type noSlip; }
+    bottomFar { type slip; }
+    frontAndBack { type empty; }
+}

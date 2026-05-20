@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-path-task-01-ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Open /home/user/Desktop/cli_plate.step in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Create a FreeCAD Path/CAM Job and a top Face operation. Set the Job origin at the stock top-face center. Use T1 to target final top Z=10.000 mm with S6000 rpm and F750 mm/min. Tool definition: T1 is a face mill, S6000 rpm, F750 mm/min. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-01.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/CAM_Job；https://wiki.freecad.org/CAM_Post；https://wiki.freecad.org/CAM_scripting https://wiki.freecad.org/CAM_Job%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Post%EF%BC%9Bhttps:/wiki.freecad.org/CAM_scripting",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/cli_plate.step",
+            "path": "/home/user/Desktop/cli_plate.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

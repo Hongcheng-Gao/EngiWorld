@@ -1,0 +1,57 @@
+{
+  "id": "v-abaqus-task-07-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus through the graphical user interface to perform a torsion analysis of a circular shaft (Variant A). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Revolution. Sketch a rectangle from (0, 0) to (5, 80) in the X-Y plane, using the left vertical edge at X = 0 as the revolution axis (global Y-axis). Revolve 360 deg to generate a solid cylinder with diameter 10 mm and length 80 mm, aligned with the global Y-axis. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Solid Homogeneous section using Steel and assign it to the entire shaft. Assembly: Create one dependent instance of the shaft. Analysis Step: Create a Static, General step named Step-Torque-A. Loads and Boundary Conditions: Apply an Encastre boundary condition to the fixed end face at Y = 0. Create a reference point RP-1 at the center of the free end face (Y = 80 mm) and establish a kinematic coupling between RP-1 and that end face. Apply a torque (Moment) of 850 N*mm at RP-1 about the global Y-axis. Discretization: Mesh the shaft with a global seed size of 4 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-Torsion-A, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Torsion-A.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-Torsion-A.odb. Run the solver to completion and ensure a result file is generated. You must complete all operations interactively through the abaqus graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+          "cae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

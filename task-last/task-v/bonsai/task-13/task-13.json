@@ -1,0 +1,65 @@
+{
+  "id": "v-bonsai-task-13-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "GUI-only requirement: Complete the task entirely in the launched Bonsai/Blender graphical user interface. Do not open Terminal or a shell; do not use the Blender Python console, Text editor scripts, Python, IfcOpenShell, shell commands, or any helper script/macro to directly generate or edit the deliverable files. Use only Bonsai/Blender native GUI tools, panels, menus, dialogs, and built-in save/export commands. Open the provided init.ifc model in Bonsai and use init_plan.png as the plan reference. Repair the existing door and window conditions so each door or window is hosted by an explicit wall opening, then save the completed IFC4 model as result.ifc. The result should keep one project, one site, one building, and one building storey. It should contain at least four walls, exactly one door, exactly three windows, and exactly four opening elements. Each opening element must be the RelatedOpeningElement of exactly one IfcRelVoidsElement whose RelatingBuildingElement is an IfcWall. Each opening must also be the RelatingOpeningElement of exactly one IfcRelFillsElement whose RelatedBuildingElement is the door or one of the windows, so the four filled elements are exactly one door and three windows. Do not include building element proxies or furniture. Other details may vary.",
+  "source": "https://docs.bonsaibim.org/guides/authoring/basic_modeling/window.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-13/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

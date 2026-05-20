@@ -1,0 +1,53 @@
+{
+  "id": "c-openscad-task-03-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Open /home/user/Desktop/task-023_initial.scad in OpenSCAD. Modify it from the command line so the final top-level object is the 2D projection outline of the bracket in the XY plane. Export /home/user/Desktop/task-023_output.dxf and do not export STL. The projection must contain the outside outline and two mounting-hole outlines. The mounting holes must have diameter 5 mm and center x coordinates +/-22 mm. [Software] To use OpenSCAD, run `openscad` from a terminal.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_the_2D_Subsystem; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/task-023_initial.scad",
+            "path": "/home/user/Desktop/task-023_initial.scad"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

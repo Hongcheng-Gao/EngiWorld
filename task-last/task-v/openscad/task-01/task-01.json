@@ -1,0 +1,62 @@
+{
+  "id": "v-openscad-task-01-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Look at task-001_initial.scad in OpenSCAD. Change the base parameters to width=80, depth=50, and height=10, and keep the model centered at the origin. Save as STL named /home/user/Desktop/task-001_output.stl. Do not create PNG, PDF, CSV, JSON, or any other extra output. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/STL_Import_and_Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/task-001_initial.scad",
+            "path": "/home/user/Desktop/task-001_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "/home/user/Desktop/task-001_initial.scad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

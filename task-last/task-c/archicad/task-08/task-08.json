@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-08-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Creative studio from scratch. In Archicad, create a new one-storey creative studio using real BIM elements for the building storey, slab, roof elements, and IfcSpace zones. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc. The IFC must contain exactly one IfcBuildingStorey, exactly five IfcSpace zones on that storey, at least one slab element, at least two roof elements, and unique IFC GlobalId values for exported root objects. Create zones named STUDIO 96.0 m2, OFFICE 16.0 m2, STORE 12.0 m2, PANTRY 12.0 m2, and WC 8.0 m2. Each area must be within +/-0.10 m2. Keep the STUDIO area between 95.0 and 97.0 m2 and the total zone area between 143.0 and 145.0 m2. Additional walls, materials, property sets, or exporter-created relationships are allowed when they do not replace the required BIM element types. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-59.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

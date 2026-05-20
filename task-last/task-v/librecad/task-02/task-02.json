@@ -1,0 +1,72 @@
+{
+  "id": "v-librecad-task-02-ubuntu",
+  "snapshot": "LibreCAD2.2.0.2",
+  "instruction": "Look at gui02_bolt_plate_seed.dxf in LibreCAD. On layer HOLE, draw four diameter 10 mm circular holes centered at (20,20), (100,20), (100,60), and (20,60). Preserve the existing centerlines on layer CENTER and do not delete the outer frame. On layer DIM, add two dimension annotations: a horizontal 120 mm overall plate-length dimension and a vertical 80 mm overall plate-width dimension. Save as /home/user/Desktop/gui02_bolt_plate_completed.dxf. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/gui02_bolt_plate_seed.dxf",
+            "path": "/home/user/Desktop/gui02_bolt_plate_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/gui02_bolt_plate_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

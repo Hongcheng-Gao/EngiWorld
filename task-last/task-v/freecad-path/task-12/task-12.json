@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-path-task-12-ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Look at library_part.step. Manually create the required FreeCAD Path ToolBit and ToolController objects, then use them to complete Face, Drilling, and Profile operations on library_part.step. Tool definitions to create manually as FreeCAD Path ToolBit/ToolController objects: T1 face/end mill, T2 drill, T3 profile end mill, and T4 finishing tool. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-12.nc. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://wiki.freecad.org/CAM_ToolBit_Library；https://wiki.freecad.org/CAM_ToolController https://wiki.freecad.org/CAM_ToolBit_Library%EF%BC%9Bhttps:/wiki.freecad.org/CAM_ToolController",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/library_part.step",
+            "path": "/home/user/Desktop/library_part.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/library_part.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

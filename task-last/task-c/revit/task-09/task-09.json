@@ -1,0 +1,48 @@
+{
+  "id": "c-revit-task-09-windows",
+  "snapshot": "Revit2025",
+  "instruction": "Mixed-use corner building IFC model. Create a three-storey mixed-use corner building from scratch in Revit and export it to C:\\Users\\user\\Desktop\\result.ifc using the IFC4 schema. The first level should contain retail and lobby functions, with office and meeting spaces above. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, three IfcBuildingStorey entities, six IfcSpace objects, eighteen IfcWall elements, three IfcSlab elements, and one IfcRoof. Name the spaces so they include at least one Retail space, one Lobby, two Office spaces, and two Meeting spaces. Include at least nine IfcDoor elements, seventeen IfcWindow elements, and three IfcStair elements. Do not include IfcBuildingElementProxy, IfcColumn, or IfcBeam entities. Size the shaped model so it spans 18.5-21.5 m in X, 16.5-19.5 m in Y, and 9.8-11.5 m in Z. Other facade and tenant layout details may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

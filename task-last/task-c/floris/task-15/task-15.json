@@ -1,0 +1,57 @@
+{
+  "id": "c-floris-task-15-ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "You are given a broken FLORIS script `/home/user/Desktop/broken.py`. Complete diagnose-fix-rerun purely from the command line: 1. Try running `broken.py`; read error messages and locate all issues; repair `/home/user/Desktop/broken.py` into `/home/user/Desktop/fixed.py`. 2. Re-run and ensure `/home/user/Desktop/fixed_summary.txt` is generated: Format: `turbine_0_kw, turbine_1_kw` 3. Write diagnosis report `/home/user/Desktop/diagnosis.txt` (explain each error cause and fix method item by item; total length >= 100 characters). 4. Do not use any GUI. [Software] Run your scripts with Python in an environment where `floris` is installed (e.g. `from floris import FlorisModel`).",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/broken.py",
+            "path": "/home/user/Desktop/broken.py"
+          },
+          {
+            "local_path": "task-15/init_file/two_turbine.yaml",
+            "path": "/home/user/Desktop/two_turbine.yaml"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

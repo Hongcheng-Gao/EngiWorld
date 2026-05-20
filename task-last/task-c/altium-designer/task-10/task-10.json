@@ -1,0 +1,53 @@
+{
+  "id": "c-altium-designer-task-10-windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "Fix the native Altium schematic `C:\\Users\\user\\Desktop\\broken_frequency_stage.SchDoc` and save the repaired document as `C:\\Users\\user\\Desktop\\frequency_stage_nominal.SchDoc`. The repaired schematic must restore the original `R4` value fragment, the original `C6` value fragment, and the original `V9` sine-source comment fragment. [Software] To use Altium Designer on Windows, run `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE` (adjust if your install path differs).",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/broken_frequency_stage.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\broken_frequency_stage.SchDoc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

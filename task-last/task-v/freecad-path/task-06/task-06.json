@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-path-task-06-ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Look at simple_cam_job.step. Create a basic FreeCAD Path/CAM Job containing Face, Drilling, and Profile operations. Use a linuxcnc or grbl postprocessor. Tool definitions: T1 is a 10 mm end mill for Face/Profile operations; T2 is a 5 mm drill for Drilling. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-6.nc. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://wiki.freecad.org/CAM_Walkthrough_for_the_Impatient；https://wiki.freecad.org/CAM_Post https://wiki.freecad.org/CAM_Walkthrough_for_the_Impatient%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Post",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/simple_cam_job.step",
+            "path": "/home/user/Desktop/simple_cam_job.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/simple_cam_job.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

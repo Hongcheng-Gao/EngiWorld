@@ -1,0 +1,53 @@
+{
+  "id": "c-fenics-task-03-ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "You are given an incomplete solid-mechanics template `/home/user/Desktop/elasticity_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/elasticity.py`: - Fully fix the left end face (`DirichletBC`, all displacement components) - Apply uniform traction `(0, -10, 0)` on the right end face (equivalent end load) - Define strain: `epsilon = 0.5*(grad(u) + grad(u).T)` - Define stress: `sigma = E/(1+nu)*[epsilon + nu/(1-2*nu)*tr(epsilon)*I]` - Solve 2. Run and extract: - Free-end (`x≈100, y≈10`) UY displacement - Global maximum von Mises stress - Save to `/home/user/Desktop/summary.txt` in this format: `tip_uy, max_mises` [Software] Run your scripts with Python in an environment where dolfinx is installed (e.g. `import dolfinx`).",
+  "source": "https://github.com/fenics/dolfinx",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/elasticity_base.py",
+            "path": "/home/user/Desktop/elasticity_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

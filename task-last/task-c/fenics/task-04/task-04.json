@@ -1,0 +1,53 @@
+{
+  "id": "c-fenics-task-04-ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "You are given a heat-conduction template `/home/user/Desktop/thermal_subdomain_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/thermal.py`: - Use `MeshFunction(\"size_t\", mesh, 2)` to mark left and right subdomains - Thermal conductivity: left half `k=50`, right half `k=10` - Left Dirichlet boundary `100°C`, right Dirichlet boundary `20°C` - Solve the steady temperature field 2. Extract and save to `/home/user/Desktop/summary.txt`: - Temperature at interface `x=50 mm` - Temperature at center point `(25, 25)` Format: `interface_temp, center_temp` [Software] Run your scripts with Python in an environment where dolfinx is installed (e.g. `import dolfinx`).",
+  "source": "https://github.com/fenics/dolfinx",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/thermal_subdomain_base.py",
+            "path": "/home/user/Desktop/thermal_subdomain_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

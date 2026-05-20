@@ -1,0 +1,48 @@
+{
+  "id": "c-revit-task-01-windows",
+  "snapshot": "Revit2025",
+  "instruction": "Outpatient clinic IFC model. Create a one-storey L-shaped outpatient clinic from scratch in Revit and export the completed model to C:\\Users\\user\\Desktop\\result.ifc using the IFC4 schema. The exported IFC should contain one IfcProject, one IfcSite, one IfcBuilding, one IfcBuildingStorey, seven real IfcSpace room objects, twelve IfcWall elements, one IfcSlab floor plate, and one IfcRoof. Name the spaces so the room set includes Reception, Consultation 1, Consultation 2, Treatment, Accessible Toilet, Staff, and Corridor. Use real BIM elements for the main components, with at least seven IfcDoor elements and at least eight IfcWindow elements. Do not include IfcBuildingElementProxy, IfcStair, IfcColumn, or IfcBeam entities in the final export. Size the shaped model so its overall bounding box spans 22.0-26.0 m in X, 16.0-20.0 m in Y, and 3.0-4.5 m in Z. Express the L-shaped plan in the slab geometry: the slab's horizontal projected footprint should occupy 70%-88% of the full bounding-box rectangle. Nonessential materials, exact wall segmentation, door/window styles, and exporter relationship details may vary, but every IfcRoot entity in the IFC must have a unique GlobalId. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

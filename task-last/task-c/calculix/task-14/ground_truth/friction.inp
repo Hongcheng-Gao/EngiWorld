@@ -1,0 +1,63 @@
+*Heading
+Frictional contact - revised feasible deck
+*Node
+1, 40.0, 0.0, 40.0
+2, 60.0, 0.0, 40.0
+3, 60.0, 0.0, 60.0
+4, 40.0, 0.0, 60.0
+5, 40.0, 30.0, 40.0
+6, 60.0, 30.0, 40.0
+7, 60.0, 30.0, 60.0
+8, 40.0, 30.0, 60.0
+101, 0.0, 0.0, 0.0
+102, 100.0, 0.0, 0.0
+103, 100.0, 0.0, 100.0
+104, 0.0, 0.0, 100.0
+105, 0.0, 5.0, 0.0
+106, 100.0, 5.0, 0.0
+107, 100.0, 5.0, 100.0
+108, 0.0, 5.0, 100.0
+*Element, type=C3D8R, elset=Block
+1, 1, 4, 3, 2, 5, 8, 7, 6
+*Element, type=C3D8R, elset=Plate
+2, 101, 104, 103, 102, 105, 108, 107, 106
+*Nset, nset=FIXPLATE
+101, 102, 103, 104
+*Nset, nset=PUSHNODES
+105, 108
+*Nset, nset=PRINTN
+2, 3, 6, 7, 105, 106, 107, 108
+*Elset, elset=ALL_ELEMENTS
+1, 2
+*Surface, type=ELEMENT, name=SLAVE_BLOCK_BOTTOM
+Block, S1
+*Surface, type=ELEMENT, name=MASTER_PLATE_TOP
+Plate, S2
+*Contact Pair, interaction=Int-1, type=SURFACE TO SURFACE
+SLAVE_BLOCK_BOTTOM, MASTER_PLATE_TOP
+*Surface Interaction, name=Int-1
+*Surface Behavior, pressure-overclosure=LINEAR
+1.0e7, 3.0
+*Friction
+0.3, 1.0e5
+*Material, name=Steel
+*Elastic
+210000.0, 0.3
+*Solid Section, elset=Block, material=Steel
+*Solid Section, elset=Plate, material=Steel
+*Boundary
+FIXPLATE, 1, 3, 0.0
+*Step, nlgeom
+*Static
+0.1, 1.0, 1e-6, 0.2
+*Boundary
+PUSHNODES, 1, 1, 0.1
+*Dload
+1, P2, 10.0
+*Node Print, nset=PRINTN, frequency=999
+U
+*El Print, elset=ALL_ELEMENTS, frequency=999
+S
+*Contact Print, slave=SLAVE_BLOCK_BOTTOM, master=MASTER_PLATE_TOP, frequency=999
+CDIS
+*End Step

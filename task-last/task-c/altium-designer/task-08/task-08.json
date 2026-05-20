@@ -1,0 +1,53 @@
+{
+  "id": "c-altium-designer-task-08-windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "Fix the native Altium board `C:\\Users\\user\\Desktop\\broken_pcie_diffpair_rules.PcbDoc` and save the repaired document as `C:\\Users\\user\\Desktop\\pcie_diffpair_rules.PcbDoc`. The repaired board must restore the `PCIE_85` differential-pair class fragment, the `DiffPairsRouting_PCIE_85` routing-rule fragment, and the `MatchedLengths_PCIE_RX_TX_TX_C_CLK` tolerance fragment. [Software] To use Altium Designer on Windows, run `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE` (adjust if your install path differs).",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/pcb/high-speed-design/xsignals?version=22; https://www.altium.com/documentation/altium-designer/schematic/defining-differential-pairs; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/broken_pcie_diffpair_rules.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\broken_pcie_diffpair_rules.PcbDoc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

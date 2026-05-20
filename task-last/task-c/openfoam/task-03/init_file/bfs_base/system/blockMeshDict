@@ -1,0 +1,88 @@
+/*--------------------------------*- C++ -*----------------------------------*\
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+convertToMeters 1;
+
+vertices
+(
+    (-0.2 0.05 0)
+    (0 0.05 0)
+    (0 0.2 0)
+    (-0.2 0.2 0)
+    (1.5 0.05 0)
+    (1.5 0.2 0)
+    (0 0 0)
+    (1.5 0 0)
+    (-0.2 0.05 0.01)
+    (0 0.05 0.01)
+    (0 0.2 0.01)
+    (-0.2 0.2 0.01)
+    (1.5 0.05 0.01)
+    (1.5 0.2 0.01)
+    (0 0 0.01)
+    (1.5 0 0.01)
+);
+
+blocks
+(
+    hex (0 1 2 3 8 9 10 11) (40 40 1) simpleGrading (1 1 1)
+    hex (1 4 5 2 9 12 13 10) (300 60 1) simpleGrading (1 1 1) // TODO_OUTLET_REFINEMENT
+    hex (6 7 4 1 14 15 12 9) (300 20 1) simpleGrading (1 1 1)
+);
+
+boundary
+(
+    inlet
+    {
+        type patch;
+        faces
+        (
+            (0 3 11 8)
+        );
+    }
+    outlet
+    {
+        type patch;
+        faces
+        (
+            (4 5 13 12)
+            (7 4 12 15)
+        );
+    }
+    upperWall
+    {
+        type wall;
+        faces
+        (
+            (3 2 10 11)
+            (2 5 13 10)
+        );
+    }
+    lowerWall
+    {
+        type wall;
+        faces
+        (
+            (6 7 15 14)
+            (0 1 9 8)
+            (6 14 9 1)
+        );
+    }
+    frontAndBack
+    {
+        type empty;
+        faces
+        (
+            (0 1 2 3)
+            (8 11 10 9)
+            (1 4 5 2)
+            (9 10 13 12)
+            (6 7 4 1)
+            (14 9 12 15)
+        );
+    }
+);

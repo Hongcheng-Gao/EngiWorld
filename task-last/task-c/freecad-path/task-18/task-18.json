@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-path-task-18-ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Open /home/user/Desktop/relief_surface.step in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Create FreeCAD Path/CAM 3D roughing and finishing operations. Use T1 for 3D Pocket roughing with 0.5 mm stock, and T2 for 3D Surface finishing with stepover no larger than 1.5 mm. Tool definitions: T1 is for 3D Pocket roughing; T2 is for 3D Surface finishing with stepover <= 1.5 mm. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-18.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/CAM_Pocket3D；https://wiki.freecad.org/CAM_Surface https://wiki.freecad.org/CAM_Pocket3D%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Surface",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/relief_surface.step",
+            "path": "/home/user/Desktop/relief_surface.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

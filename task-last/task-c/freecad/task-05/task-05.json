@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-task-05-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Open /home/user/Desktop/freecad_task-05_input.step. Keep the circular flange outside diameter 148 mm and thickness 18 mm. Cut a center through hole of diameter 44 mm. On a bolt circle radius of 54 mm, cut eight through holes every 45 degrees starting on +X. The holes at 0, 90, 180, and 270 degrees are diameter 8 mm and have bottom counterbores of diameter 16 mm and depth 5 mm. The holes at 45, 135, 225, and 315 degrees are diameter 10 mm and have top counterbores of diameter 18 mm and depth 5 mm. Export /home/user/Desktop/freecad_task-05_output.step. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/freecad_task-05_input.step",
+            "path": "/home/user/Desktop/freecad_task-05_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

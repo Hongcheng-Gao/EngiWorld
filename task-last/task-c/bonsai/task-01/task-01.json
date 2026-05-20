@@ -1,0 +1,48 @@
+{
+  "id": "c-bonsai-task-01-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Single-Room BIM Shell Use the opened Bonsai IFC authoring environment to create a new metric IFC4 building shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The IFC should contain one project, one site, one building, and one building storey, with all modeled products spatially assigned to that storey. Use real BIM entities only: one IfcSpace named Room 101, four IfcWall elements, one IfcSlab, one IfcDoor, one IfcWindow, two IfcOpeningElement objects, two IfcRelVoidsElement relationships, and two IfcRelFillsElement relationships. Do not add building element proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Room 101 must have clear plan dimensions of 6.00 m by 4.00 m, in either X/Y orientation. Each wall must be 3.00 m high and 0.20 m thick, and the slab must be 0.20 m thick. The door must have OverallWidth 0.90 m and fill its own opening in the south wall, defined as the wall with the lowest world-coordinate center Y value. The window must have OverallWidth 1.50 m and fill a different opening in the east wall, defined as the wall with the highest world-coordinate center X value. Other representation details may vary as long as the BIM meaning and dimensions are preserved. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
+  "source": "https://docs.bonsaibim.org/guides/authoring/starting_new_project.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

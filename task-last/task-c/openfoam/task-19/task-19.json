@@ -1,0 +1,60 @@
+{
+  "id": "c-openfoam-task-19-ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "You are given a porous-medium template `/home/user/Desktop/porous_base/`. Complete porous-zone flow analysis from the command line: 1. Modify and create `/home/user/Desktop/porous/`: - Build packed-bed geometry and define porous region - Set porous resistance coefficients and inflow conditions - Run to convergence 2. Extract pressure drop between inlet and outlet. 3. Write a post-processing script to output `/home/user/Desktop/summary.txt`: - Inlet-outlet pressure drop `delta_p` - Format: `delta_p` 4. Do not use GUI tools. [Software] OpenFOAM is normally used from a shell after sourcing your installation environment (e.g. its `etc/bashrc`); `foamRun -help` verifies solver binaries are available.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/porous_base.tar",
+            "path": "/home/user/Desktop/porous_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/porous_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/porous_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

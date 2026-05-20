@@ -1,0 +1,53 @@
+{
+  "id": "c-openscad-task-17-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Open /home/user/Desktop/task-037_initial.scad in OpenSCAD. Edit it. Use rotate_extrude() or an equivalent method to generate a V-groove pulley. The pulley outside diameter is 50 mm, total width 16 mm, center hole diameter 8 mm, and the circumferential center groove is a 90 degree V groove about 4 mm deep. Export /home/user/Desktop/task-037_output.stl. [Software] To use OpenSCAD, run `openscad` from a terminal.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_the_2D_Subsystem; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/task-037_initial.scad",
+            "path": "/home/user/Desktop/task-037_initial.scad"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

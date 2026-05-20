@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-task-05-windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Look at bracket_input.dxf. Build a U-shaped bracket outline with vertices (0,0), (160,0), (160,80), (115,80), (115,35), (45,35), (45,80), and (0,80) on layer OUTLINE. Add diameter 10 holes at (25,20) and (135,20) on layer HOLE and text ACAD-05 on layer ANNOTATION. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/bracket_input.dxf",
+            "path": "C:\\Users\\user\\Desktop\\bracket_input.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\bracket_input.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

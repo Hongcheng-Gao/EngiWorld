@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-09-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Community market hall from scratch. In Archicad, create a new one-storey community market hall using real BIM elements for the storey, IfcSpace zones, slab, and roof. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc and export a tab-delimited zone schedule to C:\\Users\\user\\Desktop\\result.txt. The IFC must contain exactly one IfcBuildingStorey, exactly thirteen IfcSpace zones on the GROUND storey, at least one slab element, at least one roof element, and unique IFC GlobalId values for exported root objects. Create AISLE 54.0 m2, HALL 12.0 m2, STALL-1 through STALL-8 at 7.5 m2 each, COLD-STORE 9.0 m2, DRY-STORE 9.0 m2, and WC 5.0 m2. Each area must be within +/-0.10 m2; the eight stalls together must be between 59.0 and 61.0 m2, and the total zone area must be between 148.0 and 150.0 m2. The schedule must use headers ZoneName, Area, Storey and list AISLE, HALL, STALL-1 through STALL-8, COLD-STORE, DRY-STORE, and WC in that order with GROUND as the storey value. Exporter-specific metadata and non-required helper objects may vary. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

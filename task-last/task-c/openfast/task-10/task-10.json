@@ -1,0 +1,60 @@
+{
+  "id": "c-openfast-task-10-ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "You are given templates `/home/user/Desktop/tsr_scan.fst` and `/home/user/Desktop/elasto_tsr_base.dat`. Complete a tip-speed-ratio (TSR) sweep from the command line: 1. Use Python or a shell script to generate 4 ElastoDyn files: - `/home/user/Desktop/elasto_rpm6.dat` (`RotSpeed=6`) - `/home/user/Desktop/elasto_rpm9.dat` (`RotSpeed=9`) - `/home/user/Desktop/elasto_rpm12.dat` (`RotSpeed=12`) - `/home/user/Desktop/elasto_rpm15.dat` (`RotSpeed=15`) 2. Fix wind speed at 8 m/s (steady InflowWind) and run the 4 cases. 3. Write a post-processing script to compute power coefficient: - `Cp = GenPwr / (0.5 * 1.225 * pi * (63)^2 * 8^3)` (NREL 5MW blade length 63 m, air density 1.225 kg/m³) - `TSR = (RotSpeed * 2*pi/60) * 63 / 8` 4. Save to `/home/user/Desktop/summary.txt` in this format: `rpm, tsr, cp` 5. Do not use GUI tools. [Init Package Note] - Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. - Continue following the original task workflow: generate/modify required files and compute outputs yourself. - Only initialization inputs are included; no answer/result artifacts are preloaded. [Software] Run `openfast` from a terminal (use the full path if it is not on PATH).",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

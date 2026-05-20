@@ -1,0 +1,104 @@
+FoamFile
+{
+    format      ascii;
+    class       dictionary;
+    object      blockMeshDict;
+}
+convertToMeters 1;
+
+vertices
+(
+    (-1 0 0)
+    (0 0 0)
+    (1 0 0)
+    (2 0 0)
+    (-1 1 0)
+    (0 1 0)
+    (1 1 0)
+    (2 1 0)
+    (-1 0 0.01)
+    (0 0 0.01)
+    (1 0 0.01)
+    (2 0 0.01)
+    (-1 1 0.01)
+    (0 1 0.01)
+    (1 1 0.01)
+    (2 1 0.01)
+);
+
+blocks
+(
+    hex (0 1 5 4 8 9 13 12) (80 80 1) simpleGrading (1 1 1)
+    hex (1 2 6 5 9 10 14 13) (120 100 1) simpleGrading (1 1 1) // TODO_AIRFOIL_NEARFIELD_REFINEMENT
+    hex (2 3 7 6 10 11 15 14) (80 80 1) simpleGrading (1 1 1)
+);
+
+edges
+(
+    spline 1 2
+    (
+        (0.20 0.035 0.00)
+        (0.40 0.060 0.00)
+        (0.60 0.055 0.00)
+        (0.80 0.025 0.00)
+    ) // TODO_AIRFOIL_UPPER_SPLINE_POINTS
+
+    spline 9 10
+    (
+        (0.20 0.035 0.01)
+        (0.40 0.060 0.01)
+        (0.60 0.055 0.01)
+        (0.80 0.025 0.01)
+    ) // TODO_AIRFOIL_UPPER_SPLINE_POINTS_3D
+);
+
+boundary
+(
+    inlet
+    {
+        type patch;
+        faces ((0 4 12 8));
+    }
+    outlet
+    {
+        type patch;
+        faces ((3 7 15 11));
+    }
+    top
+    {
+        type patch;
+        faces
+        (
+            (4 5 13 12)
+            (5 6 14 13)
+            (6 7 15 14)
+        );
+    }
+    airfoil
+    {
+        type wall;
+        faces ((1 2 10 9)); // TODO_AIRFOIL_PATCH (replace with full NACA contour topology)
+    }
+    bottomFar
+    {
+        type patch;
+        faces
+        (
+            (0 1 9 8)
+            (2 3 11 10)
+        );
+    }
+    frontAndBack
+    {
+        type empty;
+        faces
+        (
+            (0 1 5 4)
+            (8 12 13 9)
+            (1 2 6 5)
+            (9 13 14 10)
+            (2 3 7 6)
+            (10 14 15 11)
+        );
+    }
+);

@@ -1,0 +1,61 @@
+{
+  "id": "c-archicad-task-11-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Shared house conversion from init.ifc. Open the provided C:\\Users\\user\\Desktop\\init.ifc in Archicad. Use C:\\Users\\user\\Desktop\\init_plan.png and C:\\Users\\user\\Desktop\\init_section.png as references for the existing shell, then convert it into the required two-storey shared house. The init model is only a starting point; revise, add, or remove BIM elements as needed. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc and export a tab-delimited zone schedule to C:\\Users\\user\\Desktop\\result.txt. Preserve the overall model envelope at approximately min X/Y/Z 0.0, 0.0, 0.0 and max X/Y/Z 18.0, 12.0, 6.6, within 0.5 m. The IFC must have unique GlobalId values, exactly two building storeys, exactly eleven IfcSpace zones, at least eight walls, at least two slabs, and at least one roof. On the lower storey create Z01 BED-1 16.0 m2, Z02 BED-2 16.0 m2, Z03 BED-3 16.0 m2, Z04 SHARED-KITCHEN 20.0 m2, Z05 DINING 20.0 m2, Z06 LOUNGE 16.0 m2, Z07 LAUNDRY 16.0 m2, and Z08 COURTYARD 36.0 m2. On the upper storey create Z09 BED-4 16.0 m2, Z10 BED-5 16.0 m2, and Z11 BED-6 16.0 m2. The schedule must use headers ZoneNumber, ZoneName, Area, list those rows in order, and keep every area within +/-0.10 m2 with a total between 203.0 and 205.0 m2. Equivalent Archicad or IFC export internals, object names, relationship structure, materials, and property sets may vary; the required result is the stated BIM model and deliverables, not a byte-for-byte copy of the teacher IFC. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-11/init_image/init_plan.png",
+            "path": "C:\\Users\\user\\Desktop\\init_plan.png"
+          },
+          {
+            "local_path": "task-11/init_image/init_section.png",
+            "path": "C:\\Users\\user\\Desktop\\init_section.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,53 @@
+{
+  "id": "c-freecad-task-12-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Open /home/user/Desktop/freecad_task-12_input.step. The input L bracket has a base spanning X=0..140, Y=0..66, Z=0..12 and a vertical wall spanning X=0..140, Y=58..66, Z=12..90. Add and fuse three triangular reinforcing ribs, each 6 mm thick in X and centered at X=30, 70, and 110. Each rib has a triangular Y-Z profile with base leg from Y=30 to Y=58 on Z=12 and vertical leg from Z=12 to Z=55 at Y=30. Cut two vertical through holes of diameter 10 mm in the base at (35,28) and (105,28). Cut two through holes through the vertical wall along Y: diameter 12 mm centered at X=50, Z=52, and diameter 10 mm centered at X=92, Z=68. Export /home/user/Desktop/freecad_task-12_output.step. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/freecad_task-12_input.step",
+            "path": "/home/user/Desktop/freecad_task-12_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

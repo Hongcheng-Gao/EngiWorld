@@ -1,0 +1,62 @@
+{
+  "id": "v-altium-designer-task-17-windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "The opened file `wifi_board.PcbDoc` is the source Altium board. Create a native panel from it. Save the result as `C:\\Users\\user\\Desktop\\wifi_panel.PcbDoc` in Altium Designer. Target panel constraints: - The embedded source board document must still be `WiFi.PcbDoc`. - The array must be `4` rows by `3` columns. - `ROWSPACING` must be `1133.8583mil`. - `COLSPACING` must be `1338.5827mil`. - The array object must keep `MIRROR=TRUE` and `ORIGINMODE=1`. - The resulting board must contain route tool-path data intended for panel fabrication.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/wifi_board.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\wifi_board.PcbDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\wifi_board.PcbDoc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

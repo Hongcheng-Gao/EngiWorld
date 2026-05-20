@@ -1,0 +1,53 @@
+{
+  "id": "c-eagle-task-17-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The file `/home/user/Desktop/board.brd` is the board to process. Export an IPC-D-356A bare-board electrical-test netlist. Save the result as `/home/user/Desktop/board.ipc`. The IPC-D-356A format uses fixed-width ASCII: * `C <comment>` lines at the top * `P JOB...` and `P UNITS` parameter lines * `317<net><refdes><drill>A00<X><Y>...` test records, one per pad/via * `999` trailer Requirements: 1. File exists and is non-empty. 2. First non-empty line starts with `C`. 3. At least one `P JOB...` line. 4. At least one `317` test record. 5. Every `317` record has `D<drill>A<access>` tokens. 6. Last non-empty line is exactly `999`. [Software] On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).",
+  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-USER-LANG-REF.htm; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-ULP-OBJECT-TYPES.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/board.brd",
+            "path": "/home/user/Desktop/board.brd"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "c-revit-task-04-windows",
+  "snapshot": "Revit2025",
+  "instruction": "Warehouse frame IFC and schedule. Create a two-storey warehouse from scratch in Revit with a storage hall, an office mezzanine, and a regular steel frame. Export the IFC4 model to C:\\Users\\user\\Desktop\\result.ifc and export a structural quantity schedule to C:\\Users\\user\\Desktop\\result.csv. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, two IfcBuildingStorey entities, two IfcSpace objects, twenty IfcColumn elements, thirty-one IfcBeam elements, two IfcSlab elements, four IfcWall elements, and one IfcRoof. Name the spaces so they include Storage and Office. Include at least one IfcStair, two IfcDoor elements, and five IfcWindow elements, and do not include IfcBuildingElementProxy entities. Size the shaped model so its overall bounding box spans 28.0-32.0 m in X, 17.0-19.5 m in Y, and 5.8-7.0 m in Z. The CSV must have exactly the header row category,count and four data rows: columns,20; beams,31; slabs,2; and walls,4. The schedule counts must match the corresponding IFC entity counts. Other framing placement and style details may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-0CF37424-FA07-46FE-A4D8-7ABED3FB2933",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-task-06-windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Look at task-06_blank_seed.dxf. Start from the blank seed. Draw a circular flange centered at (80,80) with outer radius 60 on layer OUTLINE and inner radius 25 on layer CUTOUT. Add six diameter 8 bolt holes on radius 45 at 90-degree start, equally spaced every 60 degrees, on layer HOLE. Add text ACAD-06 on layer ANNOTATION. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/task-06_blank_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\task-06_blank_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\task-06_blank_seed.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

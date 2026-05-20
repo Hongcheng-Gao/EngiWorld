@@ -1,0 +1,60 @@
+{
+  "id": "c-openfast-task-18-ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "You are given ROSCO controller template `/home/user/Desktop/rosco_base.IN`. Complete controller tuning from the command line: 1. Generate two ROSCO input files: - `/home/user/Desktop/rosco_soft.IN` (`PC_Kp=0.001`, `PC_Ki=0.001`) - `/home/user/Desktop/rosco_stiff.IN` (`PC_Kp=0.01`, `PC_Ki=0.01`) 2. Use the same OpenFAST model (TurbSim turbulent wind 12 m/s) and run both cases. 3. Write a post-processing script to extract: - Standard deviation of `RotSpeed` (rpm) - Standard deviation of `BladePitch` (deg) - Standard deviation of power (kW) 4. Save to `/home/user/Desktop/summary.txt` in this format: `soft_rpm_std, stiff_rpm_std, soft_pitch_std, stiff_pitch_std` 5. Do not use GUI tools. [Init Package Note] - Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. - Continue following the original task workflow: generate/modify required files and compute outputs yourself. - Only initialization inputs are included; no answer/result artifacts are preloaded. [Software] Run `openfast` from a terminal (use the full path if it is not on PATH).",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

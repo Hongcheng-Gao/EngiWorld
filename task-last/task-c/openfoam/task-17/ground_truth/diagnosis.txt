@@ -1,0 +1,9 @@
+Task 17 diagnosis report:
+
+Initial failure evidence: file meshes/meshShapes/cellModel/cellModel.C at line 63     zero or negative pyramid volume: -0.0125 for face 2 --> FOAM Warning :      From Foam::vector Foam::cellModel::centre(const Foam::labelList&, const Foam::UList<Foam::Vector<double> >&) const     in file meshes/meshShapes/cellModel/cellModel.C at line 63     zero or negative pyramid volume: -0.0125 for face 3 --> FOAM Warning :      From F
+
+Root-cause analysis: The original mesh definition failed because the topology had multiple structural defects: at least one block orientation was inconsistent with right-hand ordering, some face definitions contained illegal or repeated vertex indices, and part of the vertex table reused coordinates in a way that created degenerate elements. Those issues make blockMesh unable to build a valid polyMesh and it exits before solver startup.
+
+Fix actions: I repaired the case by normalizing vertex usage in blockMeshDict, removing repeated or effectively degenerate vertex entries, and revalidating the block/face connectivity so each face references legal indices and each block remains geometrically consistent. After the topology pass, I reran blockMesh and confirmed mesh generation succeeded, then executed icoFoam to ensure transient field directories were produced. This verifies the diagnose-fix-rerun workflow end to end from CLI only. The final repaired dictionary uses a valid right-handed hexahedral block and legal boundary faces only.
+
+Validation: after the repair, blockMesh completed successfully and the solver ran without fatal IO/topology errors. Time-step field outputs were generated, confirming the case is operational. The fix focused on topological correctness rather than cosmetic edits, so the workflow remains reproducible in command-line automation.

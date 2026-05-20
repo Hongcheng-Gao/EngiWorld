@@ -1,0 +1,57 @@
+{
+  "id": "c-freecad-path-task-20-ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Open /home/user/Desktop/final_benchmark.step, /home/user/Desktop/params.json in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Complete the full FreeCAD Path/CAM delivery. Configure stock, Job origin, and fixture/check geometry; machine the outside profile, three pockets, sixteen through holes, two counterbores, and one surface region; use at least five tool classes. Tool rule: use at least five tool classes covering facing, pocketing, drilling, counterboring, surface finishing, and profiling. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-20.nc, /home/user/Desktop/post_log.txt. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://wiki.freecad.org/CAM_Workbench；https://wiki.freecad.org/CAM_Post；https://wiki.freecad.org/CAM_scripting https://wiki.freecad.org/CAM_Workbench%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Post%EF%BC%9Bhttps:/wiki.freecad.org/CAM_scripting",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/final_benchmark.step",
+            "path": "/home/user/Desktop/final_benchmark.step"
+          },
+          {
+            "local_path": "task-20/init_file/params.json",
+            "path": "/home/user/Desktop/params.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

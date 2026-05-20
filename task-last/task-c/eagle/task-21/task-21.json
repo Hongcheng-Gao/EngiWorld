@@ -1,0 +1,64 @@
+{
+  "id": "c-eagle-task-21-ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The file `/home/user/Desktop/test.lbr` is the library to inspect. Run the library consistency check and save the resulting report as `/home/user/Desktop/consistency.md`. Requirements: 1. `/home/user/Desktop/consistency.md` must exist and contain at least 100 bytes of readable UTF-8 text. 2. The report must mention a missing-pad defect. 3. The report must mention a duplicate-pin defect. 4. The report must mention a missing-pin defect. 5. The report must mention an uncovered-pin or not-connected-pin defect. [Software] On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).",
+  "source": "https://github.com/plusea/EAGLE/blob/master/ulp/exp-project-lbr.ulp",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/test.lbr",
+            "path": "/home/user/Desktop/test.lbr"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-21/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,61 @@
+{
+  "id": "v-solvespace-task-11-ubuntu",
+  "snapshot": "solvespace3.1ds1-3.1build2",
+  "instruction": "In SolveSpace, import seed_ss_gui_11_arc_notch.dxf from /home/user/Desktop using the GUI DXF import workflow (File > Import), then continue editing that imported drawing rather than starting from an empty document. Do not use File > Open or launch the DXF as a native SolveSpace file. Use the existing rectangle and construction marks to create the final 120 x 80 rectangular outer outline. Add one semicircular notch in the middle of the top edge, radius 15, with circle center at (60,80). Add two bottom holes of diameter 8 with centers at (25,20) and (95,20). Construction or guide geometry from the seed may be changed or removed unless it is explicitly required above. Save the completed drawing as /home/user/Desktop/final_ss_gui_11.dxf. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/seed_ss_gui_11_arc_notch.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_11_arc_notch.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

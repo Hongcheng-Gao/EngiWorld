@@ -1,0 +1,95 @@
+
+**** 04/27/26 21:44:19 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Class AB push-pull stage crossover inspection.
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+* The solver should run this native DC transfer sweep and summarize the
+* crossover dead zone around 0 V input.
+
+.MODEL Q2N2222A NPN (IS=1E-14 BF=200 VAF=100)
+.MODEL Q2N2907A PNP (IS=1E-14 BF=200 VAF=100)
+
+VCC  VCC  0   DC 12
+VEE  VEE  0   DC -12
+
+VIN  IN   0   DC 0
+R1   IN   BASE 1k
+
+QNPN VCC  BASE NOUT Q2N2222A
+QPNP VEE  BASE NOUT Q2N2907A
+
+RL   NOUT 0    8
+
+.DC VIN -100m 100m 10m
+.MEAS DC VOUT_N20M FIND V(NOUT) AT=-20m
+.MEAS DC VOUT_N10M FIND V(NOUT) AT=-10m
+.MEAS DC VOUT_0M   FIND V(NOUT) AT=0
+.MEAS DC VOUT_P10M FIND V(NOUT) AT=10m
+.MEAS DC VOUT_P20M FIND V(NOUT) AT=20m
+.PROBE
+.END
+
+**** 04/27/26 21:44:19 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Class AB push-pull stage crossover inspection.
+
+
+ ****     BJT MODEL PARAMETERS
+
+
+******************************************************************************
+
+
+
+
+               Q2N2222A        Q2N2907A        
+               NPN             PNP             
+       LEVEL    1               1            
+          IS   10.000000E-15   10.000000E-15 
+          BF  200             200            
+          NF    1               1            
+         VAF  100             100            
+          BR    1               1            
+          NR    1               1            
+         ISS    0               0            
+          RE    0               0            
+          RC    0               0            
+         CJE    0               0            
+         VJE     .75             .75         
+         CJC    0               0            
+         VJC     .75             .75         
+         MJC     .33             .33         
+        XCJC    1               1            
+         CJS    0               0            
+         VJS     .75             .75         
+          KF    0               0            
+          AF    1               1            
+          CN    2.42            2.2          
+           D     .87             .52         
+
+
+
+          JOB CONCLUDED
+
+**** 04/27/26 21:44:19 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Class AB push-pull stage crossover inspection.
+
+
+ ****     JOB STATISTICS SUMMARY
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =         .03
+

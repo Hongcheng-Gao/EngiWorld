@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-04-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Two-storey branch library from scratch. In Archicad, create a new two-storey branch library using real BIM elements for storeys, slabs, a roof, a stair, and library IfcSpace zones. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc. The IFC must contain exactly two IfcBuildingStorey objects, exactly seven IfcSpace zones, at least two slab elements, at least one roof element, at least one stair element, and unique IFC GlobalId values for exported root objects. On the ground storey, create L01 G-LOBBY 9.0 m2, L02 G-READING 48.0 m2, L03 G-STACKS 12.0 m2, and L04 G-WC 4.0 m2. On the upper storey, create L05 1-GALLERY 15.0 m2, L06 1-STUDY-1 9.0 m2, and L07 1-STUDY-2 9.0 m2. Store each zone number as the Reference or LongName where possible. Each area must be within +/-0.10 m2, the ground-storey zone total must be between 72.0 and 74.0 m2, and the upper-storey zone total must be between 32.0 and 34.0 m2. Extra exporter metadata or object naming differences are acceptable. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-177.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-06-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Early learning centre from scratch. In Archicad, create a new one-storey early learning centre with real IfcSpace zones plus slab and roof BIM elements. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc and export a tab-delimited zone schedule to C:\\Users\\user\\Desktop\\result.txt. The IFC must contain exactly one IfcBuildingStorey, exactly ten IfcSpace zones on the GROUND storey, at least one slab element, at least one roof element, and unique IFC GlobalId values for exported root objects. Create zones 01 CLASSROOM-1 22.5 m2, 02 CLASSROOM-2 22.5 m2, 03 CLASSROOM-3 22.5 m2, 04 CLASSROOM-4 22.5 m2, 05 PLAY-HALL 64.0 m2, 06 NAP 16.0 m2, 07 STAFF 16.0 m2, 08 WC-CHILD 10.0 m2, 09 WC-STAFF 6.0 m2, and 10 YARD 40.0 m2. Each area must be within +/-0.10 m2; the four classroom zones together must be between 89.0 and 91.0 m2, and the total zone area must be between 241.0 and 243.0 m2. The schedule must use headers ZoneNumber, ZoneName, Area, Storey, list the rows in the order above, and use GROUND as the storey value for every row. Harmless extra metadata and exporter-specific property sets may vary. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

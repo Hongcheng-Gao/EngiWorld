@@ -1,0 +1,65 @@
+{
+  "id": "v-bonsai-task-15-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "GUI-only requirement: Complete the task entirely in the launched Bonsai/Blender graphical user interface. Do not open Terminal or a shell; do not use the Blender Python console, Text editor scripts, Python, IfcOpenShell, shell commands, or any helper script/macro to directly generate or edit the deliverable files. Use only Bonsai/Blender native GUI tools, panels, menus, dialogs, and built-in save/export commands. Open the provided init.ifc model in Bonsai and use init_plan.png as the plan reference. Consolidate duplicate element types and material assignments so each repeated construction or product family uses a single shared IFC type, then save the completed IFC4 model as /home/user/Desktop/result.ifc using Bonsai's graphical save/export controls. The result should keep one project, one site, one building, and one building storey, and it should contain no IfcBuildingElementProxy or IfcFurniture objects. Model exactly four walls assigned by one IfcRelDefinesByType relationship to one IfcWallType named WallType_External with material layer summary Brick:0.100m | Insulation:0.050m | Gypsum:0.015m. Model exactly one slab assigned to one IfcSlabType named SlabType_200 with material summary Concrete:0.200m. Model exactly two doors assigned to one IfcDoorType named Door Type A with material Timber. Model exactly four windows assigned to one IfcWindowType named Window Type W with material Aluminum. The IFC file should contain exactly six IfcMaterial objects named Brick, Insulation, Gypsum, Concrete, Timber, and Aluminum. Do not create a CSV schedule or separate report file; all type consolidation, occurrence counts, and material assignments must be represented directly in result.ifc. Other non-required IFC metadata may vary as long as the saved model satisfies these stated GUI-created IFC requirements.",
+  "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/material_assignment.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          },
+          {
+            "local_path": "task-15/init_image/init_plan.png",
+            "path": "/home/user/Desktop/init_plan.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

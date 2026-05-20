@@ -1,0 +1,60 @@
+{
+  "id": "c-openfast-task-13-ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "You are given template `/home/user/Desktop/shutdown.fst`. Complete a normal shutdown simulation from the command line: 1. Modify ServoDyn file `/home/user/Desktop/servo_shutdown.dat`: - Set `TimGenOf=20.0` (generator disconnection at 20 s) - Set `GenTiStp=True` (timed shutdown) - Set pitch-rate limits (e.g., `TPitManS=20`, `PitManRat=2°/s`, `BlPitchF=90°`) or configure shutdown logic via ROSCO/DISCON 2. Set initial wind speed to 15 m/s (steady wind), initial rotor speed 12.1 rpm. 3. Run for 60 s. 4. Write a post-processing script to extract: - Time for `RotSpeed` to drop to 2 rpm (measured from 20 s) - Time for `GenPwr` to drop below 100 kW - Save to `/home/user/Desktop/summary.txt` in this format: `rotor_stop_time_s, power_zero_time_s` 5. Do not use GUI tools. [Init Package Note] - Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. - Continue following the original task workflow: generate/modify required files and compute outputs yourself. - Only initialization inputs are included; no answer/result artifacts are preloaded. [Software] Run `openfast` from a terminal (use the full path if it is not on PATH).",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

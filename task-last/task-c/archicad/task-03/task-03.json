@@ -1,0 +1,48 @@
+{
+  "id": "c-archicad-task-03-windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "L-shaped neighborhood clinic from scratch. In Archicad, create a new one-storey L-shaped clinic using real BIM elements for spaces, walls, slabs, roofs, and at least one door. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc and export a tab-delimited zone schedule to C:\\Users\\user\\Desktop\\result.txt. The IFC must contain exactly one IfcBuildingStorey, exactly nine IfcSpace zones on that storey, at least thirty wall elements, at least two slab elements, at least two roof elements, at least one door element, and unique IFC GlobalId values for exported root objects. The required zone numbers, names, and areas are C01 RECEPTION 12.0 m2, C02 WAITING 12.0 m2, C03 CONSULT-1 9.0 m2, C04 CONSULT-2 9.0 m2, C05 TREATMENT 15.0 m2, C06 STAFF 9.0 m2, C07 WC-ACC 4.0 m2, C08 CLEAN 4.0 m2, and C09 PLANT 6.0 m2. Each area must be within +/-0.10 m2 and the total scheduled zone area must be between 79.0 and 81.0 m2. The schedule must use headers ZoneNumber, ZoneName, Area and list those nine rows in order, with schedule areas matching the IFC space quantities within +/-0.10 m2. Equivalent wall, slab, roof, door, and quantity representations are acceptable when the BIM semantics and required areas are preserved. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
+  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

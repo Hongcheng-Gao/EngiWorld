@@ -1,0 +1,57 @@
+{
+  "id": "c-revit-task-18-windows",
+  "snapshot": "Revit2025",
+  "instruction": "Remodel a structural frame scheme from the provided IFC. Open C:\\Users\\user\\Desktop\\init.ifc in Revit and use C:\\Users\\user\\Desktop\\init_sheet.png as the visual reference for the starting condition. Remodel the starting file as a structural frame scheme, then export the IFC4 model to C:\\Users\\user\\Desktop\\result.ifc and a structural count schedule to C:\\Users\\user\\Desktop\\result.csv. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, one IfcBuildingStorey, one IfcSlab, fifteen IfcColumn elements, and twenty-two IfcBeam elements. The final IFC should not include IfcSpace, IfcWall, IfcRoof, IfcDoor, IfcWindow, IfcStair, IfcCurtainWall, or IfcBuildingElementProxy entities. The CSV must have exactly the headers category,count and two data rows: columns,15 and beams,22, and those values must match the IFC column and beam counts. The init file is only a starting point. Other frame layout details may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
+  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-0CF37424-FA07-46FE-A4D8-7ABED3FB2933",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          },
+          {
+            "local_path": "task-18/init_image/init_sheet.png",
+            "path": "C:\\Users\\user\\Desktop\\init_sheet.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
