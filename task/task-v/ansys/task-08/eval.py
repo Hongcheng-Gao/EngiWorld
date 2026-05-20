@@ -1,13 +1,6 @@
 from pathlib import Path
 import subprocess
 
-import sys
-
-_TASK_V_ROOT = Path(__file__).resolve().parents[2]
-if str(_TASK_V_ROOT) not in sys.path:
-    sys.path.insert(0, str(_TASK_V_ROOT))
-from _gui_bypass import check_no_gui_bypass
-
 
 DESKTOP = Path(r"C:\Users\user\Desktop")
 DB_FILE = DESKTOP / "apdl_thermal_stress.db"
@@ -31,6 +24,26 @@ TOLERANCE = {
 
 def is_nonempty_file(path: Path) -> bool:
     return path.exists() and path.is_file() and path.stat().st_size > 0
+
+
+def has_forbidden_py_file(desktop_path: Path) -> bool:
+    try:
+        entries = desktop_path.iterdir()
+    except Exception:
+        return True
+
+    for entry in entries:
+        try:
+            if not entry.is_file():
+                continue
+        except Exception:
+            return True
+
+        name = entry.name.lower()
+        if name.endswith(".py") and name != "eval.py":
+            return True
+
+    return False
 
 
 def within_tolerance(name: str, truth: float, pred: float) -> bool:
@@ -113,9 +126,10 @@ def _kill_ansys_related() -> None:
 
 
 def evaluate() -> bool:
-    if not check_no_gui_bypass(DESKTOP):
-        return False
     _kill_ansys_related()
+
+    if has_forbidden_py_file(DESKTOP):
+        return False
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
         return False
@@ -123,6 +137,7 @@ def evaluate() -> bool:
     mapdl = None
     try:
         from ansys.mapdl.core import launch_mapdl
+
         mapdl = launch_mapdl(
             exec_file=EXEC_FILE,
             jobname=JOBNAME,

@@ -1,6 +1,6 @@
-from pathlib import Path
 import subprocess
-import sys
+from pathlib import Path
+
 
 DESKTOP = Path(r"C:\Users\user\Desktop")
 DB_FILE = DESKTOP / "apdl_solid_beam.db"
@@ -8,12 +8,7 @@ RESULT_FILE = DESKTOP / "apdl_solid_beam.rst"
 REQUIRED_FILES = [DB_FILE, RESULT_FILE]
 EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
 JOBNAME = "eval_apdl_solid_beam"
-MAPDL_PORT = 50110
-
-_TASK_V_ROOT = Path(__file__).resolve().parents[2]
-if str(_TASK_V_ROOT) not in sys.path:
-    sys.path.insert(0, str(_TASK_V_ROOT))
-from _gui_bypass import check_no_gui_bypass
+MAPDL_PORT = 50101
 
 GROUND_TRUTH = {
     "load_point_UY_mm": -0.18762852462477883,
@@ -33,6 +28,26 @@ TOLERANCE = {
 
 def is_nonempty_file(path: Path) -> bool:
     return path.exists() and path.is_file() and path.stat().st_size > 0
+
+
+def has_forbidden_py_file(desktop_path: Path) -> bool:
+    try:
+        entries = desktop_path.iterdir()
+    except Exception:
+        return True
+
+    for entry in entries:
+        try:
+            if not entry.is_file():
+                continue
+        except Exception:
+            return True
+
+        name = entry.name.lower()
+        if name.endswith(".py") and name != "eval.py":
+            return True
+
+    return False
 
 
 def within_tolerance(name: str, truth: float, pred: float) -> bool:
@@ -117,10 +132,12 @@ def _kill_ansys_related() -> None:
             pass
 
 
+
 def evaluate() -> bool:
-    if not check_no_gui_bypass(DESKTOP):
-        return False
     _kill_ansys_related()
+
+    if has_forbidden_py_file(DESKTOP):
+        return False
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
         return False
