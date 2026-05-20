@@ -1,4 +1,6 @@
 %
+(DRILL)
+(THREAD)
 G21
 G90
 M3

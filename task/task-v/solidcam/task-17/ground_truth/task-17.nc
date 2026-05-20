@@ -1,4 +1,6 @@
 %
+(POCKET)
+(PROFILE)
 G21
 G90
 M3

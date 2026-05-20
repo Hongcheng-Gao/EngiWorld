@@ -16,7 +16,7 @@ if str(_TASK_V_ROOT) not in sys.path:
 from _gui_bypass import check_no_gui_bypass
 
 
-SPEC = {'files': {'task-7.nc': {'tools': [1, 2], 'z': [6, 0], 'points': [(-28, 0), (28, 0)], 'terms': ['ROUGH', 'FINISH', 'CONTOUR'], 'kind': 'nc'}}}
+SPEC = {'files': {'task-7.nc': {'any_terms': [['POCKET', 'ROUGH'], ['PROFILE', 'CONTOUR', 'FINISH']], 'min_tool_calls': 1, 'min_motion': 4, 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 TOL = 0.5
 
@@ -75,9 +75,32 @@ def rect_distance(x: float, y: float, rect: list[float]) -> float:
     return math.hypot(max(xmin - x, 0, x - xmax), max(ymin - y, 0, y - ymax))
 
 
+def motion_block_count(src: str) -> int:
+    active_motion = False
+    count = 0
+    for line in src.splitlines():
+        if re.search(r"\bG0?(?:0|1|2|3)\b|\bG8[123]\b", line):
+            active_motion = True
+        if active_motion and re.search(r"\b[XYZABC][+-]?\d", line):
+            count += 1
+    return count
+
+
+def tool_call_count(src: str) -> int:
+    return len(re.findall(r"\bT0*\d+\b", src))
+
+
 def check_nc(path: Path, rule: dict[str, Any]) -> bool:
     src = text(path)
     if "G21" not in src or "G90" not in src or "M30" not in src:
+        return False
+    if len(src) < int(rule.get("min_size", 40)):
+        return False
+    if tool_call_count(src) < int(rule.get("min_tool_calls", 1)):
+        return False
+    if motion_block_count(src) < int(rule.get("min_motion", 2)):
+        return False
+    if rule.get("require_xy", True) and (not nums(src, "X") or not nums(src, "Y")):
         return False
     for tool in rule.get("tools", []):
         if re.search(rf"\bT0*{int(tool)}\b", src) is None:
@@ -102,6 +125,9 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
     for term in rule.get("terms", []):
         if str(term).upper() not in src:
             return False
+    for group in rule.get("any_terms", []):
+        if not any(str(term).upper() in src for term in group):
+            return False
     for code in rule.get("wcs", []):
         if str(code).upper() not in src:
             return False
@@ -112,8 +138,6 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
     if rule.get("turning") and (not nums(src, "X") or not nums(src, "Z")):
         return False
     if rule.get("millturn") and (re.search(r"\bC[+-]?\d", src) is None or re.search(r"\bY[+-]?\d", src) is None):
-        return False
-    if rule.get("min_motion") and len(re.findall(r"\bG0?[123]\b", src)) < int(rule["min_motion"]):
         return False
     if rule.get("program") and str(int(rule["program"])) not in src:
         return False
