@@ -1,6 +1,6 @@
 {
   "id": "c-abaqus-task-15-windows",
-  "snapshot": "ABAQUS-2025",
+  "snapshot": "ABAQUS-2025L",
   "instruction": "Use Abaqus via the Command Line Interface (CLI) to perform a constrained thermal stress analysis (Case B). Use the N-mm-MPa unit system. Part: Create a 3D Deformable Solid part using Extrusion. Sketch an 8 mm x 8 mm rectangle in the Y-Z plane (Y from 0 to 8, Z from 0 to 8). Extrude along the global X-axis to a length of 120 mm. Property: Create a material named Aluminum. Set Young's modulus E = 70000 MPa, Poisson's ratio nu = 0.33, and thermal expansion coefficient = 2.3e-5 /K. Assembly: Create one dependent instance of the bar. Step: Create a Static, General step named Step-Thermal-B. Load: Apply a predefined temperature field of 20 degC to the whole model in the Initial step. Fix both end faces with U1 = U2 = U3 = 0: the left end face at X = 0 and the right end face at X = 120 mm. In Step-Thermal-B, apply a predefined temperature field of 100 degC to the whole model. Mesh: Apply a global seed size of 6 mm. Assign element type C3D8R and generate the mesh. Job: Create a job named Job-ThermalStress-B, submit it for analysis, and wait for successful completion. Save: Save the model database to C:\\Users\\user\\Desktop\\Job-ThermalStress-B.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-ThermalStress-B.odb. [Software] To start Abaqus/CAE, run `C:\\SIMULIA\\EstProducts\\2023\\win_b64\\resources\\install\\cmdDirFeature\\launcher.bat cae` (adjust path to your install).",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
@@ -32,7 +32,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "abaqus cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {

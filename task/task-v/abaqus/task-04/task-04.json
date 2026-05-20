@@ -1,6 +1,6 @@
 {
   "id": "v-abaqus-task-04-windows",
-  "snapshot": "ABAQUS-2025",
+  "snapshot": "ABAQUS-2025L",
   "instruction": "Use Abaqus through the graphical user interface to complete the following task. Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Build a straight rectangular bar with length 100 mm along the global X-axis. The cross-section is a 10 mm x 10 mm square in the Y-Z plane, so the final geometry occupies X = 0 to 100 mm, Y = 0 to 10 mm, and Z = 0 to 10 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Solid Homogeneous section using Steel and assign it to the entire bar. Assembly: Create one dependent instance of the bar. Analysis Step: Create a Static, General step named Step-Load, placed after the Initial step. Loads and Boundary Conditions: Apply an Encastre boundary condition to the end face at X = 0. Apply a tensile Surface Traction, General to the end face at X = 100 mm. Set the traction magnitude to 10 MPa acting in the global positive X direction. This traction is equivalent to a total tensile force of 1000 N distributed over the 10 mm x 10 mm end face. Discretization: Mesh the bar with a global seed size of 5 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-Tension, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Open the output database. Display the Mises stress contour. Query the U1 displacement at the node located at the center of the free end face (X = 100 mm, Y = 5 mm, Z = 5 mm). Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Tension.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Tension.odb. Run the solver to completion and ensure a result file is generated. You must complete all operations interactively through the abaqus graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
@@ -14,7 +14,7 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "C:\\SIMULIA\\EstProducts\\2025\\win_b64\\resources\\install\\cmdDirFeature\\launcher.bat",
+          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
           "cae"
         ]
       }
@@ -41,7 +41,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "abaqus cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {

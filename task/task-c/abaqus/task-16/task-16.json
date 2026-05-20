@@ -1,6 +1,6 @@
 {
   "id": "c-abaqus-task-16-windows",
-  "snapshot": "ABAQUS-2025",
+  "snapshot": "ABAQUS-2025L",
   "instruction": "Use Abaqus via the Command Line Interface (CLI) to perform a transient heat-transfer analysis of a rectangular solid block (Variant A). Use the N-mm-MPa unit system with appropriate thermal units. Part: Create a 3D Deformable Solid, Extrusion part. Sketch a rectangle from (0, 0) to (60, 18) and extrude it by 12 mm to create a block of size 60 mm x 18 mm x 12 mm. Property: Create a material named Steel. Set the density to 7.85e-9 tonne/mm^3, the thermal conductivity to 0.045 W/(mm·K), and the specific heat to 4.5e8 mJ/(tonne·K). Create a Homogeneous Solid Section and assign it to the whole block. Assembly: Create one dependent instance of the block. Step: Create a Heat Transfer step named Step-Heat-A. Use transient response. Set the time period to 300 s, the initial increment to 2 s, the maximum increment to 15 s, and the maximum allowable temperature change per increment DELTMX to 10. Initial Condition and Boundary Condition: Apply an initial uniform temperature of 25 degC to the whole block. Apply a temperature boundary condition of 95 degC on the X = 0 face during Step-Heat-A. Mesh: Apply a global seed size of 4 mm. Use DC3D8 heat-transfer brick elements and generate the mesh. Job: Create a job named Job-TransientHeat-A and submit it for solving. Wait for the analysis to complete successfully. Visualization: Review the temperature field at the final time. Record the average temperature near the X = 0 heated face, the average temperature in the X approximately 5 mm band, and the final analysis time. Save: Save the model database to C:\\Users\\user\\Desktop\\Job-TransientHeat-A.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-TransientHeat-A.odb. [Software] To start Abaqus/CAE, run `C:\\SIMULIA\\EstProducts\\2023\\win_b64\\resources\\install\\cmdDirFeature\\launcher.bat cae` (adjust path to your install).",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
@@ -32,7 +32,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "abaqus cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
     "expected": {
