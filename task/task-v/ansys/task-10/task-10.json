@@ -1,6 +1,6 @@
 {
   "id": "v-ansys-task-10-windows",
-  "snapshot": "ANSYS-2026",
+  "snapshot": "ANSYS-2026R",
   "instruction": "Use the ANSYS Fluent GUI to complete a 2D laminar channel-flow analysis. Physical problem: Two-dimensional laminar flow through a straight rectangular channel. Coordinate system and geometry: - Use a 2D planar model. - Use SI units in Fluent. - The channel length is along the X direction. - The channel height is along the Y direction. - The channel domain should occupy: - 0 ≤ X ≤ 0.200 m - 0 ≤ Y ≤ 0.002 m - The inlet is the boundary at X = 0 m. - The outlet is the boundary at X = 0.200 m. - The bottom wall is the boundary at Y = 0 m. - The top wall is the boundary at Y = 0.002 m. - Name the four boundary zones as: - inlet - outlet - bottom - top Model parameters: - Fluid: water-liquid - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Structured quadrilateral mesh - Element size: 0.5 mm, equivalent to 5.0e-4 m Boundary conditions: - Inlet: - Velocity inlet - Uniform X-velocity = 0.2 m/s - Y-velocity = 0 m/s - Outlet: - Pressure outlet - Gauge pressure = 0 Pa - Top wall: - Stationary no-slip wall - Bottom wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialization: hybrid initialization - Run 500 iterations or until the solution is converged. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\poiseuille_shear.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\poiseuille_shear.dat Run the solver to completion and ensure a result file is generated. You must complete all operations interactively through the ANSYS graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
@@ -8,6 +8,15 @@
       "type": "upload_file",
       "parameters": {
         "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
       }
     },
     {

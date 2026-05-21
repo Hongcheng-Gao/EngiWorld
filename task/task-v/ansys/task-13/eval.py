@@ -39,7 +39,7 @@ def has_forbidden_py_file(desktop_path: Path) -> bool:
             return True
 
         name = entry.name.lower()
-        if name.endswith(".py") and name != "eval.py":
+        if name.endswith(".py") and name not in {"eval.py", "license.py"}:
             return True
 
     return False
