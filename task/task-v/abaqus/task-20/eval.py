@@ -449,6 +449,28 @@ def collect_task_specific(category, inst, step, last_frame, fields):
     return out
 
 
+def has_forbidden_py_file(desktop_path):
+    try:
+        entries = os.listdir(desktop_path)
+    except Exception:
+        return True
+
+    for name in entries:
+        try:
+            full_path = os.path.join(desktop_path, name)
+            if not os.path.isfile(full_path):
+                continue
+        except Exception:
+            return True
+
+        lower_name = name.lower()
+        if lower_name.endswith('.py') and lower_name != 'eval.py':
+            return True
+
+    return False
+
+
+
 def compare_scalar(obs, exp):
     if exp is None:
         return obs is None
@@ -476,6 +498,10 @@ def compare_values(obs, exp):
 def check_task():
     job_name = GT['job_name']
     desktop = get_desktop(job_name)
+
+    if has_forbidden_py_file(desktop):
+        return False
+
     cae_path = os.path.join(desktop, job_name + '.cae')
     odb_path = os.path.join(desktop, job_name + '.odb')
 

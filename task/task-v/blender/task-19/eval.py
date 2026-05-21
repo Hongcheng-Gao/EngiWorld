@@ -10,6 +10,111 @@ from pathlib import Path
 
 
 DESKTOP = Path('/home/user/Desktop')
+
+GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
+    ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
+    ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
+    ".lua", ".tcl", ".ahk", ".scr",
+}
+GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
+GUI_BYPASS_OUTPUT_TOKENS = (
+    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
+    "report.csv", "result.csv",
+    ".dxf", ".dwg", ".step", ".stp", ".fcstd", ".scad", ".stl", ".obj",
+    ".blend", ".pcb", ".sch", ".brd", ".dsn", ".opj",
+    ".db", ".rst", ".rth", ".wbpj", ".odb", ".cae", ".inp",
+    ".nc", ".gcode", ".slb", ".ipt", ".sldprt", ".sldasm",
+    "autocad_result", "apdl_", "wb_",
+)
+GUI_BYPASS_COMMAND_TOKENS = (
+    "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
+    "bash", " sh ", "zsh", "node", "ruby", "perl",
+    "ifcopenshell", "openstudio", "energyplus",
+    "blender --background", "revitbatchprocessor",
+    "ansys", "mapdl", "fluent", "abaqus", "cae noGUI",
+    "freecad", "freecadcmd", "openscad", "librecad",
+    "ezdxf", "cadquery", "accoreconsole", "autolisp",
+    "solidworks", "solvespace", "kicad-cli", "pcbnew",
+)
+
+
+def _read_text_safe(path):
+    try:
+        return path.read_text(encoding="utf-8", errors="ignore")
+    except Exception:
+        return ""
+
+
+def _desktop_script_artifacts(root):
+    if not root.exists() or not root.is_dir():
+        return True
+    try:
+        candidates = list(root.iterdir())
+        for directory in list(candidates):
+            if directory.is_dir() and directory.name not in {"__pycache__", "_runtime"}:
+                try:
+                    candidates.extend(directory.iterdir())
+                except Exception:
+                    pass
+        for path in candidates:
+            if not path.is_file():
+                continue
+            if path.name in GUI_BYPASS_ALLOWED_FILENAMES:
+                continue
+            if path.suffix.lower() in GUI_BYPASS_FORBIDDEN_EXTENSIONS:
+                return True
+    except Exception:
+        return True
+    return False
+
+
+def _history_paths(root):
+    home = Path.home()
+    return [
+        home / ".bash_history",
+        home / ".zsh_history",
+        home / ".python_history",
+        home / ".local/share/fish/fish_history",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
+        root / ".bash_history",
+        root / ".zsh_history",
+    ]
+
+
+def _history_contains_bypass(root):
+    for path in _history_paths(root):
+        if not path.is_file():
+            continue
+        text = _read_text_safe(path).lower()
+        if not text:
+            continue
+        for raw_line in text.splitlines():
+            line = raw_line.strip()
+            if not line or "eval.py" in line:
+                continue
+            touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
+            runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
+            writes_file = any(
+                token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item")
+            )
+            if touches_output and (runs_command or writes_file):
+                return True
+            if ("/desktop/" in line or "\\desktop\\" in line) and any(
+                ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS
+            ) and runs_command:
+                return True
+    return False
+
+
+def check_no_gui_bypass(root):
+    root = Path(root)
+    if _desktop_script_artifacts(root):
+        return False
+    if _history_contains_bypass(root):
+        return False
+    return True
+
 BLENDER_PATH = "blender"
 
 BUNDLE = {'eval_inner.py': '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'}
@@ -205,28 +310,9 @@ finally:
 
 
 
-def _has_generated_python_file() -> bool:
-    if not DESKTOP.exists():
-        return False
-    initial_python_names = {Path(rel).name for rel, _ in INIT_MAP if Path(rel).suffix.lower() == ".py"}
-    allowed_names = {"eval.py"}
-    allowed_names.update(initial_python_names)
-    try:
-        items = list(DESKTOP.iterdir())
-    except Exception:
-        return False
-    for path in items:
-        if path.name in allowed_names or path.name == "_runtime":
-            continue
-        try:
-            if path.is_file() and path.suffix.lower() == ".py":
-                return True
-        except Exception:
-            continue
-    return False
 
 def _run() -> bool:
-    if _has_generated_python_file():
+    if not check_no_gui_bypass(DESKTOP):
         return False
 
     import uuid
