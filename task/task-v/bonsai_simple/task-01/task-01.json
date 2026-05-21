@@ -1,0 +1,56 @@
+{
+  "id": "v-bonsai-simple-task-01-ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "GUI-only requirement: Complete the task entirely in the launched Bonsai/Blender graphical user interface. Do not open Terminal or a shell; do not use the Blender Python console, Text editor scripts, Python, IfcOpenShell, shell commands, or any helper script/macro to directly generate or edit the deliverable file. Use only Bonsai/Blender native GUI tools, panels, menus, dialogs, and built-in save/export commands. Basic single-room building shell. Start from a blank Bonsai/Blender project with no init_file inputs and no reference images. Use Bonsai's native IFC authoring workflow to create a new metric IFC4 model, then save the only required deliverable on the Desktop as /home/user/Desktop/result.ifc using Bonsai's graphical IFC save/export controls. Model one rectangular single-storey room about 5 m by 4 m with four exterior walls about 3 m high, one floor slab, one real space, one door, and one window. Name the space Room 101 so it exports as an IfcSpace. Create real IFC/BIM elements for the required wall, slab, door, window, and space objects rather than ordinary Blender mesh placeholders or visual-only geometry. The exported IFC should use the IFC4 schema, have unique GlobalId values for IfcRoot objects, and contain at least one IfcProject, one IfcSite, one IfcBuilding, one IfcBuildingStorey, one IfcSpace named Room 101, four wall-like IfcWall or IfcWallStandardCase elements, one IfcSlab, one IfcDoor, and one IfcWindow. Do not use IfcBuildingElementProxy objects as substitutes for the required BIM elements. The shaped model should have an overall size roughly matching the single-room shell, with X span about 5 m, Y span about 4 m, and Z span about 3 m. Other coordinates, wall thicknesses, opening positions, materials, object type names, relationship nesting, property sets, and harmless exporter metadata may vary as long as the saved IFC satisfies these requirements.",
+  "source": "https://docs.bonsaibim.org/tutorials/project0.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
