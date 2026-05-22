@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-17-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-17_input.step in FreeCAD. Convert the rectangular block into a V-block clamp. Keep the 120 x 50 x 40 mm outside envelope. Cut a full-length 90-degree V groove along X, centered on Y=25 mm and open at the top; the groove vertex is at Y=25 mm, Z=18 mm, and its top edges are at Y=3 mm and Y=47 mm on the Z=40 mm top face. Cut three vertical clamp screw holes of diameter 8 mm at X=25,60,95 mm on Y=25 mm, with top counterbores of diameter 18 mm and depth 6 mm. Cut two long horizontal relief holes of diameter 10 mm along X, centered at Y=8 and Y=42 mm, Z=20 mm. Export /home/user/Desktop/freecad_task-17_output.step. Use interactive GUI steps only and do not use external scripts.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/freecad_task-17_input.step",
+            "path": "/home/user/Desktop/freecad_task-17_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-17_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

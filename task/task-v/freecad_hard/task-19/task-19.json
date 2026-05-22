@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-19-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-19_input.step in FreeCAD. Create a motor mounting plate with a raised register and multiple slots. Keep the base plate 160 x 90 x 10 mm. Add and fuse a raised circular register pad centered at (80,45), diameter 68 mm and height 10 mm. Cut a vertical center bore of diameter 36 mm through the entire part. Cut six vertical through bolt holes of diameter 7 mm on a 27 mm bolt-circle radius centered at (80,45), starting on +X and repeating every 60 degrees. Cut four obround mounting slots of total length 30 mm along X and width 8 mm at centers (35,22), (125,22), (35,68), and (125,68). Also cut two lightening slots of total length 42 mm and width 8 mm centered at (80,18) and (80,72). Export /home/user/Desktop/freecad_task-19_output.step using the GUI only; no external scripts.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/freecad_task-19_input.step",
+            "path": "/home/user/Desktop/freecad_task-19_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-19_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

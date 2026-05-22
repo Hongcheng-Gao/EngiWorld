@@ -1,0 +1,72 @@
+{
+    "id": "v-librecad-hard-task-15-ubuntu",
+    "snapshot": "LibreCAD2.2.0.2",
+    "instruction": "Look at guih15_sheet_metal_flat_seed.dxf in LibreCAD. Complete the hard sheet-metal flat pattern. Draw OUTLINE closed profile through (0,35), (60,35), (60,0), (200,0), (200,35), (260,35), (260,135), (200,135), (200,170), (60,170), (60,135), and (0,135). Add BEND lines (60,0)-(60,170), (200,0)-(200,170), (0,35)-(260,35), and (0,135)-(260,135). Add HOLE circles radius 5 at (35,85), (225,85), (130,35), and (130,135), RELIEF circles radius 4 at (60,35), (60,135), (200,35), and (200,135), and notes BEND 90 UP, BEND 90 DOWN, 4X Ø10, and K=0.38 T=2.0. Save the result as /home/user/Desktop/guih15_sheet_metal_flat_completed.dxf. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+    "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-15/init_file/guih15_sheet_metal_flat_seed.dxf",
+                        "path": "/home/user/Desktop/guih15_sheet_metal_flat_seed.dxf"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "launch",
+            "parameters": {
+                "command": [
+                    "librecad",
+                    "/home/user/Desktop/guih15_sheet_metal_flat_seed.dxf"
+                ]
+            }
+        },
+        {
+            "type": "execute",
+            "parameters": {
+                "command": [
+                    "python3",
+                    "-c",
+                    "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+                ]
+            }
+        }
+    ],
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "librecad"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-15/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python3 /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
+    },
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
+}

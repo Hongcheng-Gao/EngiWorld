@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-hard-task-13-windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Look at hard-13_seed.dxf. Create the hard AutoCAD drawing 'gearbox side cover with four boss ears' using exact model-space coordinates in millimeters. Create or keep these layers exactly as needed: ANNOTATION, CENTER, CUTOUT, HOLE, OUTLINE, REFERENCE, RIB. Straight geometry may be LINE entities or straight LWPOLYLINE edges; every listed rounded or slot end must be an ARC entity using the listed start/end angles in degrees. Required straight segments: OUTLINE (42,20)->(198,20); OUTLINE (220,42)->(220,158); OUTLINE (198,180)->(42,180); OUTLINE (20,158)->(20,42); CENTER (20,100)->(220,100); CENTER (120,20)->(120,180). Required circles: OUTLINE center (20,20) radius 18; OUTLINE center (220,20) radius 18; OUTLINE center (220,180) radius 18; OUTLINE center (20,180) radius 18; CUTOUT center (120,100) radius 44; CENTER center (120,100) radius 20; HOLE center (190,100) radius 5; HOLE center (169.497,149.497) radius 5; HOLE center (120,170) radius 5; HOLE center (70.503,149.497) radius 5; HOLE center (50,100) radius 5; HOLE center (70.503,50.503) radius 5; HOLE center (120,30) radius 5; HOLE center (169.497,50.503) radius 5; HOLE center (40,40) radius 6; HOLE center (200,40) radius 6; HOLE center (200,160) radius 6; HOLE center (40,160) radius 6. Required arcs: OUTLINE center (42,42) radius 22 start 180 end 270; OUTLINE center (198,42) radius 22 start 270 end 0; OUTLINE center (198,158) radius 22 start 0 end 90; OUTLINE center (42,158) radius 22 start 90 end 180; RIB center (120,100) radius 58 start 30 end 70; RIB center (120,100) radius 58 start 110 end 150; RIB center (120,100) radius 58 start 210 end 250; RIB center (120,100) radius 58 start 290 end 330. Required text strings: ANNOTATION text ACAD-H13; ANNOTATION text GEARBOX COVER. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/hard-13_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\hard-13_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\hard-13_seed.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-16-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-16_input.step in FreeCAD. Machine a mold insert plate with nested pockets and pads. Keep the 100 x 100 x 25 mm outer block. Cut a shallow square top recess 74 x 74 mm centered at (50,50), 5 mm deep. Through the center, cut a rectangular window 48 x 38 mm centered at (50,50) through the full plate. Inside the top recess, add and fuse two raised rectangular pads, each 20 x 10 x 8 mm, centered at (35,50) and (65,50) with pad tops at Z=28 mm; drill a blind vertical hole of diameter 5 mm and depth 10 mm from the top of each pad. Cut four vertical through mounting holes of diameter 6 mm at (18,18), (82,18), (18,82), and (82,82), each with a top counterbore diameter 14 mm and depth 6 mm. Export /home/user/Desktop/freecad_task-16_output.step using GUI only; external scripts are prohibited.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/freecad_task-16_input.step",
+            "path": "/home/user/Desktop/freecad_task-16_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-16_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

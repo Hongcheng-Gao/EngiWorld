@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-07-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-7_input.step in FreeCAD. Machine the rectangular rail into a dovetail slide. Keep the 160 x 45 x 30 mm outside envelope. Cut a full-length centered dovetail slot open from the top: the slot runs along X for the entire 160 mm length, is centered at Y=22.5 mm, has top opening width 28 mm, bottom width 16 mm, and depth 14 mm so the slot floor is at Z=16 mm. Cut six vertical through holes of diameter 5.6 mm along the rail centerline at X=20,44,68,92,116,140 mm, all with Y=22.5 mm, and add a top counterbore of diameter 12 mm and depth 5 mm to each. Cut one shallow side relief groove into each long side face; each groove is 5 mm deep into the side face, 5 mm tall, runs the full 160 mm length, and is centered at Z=15 mm. Export /home/user/Desktop/freecad_task-7_output.step. Work interactively in the GUI only; scripts are forbidden.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/freecad_task-7_input.step",
+            "path": "/home/user/Desktop/freecad_task-7_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-7_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

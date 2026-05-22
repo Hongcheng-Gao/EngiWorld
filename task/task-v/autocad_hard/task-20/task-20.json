@@ -1,0 +1,67 @@
+{
+  "id": "v-autocad-hard-task-20-windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Look at hard-20_bed_seed.dxf, hard-20_rail_reference.dxf. Create the hard AutoCAD drawing 'machine-bed master layout with rails and pockets' using exact model-space coordinates in millimeters. Create or keep these layers exactly as needed: ANNOTATION, CENTER, CUTOUT, HOLE, OUTLINE, RAIL, REFERENCE, RIB. Straight geometry may be LINE entities or straight LWPOLYLINE edges; every listed rounded or slot end must be an ARC entity using the listed start/end angles in degrees. Required straight segments: OUTLINE (25,0)->(395,0); OUTLINE (420,25)->(420,195); OUTLINE (395,220)->(25,220); OUTLINE (0,195)->(0,25); RAIL (55,35)->(365,35); RAIL (365,35)->(365,60); RAIL (365,60)->(55,60); RAIL (55,60)->(55,35); RAIL (55,160)->(365,160); RAIL (365,160)->(365,185); RAIL (365,185)->(55,185); RAIL (55,185)->(55,160); CUTOUT (120,80)->(300,80); CUTOUT (300,80)->(300,140); CUTOUT (300,140)->(120,140); CUTOUT (120,140)->(120,80); CUTOUT (62,116)->(118,116); CUTOUT (62,104)->(118,104); CUTOUT (302,116)->(358,116); CUTOUT (302,104)->(358,104); CUTOUT (205,17)->(205,53); CUTOUT (215,17)->(215,53); CUTOUT (205,167)->(205,203); CUTOUT (215,167)->(215,203); CENTER (0,110)->(420,110); CENTER (210,0)->(210,220); CENTER (55,35)->(365,185); CENTER (55,185)->(365,35). Required circles: HOLE center (70,47.5) radius 4; HOLE center (70,172.5) radius 4; HOLE center (115,47.5) radius 4; HOLE center (115,172.5) radius 4; HOLE center (160,47.5) radius 4; HOLE center (160,172.5) radius 4; HOLE center (205,47.5) radius 4; HOLE center (205,172.5) radius 4; HOLE center (250,47.5) radius 4; HOLE center (250,172.5) radius 4; HOLE center (295,47.5) radius 4; HOLE center (295,172.5) radius 4; HOLE center (340,47.5) radius 4; HOLE center (340,172.5) radius 4; HOLE center (40,40) radius 8; HOLE center (380,40) radius 8; HOLE center (40,180) radius 8; HOLE center (380,180) radius 8; HOLE center (210,110) radius 18. Required arcs: OUTLINE center (25,25) radius 25 start 180 end 270; OUTLINE center (395,25) radius 25 start 270 end 0; OUTLINE center (395,195) radius 25 start 0 end 90; OUTLINE center (25,195) radius 25 start 90 end 180; CUTOUT center (62,110) radius 6 start 90 end 270; CUTOUT center (118,110) radius 6 start 270 end 90; CUTOUT center (302,110) radius 6 start 90 end 270; CUTOUT center (358,110) radius 6 start 270 end 90; CUTOUT center (210,53) radius 5 start 0 end 180; CUTOUT center (210,17) radius 5 start 180 end 0; CUTOUT center (210,203) radius 5 start 0 end 180; CUTOUT center (210,167) radius 5 start 180 end 0; RIB center (210,110) radius 70 start 30 end 70; RIB center (210,110) radius 70 start 110 end 150; RIB center (210,110) radius 70 start 210 end 250; RIB center (210,110) radius 70 start 290 end 330. Required text strings: ANNOTATION text ACAD-H20; ANNOTATION text MACHINE BED MASTER. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/hard-20_bed_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\hard-20_bed_seed.dxf"
+          },
+          {
+            "local_path": "task-20/init_file/hard-20_rail_reference.dxf",
+            "path": "C:\\Users\\user\\Desktop\\hard-20_rail_reference.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\hard-20_bed_seed.dxf",
+          "C:\\Users\\user\\Desktop\\hard-20_rail_reference.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

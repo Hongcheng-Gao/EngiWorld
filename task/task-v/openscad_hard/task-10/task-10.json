@@ -1,0 +1,62 @@
+{
+  "id": "v-openscad-hard-task-10-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Look at task-010_initial.scad. Model a planetary gearbox carrier plate with a 90 x 90 x 14 mm envelope. Add a circular outside rim, a centered 16 mm through bore, three planet pin bosses on a 56 mm pitch circle with 8 mm outside radius and 4 mm pilot holes, and six 6 mm lightening holes on a 62 mm pitch circle. Use loops and rotate() so the features are exactly evenly spaced. Fully render and export /home/user/Desktop/task-010_output.stl. Do not create PNG, PDF, CSV, JSON, or any other extra output. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/task-010_initial.scad",
+            "path": "/home/user/Desktop/task-010_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "/home/user/Desktop/task-010_initial.scad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

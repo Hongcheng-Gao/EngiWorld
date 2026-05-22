@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-11-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-11_input.step in FreeCAD. Turn the angle plate into a lightened, ribbed inspection fixture. Keep the base and vertical wall outer dimensions. Add two end gussets 8 mm thick along X with X spans 6 to 14 mm and 96 to 104 mm, and one central gusset 6 mm thick along X with X span 52 to 58 mm; all gussets must join the base top to the vertical wall. Cut a rounded rectangular inspection window through the vertical wall with exact outside opening size 58 mm wide along X by 36 mm high along Z, centered at X=55 mm and Z=56 mm, with 5 mm radius corners. Cut three additional horizontal through holes of diameter 8 mm through the lower vertical wall at X=28,55,82 mm and Z=28 mm. Cut two vertical obround through slots in the base, centers (28,30) and (82,30), each length 30 mm along X and width 9 mm. Export /home/user/Desktop/freecad_task-11_output.step through the GUI only; external scripts are forbidden.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/freecad_task-11_input.step",
+            "path": "/home/user/Desktop/freecad_task-11_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-11_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

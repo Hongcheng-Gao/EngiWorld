@@ -1,0 +1,126 @@
+{
+  "ok": true,
+  "engine": "solidworks_cam",
+  "model": "C:\\Users\\User\\Desktop\\cam_part.sldprt",
+  "job": "C:\\Users\\User\\Desktop\\cam_job.json",
+  "tools": "C:\\Users\\User\\Desktop\\tools.csv",
+  "output": "C:\\Users\\User\\Desktop\\task-01.nc",
+  "parsed_job": {
+    "job_id": "task-01-existing-cam-post",
+    "units": "use_part_settings",
+    "model": "C:\\Users\\User\\Desktop\\cam_part.sldprt",
+    "cam_data": "use_existing_setups_operations_and_toolcrib",
+    "actions": [
+      "open_existing_cam_part",
+      "regenerate_operation_plan_if_needed",
+      "generate_toolpaths_for_all_stored_operations",
+      "postprocess_all_stored_operations"
+    ],
+    "output": "C:\\Users\\User\\Desktop\\task-01.nc",
+    "audit_log": "C:\\Users\\User\\Desktop\\solidcam_cli_run.json"
+  },
+  "parsed_tools": [
+    {
+      "source": "cam_part",
+      "requirement": "tooling",
+      "value": "use_existing_toolcrib"
+    },
+    {
+      "source": "cam_part",
+      "requirement": "operations",
+      "value": "postprocess_all_stored_operations"
+    },
+    {
+      "source": "output",
+      "requirement": "file",
+      "value": "C:\\Users\\User\\Desktop\\task-01.nc"
+    }
+  ],
+  "machine": {
+    "setup_count": 0,
+    "operation_setup_count": 0,
+    "controller": "C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts\\M3Axis-Tutorial.CTL"
+  },
+  "calls": [
+    {
+      "name": "Dispatch SldWorks.Application",
+      "ok": true,
+      "return_type": "CDispatch"
+    },
+    {
+      "name": "Load SOLIDWORKS CAM add-in",
+      "ok": true,
+      "return_type": "int"
+    },
+    {
+      "name": "OpenDoc6 cam_part.sldprt",
+      "ok": true,
+      "return_type": "CDispatch"
+    },
+    {
+      "name": "Open document status",
+      "ok": true,
+      "errors": 0,
+      "warnings": 0,
+      "path": "C:\\Users\\User\\Desktop\\cam_part.sldprt"
+    },
+    {
+      "name": "Activate document",
+      "ok": true,
+      "return_type": "CDispatch"
+    },
+    {
+      "name": "Dispatch SWCAM.CWApp",
+      "ok": true,
+      "return_type": "ICWApp4"
+    },
+    {
+      "name": "SWCAM IGetActiveDoc",
+      "ok": true,
+      "return_type": "ICWPartDoc2"
+    },
+    {
+      "name": "Get active CAM machine",
+      "ok": true,
+      "return_type": "ICWMillMachine"
+    },
+    {
+      "name": "Enumerate existing feature setups",
+      "ok": true,
+      "return_type": "ICWDispatchCollection"
+    },
+    {
+      "name": "Enumerate existing operation setups",
+      "ok": true,
+      "return_type": "ICWDispatchCollection"
+    },
+    {
+      "name": "Extract machinable features",
+      "ok": true,
+      "return_type": "int"
+    },
+    {
+      "name": "Generate operation plan",
+      "ok": true,
+      "return_type": "NoneType"
+    },
+    {
+      "name": "Generate toolpath",
+      "ok": true,
+      "return_type": "NoneType"
+    },
+    {
+      "name": "Generate toolpath from part document",
+      "ok": true,
+      "return_type": "NoneType"
+    },
+    {
+      "name": "PostProcess",
+      "ok": true,
+      "return_type": "NoneType",
+      "output": "C:\\Users\\User\\Desktop\\task-01.nc",
+      "nc_exists": true,
+      "nc_size": 57625
+    }
+  ]
+}

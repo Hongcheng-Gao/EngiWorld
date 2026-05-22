@@ -1,0 +1,72 @@
+{
+    "id": "v-librecad-hard-task-14-ubuntu",
+    "snapshot": "LibreCAD2.2.0.2",
+    "instruction": "Look at guih14_robot_baseplate_seed.dxf in LibreCAD. Complete the hard robot baseplate. Draw BASE square (0,0)-(320,320), CUT circle center (160,160) radius 35, twelve HOLE circles radius 5 on a radius-120 bolt circle centered at (160,160) every 30 degrees starting at (280,160), four horizontal SLOTs 50 x 12 centered at (80,80), (240,80), (80,240), and (240,240), CENTER axes (0,160)-(320,160) and (160,0)-(160,320), DATUM target circles radius 8 at (0,160), (160,0), and (320,160), and notes ROBOT BASE RB-320, 12X Ø10 ON Ø240 B.C., 4X SLOT 50X12, and DATUM A/B/C. Save the result as /home/user/Desktop/guih14_robot_baseplate_completed.dxf. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+    "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+    "config": [
+        {
+            "type": "upload_file",
+            "parameters": {
+                "files": [
+                    {
+                        "local_path": "task-14/init_file/guih14_robot_baseplate_seed.dxf",
+                        "path": "/home/user/Desktop/guih14_robot_baseplate_seed.dxf"
+                    }
+                ]
+            }
+        },
+        {
+            "type": "launch",
+            "parameters": {
+                "command": [
+                    "librecad",
+                    "/home/user/Desktop/guih14_robot_baseplate_seed.dxf"
+                ]
+            }
+        },
+        {
+            "type": "execute",
+            "parameters": {
+                "command": [
+                    "python3",
+                    "-c",
+                    "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+                ]
+            }
+        }
+    ],
+    "trajectory": "trajectories/",
+    "related_apps": [
+        "librecad"
+    ],
+    "evaluator": {
+        "postconfig": [
+            {
+                "type": "upload_file",
+                "parameters": {
+                    "files": [
+                        {
+                            "local_path": "task-14/eval.py",
+                            "path": "/home/user/Desktop/eval.py"
+                        }
+                    ]
+                }
+            }
+        ],
+        "func": "exact_match",
+        "result": {
+            "type": "vm_command_line",
+            "command": "python3 /home/user/Desktop/eval.py",
+            "shell": "true"
+        },
+        "expected": {
+            "type": "rule",
+            "rules": {
+                "expected": "True\n"
+            }
+        }
+    },
+    "proxy": false,
+    "fixed_ip": false,
+    "possibility_of_env_change": "low"
+}

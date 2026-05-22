@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-05-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-5_input.step in FreeCAD. Make a detailed electronics enclosure from the solid 150 x 90 x 45 mm blank. Cut a top-opening internal cavity 118 x 58 mm centered at (75,45), depth 38 mm, leaving a 7 mm bottom floor. Add four internal cylindrical standoffs fused to the floor at (35,25), (115,25), (35,65), and (115,65), each diameter 16 mm and height 24 mm from Z=7 to Z=31. Drill a blind vertical hole of diameter 5 mm and depth 18 mm into the top of each standoff. Cut a front connector window 36 x 14 mm through the Y=0 wall centered at X=75 and Z=23, a rear window 50 x 12 mm through the Y=90 wall centered at X=75 and Z=26, and matching side service windows 24 x 12 mm through both X side walls centered at Y=45 and Z=26. Export /home/user/Desktop/freecad_task-5_output.step. Use only interactive GUI operations and no external scripts.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/freecad_task-5_input.step",
+            "path": "/home/user/Desktop/freecad_task-5_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-5_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

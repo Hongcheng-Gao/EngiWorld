@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-15-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-15_input.step in FreeCAD. Build a three-port flanged tube manifold from the straight tube. The tube axis is along X. Hollow the tube with an inside diameter of 16 mm through its full length while keeping the outside diameter 26 mm. Add two end flanges, each outside diameter 56 mm and 10 mm thick along X, one at each end, with the central bore open. Add a vertical branch tube centered at X=60 mm with outside diameter 22 mm, inside diameter 14 mm, rising to Z=55 mm, and add a top flange diameter 48 mm by 8 mm thick. Cut four bolt holes of diameter 5.6 mm through each end flange on a 19 mm bolt radius at angular positions 45,135,225,315 degrees in the flange YZ plane, measured from +Y toward +Z, and cut four vertical bolt holes of diameter 5 mm through the top flange on radius 17 mm. Export /home/user/Desktop/freecad_task-15_output.step through the GUI only; no scripts.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/freecad_task-15_input.step",
+            "path": "/home/user/Desktop/freecad_task-15_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-15_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

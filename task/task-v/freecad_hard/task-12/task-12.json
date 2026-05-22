@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-12-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-12_input.step in FreeCAD. Use the single calibration cube as the seed for a multi-body inspection gauge compound; the final STEP must intentionally contain ten separate solids, not one fused solid. Create five separate rectangular gauge blocks arranged as a staircase along X, each 18 x 18 mm in plan, bottom at Z=0, with heights 10,16,22,28,34 mm and X origins 0,24,48,72,96 mm. Also create five separate vertical cylindrical pins on a diagonal row at centers (12,42), (42,50), (72,42), (102,50), and (132,42). Their diameters must be 10,11,12,13,14 mm and their heights 18,21,24,27,30 mm respectively. Do not fuse the ten bodies; export them together as a compound STEP /home/user/Desktop/freecad_task-12_output.step. Use GUI operations only and do not create external script files.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/freecad_task-12_input.step",
+            "path": "/home/user/Desktop/freecad_task-12_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-12_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

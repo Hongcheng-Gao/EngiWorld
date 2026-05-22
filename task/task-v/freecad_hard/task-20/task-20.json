@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-20-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-20_input.step in FreeCAD. Machine the block into a sliding carriage with underside and top rail details. Keep the original 150 x 80 x 35 mm block coordinate frame. Cut an underside U-channel 110 x 42 x 22 mm, centered at X=75 and Y=40, opening through the bottom and leaving 20 mm end walls. Cut a top T-slot along X: a narrow upper slot 130 x 14 mm from Z=23 to Z=35 and a wider lower slot 130 x 28 mm from Z=17 to Z=25, both centered at Y=40. Add two raised top rails, each 130 x 8 x 8 mm, running along X on both sides of the T-slot with bottoms at Z=35. Cut four horizontal side cross-holes of diameter 7 mm through the carriage along Y, centered at X=25,55,95,125 mm and Z=10 mm. Cut two vertical obround mounting slots centered at (40,40) and (110,40), length 34 mm along Y and width 9 mm. Export /home/user/Desktop/freecad_task-20_output.step using GUI operations only; external script files are forbidden.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/freecad_task-20_input.step",
+            "path": "/home/user/Desktop/freecad_task-20_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-20_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

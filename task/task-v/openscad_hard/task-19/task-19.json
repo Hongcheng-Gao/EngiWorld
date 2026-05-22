@@ -1,0 +1,62 @@
+{
+  "id": "v-openscad-hard-task-19-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Look at task-019_initial.scad. Create a stepped threaded adapter with an integrated hex wrench section. The XY envelope should sort to 52 x 60 mm and total height must be 46 mm. Include a lower 36 mm diameter cylinder, a 60 mm across-corners hex section around z=12..22, an upper 28 mm diameter spigot, a 14 mm centered through bore, and a 6 mm cross hole along the X axis at z=28. Fully render and export /home/user/Desktop/task-019_output.stl. Do not create PNG, PDF, CSV, JSON, or any other extra output. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/task-019_initial.scad",
+            "path": "/home/user/Desktop/task-019_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "/home/user/Desktop/task-019_initial.scad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

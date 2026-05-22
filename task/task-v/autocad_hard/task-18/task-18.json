@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-hard-task-18-windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Look at hard-18_seed.dxf. Create the hard AutoCAD drawing 'asymmetric engine mount bracket' using exact model-space coordinates in millimeters. Create or keep these layers exactly as needed: ANNOTATION, CENTER, CUTOUT, HOLE, OUTLINE, REFERENCE, RIB. Straight geometry may be LINE entities or straight LWPOLYLINE edges; every listed rounded or slot end must be an ARC entity using the listed start/end angles in degrees. Required straight segments: OUTLINE (0,0)->(220,0); OUTLINE (220,0)->(240,40); OUTLINE (240,40)->(210,125); OUTLINE (210,125)->(145,155); OUTLINE (145,155)->(80,135); OUTLINE (80,135)->(35,90); OUTLINE (35,90)->(0,0); RIB (35,90)->(220,0); RIB (80,135)->(145,0); RIB (145,155)->(210,0); RIB (0,0)->(145,155); CUTOUT (95,130)->(145,130); CUTOUT (95,120)->(145,120); CUTOUT (200,47)->(200,83); CUTOUT (210,47)->(210,83); CENTER (0,77.5)->(240,77.5); CENTER (120,0)->(120,155). Required circles: HOLE center (35,30) radius 8; HOLE center (190,30) radius 8; HOLE center (95,95) radius 12; HOLE center (165,105) radius 10; HOLE center (120,55) radius 6. Required arcs: CUTOUT center (95,125) radius 5 start 90 end 270; CUTOUT center (145,125) radius 5 start 270 end 90; CUTOUT center (205,83) radius 5 start 0 end 180; CUTOUT center (205,47) radius 5 start 180 end 0; OUTLINE center (35,90) radius 20 start 180 end 300; OUTLINE center (210,125) radius 24 start 300 end 60. Required text strings: ANNOTATION text ACAD-H18; ANNOTATION text ASYM ENGINE MOUNT. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/hard-18_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\hard-18_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\hard-18_seed.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

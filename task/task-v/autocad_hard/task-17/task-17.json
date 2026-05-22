@@ -1,0 +1,62 @@
+{
+  "id": "v-autocad-hard-task-17-windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Look at hard-17_seed.dxf. Create the hard AutoCAD drawing 'rack gear mounting strip with tooth layout' using exact model-space coordinates in millimeters. Create or keep these layers exactly as needed: ANNOTATION, CENTER, CUTOUT, HOLE, OUTLINE, REFERENCE, TOOTH. Straight geometry may be LINE entities or straight LWPOLYLINE edges; every listed rounded or slot end must be an ARC entity using the listed start/end angles in degrees. Required straight segments: OUTLINE (0,0)->(360,0); OUTLINE (360,0)->(360,45); OUTLINE (360,45)->(0,45); OUTLINE (0,45)->(0,0); TOOTH (20,45)->(27.5,65); TOOTH (27.5,65)->(35,45); TOOTH (35,45)->(47.5,65); TOOTH (47.5,65)->(55,45); TOOTH (55,45)->(67.5,65); TOOTH (67.5,65)->(75,45); TOOTH (75,45)->(87.5,65); TOOTH (87.5,65)->(95,45); TOOTH (95,45)->(107.5,65); TOOTH (107.5,65)->(115,45); TOOTH (115,45)->(127.5,65); TOOTH (127.5,65)->(135,45); TOOTH (135,45)->(147.5,65); TOOTH (147.5,65)->(155,45); TOOTH (155,45)->(167.5,65); TOOTH (167.5,65)->(175,45); TOOTH (175,45)->(187.5,65); TOOTH (187.5,65)->(195,45); TOOTH (195,45)->(207.5,65); TOOTH (207.5,65)->(215,45); TOOTH (215,45)->(227.5,65); TOOTH (227.5,65)->(235,45); TOOTH (235,45)->(247.5,65); TOOTH (247.5,65)->(255,45); TOOTH (255,45)->(267.5,65); TOOTH (267.5,65)->(275,45); TOOTH (275,45)->(287.5,65); TOOTH (287.5,65)->(295,45); TOOTH (295,45)->(307.5,65); TOOTH (307.5,65)->(315,45); TOOTH (315,45)->(327.5,65); TOOTH (327.5,65)->(335,45); CUTOUT (68,27.5)->(112,27.5); CUTOUT (68,17.5)->(112,17.5); CUTOUT (248,27.5)->(292,27.5); CUTOUT (248,17.5)->(292,17.5); CENTER (0,22.5)->(360,22.5); CENTER (20,45)->(340,45). Required circles: HOLE center (35,22.5) radius 4.5; HOLE center (85,22.5) radius 4.5; HOLE center (135,22.5) radius 4.5; HOLE center (185,22.5) radius 4.5; HOLE center (235,22.5) radius 4.5; HOLE center (285,22.5) radius 4.5; HOLE center (335,22.5) radius 4.5. Required arcs: CUTOUT center (68,22.5) radius 5 start 90 end 270; CUTOUT center (112,22.5) radius 5 start 270 end 90; CUTOUT center (248,22.5) radius 5 start 90 end 270; CUTOUT center (292,22.5) radius 5 start 270 end 90. Required text strings: ANNOTATION text ACAD-H17; ANNOTATION text RACK STRIP 16T. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/hard-17_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\hard-17_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\hard-17_seed.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "v-freecad-hard-task-04-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Look at freecad_task-4_input.step in FreeCAD. Convert the plain 160 mm long shaft into a hollow stepped shaft assembly. Keep the original shaft length and axis along X. Add and fuse three coaxial collars, each 12 mm wide along X and outside diameter 44 mm, centered at X=35, 80, and 125 mm. Cut a coaxial through bore of diameter 10 mm through the complete shaft length. Cut two top keyways centered on the shaft Y=0 plane: one from X=20 to X=65 and one from X=95 to X=140, each 9 mm wide along Y and 4 mm deep below the top surface of the 24 mm shaft. Cut one cross-drilled hole of diameter 7 mm through each collar along the Y direction at the collar center. Export /home/user/Desktop/freecad_task-4_output.step through the GUI only; do not use script files.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/PartDesign_Workbench; https://wiki.freecad.org/Draft_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/freecad_task-4_input.step",
+            "path": "/home/user/Desktop/freecad_task-4_input.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/freecad_task-4_input.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

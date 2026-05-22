@@ -9,7 +9,31 @@ import re
 from pathlib import Path
 from typing import Any
 
-SPEC = {'files': {'task-01.nc': {'tools': [1], 'spindles': [6000], 'feeds': [750], 'z': [10], 'kind': 'nc'}}}
+SPEC = {
+    "files": {
+        "task-01.nc": {
+            "kind": "nc",
+            "min_bytes": 20000,
+            "tools": [1, 2, 3, 4, 5, 15, 16],
+            "spindles": [3323, 7868, 6557, 4378, 12000, 4957, 4928],
+            "wcs": ["G54"],
+            "terms": ["ROUGH MILL", "CONTOUR MILL", "CENTER DRILL", "DRILL1"],
+            "arcs": True,
+            "min_motion": 500,
+        },
+        "solidcam_cli_run.json": {
+            "kind": "solidcam_cli_log",
+            "required_call_groups": {
+                "cam_connection": ["SOLIDCAM", "SWCAM", "CWAPP", "CAMWORKS", "SOLIDWORKS CAM"],
+                "document_open": ["OPENDOC", "IOPENDOCUMENT", "OPEN DOCUMENT"],
+                "existing_cam": ["EXISTING", "ACTIVE CAM MACHINE", "ENUMERATE", "TOOLCRIB", "CAM PART"],
+                "operation_plan": ["ACTIVEDOCGOP", "OPERATION PLAN", "GENERATE OPERATION"],
+                "toolpath": ["ACTIVEDOCGTP", "GENERATETOOLPATH", "GENERATE TOOLPATH"],
+                "postprocess": ["POSTPROCESS", "POST PROCESS"],
+            },
+        },
+    }
+}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 TOL = 0.5
 
@@ -70,6 +94,8 @@ def rect_distance(x: float, y: float, rect: list[float]) -> float:
 
 def check_nc(path: Path, rule: dict[str, Any]) -> bool:
     src = text(path)
+    if rule.get("min_bytes") and path.stat().st_size < int(rule["min_bytes"]):
+        return False
     if "G21" not in src or "G90" not in src or "M30" not in src:
         return False
     for tool in rule.get("tools", []):
@@ -165,6 +191,100 @@ def check_json(path: Path, rule: dict[str, Any]) -> bool:
     return True
 
 
+def check_solidcam_cli_log(path: Path, rule: dict[str, Any]) -> bool:
+    data = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(data, dict):
+        return False
+    if data.get("ok") is not True:
+        return False
+    if data.get("engine") != "solidworks_cam":
+        return False
+    model = str(data.get("model", "")).lower()
+    output = str(data.get("output", "")).lower()
+    if not model.endswith("cam_part.sldprt"):
+        return False
+    if not output.endswith(r"\task-01.nc"):
+        return False
+    if not has_any_path(data, "cam_job.json") or not has_any_path(data, "tools.csv"):
+        return False
+    if not has_any_text(data, "USE_EXISTING") or not has_any_text(data, "POSTPROCESS_ALL_STORED_OPERATIONS"):
+        return False
+    if not has_any_text(data, "MILL") and not has_any_text(data, "CAM"):
+        return False
+    calls = data.get("calls")
+    if not isinstance(calls, list):
+        return False
+
+    ok_call_texts: list[str] = []
+    for item in calls:
+        if not isinstance(item, dict) or item.get("ok") is not True:
+            continue
+        pieces = [
+            str(item.get(key, ""))
+            for key in ("name", "method", "command", "api", "interface", "engine")
+        ]
+        ok_call_texts.append(" ".join(pieces).upper())
+
+    for variants in rule.get("required_call_groups", {}).values():
+        if not any(
+            any(str(token).upper() in call_text for token in variants)
+            for call_text in ok_call_texts
+        ):
+            return False
+
+    post_calls = [
+        item
+        for item in calls
+        if isinstance(item, dict)
+        and item.get("ok") is True
+        and any(
+            token in " ".join(str(item.get(key, "")) for key in ("name", "method", "command", "api")).upper()
+            for token in ("POSTPROCESS", "POST PROCESS")
+        )
+    ]
+    if not post_calls:
+        return False
+    if max(float(item.get("nc_size") or 0) for item in post_calls) < 20000:
+        return False
+    return True
+
+
+def walk_json(value: Any) -> Any:
+    if isinstance(value, dict):
+        for key, item in value.items():
+            yield key, item
+            yield from walk_json(item)
+    elif isinstance(value, list):
+        for item in value:
+            yield from walk_json(item)
+
+
+def has_any_path(data: Any, filename: str) -> bool:
+    filename = filename.lower()
+    return any(filename in str(value).lower() for _key, value in walk_json(data))
+
+
+def has_any_text(data: Any, text_value: str) -> bool:
+    needle = text_value.upper()
+    return any(needle in str(value).upper() for _key, value in walk_json(data))
+
+
+def has_any_value(data: Any, keys: set[str], expected: float | int | str) -> bool:
+    normalized = {key.lower() for key in keys}
+    for key, value in walk_json(data):
+        if str(key).lower() not in normalized:
+            continue
+        if equal(value, expected):
+            return True
+        if isinstance(value, str):
+            try:
+                if equal(float(value), expected):
+                    return True
+            except Exception:
+                pass
+    return False
+
+
 def check_csv(path: Path, rule: dict[str, Any]) -> bool:
     with path.open(newline="", encoding="utf-8") as handle:
         rows = list(csv.DictReader(handle))
@@ -203,6 +323,8 @@ def check_one(path: Path, rule: dict[str, Any]) -> bool:
         return check_nc(path, rule)
     if kind == "json":
         return check_json(path, rule)
+    if kind == "solidcam_cli_log":
+        return check_solidcam_cli_log(path, rule)
     if kind == "csv":
         return check_csv(path, rule)
     if kind == "pdf":

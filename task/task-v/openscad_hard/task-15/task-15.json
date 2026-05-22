@@ -1,0 +1,62 @@
+{
+  "id": "v-openscad-hard-task-15-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Look at task-015_initial.scad. Model a radial impeller rotor. The final envelope is 78 x 78 x 20 mm. Add a 20 mm diameter central hub, an 8 mm through bore, and twelve swept-looking blades distributed evenly from roughly 18 mm radius to 38 mm radius between z=2 and z=18. Use a looped rotate() construction rather than manually typing all blades. Fully render and export /home/user/Desktop/task-015_output.stl. Do not create PNG, PDF, CSV, JSON, or any other extra output. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/task-015_initial.scad",
+            "path": "/home/user/Desktop/task-015_initial.scad"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "openscad",
+          "/home/user/Desktop/task-015_initial.scad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
