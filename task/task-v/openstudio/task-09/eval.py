@@ -7,7 +7,7 @@ import tempfile
 
 
 DESKTOP = Path("/home/user/Desktop")
-
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 3, 'OS:ThermalZone': 3, 'OS:Surface': 19, 'OS:SubSurface': 0}, 'space_names': ['StudioA', 'StudioB', 'Support'], 'surface_counts': {'Floor': 3, 'RoofCeiling': 3, 'Wall': 13}, 'outside_boundary_counts': {'Ground': 3, 'Outdoors': 10, 'Surface': 6}, 'window_count': 0, 'fixed_window_count': 0, 'bbox_spans_m': [10.0, 7.0, 3.2], 'floor_area_m2': 70.0, 'exterior_wall_area_m2': 108.8, 'window_area_m2': 0, 'hvac': {'ideal_loads': 0, 'equipment_lists': 3, 'thermostats': 0}, 'loads': {'min_schedules': 0, 'people': 0, 'lights': 0, 'electric_equipment': 0, 'space_types': 0}}
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -17,13 +17,23 @@ GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
 GUI_BYPASS_OUTPUT_TOKENS = (
     "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv"
+    "report.csv", "result.csv", "kpis.json"
 )
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
     "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
     "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
 )
+WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
+
+
+def finish(ok):
+    print("True" if ok else "False")
+    raise SystemExit(0)
+
+
+def approx(actual, expected, abs_tol, rel_tol=0.0):
+    return abs(float(actual) - float(expected)) <= max(float(abs_tol), abs(float(expected)) * float(rel_tol))
 
 
 def _read_text_safe(path):
@@ -45,9 +55,7 @@ def _desktop_script_artifacts(root):
                 except Exception:
                     pass
         for path in candidates:
-            if not path.is_file():
-                continue
-            if path.name in GUI_BYPASS_ALLOWED_FILENAMES:
+            if not path.is_file() or path.name in GUI_BYPASS_ALLOWED_FILENAMES:
                 continue
             if path.suffix.lower() in GUI_BYPASS_FORBIDDEN_EXTENSIONS:
                 return True
@@ -56,28 +64,20 @@ def _desktop_script_artifacts(root):
     return False
 
 
-def _history_paths(root):
+def _history_contains_bypass(root):
     home = Path.home()
     paths = [
         home / ".bash_history",
         home / ".zsh_history",
         home / ".python_history",
         home / ".local/share/fish/fish_history",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
         root / ".bash_history",
         root / ".zsh_history",
     ]
-    return paths
-
-
-def _history_contains_bypass(root):
-    for path in _history_paths(root):
+    for path in paths:
         if not path.is_file():
             continue
         text = _read_text_safe(path).lower()
-        if not text:
-            continue
         for raw_line in text.splitlines():
             line = raw_line.strip()
             if not line or "eval.py" in line:
@@ -94,31 +94,7 @@ def _history_contains_bypass(root):
 
 def check_no_gui_bypass(root):
     root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 2, 'OS:Space': 6, 'OS:ThermalZone': 6, 'OS:Surface': 38, 'OS:SubSurface': 14, 'OS:ZoneHVAC:IdealLoadsAirSystem': 6, 'OS:ZoneHVAC:EquipmentList': 6, 'OS:ThermostatSetpoint:DualSetpoint': 6}, 'space_names': ['Ground North', 'Ground South', 'Ground East', 'Upper North', 'Upper South', 'Upper East'], 'surface_counts': {'Floor': 6, 'RoofCeiling': 6, 'Wall': 26}, 'outside_boundary_counts': {'Ground': 3, 'Outdoors': 17, 'Surface': 18}, 'window_count': 14, 'fixed_window_count': 14, 'bbox_spans_m': [16.0, 14.0, 7.0], 'floor_area_m2': 448.0, 'exterior_wall_area_m2': 420.0, 'window_area_m2': 92.4, 'hvac': {'ideal_loads': 6, 'equipment_lists': 6, 'thermostats': 6}}
-WINDOW_TYPES = {"FixedWindow", "OperableWindow", "GlassDoor", "Skylight"}
-
-
-def finish(ok):
-    print("True" if ok else "False")
-    raise SystemExit(0)
-
-
-def approx(actual, expected, abs_tol, rel_tol=0.0):
-    return abs(float(actual) - float(expected)) <= max(float(abs_tol), abs(float(expected)) * float(rel_tol))
-
-
-
-def parse_float(value):
-    text = str(value).strip()
-    if not text or text.lower() == "autosize":
-        raise ValueError(text)
-    return float(text)
+    return not _desktop_script_artifacts(root) and not _history_contains_bypass(root)
 
 
 OPENSTUDIO_DUMP_RUBY = r"""
@@ -181,6 +157,13 @@ def name(obj):
     return obj["fields"][1] if len(obj["fields"]) > 1 else ""
 
 
+def parse_float(value):
+    text = str(value).strip()
+    if not text or text.lower() == "autosize":
+        raise ValueError(text)
+    return float(text)
+
+
 def parse_vertices(fields, start_index):
     values = [parse_float(v) for v in fields[start_index:]]
     if len(values) % 3 != 0 or not values:
@@ -206,42 +189,38 @@ def bbox(points):
 
 
 def surface_data(objects):
-    surfaces = []
+    result = []
     for obj in by_type(objects, "OS:Surface"):
         fields = obj["fields"]
         if len(fields) < 14:
             raise ValueError("surface has too few fields")
         points = parse_vertices(fields, 11)
-        surfaces.append({
+        result.append({
             "handle": handle(obj),
-            "name": name(obj),
-            "surface_type": fields[2],
-            "space_handle": fields[4],
-            "outside_boundary": fields[5],
+            "type": fields[2],
+            "space": fields[4],
+            "obc": fields[5],
             "vertices": points,
             "area": polygon_area_3d(points),
-            "bbox": bbox(points),
         })
-    return surfaces
+    return result
 
 
 def subsurface_data(objects):
-    subsurfaces = []
+    result = []
     for obj in by_type(objects, "OS:SubSurface"):
         fields = obj["fields"]
         if len(fields) < 13:
             raise ValueError("subsurface has too few fields")
         points = parse_vertices(fields, 10)
-        subsurfaces.append({
+        result.append({
             "handle": handle(obj),
-            "name": name(obj),
-            "subsurface_type": fields[2],
-            "surface_handle": fields[4],
+            "type": fields[2],
+            "surface": fields[4],
             "vertices": points,
             "area": polygon_area_3d(points),
-            "bbox": bbox(points),
         })
-    return subsurfaces
+    return result
 
 
 def shading_surface_data(objects):
@@ -251,45 +230,33 @@ def shading_surface_data(objects):
         if len(fields) < 8:
             raise ValueError("shading surface has too few fields")
         points = parse_vertices(fields, 6)
-        result.append({
-            "handle": handle(obj),
-            "name": name(obj),
-            "group_handle": fields[3],
-            "vertices": points,
-            "area": polygon_area_3d(points),
-            "bbox": bbox(points),
-        })
+        result.append({"handle": handle(obj), "vertices": points, "area": polygon_area_3d(points)})
     return result
-
-
 
 
 def metrics(objects):
     surfaces = surface_data(objects)
     subsurfaces = subsurface_data(objects)
-    shading_surfaces = shading_surface_data(objects)
+    shading = shading_surface_data(objects)
     all_points = [point for surface in surfaces for point in surface["vertices"]]
     bounds = bbox(all_points)
     spans = (bounds[3] - bounds[0], bounds[4] - bounds[1], bounds[5] - bounds[2])
-    floors = [s for s in surfaces if s["surface_type"] == "Floor"]
-    exterior_walls = [s for s in surfaces if s["surface_type"] == "Wall" and s["outside_boundary"] == "Outdoors"]
-    windows = [s for s in subsurfaces if s["subsurface_type"] in WINDOW_TYPES]
+    floors = [s for s in surfaces if s["type"] == "Floor"]
+    exterior_walls = [s for s in surfaces if s["type"] == "Wall" and s["obc"] == "Outdoors"]
+    windows = [s for s in subsurfaces if s["type"] in WINDOW_TYPES]
     floor_area_by_space = {}
     for floor in floors:
-        floor_area_by_space[floor["space_handle"]] = floor_area_by_space.get(floor["space_handle"], 0.0) + floor["area"]
+        floor_area_by_space[floor["space"]] = floor_area_by_space.get(floor["space"], 0.0) + floor["area"]
     return {
         "surfaces": surfaces,
         "subsurfaces": subsurfaces,
-        "shading_surfaces": shading_surfaces,
-        "bounds": bounds,
+        "shading": shading,
         "spans": spans,
-        "floors": floors,
-        "exterior_walls": exterior_walls,
         "windows": windows,
         "floor_area": sum(s["area"] for s in floors),
         "exterior_wall_area": sum(s["area"] for s in exterior_walls),
         "window_area": sum(s["area"] for s in windows),
-        "shading_area": sum(s["area"] for s in shading_surfaces),
+        "shading_area": sum(s["area"] for s in shading),
         "floor_area_by_space": floor_area_by_space,
     }
 
@@ -302,14 +269,6 @@ def check_required_outputs(root):
     return True
 
 
-def check_version(objects):
-    prefix = SPEC.get("openstudio_version_prefix")
-    if not prefix:
-        return True
-    versions = by_type(objects, "OS:Version")
-    return len(versions) == 1 and versions[0]["fields"] and versions[0]["fields"][-1].startswith(prefix)
-
-
 def check_counts(objects, data):
     for object_type, expected in SPEC.get("object_counts", {}).items():
         if len(by_type(objects, object_type)) != int(expected):
@@ -318,16 +277,16 @@ def check_counts(objects, data):
         if sorted(name(obj) for obj in by_type(objects, "OS:Space")) != sorted(SPEC["space_names"]):
             return False
     for surface_type, expected in SPEC.get("surface_counts", {}).items():
-        if sum(1 for s in data["surfaces"] if s["surface_type"] == surface_type) != int(expected):
+        if sum(1 for s in data["surfaces"] if s["type"] == surface_type) != int(expected):
             return False
     for obc, expected in SPEC.get("outside_boundary_counts", {}).items():
-        if sum(1 for s in data["surfaces"] if s["outside_boundary"] == obc) != int(expected):
+        if sum(1 for s in data["surfaces"] if s["obc"] == obc) != int(expected):
             return False
     if SPEC.get("window_count") is not None and len(data["windows"]) != int(SPEC["window_count"]):
         return False
-    if SPEC.get("fixed_window_count") is not None and sum(1 for w in data["windows"] if w["subsurface_type"] == "FixedWindow") != int(SPEC["fixed_window_count"]):
+    if SPEC.get("fixed_window_count") is not None and sum(1 for w in data["windows"] if w["type"] == "FixedWindow") != int(SPEC["fixed_window_count"]):
         return False
-    if SPEC.get("shading_surface_count") is not None and len(data["shading_surfaces"]) != int(SPEC["shading_surface_count"]):
+    if SPEC.get("shading_surface_count") is not None and len(data["shading"]) != int(SPEC["shading_surface_count"]):
         return False
     return True
 
@@ -346,47 +305,40 @@ def check_space_links(objects, data):
 
 def check_geometry(data):
     for actual, expected in zip(data["spans"], SPEC["bbox_spans_m"]):
-        if not approx(actual, expected, SPEC.get("dimension_tolerance_m", 0.05)):
+        if not approx(actual, expected, SPEC.get("dimension_tolerance_m", 0.1)):
             return False
-    if not approx(data["floor_area"], SPEC["floor_area_m2"], SPEC.get("area_tolerance_m2", 0.5)):
-        return False
-    if not approx(data["exterior_wall_area"], SPEC["exterior_wall_area_m2"], SPEC.get("area_tolerance_m2", 0.5)):
-        return False
-    if not approx(data["window_area"], SPEC["window_area_m2"], SPEC.get("area_tolerance_m2", 0.5)):
-        return False
-    if SPEC.get("shading_area_m2") is not None and not approx(data["shading_area"], SPEC["shading_area_m2"], SPEC.get("area_tolerance_m2", 0.5)):
-        return False
+    for key, data_key in [
+        ("floor_area_m2", "floor_area"),
+        ("exterior_wall_area_m2", "exterior_wall_area"),
+        ("window_area_m2", "window_area"),
+        ("shading_area_m2", "shading_area"),
+    ]:
+        if key in SPEC and not approx(data[data_key], SPEC[key], SPEC.get("area_tolerance_m2", 0.75)):
+            return False
     return True
 
 
 def check_hvac(objects):
-    hvac = SPEC.get("hvac")
-    if not hvac:
-        return True
-    if len(by_type(objects, "OS:ZoneHVAC:IdealLoadsAirSystem")) != hvac.get("ideal_loads", 0):
-        return False
-    if len(by_type(objects, "OS:ZoneHVAC:EquipmentList")) != hvac.get("equipment_lists", 0):
-        return False
-    if len(by_type(objects, "OS:ThermostatSetpoint:DualSetpoint")) != hvac.get("thermostats", 0):
-        return False
-    return True
+    hvac = SPEC.get("hvac", {})
+    mapping = {
+        "ideal_loads": "OS:ZoneHVAC:IdealLoadsAirSystem",
+        "equipment_lists": "OS:ZoneHVAC:EquipmentList",
+        "thermostats": "OS:ThermostatSetpoint:DualSetpoint",
+    }
+    return all(len(by_type(objects, object_type)) == expected for key, object_type in mapping.items() for expected in [hvac.get(key, 0)])
 
 
-
-
-def check_workflow(root):
-    workflow = SPEC.get("workflow")
-    if not workflow:
-        return True
-    payload = json.loads((root / "workflow.osw").read_text(encoding="utf-8"))
-    if not isinstance(payload, dict):
+def check_loads(objects):
+    loads = SPEC.get("loads", {})
+    mapping = {
+        "people": "OS:People",
+        "lights": "OS:Lights",
+        "electric_equipment": "OS:ElectricEquipment",
+        "space_types": "OS:SpaceType",
+    }
+    if len(by_type(objects, "OS:Schedule:Ruleset")) < loads.get("min_schedules", 0):
         return False
-    for key in workflow["required_keys"]:
-        if key not in payload:
-            return False
-    if len(payload.get("steps", [])) < workflow.get("min_steps", 0):
-        return False
-    return True
+    return all(len(by_type(objects, object_type)) == expected for key, object_type in mapping.items() for expected in [loads.get(key, 0)])
 
 
 def evaluate():
@@ -396,15 +348,13 @@ def evaluate():
     if not root.is_dir() or not check_required_outputs(root):
         return False
     objects = parse_osm(root / "result.osm")
-    if not objects:
-        return False
     data = metrics(objects)
     return (
         check_counts(objects, data)
         and check_space_links(objects, data)
         and check_geometry(data)
         and check_hvac(objects)
-        and check_workflow(root)
+        and check_loads(objects)
     )
 
 

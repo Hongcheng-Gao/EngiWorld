@@ -1,20 +1,26 @@
 {
   "id": "v-openstudio-task-08-ubuntu",
   "snapshot": "OpenStudio-1.11.0",
-  "instruction": "GUI-only requirement: Complete the task entirely in the launched OpenStudio Application graphical user interface. Do not open Terminal or a shell; do not run Ruby, Python, OpenStudio CLI, EnergyPlus command-line tools, shell commands, or helper scripts; do not edit OSM/OSW files directly outside the GUI. Use only OpenStudio Application GUI tools, dialogs, and built-in save/export commands. GUI Office Window And Shade Model. Work in the opened OpenStudio Application and build the model from scratch; there are no init_file inputs or local reference images for this case. Use the OpenStudio Application tabs and dialogs to create the geometry, space, thermal zone, fixed windows, one exterior shading surface, simple ideal-loads HVAC metadata, and thermostat. Save only the completed model as /home/user/Desktop/result.osm using the OpenStudio Application save/save-as workflow; do not create run/eplusout.sql, workflow.osw, or any manually edited workflow artifact. Create 1 building story, 1 space, and 1 thermal zone. Name the OS:Space GUI Office. Every space must be assigned to a building story and a thermal zone, and each space must have more than 0.05 m2 of floor area. Model the enclosure with 6 total OS:Surface objects, split into 1 Floor surface, 1 RoofCeiling surface, and 4 Wall surfaces; the surface Outside Boundary Condition counts should be exactly 1 Ground and 5 Outdoors. Add 4 OS:SubSurface objects, all of them FixedWindow windows, with total fixed-window area 44.80 m2 within +/-0.50 m2. Add exactly 1 OS:ShadingSurface object using the OpenStudio Application shading-surface controls. Include exactly 1 OS:ZoneHVAC:IdealLoadsAirSystem object, 1 OS:ZoneHVAC:EquipmentList object, and 1 OS:ThermostatSetpoint:DualSetpoint object. Set the geometry so the overall surface-geometry bounding box spans 15.00 m in X, 10.00 m in Y, and 3.20 m in Z, each within +/-0.05 m. The total floor surface area must be 150.00 m2 within +/-0.50 m2, and the total exterior wall gross area must be 160.00 m2 within +/-0.50 m2. Other object handles, schedules, construction names, material details, and serializer ordering may vary as long as the saved OpenStudio model satisfies these stated GUI-created model requirements.",
+  "instruction": "GUI-only requirement: Complete the task entirely in the launched OpenStudio Application graphical user interface. Do not open Terminal or a shell; do not run Ruby, Python, OpenStudio CLI, EnergyPlus command-line tools, shell commands, or helper scripts; do not edit OSM, OSW, SQL, ERR, or other deliverable files directly outside the GUI. Use only OpenStudio Application GUI tools, dialogs, and built-in save/run commands. Add Missing Windows. Work in the opened OpenStudio application, starting from the Desktop input file init.osm. Modify the model rather than replacing the task package with an unrelated file. Save result.osm in the task output folder. Starting from init.osm, add three exterior FixedWindow subsurfaces to the existing WindowOffice space while keeping the space and thermal zone links intact. The completed model must contain 1 building story, 1 spaces and 1 thermal zones. Use these exact OS:Space names: WindowOffice. Every space must be assigned to a building story and a thermal zone, and each space must have more than 0.05 m2 of floor area. Model the enclosure with 6 OS:Surface objects, split into 1 floor surfaces, 1 roof/ceiling surfaces and 4 wall surfaces. The surface outside-boundary counts should be 1 Ground, 5 Outdoors and 0 Surface. Add 3 OS:SubSurface objects, all FixedWindow windows, with total fixed-window area 7.20 m2 within +/-0.75 m2. Include 0 ideal-loads air systems, 1 zone HVAC equipment lists and 0 dual-setpoint thermostats. Set the geometry so the overall surface-geometry bounding box spans 12.00 m in X, 6.00 m in Y and 3.20 m in Z, each within +/-0.10 m. The total floor surface area should be 72.00 m2 within +/-0.75 m2 and the total exterior wall gross area should be 115.20 m2 within +/-0.75 m2. Other model details may vary as long as the saved OSM satisfies these stated requirements.",
   "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-08/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
       }
     },
     {
       "type": "launch",
       "parameters": {
         "command": [
-          "OpenStudioApp"
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
         ]
       }
     }
