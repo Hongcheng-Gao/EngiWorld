@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-import csv
+import os
 import re
-from collections import Counter
 from pathlib import Path
 
-
-DESKTOP = Path("/home/user/Desktop")
-
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
-    ".lua", ".tcl", ".ahk", ".scr"
+    ".lua", ".tcl", ".ahk", ".scr",
 }
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
 GUI_BYPASS_OUTPUT_TOKENS = (
     "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv"
+    "report.csv", "result.csv",
 )
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
     "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
-    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
+
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Living', 'Bedroom', 'Kitchen', 'Bath', 'Laundry'], 'material_names': ['Timber', 'Tile'], 'exact_counts': {'storeys': 1, 'spaces': 5}, 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'walls': 10, 'slabs': 1, 'doors': 5, 'windows': 5, 'openings': 4, 'voids': 4, 'fills': 4}, 'forbidden': ['IfcBuildingElementProxy', 'IfcFurniture'], 'overall_span_ranges_m': {'x': (11.0, 13.2), 'y': (7.0, 9.2), 'z': (2.3, 3.9)}}
 
 
 def _read_text_safe(path):
@@ -57,17 +56,14 @@ def _desktop_script_artifacts(root):
 
 def _history_paths(root):
     home = Path.home()
-    paths = [
+    return [
         home / ".bash_history",
         home / ".zsh_history",
         home / ".python_history",
         home / ".local/share/fish/fish_history",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
         root / ".bash_history",
         root / ".zsh_history",
     ]
-    return paths
 
 
 def _history_contains_bypass(root):
@@ -93,191 +89,137 @@ def _history_contains_bypass(root):
 
 def check_no_gui_bypass(root):
     root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-REQUIRED_OUTPUTS = ("result.ifc",)
-CSV_HEADERS = ("GlobalId", "Class", "TypeName", "Width", "Height", "HostWall")
-EXPECTED_ROWS = [
-    {"Class": "IfcDoor", "TypeName": "DoorType-1000", "Width": 1.0, "Height": 2.1, "HostWall": "Wall-S"},
-    {"Class": "IfcDoor", "TypeName": "DoorType-1000", "Width": 1.0, "Height": 2.1, "HostWall": "Wall-N"},
-    {"Class": "IfcWindow", "TypeName": "WindowType-1200", "Width": 1.2, "Height": 1.2, "HostWall": "Wall-N"},
-    {"Class": "IfcWindow", "TypeName": "WindowType-1200", "Width": 1.2, "Height": 1.2, "HostWall": "Wall-N"},
-    {"Class": "IfcWindow", "TypeName": "WindowType-1000", "Width": 1.0, "Height": 1.2, "HostWall": "Wall-E"},
-]
-WIDTH_HEIGHT_TOLERANCE = 0.05
-FORBIDDEN_CLASSES = ("IfcBuildingElementProxy", "IfcFurnishingElement")
+    return not _desktop_script_artifacts(root) and not _history_contains_bypass(root)
 
 
-def emit(ok):
+def finish(ok):
     print("True" if ok else "False")
     raise SystemExit(0)
 
 
 def norm(value):
-    return re.sub(r"\s+", " ", str(value or "").strip())
+    return re.sub(r"\s+", " ", str(value or "").replace("_", " ").replace("-", " ").strip()).lower()
 
 
-def parse_float(value):
-    text = str(value).strip().replace(" ", "")
-    if text.count(",") == 1 and text.count(".") == 0:
-        text = text.replace(",", ".")
-    else:
-        text = text.replace(",", "")
-    return float(text)
+def entity_count(model, classes):
+    if isinstance(classes, str):
+        classes = [classes]
+    return sum(len(model.by_type(name)) for name in classes)
 
 
-def read_csv(path):
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        reader = csv.DictReader(handle)
-        if reader.fieldnames != list(CSV_HEADERS):
-            return None
-        return [row for row in reader if any(str(value).strip() for value in row.values())]
+def unique_global_ids(model):
+    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
+    return bool(gids) and len(gids) == len(set(gids))
 
 
-def class_count(model, ifc_class):
-    return len(model.by_type(ifc_class))
+def check_counts(model):
+    class_map = {
+        "projects": "IfcProject",
+        "sites": "IfcSite",
+        "buildings": "IfcBuilding",
+        "storeys": "IfcBuildingStorey",
+        "spaces": "IfcSpace",
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": "IfcSlab",
+        "doors": "IfcDoor",
+        "windows": "IfcWindow",
+        "columns": "IfcColumn",
+        "openings": "IfcOpeningElement",
+        "voids": "IfcRelVoidsElement",
+        "fills": "IfcRelFillsElement",
+    }
+    for key, expected in SPEC.get("exact_counts", {}).items():
+        if entity_count(model, class_map[key]) != expected:
+            return False
+    for key, minimum in SPEC.get("min_counts", {}).items():
+        if entity_count(model, class_map[key]) < minimum:
+            return False
+    for ifc_class in SPEC.get("forbidden", []):
+        if entity_count(model, ifc_class) > 0:
+            return False
+    return True
 
 
-def wall_name_for_filled_element(model):
-    opening_to_wall = {}
-    for rel in model.by_type("IfcRelVoidsElement"):
-        wall = getattr(rel, "RelatingBuildingElement", None)
-        opening = getattr(rel, "RelatedOpeningElement", None)
-        if wall is not None and opening is not None and wall.is_a("IfcWall"):
-            opening_to_wall[opening.id()] = norm(getattr(wall, "Name", ""))
-
-    element_to_wall = {}
-    for rel in model.by_type("IfcRelFillsElement"):
-        element = getattr(rel, "RelatedBuildingElement", None)
-        opening = getattr(rel, "RelatingOpeningElement", None)
-        if element is not None and opening is not None:
-            host = opening_to_wall.get(opening.id())
-            if host:
-                element_to_wall[getattr(element, "GlobalId", "")] = host
-    return element_to_wall
+def check_space_names(model):
+    names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
+    required = [norm(name) for name in SPEC["space_names"]]
+    return sorted(names) == sorted(required)
 
 
-def check_ifc(path):
+def check_materials(model):
+    required = [norm(name) for name in SPEC.get("material_names", [])]
+    if not required:
+        return True
+    names = [norm(getattr(mat, "Name", "")) for mat in model.by_type("IfcMaterial")]
+    return all(any(req == name or req in name for name in names) for req in required)
+
+
+def shaped_product_bbox(model):
+    import ifcopenshell.geom
+
+    settings = ifcopenshell.geom.settings()
+    try:
+        settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception:
+        pass
+    products = []
+    for ifc_class in ("IfcSpace", "IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcDoor", "IfcWindow", "IfcColumn"):
+        products.extend(model.by_type(ifc_class))
+    xs, ys, zs = [], [], []
+    for product in products:
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, product)
+            verts = list(shape.geometry.verts)
+        except Exception:
+            continue
+        xs.extend(verts[0::3])
+        ys.extend(verts[1::3])
+        zs.extend(verts[2::3])
+    if not xs or not ys or not zs:
+        return None
+    return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
+
+
+def check_overall_size(model):
+    bbox = shaped_product_bbox(model)
+    if bbox is None:
+        return False
+    minx, miny, minz, maxx, maxy, maxz = bbox
+    spans = {"x": maxx - minx, "y": maxy - miny, "z": maxz - minz}
+    for axis, (low, high) in SPEC["overall_span_ranges_m"].items():
+        if not (low <= spans[axis] <= high):
+            return False
+    return True
+
+
+def evaluate(root):
+    root = Path(root)
+    if not check_no_gui_bypass(root):
+        return False
+    path = root / SPEC["ifc_file"]
+    if not path.is_file() or path.stat().st_size < SPEC["min_ifc_bytes"]:
+        return False
     import ifcopenshell
 
     model = ifcopenshell.open(str(path))
-    if model.schema.upper() != "IFC4":
-        return None
-    expected_counts = {
-        "IfcProject": 1,
-        "IfcBuildingStorey": 1,
-        "IfcWall": 4,
-        "IfcSlab": 1,
-        "IfcDoor": 2,
-        "IfcWindow": 3,
-        "IfcOpeningElement": 5,
-        "IfcRelVoidsElement": 5,
-        "IfcRelFillsElement": 5,
-    }
-    for ifc_class, expected in expected_counts.items():
-        if class_count(model, ifc_class) != expected:
-            return None
-    for ifc_class in FORBIDDEN_CLASSES:
-        if class_count(model, ifc_class) != 0:
-            return None
-    host_counts = Counter()
-    element_to_wall = wall_name_for_filled_element(model)
-    for ifc_class in ("IfcDoor", "IfcWindow"):
-        for product in model.by_type(ifc_class):
-            host_counts[(ifc_class, element_to_wall.get(getattr(product, "GlobalId", "")))] += 1
-    expected_hosts = Counter({
-        ("IfcDoor", "Wall-S"): 1,
-        ("IfcDoor", "Wall-N"): 1,
-        ("IfcWindow", "Wall-N"): 2,
-        ("IfcWindow", "Wall-E"): 1,
-    })
-    if host_counts != expected_hosts:
-        return None
-    return model
-
-
-def check_csv(rows, model):
-    if rows is None or len(rows) != len(EXPECTED_ROWS):
-        return False
-
-    products = {}
-    for ifc_class in ("IfcDoor", "IfcWindow"):
-        for product in model.by_type(ifc_class):
-            products[getattr(product, "GlobalId", "")] = product
-    element_to_wall = wall_name_for_filled_element(model)
-
-    actual_signatures = []
-    seen_global_ids = set()
-    for row in rows:
-        gid = norm(row.get("GlobalId"))
-        if gid in seen_global_ids or gid not in products:
-            return False
-        seen_global_ids.add(gid)
-        product = products[gid]
-        if row.get("Class") != product.is_a():
-            return False
-        if norm(row.get("HostWall")) != element_to_wall.get(gid):
-            return False
-        try:
-            width = parse_float(row.get("Width"))
-            height = parse_float(row.get("Height"))
-        except Exception:
-            return False
-        actual_signatures.append(
-            {
-                "Class": product.is_a(),
-                "TypeName": norm(row.get("TypeName")),
-                "Width": width,
-                "Height": height,
-                "HostWall": norm(row.get("HostWall")),
-            }
-        )
-
-    unmatched = actual_signatures[:]
-    for expected in EXPECTED_ROWS:
-        found_at = None
-        for index, actual in enumerate(unmatched):
-            if actual["Class"] != expected["Class"]:
-                continue
-            if actual["TypeName"] != expected["TypeName"]:
-                continue
-            if actual["HostWall"] != expected["HostWall"]:
-                continue
-            if abs(actual["Width"] - expected["Width"]) > WIDTH_HEIGHT_TOLERANCE:
-                continue
-            if abs(actual["Height"] - expected["Height"]) > WIDTH_HEIGHT_TOLERANCE:
-                continue
-            found_at = index
-            break
-        if found_at is None:
-            return False
-        unmatched.pop(found_at)
-    return not unmatched
+    schema = str(getattr(model, "schema", "")).upper()
+    return (
+        schema.startswith(SPEC["schema"])
+        and unique_global_ids(model)
+        and check_counts(model)
+        and check_space_names(model)
+        and check_materials(model)
+        and check_overall_size(model)
+    )
 
 
 def main():
     try:
-        root = DESKTOP
-        if not check_no_gui_bypass(root):
-            emit(False)
-        if not root.is_dir():
-            emit(False)
-        for name in REQUIRED_OUTPUTS:
-            path = root / name
-            if not path.is_file() or path.stat().st_size == 0:
-                emit(False)
-        model = check_ifc(root / "result.ifc")
-        if model is None:
-            emit(False)
-        emit(model is not None)
+        finish(evaluate(DESKTOP))
     except SystemExit:
         raise
     except Exception:
-        emit(False)
+        finish(False)
 
 
 if __name__ == "__main__":

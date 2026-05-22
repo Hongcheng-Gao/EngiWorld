@@ -1,28 +1,27 @@
 #!/usr/bin/env python3
-import csv
+import os
 import re
-from collections import Counter
 from pathlib import Path
 
-
-DESKTOP = Path("/home/user/Desktop")
-
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
-    ".lua", ".tcl", ".ahk", ".scr"
+    ".lua", ".tcl", ".ahk", ".scr",
 }
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
 GUI_BYPASS_OUTPUT_TOKENS = (
     "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv"
+    "report.csv", "result.csv",
 )
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
     "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
-    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
+
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Room 201'], 'material_names': [], 'exact_counts': {'storeys': 1, 'spaces': 1}, 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'walls': 4, 'slabs': 1, 'doors': 1, 'windows': 1, 'openings': 2, 'voids': 2, 'fills': 2}, 'forbidden': ['IfcBuildingElementProxy', 'IfcFurniture'], 'overall_span_ranges_m': {'x': (5.0, 7.2), 'y': (3.0, 5.2), 'z': (2.3, 3.9)}}
 
 
 def _read_text_safe(path):
@@ -57,17 +56,14 @@ def _desktop_script_artifacts(root):
 
 def _history_paths(root):
     home = Path.home()
-    paths = [
+    return [
         home / ".bash_history",
         home / ".zsh_history",
         home / ".python_history",
         home / ".local/share/fish/fish_history",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
         root / ".bash_history",
         root / ".zsh_history",
     ]
-    return paths
 
 
 def _history_contains_bypass(root):
@@ -93,172 +89,137 @@ def _history_contains_bypass(root):
 
 def check_no_gui_bypass(root):
     root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-REQUIRED_FILES = ("result.ifc",)
-EXPECTED_SPACES = {"LIVING", "KITCHEN", "BEDROOM", "BATH"}
-EXPECTED_COUNTS = {
-    "IfcProject": 1,
-    "IfcBuildingStorey": 1,
-    "IfcSpace": 4,
-    "IfcWall": 7,
-    "IfcDoor": 3,
-    "IfcWindow": 4,
-    "IfcSlab": 1,
-    "IfcBuildingElementProxy": 0,
-}
-EXPECTED_CSV_HEADER = ["GlobalId", "Class", "TypeName", "MaterialSummary", "Storey"]
-EXPECTED_CSV_CLASS_COUNTS = {"IfcWall": 7, "IfcDoor": 3, "IfcWindow": 4}
-EXPECTED_CSV_MATERIAL_COUNTS = {
-    "Brick | Insulation | Gypsum": 7,
-    "Timber": 3,
-    "Aluminium": 4,
-}
-WALL_MATERIALS = ["BRICK", "INSULATION", "GYPSUM"]
+    return not _desktop_script_artifacts(root) and not _history_contains_bypass(root)
 
 
-def emit(ok):
+def finish(ok):
     print("True" if ok else "False")
     raise SystemExit(0)
 
 
 def norm(value):
-    text = str(value or "").replace("_", " ").replace("-", " ")
-    return re.sub(r"\s+", " ", text.strip()).upper()
+    return re.sub(r"\s+", " ", str(value or "").replace("_", " ").replace("-", " ").strip()).lower()
 
 
-def require_files(root):
-    for rel in REQUIRED_FILES:
-        path = root / rel
-        if not path.is_file():
+def entity_count(model, classes):
+    if isinstance(classes, str):
+        classes = [classes]
+    return sum(len(model.by_type(name)) for name in classes)
+
+
+def unique_global_ids(model):
+    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
+    return bool(gids) and len(gids) == len(set(gids))
+
+
+def check_counts(model):
+    class_map = {
+        "projects": "IfcProject",
+        "sites": "IfcSite",
+        "buildings": "IfcBuilding",
+        "storeys": "IfcBuildingStorey",
+        "spaces": "IfcSpace",
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": "IfcSlab",
+        "doors": "IfcDoor",
+        "windows": "IfcWindow",
+        "columns": "IfcColumn",
+        "openings": "IfcOpeningElement",
+        "voids": "IfcRelVoidsElement",
+        "fills": "IfcRelFillsElement",
+    }
+    for key, expected in SPEC.get("exact_counts", {}).items():
+        if entity_count(model, class_map[key]) != expected:
             return False
-        if rel.endswith(".ifc") and path.stat().st_size < 100:
+    for key, minimum in SPEC.get("min_counts", {}).items():
+        if entity_count(model, class_map[key]) < minimum:
             return False
-        if rel.endswith(".csv") and path.stat().st_size < 1:
+    for ifc_class in SPEC.get("forbidden", []):
+        if entity_count(model, ifc_class) > 0:
             return False
     return True
 
 
-def read_csv(path):
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
-        rows = list(csv.reader(handle))
-    if not rows:
-        return None, None
-    header = [cell.strip() for cell in rows[0]]
-    body = []
-    for row in rows[1:]:
-        if not any(str(cell).strip() for cell in row):
+def check_space_names(model):
+    names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
+    required = [norm(name) for name in SPEC["space_names"]]
+    return sorted(names) == sorted(required)
+
+
+def check_materials(model):
+    required = [norm(name) for name in SPEC.get("material_names", [])]
+    if not required:
+        return True
+    names = [norm(getattr(mat, "Name", "")) for mat in model.by_type("IfcMaterial")]
+    return all(any(req == name or req in name for name in names) for req in required)
+
+
+def shaped_product_bbox(model):
+    import ifcopenshell.geom
+
+    settings = ifcopenshell.geom.settings()
+    try:
+        settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception:
+        pass
+    products = []
+    for ifc_class in ("IfcSpace", "IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcDoor", "IfcWindow", "IfcColumn"):
+        products.extend(model.by_type(ifc_class))
+    xs, ys, zs = [], [], []
+    for product in products:
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, product)
+            verts = list(shape.geometry.verts)
+        except Exception:
             continue
-        padded = row + [""] * max(0, len(header) - len(row))
-        body.append({header[i]: padded[i].strip() for i in range(len(header))})
-    return header, body
+        xs.extend(verts[0::3])
+        ys.extend(verts[1::3])
+        zs.extend(verts[2::3])
+    if not xs or not ys or not zs:
+        return None
+    return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
 
 
-def material_sequences(product):
-    sequences = []
-    for rel in getattr(product, "HasAssociations", []) or []:
-        if not rel.is_a("IfcRelAssociatesMaterial"):
-            continue
-        mat = rel.RelatingMaterial
-        if mat.is_a("IfcMaterial"):
-            sequences.append([norm(mat.Name)])
-        elif mat.is_a("IfcMaterialLayerSetUsage"):
-            layers = mat.ForLayerSet.MaterialLayers or []
-            sequences.append([norm(layer.Material.Name) for layer in layers if layer.Material])
-        elif mat.is_a("IfcMaterialLayerSet"):
-            layers = mat.MaterialLayers or []
-            sequences.append([norm(layer.Material.Name) for layer in layers if layer.Material])
-        elif mat.is_a("IfcMaterialList"):
-            sequences.append([norm(item.Name) for item in mat.Materials if item])
-    return sequences
+def check_overall_size(model):
+    bbox = shaped_product_bbox(model)
+    if bbox is None:
+        return False
+    minx, miny, minz, maxx, maxy, maxz = bbox
+    spans = {"x": maxx - minx, "y": maxy - miny, "z": maxz - minz}
+    for axis, (low, high) in SPEC["overall_span_ranges_m"].items():
+        if not (low <= spans[axis] <= high):
+            return False
+    return True
 
 
-def has_sequence(product, expected):
-    return any(sequence == expected for sequence in material_sequences(product))
-
-
-def has_material(product, expected):
-    wanted = norm(expected)
-    return any(wanted in sequence for sequence in material_sequences(product))
-
-
-def check_ifc(root):
+def evaluate(root):
+    root = Path(root)
     if not check_no_gui_bypass(root):
+        return False
+    path = root / SPEC["ifc_file"]
+    if not path.is_file() or path.stat().st_size < SPEC["min_ifc_bytes"]:
         return False
     import ifcopenshell
 
-    model = ifcopenshell.open(str(root / "result.ifc"))
-    if str(model.schema).upper() != "IFC4":
-        return None
-    for cls, count in EXPECTED_COUNTS.items():
-        if len(model.by_type(cls)) != count:
-            return None
-
-    storey = model.by_type("IfcBuildingStorey")[0]
-    if getattr(storey, "Name", None) != "Level 00":
-        return None
-
-    space_names = {norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")}
-    if space_names != EXPECTED_SPACES:
-        return None
-
-    for wall in model.by_type("IfcWall"):
-        if not has_sequence(wall, WALL_MATERIALS):
-            return None
-    for door in model.by_type("IfcDoor"):
-        if not has_material(door, "Timber"):
-            return None
-    for window in model.by_type("IfcWindow"):
-        if not has_material(window, "Aluminium"):
-            return None
-
-    return {
-        element.GlobalId: element.is_a()
-        for cls in EXPECTED_CSV_CLASS_COUNTS
-        for element in model.by_type(cls)
-    }
-
-
-def check_csv(root, ifc_elements):
-    header, rows = read_csv(root / "result.csv")
-    if header != EXPECTED_CSV_HEADER:
-        return False
-    if len(rows) != 14:
-        return False
-
-    row_ids = [row.get("GlobalId", "") for row in rows]
-    if len(set(row_ids)) != len(row_ids):
-        return False
-    if set(row_ids) != set(ifc_elements):
-        return False
-
-    if Counter(row.get("Class", "") for row in rows) != EXPECTED_CSV_CLASS_COUNTS:
-        return False
-    if Counter(row.get("MaterialSummary", "") for row in rows) != EXPECTED_CSV_MATERIAL_COUNTS:
-        return False
-    for row in rows:
-        if row.get("Class") != ifc_elements[row["GlobalId"]]:
-            return False
-        if row.get("Storey") != "Level 00":
-            return False
-    return True
+    model = ifcopenshell.open(str(path))
+    schema = str(getattr(model, "schema", "")).upper()
+    return (
+        schema.startswith(SPEC["schema"])
+        and unique_global_ids(model)
+        and check_counts(model)
+        and check_space_names(model)
+        and check_materials(model)
+        and check_overall_size(model)
+    )
 
 
 def main():
     try:
-        root = DESKTOP
-        if not root.is_dir() or not require_files(root):
-            emit(False)
-        ifc_elements = check_ifc(root)
-        emit(bool(ifc_elements))
+        finish(evaluate(DESKTOP))
     except SystemExit:
         raise
     except Exception:
-        emit(False)
+        finish(False)
 
 
 if __name__ == "__main__":

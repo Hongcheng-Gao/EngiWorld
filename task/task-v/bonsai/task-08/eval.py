@@ -1,25 +1,27 @@
 #!/usr/bin/env python3
+import os
+import re
 from pathlib import Path
 
-
-DESKTOP = Path("/home/user/Desktop")
-
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
-    ".lua", ".tcl", ".ahk", ".scr"
+    ".lua", ".tcl", ".ahk", ".scr",
 }
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
 GUI_BYPASS_OUTPUT_TOKENS = (
     "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv"
+    "report.csv", "result.csv",
 )
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
     "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
-    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
+
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Sales', 'Stock', 'WC', 'Office'], 'material_names': ['Brick', 'Glass'], 'exact_counts': {'storeys': 1, 'spaces': 4}, 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'walls': 8, 'slabs': 1, 'doors': 4, 'windows': 4, 'openings': 4, 'voids': 4, 'fills': 4}, 'forbidden': ['IfcBuildingElementProxy', 'IfcFurniture'], 'overall_span_ranges_m': {'x': (9.0, 11.2), 'y': (5.0, 7.2), 'z': (2.5, 4.1)}}
 
 
 def _read_text_safe(path):
@@ -54,17 +56,14 @@ def _desktop_script_artifacts(root):
 
 def _history_paths(root):
     home = Path.home()
-    paths = [
+    return [
         home / ".bash_history",
         home / ".zsh_history",
         home / ".python_history",
         home / ".local/share/fish/fish_history",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
         root / ".bash_history",
         root / ".zsh_history",
     ]
-    return paths
 
 
 def _history_contains_bypass(root):
@@ -90,121 +89,137 @@ def _history_contains_bypass(root):
 
 def check_no_gui_bypass(root):
     root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-EXPECTED_NAMES = {
-    "IfcDuctSegment": {"Supply Segment 1", "Supply Segment 2"},
-    "IfcDuctFitting": {"Branch Fitting"},
-    "IfcAirTerminal": {"Terminal South", "Terminal East"},
-}
-EXPECTED_COUNTS = {
-    "IfcProject": 1,
-    "IfcBuildingStorey": 1,
-    "IfcBuildingElementProxy": 0,
-    "IfcDuctSegment": 2,
-    "IfcDuctFitting": 1,
-    "IfcAirTerminal": 2,
-    "IfcDistributionSystem": 1,
-}
-EXPECTED_SPANS = {
-    "Supply Segment 1": (1.80, 0.35, 0.25),
-    "Supply Segment 2": (1.40, 0.30, 0.25),
-    "Branch Fitting": (0.45, 0.40, 0.30),
-    "Terminal South": (0.40, 0.40, 0.20),
-    "Terminal East": (0.40, 0.40, 0.20),
-}
+    return not _desktop_script_artifacts(root) and not _history_contains_bypass(root)
 
 
-def emit(ok):
+def finish(ok):
     print("True" if ok else "False")
     raise SystemExit(0)
 
 
-def close(actual, expected, tol=0.05):
-    return abs(float(actual) - float(expected)) <= tol
+def norm(value):
+    return re.sub(r"\s+", " ", str(value or "").replace("_", " ").replace("-", " ").strip()).lower()
 
 
-def product_spans(product):
+def entity_count(model, classes):
+    if isinstance(classes, str):
+        classes = [classes]
+    return sum(len(model.by_type(name)) for name in classes)
+
+
+def unique_global_ids(model):
+    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
+    return bool(gids) and len(gids) == len(set(gids))
+
+
+def check_counts(model):
+    class_map = {
+        "projects": "IfcProject",
+        "sites": "IfcSite",
+        "buildings": "IfcBuilding",
+        "storeys": "IfcBuildingStorey",
+        "spaces": "IfcSpace",
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": "IfcSlab",
+        "doors": "IfcDoor",
+        "windows": "IfcWindow",
+        "columns": "IfcColumn",
+        "openings": "IfcOpeningElement",
+        "voids": "IfcRelVoidsElement",
+        "fills": "IfcRelFillsElement",
+    }
+    for key, expected in SPEC.get("exact_counts", {}).items():
+        if entity_count(model, class_map[key]) != expected:
+            return False
+    for key, minimum in SPEC.get("min_counts", {}).items():
+        if entity_count(model, class_map[key]) < minimum:
+            return False
+    for ifc_class in SPEC.get("forbidden", []):
+        if entity_count(model, ifc_class) > 0:
+            return False
+    return True
+
+
+def check_space_names(model):
+    names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
+    required = [norm(name) for name in SPEC["space_names"]]
+    return sorted(names) == sorted(required)
+
+
+def check_materials(model):
+    required = [norm(name) for name in SPEC.get("material_names", [])]
+    if not required:
+        return True
+    names = [norm(getattr(mat, "Name", "")) for mat in model.by_type("IfcMaterial")]
+    return all(any(req == name or req in name for name in names) for req in required)
+
+
+def shaped_product_bbox(model):
     import ifcopenshell.geom
-    import numpy as np
 
     settings = ifcopenshell.geom.settings()
     try:
         settings.set(settings.USE_WORLD_COORDS, True)
     except Exception:
         pass
-    shape = ifcopenshell.geom.create_shape(settings, product)
-    verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
-    return [float(v) for v in (verts.max(axis=0) - verts.min(axis=0))]
+    products = []
+    for ifc_class in ("IfcSpace", "IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcDoor", "IfcWindow", "IfcColumn"):
+        products.extend(model.by_type(ifc_class))
+    xs, ys, zs = [], [], []
+    for product in products:
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, product)
+            verts = list(shape.geometry.verts)
+        except Exception:
+            continue
+        xs.extend(verts[0::3])
+        ys.extend(verts[1::3])
+        zs.extend(verts[2::3])
+    if not xs or not ys or not zs:
+        return None
+    return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
 
 
-def contained_in_storey(product, storey):
-    return any(rel.RelatingStructure == storey for rel in (getattr(product, "ContainedInStructure", []) or []))
-
-
-def check_geometry(products_by_name):
-    for name, expected in EXPECTED_SPANS.items():
-        spans = product_spans(products_by_name[name])
-        if any(not close(actual, target) for actual, target in zip(spans, expected)):
+def check_overall_size(model):
+    bbox = shaped_product_bbox(model)
+    if bbox is None:
+        return False
+    minx, miny, minz, maxx, maxy, maxz = bbox
+    spans = {"x": maxx - minx, "y": maxy - miny, "z": maxz - minz}
+    for axis, (low, high) in SPEC["overall_span_ranges_m"].items():
+        if not (low <= spans[axis] <= high):
             return False
     return True
 
 
-def check_system(model, products_by_name):
-    systems = model.by_type("IfcDistributionSystem")
-    if len(systems) != 1 or systems[0].Name != "Supply Air":
-        return False
-    related = set()
-    for rel in model.by_type("IfcRelAssignsToGroup"):
-        if rel.RelatingGroup == systems[0]:
-            related.update(rel.RelatedObjects)
-    return related == set(products_by_name.values())
-
-
-def check_ifc(root):
+def evaluate(root):
+    root = Path(root)
     if not check_no_gui_bypass(root):
+        return False
+    path = root / SPEC["ifc_file"]
+    if not path.is_file() or path.stat().st_size < SPEC["min_ifc_bytes"]:
         return False
     import ifcopenshell
 
-    path = root / "result.ifc"
-    if not path.is_file() or path.stat().st_size < 100:
-        return False
     model = ifcopenshell.open(str(path))
-    if str(model.schema).upper() != "IFC4":
-        return False
-    for cls, expected in EXPECTED_COUNTS.items():
-        if len(model.by_type(cls)) != expected:
-            return False
-
-    storey = model.by_type("IfcBuildingStorey")[0]
-    if storey.Name != "Level 00":
-        return False
-
-    products_by_name = {}
-    for cls, names in EXPECTED_NAMES.items():
-        elements = model.by_type(cls)
-        if {element.Name for element in elements} != names:
-            return False
-        for element in elements:
-            if not contained_in_storey(element, storey):
-                return False
-            products_by_name[element.Name] = element
-
-    return check_system(model, products_by_name) and check_geometry(products_by_name)
+    schema = str(getattr(model, "schema", "")).upper()
+    return (
+        schema.startswith(SPEC["schema"])
+        and unique_global_ids(model)
+        and check_counts(model)
+        and check_space_names(model)
+        and check_materials(model)
+        and check_overall_size(model)
+    )
 
 
 def main():
     try:
-        root = DESKTOP
-        emit(root.is_dir() and check_ifc(root))
+        finish(evaluate(DESKTOP))
     except SystemExit:
         raise
     except Exception:
-        emit(False)
+        finish(False)
 
 
 if __name__ == "__main__":
