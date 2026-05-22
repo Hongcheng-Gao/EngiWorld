@@ -1,40 +1,24 @@
 #!/usr/bin/env python3
-import csv
+import os
 import re
-try:
-    import fitz
-except ImportError:
-    import pymupdf as fitz
-try:
-    from pdfminer.high_level import extract_text as _pdfminer_extract_text
-    from pdfminer.pdfpage import PDFPage as _PDFPage
-    _HAS_PDFMINER = True
-except ImportError:
-    _HAS_PDFMINER = False
-
 from pathlib import Path
 
-import ifcopenshell
-
-
-DESKTOP = Path("C:/Users/user/Desktop")
-
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "C:/Users/user/Desktop"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
-    ".lua", ".tcl", ".ahk", ".scr"
+    ".lua", ".tcl", ".ahk", ".scr",
 }
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
-GUI_BYPASS_OUTPUT_TOKENS = (
-    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv"
-)
+GUI_BYPASS_OUTPUT_TOKENS = ("result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt", "report.csv", "result.csv")
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
     "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
-    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
+
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['LOBBY', 'OFFICE', 'UPPER OFFICE', 'STAIR'], 'exact_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 2, 'spaces': 4}, 'min_counts': {'walls': 10, 'slabs': 2, 'doors': 4, 'windows': 4, 'stairs': 1}, 'overall_span_ranges_m': {'x': [9.0, 11.2], 'y': [5.0, 7.2], 'z': [5.8999999999999995, 7.5]}}
 
 
 def _read_text_safe(path):
@@ -69,7 +53,7 @@ def _desktop_script_artifacts(root):
 
 def _history_paths(root):
     home = Path.home()
-    paths = [
+    return [
         home / ".bash_history",
         home / ".zsh_history",
         home / ".python_history",
@@ -79,7 +63,6 @@ def _history_paths(root):
         root / ".bash_history",
         root / ".zsh_history",
     ]
-    return paths
 
 
 def _history_contains_bypass(root):
@@ -105,14 +88,7 @@ def _history_contains_bypass(root):
 
 def check_no_gui_bypass(root):
     root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-
-SPEC = {'title': 'Nursery Cluster Issue Set with Occupancy Schedule', 'starts_from_init': False, 'required_outputs': {'result.ifc': 500, 'result.pdf': 500, 'result.txt': 20}, 'schema': 'IFC4', 'storey_count': 1, 'space_names': ['CLASSROOM-1', 'CLASSROOM-2', 'CLASSROOM-3', 'COMMON', 'SLEEP', 'STAFF', 'WC-CHILD', 'WC-STAFF'], 'min_counts': {'IfcSlab': 1, 'IfcRoof': 1}, 'bbox_exact': {'min': [0.0, 0.0, -0.3], 'max': [15.0, 17.0, 4.35]}, 'bbox_tolerance': 0.5, 'csv_headers': ['ZoneName', 'Area', 'Storey'], 'csv_rows': [['CLASSROOM-1', 20.0, 'GROUND'], ['CLASSROOM-2', 20.0, 'GROUND'], ['CLASSROOM-3', 20.0, 'GROUND'], ['COMMON', 36.0, 'GROUND'], ['SLEEP', 16.0, 'GROUND'], ['STAFF', 9.0, 'GROUND'], ['WC-CHILD', 9.0, 'GROUND'], ['WC-STAFF', 7.5, 'GROUND']], 'csv_numeric_tolerance': 0.1, 'pdf_page_count': 2, 'pdf_tokens': ['A131', 'PLAN', 'SECTION', 'NURSERY CLUSTER WITH OCCUPANCY SCHEDULE', 'CLASSROOM-1', 'COMMON', 'SLEEP', 'WC-STAFF']}
+    return not _desktop_script_artifacts(root) and not _history_contains_bypass(root)
 
 
 def finish(ok):
@@ -121,28 +97,61 @@ def finish(ok):
 
 
 def norm(value):
-    return re.sub(r"\s+", " ", str(value or "").replace("_", "-").strip()).upper()
+    return re.sub(r"\s+", " ", str(value or "").replace("_", " ").replace("-", " ").strip()).lower()
+
+
+def entity_count(model, classes):
+    if isinstance(classes, str):
+        classes = [classes]
+    return sum(len(model.by_type(name)) for name in classes)
 
 
 def unique_global_ids(model):
     gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-    return len(gids) == len(set(gids))
+    return bool(gids) and len(gids) == len(set(gids))
 
 
-def parent_storey_id(obj):
-    for rel in getattr(obj, "Decomposes", None) or []:
-        parent = getattr(rel, "RelatingObject", None)
-        if parent and parent.is_a("IfcBuildingStorey"):
-            return parent.id()
-    for rel in getattr(obj, "ContainedInStructure", None) or []:
-        parent = getattr(rel, "RelatingStructure", None)
-        if parent and parent.is_a("IfcBuildingStorey"):
-            return parent.id()
-    return None
+def check_counts(model):
+    class_map = {
+        "projects": "IfcProject",
+        "sites": "IfcSite",
+        "buildings": "IfcBuilding",
+        "storeys": "IfcBuildingStorey",
+        "spaces": "IfcSpace",
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": "IfcSlab",
+        "roofs": "IfcRoof",
+        "doors": "IfcDoor",
+        "windows": "IfcWindow",
+        "stairs": "IfcStair",
+        "columns": "IfcColumn",
+        "beams": "IfcBeam",
+        "curtain_walls": "IfcCurtainWall",
+    }
+    for key, exact in SPEC.get("exact_counts", {}).items():
+        if entity_count(model, class_map[key]) != exact:
+            return False
+    for key, minimum in SPEC.get("min_counts", {}).items():
+        if entity_count(model, class_map[key]) < minimum:
+            return False
+    alt = SPEC.get("alternative_min_counts")
+    if alt:
+        if not any(entity_count(model, class_map[key]) >= minimum for key, minimum in alt):
+            return False
+    return True
 
 
-def ifc_bbox(model):
-    import numpy as np
+def check_forbidden(model):
+    return entity_count(model, "IfcBuildingElementProxy") == 0
+
+
+def check_space_names(model):
+    actual = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
+    required = [norm(name) for name in SPEC["space_names"]]
+    return sorted(actual) == sorted(required)
+
+
+def product_bbox(product):
     import ifcopenshell.geom
 
     settings = ifcopenshell.geom.settings()
@@ -150,154 +159,93 @@ def ifc_bbox(model):
         settings.set(settings.USE_WORLD_COORDS, True)
     except Exception:
         pass
-    mins = None
-    maxs = None
-    for product in model.by_type("IfcProduct"):
-        if product.is_a("IfcOpeningElement") or not getattr(product, "Representation", None):
-            continue
-        try:
-            shape = ifcopenshell.geom.create_shape(settings, product)
-            verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
-        except Exception:
-            continue
-        if verts.size == 0:
-            continue
-        pmin = verts.min(axis=0)
-        pmax = verts.max(axis=0)
-        mins = pmin if mins is None else np.minimum(mins, pmin)
-        maxs = pmax if maxs is None else np.maximum(maxs, pmax)
-    if mins is None or maxs is None:
+    shape = ifcopenshell.geom.create_shape(settings, product)
+    verts = list(shape.geometry.verts)
+    if not verts:
         return None
-    return mins.tolist(), maxs.tolist()
+    xs, ys, zs = verts[0::3], verts[1::3], verts[2::3]
+    return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
 
 
-def parse_csv(path):
-    with path.open("r", encoding="utf-8-sig", newline="") as f:
-        return list(csv.reader(f, delimiter="\t"))
-
-
-def parse_pdf(path):
-    try:
-        doc = fitz.open(str(path))
-        pages = doc.page_count
-        text = "".join(page.get_text("text") for page in doc)
-        doc.close()
-        return pages, text.upper()
-    except Exception:
-        pass
-    if _HAS_PDFMINER:
+def shaped_product_bbox(model):
+    products = []
+    for ifc_class in ("IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcRoof", "IfcDoor", "IfcWindow", "IfcStair", "IfcColumn", "IfcBeam", "IfcCurtainWall"):
+        products.extend(model.by_type(ifc_class))
+    mins = [None, None, None]
+    maxs = [None, None, None]
+    shaped = 0
+    for product in products:
         try:
-            with open(str(path), "rb") as f:
-                pages = sum(1 for _ in _PDFPage.get_pages(f))
-            text = _pdfminer_extract_text(str(path))
-            return pages, text.upper()
+            bbox = product_bbox(product)
         except Exception:
-            pass
-    return None, None
+            continue
+        if bbox is None:
+            continue
+        shaped += 1
+        for i, value in enumerate(bbox[:3]):
+            mins[i] = value if mins[i] is None else min(mins[i], value)
+        for i, value in enumerate(bbox[3:]):
+            maxs[i] = value if maxs[i] is None else max(maxs[i], value)
+    if shaped == 0:
+        return None
+    return (*mins, *maxs)
 
 
-def compare_cell(actual, expected, tolerance):
-    if isinstance(expected, (int, float)):
-        try:
-            return abs(float(str(actual).strip()) - float(expected)) <= tolerance
-        except Exception:
-            return False
-    return str(actual).strip() == str(expected)
-
-
-def check_ifc(model):
-    if not str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"]):
-        return False
-    if not unique_global_ids(model):
-        return False
-    if len(model.by_type("IfcBuildingStorey")) != SPEC["storey_count"]:
-        return False
-    spaces = model.by_type("IfcSpace")
-    expected_names = {norm(name) for name in SPEC["space_names"]}
-    if len(spaces) != len(expected_names):
-        return False
-    for cls, minimum in SPEC.get("min_counts", {}).items():
-        if len(model.by_type(cls)) < minimum:
-            return False
-    records = {norm(getattr(space, "Name", "")): parent_storey_id(space) for space in spaces}
-    if set(records) != expected_names:
-        return False
-    if any(storey_id is None for storey_id in records.values()):
-        return False
-    if SPEC.get("storey_groups"):
-        group_storeys = {}
-        for group, names in SPEC["storey_groups"].items():
-            ids = {records[norm(name)] for name in names}
-            if len(ids) != 1:
-                return False
-            group_storeys[group] = next(iter(ids))
-        if len(set(group_storeys.values())) != len(group_storeys):
-            return False
-    elif SPEC["storey_count"] == 1:
-        if len(set(records.values())) != 1:
-            return False
-    bbox = ifc_bbox(model)
+def check_overall_size(model):
+    ranges = SPEC.get("overall_span_ranges_m") or {}
+    if not ranges:
+        return True
+    bbox = shaped_product_bbox(model)
     if bbox is None:
         return False
-    mins, maxs = bbox
-    tol = SPEC.get("bbox_tolerance", 0.5)
-    for actual, target in zip(mins, SPEC["bbox_exact"]["min"]):
-        if abs(float(actual) - float(target)) > tol:
-            return False
-    for actual, target in zip(maxs, SPEC["bbox_exact"]["max"]):
-        if abs(float(actual) - float(target)) > tol:
+    minx, miny, minz, maxx, maxy, maxz = bbox
+    spans = {"x": maxx - minx, "y": maxy - miny, "z": maxz - minz}
+    for axis, limits in ranges.items():
+        low, high = limits
+        if not (low <= spans[axis] <= high):
             return False
     return True
 
 
-def check_csv(path):
-    if "result.txt" not in SPEC["required_outputs"]:
+def check_roof_height(model):
+    roof_min = SPEC.get("roof_min_z")
+    if roof_min is None or entity_count(model, "IfcRoof") == 0:
         return True
-    rows = parse_csv(path)
-    if not rows or rows[0] != SPEC["csv_headers"]:
-        return False
-    body = rows[1:]
-    if len(body) != len(SPEC["csv_rows"]):
-        return False
-    tolerance = SPEC.get("csv_numeric_tolerance", 0.1)
-    for actual_row, expected_row in zip(body, SPEC["csv_rows"]):
-        if len(actual_row) != len(expected_row):
-            return False
-        for actual, expected in zip(actual_row, expected_row):
-            if not compare_cell(actual, expected, tolerance):
-                return False
-    return True
+    for roof in model.by_type("IfcRoof"):
+        try:
+            bbox = product_bbox(roof)
+        except Exception:
+            continue
+        if bbox and bbox[2] >= roof_min:
+            return True
+    return False
 
 
-def check_pdf(path):
-    if "result.pdf" not in SPEC["required_outputs"]:
-        return True
-    pages, text = parse_pdf(path)
-    if pages is None or text is None:
-        return False
-    if pages != SPEC["pdf_page_count"]:
-        return False
-    for token in SPEC.get("pdf_tokens", []):
-        if str(token).upper() not in text:
-            return False
-    return True
-
-
-def evaluate():
-    root = DESKTOP
+def evaluate(root):
+    root = Path(root)
     if not check_no_gui_bypass(root):
         return False
-    for rel, min_bytes in SPEC["required_outputs"].items():
-        path = root / rel
-        if not path.is_file() or path.stat().st_size < min_bytes:
-            return False
-    model = ifcopenshell.open(str(root / "result.ifc"))
-    return check_ifc(model) and check_csv(root / "result.txt") and check_pdf(root / "result.pdf")
+    path = root / SPEC["ifc_file"]
+    if not path.is_file() or path.stat().st_size < SPEC["min_ifc_bytes"]:
+        return False
+    import ifcopenshell
+
+    model = ifcopenshell.open(str(path))
+    schema = str(getattr(model, "schema", "")).upper()
+    return (
+        schema.startswith(SPEC["schema"])
+        and unique_global_ids(model)
+        and check_counts(model)
+        and check_forbidden(model)
+        and check_space_names(model)
+        and check_overall_size(model)
+        and check_roof_height(model)
+    )
 
 
 def main():
     try:
-        finish(evaluate())
+        finish(evaluate(DESKTOP))
     except SystemExit:
         raise
     except Exception:
