@@ -33,6 +33,13 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "ezdxf", "cadquery", "accoreconsole", "autolisp",
     "solidworks", "solvespace",
 )
+GUI_BYPASS_PYTHON_WRITE_TOKENS = (
+    "open(", ".write(", "write_text", "write_bytes", "pathlib", "shutil.copy",
+    "copyfile", "ezdxf", "dxfwrite", "xml.etree", "elementtree",
+)
+GUI_BYPASS_DXF_AUTHOR_SIGNATURES = (
+    "ezdxf", "created_by_ezdxf", "written_by_ezdxf", "$lastsavedby\n  1\nezdxf",
+)
 
 
 def _read_text_safe(path):
@@ -86,6 +93,7 @@ def _history_contains_bypass(root):
         text = _read_text_safe(path).lower()
         if not text:
             continue
+        recent_output_context = 0
         for raw_line in text.splitlines():
             line = raw_line.strip()
             if not line or "eval.py" in line:
@@ -93,15 +101,30 @@ def _history_contains_bypass(root):
             touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
             runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
             writes_file = any(
-                token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item")
+                token in line
+                for token in (
+                    ">", "tee ", "cat ", "set-content", "out-file", "new-item",
+                    *GUI_BYPASS_PYTHON_WRITE_TOKENS,
+                )
             )
-            if touches_output and (runs_command or writes_file):
+            in_output_context = touches_output or recent_output_context > 0
+            if in_output_context and (runs_command or writes_file):
                 return True
             if ("/desktop/" in line or "\\desktop\\" in line) and any(
                 ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS
             ) and runs_command:
                 return True
+            recent_output_context = 5 if touches_output else max(0, recent_output_context - 1)
     return False
+
+
+def _has_direct_dxf_author_signature(path):
+    try:
+        text = path.read_text(encoding="utf-8", errors="ignore").lower()
+    except Exception:
+        return True
+    compact = "\n".join(line.rstrip() for line in text.splitlines())
+    return any(signature in compact for signature in GUI_BYPASS_DXF_AUTHOR_SIGNATURES)
 
 
 def check_no_gui_bypass(root):
@@ -355,6 +378,10 @@ def evaluate():
     path = OUTPUT_ROOT / TARGET
 
     if not path.exists() or path.stat().st_size <= 0:
+
+        return False
+
+    if _has_direct_dxf_author_signature(path):
 
         return False
 
