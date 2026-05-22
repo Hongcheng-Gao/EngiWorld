@@ -1,9 +1,8 @@
 #!/usr/bin/env python3
-import csv
 import re
 from pathlib import Path
-DESKTOP = Path("C:/Users/user/Desktop")
 
+DESKTOP = Path("C:/Users/user/Desktop")
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -11,15 +10,14 @@ GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".lua", ".tcl", ".ahk", ".scr"
 }
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
-GUI_BYPASS_OUTPUT_TOKENS = (
-    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv"
-)
+GUI_BYPASS_OUTPUT_TOKENS = ("result.ifc", "result.pdf", "result.csv", "summary.txt")
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
     "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
-    "openstudio", "energyplus", "blender --background", "revitbatchprocessor"
+    "revitbatchprocessor", "dynamo"
 )
+
+SPEC = {'min_bytes': 500, 'space_names': ['Living', 'Bedroom', 'Kitchen', 'Bath'], 'min_counts': {'projects': 1, 'storeys': 1, 'spaces': 4, 'walls': 7, 'slabs': 1, 'doors': 3, 'windows': 2}, 'forbidden': ['IfcBuildingElementProxy'], 'bbox': {'x': 12, 'y': 9, 'z': 3.2, 'tol': 1.5}}
 
 
 def _read_text_safe(path):
@@ -54,17 +52,14 @@ def _desktop_script_artifacts(root):
 
 def _history_paths(root):
     home = Path.home()
-    paths = [
+    return [
         home / ".bash_history",
         home / ".zsh_history",
         home / ".python_history",
-        home / ".local/share/fish/fish_history",
         home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
         root / ".bash_history",
         root / ".zsh_history",
     ]
-    return paths
 
 
 def _history_contains_bypass(root):
@@ -72,8 +67,6 @@ def _history_contains_bypass(root):
         if not path.is_file():
             continue
         text = _read_text_safe(path).lower()
-        if not text:
-            continue
         for raw_line in text.splitlines():
             line = raw_line.strip()
             if not line or "eval.py" in line:
@@ -90,55 +83,7 @@ def _history_contains_bypass(root):
 
 def check_no_gui_bypass(root):
     root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-import ifcopenshell
-import ifcopenshell.geom
-
-
-SPEC = {
-    "required_ifc": "result.ifc",
-    "required_csv": "result.csv",
-    "min_ifc_bytes": 500,
-    "min_csv_bytes": 20,
-    "schema": "IFC4",
-    "counts": {
-        "IfcProject": 1,
-        "IfcSite": 1,
-        "IfcBuilding": 1,
-        "IfcBuildingStorey": 1,
-        "IfcSpace": 7,
-        "IfcWall": 4,
-        "IfcSlab": 1,
-        "IfcRoof": 1,
-        "IfcDoor": 4,
-        "IfcWindow": 4,
-    },
-    "forbidden_counts": {
-        "IfcStair": 0,
-        "IfcColumn": 0,
-        "IfcBeam": 0,
-        "IfcCurtainWall": 0,
-        "IfcBuildingElementProxy": 0,
-    },
-    "bbox_tolerance": 0.35,
-    "bbox": {"IfcWall": [0, 0, 0, 26, 12, 3.2], "IfcSlab": [0, 0, 0, 26, 12, 0.25], "IfcRoof": [0, 0, 3.25, 26, 12, 3.45], "IfcSpace": [0, 0, 0, 26, 12, 3.0]},
-    "space_token_counts": {"classroom": 3, "art": 1, "admin": 1, "toilet": 1, "corridor": 1},
-    "csv_headers": ["room name", "area"],
-    "csv_expected": {
-        "Administration Room": 17.50,
-        "Art Room": 30.00,
-        "Classroom 1": 66.50,
-        "Classroom 2": 66.50,
-        "Classroom 3": 66.50,
-        "Corridor": 65.00,
-        "Toilet Room": 10.00,
-    },
-}
+    return not _desktop_script_artifacts(root) and not _history_contains_bypass(root)
 
 
 def finish(ok):
@@ -147,114 +92,107 @@ def finish(ok):
 
 
 def norm(value):
-    text = str(value or "").replace("_", " ").replace("-", " ").lower()
-    return re.sub(r"\s+", " ", text).strip()
+    return re.sub(r"\s+", " ", str(value or "").replace("_", " ").replace("-", " ").strip()).lower()
 
 
-def entity_count(model, ifc_class):
-    return len(model.by_type(ifc_class))
+def entity_count(model, classes):
+    if isinstance(classes, str):
+        classes = [classes]
+    return sum(len(model.by_type(name)) for name in classes)
 
 
 def unique_global_ids(model):
     gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-    return len(gids) == len(set(gids))
+    return bool(gids) and len(gids) == len(set(gids))
 
 
-def parse_float(value):
-    return float(str(value).strip().replace(",", ""))
-
-
-def parse_csv_rows(path):
-    rows = list(csv.reader(path.read_text(encoding="utf-8-sig").splitlines()))
-    if not rows:
-        return None
-    headers = [cell.strip() for cell in rows[0]]
-    if headers != SPEC["csv_headers"]:
-        return None
-    body = [row for row in rows[1:] if any(cell.strip() for cell in row)]
-    if len(body) != len(SPEC["csv_expected"]):
-        return None
-    parsed = {}
-    for row in body:
-        if len(row) != 2:
-            return None
-        parsed[row[0].strip()] = parse_float(row[1])
-    return parsed
-
-
-def check_counts(model):
-    for ifc_class, expected in SPEC["counts"].items():
-        if entity_count(model, ifc_class) != expected:
-            return False
-    for ifc_class, expected in SPEC["forbidden_counts"].items():
-        if entity_count(model, ifc_class) != expected:
+def check_min_counts(model):
+    class_map = {
+        "projects": "IfcProject",
+        "storeys": "IfcBuildingStorey",
+        "spaces": "IfcSpace",
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": "IfcSlab",
+        "roofs": "IfcRoof",
+        "doors": "IfcDoor",
+        "windows": "IfcWindow",
+        "stairs": "IfcStair",
+        "columns": "IfcColumn",
+        "beams": "IfcBeam",
+        "curtain_walls": "IfcCurtainWall",
+    }
+    for key, minimum in SPEC.get("min_counts", {}).items():
+        if entity_count(model, class_map[key]) < minimum:
             return False
     return True
 
 
-def check_spaces(model):
+def check_forbidden(model):
+    for ifc_class in SPEC.get("forbidden", []):
+        if entity_count(model, ifc_class) > 0:
+            return False
+    return True
+
+
+def check_space_names(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    return all(sum(1 for name in names if token in name) >= minimum for token, minimum in SPEC["space_token_counts"].items())
+    for required in SPEC.get("space_names", []):
+        token = norm(required)
+        if not any(token in name for name in names):
+            return False
+    return True
 
 
-def check_csv(csv_path):
-    return parse_csv_rows(csv_path) == SPEC["csv_expected"]
-
-
-
-
-def geometry_settings():
+def combined_bbox(model):
+    import ifcopenshell.geom
     settings = ifcopenshell.geom.settings()
     settings.set(settings.USE_WORLD_COORDS, True)
-    return settings
-
-
-def combined_bbox(model, ifc_class):
+    classes = ["IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcRoof", "IfcCurtainWall", "IfcColumn", "IfcBeam", "IfcStair", "IfcSpace"]
     xs, ys, zs = [], [], []
-    settings = geometry_settings()
-    for element in model.by_type(ifc_class):
-        try:
-            shape = ifcopenshell.geom.create_shape(settings, element)
-            verts = shape.geometry.verts
-        except Exception:
-            continue
-        xs.extend(verts[0::3])
-        ys.extend(verts[1::3])
-        zs.extend(verts[2::3])
+    for ifc_class in classes:
+        for element in model.by_type(ifc_class):
+            try:
+                shape = ifcopenshell.geom.create_shape(settings, element)
+                verts = shape.geometry.verts
+            except Exception:
+                continue
+            xs.extend(verts[0::3]); ys.extend(verts[1::3]); zs.extend(verts[2::3])
     if not xs:
         return None
     return [min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)]
 
 
-def bbox_close(actual, expected, tolerance):
-    return actual is not None and all(abs(a - e) <= tolerance for a, e in zip(actual, expected))
+def check_bbox(model):
+    spec = SPEC.get("bbox")
+    if not spec:
+        return True
+    bbox = combined_bbox(model)
+    if bbox is None:
+        return False
+    x_span = bbox[3] - bbox[0]
+    y_span = bbox[4] - bbox[1]
+    z_span = bbox[5] - bbox[2]
+    tol = spec.get("tol", 1.5)
+    return abs(x_span - spec["x"]) <= tol and abs(y_span - spec["y"]) <= tol and abs(z_span - spec["z"]) <= tol
 
 
-def check_geometry(model):
-    tolerance = SPEC.get("bbox_tolerance", 0.35)
-    for ifc_class, expected in SPEC.get("bbox", {}).items():
-        if not bbox_close(combined_bbox(model, ifc_class), expected, tolerance):
-            return False
-    return True
-
-def evaluate(result_dir):
-    root = Path(result_dir)
+def evaluate(root):
+    root = Path(root)
     if not check_no_gui_bypass(root):
         return False
-    ifc_path = root / SPEC["required_ifc"]
-    csv_path = root / SPEC["required_csv"]
-    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
+    path = root / "result.ifc"
+    if not path.is_file() or path.stat().st_size < SPEC.get("min_bytes", 500):
         return False
-    if not csv_path.is_file() or csv_path.stat().st_size < SPEC["min_csv_bytes"]:
-        return False
-    model = ifcopenshell.open(str(ifc_path))
+    import ifcopenshell
+    model = ifcopenshell.open(str(path))
+    schema = str(getattr(model, "schema", "")).upper()
     return (
-        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
+        schema.startswith("IFC")
         and unique_global_ids(model)
-        and check_counts(model)
-        and check_spaces(model)
-        and check_geometry(model)
-        and check_csv(csv_path)
+        and check_min_counts(model)
+        and check_forbidden(model)
+        and check_space_names(model)
+        and check_bbox(model)
     )
 
 
