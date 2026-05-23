@@ -1,7 +1,7 @@
 {
   "id": "v-eagle-task-11-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "GUI-only requirement: Complete the task entirely in the Autodesk EAGLE graphical user interface. Do not open Command Prompt, PowerShell, Terminal, or any shell; do not run ULP scripts, command-line automation, Python, or other helper scripts/code that directly generates or edits the deliverable files. Use only EAGLE native GUI tools, menus, and built-in save/export commands. Draw a closed `40 x 25 mm` board outline on layer `20` (`Dimension`) of `blank.brd`, and save the board as `/home/user/Desktop/answer.brd`. Rounded corners are optional. Requirements: 1. `/home/user/Desktop/answer.brd` parses as well-formed XML. 2. The file has at least 4 `<wire>` elements on layer `20`. 3. The bounding-box x-span of those layer-20 wire endpoints is `40 +/- 1 mm`. 4. The bounding-box y-span is `25 +/- 1 mm`. 5. The outline is closed: every wire endpoint, rounded to `0.001 mm`, is shared by at least 2 layer-20 wires. 6. The total `<element>` count is unchanged relative to the starter.",
+  "instruction": "GUI-only requirement: Complete the task entirely in the Autodesk EAGLE graphical user interface. Do not open Command Prompt, PowerShell, Terminal, or any shell; do not run ULP scripts, command-line automation, Python, or other helper scripts/code that directly generates or edits the deliverable files. Use only EAGLE native GUI tools, menus, and built-in save/export commands. Open `blank.brd`. Apply the mechanical update described in `/home/user/Desktop/mechanical_outline.txt`, keeping the existing three resistors as the same elements, and save the finished board as `/home/user/Desktop/answer.brd`.",
   "source": "https://learn.sparkfun.com/tutorials/using-eagle-board-layout/all",
   "config": [
     {
@@ -11,6 +11,17 @@
           {
             "local_path": "task-11/init_file/blank.brd",
             "path": "/home/user/Desktop/blank.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/mechanical_outline.txt",
+            "path": "/home/user/Desktop/mechanical_outline.txt"
           }
         ]
       }

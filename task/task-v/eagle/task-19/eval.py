@@ -1,14 +1,13 @@
 from __future__ import annotations
 
-import base64
-import importlib.util
-import shutil
-import tempfile
-import zlib
+import csv
+import math
+import os
+import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
-
-DESKTOP = Path('/home/user/Desktop')
+DESKTOP = Path(os.environ.get("EVAL_DESKTOP", "/home/user/Desktop"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -18,33 +17,30 @@ GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
 GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
 GUI_BYPASS_OUTPUT_TOKENS = (
     "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv",
-    ".dxf", ".dwg", ".step", ".stp", ".fcstd", ".scad", ".stl", ".obj",
-    ".blend", ".pcb", ".sch", ".brd", ".dsn", ".opj",
-    ".db", ".rst", ".rth", ".wbpj", ".odb", ".cae", ".inp",
+    "report.csv", "result.csv", ".dxf", ".dwg", ".step", ".stp", ".fcstd",
+    ".scad", ".stl", ".obj", ".blend", ".pcb", ".sch", ".brd", ".dsn",
+    ".opj", ".db", ".rst", ".rth", ".wbpj", ".odb", ".cae", ".inp",
     ".nc", ".gcode", ".slb", ".ipt", ".sldprt", ".sldasm",
     "autocad_result", "apdl_", "wb_",
 )
 GUI_BYPASS_COMMAND_TOKENS = (
     "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
-    "bash", " sh ", "zsh", "node", "ruby", "perl",
-    "ifcopenshell", "openstudio", "energyplus",
-    "blender --background", "revitbatchprocessor",
-    "ansys", "mapdl", "fluent", "abaqus", "cae noGUI",
-    "freecad", "freecadcmd", "openscad", "librecad",
-    "ezdxf", "cadquery", "accoreconsole", "autolisp",
+    "bash", " sh ", "zsh", "node", "ruby", "perl", "ifcopenshell",
+    "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
+    "ansys", "mapdl", "fluent", "abaqus", "cae noGUI", "freecad", "freecadcmd",
+    "openscad", "librecad", "ezdxf", "cadquery", "accoreconsole", "autolisp",
     "solidworks", "solvespace", "kicad-cli", "pcbnew",
 )
 
 
-def _read_text_safe(path):
+def _read_text_safe(path: Path) -> str:
     try:
         return path.read_text(encoding="utf-8", errors="ignore")
     except Exception:
         return ""
 
 
-def _desktop_script_artifacts(root):
+def _desktop_script_artifacts(root: Path) -> bool:
     if not root.exists() or not root.is_dir():
         return True
     try:
@@ -67,7 +63,7 @@ def _desktop_script_artifacts(root):
     return False
 
 
-def _history_paths(root):
+def _history_paths(root: Path):
     home = Path.home()
     return [
         home / ".bash_history",
@@ -81,155 +77,99 @@ def _history_paths(root):
     ]
 
 
-def _history_contains_bypass(root):
+def _history_contains_bypass(root: Path) -> bool:
     for path in _history_paths(root):
-        if not path.is_file():
-            continue
         text = _read_text_safe(path).lower()
         if not text:
             continue
-        for raw_line in text.splitlines():
-            line = raw_line.strip()
-            if not line or "eval.py" in line:
-                continue
-            touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
-            runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
-            writes_file = any(
-                token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item")
-            )
-            if touches_output and (runs_command or writes_file):
-                return True
-            if ("/desktop/" in line or "\\desktop\\" in line) and any(
-                ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS
-            ) and runs_command:
-                return True
+        if any(cmd in text for cmd in GUI_BYPASS_COMMAND_TOKENS) and any(tok in text for tok in GUI_BYPASS_OUTPUT_TOKENS):
+            return True
     return False
 
 
-def check_no_gui_bypass(root):
-    root = Path(root)
-    if _desktop_script_artifacts(root):
-        return False
-    if _history_contains_bypass(root):
-        return False
-    return True
-
-BUNDLE = {'eval_inner.py': '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', 'common/schema.py': 'eJyNVF2O0zAQfq/UOwzhJRWQXfEYqWgrVCQkBKvuvpUqMsmYhnXtyHYRVYnEIbjIXoGjcBLGP2lSWpZNIiWefPPNj79xkiTj0fwrEws0W2HBlGvcMPj94yfYNYKxTFZMV6DRbrUEu2sQuNLAhAAkty2zmDU78tN1Y002HiWOkWu1gYpZVgpmDBqoN43Stjc9B16jqCKSaGv5uQPN5G48cvfVAT4e+Re8XmN5F1LNxyOgS7IN5pSnDsvGhaty+KSUCBb81mBpnY14YQrvlcTwh5V2y8Sp3SqBmsmSeLlQzMJ3//MII5UNYcnqCg7WCjkUBVmLIjUo+CQm6S5qpd0aB7+e3dwkUHNwkCxkDCgMQvJm9vZd0vs0TFvnsuTJch8I2hXsvZ8rvE1WPbgj7AqG2rg0fdKDPA68GWsalFXKk85juj8iaJPJKXto2uO5Az4yh8UTfZb50PbHk5PL9Nf9/tj9LLnfrwe50v0B2E6GFFH6CdDzzL+yL6qWqfef/Eup/UzFsJaZu6KuBlo1FpuC12Ko39IJ3OQgamOXA7WvSAV+YlLSGCNDwamZSu+mDhmzRa2VDqo8kizAU+qCdc24uZ1fA2cUtCKdA8m76sR71WjVoLa7XstBm0HK8OIV1NLmJ40x201adjJ2Z0NJuND1UM3kgQhWWSb+E0CgTB9JZ0qlsafz45ufGRHXKKAnKodygOkULv9SSIx/mV2eFj0Y3YsBzfAkoMZsmN716dDGDCKIWmIc7lvSRhzrKJM2j+sQo73Y9zHaqJK4PQCpLzvOmP/Os5ecVHzudPAaOa7TZ9JPAsB8sfiw6DLwHkdDdW6TH6KkutNycmakPso4Sx5OgD8nCfRs'}
-CALL_FUNC = 'evaluate'
-CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('prototype.brd', '/home/user/Desktop/prototype.brd')]
+def check_no_gui_bypass() -> bool:
+    return not _desktop_script_artifacts(DESKTOP) and not _history_contains_bypass(DESKTOP)
 
 
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
-
-
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
-
-
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
-
-
-
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
-
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
+def parse_xml(path: Path):
+    if not path.exists():
+        return None
     try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        score = result.get("score")
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    if hasattr(result, "score"):
-        try:
-            return float(getattr(result, "score")) == 1.0
-        except Exception:
-            pass
-    return False
-
-
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    return spec
-
-
-
-
-def _run() -> bool:
-    if not check_no_gui_bypass(DESKTOP):
-        return False
-
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        module = _load_module(root)
-        func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
-        return _is_pass(result)
+        return ET.parse(path)
     except Exception:
+        return None
+
+
+def f(value, default=None):
+    try:
+        return float(value)
+    except Exception:
+        return default
+
+
+def near(a, b, tol=0.35):
+    return a is not None and abs(a - b) <= tol
+
+
+def point_near(elem, x, y, tol=0.35):
+    return near(f(elem.get("x")), x, tol) and near(f(elem.get("y")), y, tol)
+
+
+def wire_matches(wire, p1, p2, tol=0.35):
+    a = (f(wire.get("x1")), f(wire.get("y1")))
+    b = (f(wire.get("x2")), f(wire.get("y2")))
+    return ((near(a[0], p1[0], tol) and near(a[1], p1[1], tol) and near(b[0], p2[0], tol) and near(b[1], p2[1], tol)) or
+            (near(a[0], p2[0], tol) and near(a[1], p2[1], tol) and near(b[0], p1[0], tol) and near(b[1], p1[1], tol)))
+
+
+def all_text(root):
+    return "\n".join((t.text or "") for t in root.findall(".//text"))
+
+
+def elements_by_name(root):
+    return {e.get("name"): e for e in root.findall(".//element")}
+
+
+def parts_by_name(root):
+    return {p.get("name"): p for p in root.findall(".//part")}
+
+
+def norm_drill(value):
+    return round(float(value), 3)
+
+
+def check():
+    answer = parse_xml(DESKTOP / "answer.brd")
+    starter = parse_xml(DESKTOP / "prototype.brd")
+    if answer is None or starter is None:
         return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+    ans_root = answer.getroot(); start_root = starter.getroot()
+    ans = elements_by_name(ans_root); start = elements_by_name(start_root)
+    if set(ans) != set(start):
+        return False
+    expected = {
+        "R1": {"value":"10k"}, "C1": {"value":"100n"}, "C3": {"value":"47n"},
+        "C5": {"value":"100p", "x":44.45, "y":10.16, "rot":"R180"},
+        "C6": {"value":"100p", "x":33.02, "y":8.89, "rot":"R0"},
+        "Q1": {"value":"XTAL-4MHz"},
+        "U1": {"value":"78L05A", "x":48.26, "y":18.42, "rot":"R180"},
+    }
+    for name, attrs in expected.items():
+        elem = ans.get(name)
+        for key, value in attrs.items():
+            if key in {"x", "y"}:
+                if not near(f(elem.get(key)), value, 0.05):
+                    return False
+            elif elem.get(key, "") != value:
+                return False
+    for name, elem in start.items():
+        if name in expected:
+            continue
+        for key in ("value", "x", "y", "rot"):
+            if ans[name].get(key, "") != elem.get(key, ""):
+                return False
+    return len(ans_root.findall(".//signal")) == len(start_root.findall(".//signal")) and len(ans_root.findall(".//wire")) == len(start_root.findall(".//wire"))
+
+
 if __name__ == "__main__":
-    print("True" if _run() else "False")
+    print("True" if check_no_gui_bypass() and check() else "False")
