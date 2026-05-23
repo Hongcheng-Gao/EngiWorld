@@ -138,6 +138,10 @@ def norm_drill(value):
     return round(float(value), 3)
 
 
+def normalized_rot(elem):
+    return elem.get("rot") or "R0"
+
+
 def check():
     answer = parse_xml(DESKTOP / "answer.brd")
     starter = parse_xml(DESKTOP / "prototype.brd")
@@ -160,13 +164,19 @@ def check():
             if key in {"x", "y"}:
                 if not near(f(elem.get(key)), value, 0.05):
                     return False
+            elif key == "rot":
+                if normalized_rot(elem) != value:
+                    return False
             elif elem.get(key, "") != value:
                 return False
     for name, elem in start.items():
         if name in expected:
             continue
         for key in ("value", "x", "y", "rot"):
-            if ans[name].get(key, "") != elem.get(key, ""):
+            if key == "rot":
+                if normalized_rot(ans[name]) != normalized_rot(elem):
+                    return False
+            elif ans[name].get(key, "") != elem.get(key, ""):
                 return False
     return len(ans_root.findall(".//signal")) == len(start_root.findall(".//signal")) and len(ans_root.findall(".//wire")) == len(start_root.findall(".//wire"))
 

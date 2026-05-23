@@ -15,7 +15,7 @@ GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
     ".lua", ".tcl", ".ahk", ".scr",
 }
-GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
+GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py", "apply_jlcpcb_2layer.scr"}
 GUI_BYPASS_OUTPUT_TOKENS = (
     "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
     "report.csv", "result.csv",

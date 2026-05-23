@@ -19,25 +19,52 @@
 <libraries>
 <library name="linear">
 <packages></packages>
-<symbols></symbols>
+<symbols>
+<symbol name="OPAMP">
+<wire x1="-5.08" y1="5.08" x2="-5.08" y2="-5.08" width="0.254" layer="94"/>
+<wire x1="-5.08" y1="5.08" x2="5.08" y2="0" width="0.254" layer="94"/>
+<wire x1="-5.08" y1="-5.08" x2="5.08" y2="0" width="0.254" layer="94"/>
+<pin name="IN-" x="0" y="5.08" length="point"/>
+<pin name="IN+" x="0" y="-5.08" length="point"/>
+<pin name="OUT" x="5.08" y="0" length="point" rot="R180"/>
+</symbol>
+</symbols>
 <devicesets>
 <deviceset name="LM358" prefix="U">
 <gates><gate name="A" symbol="OPAMP" x="0" y="0"/></gates>
-<devices><device name="" package=""></device></devices>
+<devices><device name=""></device></devices>
 </deviceset>
 </devicesets>
 </library>
 <library name="rcl">
 <packages></packages>
-<symbols></symbols>
+<symbols>
+<symbol name="R-EU">
+<wire x1="1.27" y1="-1.27" x2="3.81" y2="-1.27" width="0.254" layer="94"/>
+<wire x1="3.81" y1="-1.27" x2="3.81" y2="1.27" width="0.254" layer="94"/>
+<wire x1="3.81" y1="1.27" x2="1.27" y2="1.27" width="0.254" layer="94"/>
+<wire x1="1.27" y1="1.27" x2="1.27" y2="-1.27" width="0.254" layer="94"/>
+<wire x1="0" y1="0" x2="5.08" y2="0" width="0.254" layer="94"/>
+<pin name="1" x="0" y="0" length="point"/>
+<pin name="2" x="5.08" y="0" length="point" rot="R180"/>
+</symbol>
+<symbol name="C-EU">
+<wire x1="1.27" y1="-1.27" x2="1.27" y2="1.27" width="0.254" layer="94"/>
+<wire x1="2.54" y1="-1.27" x2="2.54" y2="1.27" width="0.254" layer="94"/>
+<wire x1="0" y1="-1.27" x2="0" y2="1.27" width="0.254" layer="94"/>
+<wire x1="3.81" y1="-1.27" x2="3.81" y2="1.27" width="0.254" layer="94"/>
+<pin name="1" x="0" y="0" length="point"/>
+<pin name="2" x="2.54" y="0" length="point" rot="R180"/>
+</symbol>
+</symbols>
 <devicesets>
 <deviceset name="R-EU_" prefix="R" uservalue="yes">
 <gates><gate name="G$1" symbol="R-EU" x="0" y="0"/></gates>
-<devices><device name="0207/10" package=""></device></devices>
+<devices><device name="0207/10"></device></devices>
 </deviceset>
 <deviceset name="C-EU" prefix="C" uservalue="yes">
 <gates><gate name="G$1" symbol="C-EU" x="0" y="0"/></gates>
-<devices><device name="025-025X050" package=""></device></devices>
+<devices><device name="025-025X050"></device></devices>
 </deviceset>
 </devicesets>
 </library>
