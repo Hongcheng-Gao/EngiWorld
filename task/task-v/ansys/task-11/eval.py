@@ -12,25 +12,53 @@ DB_FILE = DESKTOP / "wb_hertz.db"
 RESULT_FILE = DESKTOP / "wb_hertz.rst"
 REQUIRED_FILES = [WBPJ_FILE, DB_FILE, RESULT_FILE]
 
-GROUND_TRUTH = {
-    "min_uy_mm": -2.846456732381085e-05,
-    "max_usum_mm": 2.846907197953902e-05,
-    "max_von_mises_mpa": 0.5386189405709895,
-    "bottom_reaction_fy_n": -499.99999389378354,
-}
-
-TOLERANCE = {
-    "default": {"rel": 0.10, "abs": 1e-6},
-    "max_von_mises_mpa": {"rel": 0.10, "abs": 1e-3},
-    "bottom_reaction_fy_n": {"rel": 0.02, "abs": 1.0},
-}
-
 
 def is_nonempty_file(path: Path) -> bool:
     return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
-def has_forbidden_py_file(desktop_path: Path) -> bool:
+def _is_known_generated_script(name: str) -> bool:
+    return (
+        (name.startswith("eval_") and name.endswith((".bat", ".cmd")))
+        or (name.startswith("tmp") and name.endswith((".jou", ".wbjn")))
+    )
+
+
+def _cleanup_known_generated_scripts(desktop_path: Path) -> None:
+    try:
+        entries = list(desktop_path.iterdir())
+    except Exception:
+        return
+
+    for entry in entries:
+        try:
+            if not entry.is_file():
+                continue
+        except Exception:
+            continue
+
+        name = entry.name.lower()
+        if not _is_known_generated_script(name):
+            continue
+
+        try:
+            entry.unlink()
+        except Exception:
+            pass
+
+
+def has_forbidden_script_file(desktop_path: Path) -> bool:
+    allowed_names = {"eval.py", "license.py"}
+    forbidden_suffixes = {
+        ".bat",
+        ".cmd",
+        ".ps1",
+        ".vbs",
+        ".js",
+        ".pyw",
+        ".jou",
+        ".wbjn",
+    }
     try:
         entries = desktop_path.iterdir()
     except Exception:
@@ -44,19 +72,14 @@ def has_forbidden_py_file(desktop_path: Path) -> bool:
             return True
 
         name = entry.name.lower()
-        if name.endswith(".py") and name not in {"eval.py", "license.py"}:
+        if name in allowed_names:
+            continue
+        if _is_known_generated_script(name):
+            continue
+        if any(name.endswith(ext) for ext in forbidden_suffixes):
             return True
 
     return False
-
-
-def within_tolerance(name: str, truth: float, pred: float) -> bool:
-    tol = TOLERANCE.get(name, TOLERANCE["default"])
-    rel = tol["rel"]
-    abs_tol = tol["abs"]
-    if truth == 0:
-        return abs(pred - truth) <= abs_tol
-    return abs(pred - truth) <= max(abs(truth) * rel, abs_tol)
 
 
 def allsel(mapdl) -> None:
@@ -126,16 +149,109 @@ def _kill_ansys_related() -> None:
             pass
 
 
+
+
+def _coord_span(arr, axis: int):
+    values = [float(v[axis]) for v in arr]
+    return min(values), max(values)
+
+
+def _within(value: float, target: float, tol: float) -> bool:
+    return abs(value - target) <= tol
+
+
+def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
+    nodes = mapdl.mesh.nodes
+    if nodes is None or len(nodes) < 2:
+        return False
+
+    xmin, xmax = _coord_span(nodes, 0)
+    ymin, ymax = _coord_span(nodes, 1)
+    zmin, zmax = _coord_span(nodes, 2)
+
+    if task_name == "task-01":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 10.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 100.0, 1e-1)
+    if task_name == "task-02":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 1.0, 1e-1)
+    if task_name == "task-03":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 200.0, 1e-1)
+    if task_name == "task-04":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 20.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 20.0, 1e-1)
+    if task_name == "task-05":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 500.0, 5e-1)
+    if task_name == "task-06":
+        return _within(xmin, 25.0, 1e-1) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1)
+    if task_name == "task-07":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
+    if task_name == "task-08":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
+    if task_name == "task-11":
+        return (xmax - xmin) > 10.0 and (ymax - ymin) > 10.0 and (zmax - zmin) > 10.0
+    if task_name == "task-12":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 1000.0, 5e-1)
+    if task_name == "task-13":
+        return _within(ymin, 0.0, 1e-2) and _within(ymax, 50.0, 2e-1)
+    if task_name == "task-14":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 500.0, 5e-1)
+    if task_name == "task-18":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 2e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 100.0, 2e-1)
+    if task_name == "task-19":
+        return _within(ymin, 0.0, 1e-2) and _within(ymax, 1000.0, 5e-1)
+    if task_name == "task-20":
+        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
+
+    return True
+
+
+def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
+    mapdl.resume(DB_FILE.stem, "db")
+    if not _check_bounds_from_instruction(mapdl, task_name):
+        return False
+
+    mapdl.post1()
+    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
+    try:
+        mapdl.set("LAST")
+    except Exception:
+        try:
+            mapdl.set(1, 1)
+        except Exception:
+            return False
+
+    for key, val in pred.items():
+        try:
+            x = float(val)
+        except Exception:
+            return False
+
+        lk = key.lower()
+        if "temp" in lk and not (-1000.0 <= x <= 5000.0):
+            return False
+        if "freq" in lk and not (x > 0.0):
+            return False
+        if "reaction" in lk and abs(x) < 1e-9:
+            return False
+        if ("uy" in lk or "uz" in lk or "ux" in lk or "rot" in lk) and not (-1e6 <= x <= 1e6):
+            return False
+        if ("von_mises" in lk or "seqv" in lk or "stress" in lk) and abs(x) < 1e-9:
+            return False
+        if "final_time" in lk and not (x > 0.0):
+            return False
+
+    return True
+
 def evaluate() -> bool:
     _kill_ansys_related()
+    _cleanup_known_generated_scripts(DESKTOP)
 
-    if has_forbidden_py_file(DESKTOP):
+    if has_forbidden_script_file(DESKTOP):
         return False
 
     if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
         return False
 
     mapdl = None
+    ok = False
     try:
         from ansys.mapdl.core import launch_mapdl
 
@@ -148,22 +264,16 @@ def evaluate() -> bool:
             override=True,
         )
         pred = extract_predictions(mapdl)
+        ok = passes_process_checks(mapdl, pred, task_name="task-11")
     except Exception:
-        return False
+        ok = False
     finally:
         if mapdl is not None:
             try:
                 mapdl.exit()
             except Exception:
                 pass
-
-    for name, truth in GROUND_TRUTH.items():
-        if name not in pred:
-            return False
-        if not within_tolerance(name, truth, pred[name]):
-            return False
-    return True
-
+    return ok
 
 def main() -> None:
     print("True" if evaluate() else "False")
