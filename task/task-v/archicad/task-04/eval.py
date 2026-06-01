@@ -18,7 +18,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
 
-SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['RECEPTION', 'WAITING', 'EXAM-1', 'EXAM-2', 'STERILIZATION', 'STAFF', 'WC'], 'exact_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 7}, 'min_counts': {'walls': 14, 'slabs': 1, 'roofs': 1, 'doors': 7, 'windows': 4}, 'overall_span_ranges_m': {'x': [15.0, 17.2], 'y': [6.0, 8.2], 'z': [2.7, 4.3]}, 'roof_min_z': 2.5999999999999996}
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC', 'space_names': ['RECEPTION', 'WAITING', 'EXAM-1', 'EXAM-2', 'STERILIZATION', 'STAFF', 'WC'], 'exact_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 7}, 'min_counts': {'walls': 14, 'slabs': 1, 'roofs': 1, 'doors': 7, 'windows': 4}, 'overall_span_ranges_m': {'x': [15.0, 17.2], 'y': [6.0, 8.2], 'z': [2.7, 4.3]}, 'roof_min_z': 2.5999999999999996}
 
 
 def _read_text_safe(path):

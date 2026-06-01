@@ -18,7 +18,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
 
-SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['STUDIO', 'OFFICE', 'STORE', 'WC'], 'exact_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 4}, 'min_counts': {'walls': 8, 'slabs': 1, 'doors': 4}, 'overall_span_ranges_m': {'x': [11.0, 13.2], 'y': [6.0, 8.2], 'z': [2.6, 4.1]}, 'alternative_min_counts': [('curtain_walls', 1), ('windows', 4)]}
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC', 'space_names': ['STUDIO', 'OFFICE', 'STORE', 'WC'], 'exact_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 4}, 'min_counts': {'walls': 8, 'slabs': 1, 'doors': 4}, 'overall_span_ranges_m': {'x': [11.0, 13.2], 'y': [6.0, 8.2], 'z': [2.6, 4.1]}, 'alternative_min_counts': [('curtain_walls', 1), ('windows', 4)]}
 
 
 def _read_text_safe(path):
