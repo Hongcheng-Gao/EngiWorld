@@ -135,7 +135,10 @@ def check_forbidden(model):
 
 
 def check_space_names(model):
-    names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
+    names = []
+    for space in model.by_type("IfcSpace"):
+        names.append(norm(getattr(space, "Name", "")))
+        names.append(norm(getattr(space, "LongName", "")))
     for required in SPEC.get("space_names", []):
         token = norm(required)
         if not any(token in name for name in names):
