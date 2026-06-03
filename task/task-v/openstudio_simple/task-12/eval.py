@@ -1,12 +1,13 @@
 #!/usr/bin/env python3
 import json
+import os
 import math
 from pathlib import Path
 import subprocess
 import tempfile
 
 
-DESKTOP = Path("/home/user/Desktop")
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
 SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 1, 'OS:ThermalZone': 1, 'OS:Surface': 6, 'OS:SubSurface': 0}, 'space_names': ['LightingOffice'], 'surface_counts': {'Floor': 1, 'RoofCeiling': 1, 'Wall': 4}, 'outside_boundary_counts': {'Ground': 1, 'Outdoors': 5, 'Surface': 0}, 'window_count': 0, 'fixed_window_count': 0, 'bbox_spans_m': [9.0, 5.0, 3.2], 'floor_area_m2': 45.0, 'exterior_wall_area_m2': 89.6, 'window_area_m2': 0, 'hvac': {'ideal_loads': 0, 'equipment_lists': 1, 'thermostats': 0}, 'loads': {'min_schedules': 1, 'people': 0, 'lights': 1, 'electric_equipment': 0, 'space_types': 0}}
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {

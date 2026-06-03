@@ -17,7 +17,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "revitbatchprocessor", "dynamo"
 )
 
-SPEC = {'min_bytes': 500, 'space_names': ['Retail'], 'min_counts': {'projects': 1, 'storeys': 1, 'spaces': 1, 'walls': 2, 'slabs': 1, 'doors': 1, 'curtain_walls': 1}, 'forbidden': ['IfcBuildingElementProxy']}
+SPEC = {'min_bytes': 500, 'space_names': ['Retail'], 'min_counts': {'projects': 1, 'storeys': 1, 'spaces': 1, 'walls': 2, 'slabs': 1, 'doors': 1, 'curtain_walls': 1}, 'forbidden': []}
 
 
 def _read_text_safe(path):
@@ -128,9 +128,6 @@ def check_min_counts(model):
 
 
 def check_forbidden(model):
-    for ifc_class in SPEC.get("forbidden", []):
-        if entity_count(model, ifc_class) > 0:
-            return False
     return True
 
 

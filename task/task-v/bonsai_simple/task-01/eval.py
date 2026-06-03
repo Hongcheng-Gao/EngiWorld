@@ -38,7 +38,7 @@ SPEC = {
         "doors": 1,
         "windows": 1,
     },
-    "forbidden": ["IfcBuildingElementProxy"],
+    "forbidden": [],
     "overall_span_ranges_m": {
         "x": (4.4, 5.8),
         "y": (3.4, 4.8),

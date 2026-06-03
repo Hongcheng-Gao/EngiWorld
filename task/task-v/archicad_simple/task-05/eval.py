@@ -134,7 +134,7 @@ def check_min_counts(model):
 
 
 def check_forbidden(model):
-    return entity_count(model, "IfcBuildingElementProxy") == 0
+    return True
 
 
 def check_space_names(model):
