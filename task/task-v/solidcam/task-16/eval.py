@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-SPEC = {'files': {'task-16.nc': {'min_tool_calls': 1, 'min_motion': 6, 'kind': 'nc'}}}
+SPEC = {'files': {'task-16.nc': {'any_terms': [['ROUGH', 'ROUGHING'], ['FINISH', 'FINISHING'], ['GROOVE', 'GROOVING']], 'turning': True, 'forbid_axes': ['Y'], 'require_xy': False, 'min_tool_calls': 1, 'min_motion': 6, 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 
 
@@ -233,6 +233,9 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
         return False
     if rule.get("axis") and re.search(rf"\b{str(rule['axis']).upper()}[+-]?\d", src) is None:
         return False
+    for axis in rule.get("forbid_axes", []):
+        if re.search(rf"\b{str(axis).upper()}[+-]?\d", src):
+            return False
     if rule.get("turning") and (not nums(src, "X") or not nums(src, "Z")):
         return False
     if rule.get("millturn") and (re.search(r"\bC[+-]?\d", src) is None or re.search(r"\bY[+-]?\d", src) is None):

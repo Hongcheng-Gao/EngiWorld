@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-SPEC = {'files': {'task-18.nc': {'any_terms': [['DRILL', 'SPOT', 'CENTER', 'G81', 'G82', 'G83']], 'arcs': True, 'min_tool_calls': 1, 'min_motion': 6, 'kind': 'nc'}}}
+SPEC = {'files': {'task-18.nc': {'any_terms': [['DRILL', 'SPOT', 'CENTER', 'G81', 'G82', 'G83'], ['TAP', 'TAPPING', 'G84']], 'min_tool_calls': 2, 'min_motion': 6, 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 
 
@@ -177,7 +177,7 @@ def motion_block_count(src: str) -> int:
     active_motion = False
     count = 0
     for line in src.splitlines():
-        if re.search(r"\bG0?(?:0|1|2|3)\b|\bG8[123]\b", line):
+        if re.search(r"\bG0?(?:0|1|2|3)\b|\bG8[1234]\b", line):
             active_motion = True
         if active_motion and re.search(r"\b[XYZABC][+-]?\d", line):
             count += 1

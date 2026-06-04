@@ -1,16 +1,16 @@
 {
   "id": "v-solidcam-task-19-windows",
   "snapshot": "SolidCAM-2025",
-  "instruction": "Look at rotary_flute.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Create a 3-axis Milling CAM-Part; do not use rotary, indexed, or simultaneous 5-axis machining. Use standard SOLIDWORKS CAM Profile, Contour, Pocket, or Slot operations to create four simple accessible flute-style cuts or guide passes on the part. Use standard Profile, Contour, Pocket, or Slot operations for the flute-style cuts and keep SOLIDWORKS CAM's default generated NC comments; do not rename operations just to add labels. Do not force exact tool station numbers, spindle speeds, feedrates, or internal tool-library IDs if SOLIDWORKS CAM's Technology Database assigns stable defaults; use suitable installed tool-library entries for the required operation types and let the posted NC program reflect those real CAM selections. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-19.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For this milling task, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s). Do not manually write, fabricate, or directly create the NC/G-code text outside SOLIDWORKS CAM. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
-  "source": "SolidCAM Simultaneous 5X Milling：https://solidcam.com/cam-modules/simultaneous-5x-milling/ (SolidCAM)",
+  "instruction": "Look at straight_slot_block.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Create a 3-axis Milling CAM-Part for straight_slot_block.step from a single top-side setup. Use standard SOLIDWORKS CAM Slot, Profile, or Contour operations to machine the four visible straight slots/keyways on the top face. Each slot must be machined along its full modeled length down to the modeled slot floor; one operation per slot or an equivalent grouped slot operation is acceptable as long as all four slots are included in the posted NC program. Use only 3-axis milling for this task; do not use rotary, indexed, or simultaneous 5-axis machining. Use suitable installed flat end mill or slotting tool-library entries; exact tool station numbers, spindle speeds, feedrates, and internal tool-library IDs may follow stable SOLIDWORKS CAM Technology Database defaults. Keep SOLIDWORKS CAM's default generated NC comments; do not rename operations just to add labels. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-19.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For this milling task, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s). Do not manually write, fabricate, or directly create the NC/G-code text outside SOLIDWORKS CAM. You must complete all operations interactively through the graphical user interface (GUI) step by step. The use of external script files is strictly prohibited.",
+  "source": "Expert review recommends a standard straight-slot/keyway 3-axis slot-milling case to avoid rotary or 5-axis ambiguity.",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-19/init_file/rotary_flute.step",
-            "path": "C:\\Users\\User\\Desktop\\rotary_flute.step"
+            "local_path": "task-19/init_file/straight_slot_block.step",
+            "path": "C:\\Users\\User\\Desktop\\straight_slot_block.step"
           }
         ]
       }
@@ -20,7 +20,7 @@
       "parameters": {
         "command": [
           "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
-          "C:\\Users\\User\\Desktop\\rotary_flute.step"
+          "C:\\Users\\User\\Desktop\\straight_slot_block.step"
         ]
       }
     },
