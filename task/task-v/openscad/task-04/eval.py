@@ -129,9 +129,11 @@ SPEC = {'output': 'task-004_output.stl',
              'axis': 'z',
              'center': [0.0, 0.0],
              'radius': 16.0,
-             'span': 21.0,
+             'span': 16.0,
              'bins': 18,
-             'axial_range': [18.0, 40.0]},
+             'axial_range': [23.0, 40.0]},
+            {'kind': 'circle_at', 'axis': 'z', 'radius': 21.0, 'axial': 18.0, 'bins': 18},
+            {'kind': 'circle_at', 'axis': 'z', 'radius': 16.0, 'axial': 23.0, 'bins': 18},
             {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 11.0, 'span': 39.0, 'bins': 18}]}
 
 

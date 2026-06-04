@@ -115,13 +115,16 @@ def check_no_gui_bypass(root):
     return True
 
 SPEC = {'output': 'task-001_output.stl',
- 'bbox': [80.0, 50.0, 10.0],
+ 'bbox': [80.0, 32.0, 8.12],
  'bbox_tol': 0.75,
  'center': [0.0, 0.0, 0.0],
  'center_tol': 0.5,
- 'min_triangles': 12,
- 'min_vertices': 8,
- 'checks': []}
+ 'volume': 17600.0,
+ 'volume_tol': 350.0,
+ 'min_triangles': 24,
+ 'min_vertices': 12,
+ 'checks': [{'kind': 'slice_bbox', 'axis': 'z', 'axial': 2.56, 'extent': [80.0, 32.0], 'tol': 0.9},
+            {'kind': 'slice_bbox', 'axis': 'z', 'axial': 4.06, 'extent': [73.6, 29.44], 'tol': 1.1}]}
 
 
 def _parse_stl(path: Path):
@@ -220,6 +223,18 @@ def _bbox_ok(mesh: Mesh, expected, tol):
     return all(_close(actual, want, tol) for actual, want in zip(mesh.extents, expected))
 
 
+def _mesh_volume(mesh: Mesh):
+    total = 0.0
+    for tri in mesh.triangles:
+        (ax, ay, az), (bx, by, bz), (cx, cy, cz) = tri
+        total += (
+            ax * (by * cz - bz * cy)
+            - ay * (bx * cz - bz * cx)
+            + az * (bx * cy - by * cx)
+        ) / 6.0
+    return abs(total)
+
+
 def _axis_components(point, axis):
     x, y, z = point
     if axis == "z":
@@ -313,6 +328,23 @@ def _has_slot(mesh: Mesh, check):
     left = {"axis": "z", "center": [cx - offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
     right = {"axis": "z", "center": [cx + offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
     return _has_cylinder(mesh, left) and _has_cylinder(mesh, right)
+
+
+def _has_slice_bbox(mesh: Mesh, check):
+    axis = check["axis"]
+    axial = float(check["axial"])
+    axial_tol = float(check.get("axial_tol", 0.35))
+    tol = float(check.get("tol", 0.75))
+    pts = []
+    for point in mesh.vertices:
+        a, b, t = _axis_components(point, axis)
+        if abs(t - axial) <= axial_tol:
+            pts.append((a, b))
+    if len(pts) < int(check.get("min_points", 4)):
+        return False
+    a_extent = max(p[0] for p in pts) - min(p[0] for p in pts)
+    b_extent = max(p[1] for p in pts) - min(p[1] for p in pts)
+    return abs(a_extent - float(check["extent"][0])) <= tol and abs(b_extent - float(check["extent"][1])) <= tol
 
 
 def _near_vertex(mesh: Mesh, target, tol):
@@ -487,6 +519,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_circle_at(mesh, check)
     if kind == "slot":
         return _has_slot(mesh, check)
+    if kind == "slice_bbox":
+        return _has_slice_bbox(mesh, check)
     if kind == "rib_clusters":
         return _has_rib_clusters(mesh, check)
     if kind == "rect_outline":
@@ -522,6 +556,8 @@ def _evaluate_mesh(path: Path) -> bool:
         center_tol = float(SPEC.get("center_tol", tol))
         if any(abs(a - b) > center_tol for a, b in zip(mesh.center, SPEC["center"])):
             return False
+    if "volume" in SPEC and abs(_mesh_volume(mesh) - float(SPEC["volume"])) > float(SPEC.get("volume_tol", 1.0)):
+        return False
     return all(_run_mesh_check(mesh, check) for check in SPEC.get("checks", []))
 
 

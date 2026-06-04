@@ -117,7 +117,13 @@ def check_no_gui_bypass(root):
 SPEC = {'output': 'task-009_output.dxf',
  'checks': [{'kind': 'dxf_circle', 'center': [-40.0, 0.0], 'radius': 4.0},
             {'kind': 'dxf_circle', 'center': [40.0, 0.0], 'radius': 4.0},
+            {'kind': 'dxf_circle', 'center': [-25.0, -13.0], 'radius': 2.0},
+            {'kind': 'dxf_circle', 'center': [-25.0, 13.0], 'radius': 2.0},
+            {'kind': 'dxf_circle', 'center': [25.0, -13.0], 'radius': 2.0},
+            {'kind': 'dxf_circle', 'center': [25.0, 13.0], 'radius': 2.0},
             {'kind': 'dxf_rect', 'center': [0.0, 0.0], 'width': 60.0, 'height': 20.0},
+            {'kind': 'dxf_rect', 'center': [0.0, -13.0], 'width': 18.0, 'height': 6.0},
+            {'kind': 'dxf_rect', 'center': [0.0, 13.0], 'width': 18.0, 'height': 6.0},
             {'kind': 'dxf_outline_min', 'min_width': 90.0, 'min_height': 30.0}]}
 
 

@@ -115,9 +115,9 @@ def check_no_gui_bypass(root):
     return True
 
 SPEC = {'output': 'task-014_output.stl',
- 'bbox': [12.0, 12.0, 22.0],
+ 'bbox': [12.0, 12.0, 24.0],
  'bbox_tol': 1.0,
- 'min_triangles': 80,
+ 'min_triangles': 110,
  'checks': [{'kind': 'cylinder',
              'axis': 'z',
              'center': [0.0, 0.0],
@@ -129,9 +129,23 @@ SPEC = {'output': 'task-014_output.stl',
              'axis': 'z',
              'center': [0.0, 0.0],
              'radius': 6.0,
-             'span': 3.0,
+             'span': 5.0,
              'bins': 14,
-             'axial_range': [18.0, 22.0]}]}
+             'axial_range': [18.0, 24.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [0.0, 0.0],
+             'radius': 5.0,
+             'span': 0.9,
+             'bins': 14,
+             'axial_range': [20.4, 21.6]},
+            {'kind': 'flat_cut',
+             'plane': 'y',
+             'value': 1.5,
+             'x_span': 4.0,
+             'z_span': 16.0,
+             'z_range': [0.0, 18.0],
+             'tol': 0.25}]}
 
 
 def _parse_stl(path: Path):
@@ -325,6 +339,24 @@ def _has_slot(mesh: Mesh, check):
     return _has_cylinder(mesh, left) and _has_cylinder(mesh, right)
 
 
+def _has_flat_cut(mesh: Mesh, check):
+    plane = check["plane"]
+    value = float(check["value"])
+    tol = float(check.get("tol", 0.3))
+    z0, z1 = [float(v) for v in check["z_range"]]
+    pts = []
+    for x, y, z in mesh.vertices:
+        coord = x if plane == "x" else y
+        if abs(coord - value) <= tol and z0 - tol <= z <= z1 + tol:
+            pts.append((x, y, z))
+    if len(pts) < int(check.get("min_points", 4)):
+        return False
+    return (
+        max(p[0] for p in pts) - min(p[0] for p in pts) >= float(check["x_span"])
+        and max(p[2] for p in pts) - min(p[2] for p in pts) >= float(check["z_span"])
+    )
+
+
 def _near_vertex(mesh: Mesh, target, tol):
     tx, ty, tz = target
     return any(abs(x - tx) <= tol and abs(y - ty) <= tol and abs(z - tz) <= tol for x, y, z in mesh.vertices)
@@ -497,6 +529,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_circle_at(mesh, check)
     if kind == "slot":
         return _has_slot(mesh, check)
+    if kind == "flat_cut":
+        return _has_flat_cut(mesh, check)
     if kind == "rib_clusters":
         return _has_rib_clusters(mesh, check)
     if kind == "rect_outline":
