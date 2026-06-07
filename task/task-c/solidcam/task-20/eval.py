@@ -9,7 +9,7 @@ import re
 from pathlib import Path
 from typing import Any
 
-SPEC = {'files': {'task-20.nc': {'tools': [1, 2, 3, 4, 5], 'terms': ['FACE', 'POCKET', 'DRILL', 'COUNTERBORE', 'SPHERICAL', 'CONTOUR'], 'kind': 'nc'}}}
+SPEC = {'files': {'task-20.nc': {'tools': [1, 2, 3, 4], 'terms': ['FACE', 'POCKET', 'DRILL', 'COUNTERBORE', 'CONTOUR'], 'forbid_terms': ['SPHERICAL', 'BALL END', '5X', '5-AXIS', 'SIMULTANEOUS'], 'forbidden_axes': ['A', 'B', 'C'], 'kind': 'nc'}}}
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 TOL = 0.5
 
@@ -95,6 +95,9 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
     for term in rule.get("terms", []):
         if str(term).upper() not in src:
             return False
+    for term in rule.get("forbid_terms", []):
+        if str(term).upper() in src:
+            return False
     for code in rule.get("wcs", []):
         if str(code).upper() not in src:
             return False
@@ -102,6 +105,9 @@ def check_nc(path: Path, rule: dict[str, Any]) -> bool:
         return False
     if rule.get("axis") and re.search(rf"\b{str(rule['axis']).upper()}[+-]?\d", src) is None:
         return False
+    for axis in rule.get("forbidden_axes", []):
+        if re.search(rf"\b{str(axis).upper()}[+-]?\d", src):
+            return False
     if rule.get("turning") and (not nums(src, "X") or not nums(src, "Z")):
         return False
     if rule.get("millturn") and (re.search(r"\bC[+-]?\d", src) is None or re.search(r"\bY[+-]?\d", src) is None):
