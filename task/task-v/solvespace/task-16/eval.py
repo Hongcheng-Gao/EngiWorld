@@ -336,6 +336,25 @@ def _has_handle_outline(doc):
 
 
 
+def _has_circle(doc, center, radius):
+
+    for entity in doc.modelspace():
+
+        if entity.dxftype() != "CIRCLE":
+
+            continue
+
+        c = entity.dxf.center
+
+        if _point_close((c.x, c.y), center) and _close(entity.dxf.radius, radius):
+
+            return True
+
+    return False
+
+
+
+
 
 def evaluate():
     if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
@@ -349,7 +368,13 @@ def evaluate():
 
     doc = ezdxf.readfile(path)
 
-    return _has_handle_outline(doc) and _has_rect(doc, 30, 18, 130, 32)
+    mounting_holes = [(40, 10), (120, 10), (40, 40), (120, 40)]
+
+    return (
+        _has_handle_outline(doc)
+        and _has_rect(doc, 30, 18, 130, 32)
+        and all(_has_circle(doc, p, 3) for p in mounting_holes)
+    )
 
 
 

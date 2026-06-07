@@ -338,6 +338,25 @@ def _has_slot(doc, cx):
 
 
 
+def _has_circle(doc, center, radius):
+
+    for entity in doc.modelspace():
+
+        if entity.dxftype() != "CIRCLE":
+
+            continue
+
+        c = entity.dxf.center
+
+        if _point_close((c.x, c.y), center) and _close(entity.dxf.radius, radius):
+
+            return True
+
+    return False
+
+
+
+
 
 def evaluate():
     if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
@@ -351,7 +370,14 @@ def evaluate():
 
     doc = ezdxf.readfile(path)
 
-    return _has_rect(doc) and _has_slot(doc, 60) and _has_slot(doc, 120)
+    corner_holes = [(20, 15), (160, 15), (20, 45), (160, 45)]
+
+    return (
+        _has_rect(doc)
+        and _has_slot(doc, 60)
+        and _has_slot(doc, 120)
+        and all(_has_circle(doc, p, 3) for p in corner_holes)
+    )
 
 
 

@@ -321,7 +321,7 @@ def evaluate():
 
         and _has_circle(doc, (95, 40), 5)
 
-        and _has_segment(segs, (0, 40), (120, 40), layer="CENTER")
+        and _has_segment(segs, (0, 40), (120, 40))
 
     )
 

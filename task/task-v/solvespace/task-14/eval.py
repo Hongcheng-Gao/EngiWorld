@@ -295,7 +295,13 @@ def evaluate():
 
     doc = ezdxf.readfile(path)
 
-    return _has_rect(doc, 0, 0, 80, 140) and _has_circle(doc, (40, 95), 12) and _has_rect(doc, 35, 28, 45, 83)
+    return (
+        _has_rect(doc, 0, 0, 80, 140)
+        and _has_circle(doc, (40, 95), 12)
+        and _has_rect(doc, 35, 28, 45, 83)
+        and _has_circle(doc, (20, 20), 3)
+        and _has_circle(doc, (60, 20), 3)
+    )
 
 
 

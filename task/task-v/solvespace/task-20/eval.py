@@ -313,7 +313,13 @@ def evaluate():
 
     doc = ezdxf.readfile(path)
 
-    return _has_combo_outline(doc) and _has_circle(doc, (40, 15), 5) and _has_circle(doc, (120, 15), 5)
+    return (
+        _has_combo_outline(doc)
+        and _has_circle(doc, (40, 15), 5)
+        and _has_circle(doc, (120, 15), 5)
+        and _has_circle(doc, (20, 42.5), 3)
+        and _has_circle(doc, (135, 50), 3)
+    )
 
 
 

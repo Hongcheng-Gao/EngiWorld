@@ -194,7 +194,12 @@ def evaluate():
         return False
     doc = ezdxf.readfile(path)
     hole_center = _find_trapezoid(doc)
-    return hole_center is not None and _has_circle(doc, hole_center, 10)
+    return (
+        hole_center is not None
+        and _has_circle(doc, hole_center, 10)
+        and _has_circle(doc, (25, 20), 3)
+        and _has_circle(doc, (115, 20), 3)
+    )
 
 
 if __name__ == "__main__":

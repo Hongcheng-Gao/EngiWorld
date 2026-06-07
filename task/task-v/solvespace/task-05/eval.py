@@ -296,6 +296,7 @@ def evaluate():
     doc = ezdxf.readfile(path)
 
     holes = [(15, 15), (145, 15), (15, 85), (145, 85)]
+    secondary_holes = [(80, 15), (80, 85), (15, 50), (145, 50)]
 
     return (
 
@@ -304,6 +305,7 @@ def evaluate():
         and _has_rect_at(doc, 30, 25, 130, 75)
 
         and all(_has_circle(doc, p, 4) for p in holes)
+        and all(_has_circle(doc, p, 2.5) for p in secondary_holes)
 
     )
 

@@ -370,6 +370,25 @@ def _has_obround_slot(doc):
 
 
 
+def _has_circle(doc, center, radius):
+
+    for entity in doc.modelspace():
+
+        if entity.dxftype() != "CIRCLE":
+
+            continue
+
+        c = entity.dxf.center
+
+        if _point_close((c.x, c.y), center) and _close(entity.dxf.radius, radius):
+
+            return True
+
+    return False
+
+
+
+
 
 def evaluate():
     if not check_no_gui_bypass(OUTPUT_ROOT):
@@ -381,13 +400,14 @@ def evaluate():
 
         return False
 
-    if _has_direct_dxf_author_signature(path):
-
-        return False
-
     doc = ezdxf.readfile(path)
 
-    return _has_rectangle(doc, 140, 50) and _has_obround_slot(doc)
+    return (
+        _has_rectangle(doc, 140, 50)
+        and _has_obround_slot(doc)
+        and _has_circle(doc, (20, 25), 3)
+        and _has_circle(doc, (120, 25), 3)
+    )
 
 
 

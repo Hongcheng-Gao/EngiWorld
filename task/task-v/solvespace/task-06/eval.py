@@ -201,6 +201,17 @@ def evaluate():
         _has_circle(doc, center, 10)
         and _has_circle(doc, (center[0] - 28, center[1]), 3)
         and _has_circle(doc, (center[0] + 28, center[1]), 3)
+        and all(
+            _has_circle(
+                doc,
+                (
+                    center[0] + 25 * math.cos(math.radians(angle)),
+                    center[1] + 25 * math.sin(math.radians(angle)),
+                ),
+                2,
+            )
+            for angle in [0, 60, 120, 180, 240, 300]
+        )
     )
 
 

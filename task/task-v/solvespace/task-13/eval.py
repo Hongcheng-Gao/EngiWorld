@@ -360,6 +360,17 @@ def _has_dogbone_outline(doc):
 
 
 
+def _has_rect(doc, x0, y0, x1, y1):
+
+    segs = _segments(doc)
+
+    corners = [(x0, y0), (x1, y0), (x1, y1), (x0, y1)]
+
+    return all(_has_segment(segs, corners[i], corners[(i + 1) % 4]) for i in range(4))
+
+
+
+
 
 def evaluate():
     if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
@@ -373,7 +384,12 @@ def evaluate():
 
     doc = ezdxf.readfile(path)
 
-    return _has_dogbone_outline(doc) and _has_circle(doc, (30, 30), 4) and _has_circle(doc, (110, 30), 4)
+    return (
+        _has_dogbone_outline(doc)
+        and _has_circle(doc, (30, 30), 4)
+        and _has_circle(doc, (110, 30), 4)
+        and _has_rect(doc, 50, 26, 90, 34)
+    )
 
 
 

@@ -161,6 +161,13 @@ def evaluate():
         )
         if not _has_circle(circles, expected, 4):
             return False
+    for angle in [0, 120, 240]:
+        expected = (
+            center[0] + 35 * math.cos(math.radians(angle)),
+            center[1] + 35 * math.sin(math.radians(angle)),
+        )
+        if not _has_circle(circles, expected, 3):
+            return False
     return True
 
 

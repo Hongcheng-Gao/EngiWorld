@@ -363,7 +363,13 @@ def evaluate():
 
     doc = ezdxf.readfile(path)
 
-    return _has_notched_outline(doc) and _has_circle(doc, (25, 20), 4) and _has_circle(doc, (95, 20), 4)
+    return (
+        _has_notched_outline(doc)
+        and _has_circle(doc, (25, 20), 4)
+        and _has_circle(doc, (95, 20), 4)
+        and _has_circle(doc, (25, 60), 3)
+        and _has_circle(doc, (95, 60), 3)
+    )
 
 
 

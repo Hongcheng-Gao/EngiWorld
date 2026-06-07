@@ -324,8 +324,13 @@ def evaluate():
     doc = ezdxf.readfile(path)
 
     holes = [(35, 30), (90, 30), (145, 30)]
+    tab_holes = [(35, 86), (90, 86), (145, 86)]
 
-    return _has_tabbed_outline(doc) and all(_has_circle(doc, p, 4) for p in holes)
+    return (
+        _has_tabbed_outline(doc)
+        and all(_has_circle(doc, p, 4) for p in holes)
+        and all(_has_circle(doc, p, 2.5) for p in tab_holes)
+    )
 
 
 
