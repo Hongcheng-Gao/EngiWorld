@@ -14,7 +14,7 @@ VARIANTS = [
 ]
 REQUIRED = [f"{variant['name']}.nc" for variant in VARIANTS]
 VARIANT_BY_FILE = {f"{variant['name']}.nc": variant for variant in VARIANTS}
-CFG = {"tools": [1], "ops": ["Job", "Pocket Shape"]}
+CFG = {"tools": [1], "spindles": [7000], "feeds": [500], "ops": ["Job", "Pocket Shape"]}
 ROOT = Path(__file__).resolve().parent
 TARGET = Path("/home/user/Desktop")
 

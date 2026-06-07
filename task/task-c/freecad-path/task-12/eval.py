@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 REQUIRED = ['task-12.nc']
-CFG = {'tools': [1, 2], 'sequence': True, 'program': 2032, 'ops': ['Job', 'Pocket', 'Drilling']}
+CFG = {'tools': [1, 2], 'spindles': [7000], 'feeds': [600], 'sequence': True, 'program': 2032, 'ops': ['Job', 'Pocket', 'Drilling']}
 ROOT = Path(__file__).resolve().parent
 TARGET = Path("/home/user/Desktop")
 

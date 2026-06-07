@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 REQUIRED = ['task-20.nc', 'post_log.txt']
-CFG = {'tools': [1, 2, 3, 4, 5], 'ops': ['Job', 'Face', 'Pocket', 'Drilling', 'Counterbore', 'Surface', 'Profile'], 'hole_count': 18, 'pocket_count': 3, 'fixture_clearance': 3.0, 'all_checks_pass': True}
+CFG = {'tools': [1, 2, 3, 4, 5], 'spindles': [7000], 'feeds': [500], 'ops': ['Job', 'Face', 'Pocket', 'Drilling', 'Counterbore', 'Surface', 'Profile'], 'hole_count': 18, 'pocket_count': 3, 'fixture_clearance': 3.0, 'all_checks_pass': True}
 ROOT = Path(__file__).resolve().parent
 TARGET = Path("/home/user/Desktop")
 

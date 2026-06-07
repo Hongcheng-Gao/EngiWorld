@@ -6,7 +6,7 @@ import re
 from pathlib import Path
 
 REQUIRED = ['task-08.nc']
-CFG = {'tools': [1, 2], 'z': [6.0], 'ops': ['Job', 'Pocket Shape', 'Rest Machining'], 'rest_machining': True}
+CFG = {'tools': [1, 2], 'spindles': [7000], 'feeds': [500], 'z': [6.0], 'ops': ['Job', 'Pocket Shape', 'Rest Machining'], 'rest_machining': True}
 ROOT = Path(__file__).resolve().parent
 TARGET = Path("/home/user/Desktop")
 
@@ -28,6 +28,21 @@ def check_nc(path: Path) -> bool:
             return False
     for wcs in CFG.get("wcs", []):
         if str(wcs).upper() not in text:
+            return False
+    for op in CFG.get("ops", []):
+        if str(op).upper() not in text:
+            return False
+    for z in CFG.get("z", []):
+        if re.search(rf"\bZ\s*{float(z):.3f}\b", text) is None:
+            return False
+    bbox = CFG.get("bbox")
+    if bbox:
+        xmin, xmax, ymin, ymax = bbox
+        for axis, value in (("X", xmin), ("X", xmax), ("Y", ymin), ("Y", ymax)):
+            if re.search(rf"\b{axis}\s*{float(value):.3f}\b", text) is None:
+                return False
+    for x, y in CFG.get("holes", []):
+        if re.search(rf"\bX\s*{float(x):.3f}\b[^\n]*\bY\s*{float(y):.3f}\b", text) is None:
             return False
     if CFG.get("sequence"):
         nums = [int(m.group(1)) for m in re.finditer(r"\bN(\d+)\b", text)]
