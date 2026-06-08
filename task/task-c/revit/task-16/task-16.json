@@ -1,8 +1,9 @@
 {
   "id": "c-revit-task-16-windows",
+  "difficulty": "hard",
   "snapshot": "Revit2025",
-  "instruction": "Remodel a mixed retail and office building from the provided IFC. Open C:\\Users\\user\\Desktop\\init.ifc in Revit and use C:\\Users\\user\\Desktop\\init_sheet.png as the visual reference for the starting condition. Remodel the starting building as a two-storey mixed retail and office building, then export the IFC4 model to C:\\Users\\user\\Desktop\\result.ifc and an area schedule to C:\\Users\\user\\Desktop\\result.csv. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, two IfcBuildingStorey entities, four IfcSpace objects, eight IfcWall elements, and two IfcSlab elements. Name the spaces so they include at least two Retail spaces and two Office spaces. The final IFC should not include IfcRoof, IfcDoor, IfcWindow, IfcCurtainWall, IfcBuildingElementProxy, IfcStair, IfcColumn, or IfcBeam entities. The CSV must have exactly the headers category,area and two data rows: retail,95 and office,95. The init file is only a starting model; nonessential layout details may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
-  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-FF0555DF-C278-46F8-BB09-496FBDF61648",
+  "instruction": "Use the opened Autodesk Revit environment and its automation interfaces to export the completed model to C:\\Users\\user\\Desktop\\result.ifc as IFC4. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a plain three-storey mixed-use block. The architect wants the building reorganized so the ground floor reads as retail with back-office support, the upper floors become paired studios and labs, and the top is capped by a modest sloped roof. Keep the regular frame and stacked floor plates coherent.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
   "config": [
     {
       "type": "upload_file",
@@ -11,12 +12,28 @@
           {
             "local_path": "task-16/init_file/init.ifc",
             "path": "C:\\Users\\user\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-16/init_image/init_sheet.png",
-            "path": "C:\\Users\\user\\Desktop\\init_sheet.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ],
+        "timeout": 90
       }
     }
   ],

@@ -1,366 +1,205 @@
 #!/usr/bin/env python3
-
-import csv
-
+import hashlib
+import math
+import os
 import re
-
 from pathlib import Path
 
+import ifcopenshell
+import ifcopenshell.geom
+import numpy as np
+
+SPEC = {
+  "absent_space_tokens": [],
+  "bbox_ranges_m": {
+    "x": [
+      8.4,
+      10.2
+    ],
+    "y": [
+      6.4,
+      8.2
+    ],
+    "z": [
+      2.5,
+      3.5
+    ]
+  },
+  "exact_counts": {
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 1,
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcSlab": 1,
+    "IfcSpace": 3,
+    "IfcWall": 6
+  },
+  "forbidden": [
+    "IfcBeam",
+    "IfcBuildingElementProxy",
+    "IfcColumn",
+    "IfcCurtainWall",
+    "IfcDoor",
+    "IfcRoof",
+    "IfcWindow"
+  ],
+  "min_counts": {},
+  "min_file_bytes": 20000,
+  "min_shaped_products": 7,
+  "space_tokens": [
+    "Waiting",
+    "Records Room",
+    "Exam"
+  ],
+  "storey_tokens": [
+    "Ground Floor"
+  ]
+}
 DESKTOP = Path("C:/Users/user/Desktop")
 
 
-
-import ifcopenshell
-
-import ifcopenshell.geom
-
-import numpy as np
-
-
-
-
-
-SPEC = {
-
-    "required_ifc": "result.ifc",
-
-    "required_csv": "result.csv",
-
-    "min_ifc_bytes": 500,
-
-    "min_csv_bytes": 20,
-
-    "schema": "IFC4",
-
-    "counts": {
-
-        "IfcProject": 1,
-
-        "IfcSite": 1,
-
-        "IfcBuilding": 1,
-
-        "IfcBuildingStorey": 2,
-
-        "IfcSpace": 2,
-
-        "IfcColumn": 20,
-
-        "IfcBeam": 31,
-
-        "IfcSlab": 2,
-
-        "IfcWall": 4,
-
-        "IfcRoof": 1,
-
-    },
-
-    "min_counts": {
-
-        "IfcStair": 1,
-
-        "IfcDoor": 2,
-
-        "IfcWindow": 5,
-
-    },
-
-    "forbidden_counts": {"IfcBuildingElementProxy": 0},
-
-    "required_space_tokens": ["storage", "office"],
-
-    "bbox_ranges_m": {"x": (28.0, 32.0), "y": (17.0, 19.5), "z": (5.8, 7.0)},
-
-    "csv_headers": ["category", "count"],
-
-    "csv_expected": {"columns": 20, "beams": 31, "slabs": 2, "walls": 4},
-
-    "csv_ifc_map": {
-
-        "columns": "IfcColumn",
-
-        "beams": "IfcBeam",
-
-        "slabs": "IfcSlab",
-
-        "walls": "IfcWall",
-
-    },
-
-}
-
-
-
-
-
 def finish(ok):
-
     print("True" if ok else "False")
-
     raise SystemExit(0)
 
 
-
-
-
 def norm(value):
-
     text = str(value or "").replace("_", " ").replace("-", " ").lower()
-
     return re.sub(r"\s+", " ", text).strip()
 
 
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
 
-
-def entity_count(model, ifc_class):
-
-    return len(model.by_type(ifc_class))
-
-
-
+def app_is_revit(model):
+    apps = " ".join(
+        " ".join(str(getattr(app, attr, "") or "") for attr in ("ApplicationIdentifier", "ApplicationFullName", "Version"))
+        for app in model.by_type("IfcApplication")
+    )
+    header = ""
+    try:
+        header = model.wrapped_data.header().file_name.originating_system or ""
+    except Exception:
+        pass
+    text = f"{apps} {header}".lower()
+    return "revit" in text and "archicad" not in text
 
 
 def unique_global_ids(model):
-
-    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-
-    return len(gids) == len(set(gids))
+    gids = [entity.GlobalId for entity in model.by_type("IfcRoot") if getattr(entity, "GlobalId", None)]
+    return bool(gids) and len(gids) == len(set(gids))
 
 
-
-
-
-def parse_int(value):
-
-    text = str(value).strip().replace(",", "")
-
-    if not re.fullmatch(r"[+-]?\d+", text):
-
-        raise ValueError("not an integer")
-
-    return int(text)
-
-
-
-
-
-def parse_csv_counts(path):
-
-    with path.open("r", encoding="utf-8-sig", newline="") as handle:
-
-        rows = list(csv.reader(handle))
-
-    if not rows:
-
-        return None
-
-    headers = [cell.strip() for cell in rows[0]]
-
-    if headers != SPEC["csv_headers"]:
-
-        return None
-
-    body = [row for row in rows[1:] if any(cell.strip() for cell in row)]
-
-    if len(body) != len(SPEC["csv_expected"]):
-
-        return None
-
-    result = {}
-
-    for row in body:
-
-        if len(row) != 2:
-
-            return None
-
-        category = norm(row[0])
-
-        if category in result:
-
-            return None
-
-        result[category] = parse_int(row[1])
-
-    return result
-
-
-
+def entity_count(model, ifc_class):
+    return len(model.by_type(ifc_class))
 
 
 def check_counts(model):
-
-    for ifc_class, expected in SPEC["counts"].items():
-
+    for ifc_class, expected in SPEC["exact_counts"].items():
         if entity_count(model, ifc_class) != expected:
-
             return False
-
     for ifc_class, minimum in SPEC["min_counts"].items():
-
         if entity_count(model, ifc_class) < minimum:
-
             return False
-
-    for ifc_class, expected in SPEC["forbidden_counts"].items():
-
-        if entity_count(model, ifc_class) != expected:
-
+    for ifc_class in SPEC["forbidden"]:
+        if entity_count(model, ifc_class) != 0:
             return False
-
     return True
 
 
+def space_label(space):
+    return norm(f"{getattr(space, 'Name', '')} {getattr(space, 'LongName', '')}")
 
 
+def check_names(model):
+    storey_names = [norm(getattr(s, "Name", "")) for s in model.by_type("IfcBuildingStorey")]
+    for token in SPEC["storey_tokens"]:
+        if not any(norm(token) in name for name in storey_names):
+            return False
+    space_names = [space_label(s) for s in model.by_type("IfcSpace")]
+    for token in SPEC["space_tokens"]:
+        if not any(norm(token) in name for name in space_names):
+            return False
+    for token in SPEC["absent_space_tokens"]:
+        if any(norm(token) in name for name in space_names):
+            return False
+    return True
 
-def check_spaces(model):
 
-    names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-
-    return all(any(token in name for name in names) for token in SPEC["required_space_tokens"])
-
-
-
+def shape_records(model):
+    settings = ifcopenshell.geom.settings()
+    try:
+        settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception:
+        pass
+    records = []
+    for product in model.by_type("IfcProduct"):
+        if product.is_a("IfcOpeningElement") or not getattr(product, "Representation", None):
+            continue
+        try:
+            shape = ifcopenshell.geom.create_shape(settings, product)
+            verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
+        except Exception:
+            continue
+        if verts.size:
+            records.append((product, verts))
+    return records
 
 
 def check_geometry(model):
-
-    settings = ifcopenshell.geom.settings()
-
-    try:
-
-        settings.set(settings.USE_WORLD_COORDS, True)
-
-    except Exception:
-
-        pass
-
-    records = []
-
-    for product in model.by_type("IfcProduct"):
-
-        if product.is_a("IfcOpeningElement") or not getattr(product, "Representation", None):
-
-            continue
-
-        try:
-
-            shape = ifcopenshell.geom.create_shape(settings, product)
-
-            verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
-
-        except Exception:
-
-            continue
-
-        if verts.size:
-
-            records.append(verts)
-
-    if not records:
-
+    records = shape_records(model)
+    if len(records) < SPEC["min_shaped_products"]:
         return False
-
-    mins = np.min([verts.min(axis=0) for verts in records], axis=0)
-
-    maxs = np.max([verts.max(axis=0) for verts in records], axis=0)
-
+    mins = np.min([verts.min(axis=0) for _, verts in records], axis=0)
+    maxs = np.max([verts.max(axis=0) for _, verts in records], axis=0)
     spans = maxs - mins
-
     for axis, idx in (("x", 0), ("y", 1), ("z", 2)):
-
         low, high = SPEC["bbox_ranges_m"][axis]
-
-        if not (low <= float(spans[idx]) <= high):
-
+        value = float(spans[idx])
+        if not (low <= value <= high) or not math.isfinite(value):
             return False
-
     return True
 
 
-
-
-
-def check_csv(model, csv_path):
-
-    csv_counts = parse_csv_counts(csv_path)
-
-    if csv_counts != SPEC["csv_expected"]:
-
-        return False
-
-    for category, ifc_class in SPEC["csv_ifc_map"].items():
-
-        if csv_counts[category] != entity_count(model, ifc_class):
-
-            return False
-
-    return True
-
-
-
+def init_path_for(result_dir):
+    local = Path(result_dir).parent / "init_file" / "init.ifc"
+    if local.is_file():
+        return local
+    remote = DESKTOP / "init.ifc"
+    return remote if remote.is_file() else None
 
 
 def evaluate(result_dir):
-
-    root = Path(result_dir)
-
-    ifc_path = root / SPEC["required_ifc"]
-
-    csv_path = root / SPEC["required_csv"]
-
-    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
-
+    result_dir = Path(result_dir)
+    result = result_dir / "result.ifc"
+    if not result.is_file() or result.stat().st_size < SPEC["min_file_bytes"]:
         return False
-
-    if not csv_path.is_file() or csv_path.stat().st_size < SPEC["min_csv_bytes"]:
-
+    init = init_path_for(result_dir)
+    if init is not None and init.is_file() and sha256(init) == sha256(result):
         return False
-
-    model = ifcopenshell.open(str(ifc_path))
-
+    model = ifcopenshell.open(str(result))
     return (
-
-        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
-
+        str(getattr(model, "schema", "")).upper().startswith("IFC4")
+        and app_is_revit(model)
         and unique_global_ids(model)
-
         and check_counts(model)
-
-        and check_spaces(model)
-
+        and check_names(model)
         and check_geometry(model)
-
-        and check_csv(model, csv_path)
-
     )
 
 
-
-
-
 def main():
-
     try:
-
-        finish(evaluate(DESKTOP))
-
-    except SystemExit:
-
-        raise
-
+        result_dir = Path(os.environ.get("RESULT_DIR", str(DESKTOP)))
+        finish(evaluate(result_dir))
     except Exception:
-
         finish(False)
 
 
-
-
-
 if __name__ == "__main__":
-
     main()
-

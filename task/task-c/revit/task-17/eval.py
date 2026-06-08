@@ -1,243 +1,217 @@
 #!/usr/bin/env python3
-
+import hashlib
+import math
+import os
 import re
-
-try:
-    import fitz
-except ImportError:
-    import pymupdf as fitz
-try:
-    from pdfminer.high_level import extract_text as _pdfminer_extract_text
-    from pdfminer.pdfpage import PDFPage as _PDFPage
-    _HAS_PDFMINER = True
-except ImportError:
-    _HAS_PDFMINER = False
-
-
 from pathlib import Path
 
+import ifcopenshell
+import ifcopenshell.geom
+import numpy as np
+
+SPEC = {
+  "absent_space_tokens": [
+    "Open Lab"
+  ],
+  "bbox_ranges_m": {
+    "x": [
+      17.4,
+      19.2
+    ],
+    "y": [
+      11.4,
+      13.2
+    ],
+    "z": [
+      4.9,
+      6.5
+    ]
+  },
+  "exact_counts": {
+    "IfcBeam": 7,
+    "IfcBuilding": 1,
+    "IfcBuildingStorey": 2,
+    "IfcColumn": 12,
+    "IfcProject": 1,
+    "IfcSite": 1,
+    "IfcSlab": 2,
+    "IfcSpace": 12,
+    "IfcWall": 14
+  },
+  "forbidden": [
+    "IfcBuildingElementProxy",
+    "IfcCurtainWall",
+    "IfcDoor",
+    "IfcRoof",
+    "IfcWindow"
+  ],
+  "min_counts": {},
+  "min_file_bytes": 20000,
+  "min_shaped_products": 20,
+  "space_tokens": [
+    "Lab G1",
+    "Lab G2",
+    "Support G3",
+    "Lab G4",
+    "Lab G5",
+    "Support G6",
+    "Lab U1",
+    "Lab U2",
+    "Support U3",
+    "Lab U4",
+    "Lab U5",
+    "Support U6"
+  ],
+  "storey_tokens": [
+    "Ground Floor",
+    "Level 2"
+  ]
+}
 DESKTOP = Path("C:/Users/user/Desktop")
 
 
-
-import ifcopenshell
-
-
-
-
-
-SPEC = {
-
-    "required_ifc": "result.ifc",
-
-    "required_pdf": "result.pdf",
-
-    "min_ifc_bytes": 500,
-
-    "min_pdf_bytes": 200,
-
-    "schema": "IFC4",
-
-    "counts": {
-
-        "IfcProject": 1,
-
-        "IfcSite": 1,
-
-        "IfcBuilding": 1,
-
-        "IfcBuildingStorey": 1,
-
-        "IfcWall": 4,
-
-        "IfcSlab": 1,
-
-        "IfcCurtainWall": 5,
-
-    },
-
-    "forbidden_counts": {
-
-        "IfcSpace": 0,
-
-        "IfcRoof": 0,
-
-        "IfcDoor": 0,
-
-        "IfcWindow": 0,
-
-        "IfcStair": 0,
-
-        "IfcColumn": 0,
-
-        "IfcBeam": 0,
-
-        "IfcBuildingElementProxy": 0,
-
-    },
-
-    "pdf_tokens": ["PODIUM FACADE", "A301"],
-
-}
-
-
-
-
-
 def finish(ok):
-
     print("True" if ok else "False")
-
     raise SystemExit(0)
 
 
+def norm(value):
+    text = str(value or "").replace("_", " ").replace("-", " ").lower()
+    return re.sub(r"\s+", " ", text).strip()
 
 
+def sha256(path):
+    h = hashlib.sha256()
+    with open(path, "rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            h.update(chunk)
+    return h.hexdigest()
 
-def entity_count(model, ifc_class):
 
-    return len(model.by_type(ifc_class))
-
-
-
+def app_is_revit(model):
+    apps = " ".join(
+        " ".join(str(getattr(app, attr, "") or "") for attr in ("ApplicationIdentifier", "ApplicationFullName", "Version"))
+        for app in model.by_type("IfcApplication")
+    )
+    header = ""
+    try:
+        header = model.wrapped_data.header().file_name.originating_system or ""
+    except Exception:
+        pass
+    text = f"{apps} {header}".lower()
+    return "revit" in text and "archicad" not in text
 
 
 def unique_global_ids(model):
-
-    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-
-    return len(gids) == len(set(gids))
+    gids = [entity.GlobalId for entity in model.by_type("IfcRoot") if getattr(entity, "GlobalId", None)]
+    return bool(gids) and len(gids) == len(set(gids))
 
 
-
+def entity_count(model, ifc_class):
+    return len(model.by_type(ifc_class))
 
 
 def check_counts(model):
-
-    for ifc_class, expected in SPEC["counts"].items():
-
+    for ifc_class, expected in SPEC["exact_counts"].items():
         if entity_count(model, ifc_class) != expected:
-
             return False
-
-    for ifc_class, expected in SPEC["forbidden_counts"].items():
-
-        if entity_count(model, ifc_class) != expected:
-
+    for ifc_class, minimum in SPEC["min_counts"].items():
+        if entity_count(model, ifc_class) < minimum:
             return False
-
+    for ifc_class in SPEC["forbidden"]:
+        if entity_count(model, ifc_class) != 0:
+            return False
     return True
 
 
+def space_label(space):
+    return norm(f"{getattr(space, 'Name', '')} {getattr(space, 'LongName', '')}")
 
 
+def check_names(model):
+    storey_names = [norm(getattr(s, "Name", "")) for s in model.by_type("IfcBuildingStorey")]
+    for token in SPEC["storey_tokens"]:
+        if not any(norm(token) in name for name in storey_names):
+            return False
+    space_names = [space_label(s) for s in model.by_type("IfcSpace")]
+    for token in SPEC["space_tokens"]:
+        if not any(norm(token) in name for name in space_names):
+            return False
+    for token in SPEC["absent_space_tokens"]:
+        if any(norm(token) in name for name in space_names):
+            return False
+    return True
 
-def extract_pdf_text(path):
+
+def shape_records(model):
+    settings = ifcopenshell.geom.settings()
     try:
-        doc = fitz.open(str(path))
-        text = "".join(page.get_text("text") for page in doc)
-        doc.close()
-        return text
+        settings.set(settings.USE_WORLD_COORDS, True)
     except Exception:
         pass
-    if _HAS_PDFMINER:
+    records = []
+    for product in model.by_type("IfcProduct"):
+        if product.is_a("IfcOpeningElement") or not getattr(product, "Representation", None):
+            continue
         try:
-            return _pdfminer_extract_text(str(path))
+            shape = ifcopenshell.geom.create_shape(settings, product)
+            verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
         except Exception:
-            pass
-    raise RuntimeError("cannot extract PDF text")
+            continue
+        if verts.size:
+            records.append((product, verts))
+    return records
 
 
-
-
-
-def page_count(path):
-    try:
-        doc = fitz.open(str(path))
-        n = doc.page_count
-        doc.close()
-        return n
-    except Exception:
-        pass
-    if _HAS_PDFMINER:
-        try:
-            with open(str(path), "rb") as f:
-                return sum(1 for _ in _PDFPage.get_pages(f))
-        except Exception:
-            pass
-    raise RuntimeError("cannot determine page count")
-
-
-
-
-
-def check_pdf(pdf_path):
-
-    if page_count(pdf_path) != 1:
-
+def check_geometry(model):
+    records = shape_records(model)
+    if len(records) < SPEC["min_shaped_products"]:
         return False
+    mins = np.min([verts.min(axis=0) for _, verts in records], axis=0)
+    maxs = np.max([verts.max(axis=0) for _, verts in records], axis=0)
+    spans = maxs - mins
+    for axis, idx in (("x", 0), ("y", 1), ("z", 2)):
+        low, high = SPEC["bbox_ranges_m"][axis]
+        value = float(spans[idx])
+        if not (low <= value <= high) or not math.isfinite(value):
+            return False
+    return True
 
-    text = extract_pdf_text(pdf_path).lower()
 
-    return all(token.lower() in text for token in SPEC["pdf_tokens"])
-
-
-
+def init_path_for(result_dir):
+    local = Path(result_dir).parent / "init_file" / "init.ifc"
+    if local.is_file():
+        return local
+    remote = DESKTOP / "init.ifc"
+    return remote if remote.is_file() else None
 
 
 def evaluate(result_dir):
-
-    root = Path(result_dir)
-
-    ifc_path = root / SPEC["required_ifc"]
-
-    pdf_path = root / SPEC["required_pdf"]
-
-    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_ifc_bytes"]:
-
+    result_dir = Path(result_dir)
+    result = result_dir / "result.ifc"
+    if not result.is_file() or result.stat().st_size < SPEC["min_file_bytes"]:
         return False
-
-    if not pdf_path.is_file() or pdf_path.stat().st_size < SPEC["min_pdf_bytes"]:
-
+    init = init_path_for(result_dir)
+    if init is not None and init.is_file() and sha256(init) == sha256(result):
         return False
-
-    model = ifcopenshell.open(str(ifc_path))
-
+    model = ifcopenshell.open(str(result))
     return (
-
-        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
-
+        str(getattr(model, "schema", "")).upper().startswith("IFC4")
+        and app_is_revit(model)
         and unique_global_ids(model)
-
         and check_counts(model)
-
-        and check_pdf(pdf_path)
-
+        and check_names(model)
+        and check_geometry(model)
     )
 
 
-
-
-
 def main():
-
     try:
-
-        finish(evaluate(DESKTOP))
-
-    except SystemExit:
-
-        raise
-
+        result_dir = Path(os.environ.get("RESULT_DIR", str(DESKTOP)))
+        finish(evaluate(result_dir))
     except Exception:
-
         finish(False)
 
 
-
-
-
 if __name__ == "__main__":
-
     main()
-

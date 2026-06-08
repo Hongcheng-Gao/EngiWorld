@@ -1,8 +1,9 @@
 {
   "id": "c-revit-task-19-windows",
+  "difficulty": "hard",
   "snapshot": "Revit2025",
-  "instruction": "Remodel a courtyard hotel and export schedule and sheet. Open C:\\Users\\user\\Desktop\\init.ifc in Revit and use C:\\Users\\user\\Desktop\\init_sheet.png as the visual reference for the starting condition. Remodel the starting building as a two-storey courtyard hotel, then export the IFC4 model to C:\\Users\\user\\Desktop\\result.ifc, a room area schedule to C:\\Users\\user\\Desktop\\result.csv, and a one-page Revit plan sheet to C:\\Users\\user\\Desktop\\result.pdf. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, two IfcBuildingStorey entities, seventeen IfcSpace objects, twenty-four IfcWall elements, and six IfcSlab elements. Name the spaces so the model includes exactly sixteen Bedroom rooms and one space named Shared Lounge. The final IFC should not include IfcRoof, IfcDoor, IfcWindow, IfcCurtainWall, IfcBuildingElementProxy, IfcStair, IfcColumn, or IfcBeam entities. The CSV must have exactly the headers room name,area with seventeen data rows: one Shared Lounge row with area 60 and sixteen Bedroom rows with area 24 each. The PDF must be a single-page sheet whose visible text includes COURTYARD HOTEL PLAN and A201. Other courtyard proportions, sheet graphics, and metadata may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
-  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-DD74A51D-A0B0-4461-A4BA-0F9CCC191CDB",
+  "instruction": "Use the opened Autodesk Revit environment and its automation interfaces to export the completed model to C:\\Users\\user\\Desktop\\result.ifc as IFC4. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a large three-storey campus laboratory frame. The university wants four coordinated lab/support zones on every level, arranged around a disciplined structural rhythm, with a sloped roof that keeps the building readable as one coherent block.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
   "config": [
     {
       "type": "upload_file",
@@ -11,12 +12,28 @@
           {
             "local_path": "task-19/init_file/init.ifc",
             "path": "C:\\Users\\user\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-19/init_image/init_sheet.png",
-            "path": "C:\\Users\\user\\Desktop\\init_sheet.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ],
+        "timeout": 90
       }
     }
   ],

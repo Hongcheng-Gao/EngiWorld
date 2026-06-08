@@ -1,8 +1,9 @@
 {
   "id": "c-revit-task-14-windows",
+  "difficulty": "medium",
   "snapshot": "Revit2025",
-  "instruction": "Remodel a portal-frame hall from the provided IFC. Open C:\\Users\\user\\Desktop\\init.ifc in Revit and use C:\\Users\\user\\Desktop\\init_sheet.png as the visual reference for the starting condition. Remodel the starting building as a larger portal-frame hall with a mezzanine office and export the final IFC4 model to C:\\Users\\user\\Desktop\\result.ifc. The final IFC must contain one IfcProject, one IfcSite, one IfcBuilding, two IfcBuildingStorey entities, two IfcSpace objects, eight IfcWall elements, two IfcSlab elements, two IfcRoof elements, fifteen IfcColumn elements, and seven IfcBeam elements. Name the spaces so they include Hall and Office, with one space named exactly Mezzanine Office. The final export should not include IfcDoor, IfcWindow, IfcCurtainWall, IfcBuildingElementProxy, or IfcStair entities. The init model should be used as a starting condition rather than copied through unchanged. Other frame spacing and roof detailing may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
-  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-0CF37424-FA07-46FE-A4D8-7ABED3FB2933",
+  "instruction": "Use the opened Autodesk Revit environment and its automation interfaces to export the completed model to C:\\Users\\user\\Desktop\\result.ifc as IFC4. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a compact three-storey community work building. The architect wants each floor clarified into east and west wings with a consistent central dividing wall, preserving the repetitive stacked massing.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
   "config": [
     {
       "type": "upload_file",
@@ -11,12 +12,28 @@
           {
             "local_path": "task-14/init_file/init.ifc",
             "path": "C:\\Users\\user\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-14/init_image/init_sheet.png",
-            "path": "C:\\Users\\user\\Desktop\\init_sheet.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ],
+        "timeout": 90
       }
     }
   ],

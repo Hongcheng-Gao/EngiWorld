@@ -1,13 +1,39 @@
 {
   "id": "c-revit-task-03-windows",
+  "difficulty": "simple",
   "snapshot": "Revit2025",
-  "instruction": "Library annex IFC model. Create a one-storey library annex from scratch in Revit and export it to C:\\Users\\user\\Desktop\\result.ifc using the IFC4 schema. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, one IfcBuildingStorey, five IfcSpace room objects, eight IfcWall elements, one IfcSlab, and one IfcRoof. Name the spaces so they include Lobby, Reading, Stacks, Office, and Restroom. Include at least four IfcDoor elements, six IfcWindow elements, and one IfcOpeningElement, and do not include IfcBuildingElementProxy, IfcStair, IfcColumn, or IfcBeam entities. Size the annex so the shaped model spans 18.0-22.0 m in X, 10.5-13.5 m in Y, and 3.5-5.5 m in Z. Model the roof as a sloped roof whose shaped roof geometry has at least 0.8 m of vertical range. Exact roof construction, room proportions, materials, and exporter internals may vary, but all IfcRoot GlobalIds must be unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
-  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "instruction": "Use the opened Autodesk Revit environment and its automation interfaces to export the completed model to C:\\Users\\user\\Desktop\\result.ifc as IFC4. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a modest single-storey retail pavilion with a clear front sales area and a rear service band. The operator wants a small prep room carved out of the back-of-house area without changing the public retail zone or the outside envelope.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-03/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ],
+        "timeout": 90
       }
     }
   ],

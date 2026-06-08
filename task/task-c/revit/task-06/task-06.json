@@ -1,13 +1,39 @@
 {
   "id": "c-revit-task-06-windows",
+  "difficulty": "medium",
   "snapshot": "Revit2025",
-  "instruction": "Dormitory wing IFC model. Create a three-storey dormitory wing from scratch in Revit and export it to C:\\Users\\user\\Desktop\\result.ifc using the IFC4 schema. The building should use a double-loaded corridor arrangement on each level. The IFC must contain one IfcProject, one IfcSite, one IfcBuilding, three IfcBuildingStorey entities, twenty-four IfcSpace objects, twelve IfcWall elements, three IfcSlab elements, and one IfcRoof. Name the spaces so the model includes at least three Corridor spaces, eighteen Student Room spaces, and three Bath spaces. Include at least twenty-four IfcDoor elements, eighteen IfcWindow elements, and three IfcStair elements. Do not include IfcBuildingElementProxy, IfcColumn, or IfcBeam entities. Size the shaped model so it spans 34.0-38.0 m in X, 10.5-13.5 m in Y, and 9.5-11.5 m in Z. Room subdivision and facade rhythm may vary as long as the required BIM elements are present and all IfcRoot GlobalIds are unique. [Software] Launch Revit with `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe`.",
-  "source": "https://help.autodesk.com/view/RVT/2024/ENU/?guid=GUID-9A9F7D00-A6A1-4E17-8C74-0965FDA5E007",
+  "instruction": "Use the opened Autodesk Revit environment and its automation interfaces to export the completed model to C:\\Users\\user\\Desktop\\result.ifc as IFC4. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a two-storey neighbourhood centre with a public ground floor and an open activity space upstairs. The client wants a small reading room separated from the upper activity space, using a calm internal partition while preserving the ground-floor layout and the overall two-storey mass.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-06/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ],
+        "timeout": 90
       }
     }
   ],
