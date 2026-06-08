@@ -1,20 +1,12 @@
 # -*- coding: utf-8 -*-
-# eval_job_flangehole_fixed.py
+# Process-oriented evaluator
 # Run with:
-#     abaqus cae noGUI=eval_job_flangehole_fixed.py
+#   abaqus cae noGUI=eval.py
 #
-# Final stdout is intended to be only:
-#     true
+# Final stdout must be exactly one line:
+#   True
 # or
-#     false
-#
-# This evaluator reads:
-#     <Desktop>\Job-FlangeHole.cae
-#     <Desktop>\Job-FlangeHole.odb
-#
-# It also writes:
-#     <Desktop>\eval_result.txt
-#     <Desktop>\eval_detail.txt
+#   False
 
 from abaqus import *
 from abaqusConstants import *
@@ -26,38 +18,29 @@ import sys
 import math
 import traceback
 
-# ============================================================
-# 1. Paths
-# ============================================================
+TASK_ID = 'task-03'
+PROCESS_SPEC = {'artifact': {'job_name': 'Job-FlangeHole', 'model_name': 'Model-HoleTension', 'step_name': 'Step-HoleTension'},
+ 'process': {'bc_signatures': [{'dofs': {'u1': 0.0, 'u2': 0.0, 'u3': 0.0}, 'step': 'Initial'},
+                               {'dofs': {'u2': 0.0, 'u3': 0.0}, 'step': 'Initial'},
+                               {'dofs': {'u3': 0.0}, 'step': 'Initial'}],
+             'geometry': {'bbox_spans': {'x': 120.0, 'y': 240.0},
+                          'hole': {'center': [60.0, 120.0], 'min_nodes': 8, 'radius': 6.0, 'tol': 0.8},
+                          'tol': 0.25},
+             'load_signatures': [{'magnitude': 8.0,
+                                  'step': 'Step-HoleTension',
+                                  'tol': 0.5,
+                                  'type_any': ['SHELLEDGELOAD']}],
+             'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
+             'mesh': {'main_element_type': 'S4R', 'seed_sizes': [10.0], 'seed_tol': 1.5},
+             'min_counts': {'boundary_conditions': 3, 'loads': 2},
+             'section': {'material_names': ['Steel'], 'num_int_pts': 5, 'thickness': 1.0, 'type': 'SHELL'},
+             'step': {'kind': 'STATIC'}},
+ 'solver': {'min_frames': 2}}
 
-def get_desktop():
-    candidates = []
-
-    userprofile = os.environ.get('USERPROFILE', None)
-    if userprofile:
-        candidates.append(os.path.join(userprofile, 'Desktop'))
-
-    candidates.append(r'C:\Users\user\Desktop')
-    candidates.append(r'C:\Users\User\Desktop')
-
-    # Prefer the desktop that already contains the target files.
-    for d in candidates:
-        if os.path.exists(os.path.join(d, 'Job-FlangeHole.cae')) or \
-           os.path.exists(os.path.join(d, 'Job-FlangeHole.odb')):
-            return d
-
-    for d in candidates:
-        if os.path.isdir(d):
-            return d
-
-    return r'C:\Users\user\Desktop'
-
-
-desktop = get_desktop()
-cae_path = os.path.join(desktop, 'Job-FlangeHole.cae')
-odb_path = os.path.join(desktop, 'Job-FlangeHole.odb')
-result_file = os.path.join(desktop, 'eval_result.txt')
-detail_file = os.path.join(desktop, 'eval_detail.txt')
+ABS_TOL = 1.0e-6
+GEOM_TOL = 5.0e-3
+MATERIAL_TOL = 1.0e-6
+SEED_TOL_DEFAULT = 1.0e-3
 
 DETAILS = []
 
@@ -66,110 +49,30 @@ def log(msg):
     DETAILS.append(str(msg))
 
 
-# ============================================================
-# 2. Hard-coded ground truth
-# ============================================================
-
-GT = {
-    # File / model
-    'step_name': 'Step-HoleTension',
-    'last_frame_value': 1.0,
-
-    # Material / section
-    'youngs_modulus': 210000.0,
-    'poisson_ratio': 0.3,
-    'shell_thickness': 1.0,
-    'shell_num_int_pts': 5,
-
-    # Geometry from mesh nodes
-    'mesh_x_min': 0.0,
-    'mesh_x_max': 120.0,
-    'mesh_y_min': 0.0,
-    'mesh_y_max': 240.0,
-    'hole_diameter_from_mesh_avg': 11.999995654927822,
-    'hole_boundary_node_count': 16,
-
-    # Mesh
-    'cae_num_nodes': 638,
-    'cae_num_elements': 605,
-    'cae_s4r_count': 583,
-    'cae_s3_count': 22,
-
-    'odb_num_nodes': 638,
-    'odb_num_elements': 605,
-    'odb_s4r_count': 583,
-    'odb_s3r_count': 22,
-
-    # Results
-    'odb_num_frames': 2,
-    'max_u_magnitude': 0.0053171977986313365,
-    'max_abs_u1': 0.004665727261453867,
-    'max_abs_u2': 0.002775878179818392,
-    'max_abs_u3': 1.556629173988425e-17,
-    'max_u1': 0.00011847333371406421,
-    'min_u1': -0.004665727261453867,
-    'max_u2': 0.002775878179818392,
-    'min_u2': -1.8799695681082085e-05,
-    'max_mises': 16.02847671508789,
-    'min_s11': -16.6141357421875,
-    'max_s11': -0.3741181790828705
-}
-
-# ============================================================
-# 3. Tolerances
-# ============================================================
-
-ABS_TOL_MATERIAL = 1.0e-6
-ABS_TOL_SECTION = 1.0e-6
-ABS_TOL_COORD = 1.0e-6
-ABS_TOL_FRAME = 1.0e-10
-
-# Mesh is fixed by the instruction, but allow a small tolerance for GUI-generated mesh variations.
-NODE_COUNT_TOL = 5
-ELEMENT_COUNT_TOL = 5
-ELEM_TYPE_COUNT_TOL = 5
-HOLE_NODE_COUNT_TOL = 2
-
-ABS_TOL_HOLE_DIAM = 5.0e-3
-
-REL_TOL_DISP = 5.0e-3
-ABS_TOL_DISP = 1.0e-8
-
-REL_TOL_STRESS = 5.0e-3
-ABS_TOL_STRESS = 1.0e-6
-
-ABS_TOL_U3 = 1.0e-8
-
-
-# ============================================================
-# 4. Utility functions
-# ============================================================
-
-def output_result(value):
-    result_text = 'True' if value else 'false'
-
+def _write_text(path, text):
     try:
-        with open(result_file, 'w') as f:
-            f.write(result_text + '\n')
-    except:
+        f = open(path, 'w')
+        f.write(text)
+        f.close()
+    except Exception:
         pass
 
-    try:
-        with open(detail_file, 'w') as f:
-            f.write(result_text + '\n')
-            for line in DETAILS:
-                f.write(str(line) + '\n')
-    except:
-        pass
+
+def output_result(value, detail_path=None, result_path=None):
+    text = 'True\n' if value else 'False\n'
+    if result_path:
+        _write_text(result_path, text)
+    if detail_path:
+        _write_text(detail_path, ''.join([line + '\n' for line in DETAILS]))
 
     try:
-        sys.__stdout__.write(result_text + '\n')
+        sys.__stdout__.write(text)
         sys.__stdout__.flush()
-    except:
+    except Exception:
         try:
-            sys.stdout.write(result_text + '\n')
+            sys.stdout.write(text)
             sys.stdout.flush()
-        except:
+        except Exception:
             pass
 
 
@@ -183,573 +86,1008 @@ def ok(msg):
     return True
 
 
-def close_enough(obs, exp, rel_tol=1.0e-3, abs_tol=1.0e-8):
-    obs = float(obs)
-    exp = float(exp)
-    tol = max(float(abs_tol), float(rel_tol) * abs(exp))
-    return abs(obs - exp) <= tol
+def safe_float(v, default=None):
+    try:
+        return float(v)
+    except Exception:
+        return default
 
 
-def count_close(obs, exp, tol):
-    return abs(int(obs) - int(exp)) <= int(tol)
+def close_enough(a, b, tol=ABS_TOL, rel=1.0e-3):
+    fa = safe_float(a, None)
+    fb = safe_float(b, None)
+    if fa is None or fb is None:
+        return False
+    return abs(fa - fb) <= max(float(tol), abs(fb) * float(rel))
 
 
-def vec_mag(v):
-    s = 0.0
-    for x in v:
-        s += float(x) * float(x)
-    return math.sqrt(s)
+def ci(s):
+    try:
+        return str(s).strip().upper()
+    except Exception:
+        return ''
 
 
-def get_step_key(steps, target):
-    target_upper = target.upper()
-    for k in steps.keys():
-        if k.upper() == target_upper:
-            return k
+def names_equal(a, b):
+    return ci(a) == ci(b)
+
+
+def get_desktop(job_name):
+    candidates = []
+    up = os.environ.get('USERPROFILE', None)
+    if up:
+        candidates.append(os.path.join(up, 'Desktop'))
+    candidates.append(r'C:\Users\user\Desktop')
+    candidates.append(r'C:\Users\User\Desktop')
+
+    for d in candidates:
+        if os.path.exists(os.path.join(d, job_name + '.cae')) or os.path.exists(os.path.join(d, job_name + '.odb')):
+            return d
+
+    for d in candidates:
+        if os.path.isdir(d):
+            return d
+
+    return r'C:\Users\user\Desktop'
+
+
+def find_key_ci(repo, target):
+    if target is None:
+        return None
+    tu = ci(target)
+    try:
+        for k in repo.keys():
+            ku = ci(k)
+            if ku == tu or ku.endswith('.' + tu):
+                return k
+    except Exception:
+        return None
     return None
 
 
-def get_main_instance(root_assembly):
-    best_key = None
-    best_nodes = -1
-
-    for k in root_assembly.instances.keys():
-        inst = root_assembly.instances[k]
-        try:
-            n = len(inst.nodes)
-        except:
-            n = -1
-
-        if n > best_nodes:
-            best_nodes = n
-            best_key = k
-
-    if best_key is None:
+def get_repo_value_ci(repo, target):
+    k = find_key_ci(repo, target)
+    if k is None:
+        return None
+    try:
+        return repo[k]
+    except Exception:
         return None
 
-    return root_assembly.instances[best_key]
+
+def symbol_to_bool(v):
+    if isinstance(v, bool):
+        return v
+    vu = ci(v)
+    if vu in ('ON', 'TRUE', '1'):
+        return True
+    if vu in ('OFF', 'FALSE', '0'):
+        return False
+    return None
+
+
+def is_set_value(v):
+    vu = ci(v)
+    if vu in ('', 'NONE', 'UNSET', 'UNCHANGED', 'FREED'):
+        return False
+    return True
+
+
+def class_name(obj):
+    try:
+        return obj.__class__.__name__.upper()
+    except Exception:
+        try:
+            return str(type(obj)).upper()
+        except Exception:
+            return ''
+
+
+def step_kind_matches(step_obj, expected_kind):
+    text = ' '.join([
+        class_name(step_obj),
+        ci(getattr(step_obj, 'procedureType', '')),
+        ci(getattr(step_obj, 'analysis', '')),
+    ])
+    ek = ci(expected_kind)
+    if ek == 'STATIC':
+        return ('STATIC' in text) and ('HEAT' not in text)
+    if ek == 'HEAT_TRANSFER':
+        return ('HEAT' in text) or ('HEAT_TRANSFER' in text)
+    if ek == 'BUCKLE':
+        return 'BUCKLE' in text
+    if ek == 'FREQUENCY':
+        return 'FREQUENCY' in text
+    return False
+
+
+def choose_model(mdb_obj, expected_name=None):
+    if expected_name:
+        k = find_key_ci(mdb_obj.models, expected_name)
+        if k is not None:
+            return mdb_obj.models[k]
+
+    best = None
+    best_score = -1
+    try:
+        for mk in mdb_obj.models.keys():
+            m = mdb_obj.models[mk]
+            score = 0
+            try:
+                score += len(m.parts.keys()) * 10
+            except Exception:
+                pass
+            try:
+                for pk in m.parts.keys():
+                    p = m.parts[pk]
+                    score += len(p.elements) * 2 + len(p.nodes)
+            except Exception:
+                pass
+            if score > best_score:
+                best_score = score
+                best = m
+    except Exception:
+        return None
+
+    return best
+
+
+def choose_primary_part(model):
+    best = None
+    best_score = -1
+    try:
+        for pk in model.parts.keys():
+            p = model.parts[pk]
+            score = 0
+            try:
+                score += len(p.elements) * 2 + len(p.nodes)
+            except Exception:
+                pass
+            if score > best_score:
+                best_score = score
+                best = p
+    except Exception:
+        return None
+    return best
+
+
+def collect_node_xyz(nodes):
+    out = []
+    for n in nodes:
+        try:
+            x, y, z = n.coordinates
+            out.append((float(x), float(y), float(z)))
+        except Exception:
+            pass
+    return out
+
+
+def bbox_from_xyz(xyz):
+    if not xyz:
+        return None
+    xs = [p[0] for p in xyz]
+    ys = [p[1] for p in xyz]
+    zs = [p[2] for p in xyz]
+    return {
+        'x_min': min(xs), 'x_max': max(xs),
+        'y_min': min(ys), 'y_max': max(ys),
+        'z_min': min(zs), 'z_max': max(zs),
+        'x_span': max(xs) - min(xs),
+        'y_span': max(ys) - min(ys),
+        'z_span': max(zs) - min(zs),
+    }
+
+
+def check_bbox(bbox, geom_spec):
+    if bbox is None:
+        return fail('Geometry bbox is empty')
+
+    tol = float(geom_spec.get('tol', GEOM_TOL))
+
+    spans = geom_spec.get('bbox_spans', None)
+    if spans:
+        for axis, exp in spans.items():
+            key = axis.lower() + '_span'
+            obs = bbox.get(key, None)
+            if obs is None or not close_enough(obs, exp, tol=tol, rel=1.0e-3):
+                return fail('bbox span mismatch for %s: obs=%s exp=%s tol=%s' % (axis, str(obs), str(exp), str(tol)))
+
+    mins = geom_spec.get('bbox_mins', None)
+    if mins:
+        for axis, exp in mins.items():
+            key = axis.lower() + '_min'
+            obs = bbox.get(key, None)
+            if obs is None or not close_enough(obs, exp, tol=tol, rel=1.0e-3):
+                return fail('bbox min mismatch for %s: obs=%s exp=%s tol=%s' % (axis, str(obs), str(exp), str(tol)))
+
+    maxs = geom_spec.get('bbox_maxs', None)
+    if maxs:
+        for axis, exp in maxs.items():
+            key = axis.lower() + '_max'
+            obs = bbox.get(key, None)
+            if obs is None or not close_enough(obs, exp, tol=tol, rel=1.0e-3):
+                return fail('bbox max mismatch for %s: obs=%s exp=%s tol=%s' % (axis, str(obs), str(exp), str(tol)))
+
+    return True
+
+
+def check_hole(xyz, hole_spec):
+    if not hole_spec:
+        return True
+
+    cx = float(hole_spec['center'][0])
+    cy = float(hole_spec['center'][1])
+    r0 = float(hole_spec['radius'])
+    tol = float(hole_spec.get('tol', 1.0))
+    min_nodes = int(hole_spec.get('min_nodes', 6))
+
+    hits = []
+    for x, y, z in xyz:
+        rr = math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
+        if abs(rr - r0) <= tol:
+            hits.append(rr)
+
+    if len(hits) < min_nodes:
+        return fail('hole boundary nodes too few: obs=%s min=%s' % (str(len(hits)), str(min_nodes)))
+
+    ravg = sum(hits) / float(len(hits))
+    if not close_enough(ravg, r0, tol=tol, rel=1.0e-3):
+        return fail('hole radius mismatch: obs=%s exp=%s tol=%s' % (str(ravg), str(r0), str(tol)))
+
+    return True
 
 
 def get_element_type_counts(elements):
     counts = {}
-    for elem in elements:
-        try:
-            etype = str(elem.type)
-        except:
-            etype = 'UNKNOWN'
-        counts[etype] = counts.get(etype, 0) + 1
+    for e in elements:
+        t = ci(getattr(e, 'type', 'UNKNOWN'))
+        counts[t] = counts.get(t, 0) + 1
     return counts
 
 
-def coord_extents_and_hole_from_nodes(nodes):
-    xs = []
-    ys = []
-    zs = []
-    hole_rs = []
-
-    cx = 60.0
-    cy = 120.0
-    target_r = 6.0
-
-    for node in nodes:
-        x, y, z = node.coordinates
-        x = float(x)
-        y = float(y)
-        z = float(z)
-
-        xs.append(x)
-        ys.append(y)
-        zs.append(z)
-
-        r = math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
-
-        # The reference extraction used abs(r - 6.0) < 1.0.
-        if abs(r - target_r) < 1.0:
-            hole_rs.append(r)
-
-    if len(xs) == 0:
-        return None
-
-    out = {
-        'x_min': min(xs),
-        'x_max': max(xs),
-        'y_min': min(ys),
-        'y_max': max(ys),
-        'z_min': min(zs),
-        'z_max': max(zs),
-        'hole_node_count': len(hole_rs),
-        'hole_diameter_avg': None
-    }
-
-    if len(hole_rs) > 0:
-        out['hole_diameter_avg'] = 2.0 * sum(hole_rs) / len(hole_rs)
-
-    return out
-
-
-def material_ok(model):
-    for mat_name in model.materials.keys():
-        mat = model.materials[mat_name]
-        try:
-            E, nu = mat.elastic.table[0]
-            if close_enough(E, GT['youngs_modulus'], rel_tol=0.0, abs_tol=ABS_TOL_MATERIAL) and \
-               close_enough(nu, GT['poisson_ratio'], rel_tol=0.0, abs_tol=ABS_TOL_MATERIAL):
-                log('Material matched: %s, E=%s, nu=%s' % (mat_name, str(E), str(nu)))
-                return True
-        except:
-            pass
-
-    return False
-
-
-def section_ok(model):
-    for sec_name in model.sections.keys():
-        sec = model.sections[sec_name]
-        try:
-            thickness = float(sec.thickness)
-        except:
-            continue
-
-        if not close_enough(thickness, GT['shell_thickness'], rel_tol=0.0, abs_tol=ABS_TOL_SECTION):
-            continue
-
-        # Some Abaqus versions expose numIntPts; some do not. If exposed, check it.
-        try:
-            nipt = int(sec.numIntPts)
-            if nipt != int(GT['shell_num_int_pts']):
-                continue
-        except:
-            pass
-
-        log('Section matched: %s, thickness=%s' % (sec_name, str(thickness)))
+def check_mesh(part_obj, mesh_spec):
+    if not mesh_spec:
         return True
 
-    return False
+    main_type = ci(mesh_spec.get('main_element_type', ''))
+    tol = float(mesh_spec.get('seed_tol', SEED_TOL_DEFAULT))
 
+    try:
+        counts = get_element_type_counts(part_obj.elements)
+    except Exception:
+        return fail('Cannot inspect element types')
 
-def get_best_model_from_cae():
-    best_model = None
-    best_score = -1
+    total = 0
+    for k in counts:
+        total += counts[k]
 
-    for model_name in mdb.models.keys():
-        model = mdb.models[model_name]
-        score = 0
+    if main_type:
+        main_count = counts.get(main_type, 0)
+        if main_count <= 0:
+            return fail('Main element type not found: ' + str(main_type))
+        if total > 0 and float(main_count) / float(total) < 0.5:
+            return fail('Main element type fraction too low for %s: %s/%s' % (main_type, str(main_count), str(total)))
 
-        if get_step_key(model.steps, GT['step_name']) is not None:
-            score += 100000
-
+    seed_sizes = mesh_spec.get('seed_sizes', [])
+    if seed_sizes:
+        observed = []
         try:
-            for part_name in model.parts.keys():
-                part = model.parts[part_name]
-                score += len(part.nodes) + 2 * len(part.elements)
-        except:
+            s = part_obj.getPartSeeds(SIZE)
+            sf = safe_float(s, None)
+            if sf is not None and sf > 0.0:
+                observed.append(sf)
+        except Exception:
             pass
 
-        try:
-            assembly = model.rootAssembly
-            for inst_name in assembly.instances.keys():
-                inst = assembly.instances[inst_name]
-                score += len(inst.nodes) + 2 * len(inst.elements)
-        except:
-            pass
+        if observed:
+            for exp in seed_sizes:
+                expf = float(exp)
+                ok_seed = False
+                for ob in observed:
+                    if close_enough(ob, expf, tol=tol, rel=1.0e-3):
+                        ok_seed = True
+                        break
+                if not ok_seed:
+                    return fail('seed size mismatch: expected one of %s, observed=%s' % (str(seed_sizes), str(observed)))
 
-        if score > best_score:
-            best_score = score
-            best_model = model
-
-    return best_model
-
-
-def get_best_part_or_instance_mesh_from_cae(model):
-    best_obj = None
-    best_nodes = -1
-    best_elements = -1
-    best_counts = {}
-    best_source = None
-
-    try:
-        for part_name in model.parts.keys():
-            part = model.parts[part_name]
-            try:
-                n = len(part.nodes)
-                e = len(part.elements)
-                if n > best_nodes:
-                    best_obj = part
-                    best_nodes = n
-                    best_elements = e
-                    best_counts = get_element_type_counts(part.elements)
-                    best_source = 'part:' + part_name
-            except:
-                pass
-    except:
-        pass
-
-    try:
-        for inst_name in model.rootAssembly.instances.keys():
-            inst = model.rootAssembly.instances[inst_name]
-            try:
-                n = len(inst.nodes)
-                e = len(inst.elements)
-                if n > best_nodes:
-                    best_obj = inst
-                    best_nodes = n
-                    best_elements = e
-                    best_counts = get_element_type_counts(inst.elements)
-                    best_source = 'instance:' + inst_name
-            except:
-                pass
-    except:
-        pass
-
-    return best_obj, best_nodes, best_elements, best_counts, best_source
-
-
-# ============================================================
-# 5. CAE checks
-# ============================================================
-
-def check_cae_file():
-    if not os.path.exists(cae_path):
-        return fail('CAE file not found: ' + cae_path)
-
-    try:
-        openMdb(pathName=cae_path)
-    except Exception as e:
-        return fail('Cannot open CAE: ' + str(e))
-
-    model = get_best_model_from_cae()
-    if model is None:
-        return fail('No model found in CAE')
-
-    if get_step_key(model.steps, GT['step_name']) is None:
-        return fail('Step not found in CAE: ' + GT['step_name'])
-    ok('CAE step found: ' + GT['step_name'])
-
-    if not material_ok(model):
-        return fail('Steel material properties not found')
-    ok('CAE material matched')
-
-    if not section_ok(model):
-        return fail('Shell section thickness/integration points not matched')
-    ok('CAE shell section matched')
-
-    obj, n_nodes, n_elems, elem_counts, source = get_best_part_or_instance_mesh_from_cae(model)
-    log('CAE mesh source: %s' % str(source))
-    log('CAE mesh counts: nodes=%s, elements=%s, element_types=%s' %
-        (str(n_nodes), str(n_elems), str(elem_counts)))
-
-    if not count_close(n_nodes, GT['cae_num_nodes'], NODE_COUNT_TOL):
-        return fail('CAE node count mismatch: observed %s, expected %s' %
-                    (str(n_nodes), str(GT['cae_num_nodes'])))
-
-    if not count_close(n_elems, GT['cae_num_elements'], ELEMENT_COUNT_TOL):
-        return fail('CAE element count mismatch: observed %s, expected %s' %
-                    (str(n_elems), str(GT['cae_num_elements'])))
-
-    if not count_close(elem_counts.get('S4R', 0), GT['cae_s4r_count'], ELEM_TYPE_COUNT_TOL):
-        return fail('CAE S4R count mismatch: observed %s, expected %s' %
-                    (str(elem_counts.get('S4R', 0)), str(GT['cae_s4r_count'])))
-
-    # In CAE the triangular elements appear as S3 in the extracted truth.
-    s3_like_count = elem_counts.get('S3', 0) + elem_counts.get('S3R', 0)
-    if not count_close(s3_like_count, GT['cae_s3_count'], ELEM_TYPE_COUNT_TOL):
-        return fail('CAE S3/S3R count mismatch: observed %s, expected %s' %
-                    (str(s3_like_count), str(GT['cae_s3_count'])))
-
-    ok('CAE mesh matched')
-
-    geom = None
-    try:
-        geom = coord_extents_and_hole_from_nodes(obj.nodes)
-        log('CAE geometry: ' + str(geom))
-    except Exception as e:
-        return fail('Cannot read CAE mesh geometry: ' + str(e))
-
-    if geom is None:
-        return fail('CAE geometry is empty')
-
-    if not close_enough(geom['x_min'], GT['mesh_x_min'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-        return fail('CAE x_min mismatch: ' + str(geom['x_min']))
-
-    if not close_enough(geom['x_max'], GT['mesh_x_max'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-        return fail('CAE x_max mismatch: ' + str(geom['x_max']))
-
-    if not close_enough(geom['y_min'], GT['mesh_y_min'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-        return fail('CAE y_min mismatch: ' + str(geom['y_min']))
-
-    if not close_enough(geom['y_max'], GT['mesh_y_max'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-        return fail('CAE y_max mismatch: ' + str(geom['y_max']))
-
-    if geom['hole_diameter_avg'] is None:
-        return fail('CAE hole boundary nodes not found')
-
-    if not close_enough(
-        geom['hole_diameter_avg'],
-        GT['hole_diameter_from_mesh_avg'],
-        rel_tol=0.0,
-        abs_tol=ABS_TOL_HOLE_DIAM
-    ):
-        return fail('CAE hole diameter mismatch: observed %s, expected %s' %
-                    (str(geom['hole_diameter_avg']), str(GT['hole_diameter_from_mesh_avg'])))
-
-    if not count_close(geom['hole_node_count'], GT['hole_boundary_node_count'], HOLE_NODE_COUNT_TOL):
-        return fail('CAE hole node count mismatch: observed %s, expected %s' %
-                    (str(geom['hole_node_count']), str(GT['hole_boundary_node_count'])))
-
-    ok('CAE geometry and hole matched')
-
-    # Do not check exact BC/load internal values here. The reference extraction itself
-    # returned null for BC DOFs and null load magnitudes. Only require that objects exist.
-    try:
-        bc_count = len(model.boundaryConditions.keys())
-        load_count = len(model.loads.keys())
-        log('CAE BC names: ' + str(list(model.boundaryConditions.keys())))
-        log('CAE load names: ' + str(list(model.loads.keys())))
-
-        if bc_count < 3:
-            return fail('Expected at least 3 boundary condition objects, observed %s' % str(bc_count))
-
-        if load_count < 2:
-            return fail('Expected at least 2 load objects, observed %s' % str(load_count))
-    except Exception as e:
-        return fail('Cannot inspect CAE loads/BCs: ' + str(e))
-
-    ok('CAE loads and BCs exist')
     return True
 
 
-# ============================================================
-# 6. ODB checks
-# ============================================================
+def _read_material_value(mat_obj, field_name):
+    obj = getattr(mat_obj, field_name, None)
+    if obj is None:
+        return None
+    tbl = getattr(obj, 'table', None)
+    if tbl is None:
+        return None
+    try:
+        if len(tbl) == 0:
+            return None
+        row0 = tbl[0]
+        if len(row0) == 0:
+            return None
+        return safe_float(row0[0], None)
+    except Exception:
+        return None
 
-def check_odb_file():
-    if not os.path.exists(odb_path):
-        return fail('ODB file not found: ' + odb_path)
+
+def check_materials(model, mats_spec):
+    if not mats_spec:
+        return True
+
+    for exp in mats_spec:
+        mobj = get_repo_value_ci(model.materials, exp.get('name'))
+        if mobj is None:
+            return fail('Material not found: ' + str(exp.get('name')))
+
+        if 'E' in exp or 'nu' in exp:
+            try:
+                e_obs, nu_obs = mobj.elastic.table[0]
+            except Exception:
+                return fail('Material elastic data missing: ' + str(exp.get('name')))
+
+            if 'E' in exp and not close_enough(e_obs, exp['E'], tol=MATERIAL_TOL, rel=1.0e-3):
+                return fail('Material E mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(e_obs), str(exp['E'])))
+            if 'nu' in exp and not close_enough(nu_obs, exp['nu'], tol=MATERIAL_TOL, rel=1.0e-3):
+                return fail('Material nu mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(nu_obs), str(exp['nu'])))
+
+        if 'density' in exp:
+            obs = _read_material_value(mobj, 'density')
+            if obs is None or not close_enough(obs, exp['density'], tol=MATERIAL_TOL, rel=5.0e-2):
+                return fail('Material density mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(exp['density'])))
+
+        if 'conductivity' in exp:
+            obs = _read_material_value(mobj, 'conductivity')
+            if obs is None:
+                return fail('Material conductivity missing for ' + str(exp.get('name')))
+            target = exp['conductivity']
+            if isinstance(target, (list, tuple)):
+                matched = False
+                for t in target:
+                    if close_enough(obs, t, tol=MATERIAL_TOL, rel=5.0e-2):
+                        matched = True
+                        break
+                if not matched:
+                    return fail('Material conductivity mismatch for %s: obs=%s exp_any=%s' % (str(exp.get('name')), str(obs), str(target)))
+            else:
+                if not close_enough(obs, target, tol=MATERIAL_TOL, rel=5.0e-2):
+                    return fail('Material conductivity mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(target)))
+
+        if 'specific_heat' in exp:
+            obs = _read_material_value(mobj, 'specificHeat')
+            if obs is None or not close_enough(obs, exp['specific_heat'], tol=MATERIAL_TOL, rel=5.0e-2):
+                return fail('Material specificHeat mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(exp['specific_heat'])))
+
+        if 'expansion' in exp:
+            obs = _read_material_value(mobj, 'expansion')
+            if obs is None or not close_enough(obs, exp['expansion'], tol=MATERIAL_TOL, rel=5.0e-2):
+                return fail('Material expansion mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(exp['expansion'])))
+
+    return True
+
+
+def check_section(model, part_obj, section_spec):
+    if not section_spec:
+        return True
+
+    try:
+        assigns = part_obj.sectionAssignments
+        if len(assigns) == 0:
+            return fail('No section assignment found on primary part')
+    except Exception:
+        return fail('Cannot inspect section assignments on primary part')
+
+    expected_type = ci(section_spec.get('type', ''))
+    expected_materials = [ci(x) for x in section_spec.get('material_names', [])]
+    expected_thickness = section_spec.get('thickness', None)
+    expected_int_pts = section_spec.get('num_int_pts', None)
+
+    found_match = False
+    try:
+        for sk in model.sections.keys():
+            sec = model.sections[sk]
+            sname = class_name(sec)
+
+            if expected_type == 'SHELL' and 'SHELL' not in sname:
+                continue
+            if expected_type == 'SOLID' and 'SOLID' not in sname:
+                continue
+
+            mat_name = ci(getattr(sec, 'material', ''))
+            if expected_materials and mat_name not in expected_materials:
+                continue
+
+            if expected_thickness is not None:
+                th = safe_float(getattr(sec, 'thickness', None), None)
+                if th is None or not close_enough(th, expected_thickness, tol=GEOM_TOL, rel=1.0e-3):
+                    continue
+
+            if expected_int_pts is not None:
+                nipt = getattr(sec, 'numIntPts', None)
+                ni = None
+                try:
+                    ni = int(nipt)
+                except Exception:
+                    ni = None
+                if ni is None or ni != int(expected_int_pts):
+                    continue
+
+            found_match = True
+            break
+    except Exception:
+        return fail('Cannot inspect section objects')
+
+    if not found_match:
+        return fail('No matching section found for expected section spec')
+
+    return True
+
+
+def all_set_names(model, part_obj):
+    names = []
+    try:
+        names.extend(list(model.rootAssembly.sets.keys()))
+    except Exception:
+        pass
+    try:
+        names.extend(list(model.rootAssembly.nodeSets.keys()))
+    except Exception:
+        pass
+    try:
+        names.extend(list(part_obj.sets.keys()))
+    except Exception:
+        pass
+    return names
+
+
+def set_name_exists(all_names, target):
+    tu = ci(target)
+    for n in all_names:
+        nu = ci(n)
+        if nu == tu or nu.endswith('.' + tu):
+            return True
+    return False
+
+
+def check_required_sets(model, part_obj, set_names):
+    if not set_names:
+        return True
+    names = all_set_names(model, part_obj)
+    for s in set_names:
+        if not set_name_exists(names, s):
+            return fail('Required set not found: ' + str(s))
+    return True
+
+
+def bc_matches_req(bc_obj, req):
+    step_req = req.get('step', None)
+    if step_req is not None:
+        cstep = getattr(bc_obj, 'createStepName', None)
+        if not names_equal(cstep, step_req):
+            return False
+
+    dofs = req.get('dofs', {})
+    for dof_name in dofs.keys():
+        exp = dofs[dof_name]
+        obs = getattr(bc_obj, dof_name, None)
+        if exp == 'SET':
+            if not is_set_value(obs):
+                return False
+        elif exp == 'UNSET':
+            if is_set_value(obs):
+                return False
+        else:
+            if not is_set_value(obs):
+                return False
+            if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
+                return False
+
+    return True
+
+
+def check_bcs(model, bc_specs, min_count=None):
+    repo = model.boundaryConditions
+
+    if min_count is not None:
+        try:
+            if len(repo.keys()) < int(min_count):
+                return fail('Boundary condition count too low: obs=%s min=%s' % (str(len(repo.keys())), str(min_count)))
+        except Exception:
+            return fail('Cannot inspect boundary condition repository')
+
+    if not bc_specs:
+        return True
+
+    try:
+        bcs = [repo[k] for k in repo.keys()]
+    except Exception:
+        return fail('Cannot iterate boundary conditions')
+
+    for req in bc_specs:
+        matched = False
+        for bc in bcs:
+            if bc_matches_req(bc, req):
+                matched = True
+                break
+        if not matched:
+            return fail('Required BC signature not found: ' + str(req))
+
+    return True
+
+
+def type_matches_any(obj, tokens):
+    if not tokens:
+        return True
+    txt = class_name(obj)
+    for t in tokens:
+        if ci(t) in txt:
+            return True
+    return False
+
+
+def load_matches_req(load_obj, req):
+    if not type_matches_any(load_obj, req.get('type_any', [])):
+        return False
+
+    step_req = req.get('step', None)
+    if step_req is not None:
+        cstep = getattr(load_obj, 'createStepName', None)
+        if not names_equal(cstep, step_req):
+            return False
+
+    if 'magnitude' in req:
+        mag = getattr(load_obj, 'magnitude', None)
+        if mag is None:
+            return False
+        tol = float(req.get('tol', ABS_TOL))
+        if not close_enough(mag, req['magnitude'], tol=tol, rel=1.0e-2):
+            return False
+
+    comp = req.get('component', None)
+    if comp:
+        val = getattr(load_obj, comp, None)
+        if val is None:
+            return False
+        if not is_set_value(val):
+            return False
+        sign = req.get('sign', None)
+        vf = safe_float(val, None)
+        if vf is None:
+            return False
+        if sign == 'positive' and vf <= 0.0:
+            return False
+        if sign == 'negative' and vf >= 0.0:
+            return False
+
+    return True
+
+
+def check_loads(model, load_specs, min_count=None):
+    repo = model.loads
+
+    if min_count is not None:
+        try:
+            if len(repo.keys()) < int(min_count):
+                return fail('Load count too low: obs=%s min=%s' % (str(len(repo.keys())), str(min_count)))
+        except Exception:
+            return fail('Cannot inspect load repository')
+
+    if not load_specs:
+        return True
+
+    try:
+        loads = [repo[k] for k in repo.keys()]
+    except Exception:
+        return fail('Cannot iterate loads')
+
+    for req in load_specs:
+        matched = False
+        for ld in loads:
+            if load_matches_req(ld, req):
+                matched = True
+                break
+        if not matched:
+            return fail('Required load signature not found: ' + str(req))
+
+    return True
+
+
+def check_couplings(model, req):
+    if not req:
+        return True
+
+    min_count = int(req.get('min_count', 0))
+
+    try:
+        repo = model.constraints
+        couplings = []
+        for k in repo.keys():
+            c = repo[k]
+            if 'COUPLING' in class_name(c):
+                ctype = ci(getattr(c, 'couplingType', ''))
+                if 'KINEMATIC' in ctype or req.get('accept_any_coupling', False):
+                    couplings.append(c)
+        if len(couplings) < min_count:
+            return fail('Kinematic coupling count too low: obs=%s min=%s' % (str(len(couplings)), str(min_count)))
+    except Exception:
+        return fail('Cannot inspect coupling constraints')
+
+    return True
+
+
+def check_contact(model, req):
+    if not req:
+        return True
+
+    min_interactions = int(req.get('min_interactions', 1))
+    min_props = int(req.get('min_properties', 1))
+
+    try:
+        if len(model.interactions.keys()) < min_interactions:
+            return fail('Interaction count too low: obs=%s min=%s' % (str(len(model.interactions.keys())), str(min_interactions)))
+    except Exception:
+        return fail('Cannot inspect interactions')
+
+    try:
+        if len(model.interactionProperties.keys()) < min_props:
+            return fail('Interaction property count too low: obs=%s min=%s' % (str(len(model.interactionProperties.keys())), str(min_props)))
+    except Exception:
+        return fail('Cannot inspect interaction properties')
+
+    if req.get('hard', False) or req.get('frictionless', False):
+        hard_ok = not req.get('hard', False)
+        fric_ok = not req.get('frictionless', False)
+
+        try:
+            for k in model.interactionProperties.keys():
+                ip = model.interactionProperties[k]
+
+                if req.get('hard', False):
+                    nb = getattr(ip, 'normalBehavior', None)
+                    po = ci(getattr(nb, 'pressureOverclosure', '')) if nb is not None else ''
+                    if 'HARD' in po:
+                        hard_ok = True
+
+                if req.get('frictionless', False):
+                    tb = getattr(ip, 'tangentialBehavior', None)
+                    form = ci(getattr(tb, 'formulation', '')) if tb is not None else ''
+                    if 'FRICTIONLESS' in form:
+                        fric_ok = True
+        except Exception:
+            pass
+
+        if not hard_ok:
+            return fail('Hard contact property not confirmed')
+        if not fric_ok:
+            return fail('Frictionless tangential behavior not confirmed')
+
+    return True
+
+
+def check_predefined_temperature(model, reqs):
+    if not reqs:
+        return True
+
+    try:
+        fields = [model.predefinedFields[k] for k in model.predefinedFields.keys()]
+    except Exception:
+        return fail('Cannot inspect predefined fields')
+
+    for req in reqs:
+        step_req = req.get('step', None)
+        mag_req = req.get('magnitude', None)
+
+        matched = False
+        for pf in fields:
+            if 'TEMPERATURE' not in class_name(pf):
+                continue
+            cstep = getattr(pf, 'createStepName', None)
+            if step_req is not None and not names_equal(cstep, step_req):
+                continue
+
+            if mag_req is not None:
+                mags = getattr(pf, 'magnitudes', None)
+                mv = None
+                try:
+                    if isinstance(mags, (list, tuple)) and len(mags) > 0:
+                        mv = safe_float(mags[0], None)
+                    else:
+                        mv = safe_float(mags, None)
+                except Exception:
+                    mv = None
+
+                if mv is None:
+                    matched = True
+                    break
+
+                if close_enough(mv, mag_req, tol=GEOM_TOL, rel=1.0e-2):
+                    matched = True
+                    break
+            else:
+                matched = True
+                break
+
+        if not matched:
+            return fail('Required temperature predefined field not found: ' + str(req))
+
+    return True
+
+
+
+
+def build_keyword_text(model):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        lines = model.keywordBlock.sieBlocks
+        return '\n'.join([str(x) for x in lines]).upper()
+    except Exception:
+        return ''
+
+
+def section_in_text(text, name):
+    if not text:
+        return False
+    return ci(name) in text
+
+
+def check_keyword_bcs_loads(model, proc):
+    text = build_keyword_text(model)
+    if not text:
+        return fail('Cannot read keyword block text from CAE model')
+
+    # BC requirements: verify key sets/keywords appear in imported INP text.
+    bc_specs = proc.get('bc_signatures', [])
+    if bc_specs:
+        set_names = [ci(x) for x in proc.get('required_sets', [])]
+        for req in bc_specs:
+            dofs = req.get('dofs', {})
+            keys_upper = [ci(k) for k in dofs.keys()]
+            if 'U3' in keys_upper and not section_in_text(text, ', 3, 3'):
+                return fail('Keyword BC check failed for U3 constraint pattern')
+            if 'U2' in keys_upper and not section_in_text(text, ', 2, 2'):
+                return fail('Keyword BC check failed for U2 constraint pattern')
+            if 'U1' in keys_upper and not section_in_text(text, ', 1, 1'):
+                return fail('Keyword BC check failed for U1 constraint pattern')
+            if len(keys_upper) == 0 and not section_in_text(text, ', 11, 11'):
+                return fail('Keyword BC check failed for temperature BC pattern')
+
+            matched_set = False
+            for sn in set_names:
+                if sn and section_in_text(text, sn):
+                    matched_set = True
+                    break
+            if set_names and not matched_set:
+                return fail('Keyword BC check failed: none of required sets appear in keyword text')
+
+    # Load requirements: verify requested load keyword families exist.
+    for req in proc.get('load_signatures', []):
+        types = [ci(x) for x in req.get('type_any', [])]
+        if not types:
+            continue
+        ok_type = False
+        for t in types:
+            if 'CONCENTRATEDFORCE' in t and section_in_text(text, '*CLOAD'):
+                ok_type = True
+            if 'MOMENT' in t and section_in_text(text, '*CLOAD'):
+                ok_type = True
+            if 'PRESSURE' in t and (section_in_text(text, '*DLOAD') or section_in_text(text, '*DSLOAD')):
+                ok_type = True
+            if 'SURFACETRACTION' in t and (section_in_text(text, '*DSLOAD') or section_in_text(text, '*DLOAD')):
+                ok_type = True
+            if 'SHELLEDGELOAD' in t and (section_in_text(text, '*DSLOAD') or section_in_text(text, '*CLOAD')):
+                ok_type = True
+        if not ok_type:
+            return fail('Keyword load check failed for expected load type: ' + str(types))
+
+    return True
+
+def check_step(model, step_spec):
+    step_name = PROCESS_SPEC['artifact']['step_name']
+    step_key = find_key_ci(model.steps, step_name)
+    if step_key is None:
+        return fail('Step not found in CAE model: ' + str(step_name))
+
+    step_obj = model.steps[step_key]
+
+    kind = step_spec.get('kind', None)
+    if kind is not None and not step_kind_matches(step_obj, kind):
+        return fail('Step kind mismatch: expected %s got class=%s procedure=%s' % (
+            str(kind), class_name(step_obj), str(getattr(step_obj, 'procedureType', None))))
+
+    if 'nlgeom' in step_spec and step_spec['nlgeom'] is not None:
+        exp = bool(step_spec['nlgeom'])
+        obs_raw = getattr(step_obj, 'nlgeom', None)
+        obs = symbol_to_bool(obs_raw)
+        if obs is None or obs != exp:
+            return fail('Step nlgeom mismatch: obs=%s exp=%s' % (str(obs_raw), str(exp)))
+
+    if 'num_eigen' in step_spec and step_spec['num_eigen'] is not None:
+        obs = getattr(step_obj, 'numEigen', None)
+        try:
+            oi = int(obs)
+        except Exception:
+            return fail('Step numEigen unreadable: ' + str(obs))
+        if oi != int(step_spec['num_eigen']):
+            return fail('Step numEigen mismatch: obs=%s exp=%s' % (str(oi), str(step_spec['num_eigen'])))
+
+    if 'response' in step_spec and step_spec['response'] is not None:
+        obs = ci(getattr(step_obj, 'response', ''))
+        if ci(step_spec['response']) not in obs:
+            return fail('Step response mismatch: obs=%s exp=%s' % (str(obs), str(step_spec['response'])))
+
+    for key, attr in [('time_period', 'timePeriod'), ('initial_inc', 'initialInc'), ('max_inc', 'maxInc'), ('deltmx', 'deltmx')]:
+        if key in step_spec and step_spec[key] is not None:
+            obs = getattr(step_obj, attr, None)
+            if not close_enough(obs, step_spec[key], tol=GEOM_TOL, rel=1.0e-2):
+                return fail('Step %s mismatch: obs=%s exp=%s' % (str(attr), str(obs), str(step_spec[key])))
+
+    return True
+
+
+def check_cae_process(cae_path):
+    try:
+        openMdb(pathName=cae_path)
+    except Exception as e:
+        return fail('Cannot open CAE: ' + str(e)), None
+
+    model = choose_model(mdb, PROCESS_SPEC['artifact'].get('model_name', None))
+    if model is None:
+        return fail('Cannot choose model from CAE'), None
+
+    part_obj = choose_primary_part(model)
+    if part_obj is None:
+        return fail('Cannot choose primary part from CAE'), None
+
+    proc = PROCESS_SPEC.get('process', {})
+
+    if not check_step(model, proc.get('step', {})):
+        return False, model
+    ok('Step check passed')
+
+    if not check_materials(model, proc.get('materials', [])):
+        return False, model
+    ok('Material check passed')
+
+    if not check_section(model, part_obj, proc.get('section', {})):
+        return False, model
+    ok('Section check passed')
+
+    xyz = collect_node_xyz(part_obj.nodes)
+    bbox = bbox_from_xyz(xyz)
+    if not check_bbox(bbox, proc.get('geometry', {})):
+        return False, model
+    if not check_hole(xyz, proc.get('geometry', {}).get('hole', None)):
+        return False, model
+    ok('Geometry check passed')
+
+    if not check_mesh(part_obj, proc.get('mesh', {})):
+        return False, model
+    ok('Mesh check passed')
+
+    if not check_required_sets(model, part_obj, proc.get('required_sets', [])):
+        return False, model
+    ok('Set check passed')
+
+    min_bc = None
+    min_load = None
+    min_counts = proc.get('min_counts', {})
+    if min_counts:
+        min_bc = min_counts.get('boundary_conditions', None)
+        min_load = min_counts.get('loads', None)
+
+    if not check_keyword_bcs_loads(model, proc):
+        return False, model
+    ok('Keyword BC/Load check passed')
+
+    if not check_couplings(model, proc.get('kinematic_coupling', None)):
+        return False, model
+    if proc.get('kinematic_coupling', None):
+        ok('Coupling check passed')
+
+    if not check_contact(model, proc.get('contact', None)):
+        return False, model
+    if proc.get('contact', None):
+        ok('Contact check passed')
+
+    if not check_predefined_temperature(model, proc.get('predefined_temperatures', [])):
+        return False, model
+    if proc.get('predefined_temperatures', []):
+        ok('Predefined temperature check passed')
+
+    return True, model
+
+
+def check_odb_completion(odb_path):
+    solver_spec = PROCESS_SPEC.get('solver', {})
+    min_frames = int(solver_spec.get('min_frames', 1))
+    require_mode_frames = bool(solver_spec.get('require_mode_frames', False))
 
     odb = None
-
     try:
         odb = openOdb(path=odb_path, readOnly=True)
 
-        inst = get_main_instance(odb.rootAssembly)
-        if inst is None:
-            return fail('No instance found in ODB')
-
-        if not count_close(len(inst.nodes), GT['odb_num_nodes'], NODE_COUNT_TOL):
-            return fail('ODB node count mismatch: observed %s, expected %s' %
-                        (str(len(inst.nodes)), str(GT['odb_num_nodes'])))
-
-        if not count_close(len(inst.elements), GT['odb_num_elements'], ELEMENT_COUNT_TOL):
-            return fail('ODB element count mismatch: observed %s, expected %s' %
-                        (str(len(inst.elements)), str(GT['odb_num_elements'])))
-
-        elem_counts = get_element_type_counts(inst.elements)
-        log('ODB element types: ' + str(elem_counts))
-
-        if not count_close(elem_counts.get('S4R', 0), GT['odb_s4r_count'], ELEM_TYPE_COUNT_TOL):
-            return fail('ODB S4R count mismatch: observed %s, expected %s' %
-                        (str(elem_counts.get('S4R', 0)), str(GT['odb_s4r_count'])))
-
-        # In ODB the triangular elements appear as S3R in the extracted truth.
-        s3r_like_count = elem_counts.get('S3R', 0) + elem_counts.get('S3', 0)
-        if not count_close(s3r_like_count, GT['odb_s3r_count'], ELEM_TYPE_COUNT_TOL):
-            return fail('ODB S3/S3R count mismatch: observed %s, expected %s' %
-                        (str(s3r_like_count), str(GT['odb_s3r_count'])))
-
-        ok('ODB mesh matched')
-
-        geom = coord_extents_and_hole_from_nodes(inst.nodes)
-        log('ODB geometry: ' + str(geom))
-
-        if geom is None:
-            return fail('ODB geometry is empty')
-
-        if not close_enough(geom['x_min'], GT['mesh_x_min'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-            return fail('ODB x_min mismatch: ' + str(geom['x_min']))
-
-        if not close_enough(geom['x_max'], GT['mesh_x_max'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-            return fail('ODB x_max mismatch: ' + str(geom['x_max']))
-
-        if not close_enough(geom['y_min'], GT['mesh_y_min'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-            return fail('ODB y_min mismatch: ' + str(geom['y_min']))
-
-        if not close_enough(geom['y_max'], GT['mesh_y_max'], rel_tol=0.0, abs_tol=ABS_TOL_COORD):
-            return fail('ODB y_max mismatch: ' + str(geom['y_max']))
-
-        if geom['hole_diameter_avg'] is None:
-            return fail('ODB hole boundary nodes not found')
-
-        if not close_enough(
-            geom['hole_diameter_avg'],
-            GT['hole_diameter_from_mesh_avg'],
-            rel_tol=0.0,
-            abs_tol=ABS_TOL_HOLE_DIAM
-        ):
-            return fail('ODB hole diameter mismatch: observed %s, expected %s' %
-                        (str(geom['hole_diameter_avg']), str(GT['hole_diameter_from_mesh_avg'])))
-
-        if not count_close(geom['hole_node_count'], GT['hole_boundary_node_count'], HOLE_NODE_COUNT_TOL):
-            return fail('ODB hole node count mismatch: observed %s, expected %s' %
-                        (str(geom['hole_node_count']), str(GT['hole_boundary_node_count'])))
-
-        ok('ODB geometry and hole matched')
-
-        step_key = get_step_key(odb.steps, GT['step_name'])
+        step_key = find_key_ci(odb.steps, PROCESS_SPEC['artifact']['step_name'])
         if step_key is None:
-            return fail('ODB step not found: ' + GT['step_name'])
+            return fail('Target step not found in ODB: ' + str(PROCESS_SPEC['artifact']['step_name']))
 
         step = odb.steps[step_key]
+        nf = len(step.frames)
+        if nf < min_frames:
+            return fail('ODB frame count too low: obs=%s min=%s' % (str(nf), str(min_frames)))
 
-        if len(step.frames) != GT['odb_num_frames']:
-            return fail('ODB frame count mismatch: observed %s, expected %s' %
-                        (str(len(step.frames)), str(GT['odb_num_frames'])))
+        if require_mode_frames and nf <= 1:
+            return fail('ODB mode frames missing (need >1 frame for perturbation step)')
 
-        if len(step.frames) == 0:
-            return fail('ODB step has no frames')
+        try:
+            status = ci(getattr(odb.diagnosticData, 'jobStatus', ''))
+            if status and ('ABORT' in status or 'TERMINAT' in status):
+                return fail('ODB diagnostic status indicates failure: ' + str(status))
+        except Exception:
+            pass
 
         last_frame = step.frames[-1]
+        try:
+            fv = safe_float(last_frame.frameValue, None)
+            if fv is None:
+                return fail('Last frame value is not numeric')
+        except Exception:
+            return fail('Cannot read last frame value')
 
-        if not close_enough(last_frame.frameValue, GT['last_frame_value'], rel_tol=1.0e-8, abs_tol=ABS_TOL_FRAME):
-            return fail('Last frame value mismatch: observed %s, expected %s' %
-                        (str(last_frame.frameValue), str(GT['last_frame_value'])))
-
-        ok('ODB step and frame matched')
-
-        for required in ['U', 'S']:
-            if required not in last_frame.fieldOutputs.keys():
-                return fail('Required field output not found: ' + required)
-
-        U_field = last_frame.fieldOutputs['U']
-        S_field = last_frame.fieldOutputs['S']
-
-        # ----------------------------------------------------
-        # Displacement checks
-        # ----------------------------------------------------
-        max_u_magnitude = -1.0
-        max_abs_u1 = -1.0
-        max_abs_u2 = -1.0
-        max_abs_u3 = -1.0
-
-        max_u1 = None
-        min_u1 = None
-        max_u2 = None
-        min_u2 = None
-
-        for val in U_field.values:
-            u1 = float(val.data[0])
-            u2 = float(val.data[1])
-            u3 = float(val.data[2])
-
-            umag = vec_mag(val.data)
-
-            max_u_magnitude = max(max_u_magnitude, umag)
-            max_abs_u1 = max(max_abs_u1, abs(u1))
-            max_abs_u2 = max(max_abs_u2, abs(u2))
-            max_abs_u3 = max(max_abs_u3, abs(u3))
-
-            max_u1 = u1 if max_u1 is None else max(max_u1, u1)
-            min_u1 = u1 if min_u1 is None else min(min_u1, u1)
-            max_u2 = u2 if max_u2 is None else max(max_u2, u2)
-            min_u2 = u2 if min_u2 is None else min(min_u2, u2)
-
-        log('Displacement summary: max|U|=%s, max|U1|=%s, max|U2|=%s, max|U3|=%s, maxU1=%s, minU1=%s, maxU2=%s, minU2=%s' %
-            (str(max_u_magnitude), str(max_abs_u1), str(max_abs_u2), str(max_abs_u3),
-             str(max_u1), str(min_u1), str(max_u2), str(min_u2)))
-
-        if not close_enough(max_u_magnitude, GT['max_u_magnitude'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('max U magnitude mismatch: observed %s, expected %s' %
-                        (str(max_u_magnitude), str(GT['max_u_magnitude'])))
-
-        if not close_enough(max_abs_u1, GT['max_abs_u1'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('max abs U1 mismatch: observed %s, expected %s' %
-                        (str(max_abs_u1), str(GT['max_abs_u1'])))
-
-        if not close_enough(max_abs_u2, GT['max_abs_u2'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('max abs U2 mismatch: observed %s, expected %s' %
-                        (str(max_abs_u2), str(GT['max_abs_u2'])))
-
-        if max_abs_u3 > ABS_TOL_U3:
-            return fail('max abs U3 too large: observed %s' % str(max_abs_u3))
-
-        if not close_enough(max_u1, GT['max_u1'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('max U1 mismatch: observed %s, expected %s' %
-                        (str(max_u1), str(GT['max_u1'])))
-
-        if not close_enough(min_u1, GT['min_u1'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('min U1 mismatch: observed %s, expected %s' %
-                        (str(min_u1), str(GT['min_u1'])))
-
-        if not close_enough(max_u2, GT['max_u2'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('max U2 mismatch: observed %s, expected %s' %
-                        (str(max_u2), str(GT['max_u2'])))
-
-        if not close_enough(min_u2, GT['min_u2'], rel_tol=REL_TOL_DISP, abs_tol=ABS_TOL_DISP):
-            return fail('min U2 mismatch: observed %s, expected %s' %
-                        (str(min_u2), str(GT['min_u2'])))
-
-        ok('ODB displacement matched')
-
-        # ----------------------------------------------------
-        # Stress checks
-        # ----------------------------------------------------
-        max_mises = -1.0
-        max_s11 = None
-        min_s11 = None
-
-        for val in S_field.values:
-            try:
-                mises = float(val.mises)
-                max_mises = max(max_mises, mises)
-            except:
-                pass
-
-            try:
-                s11 = float(val.data[0])
-                max_s11 = s11 if max_s11 is None else max(max_s11, s11)
-                min_s11 = s11 if min_s11 is None else min(min_s11, s11)
-            except:
-                pass
-
-        log('Stress summary: maxMises=%s, maxS11=%s, minS11=%s' %
-            (str(max_mises), str(max_s11), str(min_s11)))
-
-        if not close_enough(max_mises, GT['max_mises'], rel_tol=REL_TOL_STRESS, abs_tol=ABS_TOL_STRESS):
-            return fail('max Mises mismatch: observed %s, expected %s' %
-                        (str(max_mises), str(GT['max_mises'])))
-
-        if max_s11 is None or not close_enough(max_s11, GT['max_s11'], rel_tol=REL_TOL_STRESS, abs_tol=ABS_TOL_STRESS):
-            return fail('max S11 mismatch: observed %s, expected %s' %
-                        (str(max_s11), str(GT['max_s11'])))
-
-        if min_s11 is None or not close_enough(min_s11, GT['min_s11'], rel_tol=REL_TOL_STRESS, abs_tol=ABS_TOL_STRESS):
-            return fail('min S11 mismatch: observed %s, expected %s' %
-                        (str(min_s11), str(GT['min_s11'])))
-
-        ok('ODB stress matched')
+        ok('ODB completion check passed')
         return True
 
     except Exception as e:
-        log('Exception in ODB check: ' + str(e))
         log(traceback.format_exc())
-        return False
-
+        return fail('Cannot open/inspect ODB: ' + str(e))
     finally:
         try:
             if odb is not None:
                 odb.close()
-        except:
+        except Exception:
             pass
 
 
-# ============================================================
-# 7. Main
-# ============================================================
+def artifact_check(desktop):
+    job_name = PROCESS_SPEC['artifact']['job_name']
+    cae_path = os.path.join(desktop, job_name + '.cae')
+    odb_path = os.path.join(desktop, job_name + '.odb')
 
-try:
-    passed = check_cae_file() and check_odb_file()
-except Exception as e:
-    log('Top-level exception: ' + str(e))
-    log(traceback.format_exc())
-    passed = False
+    if not os.path.exists(cae_path):
+        return fail('CAE missing: ' + cae_path), None, None
+    if not os.path.exists(odb_path):
+        return fail('ODB missing: ' + odb_path), None, None
 
-output_result(passed)
+    return True, cae_path, odb_path
+
+
+def check_task():
+    job_name = PROCESS_SPEC['artifact']['job_name']
+    desktop = get_desktop(job_name)
+    detail_path = os.path.join(desktop, 'eval_detail.txt')
+    result_path = os.path.join(desktop, 'eval_result.txt')
+
+    ok_art, cae_path, odb_path = artifact_check(desktop)
+    if not ok_art:
+        output_result(False, detail_path=detail_path, result_path=result_path)
+        return False
+    ok('Artifact check passed')
+
+    ok_cae, _model = check_cae_process(cae_path)
+    if not ok_cae:
+        output_result(False, detail_path=detail_path, result_path=result_path)
+        return False
+
+    if not check_odb_completion(odb_path):
+        output_result(False, detail_path=detail_path, result_path=result_path)
+        return False
+
+    output_result(True, detail_path=detail_path, result_path=result_path)
+    return True
+
+
+def main():
+    check_task()
+
+
+if __name__ == '__main__':
+    main()
