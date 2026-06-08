@@ -1,13 +1,38 @@
 {
   "id": "c-archicad-task-10-windows",
   "snapshot": "ArchiCAD-27",
-  "instruction": "Courtyard guesthouse from scratch. In Archicad, create a new one-storey courtyard guesthouse using real BIM elements for storey, slab, roof elements, and IfcSpace zones. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc. The IFC must contain exactly one IfcBuildingStorey, exactly ten IfcSpace zones on that storey, at least one slab element, at least four roof elements, and unique IFC GlobalId values for exported root objects. Create GUEST-1 20.0 m2, GUEST-2 20.0 m2, GUEST-3 24.0 m2, GUEST-4 24.0 m2, GUEST-5 20.0 m2, GUEST-6 20.0 m2, RECEPTION 28.0 m2, LINEN 12.0 m2, LAUNDRY 40.0 m2, and COURT 80.0 m2. Each listed area must be within +/-0.10 m2. The six guest rooms together must be between 127.0 and 129.0 m2, COURT must be between 79.0 and 81.0 m2, and the total zone area must be between 287.0 and 289.0 m2. The courtyard and roof may be represented in any reasonable exporter-compatible BIM form that preserves these required elements and quantities. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "instruction": "Using the opened Graphisoft/Archicad environment and the official Graphisoft/Archicad command-line or automation interfaces available in the environment, complete the model work from C:\\Users\\user\\Desktop\\init.ifc and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a small courtyard guesthouse with six guest rooms, reception, service rooms, and low roof forms. The operator wants one accessible guest suite and a housekeeping closet clearly registered without changing the courtyard or the roof outline. Add the suite and closet information, including the access and daylight records needed for room operations.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-10/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ],
+        "timeout": 80
       }
     }
   ],

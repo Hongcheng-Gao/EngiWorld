@@ -1,8 +1,8 @@
 {
   "id": "c-archicad-task-16-windows",
   "snapshot": "ArchiCAD-27",
-  "instruction": "Vertical duplex conversion from init.ifc. Open C:\\Users\\user\\Desktop\\init.ifc in Archicad and use C:\\Users\\user\\Desktop\\init_plan.png and C:\\Users\\user\\Desktop\\init_section.png as references while converting it into the required two-storey vertical duplex. Replace any proxy or placeholder shell geometry with real BIM walls, slabs, roofs, storeys, and zones where needed. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc. Keep the shaped model envelope approximately within min 0.0, 0.0, 0.0 and max 8.0, 6.0, 6.6, with 0.5 m tolerance. The IFC must have unique GlobalId values, exactly two building storeys, exactly two IfcSpace zones, at least eight walls, at least two slabs, and at least two roof elements. Create one zone named UNIT-A on one storey and one zone named UNIT-B on the other storey. Equivalent Archicad or IFC export internals, object names, relationship structure, materials, and property sets may vary; the required result is the stated BIM model and deliverables, not a byte-for-byte copy of the teacher IFC. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/121_IFC/121_IFC-5.htm",
+  "instruction": "Using the opened Graphisoft/Archicad environment and the official Graphisoft/Archicad command-line or automation interfaces available in the environment, complete the model work from C:\\Users\\user\\Desktop\\init.ifc and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a two-level laboratory building with a lower lab floor, upper seminar/gallery level, a stair, roof elements, and a glazed envelope rhythm. The research group needs a controlled wet-lab support suite on the lower level and an observation record connected to the upper seminar space. Preserve the stair, roof, atrium, and existing lab shell, and add the controlled suite, prep, eyewash, and observation items so safety review can read the workflow across both levels.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
   "config": [
     {
       "type": "upload_file",
@@ -11,16 +11,28 @@
           {
             "local_path": "task-16/init_file/init.ifc",
             "path": "C:\\Users\\user\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-16/init_image/init_plan.png",
-            "path": "C:\\Users\\user\\Desktop\\init_plan.png"
-          },
-          {
-            "local_path": "task-16/init_image/init_section.png",
-            "path": "C:\\Users\\user\\Desktop\\init_section.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ],
+        "timeout": 80
       }
     }
   ],

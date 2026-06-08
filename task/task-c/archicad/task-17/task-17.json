@@ -1,8 +1,8 @@
 {
   "id": "c-archicad-task-17-windows",
   "snapshot": "ArchiCAD-27",
-  "instruction": "School wing link conversion from init.ifc. Open C:\\Users\\user\\Desktop\\init.ifc in Archicad and use C:\\Users\\user\\Desktop\\init_plan.png and C:\\Users\\user\\Desktop\\init_section.png as references while converting it into the required one-storey school wing link. The init file is a starting condition and the final export must include the revised spaces plus a renovation works schedule. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc and export a tab-delimited renovation works schedule to C:\\Users\\user\\Desktop\\result.txt. Keep the shaped model envelope approximately within min 0.0, 0.0, 0.0 and max 30.0, 10.0, 3.3, with 0.5 m tolerance. The IFC must have unique GlobalId values, exactly one building storey, exactly seven IfcSpace zones, at least four walls, at least one slab, and at least one roof. Put all zones on the single storey and name them CLASSROOM-1, CLASSROOM-2, CLASSROOM-3, CLASSROOM-4, CORRIDOR, CONNECTOR, and STORE. The renovation schedule must use headers Status, Category, Quantity and contain these rows in order with quantities within +/-0.10: DEMOLISH PartitionWalls 18.6; DEMOLISH OldCorridorSegment 9.2; NEW ConnectorWalls 24.4; NEW ClassroomPartitions 16.8; NEW GlazedLink 10.5. The schedule quantity total must be between 79.4 and 79.6. Equivalent Archicad or IFC export internals, object names, relationship structure, materials, and property sets may vary; the required result is the stated BIM model and deliverables, not a byte-for-byte copy of the teacher IFC. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/050_ViewsVB/050_ViewsVB-122.htm",
+  "instruction": "Using the opened Graphisoft/Archicad environment and the official Graphisoft/Archicad command-line or automation interfaces available in the environment, complete the model work from C:\\Users\\user\\Desktop\\init.ifc and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is an industrial workshop with a large workshop floor, loading bay, plant, office, meeting room, WC, mezzanine, stair, broad doors, and high windows. The operator wants a safer separation between loading, battery charging, and mezzanine project work while keeping the workshop bays, roof, stair, and exterior opening rhythm intact. Add the quarantine, charging, mezzanine office, and fire-separation records needed for the updated operations plan.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
   "config": [
     {
       "type": "upload_file",
@@ -11,16 +11,28 @@
           {
             "local_path": "task-17/init_file/init.ifc",
             "path": "C:\\Users\\user\\Desktop\\init.ifc"
-          },
-          {
-            "local_path": "task-17/init_image/init_plan.png",
-            "path": "C:\\Users\\user\\Desktop\\init_plan.png"
-          },
-          {
-            "local_path": "task-17/init_image/init_section.png",
-            "path": "C:\\Users\\user\\Desktop\\init_section.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ],
+        "timeout": 80
       }
     }
   ],

@@ -1,13 +1,38 @@
 {
   "id": "c-archicad-task-02-windows",
   "snapshot": "ArchiCAD-27",
-  "instruction": "Two-storey duplex pair from scratch. In Archicad, create a new two-storey duplex pair using real BIM elements for the two building storeys, IfcSpace zones, walls, slabs, roofs, and stairs. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc. The IFC must contain exactly two IfcBuildingStorey objects, exactly twelve IfcSpace zones, at least five wall elements, at least two slab elements, at least one roof element, at least two stair elements, and unique IFC GlobalId values for exported root objects. Create two units, A and B. On the lower storey, create A01 A-LIVING 20.0 m2, A02 A-KITCHEN 7.5 m2, A03 A-BATH 5.0 m2, A04 A-STAIR 4.0 m2, B01 B-LIVING 20.0 m2, B02 B-KITCHEN 7.5 m2, B03 B-BATH 5.0 m2, and B04 B-STAIR 4.0 m2. On the upper storey, create A05 A-BED-1 9.6 m2, A06 A-BED-2 6.4 m2, B05 B-BED-1 9.6 m2, and B06 B-BED-2 6.4 m2. Store each zone number as the zone Reference or LongName where possible. Each listed area must be within +/-0.10 m2, and each duplex unit's total zone area must be between 50.0 and 55.0 m2. The two stairs should read as vertical circulation between lower and upper storeys, but their internal representation may vary by exporter. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "instruction": "Using the opened Graphisoft/Archicad environment and the official Graphisoft/Archicad command-line or automation interfaces available in the environment, complete the model work from C:\\Users\\user\\Desktop\\init.ifc and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a small two-level pair of mirrored residential units under a shared pitched roof. The leasing team needs the room data to distinguish the A and B households without disturbing the stair cores, roof form, or the existing room layout. Register the two living rooms as the primary unit anchors for UNIT-A and UNIT-B so downstream schedules can separate the two homes.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-02/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ],
+        "timeout": 80
       }
     }
   ],

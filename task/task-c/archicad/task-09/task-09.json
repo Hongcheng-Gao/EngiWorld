@@ -1,13 +1,38 @@
 {
   "id": "c-archicad-task-09-windows",
   "snapshot": "ArchiCAD-27",
-  "instruction": "Community market hall from scratch. In Archicad, create a new one-storey community market hall using real BIM elements for the storey, IfcSpace zones, slab, and roof. Save an IFC4 export to C:\\Users\\user\\Desktop\\result.ifc and export a tab-delimited zone schedule to C:\\Users\\user\\Desktop\\result.txt. The IFC must contain exactly one IfcBuildingStorey, exactly thirteen IfcSpace zones on the GROUND storey, at least one slab element, at least one roof element, and unique IFC GlobalId values for exported root objects. Create AISLE 54.0 m2, HALL 12.0 m2, STALL-1 through STALL-8 at 7.5 m2 each, COLD-STORE 9.0 m2, DRY-STORE 9.0 m2, and WC 5.0 m2. Each area must be within +/-0.10 m2; the eight stalls together must be between 59.0 and 61.0 m2, and the total zone area must be between 148.0 and 150.0 m2. The schedule must use headers ZoneName, Area, Storey and list AISLE, HALL, STALL-1 through STALL-8, COLD-STORE, DRY-STORE, and WC in that order with GROUND as the storey value. Exporter-specific metadata and non-required helper objects may vary. [Software] Launch ArchiCAD with `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad` (adjust version/path).",
-  "source": "https://help.graphisoft.com/AC/28/INT/_AC28_Help/040_ElementsVB/040_ElementsVB-137.htm",
+  "instruction": "Using the opened Graphisoft/Archicad environment and the official Graphisoft/Archicad command-line or automation interfaces available in the environment, complete the model work from C:\\Users\\user\\Desktop\\init.ifc and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a single-storey market hall with stalls, stores, an aisle, and a simple roof. The operator wants a clearer cold-chain handover and waste holding arrangement near the service areas without disturbing the public aisle or stall rhythm. Add the missing support zones and service-side door records so food safety review can read the intended back-of-house workflow.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-09/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ],
+        "timeout": 80
       }
     }
   ],
