@@ -1,197 +1,87 @@
 #!/usr/bin/env python3
-import re
 from pathlib import Path
-
-import ifcopenshell
-
-
-DESKTOP = Path("/home/user/Desktop")
-import ifcopenshell.geom
-
-
-SPEC = {
-    "required_output": "result.ifc",
-    "min_file_bytes": 500,
-    "schema": "IFC4",
-    "counts": {
-        "IfcProject": 1,
-        "IfcSite": 1,
-        "IfcBuilding": 1,
-        "IfcBuildingStorey": 2,
-        "IfcSpace": 2,
-        "IfcWall": 8,
-        "IfcSlab": 2,
-        "IfcRoof": 1,
-        "IfcWallType": 1,
-    },
-    "forbidden_counts": {
-        "IfcDoor": 0,
-        "IfcWindow": 0,
-        "IfcBuildingElementProxy": 0,
-        "IfcFurniture": 0,
-        "IfcColumn": 0,
-        "IfcBeam": 0,
-        "IfcStair": 0,
-        "IfcFlowTerminal": 0,
-    },
-    "project_name": "Normalized IFC4",
-    "site_name": "Default Site",
-    "building_name": "Default Building",
-    "storeys": {"Ground Floor", "Upper Floor"},
-    "spaces": {"GF Office": (9.4, 7.4, 2.8), "UF Office": (9.4, 7.4, 2.8)},
-    "walls": {
-        "W-S": (10.0, 0.2, 3.0),
-        "W-S-UP": (10.0, 0.2, 3.0),
-        "W-N": (10.0, 0.2, 3.0),
-        "W-N-UP": (10.0, 0.2, 3.0),
-        "W-W": (0.2, 8.0, 3.0),
-        "W-W-UP": (0.2, 8.0, 3.0),
-        "W-E": (0.2, 8.0, 3.0),
-        "W-E-UP": (0.2, 8.0, 3.0),
-    },
-    "slabs": {"GF Slab": (10.0, 8.0, 0.2), "UF Slab": (10.0, 8.0, 0.2)},
-    "roof": ("Roof", (10.0, 8.0, 0.25)),
-    "wall_type_name": "ExtWallType-A",
-    "linear_tolerance_m": 0.08,
-}
-
-
-def emit(ok):
-    print("True" if ok else "False")
-    raise SystemExit(0)
-
-
-def clean_name(value):
-    return re.sub(r"\s+", " ", str(value or "").strip())
-
-
-def approx(actual, expected, tol):
-    return actual is not None and abs(float(actual) - float(expected)) <= float(tol)
-
-
-def shape_bbox(entity):
-    settings = ifcopenshell.geom.settings()
-    try:
-        settings.set(settings.USE_WORLD_COORDS, True)
-    except Exception:
-        pass
-    shape = ifcopenshell.geom.create_shape(settings, entity)
-    verts = list(shape.geometry.verts)
-    if not verts:
-        return None
-    xs = verts[0::3]
-    ys = verts[1::3]
-    zs = verts[2::3]
-    return (min(xs), min(ys), min(zs), max(xs), max(ys), max(zs))
-
-
-def span(bbox):
-    minx, miny, minz, maxx, maxy, maxz = bbox
-    return (maxx - minx, maxy - miny, maxz - minz)
-
-
-def dimensions_match(actual, expected, tol):
-    return all(approx(a, e, tol) for a, e in zip(sorted(actual), sorted(expected)))
-
-
-def parent_storey(obj):
-    if obj.is_a("IfcSpace"):
-        for rel in getattr(obj, "Decomposes", None) or []:
-            parent = getattr(rel, "RelatingObject", None)
-            if parent and parent.is_a("IfcBuildingStorey"):
-                return parent
-    for rel in getattr(obj, "ContainedInStructure", None) or []:
-        parent = getattr(rel, "RelatingStructure", None)
-        if parent and parent.is_a("IfcBuildingStorey"):
-            return parent
+import re, ifcopenshell, ifcopenshell.util.element
+DESKTOP=Path("/home/user/Desktop")
+SPEC={'task': 'BONSAI-CLI-18', 'schema': 'IFC4', 'counts': {'IfcBuildingStorey': 2, 'IfcSpace': 2, 'IfcWall': 8, 'IfcSlab': 2, 'IfcRoof': 1, 'IfcWallType': 1, 'IfcSlabType': 1, 'IfcGroup': 1}, 'types': {'IfcWall': 'ExtWallType-A', 'IfcSlab': 'SlabType-A'}, 'markers': {'IfcSpace': ['GF Office', 'UF Office'], 'IfcWall': ['W-S', 'W-S-UP', 'W-N', 'W-N-UP', 'W-W', 'W-W-UP', 'W-E', 'W-E-UP'], 'IfcSlab': ['GF Slab', 'UF Slab'], 'IfcRoof': ['Roof']}, 'props': {'IfcSpace': {'GF Office': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'UF Office': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}}, 'IfcWall': {'W-S': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-S-UP': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-N': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-N-UP': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-W': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-W-UP': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-E': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'W-E-UP': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}}, 'IfcSlab': {'GF Slab': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}, 'UF Slab': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}}, 'IfcRoof': {'Roof': {'MigrationStatus': 'IFC4_NORMALIZED', 'SourceSchema': 'IFC2X3'}}}, 'groups': {'IFC4 Migration Set 18': ['W-S', 'W-S-UP', 'W-N', 'W-N-UP', 'W-W', 'W-W-UP', 'W-E', 'W-E-UP', 'GF Slab', 'UF Slab', 'Roof']}}
+def finish(ok): print("True" if ok else "False"); raise SystemExit(0)
+def norm(v): return re.sub(r"\s+"," ",str(v or "").strip()).lower()
+def eq(a,b): return norm(a)==norm(b)
+def psets(e):
+    try: return ifcopenshell.util.element.get_psets(e, should_inherit=True)
+    except Exception: return {}
+def prop(e,k):
+    for ps in psets(e).values():
+        for key,val in ps.items():
+            if key!='id' and eq(key,k): return val
     return None
-
-
-def unique_global_ids(model):
-    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-    return len(gids) == len(set(gids))
-
-
-def check_counts(model):
-    for ifc_class, expected in SPEC["counts"].items():
-        if len(model.by_type(ifc_class)) != expected:
-            return False
-    for ifc_class, expected in SPEC["forbidden_counts"].items():
-        if len(model.by_type(ifc_class)) != expected:
-            return False
-    return True
-
-
-def check_hierarchy(model):
-    return (
-        len(model.by_type("IfcProject")) == 1
-        and clean_name(model.by_type("IfcProject")[0].Name) == SPEC["project_name"]
-        and len(model.by_type("IfcSite")) == 1
-        and clean_name(model.by_type("IfcSite")[0].Name) == SPEC["site_name"]
-        and len(model.by_type("IfcBuilding")) == 1
-        and clean_name(model.by_type("IfcBuilding")[0].Name) == SPEC["building_name"]
-        and {clean_name(s.Name) for s in model.by_type("IfcBuildingStorey")} == SPEC["storeys"]
-        and len(model.by_type("IfcWallType")) == 1
-        and clean_name(model.by_type("IfcWallType")[0].Name) == SPEC["wall_type_name"]
-    )
-
-
-def check_products(model):
-    spaces = {clean_name(s.Name): s for s in model.by_type("IfcSpace")}
-    if set(spaces) != set(SPEC["spaces"]):
-        return False
-    for name, dims in SPEC["spaces"].items():
-        bbox = shape_bbox(spaces[name])
-        if bbox is None or not dimensions_match(span(bbox), dims, SPEC["linear_tolerance_m"]):
-            return False
-    walls = {clean_name(w.Name): w for w in model.by_type("IfcWall")}
-    if set(walls) != set(SPEC["walls"]):
-        return False
-    for name, dims in SPEC["walls"].items():
-        bbox = shape_bbox(walls[name])
-        if bbox is None or not dimensions_match(span(bbox), dims, SPEC["linear_tolerance_m"]):
-            return False
-    slabs = {clean_name(s.Name): s for s in model.by_type("IfcSlab")}
-    if set(slabs) != set(SPEC["slabs"]):
-        return False
-    for name, dims in SPEC["slabs"].items():
-        bbox = shape_bbox(slabs[name])
-        if bbox is None or not dimensions_match(span(bbox), dims, SPEC["linear_tolerance_m"]):
-            return False
-    roofs = model.by_type("IfcRoof")
-    if len(roofs) != 1 or clean_name(roofs[0].Name) != SPEC["roof"][0]:
-        return False
-    bbox = shape_bbox(roofs[0])
-    if bbox is None or not dimensions_match(span(bbox), SPEC["roof"][1], SPEC["linear_tolerance_m"]):
-        return False
-    return all(parent_storey(entity) is not None and clean_name(parent_storey(entity).Name) in SPEC["storeys"] for entity in list(spaces.values()) + list(walls.values()) + list(slabs.values()) + roofs)
-
-
+def marker(e): return eq(prop(e,'TaskCode'),SPEC['task']) and eq(prop(e,'AutomationStatus'),'CLI_UPDATED')
+def typ(e):
+    try: return ifcopenshell.util.element.get_type(e)
+    except Exception: return None
+def rel_group_members(g):
+    got=set()
+    for rel in getattr(g,'IsGroupedBy',None) or []:
+        for o in rel.RelatedObjects: got.add(str(getattr(o,'Name','') or ''))
+    return got
+def nested_ports(entity):
+    ports=[]
+    for rel in getattr(entity,'IsNestedBy',None) or []:
+        for obj in getattr(rel,'RelatedObjects',None) or []:
+            if obj.is_a('IfcDistributionPort'): ports.append(obj)
+    return ports
+def connected_count(port):
+    return len({rel.id() for rel in (getattr(port,'ConnectedTo',None) or []) + (getattr(port,'ConnectedFrom',None) or [])})
 def evaluate():
-    result_dir = DESKTOP
-    if not result_dir.is_dir():
-        return False
-    ifc_path = result_dir / SPEC["required_output"]
-    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_file_bytes"]:
-        return False
-    model = ifcopenshell.open(str(ifc_path))
-    return (
-        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
-        and unique_global_ids(model)
-        and check_counts(model)
-        and check_hierarchy(model)
-        and check_products(model)
-    )
-
-
+    p=DESKTOP/'result.ifc'
+    if not p.is_file() or p.stat().st_size<1000: return False
+    m=ifcopenshell.open(str(p))
+    if SPEC.get('schema') and not str(m.schema).upper().startswith(SPEC['schema']): return False
+    for cls,n in SPEC.get('counts',{}).items():
+        try: actual=len(m.by_type(cls))
+        except Exception: actual=0
+        if actual!=n: return False
+    for cls in SPEC.get('forbidden',[]):
+        try:
+            if len(m.by_type(cls)): return False
+        except Exception: pass
+    for cls,names in SPEC.get('markers',{}).items():
+        for name in names:
+            objs=[o for o in m.by_type(cls) if eq(o.Name,name)]
+            if len(objs)!=1 or not marker(objs[0]): return False
+    for cls,type_name in SPEC.get('types',{}).items():
+        objs=m.by_type(cls)
+        if not objs: return False
+        ids={typ(o).id() if typ(o) else None for o in objs}
+        if len(ids)!=1 or None in ids: return False
+        t=m.by_id(next(iter(ids)))
+        if not eq(t.Name,type_name) or not marker(t): return False
+    for cls,mapprops in SPEC.get('props',{}).items():
+        for name,pmap in mapprops.items():
+            objs=[o for o in m.by_type(cls) if eq(o.Name,name)]
+            if len(objs)!=1: return False
+            for k,v in pmap.items():
+                if not eq(prop(objs[0],k),v): return False
+    for gname,members in SPEC.get('groups',{}).items():
+        groups=[g for g in m.by_type('IfcGroup') if eq(g.Name,gname)]
+        if len(groups)!=1 or not marker(groups[0]): return False
+        if rel_group_members(groups[0])!=set(members): return False
+    for sname, data in SPEC.get('systems',{}).items():
+        systems=[s for s in m.by_type('IfcDistributionSystem') if eq(s.Name,sname)]
+        if len(systems)!=1 or not marker(systems[0]): return False
+        members=set()
+        for rel in m.by_type('IfcRelAssignsToGroup'):
+            if getattr(rel,'RelatingGroup',None) and rel.RelatingGroup.id()==systems[0].id():
+                for o in rel.RelatedObjects: members.add(str(getattr(o,'Name','') or ''))
+        if members!=set(data['members']): return False
+        for name in data.get('products',{}):
+            objs=[o for cls in ('IfcDuctSegment','IfcDuctFitting','IfcAirTerminal') for o in m.by_type(cls) if eq(o.Name,name)]
+            if len(objs)!=1 or not marker(objs[0]): return False
+            ports=nested_ports(objs[0])
+            exp=data['products'][name]
+            if len(ports)!=exp['ports'] or sum(connected_count(p) for p in ports)!=exp['connections']: return False
+    return True
 def main():
-    try:
-        emit(evaluate())
-    except SystemExit:
-        raise
-    except Exception:
-        emit(False)
-
-
-if __name__ == "__main__":
-    main()
+    try: finish(evaluate())
+    except SystemExit: raise
+    except Exception: finish(False)
+if __name__=='__main__': main()

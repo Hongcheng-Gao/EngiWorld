@@ -1,13 +1,39 @@
 {
   "id": "c-bonsai-task-06-ubuntu",
   "snapshot": "Bonsai-0.8.5",
-  "instruction": "Georeferenced Small Office Shell Use the opened Bonsai IFC authoring environment to create a new metric IFC4 georeferenced small office shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The model must contain one project, one site, one building, one storey named Level 00, two spaces, five walls, one slab, one door, two windows, three openings, three void relationships, three fill relationships, one IfcProjectedCRS, and one IfcMapConversion. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Create spaces named Office and WC. Office must be 5.60 m by 4.60 m in clear plan size, WC must be 1.70 m by 2.20 m, and both spaces must be 3.00 m high. Name the slab Floor Slab and make it 8.00 m by 5.00 m by 0.20 m. Walls must be 3.00 m high with a plan thickness of either 0.12 m or 0.20 m. The door must have OverallWidth 0.80 m and fill one wall opening. The two windows must have OverallWidth values of 1.00 m and 1.40 m, each filling one wall opening. Assign all spaces, walls, slab, door, and windows to Level 00. Set the projected CRS name to EPSG:3857 and the map conversion values to Eastings 501234.000, Northings 6843210.000, OrthogonalHeight 35.000, XAxisAbscissa 1.000, XAxisOrdinate 0.000, and Scale 1.000. Keep all product bounding-box coordinates within 100.00 m of the local origin. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
-  "source": "https://docs.bonsaibim.org/guides/authoring/advanced_modeling/georeferencing.html",
+  "instruction": "Use the already opened Bonsai/Blender IFC authoring environment and its CLI/API tools to update /home/user/Desktop/init.ifc and save the finished model as /home/user/Desktop/result.ifc. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a small single-storey office fit-out that will be exchanged with a civil consultant. The building geometry and room arrangement are already acceptable, but the file lacks the survey context needed for coordination. Preserve the office shell, internal partition, spaces, slab, and existing openings. Rename the level as the geospatial ground level and register the project in the Web Mercator survey context provided by the consultant, using the supplied eastings, northings, height, axis, and scale values. Record the survey coordination with revision code BONSAI-CLI-06 on the rooms and envelope elements.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html; /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-06/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ],
+        "timeout": 35
       }
     }
   ],
@@ -44,5 +70,6 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low"
+  "possibility_of_env_change": "low",
+  "difficulty": "medium"
 }

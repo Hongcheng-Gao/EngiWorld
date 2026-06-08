@@ -1,13 +1,39 @@
 {
   "id": "c-bonsai-task-02-ubuntu",
   "snapshot": "Bonsai-0.8.5",
-  "instruction": "One-Storey Clinic Shell Use the opened Bonsai IFC authoring environment to create a new metric IFC4 clinic shell from a blank model. Save the completed model as /home/user/Desktop/result.ifc. The hierarchy must contain one project, one site, one building, and one storey named Clinic Level with elevation 0.00 m. Use real BIM entities for three IfcSpace elements, six IfcWall elements, one IfcSlab, three IfcDoor elements, three IfcWindow elements, six wall openings, six matching void relationships, and six matching fill relationships. Do not include proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Create spaces named Consult 1, Consult 2, and Corridor, all assigned to Clinic Level and 2.80 m high. Consult 1 and Consult 2 each require clear plan dimensions of 3.20 m by 3.20 m, while Corridor requires 6.40 m by 1.80 m. Name the slab Clinic Slab, make it 6.80 m by 5.40 m by 0.20 m, and assign it to Clinic Level. Each wall must be 3.00 m high with a plan thickness of either 0.15 m or 0.20 m. Each door must have OverallWidth 0.90 m and fill one wall opening, and each window must have OverallWidth 1.20 m and fill one wall opening. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
-  "source": "https://docs.bonsaibim.org/tutorials/project1.html",
+  "instruction": "Use the already opened Bonsai/Blender IFC authoring environment and its CLI/API tools to update /home/user/Desktop/init.ifc and save the finished model as /home/user/Desktop/result.ifc. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a small one-storey neighbourhood clinic with two consultation rooms reached from a short corridor. The clinic manager needs a clean operational BIM record before room booking is integrated: the level should be named as the clinic ground level, each consult room and the corridor should carry practical room references, and their usage should distinguish clinical rooms from circulation. Preserve the existing exterior shell, doors, windows, openings, and slab. Standardise the wall and slab assemblies to match a 200 mm clinic construction language, and stamp the affected spaces, walls, and assemblies with revision code BONSAI-CLI-02.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html; /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-02/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ],
+        "timeout": 35
       }
     }
   ],
@@ -44,5 +70,6 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low"
+  "possibility_of_env_change": "low",
+  "difficulty": "simple"
 }

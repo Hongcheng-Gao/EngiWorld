@@ -1,293 +1,113 @@
 #!/usr/bin/env python3
 import re
 from pathlib import Path
-
 import ifcopenshell
-
-
-DESKTOP = Path("/home/user/Desktop")
 import ifcopenshell.geom
-import ifcopenshell.util.unit
-
-
-SPEC = {
-    "required_output": "result.ifc",
-    "min_file_bytes": 500,
-    "schema": "IFC4",
-    "counts": {
-        "IfcProject": 1,
-        "IfcSite": 1,
-        "IfcBuilding": 1,
-        "IfcBuildingStorey": 1,
-        "IfcSpace": 4,
-        "IfcWall": 8,
-        "IfcSlab": 1,
-        "IfcDoor": 2,
-        "IfcWindow": 4,
-        "IfcOpeningElement": 6,
-        "IfcRelVoidsElement": 6,
-        "IfcRelFillsElement": 6,
-    },
-    "forbidden_counts": {
-        "IfcBuildingElementProxy": 0,
-        "IfcFurniture": 0,
-        "IfcRoof": 0,
-        "IfcColumn": 0,
-        "IfcBeam": 0,
-        "IfcStair": 0,
-        "IfcFlowTerminal": 0,
-    },
-    "storeys": {"Duplex Level": 0.0},
-    "spaces": {
-        "A Living": (4.8, 2.0),
-        "A Bed": (4.8, 2.0),
-        "B Living": (4.8, 2.0),
-        "B Bed": (4.8, 2.0),
-    },
-    "space_height_m": 2.8,
-    "slabs": {"Duplex Slab": (10.4, 4.4, 0.2)},
-    "door_width_m": 0.95,
-    "window_width_m": 1.2,
-    "wall_height_m": 3.0,
-    "wall_thickness_options_m": (0.15, 0.20),
-    "linear_tolerance_m": 0.08,
-    "height_tolerance_m": 0.05,
-    "thickness_tolerance_m": 0.04,
-    "party_wall_midpoint_tolerance_m": 0.25,
-}
-
-
-def emit(ok):
-    print("True" if ok else "False")
-    raise SystemExit(0)
-
-
-def clean_name(value):
-    return re.sub(r"\s+", " ", str(value or "").strip())
-
-
-def approx(actual, expected, tol):
-    return actual is not None and abs(float(actual) - float(expected)) <= float(tol)
-
-
-def unit_scale(model):
-    try:
-        return float(ifcopenshell.util.unit.calculate_unit_scale(model))
-    except Exception:
-        return 1.0
-
-
-def shape_bbox(entity):
-    settings = ifcopenshell.geom.settings()
-    try:
-        settings.set(settings.USE_WORLD_COORDS, True)
-    except Exception:
-        pass
-    shape = ifcopenshell.geom.create_shape(settings, entity)
-    verts = list(shape.geometry.verts)
-    if not verts:
-        return None
-    xs = verts[0::3]
-    ys = verts[1::3]
-    zs = verts[2::3]
-    return (min(xs), min(ys), min(zs), max(xs), max(ys), max(zs))
-
-
-def span(bbox):
-    minx, miny, minz, maxx, maxy, maxz = bbox
-    return (maxx - minx, maxy - miny, maxz - minz)
-
-
-def parent_storey(obj):
-    if obj.is_a("IfcSpace"):
-        for rel in getattr(obj, "Decomposes", None) or []:
-            parent = getattr(rel, "RelatingObject", None)
-            if parent and parent.is_a("IfcBuildingStorey"):
-                return parent
-    for rel in getattr(obj, "ContainedInStructure", None) or []:
-        parent = getattr(rel, "RelatingStructure", None)
-        if parent and parent.is_a("IfcBuildingStorey"):
-            return parent
+import ifcopenshell.util.element
+DESKTOP=Path("/home/user/Desktop")
+SPEC={'task': 'BONSAI-CLI-05', 'counts': {'IfcProject': 1, 'IfcSite': 1, 'IfcBuilding': 1, 'IfcBuildingStorey': 1, 'IfcSpace': 4, 'IfcWall': 8, 'IfcSlab': 1, 'IfcDoor': 2, 'IfcWindow': 4, 'IfcOpeningElement': 6, 'IfcRelVoidsElement': 6, 'IfcRelFillsElement': 6, 'IfcWallType': 1, 'IfcGroup': 2, 'IfcMaterial': 2, 'IfcMaterialLayerSet': 1}, 'names': {'IfcBuildingStorey': ['DUPLEX_LEVEL_00'], 'IfcSpace': ['A Living', 'A Bed', 'B Living', 'B Bed'], 'IfcWall': ['South Wall West', 'South Wall East', 'East Wall', 'North Wall', 'West Wall', 'Party Wall', 'Partition A', 'Partition B'], 'IfcSlab': ['Duplex Slab']}, 'space_refs': {'A Living': ('A-LIV', 'Residential'), 'A Bed': ('A-BED', 'Residential'), 'B Living': ('B-LIV', 'Residential'), 'B Bed': ('B-BED', 'Residential')}, 'groups': [('Unit A', ['A Living', 'A Bed']), ('Unit B', ['B Living', 'B Bed'])], 'slab_marker': False, 'wall_type': ('DuplexWallType', 'DuplexWall-200mm', [('Masonry', 0.15), ('Gypsum Board', 0.05)]), 'extra_wall_props': {'Party Wall': {'AcousticRating': 'STC-55'}}}
+def finish(ok): print("True" if ok else "False"); raise SystemExit(0)
+def norm(v): return re.sub(r"\s+"," ",str(v or "").strip()).lower()
+def eq(a,b): return norm(a)==norm(b)
+def approx(a,b,t=0.035):
+    try: return abs(float(a)-float(b))<=t
+    except Exception: return False
+def psets(e):
+    try: return ifcopenshell.util.element.get_psets(e, should_inherit=True)
+    except Exception: return {}
+def prop(e,k):
+    nk=norm(k)
+    for ps in psets(e).values():
+        for key,val in ps.items():
+            if key!='id' and norm(key)==nk: return val
     return None
-
-
-def unique_global_ids(model):
-    gids = [e.GlobalId for e in model.by_type("IfcRoot") if getattr(e, "GlobalId", None)]
-    return len(gids) == len(set(gids))
-
-
-def check_counts(model):
-    for ifc_class, expected in SPEC["counts"].items():
-        if len(model.by_type(ifc_class)) != expected:
-            return False
-    for ifc_class, expected in SPEC["forbidden_counts"].items():
-        if len(model.by_type(ifc_class)) != expected:
-            return False
-    return True
-
-
-def check_storeys(model):
-    storeys = model.by_type("IfcBuildingStorey")
-    if {clean_name(s.Name) for s in storeys} != set(SPEC["storeys"]):
-        return False
-    for storey in storeys:
-        if not approx(getattr(storey, "Elevation", None), SPEC["storeys"][clean_name(storey.Name)], 0.05):
-            return False
-    return True
-
-
-def check_assignment(model):
-    valid_storeys = set(SPEC["storeys"])
-    for ifc_class in ("IfcSpace", "IfcWall", "IfcSlab", "IfcDoor", "IfcWindow"):
-        for entity in model.by_type(ifc_class):
-            storey = parent_storey(entity)
-            if storey is None or clean_name(storey.Name) not in valid_storeys:
-                return False
-    return True
-
-
-def dimensions_match(actual, expected, tol):
-    return all(approx(a, e, tol) for a, e in zip(sorted(actual), sorted(expected)))
-
-
-def check_spaces(model):
-    spaces = {clean_name(s.Name): s for s in model.by_type("IfcSpace")}
-    if set(spaces) != set(SPEC["spaces"]):
-        return False
-    for name, expected_xy in SPEC["spaces"].items():
-        bbox = shape_bbox(spaces[name])
-        if bbox is None:
-            return False
-        sx, sy, sz = span(bbox)
-        if not dimensions_match((sx, sy), expected_xy, SPEC["linear_tolerance_m"]):
-            return False
-        if not approx(sz, SPEC["space_height_m"], SPEC["height_tolerance_m"]):
-            return False
-    return True
-
-
-def check_slabs(model):
-    slabs = {clean_name(s.Name): s for s in model.by_type("IfcSlab")}
-    if set(slabs) != set(SPEC["slabs"]):
-        return False
-    for name, expected in SPEC["slabs"].items():
-        bbox = shape_bbox(slabs[name])
-        if bbox is None:
-            return False
-        sx, sy, sz = span(bbox)
-        if not dimensions_match((sx, sy), expected[:2], SPEC["linear_tolerance_m"]):
-            return False
-        if not approx(sz, expected[2], SPEC["height_tolerance_m"]):
-            return False
-    return True
-
-
-def check_walls(model):
-    for wall in model.by_type("IfcWall"):
-        bbox = shape_bbox(wall)
-        if bbox is None:
-            return False
-        sx, sy, sz = span(bbox)
-        thickness = min(sx, sy)
-        if not approx(sz, SPEC["wall_height_m"], SPEC["height_tolerance_m"]):
-            return False
-        if not any(approx(thickness, option, SPEC["thickness_tolerance_m"]) for option in SPEC["wall_thickness_options_m"]):
-            return False
-    return True
-
-
-def check_party_wall(model):
-    slab = model.by_type("IfcSlab")[0]
-    slab_bbox = shape_bbox(slab)
-    if slab_bbox is None:
-        return False
-    minx, _, _, maxx, _, _ = slab_bbox
-    midpoint_x = (minx + maxx) / 2.0
-    candidates = []
-    for wall in model.by_type("IfcWall"):
-        bbox = shape_bbox(wall)
-        if bbox is None:
-            continue
-        sx, sy, sz = span(bbox)
-        center_x = (bbox[0] + bbox[3]) / 2.0
-        if sx <= 0.30 and sy >= 4.0 and approx(sz, SPEC["wall_height_m"], SPEC["height_tolerance_m"]):
-            if approx(center_x, midpoint_x, SPEC["party_wall_midpoint_tolerance_m"]):
-                candidates.append(wall)
-    return len(candidates) == 1
-
-
-def overall_width(entity, model):
-    value = getattr(entity, "OverallWidth", None)
-    if value in (None, 0, ""):
-        return None
-    raw = float(value)
-    scaled = raw * unit_scale(model)
-    return scaled if 0.05 <= scaled <= 20.0 else raw
-
-
-def fill_opening(fill):
-    rels = getattr(fill, "FillsVoids", None) or []
-    if len(rels) != 1:
-        return None
-    return getattr(rels[0], "RelatingOpeningElement", None)
-
-
-def opening_host(opening):
-    rels = getattr(opening, "VoidsElements", None) or []
-    if len(rels) != 1:
-        return None
-    return getattr(rels[0], "RelatingBuildingElement", None)
-
-
-def check_openings_and_widths(model):
-    openings = set()
-    for door in model.by_type("IfcDoor"):
-        if not approx(overall_width(door, model), SPEC["door_width_m"], SPEC["linear_tolerance_m"]):
-            return False
-        opening = fill_opening(door)
-        if opening is None or not opening_host(opening).is_a("IfcWall"):
-            return False
-        openings.add(opening.id())
-    for window in model.by_type("IfcWindow"):
-        if not approx(overall_width(window, model), SPEC["window_width_m"], SPEC["linear_tolerance_m"]):
-            return False
-        opening = fill_opening(window)
-        if opening is None or not opening_host(opening).is_a("IfcWall"):
-            return False
-        openings.add(opening.id())
-    return len(openings) == SPEC["counts"]["IfcOpeningElement"]
-
-
+def has_props(e, props): return all(eq(prop(e,k),v) for k,v in props.items())
+def typ(e):
+    try: return ifcopenshell.util.element.get_type(e)
+    except Exception: return None
+def mat(e):
+    try: return ifcopenshell.util.element.get_material(e, should_skip_usage=True, should_inherit=True)
+    except Exception: return None
+def layer_match(m, name, layers):
+    if m is None: return False
+    if m.is_a('IfcMaterialLayerSetUsage'): m=m.ForLayerSet
+    if not m.is_a('IfcMaterialLayerSet'): return False
+    if not eq(getattr(m,'LayerSetName',None) or getattr(m,'Name',None), name): return False
+    got=list(getattr(m,'MaterialLayers',None) or [])
+    if len(got)!=len(layers): return False
+    rem=[(norm(a),float(b)) for a,b in layers]
+    for layer in got:
+        mn=norm(getattr(getattr(layer,'Material',None),'Name',None)); th=getattr(layer,'LayerThickness',None)
+        hit=None
+        for i,(n,t) in enumerate(rem):
+            if n in mn and approx(th,t): hit=i; break
+        if hit is None: return False
+        rem.pop(hit)
+    return not rem
+def container(e):
+    if e.is_a('IfcSpace'):
+        for rel in getattr(e,'Decomposes',None) or []:
+            p=getattr(rel,'RelatingObject',None)
+            if p and p.is_a('IfcBuildingStorey'): return p
+    try: return ifcopenshell.util.element.get_container(e, should_get_direct=True)
+    except Exception: return None
+def geometry_exists(e):
+    if e.is_a('IfcOpeningElement'): return True
+    settings=ifcopenshell.geom.settings()
+    try: settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception: pass
+    try: return bool(ifcopenshell.geom.create_shape(settings,e).geometry.verts)
+    except Exception: return False
 def evaluate():
-    result_dir = DESKTOP
-    if not result_dir.is_dir():
-        return False
-    ifc_path = result_dir / SPEC["required_output"]
-    if not ifc_path.is_file() or ifc_path.stat().st_size < SPEC["min_file_bytes"]:
-        return False
-    model = ifcopenshell.open(str(ifc_path))
-    return (
-        str(getattr(model, "schema", "")).upper().startswith(SPEC["schema"])
-        and unique_global_ids(model)
-        and check_counts(model)
-        and check_storeys(model)
-        and check_assignment(model)
-        and check_spaces(model)
-        and check_slabs(model)
-        and check_walls(model)
-        and check_party_wall(model)
-        and check_openings_and_widths(model)
-    )
-
-
+    path=DESKTOP/'result.ifc'
+    if not path.is_file() or path.stat().st_size<1000: return False
+    m=ifcopenshell.open(str(path))
+    if not str(m.schema).upper().startswith('IFC4'): return False
+    gids=[e.GlobalId for e in m.by_type('IfcRoot') if getattr(e,'GlobalId',None)]
+    if len(gids)!=len(set(gids)): return False
+    for cls,n in SPEC['counts'].items():
+        if len(m.by_type(cls))!=n: return False
+    for cls in ['IfcBuildingElementProxy','IfcFurniture']:
+        if len(m.by_type(cls)): return False
+    for cls,names in SPEC.get('names',{}).items():
+        if {str(getattr(e,'Name',None) or '') for e in m.by_type(cls)} != set(names): return False
+    marker={'TaskCode':SPEC['task'],'AutomationStatus':'CLI_UPDATED'}
+    spaces={sp.Name:sp for sp in m.by_type('IfcSpace')}
+    for name,vals in SPEC.get('space_refs',{}).items():
+        sp=spaces.get(name)
+        if not sp or not eq(prop(sp,'Reference'),vals[0]) or not eq(prop(sp,'OccupancyType'),vals[1]) or not has_props(sp,marker): return False
+    for w in m.by_type('IfcWall'):
+        if not has_props(w, marker): return False
+    if SPEC.get('slab_marker'):
+        for s in m.by_type('IfcSlab'):
+            if not has_props(s, marker): return False
+    if 'wall_type' in SPEC:
+        ids={typ(w).id() if typ(w) else None for w in m.by_type('IfcWall')}
+        if len(ids)!=1 or None in ids: return False
+        wt=m.by_id(next(iter(ids))); tn,ls,layers=SPEC['wall_type']
+        if not wt.is_a('IfcWallType') or not eq(wt.Name,tn) or not has_props(wt,marker) or not layer_match(mat(wt),ls,layers): return False
+    if 'slab_type' in SPEC:
+        ids={typ(s).id() if typ(s) else None for s in m.by_type('IfcSlab')}
+        if len(ids)!=1 or None in ids: return False
+        st=m.by_id(next(iter(ids))); tn,ls,layers=SPEC['slab_type']
+        if not st.is_a('IfcSlabType') or not eq(st.Name,tn) or not has_props(st,marker) or not layer_match(mat(st),ls,layers): return False
+    for gname,members in SPEC.get('groups',[]):
+        groups=[g for g in m.by_type('IfcGroup') if eq(g.Name,gname)]
+        if len(groups)!=1 or not has_props(groups[0],marker): return False
+        assigned=set()
+        for rel in getattr(groups[0],'IsGroupedBy',None) or []:
+            for obj in getattr(rel,'RelatedObjects',None) or []: assigned.add(getattr(obj,'Name',None))
+        if assigned!=set(members): return False
+    for wall_name,props in SPEC.get('extra_wall_props',{}).items():
+        walls=[w for w in m.by_type('IfcWall') if eq(w.Name,wall_name)]
+        if len(walls)!=1 or not has_props(walls[0],props): return False
+    storey_ids={s.id() for s in m.by_type('IfcBuildingStorey')}
+    for prod in m.by_type('IfcWall')+m.by_type('IfcSlab')+m.by_type('IfcDoor')+m.by_type('IfcWindow')+m.by_type('IfcSpace'):
+        c=container(prod)
+        if c is None or c.id() not in storey_ids or not geometry_exists(prod): return False
+    return True
 def main():
-    try:
-        emit(evaluate())
-    except SystemExit:
-        raise
-    except Exception:
-        emit(False)
-
-
-if __name__ == "__main__":
-    main()
+    try: finish(evaluate())
+    except SystemExit: raise
+    except Exception: finish(False)
+if __name__=='__main__': main()

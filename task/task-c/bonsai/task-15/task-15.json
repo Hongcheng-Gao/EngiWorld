@@ -1,8 +1,8 @@
 {
   "id": "c-bonsai-task-15-ubuntu",
   "snapshot": "Bonsai-0.8.5",
-  "instruction": "Lobby Entrance Upgrade With Opening Schedule Use the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc by upgrading the lobby entrance and adding window openings. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the outputs as /home/user/Desktop/result.ifc and /home/user/Desktop/result.csv. The IFC4 model must contain one project, one site, one building, and one storey named Ground Floor; one space named Lobby; four walls; one slab; one roof; one door; four windows; five openings; five void relationships; and five fill relationships. Do not include proxies, furniture, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. The Lobby space must be 9.40 m by 5.40 m by 3.00 m. Name the slab Base Slab and make it 10.00 m by 6.00 m by 0.20 m. Name the roof Entrance Canopy and make it 2.20 m by 0.80 m by 0.18 m. Assign all spaces, walls, slab, roof, door, and windows to Ground Floor. Add an IfcDoor named Accessible Entrance Door filling an opening in South Wall with width 1.20 m and height 2.20 m. Add IfcWindows named North Window A and North Window B in North Wall, East Window A in East Wall, and West Window A in West Wall; each window opening must be 1.50 m wide and 1.20 m high. The CSV must use the exact headers GlobalId, Class, Width, Height, HostWall. It must contain one row for each final door or window, matched to the IFC product by GlobalId. For each row, Class must match the IFC class, Width and Height must match the associated opening size, and HostWall must match the host wall name. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
-  "source": "https://docs.bonsaibim.org/tutorials/project1.html",
+  "instruction": "Use the already opened Bonsai/Blender IFC authoring environment and its CLI/API tools to update /home/user/Desktop/init.ifc and save /home/user/Desktop/result.ifc. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a small public lobby with a flat entrance canopy and four windows. The architect has upgraded the glazing and wants the canopy recognised as a reusable entrance roof assembly while preserving the lobby massing and main opening layout. Keep the lobby shell, slab, canopy roof, entrance door, windows, and openings. Assign the canopy to the entrance canopy type, record the upgraded glazing status on each window, and stamp the lobby elements and canopy type with revision code BONSAI-CLI-15.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html; /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
@@ -11,12 +11,29 @@
           {
             "local_path": "task-15/init_file/init.ifc",
             "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-15/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ],
+        "timeout": 35
       }
     }
   ],
@@ -53,5 +70,6 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low"
+  "possibility_of_env_change": "low",
+  "difficulty": "medium"
 }

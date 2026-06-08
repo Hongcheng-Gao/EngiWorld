@@ -1,8 +1,8 @@
 {
   "id": "c-bonsai-task-12-ubuntu",
   "snapshot": "Bonsai-0.8.5",
-  "instruction": "Mezzanine Layout Addition Use the opened Bonsai IFC authoring environment to modify /home/user/Desktop/init.ifc by adding a mezzanine layout. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed IFC4 model as /home/user/Desktop/result.ifc. The final hierarchy must have one project, one site, and one building with two storeys named Ground Floor and Mezzanine. Model three spaces, four walls, two slabs, one door, two openings, two void relationships, and one fill relationship. Do not include windows, proxies, furniture, roofs, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Create Ground Storage and Ground Entry on Ground Floor, with clear plan dimensions of 9.20 m by 7.40 m and 2.10 m by 2.20 m. Create Mezzanine Office on Mezzanine with clear plan dimensions of 9.40 m by 3.70 m. All spaces must be 3.00 m high. Name the slabs Ground Slab and Mezzanine Slab; Ground Slab belongs to Ground Floor and must be 12.00 m by 8.00 m by 0.25 m, while Mezzanine Slab belongs to Mezzanine and must be 10.00 m by 8.00 m by 0.20 m. Name the single door Entry Door and make it fill an opening in South Wall with dimensions 1.00 m by 0.20 m by 2.10 m. Include one unfilled opening named Stair Void that voids Mezzanine Slab. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
-  "source": "https://docs.bonsaibim.org/tutorials/project3.html",
+  "instruction": "Use the already opened Bonsai/Blender IFC authoring environment and its CLI/API tools to update /home/user/Desktop/init.ifc and save /home/user/Desktop/result.ifc. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a small two-storey warehouse shell with a ground storage area and mezzanine office. The operations team wants the level naming and floor slab information clarified before inventory planning. Preserve the storage shell, mezzanine relationship, door, and stair void opening. Rename the two levels in a warehouse-friendly way, standardise both slabs as one warehouse slab assembly, and stamp the levels, rooms, walls, slabs, door, and slab type with revision code BONSAI-CLI-12.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html; /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
@@ -11,12 +11,29 @@
           {
             "local_path": "task-12/init_file/init.ifc",
             "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-12/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ],
+        "timeout": 35
       }
     }
   ],
@@ -53,5 +70,6 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low"
+  "possibility_of_env_change": "low",
+  "difficulty": "medium"
 }

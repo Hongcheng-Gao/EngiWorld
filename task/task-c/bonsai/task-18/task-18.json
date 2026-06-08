@@ -1,8 +1,8 @@
 {
   "id": "c-bonsai-task-18-ubuntu",
   "snapshot": "Bonsai-0.8.5",
-  "instruction": "Normalized IFC4 Office Migration Use the opened Bonsai IFC authoring environment to migrate /home/user/Desktop/init.ifc into a normalized IFC4 office model. You may use /home/user/Desktop/init_plan.png as a local reference image. Save the completed model as /home/user/Desktop/result.ifc. The final hierarchy must contain one IfcProject named Normalized IFC4, one IfcSite named Default Site, one IfcBuilding named Default Building, and two storeys named Ground Floor and Upper Floor. Include two spaces, eight walls, two slabs, one roof, and one wall type named ExtWallType-A. Do not include doors, windows, proxies, furniture, columns, beams, stairs, or flow terminals, and keep every IfcRoot GlobalId unique. Create spaces named GF Office and UF Office, each with dimensions 9.40 m by 7.40 m by 2.80 m. Keep wall names W-S, W-S-UP, W-N, W-N-UP, W-W, W-W-UP, W-E, and W-E-UP. W-S, W-S-UP, W-N, and W-N-UP must each be 10.00 m by 0.20 m by 3.00 m; W-W, W-W-UP, W-E, and W-E-UP must each be 0.20 m by 8.00 m by 3.00 m. Name the slabs GF Slab and UF Slab, each 10.00 m by 8.00 m by 0.20 m. Name the roof Roof and make it 10.00 m by 8.00 m by 0.25 m. Spatially assign all spaces, walls, slabs, and the roof to either Ground Floor or Upper Floor. Other representation details may vary. [Software] Bonsai workflows are used together with Blender; start Blender with `blender` (adjust path if needed).",
-  "source": "https://docs.ifcopenshell.org/autoapi/ifcpatch/recipes/Migrate/index.html",
+  "instruction": "Use the already opened Bonsai/Blender IFC authoring environment and its CLI/API tools to update /home/user/Desktop/init.ifc and save /home/user/Desktop/result.ifc. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a two-storey office envelope inherited from an older IFC2x3 exchange. The geometry is still useful, but the owner now requires an IFC4 deliverable with a simpler envelope specification. Preserve the two-storey massing, rooms, walls, slabs, and roof, migrate the file to the current IFC4 handover, consolidate the exterior walls under the primary wall type, keep both slabs under the shared slab type, and group the migrated envelope as one review set. Mark the migrated objects with revision code BONSAI-CLI-18 and retain a clear note that the source schema was IFC2X3.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html; /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
@@ -11,12 +11,29 @@
           {
             "local_path": "task-18/init_file/init.ifc",
             "path": "/home/user/Desktop/init.ifc"
-          },
-          {
-            "local_path": "task-18/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ],
+        "timeout": 35
       }
     }
   ],
@@ -53,5 +70,6 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low"
+  "possibility_of_env_change": "low",
+  "difficulty": "hard"
 }
