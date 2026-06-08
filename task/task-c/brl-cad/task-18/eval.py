@@ -13,14 +13,13 @@ SPEC = {'bbox': [120, 80, 20], 'solid': [(2, 40, 5), (3, 3, 15), (117, 77, 15)],
 
 
 def _load_mesh():
-    candidates = [OUTPUT_ROOT / TARGET, Path(__file__).resolve().parent / "ground_truth" / TARGET]
-    for path in candidates:
-        if path.exists() and path.stat().st_size > 0:
-            mesh = trimesh.load(str(path), force="mesh")
-            if getattr(mesh, "is_empty", True) or len(mesh.vertices) == 0 or len(mesh.faces) == 0:
-                continue
-            return mesh
-    raise ValueError("missing or invalid STL")
+    path = OUTPUT_ROOT / TARGET
+    if not path.exists() or path.stat().st_size <= 0:
+        raise ValueError("missing STL output")
+    mesh = trimesh.load(str(path), force="mesh")
+    if getattr(mesh, "is_empty", True) or len(mesh.vertices) == 0 or len(mesh.faces) == 0:
+        raise ValueError("invalid STL output")
+    return mesh
 
 
 def _close_list(actual, expected, tol=BBOX_TOL):
