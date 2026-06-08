@@ -1,8 +1,9 @@
 {
   "id": "c-openstudio-task-18-ubuntu",
   "snapshot": "OpenStudio-1.11.0",
-  "instruction": "Two-Office Balanced Layout Model. Start from the Desktop input model at /home/user/Desktop/init.osm and the weather file at /home/user/Desktop/weather.epw. Modify the input model as the base model rather than copying it unchanged. Use the Desktop reference image /home/user/Desktop/init_plan.png only as a visual guide for the starting layout. Modify the model as needed, then save the required output as /home/user/Desktop/result.osm. Every required output must be a valid, non-empty file at the stated Desktop path. The final model requirements are: - the result.osm model contains exactly 1 OS:BuildingStory, 2 OS:Space objects, and 2 OS:ThermalZone objects; - the OS:Space names are exactly NorthOffice and SouthOffice; - every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2; - the model has exactly 12 OS:Surface objects: 2 Floor surfaces, 2 RoofCeiling surfaces, and 8 Wall surfaces; - the surface Outside Boundary Condition counts are exactly 2 Ground, 8 Outdoors, and 2 Surface; - the model has exactly 6 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 6; - the model contains exactly 2 OS:ZoneHVAC:IdealLoadsAirSystem objects, 2 OS:ZoneHVAC:EquipmentList objects, 2 OS:ThermostatSetpoint:DualSetpoint objects, 1 OS:People object, 1 OS:Lights object, and 1 OS:ElectricEquipment object; - the surface geometry bounding box has X span 12.00 m, Y span 12.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m; - the sum of floor surface areas is 144.00 m2 with tolerance +/-0.50 m2; - the sum of exterior wall gross areas is 153.60 m2 with tolerance +/-0.50 m2; - the total fixed-window area is 30.72 m2 with tolerance +/-0.50 m2 Details not named here may vary, including object handles, GUIDs, incidental metadata, construction names, material definitions, and serializer ordering, as long as the required OpenStudio objects, geometry, relationships, and output data are correct. [Software] Launch the OpenStudio GUI with `OpenStudioApp` from a terminal (PATH or full path to the binary).",
-  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "difficulty": "hard",
+  "instruction": "Use the opened OpenStudio application and its CLI/API automation interface to organize /home/user/Desktop/init.osm and save the updated model as /home/user/Desktop/result.osm. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a two-story research office suite. Each floor is composed of south research areas and north office areas, and the plan stacks vertically. The research team wants to preserve the clear room grid and floor relationships while improving daylight control, ventilation assumptions, and operating loads for the south research areas. Complete the two-story model without breaking the exterior outline, floor stacking, or main partition relationships. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
@@ -11,15 +12,16 @@
           {
             "local_path": "task-18/init_file/init.osm",
             "path": "/home/user/Desktop/init.osm"
-          },
-          {
-            "local_path": "task-18/init_file/weather.epw",
-            "path": "/home/user/Desktop/weather.epw"
-          },
-          {
-            "local_path": "task-18/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
           }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
         ]
       }
     }

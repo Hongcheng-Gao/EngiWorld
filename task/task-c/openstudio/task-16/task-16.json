@@ -1,8 +1,9 @@
 {
   "id": "c-openstudio-task-16-ubuntu",
   "snapshot": "OpenStudio-1.11.0",
-  "instruction": "School Space Metadata Report From Init Model. Start from the Desktop input model at /home/user/Desktop/init.osm and modify it as the base model rather than copying it unchanged. Use the Desktop reference image /home/user/Desktop/init_plan.png only as a visual guide for the starting layout. Modify the model as needed, then save the required outputs as /home/user/Desktop/result.osm and /home/user/Desktop/result.csv. Every required output must be a valid, non-empty file at the stated Desktop path. The final model requirements are: - the result.osm model contains exactly 1 OS:BuildingStory, 4 OS:Space objects, and 4 OS:ThermalZone objects; - the OS:Space names are exactly Classroom-A, Classroom-B, TeacherOffice, and Storage; - every OS:Space references the OS:BuildingStory, references an OS:ThermalZone, and has floor area greater than 0.05 m2; - the model has exactly 24 OS:Surface objects: 4 Floor surfaces, 4 RoofCeiling surfaces, and 16 Wall surfaces; - the surface Outside Boundary Condition counts are exactly 4 Ground, 12 Outdoors, and 8 Surface; - the model has exactly 8 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 8; - the model contains exactly 0 OS:ZoneHVAC:IdealLoadsAirSystem objects, 4 OS:ZoneHVAC:EquipmentList objects, 4 OS:ThermostatSetpoint:DualSetpoint objects, 3 OS:People objects, 3 OS:Lights objects, and 3 OS:ElectricEquipment objects; - the surface geometry bounding box has X span 16.00 m, Y span 12.00 m, and Z span 3.20 m, each with tolerance +/-0.05 m; - the sum of floor surface areas is 192.00 m2 with tolerance +/-0.50 m2; - the sum of exterior wall gross areas is 179.20 m2 with tolerance +/-0.50 m2; - the total fixed-window area is 34.56 m2 with tolerance +/-0.50 m2 Prepare the required supporting files so that the result.csv report has exactly the header row space_name,resolved_schedule_set,resolved_space_type,occupied_flag and exactly 4 data rows in this order: Classroom-A, Classroom-B, Storage, TeacherOffice; the result.csv rows must exactly match these values: Classroom-A / School Defaults / ClassroomType / 1; Classroom-B / School Defaults / ClassroomType / 1; Storage / Support Defaults / StorageType / 1; TeacherOffice / Support Defaults / OfficeType / 1. Details not named here may vary, including object handles, GUIDs, incidental metadata, construction names, material definitions, and serializer ordering, as long as the required OpenStudio objects, geometry, relationships, and output data are correct. [Software] Launch the OpenStudio GUI with `OpenStudioApp` from a terminal (PATH or full path to the binary).",
-  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "difficulty": "hard",
+  "instruction": "Use the opened OpenStudio application and its CLI/API automation interface to organize /home/user/Desktop/init.osm and save the updated model as /home/user/Desktop/result.osm. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a two-story community library retrofit with a simple flat roof, continuous south shading, and a quieter north reading facade. The first floor faces the street and contains a lobby, stacks, cafe area, and support space; the second floor contains reading, maker, and small classroom spaces. Without changing floor heights, the roof, or the main horizontal order of the south facade, complete an integrated energy model covering space uses, loads, ventilation, shading, second-floor daylight controls, and cafe water use. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
@@ -11,11 +12,16 @@
           {
             "local_path": "task-16/init_file/init.osm",
             "path": "/home/user/Desktop/init.osm"
-          },
-          {
-            "local_path": "task-16/init_image/init_plan.png",
-            "path": "/home/user/Desktop/init_plan.png"
           }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
         ]
       }
     }

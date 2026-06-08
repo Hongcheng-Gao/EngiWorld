@@ -1,13 +1,28 @@
 {
   "id": "c-openstudio-task-02-ubuntu",
   "snapshot": "OpenStudio-1.11.0",
-  "instruction": "Two-Story Office Thermal Zone Model. Start from a blank OpenStudio model. There are no init_file inputs and no local reference images for this task. Use OpenStudio GUI operations, measures, scripts, or API calls to create a two-story office model and save the required outputs as /home/user/Desktop/result.osm and /home/user/Desktop/kpis.json. Every required output must be a valid, non-empty file at the stated Desktop path. The final model requirements are: - the result.osm model contains exactly 1 OS:Building, 2 OS:BuildingStory objects, 10 OS:Space objects, and 10 OS:ThermalZone objects; - the OS:Space names are exactly L1-South, L1-North, L1-West, L1-East, L1-Core, L2-South, L2-North, L2-West, L2-East, and L2-Core; - every OS:Space references an OS:BuildingStory, references an OS:ThermalZone, has Part of Total Floor Area set to Yes, and has floor area greater than 0.05 m2; - the result.osm model contains at least one OS:DefaultConstructionSet and the single OS:Building references a default construction set; - the model has exactly 68 OS:Surface objects: 10 Floor surfaces, 10 RoofCeiling surfaces, and 48 Wall surfaces; - the surface Outside Boundary Condition counts are exactly 10 Ground, 26 Outdoors, and 32 Surface; - the model has exactly 16 OS:SubSurface objects, all counted window subsurfaces are FixedWindow, and the fixed-window count is exactly 16; - the surface geometry bounding box has X span 30.00 m, Y span 18.00 m, and Z span 7.00 m, each with tolerance +/-0.05 m; - the sum of floor surface areas is 1080.00 m2 with tolerance +/-1.00 m2; - the sum of exterior wall gross areas is 576.00 m2 with tolerance +/-1.00 m2; - the total fixed-window area is 201.60 m2 with tolerance +/-1.00 m2; - the model contains exactly 10 OS:ZoneHVAC:IdealLoadsAirSystem objects, 10 OS:ZoneHVAC:EquipmentList objects, and 10 OS:ThermostatSetpoint:DualSetpoint objects; - every thermal zone is referenced by an equipment list and a thermostat, and every equipment list references an ideal loads system Prepare the required supporting files so that the kpis.json file contains total_floor_area_m2, zone_count, total_exterior_wall_area_m2, and total_window_area_m2 values matching the evaluator-computed model metrics with tolerance max(0.10, 1%). Details not named here may vary, including object handles, GUIDs, incidental metadata, construction names, material definitions, and serializer ordering, as long as the required OpenStudio objects, geometry, relationships, and output data are correct. [Software] Launch the OpenStudio GUI with `OpenStudioApp` from a terminal (PATH or full path to the binary).",
-  "source": "https://github.com/NREL/OpenStudio-resources/blob/develop/model/simulationtests/lib/baseline_model.rb",
+  "difficulty": "simple",
+  "instruction": "Use the opened OpenStudio application and its CLI/API automation interface to organize /home/user/Desktop/init.osm and save the updated model as /home/user/Desktop/result.osm. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a single-story corner consultation service point divided into a waiting area and one private consultation room. The operator wants the waiting area to feel brighter along the street, while the consultation room remains stable, comfortable, and less exposed. Without changing the exterior outline or flat-roof height, organize the two rooms, preserve the internal partition relationship, and complete the loads, comfort settings, and street-facing daylighting appropriate to public waiting and consultation use. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows /new_home/leiyu/workspace/bim任务设计.md",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-02/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
       }
     }
   ],
