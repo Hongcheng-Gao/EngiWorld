@@ -114,18 +114,72 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-003_output.stl',
- 'bbox': [72.0, 72.0, 8.0],
- 'bbox_tol': 1.0,
- 'min_triangles': 160,
- 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 36.0, 'span': 7.0, 'bins': 24},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 14.0, 'span': 7.0, 'bins': 18},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, 0.0], 'radius': 2.5, 'span': 7.0, 'bins': 8},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [13.0, 22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-13.0, 22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, 0.0], 'radius': 2.5, 'span': 7.0, 'bins': 8},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-13.0, -22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [13.0, -22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8}]}
+SPEC = {'output': 'task-020_output.3mf',
+ 'bbox': [130.0, 90.0, 64.0],
+ 'bbox_tol': 1.5,
+ 'min_triangles': 900,
+ 'checks': [{'kind': 'cylinder',
+             'axis': 'z',
+             'center': [-52.0, -32.0],
+             'radius': 5.0,
+             'span': 53.0,
+             'bins': 14,
+             'axial_range': [6.0, 60.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [-52.0, 32.0],
+             'radius': 5.0,
+             'span': 53.0,
+             'bins': 14,
+             'axial_range': [6.0, 60.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [52.0, -32.0],
+             'radius': 5.0,
+             'span': 53.0,
+             'bins': 14,
+             'axial_range': [6.0, 60.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [52.0, 32.0],
+             'radius': 5.0,
+             'span': 53.0,
+             'bins': 14,
+             'axial_range': [6.0, 60.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [-52.0, -32.0],
+             'radius': 5.5,
+             'span': 3.0,
+             'bins': 12,
+             'axial_range': [60.0, 64.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [-52.0, 32.0],
+             'radius': 5.5,
+             'span': 3.0,
+             'bins': 12,
+             'axial_range': [60.0, 64.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [52.0, -32.0],
+             'radius': 5.5,
+             'span': 3.0,
+             'bins': 12,
+             'axial_range': [60.0, 64.0]},
+            {'kind': 'cylinder',
+             'axis': 'z',
+             'center': [52.0, 32.0],
+             'radius': 5.5,
+             'span': 3.0,
+             'bins': 12,
+             'axial_range': [60.0, 64.0]},
+            {'kind': 'slot', 'center': [-25.0, 0.0], 'length': 36.0, 'width': 8.0, 'span': 6.0},
+            {'kind': 'slot', 'center': [25.0, 0.0], 'length': 36.0, 'width': 8.0, 'span': 6.0},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-45.0, 0.0], 'radius': 3.5, 'span': 5.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [45.0, 0.0], 'radius': 3.5, 'span': 5.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, -28.0], 'radius': 3.5, 'span': 5.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 28.0], 'radius': 3.5, 'span': 5.0, 'bins': 10}]}
 
 
 def _parse_stl(path: Path):
@@ -483,6 +537,35 @@ def _dxf_outline_min(polylines, check):
     return False
 
 
+def _dxf_circle_ring(circles, check):
+    cx, cy = check.get("center", [0.0, 0.0])
+    ring_radius = float(check["ring_radius"])
+    circle_radius = float(check["circle_radius"])
+    count = int(check["count"])
+    tol = float(check.get("tol", 0.75))
+    radius_tol = float(check.get("radius_tol", 0.5))
+    gap = float(check.get("gap", 8.0))
+    angles = []
+    for x, y, rad in circles:
+        if abs(math.hypot(x - cx, y - cy) - ring_radius) <= tol and abs(rad - circle_radius) <= radius_tol:
+            deg = math.degrees(math.atan2(y - cy, x - cx))
+            if deg < 0:
+                deg += 360
+            angles.append(deg)
+    if len(angles) < count:
+        return False
+    angles.sort()
+    clusters = 1
+    last = angles[0]
+    for angle in angles[1:]:
+        if angle - last > gap:
+            clusters += 1
+        last = angle
+    if angles[0] + 360 - angles[-1] <= gap and clusters > 1:
+        clusters -= 1
+    return clusters >= count
+
+
 def _run_mesh_check(mesh: Mesh, check):
     kind = check["kind"]
     if kind == "cylinder":
@@ -537,6 +620,8 @@ def _evaluate_dxf(path: Path) -> bool:
         if check["kind"] == "dxf_rect" and not _dxf_rect(polylines, check):
             return False
         if check["kind"] == "dxf_outline_min" and not _dxf_outline_min(polylines, check):
+            return False
+        if check["kind"] == "dxf_circle_ring" and not _dxf_circle_ring(circles, check):
             return False
     return True
 

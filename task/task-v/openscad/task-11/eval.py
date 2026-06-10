@@ -114,17 +114,37 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-011_output.stl',
- 'bbox': [44.0, 44.0, 18.0],
+SPEC = {'output': 'task-019_output.stl',
+ 'bbox': [40.0, 20.0, 15.8],
  'bbox_tol': 1.0,
- 'min_triangles': 150,
- 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 22.0, 'span': 17.0, 'bins': 24},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 4.0, 'span': 17.0, 'bins': 12},
-            {'kind': 'angular_clusters',
-             'count': 12,
-             'radius_range': [19.0, 21.0],
-             'z_range': [2.0, 16.0],
-             'gap': 10.0}]}
+ 'min_triangles': 70,
+ 'checks': [{'kind': 'steps',
+             'depth': 20.0,
+             'levels': [{'width': 40.0, 'top': 5.0}, {'width': 30.0, 'top': 10.0}, {'width': 20.0, 'top': 15.0}]},
+            {'kind': 'raised_region',
+             'x_range': [15.0, 20.0],
+             'y_range': [-4.0, 4.0],
+             'z_min': 5.4,
+             'x_span': 1.0,
+             'y_span': 2.0,
+             'min_points': 3},
+            {'kind': 'raised_region',
+             'x_range': [10.0, 15.0],
+             'y_range': [-4.0, 4.0],
+             'z_min': 10.4,
+             'x_span': 1.5,
+             'y_span': 1.5,
+             'min_points': 3},
+            {'kind': 'raised_region',
+             'x_range': [-6.0, 6.0],
+             'y_range': [-5.0, 5.0],
+             'z_min': 15.4,
+             'x_span': 3.0,
+             'y_span': 2.5,
+             'min_points': 4},
+            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [2.0, 3.0], 'tol': 0.4},
+            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [7.0, 8.0], 'tol': 0.4},
+            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [12.0, 13.0], 'tol': 0.4}]}
 
 
 def _parse_stl(path: Path):
@@ -374,6 +394,19 @@ def _has_raised(mesh: Mesh, check):
             max(p[1] for p in pts) - min(p[1] for p in pts) >= float(check["y_span"]))
 
 
+def _has_raised_region(mesh: Mesh, check):
+    x0, x1 = [float(v) for v in check["x_range"]]
+    y0, y1 = [float(v) for v in check["y_range"]]
+    z_min = float(check["z_min"])
+    pts = [p for p in mesh.vertices if x0 <= p[0] <= x1 and y0 <= p[1] <= y1 and p[2] >= z_min]
+    if len(pts) < int(check.get("min_points", 4)):
+        return False
+    return (
+        max(p[0] for p in pts) - min(p[0] for p in pts) >= float(check["x_span"])
+        and max(p[1] for p in pts) - min(p[1] for p in pts) >= float(check["y_span"])
+    )
+
+
 def _has_steps(mesh: Mesh, check):
     tol = float(check.get("tol", 0.75))
     depth = float(check["depth"])
@@ -498,6 +531,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_box_outline(mesh, check)
     if kind == "raised":
         return _has_raised(mesh, check)
+    if kind == "raised_region":
+        return _has_raised_region(mesh, check)
     if kind == "steps":
         return _has_steps(mesh, check)
     if kind == "angular_clusters":

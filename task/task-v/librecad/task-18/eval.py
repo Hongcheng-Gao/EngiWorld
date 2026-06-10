@@ -322,40 +322,35 @@ def no_entities_on_layer(doc, layer):
     return not any(layer_of(entity) == layer.upper() for entity in doc.modelspace())
 
 
-OUTPUT_FILE = "gui18_wall_openings_completed.dxf"
+OUTPUT_FILE = "gui05_bracket_dimension_completed.dxf"
 
 
-def seg_len(seg):
-    (ax, ay), (bx, by) = seg
-    return math.hypot(ax - bx, ay - by)
+def dimension_count(doc):
+    return sum(1 for entity in doc.modelspace() if entity.dxftype() == "DIMENSION" and layer_of(entity) == "DIM")
 
 
-def door_leaf_is_valid(doc):
-    jambs = [(750, 0), (1650, 0)]
-    for seg in iter_segments(doc, "DOOR"):
-        if not close(seg_len(seg), 900, 2.0):
-            continue
-        a, b = seg
-        if any(pt_close(a, jamb, TOL) or pt_close(b, jamb, TOL) for jamb in jambs):
-            return True
-    return False
+def has_linear_dimensions(doc):
+    explicit_text = (
+        has_text(doc, "DIM", "160", height=3.5) and
+        has_text(doc, "DIM", "90", height=3.5) and
+        text_count(doc, "DIM", "30") >= 2
+    )
+    return explicit_text or dimension_count(doc) >= 4
 
 
-def door_arc_is_valid(doc):
-    return has_arc(doc, "DOOR", (750, 0), 900) or has_arc(doc, "DOOR", (1650, 0), 900)
+def has_hole_notes(doc):
+    separate_notes = text_count(doc, "DIM", "12") >= 2
+    combined_note = any("2X" in norm_text(entity_text(entity)) and "12" in norm_text(entity_text(entity)) for entity in text_entities(doc, "DIM"))
+    return separate_notes or combined_note
 
 
 def check(doc):
     return (
-        has_segment(doc, "WALL", (0, 0), (750, 0)) and
-        has_segment(doc, "WALL", (1650, 0), (2700, 0)) and
-        has_segment(doc, "WALL", (3900, 0), (4500, 0)) and
-        has_no_segment_crossing(doc, "WALL", 0, 750, 1650) and
-        has_no_segment_crossing(doc, "WALL", 0, 2700, 3900) and
-        door_leaf_is_valid(doc) and
-        door_arc_is_valid(doc) and
-        has_segment(doc, "WINDOW", (2700, 50), (3900, 50)) and
-        has_segment(doc, "WINDOW", (2700, -50), (3900, -50))
+        has_polyline_or_edges(doc, "OUTLINE", [(0, 0), (160, 0), (160, 90), (0, 90)]) and
+        has_circle(doc, "HOLE", (30, 45), 6) and
+        has_circle(doc, "HOLE", (130, 45), 6) and
+        has_linear_dimensions(doc) and
+        has_hole_notes(doc)
     )
 
 

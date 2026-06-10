@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,43 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [20, 0], 'end': [150, 30], 'layer': 'OUTLINE'}, {'start': [150, 30], 'end': [130, 100], 'layer': 'OUTLINE'}, {'start': [130, 100], 'end': [0, 70], 'layer': 'OUTLINE'}, {'start': [0, 70], 'end': [20, 0], 'layer': 'OUTLINE'}, {'start': [10, 35], 'end': [140, 65], 'layer': 'CENTER'}], 'circles': [{'center': [75, 50], 'radius': 8, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-04', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [0.0, 0.0], 'end': [240.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [240.0, 0.0], 'end': [240.0, 90.0], 'layer': 'OUTLINE'},
+              {'start': [240.0, 90.0], 'end': [0.0, 90.0], 'layer': 'OUTLINE'},
+              {'start': [0.0, 90.0], 'end': [0.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [30.0, 0.0], 'end': [30.0, 90.0], 'layer': 'CENTER'},
+              {'start': [70.0, 0.0], 'end': [70.0, 90.0], 'layer': 'CENTER'},
+              {'start': [110.0, 0.0], 'end': [110.0, 90.0], 'layer': 'CENTER'},
+              {'start': [150.0, 0.0], 'end': [150.0, 90.0], 'layer': 'CENTER'},
+              {'start': [190.0, 0.0], 'end': [190.0, 90.0], 'layer': 'CENTER'},
+              {'start': [225.0, 0.0], 'end': [225.0, 90.0], 'layer': 'CENTER'},
+              {'start': [0.0, 20.0], 'end': [240.0, 20.0], 'layer': 'CENTER'},
+              {'start': [0.0, 45.0], 'end': [240.0, 45.0], 'layer': 'CENTER'},
+              {'start': [0.0, 70.0], 'end': [240.0, 70.0], 'layer': 'CENTER'},
+              {'start': [30.0, 20.0], 'end': [225.0, 20.0], 'layer': 'CHANNEL'},
+              {'start': [30.0, 45.0], 'end': [225.0, 45.0], 'layer': 'CHANNEL'},
+              {'start': [30.0, 70.0], 'end': [225.0, 70.0], 'layer': 'CHANNEL'},
+              {'start': [70.0, 20.0], 'end': [70.0, 70.0], 'layer': 'CHANNEL'},
+              {'start': [150.0, 20.0], 'end': [150.0, 70.0], 'layer': 'CHANNEL'},
+              {'start': [190.0, 20.0], 'end': [190.0, 70.0], 'layer': 'CHANNEL'},
+              {'start': [100.0, 24.0], 'end': [140.0, 24.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 16.0], 'end': [140.0, 16.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 74.0], 'end': [140.0, 74.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 66.0], 'end': [140.0, 66.0], 'layer': 'CUTOUT'}],
+ 'circles': [{'center': [30.0, 45.0], 'radius': 10.0, 'layer': 'PORT'},
+             {'center': [70.0, 45.0], 'radius': 8.0, 'layer': 'PORT'},
+             {'center': [110.0, 45.0], 'radius': 12.0, 'layer': 'PORT'},
+             {'center': [150.0, 45.0], 'radius': 8.0, 'layer': 'PORT'},
+             {'center': [190.0, 45.0], 'radius': 10.0, 'layer': 'PORT'},
+             {'center': [225.0, 45.0], 'radius': 6.0, 'layer': 'PORT'},
+             {'center': [60.0, 20.0], 'radius': 5.0, 'layer': 'PORT'},
+             {'center': [180.0, 70.0], 'radius': 5.0, 'layer': 'PORT'}],
+ 'arcs': [{'center': [100.0, 20.0], 'radius': 4.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [140.0, 20.0], 'radius': 4.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'},
+          {'center': [100.0, 70.0], 'radius': 4.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [140.0, 70.0], 'radius': 4.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'}],
+ 'texts': [{'text': 'ACAD-H04', 'layer': 'ANNOTATION'}, {'text': 'P1 P2 P3 T A B', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

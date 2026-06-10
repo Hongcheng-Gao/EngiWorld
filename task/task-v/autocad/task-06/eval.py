@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,61 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [], 'circles': [{'center': [80, 80], 'radius': 60, 'layer': 'OUTLINE'}, {'center': [80, 80], 'radius': 25, 'layer': 'CUTOUT'}, {'center': [80.0, 125.0], 'radius': 4, 'layer': 'HOLE'}, {'center': [41.028857, 102.5], 'radius': 4, 'layer': 'HOLE'}, {'center': [41.028857, 57.5], 'radius': 4, 'layer': 'HOLE'}, {'center': [80.0, 35.0], 'radius': 4, 'layer': 'HOLE'}, {'center': [118.971143, 57.5], 'radius': 4, 'layer': 'HOLE'}, {'center': [118.971143, 102.5], 'radius': 4, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-06', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [20.0, 0.0], 'end': [240.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [260.0, 20.0], 'end': [260.0, 160.0], 'layer': 'OUTLINE'},
+              {'start': [240.0, 180.0], 'end': [20.0, 180.0], 'layer': 'OUTLINE'},
+              {'start': [0.0, 160.0], 'end': [0.0, 20.0], 'layer': 'OUTLINE'},
+              {'start': [65.0, 30.0], 'end': [65.0, 150.0], 'layer': 'CENTER'},
+              {'start': [95.0, 30.0], 'end': [95.0, 150.0], 'layer': 'CENTER'},
+              {'start': [125.0, 30.0], 'end': [125.0, 150.0], 'layer': 'CENTER'},
+              {'start': [155.0, 30.0], 'end': [155.0, 150.0], 'layer': 'CENTER'},
+              {'start': [185.0, 30.0], 'end': [185.0, 150.0], 'layer': 'CENTER'},
+              {'start': [45.0, 45.0], 'end': [215.0, 45.0], 'layer': 'CENTER'},
+              {'start': [45.0, 67.0], 'end': [215.0, 67.0], 'layer': 'CENTER'},
+              {'start': [45.0, 89.0], 'end': [215.0, 89.0], 'layer': 'CENTER'},
+              {'start': [45.0, 111.0], 'end': [215.0, 111.0], 'layer': 'CENTER'},
+              {'start': [45.0, 133.0], 'end': [215.0, 133.0], 'layer': 'CENTER'},
+              {'start': [100.0, 25.0], 'end': [160.0, 25.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 15.0], 'end': [160.0, 15.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 165.0], 'end': [160.0, 165.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 155.0], 'end': [160.0, 155.0], 'layer': 'CUTOUT'}],
+ 'circles': [{'center': [65.0, 45.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [95.0, 45.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [125.0, 45.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [155.0, 45.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [185.0, 45.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [80.0, 67.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [110.0, 67.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [140.0, 67.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [170.0, 67.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [65.0, 89.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [95.0, 89.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [125.0, 89.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [155.0, 89.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [185.0, 89.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [80.0, 111.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [110.0, 111.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [140.0, 111.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [170.0, 111.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [65.0, 133.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [95.0, 133.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [125.0, 133.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [155.0, 133.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [185.0, 133.0], 'radius': 4.5, 'layer': 'TUBE'},
+             {'center': [45.0, 150.0], 'radius': 9.0, 'layer': 'HOLE'},
+             {'center': [215.0, 30.0], 'radius': 9.0, 'layer': 'HOLE'},
+             {'center': [45.0, 30.0], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [215.0, 150.0], 'radius': 6.0, 'layer': 'HOLE'}],
+ 'arcs': [{'center': [20.0, 20.0], 'radius': 20.0, 'start_angle': 180.0, 'end_angle': 270.0, 'layer': 'OUTLINE'},
+          {'center': [240.0, 20.0], 'radius': 20.0, 'start_angle': 270.0, 'end_angle': 0.0, 'layer': 'OUTLINE'},
+          {'center': [240.0, 160.0], 'radius': 20.0, 'start_angle': 0.0, 'end_angle': 90.0, 'layer': 'OUTLINE'},
+          {'center': [20.0, 160.0], 'radius': 20.0, 'start_angle': 90.0, 'end_angle': 180.0, 'layer': 'OUTLINE'},
+          {'center': [100.0, 20.0], 'radius': 5.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [160.0, 20.0], 'radius': 5.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'},
+          {'center': [100.0, 160.0], 'radius': 5.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [160.0, 160.0], 'radius': 5.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'}],
+ 'texts': [{'text': 'ACAD-H06', 'layer': 'ANNOTATION'}, {'text': 'TUBE-SHEET 23X', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

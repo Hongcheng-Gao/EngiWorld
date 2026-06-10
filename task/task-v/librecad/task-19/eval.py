@@ -322,17 +322,41 @@ def no_entities_on_layer(doc, layer):
     return not any(layer_of(entity) == layer.upper() for entity in doc.modelspace())
 
 
-OUTPUT_FILE = "gui19_layout_copy_completed.dxf"
+OUTPUT_FILE = "gui18_wall_openings_completed.dxf"
+
+
+def seg_len(seg):
+    (ax, ay), (bx, by) = seg
+    return math.hypot(ax - bx, ay - by)
+
+
+def door_leaf_is_valid(doc):
+    jambs = [(750, 0), (1650, 0)]
+    for seg in iter_segments(doc, "DOOR"):
+        if not close(seg_len(seg), 900, 2.0):
+            continue
+        a, b = seg
+        if any(pt_close(a, jamb, TOL) or pt_close(b, jamb, TOL) for jamb in jambs):
+            return True
+    return False
+
+
+def door_arc_is_valid(doc):
+    return has_arc(doc, "DOOR", (750, 0), 900) or has_arc(doc, "DOOR", (1650, 0), 900)
+
 
 def check(doc):
-    ok = True
-    for col in range(3):
-        for row in range(2):
-            dx = col * 60
-            dy = row * 45
-            ok = ok and has_polyline_or_edges(doc, "OUTLINE", [(dx, dy), (dx + 30, dy), (dx + 30, dy + 20), (dx, dy + 20)])
-            ok = ok and has_circle(doc, "HOLE", (dx + 15, dy + 10), 4)
-    return ok
+    return (
+        has_segment(doc, "WALL", (0, 0), (750, 0)) and
+        has_segment(doc, "WALL", (1650, 0), (2700, 0)) and
+        has_segment(doc, "WALL", (3900, 0), (4500, 0)) and
+        has_no_segment_crossing(doc, "WALL", 0, 750, 1650) and
+        has_no_segment_crossing(doc, "WALL", 0, 2700, 3900) and
+        door_leaf_is_valid(doc) and
+        door_arc_is_valid(doc) and
+        has_segment(doc, "WINDOW", (2700, 50), (3900, 50)) and
+        has_segment(doc, "WINDOW", (2700, -50), (3900, -50))
+    )
 
 
 def evaluate():

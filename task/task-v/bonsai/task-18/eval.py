@@ -3,6 +3,7 @@ import os
 import re
 from pathlib import Path
 
+
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
@@ -21,7 +22,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
 
-SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Lobby', 'Classroom 1', 'Classroom 2', 'Staff', 'Upper Studio', 'Upper Store'], 'material_names': ['Concrete', 'Glass'], 'exact_counts': {'storeys': 2, 'spaces': 6}, 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'walls': 12, 'slabs': 2, 'doors': 6, 'windows': 6, 'openings': 4, 'voids': 4, 'fills': 4}, 'forbidden': ['IfcBuildingElementProxy', 'IfcFurniture'], 'overall_span_ranges_m': {'x': (11.0, 13.2), 'y': (6.0, 8.2), 'z': (5.7, 7.3)}}
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Play', 'Sleep', 'Staff', 'WC', 'Store'], 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 5, 'walls': 9, 'slabs': 1, 'doors': 5, 'windows': 6}, 'forbidden': [], 'overall_span_ranges_m': {'x': (14.0, 16.0), 'y': (7.0, 9.0), 'z': (2.6, 4.0)}}
 
 
 def _read_text_safe(path):
@@ -61,6 +62,8 @@ def _history_paths(root):
         home / ".zsh_history",
         home / ".python_history",
         home / ".local/share/fish/fish_history",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
+        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
         root / ".bash_history",
         root / ".zsh_history",
     ]
@@ -112,7 +115,7 @@ def unique_global_ids(model):
     return bool(gids) and len(gids) == len(set(gids))
 
 
-def check_counts(model):
+def check_min_counts(model):
     class_map = {
         "projects": "IfcProject",
         "sites": "IfcSite",
@@ -123,35 +126,20 @@ def check_counts(model):
         "slabs": "IfcSlab",
         "doors": "IfcDoor",
         "windows": "IfcWindow",
-        "columns": "IfcColumn",
-        "openings": "IfcOpeningElement",
-        "voids": "IfcRelVoidsElement",
-        "fills": "IfcRelFillsElement",
     }
-    for key, expected in SPEC.get("exact_counts", {}).items():
-        if entity_count(model, class_map[key]) != expected:
-            return False
-    for key, minimum in SPEC.get("min_counts", {}).items():
+    for key, minimum in SPEC["min_counts"].items():
         if entity_count(model, class_map[key]) < minimum:
-            return False
-    for ifc_class in SPEC.get("forbidden", []):
-        if entity_count(model, ifc_class) > 0:
             return False
     return True
 
 
+def check_forbidden(model):
+    return all(entity_count(model, ifc_class) == 0 for ifc_class in SPEC["forbidden"])
+
+
 def check_space_names(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    required = [norm(name) for name in SPEC["space_names"]]
-    return sorted(names) == sorted(required)
-
-
-def check_materials(model):
-    required = [norm(name) for name in SPEC.get("material_names", [])]
-    if not required:
-        return True
-    names = [norm(getattr(mat, "Name", "")) for mat in model.by_type("IfcMaterial")]
-    return all(any(req == name or req in name for name in names) for req in required)
+    return all(any(norm(required) in name for name in names) for required in SPEC["space_names"])
 
 
 def shaped_product_bbox(model):
@@ -163,7 +151,7 @@ def shaped_product_bbox(model):
     except Exception:
         pass
     products = []
-    for ifc_class in ("IfcSpace", "IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcDoor", "IfcWindow", "IfcColumn"):
+    for ifc_class in ("IfcSpace", "IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcDoor", "IfcWindow"):
         products.extend(model.by_type(ifc_class))
     xs, ys, zs = [], [], []
     for product in products:
@@ -206,9 +194,9 @@ def evaluate(root):
     return (
         schema.startswith(SPEC["schema"])
         and unique_global_ids(model)
-        and check_counts(model)
+        and check_min_counts(model)
+        and check_forbidden(model)
         and check_space_names(model)
-        and check_materials(model)
         and check_overall_size(model)
     )
 

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,36 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 25], 'end': [30, 25], 'layer': 'OUTLINE'}, {'start': [30, 25], 'end': [30, 15], 'layer': 'OUTLINE'}, {'start': [30, 15], 'end': [110, 15], 'layer': 'OUTLINE'}, {'start': [110, 15], 'end': [110, 25], 'layer': 'OUTLINE'}, {'start': [110, 25], 'end': [150, 25], 'layer': 'OUTLINE'}, {'start': [150, 25], 'end': [150, 45], 'layer': 'OUTLINE'}, {'start': [150, 45], 'end': [110, 45], 'layer': 'OUTLINE'}, {'start': [110, 45], 'end': [110, 55], 'layer': 'OUTLINE'}, {'start': [110, 55], 'end': [30, 55], 'layer': 'OUTLINE'}, {'start': [30, 55], 'end': [30, 45], 'layer': 'OUTLINE'}, {'start': [30, 45], 'end': [0, 45], 'layer': 'OUTLINE'}, {'start': [0, 45], 'end': [0, 25], 'layer': 'OUTLINE'}, {'start': [0, 35], 'end': [150, 35], 'layer': 'CENTER'}], 'circles': [], 'arcs': [], 'texts': [{'text': 'ACAD-16', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [0.0, 0.0], 'end': [220.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [220.0, 0.0], 'end': [240.0, 40.0], 'layer': 'OUTLINE'},
+              {'start': [240.0, 40.0], 'end': [210.0, 125.0], 'layer': 'OUTLINE'},
+              {'start': [210.0, 125.0], 'end': [145.0, 155.0], 'layer': 'OUTLINE'},
+              {'start': [145.0, 155.0], 'end': [80.0, 135.0], 'layer': 'OUTLINE'},
+              {'start': [80.0, 135.0], 'end': [35.0, 90.0], 'layer': 'OUTLINE'},
+              {'start': [35.0, 90.0], 'end': [0.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [35.0, 90.0], 'end': [220.0, 0.0], 'layer': 'RIB'},
+              {'start': [80.0, 135.0], 'end': [145.0, 0.0], 'layer': 'RIB'},
+              {'start': [145.0, 155.0], 'end': [210.0, 0.0], 'layer': 'RIB'},
+              {'start': [0.0, 0.0], 'end': [145.0, 155.0], 'layer': 'RIB'},
+              {'start': [95.0, 130.0], 'end': [145.0, 130.0], 'layer': 'CUTOUT'},
+              {'start': [95.0, 120.0], 'end': [145.0, 120.0], 'layer': 'CUTOUT'},
+              {'start': [200.0, 47.0], 'end': [200.0, 83.0], 'layer': 'CUTOUT'},
+              {'start': [210.0, 47.0], 'end': [210.0, 83.0], 'layer': 'CUTOUT'},
+              {'start': [0.0, 77.5], 'end': [240.0, 77.5], 'layer': 'CENTER'},
+              {'start': [120.0, 0.0], 'end': [120.0, 155.0], 'layer': 'CENTER'}],
+ 'circles': [{'center': [35.0, 30.0], 'radius': 8.0, 'layer': 'HOLE'},
+             {'center': [190.0, 30.0], 'radius': 8.0, 'layer': 'HOLE'},
+             {'center': [95.0, 95.0], 'radius': 12.0, 'layer': 'HOLE'},
+             {'center': [165.0, 105.0], 'radius': 10.0, 'layer': 'HOLE'},
+             {'center': [120.0, 55.0], 'radius': 6.0, 'layer': 'HOLE'}],
+ 'arcs': [{'center': [95.0, 125.0], 'radius': 5.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [145.0, 125.0], 'radius': 5.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'},
+          {'center': [205.0, 83.0], 'radius': 5.0, 'start_angle': 0.0, 'end_angle': 180.0, 'layer': 'CUTOUT'},
+          {'center': [205.0, 47.0], 'radius': 5.0, 'start_angle': 180.0, 'end_angle': 0.0, 'layer': 'CUTOUT'},
+          {'center': [35.0, 90.0], 'radius': 20.0, 'start_angle': 180.0, 'end_angle': 300.0, 'layer': 'OUTLINE'},
+          {'center': [210.0, 125.0], 'radius': 24.0, 'start_angle': 300.0, 'end_angle': 60.0, 'layer': 'OUTLINE'}],
+ 'texts': [{'text': 'ACAD-H18', 'layer': 'ANNOTATION'}, {'text': 'ASYM ENGINE MOUNT', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

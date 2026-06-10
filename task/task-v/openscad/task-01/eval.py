@@ -114,17 +114,38 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-001_output.stl',
- 'bbox': [80.0, 32.0, 8.12],
- 'bbox_tol': 0.75,
- 'center': [0.0, 0.0, 0.0],
- 'center_tol': 0.5,
- 'volume': 17600.0,
- 'volume_tol': 350.0,
- 'min_triangles': 24,
- 'min_vertices': 12,
- 'checks': [{'kind': 'slice_bbox', 'axis': 'z', 'axial': 2.56, 'extent': [80.0, 32.0], 'tol': 0.9},
-            {'kind': 'slice_bbox', 'axis': 'z', 'axial': 4.06, 'extent': [73.6, 29.44], 'tol': 1.1}]}
+SPEC = {'output': 'task-006_output.stl',
+ 'bbox': [140.0, 70.0, 5.0],
+ 'bbox_tol': 1.0,
+ 'min_triangles': 1800,
+ 'checks': [{'kind': 'slot', 'center': [-50.0, -24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-50.0, -8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-50.0, 8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-50.0, 24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-30.0, -24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-30.0, -8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-30.0, 8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-30.0, 24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-10.0, -24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-10.0, -8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-10.0, 8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [-10.0, 24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [10.0, -24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [10.0, -8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [10.0, 8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [10.0, 24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [30.0, -24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [30.0, -8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [30.0, 8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [30.0, 24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [50.0, -24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [50.0, -8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [50.0, 8.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'slot', 'center': [50.0, 24.0], 'length': 14.0, 'width': 4.0, 'span': 4.0},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-60.0, -28.0], 'radius': 2.5, 'span': 4.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-60.0, 28.0], 'radius': 2.5, 'span': 4.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [60.0, -28.0], 'radius': 2.5, 'span': 4.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [60.0, 28.0], 'radius': 2.5, 'span': 4.0, 'bins': 10}]}
 
 
 def _parse_stl(path: Path):
@@ -223,18 +244,6 @@ def _bbox_ok(mesh: Mesh, expected, tol):
     return all(_close(actual, want, tol) for actual, want in zip(mesh.extents, expected))
 
 
-def _mesh_volume(mesh: Mesh):
-    total = 0.0
-    for tri in mesh.triangles:
-        (ax, ay, az), (bx, by, bz), (cx, cy, cz) = tri
-        total += (
-            ax * (by * cz - bz * cy)
-            - ay * (bx * cz - bz * cx)
-            + az * (bx * cy - by * cx)
-        ) / 6.0
-    return abs(total)
-
-
 def _axis_components(point, axis):
     x, y, z = point
     if axis == "z":
@@ -328,23 +337,6 @@ def _has_slot(mesh: Mesh, check):
     left = {"axis": "z", "center": [cx - offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
     right = {"axis": "z", "center": [cx + offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
     return _has_cylinder(mesh, left) and _has_cylinder(mesh, right)
-
-
-def _has_slice_bbox(mesh: Mesh, check):
-    axis = check["axis"]
-    axial = float(check["axial"])
-    axial_tol = float(check.get("axial_tol", 0.35))
-    tol = float(check.get("tol", 0.75))
-    pts = []
-    for point in mesh.vertices:
-        a, b, t = _axis_components(point, axis)
-        if abs(t - axial) <= axial_tol:
-            pts.append((a, b))
-    if len(pts) < int(check.get("min_points", 4)):
-        return False
-    a_extent = max(p[0] for p in pts) - min(p[0] for p in pts)
-    b_extent = max(p[1] for p in pts) - min(p[1] for p in pts)
-    return abs(a_extent - float(check["extent"][0])) <= tol and abs(b_extent - float(check["extent"][1])) <= tol
 
 
 def _near_vertex(mesh: Mesh, target, tol):
@@ -511,6 +503,35 @@ def _dxf_outline_min(polylines, check):
     return False
 
 
+def _dxf_circle_ring(circles, check):
+    cx, cy = check.get("center", [0.0, 0.0])
+    ring_radius = float(check["ring_radius"])
+    circle_radius = float(check["circle_radius"])
+    count = int(check["count"])
+    tol = float(check.get("tol", 0.75))
+    radius_tol = float(check.get("radius_tol", 0.5))
+    gap = float(check.get("gap", 8.0))
+    angles = []
+    for x, y, rad in circles:
+        if abs(math.hypot(x - cx, y - cy) - ring_radius) <= tol and abs(rad - circle_radius) <= radius_tol:
+            deg = math.degrees(math.atan2(y - cy, x - cx))
+            if deg < 0:
+                deg += 360
+            angles.append(deg)
+    if len(angles) < count:
+        return False
+    angles.sort()
+    clusters = 1
+    last = angles[0]
+    for angle in angles[1:]:
+        if angle - last > gap:
+            clusters += 1
+        last = angle
+    if angles[0] + 360 - angles[-1] <= gap and clusters > 1:
+        clusters -= 1
+    return clusters >= count
+
+
 def _run_mesh_check(mesh: Mesh, check):
     kind = check["kind"]
     if kind == "cylinder":
@@ -519,8 +540,6 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_circle_at(mesh, check)
     if kind == "slot":
         return _has_slot(mesh, check)
-    if kind == "slice_bbox":
-        return _has_slice_bbox(mesh, check)
     if kind == "rib_clusters":
         return _has_rib_clusters(mesh, check)
     if kind == "rect_outline":
@@ -556,8 +575,6 @@ def _evaluate_mesh(path: Path) -> bool:
         center_tol = float(SPEC.get("center_tol", tol))
         if any(abs(a - b) > center_tol for a, b in zip(mesh.center, SPEC["center"])):
             return False
-    if "volume" in SPEC and abs(_mesh_volume(mesh) - float(SPEC["volume"])) > float(SPEC.get("volume_tol", 1.0)):
-        return False
     return all(_run_mesh_check(mesh, check) for check in SPEC.get("checks", []))
 
 
@@ -569,6 +586,8 @@ def _evaluate_dxf(path: Path) -> bool:
         if check["kind"] == "dxf_rect" and not _dxf_rect(polylines, check):
             return False
         if check["kind"] == "dxf_outline_min" and not _dxf_outline_min(polylines, check):
+            return False
+        if check["kind"] == "dxf_circle_ring" and not _dxf_circle_ring(circles, check):
             return False
     return True
 

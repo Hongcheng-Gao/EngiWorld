@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,32 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [150, 0], 'layer': 'OUTLINE'}, {'start': [150, 0], 'end': [150, 30], 'layer': 'OUTLINE'}, {'start': [150, 30], 'end': [40, 30], 'layer': 'OUTLINE'}, {'start': [40, 30], 'end': [40, 110], 'layer': 'OUTLINE'}, {'start': [40, 110], 'end': [0, 110], 'layer': 'OUTLINE'}, {'start': [0, 110], 'end': [0, 0], 'layer': 'OUTLINE'}], 'circles': [{'center': [115, 15], 'radius': 6, 'layer': 'HOLE'}, {'center': [20, 80], 'radius': 6, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-02', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [0.0, 0.0], 'end': [190.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [190.0, 0.0], 'end': [190.0, 40.0], 'layer': 'OUTLINE'},
+              {'start': [190.0, 40.0], 'end': [145.0, 40.0], 'layer': 'OUTLINE'},
+              {'start': [145.0, 40.0], 'end': [125.0, 100.0], 'layer': 'OUTLINE'},
+              {'start': [125.0, 100.0], 'end': [60.0, 100.0], 'layer': 'OUTLINE'},
+              {'start': [60.0, 100.0], 'end': [42.0, 40.0], 'layer': 'OUTLINE'},
+              {'start': [42.0, 40.0], 'end': [0.0, 40.0], 'layer': 'OUTLINE'},
+              {'start': [0.0, 40.0], 'end': [0.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [20.0, 20.0], 'end': [170.0, 20.0], 'layer': 'RIB'},
+              {'start': [42.0, 40.0], 'end': [125.0, 100.0], 'layer': 'RIB'},
+              {'start': [60.0, 100.0], 'end': [145.0, 40.0], 'layer': 'RIB'},
+              {'start': [95.0, 0.0], 'end': [95.0, 100.0], 'layer': 'RIB'},
+              {'start': [0.0, 40.0], 'end': [190.0, 40.0], 'layer': 'RIB'},
+              {'start': [90.0, 52.0], 'end': [90.0, 88.0], 'layer': 'CUTOUT'},
+              {'start': [100.0, 52.0], 'end': [100.0, 88.0], 'layer': 'CUTOUT'}],
+ 'circles': [{'center': [30.0, 20.0], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [160.0, 20.0], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [70.0, 70.0], 'radius': 7.0, 'layer': 'HOLE'},
+             {'center': [120.0, 70.0], 'radius': 7.0, 'layer': 'HOLE'},
+             {'center': [95.0, 55.0], 'radius': 10.0, 'layer': 'HOLE'}],
+ 'arcs': [{'center': [42.0, 40.0], 'radius': 12.0, 'start_angle': 180.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [145.0, 40.0], 'radius': 12.0, 'start_angle': 270.0, 'end_angle': 0.0, 'layer': 'CUTOUT'},
+          {'center': [95.0, 88.0], 'radius': 5.0, 'start_angle': 0.0, 'end_angle': 180.0, 'layer': 'CUTOUT'},
+          {'center': [95.0, 52.0], 'radius': 5.0, 'start_angle': 180.0, 'end_angle': 0.0, 'layer': 'CUTOUT'}],
+ 'texts': [{'text': 'ACAD-H02', 'layer': 'ANNOTATION'}, {'text': 'OBLIQUE-7DEG', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

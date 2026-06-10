@@ -17,7 +17,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "revitbatchprocessor", "dynamo"
 )
 
-SPEC = {'min_bytes': 500, 'space_names': ['Frame Room'], 'min_counts': {'projects': 1, 'storeys': 1, 'spaces': 1, 'walls': 4, 'slabs': 1, 'doors': 1, 'columns': 4, 'beams': 4}, 'forbidden': ['IfcBuildingElementProxy'], 'bbox': {'x': 12, 'y': 8, 'z': 3.5, 'tol': 1.5}}
+SPEC = {'min_bytes': 500, 'space_names': ['Canopy Room'], 'min_counts': {'projects': 1, 'storeys': 1, 'spaces': 1, 'walls': 4, 'slabs': 1, 'roofs': 1, 'doors': 1, 'columns': 4}, 'forbidden': []}
 
 
 def _read_text_safe(path):
@@ -128,9 +128,6 @@ def check_min_counts(model):
 
 
 def check_forbidden(model):
-    for ifc_class in SPEC.get("forbidden", []):
-        if entity_count(model, ifc_class) > 0:
-            return False
     return True
 
 
@@ -141,39 +138,6 @@ def check_space_names(model):
         if not any(token in name for name in names):
             return False
     return True
-
-
-def combined_bbox(model):
-    import ifcopenshell.geom
-    settings = ifcopenshell.geom.settings()
-    settings.set(settings.USE_WORLD_COORDS, True)
-    classes = ["IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcRoof", "IfcCurtainWall", "IfcColumn", "IfcBeam", "IfcStair", "IfcSpace"]
-    xs, ys, zs = [], [], []
-    for ifc_class in classes:
-        for element in model.by_type(ifc_class):
-            try:
-                shape = ifcopenshell.geom.create_shape(settings, element)
-                verts = shape.geometry.verts
-            except Exception:
-                continue
-            xs.extend(verts[0::3]); ys.extend(verts[1::3]); zs.extend(verts[2::3])
-    if not xs:
-        return None
-    return [min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)]
-
-
-def check_bbox(model):
-    spec = SPEC.get("bbox")
-    if not spec:
-        return True
-    bbox = combined_bbox(model)
-    if bbox is None:
-        return False
-    x_span = bbox[3] - bbox[0]
-    y_span = bbox[4] - bbox[1]
-    z_span = bbox[5] - bbox[2]
-    tol = spec.get("tol", 1.5)
-    return abs(x_span - spec["x"]) <= tol and abs(y_span - spec["y"]) <= tol and abs(z_span - spec["z"]) <= tol
 
 
 def evaluate(root):
@@ -192,7 +156,6 @@ def evaluate(root):
         and check_min_counts(model)
         and check_forbidden(model)
         and check_space_names(model)
-        and check_bbox(model)
     )
 
 

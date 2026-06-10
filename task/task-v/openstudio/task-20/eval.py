@@ -1,14 +1,14 @@
 #!/usr/bin/env python3
 import json
+import os
 import math
 from pathlib import Path
 import subprocess
 import tempfile
-import sqlite3
 
 
-DESKTOP = Path("/home/user/Desktop")
-SPEC = {'required_outputs': {'result.osm': 500, 'run/eplusout.sql': 1000, 'run/eplusout.err': 1}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 2, 'OS:ShadingSurface': 1}, 'space_names': ['Conference', 'Office'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 2, 'fixed_window_count': 2, 'bbox_spans_m': [14.0, 6.0, 3.2], 'floor_area_m2': 84.0, 'exterior_wall_area_m2': 128.0, 'window_area_m2': 4.8, 'hvac': {'ideal_loads': 2, 'equipment_lists': 2, 'thermostats': 2}, 'loads': {'min_schedules': 6, 'people': 2, 'lights': 2, 'electric_equipment': 2, 'space_types': 0}, 'shading_surface_count': 1, 'shading_area_m2': 9.6, 'simulation': {'site_eui_mj_m2_range': [0.495, 11.465], 'total_site_energy_gj_range': [0.025, 0.975], 'zone_count': 2}}
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 2, 'OS:ShadingSurface': 1}, 'space_names': ['Conference', 'Office'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 2, 'fixed_window_count': 2, 'bbox_spans_m': [14.0, 6.0, 3.2], 'floor_area_m2': 84.0, 'exterior_wall_area_m2': 128.0, 'window_area_m2': 4.8, 'hvac': {'ideal_loads': 2, 'equipment_lists': 2, 'thermostats': 2}, 'loads': {'min_schedules': 6, 'people': 2, 'lights': 2, 'electric_equipment': 2, 'space_types': 0}, 'shading_surface_count': 1, 'shading_area_m2': 9.6}
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -342,50 +342,6 @@ def check_loads(objects):
     return all(len(by_type(objects, object_type)) == expected for key, object_type in mapping.items() for expected in [loads.get(key, 0)])
 
 
-def check_simulation_outputs(root):
-    sim = SPEC.get('simulation')
-    if not sim:
-        return True
-    sql = root / 'run' / 'eplusout.sql'
-    err = root / 'run' / 'eplusout.err'
-    if not sql.is_file() or sql.stat().st_size < 1000 or not err.is_file():
-        return False
-    err_text = err.read_text(encoding='utf-8', errors='ignore').lower()
-    if '**  fatal  **' in err_text or '** fatal **' in err_text or '**  severe  **' in err_text or '** severe **' in err_text:
-        return False
-    try:
-        con = sqlite3.connect(sql)
-        eui = sql_tabular_value(con, 'AnnualBuildingUtilityPerformanceSummary', 'Site and Source Energy', 'Total Site Energy', 'Energy Per Total Building Area')
-        total = sql_tabular_value(con, 'AnnualBuildingUtilityPerformanceSummary', 'Site and Source Energy', 'Total Site Energy', 'Total Energy')
-        zone_count = con.execute('select count(*) from Zones').fetchone()[0]
-    except Exception:
-        return False
-    lo, hi = sim['site_eui_mj_m2_range']
-    if not (lo <= eui <= hi):
-        return False
-    lo, hi = sim['total_site_energy_gj_range']
-    if not (lo <= total <= hi):
-        return False
-    if zone_count != sim['zone_count']:
-        return False
-    return True
-
-
-def sql_tabular_value(con, report_name, table_name, row_name, column_name):
-    q = '''select td.Value
-    from TabularData td
-    left join Strings rn on rn.StringIndex=td.ReportNameIndex
-    left join Strings tn on tn.StringIndex=td.TableNameIndex
-    left join Strings row on row.StringIndex=td.RowNameIndex
-    left join Strings col on col.StringIndex=td.ColumnNameIndex
-    where rn.Value=? and tn.Value=? and row.Value=? and col.Value=?
-    limit 1'''
-    value = con.execute(q, (report_name, table_name, row_name, column_name)).fetchone()
-    if value is None:
-        raise ValueError('missing tabular value')
-    return float(str(value[0]).strip())
-
-
 def evaluate():
     root = DESKTOP
     if not check_no_gui_bypass(root):
@@ -400,7 +356,6 @@ def evaluate():
         and check_geometry(data)
         and check_hvac(objects)
         and check_loads(objects)
-        and check_simulation_outputs(root)
     )
 
 

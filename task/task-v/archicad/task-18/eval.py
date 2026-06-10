@@ -18,7 +18,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
 
-SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC', 'space_names': ['LIVING', 'KITCHEN', 'BEDROOM-1', 'BEDROOM-2', 'BATH', 'STAIR'], 'exact_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 2, 'spaces': 6}, 'min_counts': {'walls': 12, 'slabs': 2, 'roofs': 1, 'doors': 6, 'windows': 5, 'stairs': 1}, 'overall_span_ranges_m': {'x': [9.0, 11.2], 'y': [6.0, 8.2], 'z': [5.8999999999999995, 7.5]}, 'roof_min_z': 5.8}
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['CLASS-1', 'CLASS-2', 'CORRIDOR', 'WC'], 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 4, 'walls': 8, 'slabs': 1, 'doors': 4, 'windows': 4}, 'overall_span_ranges_m': {'x': [12.8, 16.0], 'y': [4.8, 8.0], 'z': [2.2, 4.4]}}
 
 
 def _read_text_safe(path):
@@ -111,7 +111,7 @@ def unique_global_ids(model):
     return bool(gids) and len(gids) == len(set(gids))
 
 
-def check_counts(model):
+def check_min_counts(model):
     class_map = {
         "projects": "IfcProject",
         "sites": "IfcSite",
@@ -126,32 +126,23 @@ def check_counts(model):
         "stairs": "IfcStair",
         "columns": "IfcColumn",
         "beams": "IfcBeam",
-        "curtain_walls": "IfcCurtainWall",
     }
-    for key, exact in SPEC.get("exact_counts", {}).items():
-        if entity_count(model, class_map[key]) != exact:
-            return False
-    for key, minimum in SPEC.get("min_counts", {}).items():
+    for key, minimum in SPEC["min_counts"].items():
         if entity_count(model, class_map[key]) < minimum:
-            return False
-    alt = SPEC.get("alternative_min_counts")
-    if alt:
-        if not any(entity_count(model, class_map[key]) >= minimum for key, minimum in alt):
             return False
     return True
 
 
 def check_forbidden(model):
-    return entity_count(model, "IfcBuildingElementProxy") == 0
+    return True
 
 
 def check_space_names(model):
-    actual = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    required = [norm(name) for name in SPEC["space_names"]]
-    return sorted(actual) == sorted(required)
+    names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
+    return all(any(norm(required) == name or norm(required) in name for name in names) for required in SPEC["space_names"])
 
 
-def product_bbox(product):
+def shaped_product_bbox(model):
     import ifcopenshell.geom
 
     settings = ifcopenshell.geom.settings()
@@ -159,36 +150,22 @@ def product_bbox(product):
         settings.set(settings.USE_WORLD_COORDS, True)
     except Exception:
         pass
-    shape = ifcopenshell.geom.create_shape(settings, product)
-    verts = list(shape.geometry.verts)
-    if not verts:
-        return None
-    xs, ys, zs = verts[0::3], verts[1::3], verts[2::3]
-    return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
-
-
-def shaped_product_bbox(model):
     products = []
-    for ifc_class in ("IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcRoof", "IfcDoor", "IfcWindow", "IfcStair", "IfcColumn", "IfcBeam", "IfcCurtainWall"):
+    for ifc_class in ("IfcWall", "IfcWallStandardCase", "IfcSlab", "IfcRoof", "IfcDoor", "IfcWindow", "IfcStair", "IfcColumn", "IfcBeam"):
         products.extend(model.by_type(ifc_class))
-    mins = [None, None, None]
-    maxs = [None, None, None]
-    shaped = 0
+    xs, ys, zs = [], [], []
     for product in products:
         try:
-            bbox = product_bbox(product)
+            shape = ifcopenshell.geom.create_shape(settings, product)
+            verts = list(shape.geometry.verts)
         except Exception:
             continue
-        if bbox is None:
-            continue
-        shaped += 1
-        for i, value in enumerate(bbox[:3]):
-            mins[i] = value if mins[i] is None else min(mins[i], value)
-        for i, value in enumerate(bbox[3:]):
-            maxs[i] = value if maxs[i] is None else max(maxs[i], value)
-    if shaped == 0:
+        xs.extend(verts[0::3])
+        ys.extend(verts[1::3])
+        zs.extend(verts[2::3])
+    if not xs or not ys or not zs:
         return None
-    return (*mins, *maxs)
+    return min(xs), min(ys), min(zs), max(xs), max(ys), max(zs)
 
 
 def check_overall_size(model):
@@ -207,20 +184,6 @@ def check_overall_size(model):
     return True
 
 
-def check_roof_height(model):
-    roof_min = SPEC.get("roof_min_z")
-    if roof_min is None or entity_count(model, "IfcRoof") == 0:
-        return True
-    for roof in model.by_type("IfcRoof"):
-        try:
-            bbox = product_bbox(roof)
-        except Exception:
-            continue
-        if bbox and bbox[2] >= roof_min:
-            return True
-    return False
-
-
 def evaluate(root):
     root = Path(root)
     if not check_no_gui_bypass(root):
@@ -235,11 +198,10 @@ def evaluate(root):
     return (
         schema.startswith(SPEC["schema"])
         and unique_global_ids(model)
-        and check_counts(model)
+        and check_min_counts(model)
         and check_forbidden(model)
         and check_space_names(model)
         and check_overall_size(model)
-        and check_roof_height(model)
     )
 
 

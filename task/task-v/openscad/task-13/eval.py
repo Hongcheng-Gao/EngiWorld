@@ -114,20 +114,18 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-013_output.stl',
- 'bbox': [34.0, 34.0, 12.0],
+SPEC = {'output': 'task-003_output.stl',
+ 'bbox': [72.0, 72.0, 8.0],
  'bbox_tol': 1.0,
- 'min_triangles': 120,
- 'checks': [{'kind': 'circle_at', 'axis': 'z', 'radius': 17.0, 'axial': 0.0, 'bins': 18},
-            {'kind': 'circle_at', 'axis': 'z', 'radius': 13.0, 'axial': 12.0, 'bins': 18},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 2.5, 'span': 11.0, 'bins': 12},
-            {'kind': 'cylinder',
-             'axis': 'z',
-             'center': [0.0, 0.0],
-             'radius': 11.0,
-             'span': 1.0,
-             'bins': 14,
-             'axial_range': [0.0, 2.0]}]}
+ 'min_triangles': 160,
+ 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 36.0, 'span': 7.0, 'bins': 24},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 14.0, 'span': 7.0, 'bins': 18},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, 0.0], 'radius': 2.5, 'span': 7.0, 'bins': 8},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [13.0, 22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-13.0, 22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, 0.0], 'radius': 2.5, 'span': 7.0, 'bins': 8},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-13.0, -22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [13.0, -22.5167], 'radius': 2.5, 'span': 7.0, 'bins': 8}]}
 
 
 def _parse_stl(path: Path):

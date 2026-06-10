@@ -322,15 +322,56 @@ def no_entities_on_layer(doc, layer):
     return not any(layer_of(entity) == layer.upper() for entity in doc.modelspace())
 
 
-OUTPUT_FILE = "gui17_centerline_completed.dxf"
+OUTPUT_FILE = "gui07_hatch_section_completed.dxf"
+
+
+def has_section_hatch_with_hole_islands(doc):
+    for entity in ents(doc, "HATCH", "HATCH"):
+        pattern = str(getattr(entity.dxf, "pattern_name", "")).upper()
+        has_expected_pattern = pattern in {"ANSI31", ""} or "ANSI" in pattern
+        if has_expected_pattern and len(entity.paths) >= 3:
+            return True
+    return False
+
+
+def line_is_roughly_45(seg):
+    (ax, ay), (bx, by) = seg
+    dx = abs(ax - bx)
+    dy = abs(ay - by)
+    return dx > 1 and dy > 1 and abs(dx - dy) <= max(2.0, 0.15 * max(dx, dy))
+
+
+def segment_hits_circle(seg, center, radius):
+    (ax, ay), (bx, by) = seg
+    cx, cy = center
+    dx = bx - ax
+    dy = by - ay
+    length_sq = dx * dx + dy * dy
+    if length_sq == 0:
+        return math.hypot(cx - ax, cy - ay) < radius - TOL
+    t = max(0.0, min(1.0, ((cx - ax) * dx + (cy - ay) * dy) / length_sq))
+    px = ax + t * dx
+    py = ay + t * dy
+    return math.hypot(cx - px, cy - py) < radius - TOL
+
+
+def has_equivalent_line_hatch(doc):
+    hatch_lines = list(iter_segments(doc, "HATCH"))
+    if len(hatch_lines) < 3:
+        return False
+    holes = [((50, 50), 12), ((110, 50), 12)]
+    return (
+        all(line_is_roughly_45(seg) for seg in hatch_lines) and
+        all(not segment_hits_circle(seg, center, radius) for seg in hatch_lines for center, radius in holes)
+    )
+
 
 def check(doc):
-    circles = [((0, 0), 50), ((-25, -25), 5), ((25, -25), 5), ((25, 25), 5), ((-25, 25), 5)]
     return (
-        has_circle(doc, "OUTLINE", (0, 0), 50) and
-        all(has_circle(doc, "HOLE", c, r) for c, r in circles[1:]) and
-        all(has_segment(doc, "CENTER", (c[0] - r - 4, c[1]), (c[0] + r + 4, c[1])) and has_segment(doc, "CENTER", (c[0], c[1] - r - 4), (c[0], c[1] + r + 4)) for c, r in circles) and
-        layer_linetype(doc, "CENTER") in {"CENTER", "CENTER2", "DASHED", "DASHED2"}
+        has_polyline_or_edges(doc, "OUTLINE", [(0, 0), (160, 0), (160, 100), (0, 100)]) and
+        has_circle(doc, "HOLE", (50, 50), 12) and
+        has_circle(doc, "HOLE", (110, 50), 12) and
+        (has_section_hatch_with_hole_islands(doc) or has_equivalent_line_hatch(doc))
     )
 
 

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,47 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [180, 0], 'layer': 'OUTLINE'}, {'start': [180, 0], 'end': [180, 80], 'layer': 'OUTLINE'}, {'start': [180, 80], 'end': [0, 80], 'layer': 'OUTLINE'}, {'start': [0, 80], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [60, 45], 'end': [120, 45], 'layer': 'SLOT'}, {'start': [60, 35], 'end': [120, 35], 'layer': 'SLOT'}], 'circles': [{'center': [30, 40], 'radius': 4, 'layer': 'HOLE'}, {'center': [150, 40], 'radius': 4, 'layer': 'HOLE'}], 'arcs': [{'center': [60, 40], 'radius': 5, 'start_angle': 90, 'end_angle': 270, 'layer': 'SLOT'}, {'center': [120, 40], 'radius': 5, 'start_angle': 270, 'end_angle': 90, 'layer': 'SLOT'}], 'texts': [{'text': 'ACAD-03', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [142.0, 100.0], 'end': [185.0, 100.0], 'layer': 'CENTER'},
+              {'start': [129.698, 129.698], 'end': [160.104, 160.104], 'layer': 'CENTER'},
+              {'start': [100.0, 142.0], 'end': [100.0, 185.0], 'layer': 'CENTER'},
+              {'start': [70.302, 129.698], 'end': [39.896, 160.104], 'layer': 'CENTER'},
+              {'start': [58.0, 100.0], 'end': [15.0, 100.0], 'layer': 'CENTER'},
+              {'start': [70.302, 70.302], 'end': [39.896, 39.896], 'layer': 'CENTER'},
+              {'start': [100.0, 58.0], 'end': [100.0, 15.0], 'layer': 'CENTER'},
+              {'start': [129.698, 70.302], 'end': [160.104, 39.896], 'layer': 'CENTER'},
+              {'start': [82.0, 164.0], 'end': [118.0, 164.0], 'layer': 'CUTOUT'},
+              {'start': [82.0, 156.0], 'end': [118.0, 156.0], 'layer': 'CUTOUT'},
+              {'start': [82.0, 44.0], 'end': [118.0, 44.0], 'layer': 'CUTOUT'},
+              {'start': [82.0, 36.0], 'end': [118.0, 36.0], 'layer': 'CUTOUT'},
+              {'start': [36.0, 82.0], 'end': [36.0, 118.0], 'layer': 'CUTOUT'},
+              {'start': [44.0, 82.0], 'end': [44.0, 118.0], 'layer': 'CUTOUT'},
+              {'start': [156.0, 82.0], 'end': [156.0, 118.0], 'layer': 'CUTOUT'},
+              {'start': [164.0, 82.0], 'end': [164.0, 118.0], 'layer': 'CUTOUT'}],
+ 'circles': [{'center': [100.0, 100.0], 'radius': 85.0, 'layer': 'OUTLINE'},
+             {'center': [100.0, 100.0], 'radius': 42.0, 'layer': 'CUTOUT'},
+             {'center': [100.0, 100.0], 'radius': 20.0, 'layer': 'CENTER'},
+             {'center': [162.785, 116.823], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [145.962, 145.962], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [116.823, 162.785], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [83.177, 162.785], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [54.038, 145.962], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [37.215, 116.823], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [37.215, 83.177], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [54.038, 54.038], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [83.177, 37.215], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [116.823, 37.215], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [145.962, 54.038], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [162.785, 83.177], 'radius': 5.0, 'layer': 'HOLE'}],
+ 'arcs': [{'center': [82.0, 160.0], 'radius': 4.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [118.0, 160.0], 'radius': 4.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'},
+          {'center': [82.0, 40.0], 'radius': 4.0, 'start_angle': 90.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [118.0, 40.0], 'radius': 4.0, 'start_angle': 270.0, 'end_angle': 90.0, 'layer': 'CUTOUT'},
+          {'center': [40.0, 118.0], 'radius': 4.0, 'start_angle': 0.0, 'end_angle': 180.0, 'layer': 'CUTOUT'},
+          {'center': [40.0, 82.0], 'radius': 4.0, 'start_angle': 180.0, 'end_angle': 0.0, 'layer': 'CUTOUT'},
+          {'center': [160.0, 118.0], 'radius': 4.0, 'start_angle': 0.0, 'end_angle': 180.0, 'layer': 'CUTOUT'},
+          {'center': [160.0, 82.0], 'radius': 4.0, 'start_angle': 180.0, 'end_angle': 0.0, 'layer': 'CUTOUT'}],
+ 'texts': [{'text': 'ACAD-H03', 'layer': 'ANNOTATION'}, {'text': '12X M10 BCD130', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

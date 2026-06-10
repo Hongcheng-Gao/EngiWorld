@@ -322,22 +322,35 @@ def no_entities_on_layer(doc, layer):
     return not any(layer_of(entity) == layer.upper() for entity in doc.modelspace())
 
 
-OUTPUT_FILE = "gui16_leader_notes_completed.dxf"
+OUTPUT_FILE = "gui13_block_insert_completed.dxf"
 
 
-def has_leader_arrow_to_hole(doc):
-    target = (75, 40)
-    return any(pt_close(seg[0], target, TOL) or pt_close(seg[1], target, TOL) for seg in iter_segments(doc, "NOTE"))
+def line_crosses_origin_horizontally(entity):
+    if entity.dxftype() != "LINE":
+        return False
+    start = xy(entity.dxf.start)
+    end = xy(entity.dxf.end)
+    return close(start[1], 0) and close(end[1], 0) and min(start[0], end[0]) < 0 < max(start[0], end[0])
+
+
+def line_crosses_origin_vertically(entity):
+    if entity.dxftype() != "LINE":
+        return False
+    start = xy(entity.dxf.start)
+    end = xy(entity.dxf.end)
+    return close(start[0], 0) and close(end[0], 0) and min(start[1], end[1]) < 0 < max(start[1], end[1])
 
 
 def check(doc):
-    return (
-        has_circle(doc, "HOLE", (75, 40), 4) and
-        has_leader_arrow_to_hole(doc) and
-        has_text(doc, "NOTE", "DRILL Ø8 THRU", (95, 58), 3) and
-        text_count(doc, "NOTE", "DRILL") == 1 and
-        sum(1 for _ in text_entities(doc, "NOTE")) == 1
-    )
+    coords = [(20, 20), (60, 20), (100, 20), (140, 20), (20, 80), (60, 80), (100, 80), (140, 80)]
+    try:
+        block = doc.blocks.get("M6_HOLE")
+    except Exception:
+        return False
+    block_has_circle = any(entity.dxftype() == "CIRCLE" and close(entity.dxf.radius, 3) for entity in block)
+    block_has_h = any(line_crosses_origin_horizontally(entity) for entity in block)
+    block_has_v = any(line_crosses_origin_vertically(entity) for entity in block)
+    return block_has_circle and block_has_h and block_has_v and all(has_insert(doc, "M6_HOLE", p) for p in coords)
 
 
 def evaluate():

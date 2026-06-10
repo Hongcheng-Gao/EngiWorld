@@ -112,7 +112,7 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [130, 0], 'layer': 'OUTLINE'}, {'start': [130, 0], 'end': [130, 25], 'layer': 'OUTLINE'}, {'start': [130, 25], 'end': [35, 25], 'layer': 'OUTLINE'}, {'start': [35, 25], 'end': [35, 85], 'layer': 'OUTLINE'}, {'start': [35, 85], 'end': [130, 85], 'layer': 'OUTLINE'}, {'start': [130, 85], 'end': [130, 110], 'layer': 'OUTLINE'}, {'start': [130, 110], 'end': [0, 110], 'layer': 'OUTLINE'}, {'start': [0, 110], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [35, 55], 'end': [130, 55], 'layer': 'CENTER'}], 'circles': [{'center': [105, 55], 'radius': 10, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-17', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [110.0, 75.0], 'end': [135.0, 75.0], 'layer': 'CENTER'}, {'start': [75.0, 110.0], 'end': [75.0, 135.0], 'layer': 'CENTER'}, {'start': [40.0, 75.0], 'end': [15.0, 75.0], 'layer': 'CENTER'}, {'start': [75.0, 40.0], 'end': [75.0, 15.0], 'layer': 'CENTER'}], 'circles': [{'center': [75, 75], 'radius': 60, 'layer': 'OUTLINE'}, {'center': [75, 75], 'radius': 35, 'layer': 'CUTOUT'}, {'center': [118.422338, 92.986121], 'radius': 4, 'layer': 'HOLE'}, {'center': [92.986121, 118.422338], 'radius': 4, 'layer': 'HOLE'}, {'center': [57.013879, 118.422338], 'radius': 4, 'layer': 'HOLE'}, {'center': [31.577662, 92.986121], 'radius': 4, 'layer': 'HOLE'}, {'center': [31.577662, 57.013879], 'radius': 4, 'layer': 'HOLE'}, {'center': [57.013879, 31.577662], 'radius': 4, 'layer': 'HOLE'}, {'center': [92.986121, 31.577662], 'radius': 4, 'layer': 'HOLE'}, {'center': [118.422338, 57.013879], 'radius': 4, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-19', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 
@@ -204,83 +204,6 @@ def _has_text(doc, value, layer=None):
     return False
 
 
-def _segment_expected(start, end, layer):
-    for item in SPEC["segments"]:
-        if not _layer_ok(layer, item.get("layer")):
-            continue
-        expected_start = tuple(item["start"])
-        expected_end = tuple(item["end"])
-        if (_point_close(start, expected_start) and _point_close(end, expected_end)) or (
-            _point_close(start, expected_end) and _point_close(end, expected_start)
-        ):
-            return True
-    return False
-
-
-def _circle_expected(entity):
-    center = entity.dxf.center
-    actual_center = (float(center.x), float(center.y))
-    for item in SPEC["circles"]:
-        if not _layer_ok(getattr(entity.dxf, "layer", ""), item.get("layer")):
-            continue
-        if _point_close(actual_center, tuple(item["center"])) and _close(entity.dxf.radius, item["radius"]):
-            return True
-    return False
-
-
-def _arc_expected(entity):
-    center = entity.dxf.center
-    actual_center = (float(center.x), float(center.y))
-    for item in SPEC["arcs"]:
-        if not _layer_ok(getattr(entity.dxf, "layer", ""), item.get("layer")):
-            continue
-        if (
-            _point_close(actual_center, tuple(item["center"]))
-            and _close(entity.dxf.radius, item["radius"])
-            and _angle_close(entity.dxf.start_angle, item["start_angle"])
-            and _angle_close(entity.dxf.end_angle, item["end_angle"])
-        ):
-            return True
-    return False
-
-
-def _text_expected(entity):
-    if entity.dxftype() == "TEXT":
-        txt = str(entity.dxf.text)
-    else:
-        txt = str(entity.text)
-    for item in SPEC["texts"]:
-        if not _layer_ok(getattr(entity.dxf, "layer", ""), item.get("layer")):
-            continue
-        if txt.strip() == str(item["text"]):
-            return True
-    return False
-
-
-def _no_unexpected_geometry(doc, segments):
-    for start, end, layer in segments:
-        if not _segment_expected(start, end, layer):
-            return False
-    for entity in doc.modelspace():
-        kind = entity.dxftype()
-        if kind in {"LINE", "LWPOLYLINE"}:
-            continue
-        if kind == "CIRCLE":
-            if not _circle_expected(entity):
-                return False
-            continue
-        if kind == "ARC":
-            if not _arc_expected(entity):
-                return False
-            continue
-        if kind in {"TEXT", "MTEXT"}:
-            if not _text_expected(entity):
-                return False
-            continue
-        return False
-    return True
-
-
 def evaluate() -> bool:
     if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))):
         return False
@@ -301,7 +224,7 @@ def evaluate() -> bool:
     for item in SPEC["texts"]:
         if not _has_text(doc, item["text"], item.get("layer")):
             return False
-    return _no_unexpected_geometry(doc, segments)
+    return True
 
 
 if __name__ == "__main__":

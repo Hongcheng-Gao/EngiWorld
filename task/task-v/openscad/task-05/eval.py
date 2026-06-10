@@ -114,18 +114,25 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-005_output.stl',
- 'bbox': [80.0, 50.0, 44.0],
- 'bbox_tol': 2.0,
- 'min_triangles': 80,
- 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [-25.0, 0.0], 'radius': 3.0, 'span': 5.0, 'bins': 12},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [25.0, 0.0], 'radius': 3.0, 'span': 5.0, 'bins': 12},
-            {'kind': 'rib_clusters',
-             'count': 2,
-             'x_range': [-38.0, 38.0],
-             'y_range': [-8.0, 25.0],
-             'z_range': [8.0, 45.0],
-             'gap': 18.0}]}
+SPEC = {'output': 'task-007_output.stl',
+ 'bbox': [90.0, 50.0, 4.0],
+ 'bbox_tol': 1.0,
+ 'min_triangles': 200,
+ 'checks': [{'kind': 'slot', 'center': [-30.0, -12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [-15.0, -12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [0.0, -12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [15.0, -12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [30.0, -12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [-30.0, 0.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [-15.0, 0.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [0.0, 0.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [15.0, 0.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [30.0, 0.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [-30.0, 12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [-15.0, 12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [0.0, 12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [15.0, 12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0},
+            {'kind': 'slot', 'center': [30.0, 12.0], 'length': 10.0, 'width': 3.0, 'span': 3.0}]}
 
 
 def _parse_stl(path: Path):

@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,39 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [130, 0], 'layer': 'OUTLINE'}, {'start': [130, 0], 'end': [0, 90], 'layer': 'OUTLINE'}, {'start': [0, 90], 'end': [0, 0], 'layer': 'OUTLINE'}, {'start': [12, 12], 'end': [78, 50], 'layer': 'CENTER'}], 'circles': [{'center': [20, 20], 'radius': 4, 'layer': 'HOLE'}, {'center': [20, 70], 'radius': 4, 'layer': 'HOLE'}, {'center': [95, 15], 'radius': 4, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-07', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [153.26, 133.777], 'end': [204.997, 155.207], 'layer': 'RIB'},
+              {'start': [133.777, 153.26], 'end': [155.207, 204.997], 'layer': 'RIB'},
+              {'start': [106.223, 153.26], 'end': [84.793, 204.997], 'layer': 'RIB'},
+              {'start': [86.74, 133.777], 'end': [35.003, 155.207], 'layer': 'RIB'},
+              {'start': [86.74, 106.223], 'end': [35.003, 84.793], 'layer': 'RIB'},
+              {'start': [106.223, 86.74], 'end': [84.793, 35.003], 'layer': 'RIB'},
+              {'start': [133.777, 86.74], 'end': [155.207, 35.003], 'layer': 'RIB'},
+              {'start': [153.26, 106.223], 'end': [204.997, 84.793], 'layer': 'RIB'},
+              {'start': [75.0, 0.0], 'end': [165.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [165.0, 0.0], 'end': [165.0, 45.0], 'layer': 'OUTLINE'},
+              {'start': [165.0, 45.0], 'end': [75.0, 45.0], 'layer': 'OUTLINE'},
+              {'start': [75.0, 45.0], 'end': [75.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [120.0, 0.0], 'end': [120.0, 212.0], 'layer': 'CENTER'},
+              {'start': [28.0, 120.0], 'end': [212.0, 120.0], 'layer': 'CENTER'}],
+ 'circles': [{'center': [120.0, 120.0], 'radius': 92.0, 'layer': 'OUTLINE'},
+             {'center': [120.0, 120.0], 'radius': 36.0, 'layer': 'CUTOUT'},
+             {'center': [120.0, 120.0], 'radius': 12.0, 'layer': 'HOLE'},
+             {'center': [184.672, 146.788], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [146.788, 184.672], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [93.212, 184.672], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [55.328, 146.788], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [55.328, 93.212], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [93.212, 55.328], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [146.788, 55.328], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [184.672, 93.212], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [90.0, 22.5], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [150.0, 22.5], 'radius': 6.0, 'layer': 'HOLE'}],
+ 'arcs': [{'center': [120.0, 120.0], 'radius': 55.0, 'start_angle': 35.0, 'end_angle': 75.0, 'layer': 'CUTOUT'},
+          {'center': [120.0, 120.0], 'radius': 55.0, 'start_angle': 125.0, 'end_angle': 165.0, 'layer': 'CUTOUT'},
+          {'center': [120.0, 120.0], 'radius': 55.0, 'start_angle': 215.0, 'end_angle': 255.0, 'layer': 'CUTOUT'},
+          {'center': [120.0, 120.0], 'radius': 55.0, 'start_angle': 305.0, 'end_angle': 345.0, 'layer': 'CUTOUT'}],
+ 'texts': [{'text': 'ACAD-H07', 'layer': 'ANNOTATION'}, {'text': 'ROBOT BASE', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

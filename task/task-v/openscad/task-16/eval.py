@@ -114,12 +114,18 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-016_output.stl',
- 'bbox': [82.0, 52.0, 7.0],
+SPEC = {'output': 'task-003_output.stl',
+ 'bbox': [100.0, 46.0, 24.0],
  'bbox_tol': 1.0,
- 'min_triangles': 30,
- 'checks': [{'kind': 'rect_outline', 'width': 78.0, 'height': 48.0, 'zs': [0.0, 3.0], 'tol': 0.75},
-            {'kind': 'rect_outline', 'width': 70.0, 'height': 40.0, 'zs': [0.0, 3.0], 'tol': 0.75}]}
+ 'min_triangles': 500,
+ 'checks': [{'kind': 'slot', 'center': [0.0, -13.0], 'length': 72.0, 'width': 6.0, 'span': 20.0},
+            {'kind': 'slot', 'center': [0.0, 13.0], 'length': 72.0, 'width': 6.0, 'span': 20.0},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-38.0, -16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-38.0, 16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [38.0, -16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [38.0, 16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
+            {'kind': 'raised', 'z_min': 18.0, 'x_span': 80.0, 'y_span': 30.0},
+            {'kind': 'box_outline', 'xs': [-42.0, 42.0], 'ys': [-21.0, 21.0], 'zs': [0.0, 24.0], 'tol': 1.0}]}
 
 
 def _parse_stl(path: Path):
@@ -477,6 +483,35 @@ def _dxf_outline_min(polylines, check):
     return False
 
 
+def _dxf_circle_ring(circles, check):
+    cx, cy = check.get("center", [0.0, 0.0])
+    ring_radius = float(check["ring_radius"])
+    circle_radius = float(check["circle_radius"])
+    count = int(check["count"])
+    tol = float(check.get("tol", 0.75))
+    radius_tol = float(check.get("radius_tol", 0.5))
+    gap = float(check.get("gap", 8.0))
+    angles = []
+    for x, y, rad in circles:
+        if abs(math.hypot(x - cx, y - cy) - ring_radius) <= tol and abs(rad - circle_radius) <= radius_tol:
+            deg = math.degrees(math.atan2(y - cy, x - cx))
+            if deg < 0:
+                deg += 360
+            angles.append(deg)
+    if len(angles) < count:
+        return False
+    angles.sort()
+    clusters = 1
+    last = angles[0]
+    for angle in angles[1:]:
+        if angle - last > gap:
+            clusters += 1
+        last = angle
+    if angles[0] + 360 - angles[-1] <= gap and clusters > 1:
+        clusters -= 1
+    return clusters >= count
+
+
 def _run_mesh_check(mesh: Mesh, check):
     kind = check["kind"]
     if kind == "cylinder":
@@ -531,6 +566,8 @@ def _evaluate_dxf(path: Path) -> bool:
         if check["kind"] == "dxf_rect" and not _dxf_rect(polylines, check):
             return False
         if check["kind"] == "dxf_outline_min" and not _dxf_outline_min(polylines, check):
+            return False
+        if check["kind"] == "dxf_circle_ring" and not _dxf_circle_ring(circles, check):
             return False
     return True
 

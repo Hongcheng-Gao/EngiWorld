@@ -1,13 +1,11 @@
 from __future__ import annotations
 
-import math
 import os
 from pathlib import Path
 
 import ezdxf
 
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", r"C:\Users\user\Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -112,7 +110,34 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'target': 'autocad_result.dxf', 'segments': [{'start': [0, 0], 'end': [101.6, 0], 'layer': 'OUTLINE'}, {'start': [101.6, 0], 'end': [101.6, 50.8], 'layer': 'OUTLINE'}, {'start': [101.6, 50.8], 'end': [0, 50.8], 'layer': 'OUTLINE'}, {'start': [0, 50.8], 'end': [0, 0], 'layer': 'OUTLINE'}], 'circles': [{'center': [12.7, 12.7], 'radius': 3.175, 'layer': 'HOLE'}, {'center': [88.9, 12.7], 'radius': 3.175, 'layer': 'HOLE'}], 'arcs': [], 'texts': [{'text': 'ACAD-08', 'layer': 'ANNOTATION'}]}
+SPEC = {'target': 'autocad_result.dxf',
+ 'segments': [{'start': [0.0, 20.0], 'end': [100.0, 20.0], 'layer': 'OUTLINE'},
+              {'start': [100.0, 20.0], 'end': [100.0, 100.0], 'layer': 'OUTLINE'},
+              {'start': [100.0, 100.0], 'end': [0.0, 100.0], 'layer': 'OUTLINE'},
+              {'start': [0.0, 100.0], 'end': [0.0, 20.0], 'layer': 'OUTLINE'},
+              {'start': [150.0, 0.0], 'end': [290.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [290.0, 0.0], 'end': [290.0, 130.0], 'layer': 'OUTLINE'},
+              {'start': [290.0, 130.0], 'end': [150.0, 130.0], 'layer': 'OUTLINE'},
+              {'start': [150.0, 130.0], 'end': [150.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [100.0, 20.0], 'end': [150.0, 0.0], 'layer': 'OUTLINE'},
+              {'start': [100.0, 100.0], 'end': [150.0, 130.0], 'layer': 'OUTLINE'},
+              {'start': [100.0, 20.0], 'end': [100.0, 100.0], 'layer': 'OUTLINE'},
+              {'start': [150.0, 0.0], 'end': [150.0, 130.0], 'layer': 'OUTLINE'},
+              {'start': [50.0, 20.0], 'end': [220.0, 0.0], 'layer': 'CENTER'},
+              {'start': [50.0, 100.0], 'end': [220.0, 130.0], 'layer': 'CENTER'}],
+ 'circles': [{'center': [20.0, 40.0], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [20.0, 80.0], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [80.0, 40.0], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [80.0, 80.0], 'radius': 5.0, 'layer': 'HOLE'},
+             {'center': [175.0, 25.0], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [265.0, 25.0], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [175.0, 105.0], 'radius': 6.0, 'layer': 'HOLE'},
+             {'center': [265.0, 105.0], 'radius': 6.0, 'layer': 'HOLE'}],
+ 'arcs': [{'center': [100.0, 20.0], 'radius': 18.0, 'start_angle': 180.0, 'end_angle': 270.0, 'layer': 'CUTOUT'},
+          {'center': [100.0, 100.0], 'radius': 18.0, 'start_angle': 90.0, 'end_angle': 180.0, 'layer': 'CUTOUT'},
+          {'center': [150.0, 0.0], 'radius': 18.0, 'start_angle': 270.0, 'end_angle': 0.0, 'layer': 'CUTOUT'},
+          {'center': [150.0, 130.0], 'radius': 18.0, 'start_angle': 0.0, 'end_angle': 90.0, 'layer': 'CUTOUT'}],
+ 'texts': [{'text': 'ACAD-H08', 'layer': 'ANNOTATION'}, {'text': 'OFFSET DUCT', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
 

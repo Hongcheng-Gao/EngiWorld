@@ -114,37 +114,21 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-SPEC = {'output': 'task-019_output.stl',
- 'bbox': [40.0, 20.0, 15.8],
+SPEC = {'output': 'task-008_output.stl',
+ 'bbox': [90.0, 60.0, 32.0],
  'bbox_tol': 1.0,
- 'min_triangles': 70,
- 'checks': [{'kind': 'steps',
-             'depth': 20.0,
-             'levels': [{'width': 40.0, 'top': 5.0}, {'width': 30.0, 'top': 10.0}, {'width': 20.0, 'top': 15.0}]},
-            {'kind': 'raised_region',
-             'x_range': [15.0, 20.0],
-             'y_range': [-4.0, 4.0],
-             'z_min': 5.4,
-             'x_span': 1.0,
-             'y_span': 2.0,
-             'min_points': 3},
-            {'kind': 'raised_region',
-             'x_range': [10.0, 15.0],
-             'y_range': [-4.0, 4.0],
-             'z_min': 10.4,
-             'x_span': 1.5,
-             'y_span': 1.5,
-             'min_points': 3},
-            {'kind': 'raised_region',
-             'x_range': [-6.0, 6.0],
-             'y_range': [-5.0, 5.0],
-             'z_min': 15.4,
-             'x_span': 3.0,
-             'y_span': 2.5,
-             'min_points': 4},
-            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [2.0, 3.0], 'tol': 0.4},
-            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [7.0, 8.0], 'tol': 0.4},
-            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [12.0, 13.0], 'tol': 0.4}]}
+ 'min_triangles': 320,
+ 'checks': [{'kind': 'rib_clusters',
+             'count': 13,
+             'x_range': [-42.0, 42.0],
+             'y_range': [-26.0, 26.0],
+             'z_range': [6.5, 29.0],
+             'gap': 3.0},
+            {'kind': 'raised', 'z_min': 30.0, 'x_span': 80.0, 'y_span': 50.0},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-32.0, -20.0], 'radius': 2.2, 'span': 5.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-32.0, 20.0], 'radius': 2.2, 'span': 5.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [32.0, -20.0], 'radius': 2.2, 'span': 5.0, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [32.0, 20.0], 'radius': 2.2, 'span': 5.0, 'bins': 10}]}
 
 
 def _parse_stl(path: Path):
@@ -394,19 +378,6 @@ def _has_raised(mesh: Mesh, check):
             max(p[1] for p in pts) - min(p[1] for p in pts) >= float(check["y_span"]))
 
 
-def _has_raised_region(mesh: Mesh, check):
-    x0, x1 = [float(v) for v in check["x_range"]]
-    y0, y1 = [float(v) for v in check["y_range"]]
-    z_min = float(check["z_min"])
-    pts = [p for p in mesh.vertices if x0 <= p[0] <= x1 and y0 <= p[1] <= y1 and p[2] >= z_min]
-    if len(pts) < int(check.get("min_points", 4)):
-        return False
-    return (
-        max(p[0] for p in pts) - min(p[0] for p in pts) >= float(check["x_span"])
-        and max(p[1] for p in pts) - min(p[1] for p in pts) >= float(check["y_span"])
-    )
-
-
 def _has_steps(mesh: Mesh, check):
     tol = float(check.get("tol", 0.75))
     depth = float(check["depth"])
@@ -515,6 +486,35 @@ def _dxf_outline_min(polylines, check):
     return False
 
 
+def _dxf_circle_ring(circles, check):
+    cx, cy = check.get("center", [0.0, 0.0])
+    ring_radius = float(check["ring_radius"])
+    circle_radius = float(check["circle_radius"])
+    count = int(check["count"])
+    tol = float(check.get("tol", 0.75))
+    radius_tol = float(check.get("radius_tol", 0.5))
+    gap = float(check.get("gap", 8.0))
+    angles = []
+    for x, y, rad in circles:
+        if abs(math.hypot(x - cx, y - cy) - ring_radius) <= tol and abs(rad - circle_radius) <= radius_tol:
+            deg = math.degrees(math.atan2(y - cy, x - cx))
+            if deg < 0:
+                deg += 360
+            angles.append(deg)
+    if len(angles) < count:
+        return False
+    angles.sort()
+    clusters = 1
+    last = angles[0]
+    for angle in angles[1:]:
+        if angle - last > gap:
+            clusters += 1
+        last = angle
+    if angles[0] + 360 - angles[-1] <= gap and clusters > 1:
+        clusters -= 1
+    return clusters >= count
+
+
 def _run_mesh_check(mesh: Mesh, check):
     kind = check["kind"]
     if kind == "cylinder":
@@ -531,8 +531,6 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_box_outline(mesh, check)
     if kind == "raised":
         return _has_raised(mesh, check)
-    if kind == "raised_region":
-        return _has_raised_region(mesh, check)
     if kind == "steps":
         return _has_steps(mesh, check)
     if kind == "angular_clusters":
@@ -571,6 +569,8 @@ def _evaluate_dxf(path: Path) -> bool:
         if check["kind"] == "dxf_rect" and not _dxf_rect(polylines, check):
             return False
         if check["kind"] == "dxf_outline_min" and not _dxf_outline_min(polylines, check):
+            return False
+        if check["kind"] == "dxf_circle_ring" and not _dxf_circle_ring(circles, check):
             return False
     return True
 

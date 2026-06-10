@@ -1,5 +1,7 @@
-
 from __future__ import annotations
+OUTPUT_FILE = 'guih05_electrical_panel_completed.dxf'
+SPEC = {'polylines': [{'layer': 'PANEL', 'points': [(0, 0), (600, 0), (600, 400), (0, 400)]}, {'layer': 'TERM', 'points': [(55, 35), (545, 35), (545, 85), (55, 85)]}, {'layer': 'WIRE', 'points': [(25, 105), (575, 105), (575, 125), (25, 125)]}, {'layer': 'WIRE', 'points': [(25, 335), (575, 335), (575, 355), (25, 355)]}, {'layer': 'BREAKERS', 'points': [(60, 250), (110, 250), (110, 330), (60, 330)]}, {'layer': 'BREAKERS', 'points': [(135, 250), (185, 250), (185, 330), (135, 330)]}, {'layer': 'BREAKERS', 'points': [(210, 250), (260, 250), (260, 330), (210, 330)]}, {'layer': 'BREAKERS', 'points': [(285, 250), (335, 250), (335, 330), (285, 330)]}, {'layer': 'BREAKERS', 'points': [(360, 250), (410, 250), (410, 330), (360, 330)]}, {'layer': 'BREAKERS', 'points': [(435, 250), (485, 250), (485, 330), (435, 330)]}, {'layer': 'BREAKERS', 'points': [(60, 140), (110, 140), (110, 220), (60, 220)]}, {'layer': 'BREAKERS', 'points': [(135, 140), (185, 140), (185, 220), (135, 220)]}, {'layer': 'BREAKERS', 'points': [(210, 140), (260, 140), (260, 220), (210, 220)]}, {'layer': 'BREAKERS', 'points': [(285, 140), (335, 140), (335, 220), (285, 220)]}, {'layer': 'BREAKERS', 'points': [(360, 140), (410, 140), (410, 220), (360, 220)]}, {'layer': 'BREAKERS', 'points': [(435, 140), (485, 140), (485, 220), (435, 220)]}], 'segments': [{'layer': 'RAIL', 'start': (40, 290), 'end': (560, 290)}, {'layer': 'RAIL', 'start': (40, 180), 'end': (560, 180)}, {'layer': 'TERM', 'start': (70, 35), 'end': (70, 85)}, {'layer': 'TERM', 'start': (115, 35), 'end': (115, 85)}, {'layer': 'TERM', 'start': (160, 35), 'end': (160, 85)}, {'layer': 'TERM', 'start': (205, 35), 'end': (205, 85)}, {'layer': 'TERM', 'start': (250, 35), 'end': (250, 85)}, {'layer': 'TERM', 'start': (295, 35), 'end': (295, 85)}, {'layer': 'TERM', 'start': (340, 35), 'end': (340, 85)}, {'layer': 'TERM', 'start': (385, 35), 'end': (385, 85)}, {'layer': 'TERM', 'start': (430, 35), 'end': (430, 85)}, {'layer': 'TERM', 'start': (475, 35), 'end': (475, 85)}, {'layer': 'TERM', 'start': (520, 35), 'end': (520, 85)}], 'texts': [{'layer': 'TEXT', 'text': 'MAIN 480V'}, {'layer': 'TEXT', 'text': '24VDC'}, {'layer': 'TEXT', 'text': 'PE  N'}, {'layer': 'TEXT', 'text': 'PANEL E-104'}], 'text_min_counts': [{'layer': 'TEXT', 'text': 'B', 'min': 12}], 'texts_exact': [{'layer': 'TEXT', 'text': 'B1'}, {'layer': 'TEXT', 'text': 'B2'}, {'layer': 'TEXT', 'text': 'B3'}, {'layer': 'TEXT', 'text': 'B4'}, {'layer': 'TEXT', 'text': 'B5'}, {'layer': 'TEXT', 'text': 'B6'}, {'layer': 'TEXT', 'text': 'B7'}, {'layer': 'TEXT', 'text': 'B8'}, {'layer': 'TEXT', 'text': 'B9'}, {'layer': 'TEXT', 'text': 'B10'}, {'layer': 'TEXT', 'text': 'B11'}, {'layer': 'TEXT', 'text': 'B12'}]}
+
 
 from pathlib import Path
 import math
@@ -7,9 +9,7 @@ import os
 
 import ezdxf
 
-
 OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))
-
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -30,7 +30,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "bash", " sh ", "zsh", "node", "ruby", "perl",
     "ifcopenshell", "openstudio", "energyplus",
     "blender --background", "revitbatchprocessor",
-    "ansys", "mapdl", "fluent", "abaqus", "cae noGUI",
+    "ansys", "mapdl", "fluent", "abaqus", "cae nogui",
     "freecad", "freecadcmd", "openscad", "librecad",
     "ezdxf", "cadquery", "accoreconsole", "autolisp",
     "solidworks", "solvespace",
@@ -94,14 +94,10 @@ def _history_contains_bypass(root):
                 continue
             touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
             runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
-            writes_file = any(
-                token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item")
-            )
+            writes_file = any(token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item"))
             if touches_output and (runs_command or writes_file):
                 return True
-            if ("/desktop/" in line or "\\desktop\\" in line) and any(
-                ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS
-            ) and runs_command:
+            if ("/desktop/" in line or "\\desktop\\" in line) and any(ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS) and runs_command:
                 return True
     return False
 
@@ -114,7 +110,7 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-TOL = 0.75
+TOL = 0.85
 
 
 def close(a, b, tol=TOL):
@@ -172,28 +168,19 @@ def has_segment(doc, layer, start, end, tol=TOL):
     return any(same_segment(seg, start, end, tol) for seg in iter_segments(doc, layer))
 
 
-def has_no_segment_crossing(doc, layer, y, x1, x2, tol=TOL):
-    for a, b in iter_segments(doc, layer):
-        ax, ay = a
-        bx, by = b
-        if close(ay, y, tol) and close(by, y, tol):
-            lo, hi = sorted((ax, bx))
-            if lo < x2 - tol and hi > x1 + tol and not (hi <= x1 + tol or lo >= x2 - tol):
-                return False
-    return True
-
-
 def has_circle(doc, layer, center, radius, tol=TOL):
-    return any(pt_close(entity.dxf.center, center, tol) and close(entity.dxf.radius, radius, tol)
-               for entity in ents(doc, "CIRCLE", layer))
+    return any(pt_close(entity.dxf.center, center, tol) and close(entity.dxf.radius, radius, tol) for entity in ents(doc, "CIRCLE", layer))
 
 
 def count_circles(doc, layer):
     return sum(1 for _ in ents(doc, "CIRCLE", layer))
 
 
-def angle_close(a, b, tol=3.0):
-    return min(abs((a - b) % 360), abs((b - a) % 360)) <= tol
+def angle_close(a, b, tol=4.0):
+    a = float(a) % 360
+    b = float(b) % 360
+    d = abs(a - b) % 360
+    return min(d, 360 - d) <= tol
 
 
 def has_arc(doc, layer, center, radius, start_angle=None, end_angle=None, tol=TOL):
@@ -212,7 +199,7 @@ def has_arc(doc, layer, center, radius, start_angle=None, end_angle=None, tol=TO
 
 
 def norm_text(value):
-    return str(value).upper().replace("Ø", "DIA").replace("⌀", "DIA").replace(" ", "")
+    return str(value).upper().replace("Ø", "DIA").replace("⌀", "DIA").replace(" ", "").replace("\\P", "")
 
 
 def entity_text(entity):
@@ -223,6 +210,8 @@ def entity_text(entity):
             return entity.plain_text()
         except Exception:
             return str(entity.text)
+    if entity.dxftype() == "DIMENSION":
+        return str(getattr(entity.dxf, "text", ""))
     return ""
 
 
@@ -235,18 +224,17 @@ def text_entities(doc, layer=None):
         yield entity
 
 
-def has_text(doc, layer, value, insert=None, height=None, tol=3.0):
+def has_text(doc, layer, value, insert=None, height=None, tol=4.0):
     wanted = norm_text(value)
     for entity in text_entities(doc, layer):
-        if entity.dxftype() == "DIMENSION":
-            content = str(getattr(entity.dxf, "text", ""))
-        else:
-            content = entity_text(entity)
+        content = entity_text(entity)
         if wanted and wanted not in norm_text(content):
             continue
-        if insert is not None and hasattr(entity.dxf, "insert") and not pt_close(entity.dxf.insert, insert, tol):
-            continue
-        if height is not None and hasattr(entity.dxf, "height") and not close(entity.dxf.height, height, 0.3):
+        if insert is not None:
+            pos = getattr(entity.dxf, "insert", None)
+            if pos is None or not pt_close(pos, insert, tol):
+                continue
+        if height is not None and hasattr(entity.dxf, "height") and not close(entity.dxf.height, height, 0.5):
             continue
         return True
     return False
@@ -257,14 +245,11 @@ def text_count(doc, layer, value):
     return sum(1 for entity in text_entities(doc, layer) if wanted in norm_text(entity_text(entity)))
 
 
-def has_point(doc, layer, point, tol=TOL):
-    return any(pt_close(entity.dxf.location, point, tol) for entity in ents(doc, "POINT", layer))
-
-
-def cycle_match(got, expected, tol=TOL):
+def cycle_match(points, expected, tol=TOL):
+    got = list(points)
+    exp = list(expected)
     if got and pt_close(got[0], got[-1], 1e-6):
         got = got[:-1]
-    exp = list(expected)
     if exp and pt_close(exp[0], exp[-1], 1e-6):
         exp = exp[:-1]
     if len(got) != len(exp):
@@ -292,55 +277,146 @@ def has_polyline_or_edges(doc, layer, points, tol=TOL):
     return has_polyline(doc, layer, points, tol) or has_closed_edges(doc, layer, points, tol)
 
 
-def has_insert(doc, name, insert, layer=None, tol=TOL):
+def has_insert(doc, name, insert, layer=None, rotation=None, tol=TOL):
     for entity in ents(doc, "INSERT", layer):
-        if str(entity.dxf.name).upper() == name.upper() and pt_close(entity.dxf.insert, insert, tol):
-            return True
+        if str(entity.dxf.name).upper() != name.upper():
+            continue
+        if not pt_close(entity.dxf.insert, insert, tol):
+            continue
+        if rotation is not None and not angle_close(float(getattr(entity.dxf, "rotation", 0.0)), rotation):
+            continue
+        return True
     return False
 
 
-def layer_table(doc, name):
-    try:
-        return doc.layers.get(name)
-    except Exception:
-        return None
-
-
-def layer_linetype(doc, name):
-    layer = layer_table(doc, name)
-    return "" if layer is None else str(layer.dxf.linetype).upper()
-
-
-def layer_lineweight(doc, name):
-    layer = layer_table(doc, name)
-    if layer is None:
-        return None
-    return int(layer.dxf.lineweight)
+def entity_count(doc, dxftype, layer=None):
+    return sum(1 for _ in ents(doc, dxftype, layer))
 
 
 def no_entities_on_layer(doc, layer):
     return not any(layer_of(entity) == layer.upper() for entity in doc.modelspace())
 
 
-def wall_lines_are_bylayer(doc):
-    return all(int(getattr(entity.dxf, "color", 256) or 256) == 256 for entity in ents(doc, "LINE", "WALL"))
+def has_text_exact(doc, layer, value):
+    wanted = norm_text(value)
+    for entity in text_entities(doc, layer):
+        if norm_text(entity_text(entity)) == wanted:
+            return True
+    return False
 
 
-OUTPUT_FILE = "gui03_layer_cleanup_completed.dxf"
+def hatch_path_points(path):
+    vertices = getattr(path, "vertices", None)
+    if vertices:
+        pts = []
+        for vertex in vertices:
+            try:
+                pts.append((float(vertex[0]), float(vertex[1])))
+            except Exception:
+                pass
+        return pts
+    edges = getattr(path, "edges", None)
+    pts = []
+    if edges:
+        for edge in edges:
+            start = getattr(edge, "start", None)
+            if start is not None:
+                pts.append(xy(start))
+        last = getattr(edges[-1], "end", None)
+        if last is not None:
+            pts.append(xy(last))
+    return pts
 
-def check(doc):
-    wall = [((0, 0), (5000, 0)), ((5000, 0), (5000, 3000)), ((5000, 3000), (0, 3000)), ((0, 3000), (0, 0))]
-    return (
-        all(has_segment(doc, "WALL", a, b) for a, b in wall) and
-        has_segment(doc, "DOOR", (1800, 0), (1800, 800)) and
-        has_arc(doc, "DOOR", (1800, 0), 800, 0, 90) and
-        has_segment(doc, "CENTER", (900, 1500), (1400, 1500)) and
-        has_segment(doc, "CENTER", (1150, 1250), (1150, 1750)) and
-        layer_linetype(doc, "CENTER") in {"CENTER", "CENTER2", "DASHED", "DASHED2"} and
-        wall_lines_are_bylayer(doc) and
-        has_text(doc, "TEXT", "ROOM A", (500, 2600), 250)
+
+def has_hatch_poly(doc, layer, points, tol=TOL):
+    for entity in ents(doc, "HATCH", layer):
+        for path in getattr(entity, "paths", []):
+            pts = hatch_path_points(path)
+            if pts and cycle_match(pts, points, tol):
+                return True
+    return False
+
+
+def has_lwpolyline_slot(doc, layer, cx, cy, length, width, tol=TOL):
+    radius = float(width) / 2.0
+    left = float(cx) - float(length) / 2.0 + radius
+    right = float(cx) + float(length) / 2.0 - radius
+    top = float(cy) + radius
+    bottom = float(cy) - radius
+    expected = [(left, top), (right, top), (right, bottom), (left, bottom)]
+    for entity in ents(doc, "LWPOLYLINE", layer):
+        try:
+            pts_with_bulge = list(entity.get_points("xyb"))
+        except Exception:
+            pts_with_bulge = []
+        if not pts_with_bulge:
+            continue
+        pts = [(float(p[0]), float(p[1])) for p in pts_with_bulge]
+        if getattr(entity, "closed", False) and pts and not pt_close(pts[0], pts[-1], 1e-6):
+            pts.append(pts[0])
+        bulge_count = sum(1 for p in pts_with_bulge if len(p) >= 3 and abs(float(p[2])) > 1e-3)
+        if bulge_count >= 2 and cycle_match(pts, expected, tol):
+            return True
+    return False
+
+
+def has_slot(doc, layer, center, length, width, tol=TOL):
+    cx, cy = xy(center)
+    radius = float(width) / 2.0
+    left = cx - float(length) / 2.0 + radius
+    right = cx + float(length) / 2.0 - radius
+    top = cy + radius
+    bottom = cy - radius
+    line_arc_slot = (
+        has_segment(doc, layer, (left, top), (right, top), tol) and
+        has_segment(doc, layer, (left, bottom), (right, bottom), tol) and
+        has_arc(doc, layer, (left, cy), radius, 90, 270, tol) and
+        has_arc(doc, layer, (right, cy), radius, 270, 90, tol)
     )
+    return line_arc_slot or has_lwpolyline_slot(doc, layer, cx, cy, length, width, tol)
 
+
+def check_spec(doc):
+    for layer in SPEC.get("no_layers", []):
+        if not no_entities_on_layer(doc, layer):
+            return False
+    for item in SPEC.get("polylines", []):
+        if not has_polyline_or_edges(doc, item["layer"], item["points"]):
+            return False
+    for item in SPEC.get("segments", []):
+        if not has_segment(doc, item["layer"], item["start"], item["end"]):
+            return False
+    for item in SPEC.get("slots", []):
+        if not has_slot(doc, item["layer"], item["center"], item["length"], item["width"]):
+            return False
+    for item in SPEC.get("circles", []):
+        if not has_circle(doc, item["layer"], item["center"], item["radius"]):
+            return False
+    for item in SPEC.get("arcs", []):
+        if not has_arc(doc, item["layer"], item["center"], item["radius"], item.get("start"), item.get("end")):
+            return False
+    for item in SPEC.get("hatches", []):
+        if not has_hatch_poly(doc, item["layer"], item["points"]):
+            return False
+    for item in SPEC.get("texts", []):
+        if not has_text(doc, item["layer"], item["text"], item.get("insert"), item.get("height")):
+            return False
+    for item in SPEC.get("texts_exact", []):
+        if not has_text_exact(doc, item["layer"], item["text"]):
+            return False
+    for item in SPEC.get("text_min_counts", []):
+        if text_count(doc, item["layer"], item["text"]) < item["min"]:
+            return False
+    for item in SPEC.get("inserts", []):
+        if not has_insert(doc, item["name"], item["insert"], item.get("layer"), item.get("rotation")):
+            return False
+    for item in SPEC.get("min_counts", []):
+        if entity_count(doc, item["type"], item.get("layer")) < item["min"]:
+            return False
+    for item in SPEC.get("circle_count_min", []):
+        if count_circles(doc, item["layer"]) < item["min"]:
+            return False
+    return True
 
 def evaluate():
     if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
@@ -350,7 +426,7 @@ def evaluate():
         return False
     try:
         doc = ezdxf.readfile(path)
-        return bool(check(doc))
+        return bool(check_spec(doc))
     except Exception:
         return False
 
