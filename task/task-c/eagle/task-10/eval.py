@@ -1,125 +1,145 @@
 from __future__ import annotations
 
-import base64
-import importlib.util
-import shutil
-import tempfile
-import zlib
+import math
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-DESKTOP = Path('/home/user/Desktop')
-BUNDLE = {'eval_inner.py': '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', 'common/schema.py': 'eJyNVF2O0zAQfq/UOwzhJRWQXfEYqWgrVCQkBKvuvpUqMsmYhnXtyHYRVYnEIbjIXoGjcBLGP2lSWpZNIiWefPPNj79xkiTj0fwrEws0W2HBlGvcMPj94yfYNYKxTFZMV6DRbrUEu2sQuNLAhAAkty2zmDU78tN1Y002HiWOkWu1gYpZVgpmDBqoN43Stjc9B16jqCKSaGv5uQPN5G48cvfVAT4e+Re8XmN5F1LNxyOgS7IN5pSnDsvGhaty+KSUCBb81mBpnY14YQrvlcTwh5V2y8Sp3SqBmsmSeLlQzMJ3//MII5UNYcnqCg7WCjkUBVmLIjUo+CQm6S5qpd0aB7+e3dwkUHNwkCxkDCgMQvJm9vZd0vs0TFvnsuTJch8I2hXsvZ8rvE1WPbgj7AqG2rg0fdKDPA68GWsalFXKk85juj8iaJPJKXto2uO5Az4yh8UTfZb50PbHk5PL9Nf9/tj9LLnfrwe50v0B2E6GFFH6CdDzzL+yL6qWqfef/Eup/UzFsJaZu6KuBlo1FpuC12Ko39IJ3OQgamOXA7WvSAV+YlLSGCNDwamZSu+mDhmzRa2VDqo8kizAU+qCdc24uZ1fA2cUtCKdA8m76sR71WjVoLa7XstBm0HK8OIV1NLmJ40x201adjJ2Z0NJuND1UM3kgQhWWSb+E0CgTB9JZ0qlsafz45ufGRHXKKAnKodygOkULv9SSIx/mV2eFj0Y3YsBzfAkoMZsmN716dDGDCKIWmIc7lvSRhzrKJM2j+sQo73Y9zHaqJK4PQCpLzvOmP/Os5ecVHzudPAaOa7TZ9JPAsB8sfiw6DLwHkdDdW6TH6KkutNycmakPso4Sx5OgD8nCfRs'}
-CALL_FUNC = 'evaluate'
-CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('qfn_board.brd', '/home/user/Desktop/qfn_board.brd')]
+TASK_ID = "c-eagle-task-10-ubuntu"
+INIT_FILE = Path(__file__).resolve().parent / "init_file" / "qfn_board.brd"
+TARGET_PADS = ("1", "3", "5", "7")
+PAD_TOL = 0.8
+VIA_TOL = 1e-3
 
 
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
+def _sig(elem: ET.Element) -> tuple[tuple[str, str], ...]:
+    return tuple(sorted(elem.attrib.items()))
 
 
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
+def _element_position(root: ET.Element, name: str) -> tuple[float, float]:
+    el = root.find(f".//elements/element[@name='{name}']")
+    if el is None:
+        raise ValueError(f"missing element {name}")
+    return float(el.get("x", "0")), float(el.get("y", "0"))
 
 
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
+def _pad_centers(root: ET.Element) -> dict[str, tuple[float, float]]:
+    pkg = root.find(".//packages/package[@name='QFN8']")
+    if pkg is None:
+        raise ValueError("missing QFN8 package")
+    ux, uy = _element_position(root, "U1")
+    pads: dict[str, tuple[float, float]] = {}
+    for smd in pkg.findall("smd"):
+        name = smd.get("name")
+        if not name:
+            continue
+        pads[name] = (ux + float(smd.get("x", "0")), uy + float(smd.get("y", "0")))
+    return pads
 
 
+def _nearest_pad(point: tuple[float, float], pads: dict[str, tuple[float, float]]) -> tuple[str, float]:
+    best_name = ""
+    best_dist = float("inf")
+    px, py = point
+    for name, (x, y) in pads.items():
+        dist = math.hypot(px - x, py - y)
+        if dist < best_dist:
+            best_name = name
+            best_dist = dist
+    return best_name, best_dist
 
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
 
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
+def _nearest_point(
+    point: tuple[float, float],
+    points: dict[tuple[float, float], str],
+) -> tuple[str, float]:
+    best_name = ""
+    best_dist = float("inf")
+    px, py = point
+    for (x, y), name in points.items():
+        dist = math.hypot(px - x, py - y)
+        if dist < best_dist:
+            best_name = name
+            best_dist = dist
+    return best_name, best_dist
+
+
+def _wire_match(
+    wire: ET.Element,
+    pads: dict[str, tuple[float, float]],
+    vias: dict[tuple[float, float], str],
+) -> tuple[str, str] | None:
+    p1 = (float(wire.get("x1", "nan")), float(wire.get("y1", "nan")))
+    p2 = (float(wire.get("x2", "nan")), float(wire.get("y2", "nan")))
+    candidates = []
+    for near, far in ((p1, p2), (p2, p1)):
+        pad, pad_dist = _nearest_pad(near, pads)
+        via_name, via_dist = _nearest_point(far, vias)
+        if pad in TARGET_PADS and pad_dist <= PAD_TOL and via_dist <= VIA_TOL:
+            candidates.append((pad, via_name))
+    if len(candidates) != 1:
+        return None
+    return candidates[0]
+
+
+def evaluate(submission_dir: str) -> bool:
+    sub = Path(submission_dir).resolve()
+    target = None
+    for name in ("fanout.brd", "answer.brd"):
+        p = sub / name
+        if p.exists():
+            target = p
+            break
+    if target is None or not INIT_FILE.exists():
+        return False
+
     try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        score = result.get("score")
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    if hasattr(result, "score"):
-        try:
-            return float(getattr(result, "score")) == 1.0
-        except Exception:
-            pass
-    return False
-
-
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    return spec
-
-
-def _run() -> bool:
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        module = _load_module(root)
-        func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
-        return _is_pass(result)
+        starter = ET.parse(INIT_FILE).getroot()
+        result = ET.parse(target).getroot()
     except Exception:
         return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+
+    if not any(
+        el.get("name") == "U1" and el.get("package") == "QFN8"
+        for el in result.findall(".//element")
+    ):
+        return False
+
+    if len(result.findall(".//element")) != len(starter.findall(".//element")):
+        return False
+
+    orig_wire_sigs = {_sig(node) for node in starter.findall(".//wire")}
+    orig_via_sigs = {_sig(node) for node in starter.findall(".//via")}
+    added_wires = [node for node in result.findall(".//wire") if _sig(node) not in orig_wire_sigs]
+    added_vias = [node for node in result.findall(".//via") if _sig(node) not in orig_via_sigs]
+    if len(added_wires) != 4 or len(added_vias) != 4:
+        return False
+
+    pads = _pad_centers(result)
+    via_points: dict[tuple[float, float], str] = {}
+    for via in added_vias:
+        point = (float(via.get("x", "nan")), float(via.get("y", "nan")))
+        via_points[point] = via.get("id") or via.get("name") or f"{point[0]},{point[1]}"
+
+    used_pads: set[str] = set()
+    used_vias: set[str] = set()
+    for wire in added_wires:
+        match = _wire_match(wire, pads, via_points)
+        if match is None:
+            return False
+        pad, via_name = match
+        if pad in used_pads or via_name in used_vias:
+            return False
+        used_pads.add(pad)
+        used_vias.add(via_name)
+
+    return used_pads == set(TARGET_PADS) and len(used_vias) == 4
+
+
 if __name__ == "__main__":
-    print("True" if _run() else "False")
+    import sys
+
+    if len(sys.argv) != 2:
+        print("usage: python eval.py SUBMISSION_DIR", file=sys.stderr)
+        sys.exit(2)
+    print("True" if evaluate(sys.argv[1]) else "False")

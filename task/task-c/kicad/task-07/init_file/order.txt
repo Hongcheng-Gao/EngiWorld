@@ -1,8 +1,29 @@
-Panel order specification:
-  2x A (40x40mm board, refdes prefix UA*)
-  4x B (40x40mm board, refdes prefix UB*)
-  Spacing between copies: 3mm
-  Shared V-score rails top and bottom
+PNL03 mixed-panel build ticket
 
-Arrangement suggestion: pack tightly to minimise panel area.
-Label each copy in silkscreen: A1, A2, B1, B2, B3, B4.
+Source boards:
+  A.kicad_pcb: 40 x 40 mm, source refdes prefix UA*
+  B.kicad_pcb: 40 x 40 mm, source refdes prefix UB*
+
+Required copy slots, using the lower-left corner of each source board as the
+slot origin in panel coordinates:
+  A1: source A, origin (10, 10), rotation 0 deg, refdes suffix none
+  A2: source A, origin (53, 10), rotation 0 deg, refdes suffix _2
+  B1: source B, origin (10, 60), rotation 0 deg, refdes suffix none
+  B2: source B, origin (53, 60), rotation 0 deg, refdes suffix _2
+  B3: source B, origin (96, 10), rotation 0 deg, refdes suffix _3
+  B4: source B, origin (96, 60), rotation 0 deg, refdes suffix _4
+
+Manufacturing frame:
+  Outer rail outline: rectangle from (0, 0) to (146, 110) on Edge.Cuts.
+  Left rail width: 10 mm. Right rail width: 10 mm.
+  Top rail width: 10 mm. Bottom rail width: 10 mm.
+  Minimum board-to-board gap: 3 mm.
+  Keep the finished panel inside 146 x 110 mm.
+
+Panel features:
+  Add F.Silkscreen copy labels A1, A2, B1, B2, B3, and B4 near each copy center.
+  Add two vertical V-score guide lines on Dwgs.User at x=50 and x=93 from y=10 to y=100.
+  Add one horizontal V-score guide line on Dwgs.User at y=55 from x=10 to x=136.
+  Add fiducials FID1/FID2/FID3 at (5, 5), (141, 5), and (5, 105).
+  Add NPTH tooling holes TOOL1/TOOL2/TOOL3/TOOL4 with 3.0 mm drill at
+  (5, 55), (141, 55), (73, 5), and (73, 105).

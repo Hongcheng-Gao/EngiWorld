@@ -1,7 +1,7 @@
 {
   "id": "v-kicad-task-21-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "GUI-only requirement: Complete the task entirely in the KiCad graphical user interface (Project Manager, Schematic Editor, and PCB Editor). Do not open Command Prompt, PowerShell, Terminal, or any shell; do not run kicad-cli, pcbnew in batch mode, Python, or other helper scripts/code that directly generates or edits the deliverable files. Use only KiCad native GUI tools, menus, dialogs, and built-in save/export commands. Board Outline to Raspberry Pi HAT+ The file board.kicad_pcb is an 85x56 mm rectangular PCB with a 2x20 GPIO header (J1) and no mounting holes. The file /home/user/Desktop/spec.txt points to the Raspberry Pi HAT+ form factor. Modify the board to comply with the Raspberry Pi HAT+ mechanical specification. Replace the rectangular Edge.Cuts outline with the HAT+ outline: 65x56.5 mm with R=3 mm rounded corners. Add 4 M2.5 mounting holes at the HAT+ positions. Move the GPIO header to the HAT+ required location. Requirements: 1. Edge.Cuts bounding box: width = 65 mm +/- 0.05, height = 56.5 mm +/- 0.05. 2. Exactly 4 gr_arc elements on Edge.Cuts, each with radius approx 3 mm (+/- 0.1 mm). 3. 4 mounting hole footprints at positions (3.5,3.5), (61.5,3.5), (3.5,53.0), (61.5,53.0) +/- 0.05 mm. 4. GPIO header J1 at (29.0, 52.5) +/- 0.1 mm. Write /home/user/Desktop/answer.kicad_pcb.",
+  "instruction": "Use KiCad GUI only. Do not use shells, scripts, kicad-cli, pcbnew batch mode, Python, or other helper code to generate or edit deliverable files. Use native KiCad tools and built-in save/export commands only. Board Outline to Raspberry Pi HAT+ The file board.kicad_pcb is an 85x56 mm rectangular PCB with a 2x20 GPIO header (J1) and no mounting holes. The file /home/user/Desktop/spec.txt points to the Raspberry Pi HAT+ form factor. Modify the board to comply with the Raspberry Pi HAT+ mechanical specification. Replace the rectangular Edge.Cuts outline with the HAT+ outline: 65x56.5 mm with R=3 mm rounded corners. Add 4 M2.5 mounting holes at the HAT+ positions. Move the GPIO header to the HAT+ required location. Requirements: 1. Edge.Cuts bounding box: width = 65 mm +/- 0.05, height = 56.5 mm +/- 0.05. 2. Exactly 4 gr_arc elements on Edge.Cuts, each with radius approx 3 mm (+/- 0.1 mm). 3. 4 mounting hole footprints at positions (3.5,3.5), (61.5,3.5), (3.5,53.0), (61.5,53.0) +/- 0.05 mm. 4. GPIO header J1 at (29.0, 52.5) +/- 0.1 mm. Write /home/user/Desktop/answer.kicad_pcb. [Software] To use KiCad, run `kicad` for the GUI or `kicad-cli` for scripting/headless use (use PATH or the full install path).",
   "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/cli/cli.html; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
   "config": [
     {
@@ -41,7 +41,7 @@
         "command": [
           "python3",
           "-c",
-          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if \u0027KiCad Setup\u0027 in subprocess.run([\u0027wmctrl\u0027, \u0027-l\u0027], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
         ]
       }
     }

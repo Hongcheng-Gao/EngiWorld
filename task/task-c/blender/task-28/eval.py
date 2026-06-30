@@ -1,236 +1,203 @@
 from __future__ import annotations
 
-import base64
-import importlib.util
+import argparse
 import json
+import math
+import os
 import subprocess
-import shutil
-import zlib
-from pathlib import Path
-
-
-DESKTOP = Path('/home/user/Desktop')
-BLENDER_PATH = "blender"
-
-BUNDLE = {'eval_inner.py': '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'}
-CALL_FUNC = 'eval_outputs'
-CALL_ARGS = ['/home/user/Desktop/answer.blend']
-INIT_MAP = [('scene.blend', '/home/user/Desktop/scene.blend')]
-
-
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
-
-
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
-
-
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
-
-
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
-
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
-    try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
-
-
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        if "all_passed" in result:
-            return bool(result["all_passed"])
-        score = result.get("score", result.get("total_score"))
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    for attr in ("score", "total_score"):
-        if hasattr(result, attr):
-            try:
-                return float(getattr(result, attr)) == 1.0
-            except Exception:
-                pass
-    return False
-
-
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    desktop_prefix = "/home/user/Desktop"
-    if spec.startswith(desktop_prefix):
-        rel = spec[len(desktop_prefix):].lstrip("/")
-        return str(DESKTOP / rel) if rel else str(DESKTOP)
-    return spec
-
-
-def _call_inner(root: Path):
-    module = _load_module(root)
-    func = getattr(module, CALL_FUNC)
-    args = [_resolve_arg(arg) for arg in CALL_ARGS]
-    return func(*args)
-
-
-def _have_bpy() -> bool:
-    try:
-        import bpy  # noqa: F401
-        return True
-    except Exception:
-        return False
-
-
-def _run_via_blender(root: Path) -> bool:
-    result_path = root / "_blender_result.json"
-    runner_path = root / "_blender_runner.py"
-    added_paths = _bundle_python_paths(root)
-    args = [_resolve_arg(arg) for arg in CALL_ARGS]
-    runner_code = f"""
-import importlib.util
-import json
 import sys
+from dataclasses import dataclass, field
 from pathlib import Path
 
-ROOT = Path({str(root)!r})
-RESULT_PATH = Path({str(result_path)!r})
-CALL_FUNC = {CALL_FUNC!r}
-CALL_ARGS = {args!r}
-ADDED_PATHS = {added_paths!r}
+
+DESKTOP = Path("/home/user/Desktop")
+BLENDER = os.environ.get("BLENDER_PATH", "blender")
+FALLBACK_INIT = Path(__file__).resolve().parent / "init_file" / "scene.blend"
+INIT_BLEND = DESKTOP / "scene.blend"
 
 
-def _is_pass(result):
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        if "all_passed" in result:
-            return bool(result["all_passed"])
-        score = result.get("score", result.get("total_score"))
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    for attr in ("score", "total_score"):
-        if hasattr(result, attr):
-            try:
-                return float(getattr(result, attr)) == 1.0
-            except Exception:
-                pass
-    return False
+@dataclass
+class CheckResult:
+    name: str
+    passed: bool
+    msg: str
 
 
-spec = importlib.util.spec_from_file_location("eval_inner", ROOT / "eval_inner.py")
-if spec is None or spec.loader is None:
-    raise RuntimeError("unable to load eval_inner.py")
-module = importlib.util.module_from_spec(spec)
-sys.modules["eval_inner"] = module
-for path in reversed(ADDED_PATHS):
-    sys.path.insert(0, path)
-try:
-    spec.loader.exec_module(module)
-    func = getattr(module, CALL_FUNC)
-    value = func(*CALL_ARGS)
-    RESULT_PATH.write_text(json.dumps({{"pass": _is_pass(value)}}), encoding="utf-8")
-finally:
-    for path in ADDED_PATHS:
-        try:
-            sys.path.remove(path)
-        except ValueError:
-            pass
-"""
-    runner_path.write_text(runner_code, encoding="utf-8")
-    try:
+@dataclass
+class ScoreCard:
+    checks: list = field(default_factory=list)
+
+    def add(self, name, passed, msg, **_kw):
+        self.checks.append(CheckResult(name, passed, msg))
+
+    @property
+    def all_passed(self):
+        return bool(self.checks) and all(c.passed for c in self.checks)
+
+    @property
+    def total_score(self):
+        return 1.0 if self.all_passed else 0.0
+
+    def to_dict(self):
+        return {"score": self.total_score, "passed": self.all_passed,
+                "checks": {c.name: {"passed": c.passed, "msg": c.msg}
+                           for c in self.checks}}
+
+    def render(self):
+        lines = ["-" * 78]
+        for c in self.checks:
+            mark = "PASS" if c.passed else "FAIL"
+            lines.append(f"  [{mark}]  {c.name:<32} {c.msg}")
+        lines.append("-" * 78)
+        lines.append(f"  Result: {'PASS' if self.all_passed else 'FAIL'} "
+                     f"(score = {self.total_score:.1f})")
+        lines.append("-" * 78)
+        return "\n".join(lines)
+
+
+def _vec_close(a, b, tol):
+    return all(abs(x - y) < tol for x, y in zip(a, b))
+
+
+def _snapshot(obj):
+    mw = obj.matrix_world
+    rot = mw.to_euler()
+    return {
+        "world_loc": tuple(mw.translation),
+        "world_rot": tuple(rot),
+        "local_loc": tuple(obj.location),
+        "local_rot": tuple(obj.rotation_euler),
+    }
+
+
+def _run_eval(blend_path):
+    import bpy
+
+    card = ScoreCard()
+
+    if not os.path.isfile(blend_path):
+        card.add("file_exists", False, f"no .blend at {blend_path}")
+        return card
+    init_path = INIT_BLEND if INIT_BLEND.is_file() else FALLBACK_INIT
+    if not init_path.is_file():
+        card.add("init_exists", False, f"no init .blend at {INIT_BLEND}")
+        return card
+    card.add("file_exists", True, f"blend = {blend_path}")
+
+    bpy.ops.wm.open_mainfile(filepath=str(init_path))
+    init = {}
+    for name in ("Arm1", "Arm2", "Arm3"):
+        ob = bpy.data.objects.get(name)
+        card.add(f"init_{name}_exists", ob is not None,
+                 f"{name}: {'present' if ob else 'MISSING'}")
+        if ob is None:
+            return card
+        init[name] = _snapshot(ob)
+
+    bpy.ops.wm.open_mainfile(filepath=blend_path)
+    a1 = bpy.data.objects.get("Arm1")
+    a2 = bpy.data.objects.get("Arm2")
+    a3 = bpy.data.objects.get("Arm3")
+    for name, ob in (("arm1", a1), ("arm2", a2), ("arm3", a3)):
+        card.add(f"{name}_exists", ob is not None,
+                 f"{name}: {'present' if ob else 'MISSING'}")
+    if not (a1 and a2 and a3):
+        return card
+
+    card.add("arm1_has_no_parent", a1.parent is None,
+             f"Arm1.parent = {a1.parent.name if a1.parent else 'None'}")
+    card.add("arm2_parent_is_arm1", a2.parent is a1,
+             f"Arm2.parent = {a2.parent.name if a2.parent else 'None'}")
+    card.add("arm3_parent_is_arm2", a3.parent is a2,
+             f"Arm3.parent = {a3.parent.name if a3.parent else 'None'}")
+
+    tol = 5e-3
+    w1 = a1.matrix_world
+    i1 = init["Arm1"]["world_loc"]
+    r1 = init["Arm1"]["world_rot"]
+    card.add("arm1_world_loc", _vec_close(w1.translation, i1, tol),
+             f"Arm1 world loc = ({w1.translation.x:.4f},{w1.translation.y:.4f},{w1.translation.z:.4f})")
+    r1_now = w1.to_euler()
+    card.add("arm1_world_rot", _vec_close((r1_now.x, r1_now.y, r1_now.z), r1, tol),
+             f"Arm1 world rot = ({r1_now.x:.4f},{r1_now.y:.4f},{r1_now.z:.4f})")
+
+    w2 = a2.matrix_world
+    i2 = init["Arm2"]
+    card.add("arm2_world_loc", _vec_close(w2.translation, i2["world_loc"], tol),
+             f"Arm2 world loc = ({w2.translation.x:.4f},{w2.translation.y:.4f},{w2.translation.z:.4f})")
+    card.add("arm2_local_xy_unchanged",
+             _vec_close((a2.rotation_euler.x, a2.rotation_euler.y),
+                        (i2["local_rot"][0], i2["local_rot"][1]), tol),
+             f"Arm2 local XY = ({a2.rotation_euler.x:.4f},{a2.rotation_euler.y:.4f})")
+    target_z = i2["local_rot"][2] + math.radians(30.0)
+    card.add("arm2_local_z_rotated", abs(a2.rotation_euler.z - target_z) < tol,
+             f"Arm2 local Z = {a2.rotation_euler.z:.4f} rad (target {target_z:.4f})")
+
+    w3 = a3.matrix_world
+    i3 = init["Arm3"]["world_loc"]
+    d3 = math.sqrt(sum((w3.translation[i] - i3[i]) ** 2 for i in range(3)))
+    card.add("arm3_world_loc_preserved", d3 < tol,
+             f"Arm3 world loc = ({w3.translation.x:.4f},{w3.translation.y:.4f},{w3.translation.z:.4f}); err = {d3:.5f}")
+
+    return card
+
+
+def eval_outputs(blend_path, expected=None, postconfig=None):
+    return _run_eval(blend_path).to_dict()
+
+
+def _emit(card):
+    print(card.render())
+    print("EVAL_RESULT:" + json.dumps(card.to_dict()))
+
+
+def _run_via_blender(blend_path):
+    import tempfile
+    with tempfile.TemporaryDirectory() as td:
+        tmp = Path(td)
+        result_path = tmp / "result.json"
+        runner = tmp / "runner.py"
+        runner.write_text(
+            "import importlib.util, json\n"
+            f"spec = importlib.util.spec_from_file_location('eval_mod', {str(Path(__file__).resolve())!r})\n"
+            "mod = importlib.util.module_from_spec(spec)\n"
+            "spec.loader.exec_module(mod)\n"
+            f"card = mod._run_eval({str(blend_path)!r})\n"
+            f"Path = __import__('pathlib').Path\n"
+            f"Path({str(result_path)!r}).write_text(json.dumps({{'pass': card.all_passed}}), encoding='utf-8')\n"
+            "print('True' if card.all_passed else 'False')\n",
+            encoding="utf-8",
+        )
         proc = subprocess.run(
-            [BLENDER_PATH, "--background", "--factory-startup", "--python", str(runner_path)],
+            [BLENDER, "--background", "--factory-startup", "--python", str(runner)],
             capture_output=True,
             text=True,
             encoding="utf-8",
             errors="replace",
             timeout=600,
         )
-    except Exception:
-        return False
-    if result_path.exists():
-        try:
-            payload = json.loads(result_path.read_text(encoding="utf-8"))
-            return bool(payload.get("pass"))
-        except Exception:
-            return False
-    return proc.returncode == 0
+        if result_path.exists():
+            try:
+                return json.loads(result_path.read_text(encoding="utf-8")).get("pass", False)
+            except Exception:
+                return False
+        return proc.returncode == 0
 
 
-def _run() -> bool:
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        if _have_bpy():
-            return _is_pass(_call_inner(root))
-        return _run_via_blender(root)
-    except Exception:
-        return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+def main():
+    argv = sys.argv
+    if "--" in argv:
+        argv = argv[argv.index("--") + 1:]
+    else:
+        argv = argv[1:]
+    p = argparse.ArgumentParser(description="Evaluate HH01.")
+    p.add_argument("--blend", required=True)
+    args = p.parse_args(argv)
+    if "bpy" in sys.modules:
+        _emit(_run_eval(args.blend))
+        return
+    print("True" if _run_via_blender(args.blend) else "False")
 
 
 if __name__ == "__main__":
-    print("True" if _run() else "False")
+    main()
