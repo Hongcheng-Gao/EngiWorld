@@ -1,0 +1,28 @@
+* Non-inverting op-amp, parametric sweep on Rf to find the first step
+* whose native 1 kHz gain reaches 20 dB.
+*
+*  VIN ----+
+*          |-- Rin -- NC
+*   U1: ideal op-amp (E controlled source)
+*     V+  = IN
+*     V-  = FB node
+*   Rf from OUT -> FB
+*   Rg from FB  -> GND
+*
+.PARAM RG_VAL = 1k
+.PARAM RF_VAL = 1k
+
+VIN  IN   0  AC 1 0
+* Ideal op-amp: huge gain voltage-controlled voltage source.
+E1   OUT  0   IN  FB   1E6
+RF1  OUT  FB  {RF_VAL}
+RG1  FB   0   {RG_VAL}
+
+.AC DEC 1 1k 1k
+.STEP PARAM RF_VAL LIST 1k 1.2k 1.5k 1.8k 2.2k 2.7k 3.3k 3.9k 4.7k 5.6k
++                       6.8k 8.2k 9k 10k 12k 15k 18k 22k 27k 33k 39k 47k
++                       56k 68k 82k 100k
+
+.MEAS AC GAIN_AT_1K FIND DB(V(OUT)) AT=1k
+.PROBE
+.END

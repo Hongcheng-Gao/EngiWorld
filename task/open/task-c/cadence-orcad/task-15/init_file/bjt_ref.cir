@@ -1,0 +1,16 @@
+* Native BJT reference temperature-sweep task.
+* Run the native PSpice DC temperature sweep, keep the generated
+* .out/.dat/.measure artifacts, and export the six VREF points.
+
+VCC   VCC 0  DC 5
+RBIAS VCC N1 15k
+Q1    N1  N1 N2 QREF
+Q2    N2  N2 0  QREF
+.MODEL QREF NPN (IS=1E-15 BF=150 VAF=100 IKF=0.2 CJE=8P CJC=3P TF=0.5N)
+
+.DC VCC 5 5 1
+.TEMP -40 -20 0 25 50 85
+.MEAS DC VREF FIND V(N1) AT=5
+.PROBE
+
+.END

@@ -1,0 +1,95 @@
+{
+  "id": "v-cadence-orcad-task-12-windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "GUI-only requirement: Complete the task entirely in the Cadence OrCAD Capture graphical user interface. Do not open Command Prompt, PowerShell, Terminal, or any shell; do not run TCL/Skill scripts, batch capture automation, Python, or other helper scripts/code that directly generates or edits the deliverable files. Use only OrCAD Capture native GUI tools, menus, dialogs, and built-in save/export commands. In the opened project, edit `C:\\Users\\user\\Desktop\\TUTOR2.DSN`. Correct the `Value` property of these components: - `R1 = 10k` - `R2 = 4.7k` - `C1 = 100nF` - `C2 = 10uF` Do not modify any other component. Save the modified `C:\\Users\\user\\Desktop\\TUTOR2.DSN` together with its dependency files.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://support1.cadence.com/public/docs/content/20469530.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/DCLOCK2.OLB",
+            "path": "C:\\Users\\user\\Desktop\\DCLOCK2.OLB"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/DCLOCK2.OPJ",
+            "path": "C:\\Users\\user\\Desktop\\DCLOCK2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/TUTOR2.DSN",
+            "path": "C:\\Users\\user\\Desktop\\TUTOR2.DSN"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/TUTOR2.OPJ",
+            "path": "C:\\Users\\user\\Desktop\\TUTOR2.OPJ"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Cadence\\SPB_24.1\\tools\\bin\\capture.exe",
+          "C:\\Users\\user\\Desktop\\DCLOCK2.OPJ"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

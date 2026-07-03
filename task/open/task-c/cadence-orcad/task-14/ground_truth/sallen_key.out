@@ -1,0 +1,364 @@
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+* Run the native PSpice AC sweep, keep the generated .out/.dat/.measure
+* artifacts, and recover the sample-grid 3 dB cutoff for each corner.
+
+.PARAM CASE = 1
+.PARAM RSCALE = {TABLE(CASE,
++ 1,0.95, 2,0.95, 3,0.95,
++ 4,1.00, 5,1.00, 6,1.00,
++ 7,1.05, 8,1.05, 9,1.05)}
+.PARAM CSCALE = {TABLE(CASE,
++ 1,0.95, 2,1.00, 3,1.05,
++ 4,0.95, 5,1.00, 6,1.05,
++ 7,0.95, 8,1.00, 9,1.05)}
+
+VIN   IN   0    AC 1 0
+R1    IN   N1   {10k*RSCALE}
+R2    N1   VP   {10k*RSCALE}
+C1    N1   NOUT {1.59n*CSCALE}
+C2    VP   0    {1.59n*CSCALE}
+RL    NOUT 0    12k
+CLOAD NOUT 0    120p
+EA    OP   0    LAPLACE {V(VP,NOUT)} {2e5/((1+s/6.283e4)*(1+s/1.2566e7))}
+ROUT  OP   NOUT 15
+
+.AC DEC 100 10 1MEG
+.STEP PARAM CASE LIST 1 2 3 4 5 6 7 8 9
+.MEAS AC RSVAL PARAM {RSCALE}
+.MEAS AC CSVAL PARAM {CSCALE}
+.MEAS AC DB_8000  FIND DB(V(NOUT)) AT=8k
+.MEAS AC DB_8500  FIND DB(V(NOUT)) AT=8.5k
+.MEAS AC DB_9000  FIND DB(V(NOUT)) AT=9k
+.MEAS AC DB_9500  FIND DB(V(NOUT)) AT=9.5k
+.MEAS AC DB_10000 FIND DB(V(NOUT)) AT=10k
+.MEAS AC DB_10500 FIND DB(V(NOUT)) AT=10.5k
+.MEAS AC DB_10750 FIND DB(V(NOUT)) AT=10.75k
+.MEAS AC DB_11000 FIND DB(V(NOUT)) AT=11k
+.MEAS AC DB_11250 FIND DB(V(NOUT)) AT=11.25k
+.MEAS AC DB_11500 FIND DB(V(NOUT)) AT=11.5k
+.MEAS AC DB_11750 FIND DB(V(NOUT)) AT=11.75k
+.MEAS AC DB_12000 FIND DB(V(NOUT)) AT=12k
+.PROBE
+.END
+
+INFO(ORPSIM-16573): AC analysis does not support expression evaluation at each frequency. ABM devices with non-linear operations will be evaluated only at bias point.
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    1     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    2     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    3     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    4     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    5     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    6     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    7     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    8     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     SMALL SIGNAL BIAS SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    9     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   OP)    0.0000  (   VP)    0.0000      
+
+( NOUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+
+          JOB CONCLUDED
+
+**** 04/27/26 22:31:39 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Nonideal Sallen-Key corner cutoff task.
+
+
+ ****     JOB STATISTICS SUMMARY
+
+ ****     CURRENT STEP                     PARAM CASE =    9     
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =         .45
+

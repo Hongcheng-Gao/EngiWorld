@@ -1,0 +1,23 @@
+* Stepped current-family extraction task.
+* Run the deck, keep the native .out / _measure.txt / .dat artifacts,
+* then export the 28-row family table to CSV.
+
+.PARAM TCASE = 25
+.PARAM VBBP = 0.50
+
+VCC    VCC 0   DC 10
+VBB    BB  0   DC {VBBP}
+VSENSE VCC COL DC 0
+RLEAK  COL 0   1MEG
+
+* Smooth family emulator:
+* IC = 8 uA * exp((VBB - 0.5)/0.05) * (1 + 0.01*(TCASE - 25))
+GQ     COL 0 VALUE {8E-6*EXP((V(BB)-0.5)/0.05)*(1+0.01*(TCASE-25))}
+
+.DC VCC 10 10 1
+.STEP PARAM TCASE LIST -40 0 25 85
+.STEP PARAM VBBP LIST 0.50 0.55 0.60 0.65 0.70 0.75 0.80
+.MEAS DC IC FIND I(VSENSE) AT=10
+.PROBE
+
+.END
