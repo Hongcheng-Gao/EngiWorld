@@ -47,6 +47,90 @@ def exact_match(result, rules) -> float:
     else:
         return 0.
 
+
+def _coerce_float(value: Any) -> float | None:
+    if isinstance(value, bool):
+        return 1.0 if value else 0.0
+    if isinstance(value, Number):
+        return float(value)
+    if isinstance(value, str):
+        stripped = value.strip()
+        if stripped.lower() == "true":
+            return 1.0
+        if stripped.lower() == "false":
+            return 0.0
+        try:
+            return float(stripped)
+        except ValueError:
+            return None
+    return None
+
+
+def _score_from_json_obj(obj: Any, output_field: str) -> float | None:
+    if isinstance(obj, dict):
+        for key in (output_field, "score", "metric_value"):
+            if key in obj:
+                value = _coerce_float(obj[key])
+                if value is not None:
+                    return value
+        metrics_obj = obj.get("metrics")
+        if isinstance(metrics_obj, dict) and output_field in metrics_obj:
+            return _coerce_float(metrics_obj[output_field])
+        return None
+    return _coerce_float(obj)
+
+
+def _score_from_text(text: str, output_field: str) -> float | None:
+    stripped = text.strip()
+    if not stripped:
+        return None
+
+    try:
+        value = _score_from_json_obj(json.loads(stripped), output_field)
+        if value is not None:
+            return value
+    except Exception:
+        pass
+
+    for line in reversed([line.strip() for line in stripped.splitlines() if line.strip()]):
+        try:
+            value = _score_from_json_obj(json.loads(line), output_field)
+            if value is not None:
+                return value
+        except Exception:
+            pass
+        value = _coerce_float(line)
+        if value is not None:
+            return value
+    return None
+
+
+def quantified_score(result, **options) -> float:
+    """Return a continuous score emitted by a quantified Engiworld eval.
+
+    Quantified eval scripts either print a JSON score object to stdout or write
+    `score.json` on the VM desktop. The evaluator may pass both as a dict; when
+    present, the file content is preferred because some eval scripts only print
+    a boolean validity marker.
+    """
+    metric_options = options.get("metric") if isinstance(options.get("metric"), dict) else {}
+    output_field = options.get("output_field") or metric_options.get("output_field") or "score"
+
+    candidates = []
+    if isinstance(result, dict):
+        for key in ("score_json", "quant_metrics_json", "stdout", "output"):
+            value = result.get(key)
+            if value is not None:
+                candidates.append(str(value))
+    elif result is not None:
+        candidates.append(str(result))
+
+    for text in candidates:
+        score = _score_from_text(text, output_field)
+        if score is not None:
+            return score
+    return 0.0
+
 def match_in_list(result, rules) -> float:
     expect = rules["expected"]
     logger.debug("%s %s", result, expect)

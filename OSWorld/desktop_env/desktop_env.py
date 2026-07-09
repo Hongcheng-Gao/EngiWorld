@@ -357,9 +357,38 @@ class DesktopEnv(gym.Env):
             if isinstance(self.metric, list) \
             else {}
 
+        metric_metadata = self.evaluator.get("metric", task_config.get("quantified_metric"))
+        if metric_metadata is not None:
+            if isinstance(self.metric_options, list):
+                metadata_list = metric_metadata if isinstance(metric_metadata, list) else [metric_metadata] * len(self.metric_options)
+                self.metric_options = [
+                    {**options, "metric": metadata_list[idx]}
+                    for idx, options in enumerate(self.metric_options)
+                ]
+            elif isinstance(self.metric_options, dict):
+                self.metric_options = {**self.metric_options, "metric": metric_metadata}
+
         assert (not isinstance(self.evaluator["func"], list)
                 or (len(self.metric) == len(self.result_getter) == len(self.expected_getter) == len(
                     self.metric_options)))
+
+    def _attach_quantified_score_artifacts(self, result_state: Any) -> Dict[str, Any]:
+        payload: Dict[str, Any] = {"stdout": "" if result_state is None else result_state}
+        try:
+            desktop_path = self.controller.get_vm_desktop_path()
+            for key, filename in (("score_json", "score.json"), ("quant_metrics_json", "quant_metrics.json")):
+                script = (
+                    "from pathlib import Path\n"
+                    f"p = Path({desktop_path!r}) / {filename!r}\n"
+                    "print(p.read_text(encoding='utf-8') if p.exists() else '')\n"
+                )
+                response = self.controller.execute_python_command(script)
+                content = (response or {}).get("output", "")
+                if content.strip():
+                    payload[key] = content.strip()
+        except Exception as exc:
+            logger.warning("Failed to fetch quantified score artifacts: %s", exc)
+        return payload
 
     def step(self, action, pause=2, bash_timeout=120):
         self._step_no += 1
@@ -474,6 +503,8 @@ class DesktopEnv(gym.Env):
                     logger.error("File not found!")
                     if self.metric_conj == 'and':
                         return 0
+                if self.evaluator["func"][idx] == "quantified_score":
+                    result_state = self._attach_quantified_score_artifacts(result_state)
 
                 if "expected" in self.evaluator and self.expected_getter and self.evaluator["expected"]:
                     expected_state = self.expected_getter[idx](self, self.evaluator["expected"][idx])
@@ -496,6 +527,8 @@ class DesktopEnv(gym.Env):
             except FileNotFoundError:
                 logger.error("File not found!")
                 return 0
+            if self.evaluator["func"] == "quantified_score":
+                result_state = self._attach_quantified_score_artifacts(result_state)
 
             if "expected" in self.evaluator and self.expected_getter and self.evaluator["expected"]:
                 expected_state = self.expected_getter(self, self.evaluator["expected"])
