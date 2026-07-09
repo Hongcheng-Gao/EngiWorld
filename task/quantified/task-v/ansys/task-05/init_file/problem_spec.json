@@ -1,0 +1,34 @@
+{
+  "id": "opt-ansys-gui-05",
+  "title": "ANSYS GUI cantilever stiffness per mass optimization",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": "Maximize stiffness per unit mass while respecting stress limit.",
+  "fixed_features": [
+    "fixed support face",
+    "loaded face",
+    "500 N load",
+    "outer envelope"
+  ],
+  "constraints": {
+    "force_magnitude": 500.0,
+    "allowable_mises": 160.0,
+    "fixed_support": "one end face",
+    "loaded_region": "opposite end face"
+  },
+  "baseline": {
+    "files": [
+      "baseline_apdl_solid_beam.db",
+      "baseline_apdl_solid_beam.rst"
+    ]
+  },
+  "submission": {
+    "files": [
+      "submission.db",
+      "submission.rst"
+    ]
+  },
+  "workflow": {
+    "must_use": "interactive graphical interface"
+  }
+}

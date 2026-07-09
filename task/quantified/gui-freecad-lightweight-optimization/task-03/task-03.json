@@ -1,0 +1,79 @@
+{
+  "category": "quantified",
+  "config": [
+    {
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/baseline.stl",
+            "path": "/home/user/Desktop/baseline.stl"
+          },
+          {
+            "local_path": "task-03/init_file/profile.dxf",
+            "path": "/home/user/Desktop/profile.dxf"
+          },
+          {
+            "local_path": "task-03/init_file/constraints.json",
+            "path": "/home/user/Desktop/constraints.json"
+          }
+        ]
+      },
+      "type": "upload_file"
+    },
+    {
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/baseline.stl"
+        ]
+      },
+      "type": "launch"
+    }
+  ],
+  "difficulty": "hard",
+  "eval_dependencies": {
+    "pip_packages": [
+      "trimesh",
+      "numpy"
+    ],
+    "used_by_eval": [
+      "trimesh",
+      "numpy"
+    ],
+    "vm_preinstalled": true
+  },
+  "evaluator": {
+    "func": "quantified_score",
+    "postconfig": [
+      {
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        },
+        "type": "upload_file"
+      }
+    ],
+    "result": {
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "type": "vm_command_line"
+    }
+  },
+  "fixed_ip": false,
+  "id": "quant-gui-freecad-lightweight-task-03-ubuntu",
+  "instruction": "GUI-only FreeCAD quantified CAD optimization task. Complete the task entirely in the launched FreeCAD graphical user interface. Do not open Terminal, shells, FreeCADCmd, Python scripts, macros, or helper automation to create or edit the deliverable. Open /home/user/Desktop/baseline.stl and /home/user/Desktop/profile.dxf in FreeCAD, use them as the starting geometry and footprint guide, and redesign the part as a lightweight load-bearing fixture. This is a continuous-score optimization task, not a request to match one hidden answer. Case: camera mast triangular gusset fixture. Objective: Maximize load support per volume for a camera mast gusset fixture with tall stiffness demand. Required output: /home/user/Desktop/optimized.stl. Hard constraints: keep the STL within envelope [82.0, 62.0, 68.0] mm, keep bounding-box spans at least [76.0, 54.0, 36.0] mm, keep volume between 18000.0 and 98000.0 mm^3, and preserve material in every support/load zone marked in /home/user/Desktop/profile.dxf and /home/user/Desktop/constraints.json. The evaluator parses only the real optimized.stl geometry, computes required-zone coverage and this continuous metric: tall gusset stiffness proxy / volume; vertical depth is weighted heavily because mast deflection dominates. It writes score.json and quant_metrics.json, and ignores any self-reported score. Do not read or copy ground_truth and do not edit eval.py.",
+  "interface": "gui",
+  "possibility_of_env_change": "low",
+  "proxy": false,
+  "quantified_metric": "tall_gusset_load_per_volume",
+  "related_apps": [
+    "freecad"
+  ],
+  "snapshot": "FreeCAD0.21.2",
+  "source": "https://wiki.freecad.org/Manual:Introduction; https://trimesh.org/; https://ezdxf.readthedocs.io/",
+  "trajectory": "trajectories/"
+}

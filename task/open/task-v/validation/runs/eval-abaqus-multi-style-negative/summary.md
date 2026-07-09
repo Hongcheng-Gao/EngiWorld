@@ -1,0 +1,51 @@
+# Remote Eval Report: eval-abaqus-multi-style-negative
+
+- Host: `115.190.187.244`
+- Mode: `negative`
+- Run dir: `/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-v/cae-commercial-open-choice/validation/runs/eval-abaqus-multi-style-negative`
+- Passed: 40
+- Failed or error: 0
+- Final cleanup ok: True
+
+## Results
+
+- `task-01/empty_desktop`: pass, last='False', cleanup=ok
+- `task-01/metrics_only`: pass, last='False', cleanup=ok
+- `task-02/empty_desktop`: pass, last='False', cleanup=ok
+- `task-02/metrics_only`: pass, last='False', cleanup=ok
+- `task-03/empty_desktop`: pass, last='False', cleanup=ok
+- `task-03/metrics_only`: pass, last='False', cleanup=ok
+- `task-04/empty_desktop`: pass, last='False', cleanup=ok
+- `task-04/metrics_only`: pass, last='False', cleanup=ok
+- `task-05/empty_desktop`: pass, last='False', cleanup=ok
+- `task-05/metrics_only`: pass, last='False', cleanup=ok
+- `task-06/empty_desktop`: pass, last='False', cleanup=ok
+- `task-06/metrics_only`: pass, last='False', cleanup=ok
+- `task-07/empty_desktop`: pass, last='False', cleanup=ok
+- `task-07/metrics_only`: pass, last='False', cleanup=ok
+- `task-08/empty_desktop`: pass, last='False', cleanup=ok
+- `task-08/metrics_only`: pass, last='False', cleanup=ok
+- `task-09/empty_desktop`: pass, last='False', cleanup=ok
+- `task-09/metrics_only`: pass, last='False', cleanup=ok
+- `task-10/empty_desktop`: pass, last='False', cleanup=ok
+- `task-10/metrics_only`: pass, last='False', cleanup=ok
+- `task-11/empty_desktop`: pass, last='False', cleanup=ok
+- `task-11/metrics_only`: pass, last='False', cleanup=ok
+- `task-12/empty_desktop`: pass, last='False', cleanup=ok
+- `task-12/metrics_only`: pass, last='False', cleanup=ok
+- `task-13/empty_desktop`: pass, last='False', cleanup=ok
+- `task-13/metrics_only`: pass, last='False', cleanup=ok
+- `task-14/empty_desktop`: pass, last='False', cleanup=ok
+- `task-14/metrics_only`: pass, last='False', cleanup=ok
+- `task-15/empty_desktop`: pass, last='False', cleanup=ok
+- `task-15/metrics_only`: pass, last='False', cleanup=ok
+- `task-16/empty_desktop`: pass, last='False', cleanup=ok
+- `task-16/metrics_only`: pass, last='False', cleanup=ok
+- `task-17/empty_desktop`: pass, last='False', cleanup=ok
+- `task-17/metrics_only`: pass, last='False', cleanup=ok
+- `task-18/empty_desktop`: pass, last='False', cleanup=ok
+- `task-18/metrics_only`: pass, last='False', cleanup=ok
+- `task-19/empty_desktop`: pass, last='False', cleanup=ok
+- `task-19/metrics_only`: pass, last='False', cleanup=ok
+- `task-20/empty_desktop`: pass, last='False', cleanup=ok
+- `task-20/metrics_only`: pass, last='False', cleanup=ok

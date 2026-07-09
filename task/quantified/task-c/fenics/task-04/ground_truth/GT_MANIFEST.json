@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "task_id": "opt-fenics-04",
+  "ground_truth_policy": "baseline-only scoring with explicit positive reference sample",
+  "baseline_sample": {
+    "artifact": "init_file/baseline_permeability_field.csv",
+    "expected_score": 0.0,
+    "meaning": "visible initial feasible design, not a reference optimum"
+  },
+  "reference_sample": {
+    "artifact": "ground_truth/reference/",
+    "files": [
+      "solve_submission.py",
+      "permeability_field.csv",
+      "pressure.xdmf"
+    ],
+    "expected_score_min": 0.05,
+    "meaning": "deterministic feasible improved sample for evaluator sanity checks, not a proven global optimum",
+    "description": "High-permeability central channel within the high-permeability budget."
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/permeability_field.csv",
+    "expected_score": 0.0
+  }
+}

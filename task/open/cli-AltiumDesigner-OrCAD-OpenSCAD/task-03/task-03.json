@@ -1,0 +1,75 @@
+﻿{
+  "id": "c-altium-orcad-open-task-03-windows",
+  "snapshot": "altium-orcad-open",
+  "instruction": "Complete the task using command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD. The neutral schematic revisions `rev_a` and `rev_b` are on the desktop. Compare the two revisions and write `diff.json`. Requirements: - `diff.json` must contain `value_changes`, `refdes_added`, and `refdes_removed`. - Deduplicate multipart occurrences by refdes before comparing. - Report each value change as `ref`, `before`, and `after`. [Software] Altium Designer is available at `D:\\Altium\\AD26\\X2.EXE`. OrCAD Capture is available at `D:\\orcad\\tools\\bin\\Capture.exe`. OpenSCAD is available as `openscad`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/rev_a.edif",
+            "path": "C:\\Users\\user\\Desktop\\rev_a.edif"
+          },
+          {
+            "local_path": "task-03/init_file/rev_a.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\rev_a.schematic.json"
+          },
+          {
+            "local_path": "task-03/init_file/rev_b.edif",
+            "path": "C:\\Users\\user\\Desktop\\rev_b.edif"
+          },
+          {
+            "local_path": "task-03/init_file/rev_b.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\rev_b.schematic.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "open_software_roles": {
+    "candidate_software": [
+      "altium-designer",
+      "cadence-orcad"
+    ],
+    "distractor_software": "openscad",
+    "source_task": "OrCAD task-c/05"
+  }
+}

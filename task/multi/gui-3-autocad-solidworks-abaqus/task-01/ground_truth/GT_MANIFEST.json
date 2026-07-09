@@ -1,0 +1,133 @@
+{
+  "status": "generated_no_gui_high_quality_eval_passed",
+  "environment": "three-software-autocad-solidworks-abaqus",
+  "task": "task-01",
+  "title": "DXF Mounting Plate Static Analysis",
+  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "no_init_file": true,
+  "job_name": "Job-PlateStatic",
+  "model_name": "Model-PlateStatic",
+  "step_name": "Step-Static",
+  "required_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+      "purpose": "AutoCAD completed DXF stage"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "expected_desktop_path": "C:\\Users\\User\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks exported STEP geometry stage"
+    },
+    {
+      "file": "Job-PlateStatic.cae",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-PlateStatic.cae",
+      "purpose": "Abaqus/CAE model database"
+    },
+    {
+      "file": "Job-PlateStatic.odb",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-PlateStatic.odb",
+      "purpose": "Abaqus solved output database"
+    }
+  ],
+  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
+  "generation_method": "Non-GUI command/API generation from task instruction only; eval.py not used during generation.",
+  "generated_at_epoch": 1783396690.009923,
+  "source_instruction_sha256": "ce12a72ebd0d873c809715bc32fe1796495dc7c2eb8be0e2f10fe8d833fd5098",
+  "remote_host": "124.174.11.231",
+  "generated_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "size": 1285,
+      "sha256": "f82a56e50cc2b72ea3bb9baa3a5f5b7bca12024c7529ce309d42bd25f0ffdafa",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-01\\stage1_profile.dxf"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "size": 46494,
+      "sha256": "b306004ad6b802bb772ac46be9f5ab8badbfbd6cf5e226fe15019deac0f67f8e",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-01\\stage2_geometry.step"
+    },
+    {
+      "file": "Job-PlateStatic.cae",
+      "size": 86016,
+      "sha256": "d16dc7a37bf033f8328dca5ae7585069edc97172e27a35e8f5e460baf63319d2",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-01\\Job-PlateStatic.cae"
+    },
+    {
+      "file": "Job-PlateStatic.odb",
+      "size": 354440,
+      "sha256": "191355ef312ecdc9b1475777b9ef114cbfedb4d52e738cd05a42d0a75579dd9a",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-01\\Job-PlateStatic.odb"
+    }
+  ],
+  "generation_title": "DXF Mounting Plate Static Analysis",
+  "black_box_eval": {
+    "checked_at_epoch": 1783396837.453814,
+    "status": "pass",
+    "returncode": 0,
+    "actual": "True\n",
+    "expected": "True\n",
+    "first_fail": "",
+    "warnings": [
+      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    ],
+    "cleanup_residuals": [],
+    "out_dir": "/tmp/engiworld_multi_gt/eval_results_new_env/three-software-autocad-solidworks-abaqus__task-01"
+  },
+  "generation_self_check": {
+    "odb_path": "C:\\Users\\user\\Desktop\\Job-PlateStatic.odb",
+    "ok": true,
+    "fields": {
+      "U": 0.10000000149011612,
+      "S": 273.1643981933594,
+      "RF": 3842.02587890625
+    },
+    "frames": 2,
+    "elements": 344,
+    "mesh_report": {
+      "elements": 344,
+      "mesh_size": 7.0,
+      "target": 160
+    },
+    "chain_evidence": {
+      "token": "EW_ACAD_SW_ABQ_01",
+      "cae_set": "CHAIN_EW_ACAD_SW_ABQ_01_IMPORTED_FROM_STAGE2_GEOMETRY_STEP",
+      "cae_markers": [
+        "EW_ACAD_SW_ABQ_01",
+        "IMPORTED_FROM_stage2_geometry.step"
+      ]
+    }
+  },
+  "chain_token": "EW_ACAD_SW_ABQ_01",
+  "chain_evidence": {
+    "dxf_markers": [
+      "EW_ACAD_SW_ABQ_01",
+      "AUTOCAD_TO_SOLIDWORKS"
+    ],
+    "step_markers": [
+      "EW_ACAD_SW_ABQ_01",
+      "FROM_stage1_profile.dxf",
+      "SOLIDWORKS_TO_ABAQUS"
+    ],
+    "cae_markers": [
+      "EW_ACAD_SW_ABQ_01",
+      "IMPORTED_FROM_stage2_geometry.step"
+    ],
+    "cae_set": "CHAIN_EW_ACAD_SW_ABQ_01_IMPORTED_FROM_STAGE2_GEOMETRY_STEP"
+  },
+  "blackbox_eval": {
+    "status": "pass",
+    "host": "124.174.22.118",
+    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-01/result.json",
+    "actual": "True\n",
+    "expected": "True\n",
+    "returncode": 0,
+    "first_fail": null,
+    "warnings": [
+      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    ],
+    "cleanup_residuals": [],
+    "evaluated_at": "2026-07-07T10:11:10Z"
+  }
+}

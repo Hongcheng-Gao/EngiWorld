@@ -1,0 +1,66 @@
+{
+  "id": "opt-fenics-04",
+  "title": "FEniCS porous-flow hydraulic-resistance optimization",
+  "kind": "permeability",
+  "interface": "cli",
+  "primary_software": "fenics",
+  "objective": "Minimize hydraulic resistance through a fixed porous channel.",
+  "objective_direction": "minimize",
+  "metric_name": "hydraulic_resistance",
+  "metric_units": "normalized_Pa_s_per_m3",
+  "design_file": "permeability_field.csv",
+  "result_file": "pressure.xdmf",
+  "required_outputs": [
+    "permeability_field.csv",
+    "solve_submission.py",
+    "pressure.xdmf"
+  ],
+  "domain": {
+    "length": 1.6,
+    "height": 0.8,
+    "unit": "m"
+  },
+  "design_grid": {
+    "rows": 8,
+    "cols": 16,
+    "row_axis": "y",
+    "col_axis": "x",
+    "row_0_location": "bottom wall",
+    "col_0_location": "inlet"
+  },
+  "solver_mesh": {
+    "nx": 32,
+    "ny": 16,
+    "cell_type": "triangle"
+  },
+  "flow": {
+    "inlet_boundary": "x = 0",
+    "outlet_boundary": "x = length",
+    "inlet_pressure": 1.0,
+    "outlet_pressure": 0.0,
+    "impermeable_walls": [
+      "y = 0",
+      "y = height"
+    ]
+  },
+  "constraints": {
+    "permeability_min": 0.1,
+    "permeability_max": 5.0
+  },
+  "design_budget": {
+    "type": "high_permeability_design_budget",
+    "threshold": 3.0,
+    "max_fraction": 0.4
+  },
+  "calibration_status": "pending_vm_calibration",
+  "baseline": {
+    "file": "baseline_permeability_field.csv",
+    "artifact": "init_file/baseline_permeability_field.csv",
+    "metric_value": null,
+    "metric_units": "normalized_Pa_s_per_m3",
+    "metric_source": "computed_dynamically_by_eval_on_fenics_vm"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/permeability_field.csv"
+  }
+}

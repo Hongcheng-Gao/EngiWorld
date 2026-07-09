@@ -1,0 +1,59 @@
+{
+  "id": "open-choice-gui-bim-task-06-windows",
+  "snapshot": "Revit2025-ArchiCAD27-Abaqus2025",
+  "difficulty": "medium",
+  "instruction": "Open-choice GUI requirement: This environment provides three candidate engineering applications, including BIM-capable applications and a distractor application. Choose an appropriate BIM-capable application yourself, then complete the task entirely through that application's graphical user interface. Do not open Command Prompt, PowerShell, Terminal, macros, external API automation, Python, shell, IfcOpenShell, scripts, or any helper code that directly generates or edits the deliverable file. Use only native BIM GUI tools, menus, dialogs, model views, properties, room/zone/space tools, available library or family objects, and built-in IFC export or Save As IFC commands. Open the provided seed IFC from C:\\Users\\user\\Desktop\\init.ifc in the selected BIM application before editing. The seed IFC is intentionally prepared with stable base geometry so the task can be completed through reliable GUI edits in the selected BIM application: keep the existing floor slab and other useful seed elements unless the task explicitly asks you to add or rename something. If the imported IFC space is not available as a native room/zone/space, place a new room/zone/space in the bounded area and use a room/space schedule or room properties to set the required room name. Seed window placement exercise. The seed already contains one rectangular room shell with four walls, one floor slab, one exterior door, and four exterior windows. The hosted windows are preconfigured because hosted placement on imported IFC geometry can be unreliable in this environment. Do not redraw the floor slab or windows. Rename or recreate the room as Window Room, and keep the existing door and windows. Create real BIM model elements rather than visual-only detail geometry. Use the selected BIM application's Room/Zone/Space tool or editable imported room/space data for named rooms so they export as IFC spaces. Save the only required deliverable on the Desktop as C:\\Users\\user\\Desktop\\result.ifc using the selected BIM application's built-in IFC export. Use IFC4 if the export dialog asks for a setup, and enable room or space export if that option is available. The exported IFC should contain an IfcSpace room named Window Room; at least 1 building storey, at least 4 wall elements, at least 1 slab, at least 1 door, at least 4 windows. Other dimensions, exact coordinates, materials, family type names, wall thicknesses, and harmless metadata may vary.",
+  "source": "Open-choice BIM environment; evaluation checks IFC deliverable semantics rather than the selected tool.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit",
+    "archicad",
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "category": "open-choice",
+  "interface": "gui",
+  "candidate_app_count": 3
+}

@@ -1,0 +1,55 @@
+{
+  "id": "v-cad-open-choice-freecad-librecad-kicad-task-07-ubuntu",
+  "snapshot": "freecad-librecad-kicad",
+  "instruction": "Choose a suitable engineering drawing/CAD application available in the current Ubuntu environment. The task is to edit a DXF drawing, so select software that can reliably open, modify, and export DXF files. Open or import /home/user/Desktop/guih17_conveyor_layout_seed.dxf. Complete the hard conveyor layout. Draw FRAME rectangle (0,70)-(760,190), BELT loop rectangle (10,60)-(750,200), fourteen ROLLER circles radius 18 centered at y=130 with x=50,100,150,200,250,300,350,400,450,500,550,600,650,700, MOTOR rectangle (610,205)-(730,275) and MOTOR circle center (670,240) radius 24, SUPPORT rectangles (160,30)-(195,60) and (580,30)-(615,60), and labels 14X ROLLERS Ø36 @ 50 PITCH, MOTOR DRIVE END, and CONVEYOR C-7. Save the result as /home/user/Desktop/guih17_conveyor_layout_completed.dxf. Complete the work through an interactive graphical workflow and save/export the required DXF file to the exact Desktop path stated above. Do not generate the drawing with external scripts, command-line CAD generation, or by directly writing DXF entities programmatically.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html; generated open-choice variant from task/task-v/librecad_final/task-07",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/guih17_conveyor_layout_seed.dxf",
+            "path": "/home/user/Desktop/guih17_conveyor_layout_seed.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad",
+    "librecad",
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,196 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-06-ubuntu",
+  "owner": "taozhuo",
+  "title": "Fan controller panel with grille, knob, and four buttons",
+  "domain": "thermal_control_panel",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G06",
+  "required_files": [
+    "stage1_fan_control_panel.dxf",
+    "stage2_fan_control_panel.stl",
+    "stage2_fan_control_panel_handoff_outline.dxf",
+    "stage3_fan_control_panel_board.kicad_pcb",
+    "stage3_fan_control_panel_board_profile.svg",
+    "stage4_fan_control_panel.glb"
+  ],
+  "dxf": {
+    "file": "stage1_fan_control_panel.dxf",
+    "bbox": [
+      145.0,
+      95.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "GRILLE",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        72.5,
+        47.5,
+        32.0
+      ],
+      [
+        12.0,
+        12.0,
+        2.4
+      ],
+      [
+        133.0,
+        12.0,
+        2.4
+      ],
+      [
+        12.0,
+        83.0,
+        2.4
+      ],
+      [
+        133.0,
+        83.0,
+        2.4
+      ],
+      [
+        116.0,
+        47.5,
+        5.5
+      ]
+    ],
+    "texts": [
+      "EW4G06",
+      "PWM",
+      "RPM",
+      "FAN"
+    ],
+    "min_lines": 4,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_fan_control_panel.stl",
+    "bbox": [
+      145.0,
+      95.0,
+      10.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 12
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G06",
+      "FAN-J1",
+      "ENCODER-SW1",
+      "BTN-UP",
+      "BTN-DN",
+      "BTN-MODE",
+      "OLED-DS1"
+    ]
+  },
+  "glb": {
+    "file": "stage4_fan_control_panel.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_fan_control_panel",
+      "stage3_fan_control_panel_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_fan_control_panel",
+      "stage3_svg_object": "stage3_fan_control_panel_board_profile.svg"
+    }
+  },
+  "diversity_notes": {
+    "geometry": "Fan controller panel with grille, knob, and four buttons",
+    "electronic_focus": "a fan-control PCB with fan header, encoder, OLED, and four button footprints",
+    "visualization_focus": "a front-panel render with grille spokes, knob, and a button row aligned to the PCB"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_fan_control_panel.dxf",
+    "desktop_path": "/home/user/Desktop/seed_fan_control_panel.dxf"
+  },
+  "generated_by": {
+    "script": "generate_assets.py",
+    "packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy",
+      "xml.sax.saxutils"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_fan_control_panel_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_fan_control_panel_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_fan_control_panel.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_fan_control_panel.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_fan_control_panel_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_fan_control_panel_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_fan_control_panel_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_fan_control_panel_board.kicad_pcb"
+  }
+}

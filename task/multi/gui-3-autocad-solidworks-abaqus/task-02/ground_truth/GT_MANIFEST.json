@@ -1,0 +1,133 @@
+{
+  "status": "generated_no_gui_high_quality_eval_passed",
+  "environment": "three-software-autocad-solidworks-abaqus",
+  "task": "task-02",
+  "title": "DXF Flange Cover Pressure Analysis",
+  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "no_init_file": true,
+  "job_name": "Job-DxfFlangePressure",
+  "model_name": "Model-DxfFlangePressure",
+  "step_name": "Step-Pressure",
+  "required_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+      "purpose": "AutoCAD completed DXF stage"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "expected_desktop_path": "C:\\Users\\User\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks exported STEP geometry stage"
+    },
+    {
+      "file": "Job-DxfFlangePressure.cae",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfFlangePressure.cae",
+      "purpose": "Abaqus/CAE model database"
+    },
+    {
+      "file": "Job-DxfFlangePressure.odb",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfFlangePressure.odb",
+      "purpose": "Abaqus solved output database"
+    }
+  ],
+  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
+  "generation_method": "Non-GUI command/API generation from task instruction only; eval.py not used during generation.",
+  "generated_at_epoch": 1783396690.373375,
+  "source_instruction_sha256": "76aaf00399d95489ebfffdcc3daab71ff587a5b80dcdb8d6710df821a74d3983",
+  "remote_host": "124.174.11.231",
+  "generated_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "size": 1217,
+      "sha256": "9647dd6f4f42f1ce3f02ef18db8c14ddf0fcd685b4d0c2ec66ae5d2ef1afc30d",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-02\\stage1_profile.dxf"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "size": 59631,
+      "sha256": "fac8015c7908f3d2573a4031691e82ee9a53acf10a128e771012fa11b05c18c2",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-02\\stage2_geometry.step"
+    },
+    {
+      "file": "Job-DxfFlangePressure.cae",
+      "size": 69632,
+      "sha256": "31a85519a73a38cb654805c53dfb53b5f28116a76403dfdd73a1ea5bcea652c4",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-02\\Job-DxfFlangePressure.cae"
+    },
+    {
+      "file": "Job-DxfFlangePressure.odb",
+      "size": 342132,
+      "sha256": "0826954ee212f39067a2c658549438a6bb18e5c6f9d1762047e2421d8135e2e2",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-02\\Job-DxfFlangePressure.odb"
+    }
+  ],
+  "generation_title": "DXF Flange Cover Pressure Analysis",
+  "black_box_eval": {
+    "checked_at_epoch": 1783396837.45454,
+    "status": "pass",
+    "returncode": 0,
+    "actual": "True\n",
+    "expected": "True\n",
+    "first_fail": "",
+    "warnings": [
+      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    ],
+    "cleanup_residuals": [],
+    "out_dir": "/tmp/engiworld_multi_gt/eval_results_new_env/three-software-autocad-solidworks-abaqus__task-02"
+  },
+  "generation_self_check": {
+    "odb_path": "C:\\Users\\user\\Desktop\\Job-DxfFlangePressure.odb",
+    "ok": true,
+    "fields": {
+      "U": 6.436917465180159e-05,
+      "S": 1.1718288660049438,
+      "RF": 71.50115203857422
+    },
+    "frames": 2,
+    "elements": 324,
+    "mesh_report": {
+      "elements": 324,
+      "mesh_size": 7.0,
+      "target": 200
+    },
+    "chain_evidence": {
+      "token": "EW_ACAD_SW_ABQ_02",
+      "cae_set": "CHAIN_EW_ACAD_SW_ABQ_02_IMPORTED_FROM_STAGE2_GEOMETRY_STEP",
+      "cae_markers": [
+        "EW_ACAD_SW_ABQ_02",
+        "IMPORTED_FROM_stage2_geometry.step"
+      ]
+    }
+  },
+  "chain_token": "EW_ACAD_SW_ABQ_02",
+  "chain_evidence": {
+    "dxf_markers": [
+      "EW_ACAD_SW_ABQ_02",
+      "AUTOCAD_TO_SOLIDWORKS"
+    ],
+    "step_markers": [
+      "EW_ACAD_SW_ABQ_02",
+      "FROM_stage1_profile.dxf",
+      "SOLIDWORKS_TO_ABAQUS"
+    ],
+    "cae_markers": [
+      "EW_ACAD_SW_ABQ_02",
+      "IMPORTED_FROM_stage2_geometry.step"
+    ],
+    "cae_set": "CHAIN_EW_ACAD_SW_ABQ_02_IMPORTED_FROM_STAGE2_GEOMETRY_STEP"
+  },
+  "blackbox_eval": {
+    "status": "pass",
+    "host": "124.174.22.118",
+    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-02/result.json",
+    "actual": "True\n",
+    "expected": "True\n",
+    "returncode": 0,
+    "first_fail": null,
+    "warnings": [
+      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    ],
+    "cleanup_residuals": [],
+    "evaluated_at": "2026-07-07T10:11:16Z"
+  }
+}

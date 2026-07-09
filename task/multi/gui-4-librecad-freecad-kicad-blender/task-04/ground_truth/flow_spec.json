@@ -1,0 +1,195 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-04-ubuntu",
+  "owner": "taozhuo",
+  "title": "Round instrument gauge bezel with OLED and encoder board",
+  "domain": "instrument_display_bezel",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G04",
+  "required_files": [
+    "stage1_round_gauge_bezel.dxf",
+    "stage2_round_gauge_bezel.stl",
+    "stage2_round_gauge_bezel_handoff_outline.dxf",
+    "stage3_round_gauge_bezel_board.kicad_pcb",
+    "stage3_round_gauge_bezel_board_profile.svg",
+    "stage4_round_gauge_bezel.glb"
+  ],
+  "dxf": {
+    "file": "stage1_round_gauge_bezel.dxf",
+    "bbox": [
+      118.0,
+      118.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "WINDOW",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        59.0,
+        59.0,
+        59.0
+      ],
+      [
+        59.0,
+        59.0,
+        34.0
+      ],
+      [
+        59.0,
+        12.0,
+        2.1
+      ],
+      [
+        106.0,
+        59.0,
+        2.1
+      ],
+      [
+        59.0,
+        106.0,
+        2.1
+      ],
+      [
+        12.0,
+        59.0,
+        2.1
+      ]
+    ],
+    "texts": [
+      "EW4G04",
+      "OLED",
+      "ENCODER",
+      "BEZEL"
+    ],
+    "min_lines": 4,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_round_gauge_bezel.stl",
+    "bbox": [
+      118.0,
+      118.0,
+      18.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 12
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G04",
+      "OLED-DS1",
+      "ENCODER-SW1",
+      "BUZZER-BZ1",
+      "BTN-MODE",
+      "I2C-J1"
+    ]
+  },
+  "glb": {
+    "file": "stage4_round_gauge_bezel.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_round_gauge_bezel",
+      "stage3_round_gauge_bezel_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_round_gauge_bezel",
+      "stage3_svg_object": "stage3_round_gauge_bezel_board_profile.svg"
+    }
+  },
+  "diversity_notes": {
+    "geometry": "Round instrument gauge bezel with OLED and encoder board",
+    "electronic_focus": "a circular gauge PCB carrying an OLED display, encoder, buzzer, mode button, and I2C header",
+    "visualization_focus": "an instrument front view with smoky display lens and a raised encoder knob"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_round_gauge_bezel.dxf",
+    "desktop_path": "/home/user/Desktop/seed_round_gauge_bezel.dxf"
+  },
+  "generated_by": {
+    "script": "generate_assets.py",
+    "packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy",
+      "xml.sax.saxutils"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_round_gauge_bezel_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_round_gauge_bezel_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_round_gauge_bezel.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_round_gauge_bezel.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_round_gauge_bezel_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_round_gauge_bezel_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_round_gauge_bezel_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_round_gauge_bezel_board.kicad_pcb"
+  }
+}

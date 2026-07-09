@@ -1,0 +1,49 @@
+{
+  "id": "opt-ansys-gui-03",
+  "title": "ANSYS GUI first-frequency per mass optimization",
+  "kind": "modal",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": "Maximize first natural frequency per unit mass.",
+  "objective_direction": "maximize",
+  "metric_name": "first_frequency_per_mass",
+  "metric_units": "Hz_per_mass_unit",
+  "result_suffixes": [
+    ".rst"
+  ],
+  "submission_files": [
+    "submission.db",
+    "submission.rst"
+  ],
+  "baseline_files": [
+    "baseline_apdl_fixed_beam_modal.db",
+    "baseline_apdl_fixed_beam_modal.rst"
+  ],
+  "fixed_features": [
+    "end attachment regions",
+    "fixed boundary conditions",
+    "modal analysis type",
+    "500 mm beam envelope"
+  ],
+  "constraints": {
+    "fixed_length_mm": 500.0,
+    "material_E_mpa": 210000.0,
+    "material_nu": 0.3,
+    "density_tonne_per_mm3": 7.85e-09
+  },
+  "calibration_status": "pending_vm_calibration",
+  "baseline": {
+    "artifact": "init_file/",
+    "files": [
+      "baseline_apdl_fixed_beam_modal.db",
+      "baseline_apdl_fixed_beam_modal.rst"
+    ],
+    "metric_value": null,
+    "metric_units": "Hz_per_mass_unit",
+    "metric_source": "computed_dynamically_by_eval_on_windows_ansys_vm",
+    "meaning": "visible initial feasible GUI starting point, not a reference optimum"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/"
+  }
+}

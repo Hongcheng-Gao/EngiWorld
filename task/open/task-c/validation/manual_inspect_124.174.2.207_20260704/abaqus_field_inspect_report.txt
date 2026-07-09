@@ -1,0 +1,50 @@
+=== task01 CAE Job-Plate.cae ODB Job-Plate.odb ===
+models ['Model-1', 'Model-Plate-From-INP']
+model Model-1 parts [] materials [] steps ['Initial'] bcs [] loads [] predefs [] interactions [] constraints []
+model Model-Plate-From-INP parts ['PLATEPART'] materials ['STEEL'] steps ['Initial', 'Step-Pressure'] bcs ['Disp-BC-1', 'Disp-BC-2'] loads ['CFORCE-1', 'CFORCE-2', 'CFORCE-3', 'CFORCE-4', 'CFORCE-5', 'CFORCE-6', 'CFORCE-7', 'CFORCE-8', 'CFORCE-9', 'CFORCE-10', 'CFORCE-11', 'CFORCE-12', 'CFORCE-13', 'CFORCE-14', 'CFORCE-15', 'CFORCE-16', 'CFORCE-17', 'CFORCE-18', 'CFORCE-19', 'CFORCE-20', 'CFORCE-21', 'CFORCE-22', 'CFORCE-23', 'CFORCE-24', 'CFORCE-25'] predefs [] interactions [] constraints []
+ part PLATEPART nodes 52 elements 25 bbox {'x': (0.0, 50.0), 'y': (0.0, 1.0), 'z': (0.0, 0.0)}
+odb steps ['Step-Pressure']
+odb jobStatus JOB_STATUS_COMPLETED_SUCCESSFULLY
+step Step-Pressure frames 2
+last frame 1 Increment      1: Step Time =    1.000 fields ['E', 'RF', 'S', 'U']
+ field U nvalues 52 componentLabels ('U1', 'U2') type VECTOR
+  value 0 data= array([ 8.6843622e-34, -1.5208139e+02], dtype=float32) mises= None position= NODAL
+  value 1 data= array([ 1.0057927, -149.39928 ], dtype=float32) mises= None position= NODAL
+  value 2 data= array([ 1.3663582, -144.57484 ], dtype=float32) mises= None position= NODAL
+  value 3 data= array([ 1.5815893, -138.65025 ], dtype=float32) mises= None position= NODAL
+  value 4 data= array([ 1.7315644, -132.00966 ], dtype=float32) mises= None position= NODAL
+ field S nvalues 25 componentLabels ('S11', 'S22', 'S33', 'S12') type TENSOR_2D_PLANAR
+  value 0 data= array([-1.3997117e-02, -7.3554611e-04, -1.3997117e-02, -5.7389993e-10], dtype=float32) mises= 0.0132615705952048 position= INTEGRATION_POINT
+  value 1 data= array([-0.01950564, -0.07418244, -0.03052267, 0.13333334], dtype=float32) mises= 0.236308887600899 position= INTEGRATION_POINT
+  value 2 data= array([-0.02112215, -0.03306581, -0.01657117, 0.24000001], dtype=float32) mises= 0.415953993797302 position= INTEGRATION_POINT
+  value 3 data= array([-0.02111706, -0.06326997, -0.0256375 , 0.34285715], dtype=float32) mises= 0.595197319984436 position= INTEGRATION_POINT
+  value 4 data= array([-0.02129316, -0.03900382, -0.01818155, 0.44444445], dtype=float32) mises= 0.77004611492157 position= INTEGRATION_POINT
+ field CPRESS missing KeyError('CPRESS')
+=== task08 CAE Job-Contact.cae ODB Job-Contact.odb ===
+models ['Model-1', 'Model-Contact']
+model Model-1 parts [] materials [] steps ['Initial'] bcs [] loads [] predefs [] interactions [] constraints []
+model Model-Contact parts ['BLOCK', 'PLATE'] materials ['Steel'] steps ['Initial', 'Step-1'] bcs ['BC-PLATE-BOT'] loads ['LOAD-P'] predefs [] interactions ['Int-1'] constraints []
+ part BLOCK nodes 175 elements 96 bbox {'x': (0.0, 20.0), 'y': (0.0, 20.0), 'z': (0.0, 30.0)}
+ part PLATE nodes 242 elements 100 bbox {'x': (0.0, 100.0), 'y': (0.0, 100.0), 'z': (0.0, 5.0)}
+odb steps ['Step-1']
+odb jobStatus JOB_STATUS_COMPLETED_SUCCESSFULLY
+step Step-1 frames 2
+last frame 1 Increment      1: Step Time =    1.000 fields ['COPEN    ASSEMBLY_SURF_BLOCK_BOT/ASSEMBLY_SURF_PLATE_TOP', 'CPRESS   ASSEMBLY_SURF_BLOCK_BOT/ASSEMBLY_SURF_PLATE_TOP', 'CSHEAR1  ASSEMBLY_SURF_BLOCK_BOT/ASSEMBLY_SURF_PLATE_TOP', 'CSHEAR2  ASSEMBLY_SURF_BLOCK_BOT/ASSEMBLY_SURF_PLATE_TOP', 'CSLIP1   ASSEMBLY_SURF_BLOCK_BOT/ASSEMBLY_SURF_PLATE_TOP', 'CSLIP2   ASSEMBLY_SURF_BLOCK_BOT/ASSEMBLY_SURF_PLATE_TOP', 'LE', 'RF', 'S', 'U']
+ field U nvalues 417 componentLabels ('U1', 'U2', 'U3') type VECTOR
+  value 0 data= array([ 0.00013963, 0.00013963, -0.00162045], dtype=float32) mises= None position= NODAL
+  value 1 data= array([ 1.3983597e-04, 7.3359188e-05, -1.6259459e-03], dtype=float32) mises= None position= NODAL
+  value 2 data= array([ 1.4008142e-04, -1.1328714e-11, -1.6207712e-03], dtype=float32) mises= None position= NODAL
+  value 3 data= array([ 1.3983596e-04, -7.3359210e-05, -1.6259459e-03], dtype=float32) mises= None position= NODAL
+  value 4 data= array([ 0.00013963, -0.00013963, -0.00162045], dtype=float32) mises= None position= NODAL
+ field S nvalues 196 componentLabels ('S11', 'S22', 'S33', 'S12', 'S13', 'S23') type TENSOR_3D_FULL
+  value 0 data= array([ 6.0014520e-03, 6.0014520e-03, -9.9969254e+00, 8.1345743e-06, -2.1320784e-03, -2.1320784e-03], dtype=float32) mises= 10.0029287338257 position= INTEGRATION_POINT
+  value 1 data= array([ 5.6576957e-03, 8.1817918e-03, -1.0000611e+01, 1.7397842e-05, -1.8846157e-03, -1.1496878e-03], dtype=float32) mises= 10.007532119751 position= INTEGRATION_POINT
+  value 2 data= array([ 5.6576957e-03, 8.1817918e-03, -1.0000611e+01, -1.7397844e-05, -1.8846157e-03, 1.1496878e-03], dtype=float32) mises= 10.007532119751 position= INTEGRATION_POINT
+  value 3 data= array([ 6.0014520e-03, 6.0014520e-03, -9.9969254e+00, -8.1345752e-06, -2.1320784e-03, 2.1320784e-03], dtype=float32) mises= 10.0029287338257 position= INTEGRATION_POINT
+  value 4 data= array([-3.6021657e-03, -3.6021657e-03, -9.9803534e+00, -9.3468331e-04, -5.6095864e-03, -5.6095864e-03], dtype=float32) mises= 9.97676086425781 position= INTEGRATION_POINT
+ field CPRESS nvalues 146 componentLabels () type SCALAR
+  value 0 data= 11.7526426315308 mises= None position= NODAL
+  value 1 data= 10.9322099685669 mises= None position= NODAL
+  value 2 data= 10.076774597168 mises= None position= NODAL
+  value 3 data= 10.9322099685669 mises= None position= NODAL
+  value 4 data= 11.7526426315308 mises= None position= NODAL

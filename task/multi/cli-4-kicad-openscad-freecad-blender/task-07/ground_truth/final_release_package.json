@@ -1,0 +1,64 @@
+{
+  "critical_requirement": "The Blender review scene must show the optical line between LED1 and PD1 unobstructed by the OpenSCAD carrier.",
+  "domain": "precision encoder readhead carrier",
+  "key_metrics": {
+    "board_bbox_mm": [
+      66,
+      42,
+      1.0
+    ],
+    "enclosure_bbox_mm": [
+      78.0,
+      54.0,
+      12.2
+    ],
+    "estimated_shell_mass_g": 33.237,
+    "side_clearance_mm": 4.0,
+    "top_clearance_mm": 1.2
+  },
+  "release_decision": "pass",
+  "required_artifacts": [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_export.json",
+    "01_kicad_mechanical_map.csv",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.step",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.obj",
+    "04_blender_review.mtl",
+    "04_blender_scene_report.json",
+    "toolchain_invocation_log.json",
+    "final_release_package.json"
+  ],
+  "software_sequence": [
+    "KiCad",
+    "OpenSCAD",
+    "FreeCAD",
+    "Blender"
+  ],
+  "stage_outputs": {
+    "Blender": [
+      "04_blender_review.obj",
+      "04_blender_review.mtl",
+      "04_blender_scene_report.json"
+    ],
+    "FreeCAD": [
+      "03_freecad_assembly.step",
+      "03_freecad_clearance_report.json"
+    ],
+    "KiCad": [
+      "01_kicad_board.kicad_pcb",
+      "01_kicad_export.json",
+      "01_kicad_mechanical_map.csv"
+    ],
+    "OpenSCAD": [
+      "02_openscad_enclosure.scad",
+      "02_openscad_enclosure.stl",
+      "02_openscad_parameters.json"
+    ]
+  },
+  "task": "task-07",
+  "title": "Optical encoder readhead alignment carrier"
+}

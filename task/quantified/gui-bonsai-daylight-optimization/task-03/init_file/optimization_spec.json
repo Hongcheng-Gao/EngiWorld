@@ -1,0 +1,120 @@
+{
+  "case_id": "quant-gui-bonsai-task-03-ubuntu",
+  "title": "Corner shop daylight and display restraint",
+  "objective": "Increase useful daylight and display exposure in the sales room without overglazing the corner shop.",
+  "constraints": {
+    "case_id": "quant-gui-bonsai-task-03-ubuntu",
+    "title": "Corner shop daylight and display restraint",
+    "objective": "Increase useful daylight and display exposure in the sales room without overglazing the corner shop.",
+    "hard_constraints": [
+      "Edit the model only through the Bonsai/Blender GUI.",
+      "Preserve all IfcSpace, IfcWall, IfcSlab, and IfcDoor objects and their bounding boxes.",
+      "Do not delete, move, or resize site obstruction walls whose names begin with SITE-OBSTRUCTION.",
+      "Only IfcWindow geometry and optional IfcShadingDevice geometry may be changed or added.",
+      "Keep every window on an allowed facade for its room and within sill/head limits.",
+      "Keep each room window-to-wall ratio at or below its max_wwr.",
+      "Do not use IfcBuildingElementProxy or visual-only mesh objects as replacements for BIM elements."
+    ],
+    "invalid_conditions": [
+      "Missing or unparsable optimized.ifc.",
+      "Changed room count, room names, fixed wall/slab/door geometry, building envelope, or site obstruction geometry.",
+      "Windows placed on forbidden/private facades or outside room boundaries.",
+      "Over-limit room WWR, excessive window count, malformed windows, or oversized shading devices.",
+      "A submission that only writes score/design_summary/preview files without a valid IFC."
+    ],
+    "allowed_object_classes": [
+      "IfcWindow",
+      "IfcShadingDevice"
+    ],
+    "required_output": "/home/user/Desktop/optimized.ifc",
+    "optional_outputs": [
+      "/home/user/Desktop/design_summary.json",
+      "/home/user/Desktop/preview.png"
+    ],
+    "geometry_tolerance_m": 0.45,
+    "fixed_bbox_tolerance_m": 0.08,
+    "max_total_windows": 7,
+    "max_shading_devices": 8,
+    "window_dimension_limits_m": {
+      "min_width": 0.55,
+      "max_width": 3.2,
+      "min_height": 0.45,
+      "max_height": 2.25,
+      "max_thickness": 0.35
+    },
+    "shading_dimension_limits_m": {
+      "max_projection_or_length": 7.0,
+      "max_thickness": 0.35
+    },
+    "rooms": [
+      {
+        "name": "SALES",
+        "allowed_facades": [
+          "south",
+          "west",
+          "north"
+        ],
+        "ideal_wwr": 0.23,
+        "max_wwr": 0.34,
+        "max_windows": 5,
+        "min_sill_m": 0.55,
+        "max_head_m": 2.85,
+        "daylight_weight": 0.78
+      },
+      {
+        "name": "STOCK",
+        "allowed_facades": [],
+        "ideal_wwr": 0.0,
+        "max_wwr": 0.0,
+        "max_windows": 0,
+        "min_sill_m": 1.5,
+        "max_head_m": 2.6,
+        "daylight_weight": 0.0
+      },
+      {
+        "name": "OFFICE",
+        "allowed_facades": [
+          "north",
+          "east"
+        ],
+        "ideal_wwr": 0.11,
+        "max_wwr": 0.18,
+        "max_windows": 2,
+        "min_sill_m": 1.05,
+        "max_head_m": 2.55,
+        "daylight_weight": 0.18
+      }
+    ]
+  },
+  "site": {
+    "case_id": "quant-gui-bonsai-task-03-ubuntu",
+    "orientation": "Project north is +Y; south facade is -Y; east facade is +X.",
+    "target_daylight_period": "clear-sky working hours proxy, 09:00-15:00 local time",
+    "orientation_weights": {
+      "south": 1.0,
+      "east": 0.76,
+      "west": 0.72,
+      "north": 0.55,
+      "roof": 1.12
+    },
+    "external_obstructions": [
+      {
+        "name": "SITE-OBSTRUCTION-WEST ARCADE",
+        "bbox_m": [
+          -1.35,
+          3.0,
+          0.0,
+          -1.1,
+          6.0,
+          3.1
+        ]
+      }
+    ],
+    "scoring_thresholds": {
+      "daylight_threshold": 0.25,
+      "useful_target": 0.55,
+      "glare_threshold": 1.0,
+      "minimum_effective_score": 0.35
+    }
+  }
+}

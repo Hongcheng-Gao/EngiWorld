@@ -1,0 +1,71 @@
+﻿{
+  "id": "c-altium-orcad-open-task-19-windows",
+  "snapshot": "altium-orcad-open",
+  "instruction": "Complete the task using command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD. The neutral schematic package `oscillator_core` and `annotation_map.csv` are on the desktop. Re-annotate the listed components. Requirements: - Write `oscillator_reannotated.edif`, `oscillator_reannotated.schematic.json`, and `annotation_report.csv`. - Preserve component values and connectivity while applying the mapping. [Software] Altium Designer is available at `D:\\Altium\\AD26\\X2.EXE`. OrCAD Capture is available at `D:\\orcad\\tools\\bin\\Capture.exe`. OpenSCAD is available as `openscad`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/annotation_map.csv",
+            "path": "C:\\Users\\user\\Desktop\\annotation_map.csv"
+          },
+          {
+            "local_path": "task-19/init_file/oscillator_core.edif",
+            "path": "C:\\Users\\user\\Desktop\\oscillator_core.edif"
+          },
+          {
+            "local_path": "task-19/init_file/oscillator_core.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\oscillator_core.schematic.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "open_software_roles": {
+    "candidate_software": [
+      "altium-designer",
+      "cadence-orcad"
+    ],
+    "distractor_software": "openscad",
+    "source_task": "Altium task-c/14"
+  }
+}

@@ -1,0 +1,50 @@
+{
+  "id": "c-cae-commercial-open-choice-task-08-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Choose a suitable finite-element simulation tool available in the current Windows fused environment. Use a command-line or scripting workflow. Use the selected finite-element simulation tool to build a contact analysis assembly from scratch. Use the N-mm-MPa unit system. Part-1 (Block): Create a 3D Deformable Solid part using Extrusion. Sketch a rectangle from (0, 0) to (20, 20) in the X-Y plane. Extrude along the global Z-axis from Z = 0 to Z = 30 mm. Part-2 (Plate): Create a 3D Deformable Solid part using Extrusion. Sketch a rectangle from (0, 0) to (100, 100) in the X-Y plane. Extrude along the global Z-axis from Z = 0 to Z = 5 mm. Property: Create a material named Steel. Set Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create one Solid Homogeneous section using Steel and assign it to both parts. Assembly: Instance both parts. Use a Coincident Point constraint to align the center of the block bottom face (10, 10, 0) with the center of the plate top face (50, 50, 5). Ensure the block sits directly on top of the plate with no gap and no initial penetration. Step: Create a Static, General step named Step-1 with Nlgeom = ON. Interaction: Create a General Contact (Standard) or Surface-to-Surface Contact (Standard) interaction. Define the master surface as the plate top face (outer surface at Z = 5). Define the slave surface as the block bottom face (outer surface at Z = 0 of the block instance). Set the contact property to Frictionless with Hard Contact. Load: Apply an Encastre boundary condition to the bottom face of the plate (the face at Z = 0 of the plate). Apply a pressure of 10 MPa on the top face of the block (the face at Z = 30 mm), directed toward the block interior (downward, -Z). Mesh: Mesh the block with element type appropriate three-dimensional solid element formulation and a global seed size of 3 mm. Mesh the plate with element type appropriate three-dimensional solid element formulation and a global seed size of 5 mm. Job: Create a job named Job-Contact, submit it for analysis, and wait for successful completion. Deliverables: save the native model artifact and native solver result artifact on the Desktop, and write `C:/Users/user/Desktop/metrics.json` with numeric fields for the requested metrics.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-c/abaqus/task-08",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

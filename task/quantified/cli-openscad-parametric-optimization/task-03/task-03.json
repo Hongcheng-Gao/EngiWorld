@@ -1,0 +1,83 @@
+{
+  "artifact_generation_dependencies": {
+    "pip_packages": [
+      "solidpython2",
+      "trimesh",
+      "numpy"
+    ],
+    "used_for": [
+      "starter.scad",
+      "baseline.stl",
+      "optimized.scad",
+      "optimized.stl"
+    ]
+  },
+  "category": "quantified",
+  "config": [
+    {
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/starter.scad",
+            "path": "/home/user/Desktop/starter.scad"
+          },
+          {
+            "local_path": "task-03/init_file/baseline.stl",
+            "path": "/home/user/Desktop/baseline.stl"
+          },
+          {
+            "local_path": "task-03/init_file/constraints.json",
+            "path": "/home/user/Desktop/constraints.json"
+          }
+        ]
+      },
+      "type": "upload_file"
+    }
+  ],
+  "difficulty": "hard",
+  "eval_dependencies": {
+    "pip_packages": [
+      "trimesh",
+      "numpy"
+    ],
+    "used_by_eval": [
+      "trimesh",
+      "numpy"
+    ],
+    "vm_preinstalled": true
+  },
+  "evaluator": {
+    "func": "quantified_score",
+    "postconfig": [
+      {
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        },
+        "type": "upload_file"
+      }
+    ],
+    "result": {
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "type": "vm_command_line"
+    }
+  },
+  "fixed_ip": false,
+  "id": "quant-cli-openscad-parametric-task-03-ubuntu",
+  "instruction": "CLI-only OpenSCAD quantified CAD optimization task. Work from /home/user/Desktop/starter.scad, /home/user/Desktop/baseline.stl, and /home/user/Desktop/constraints.json. Use OpenSCAD command-line modeling and export, not a GUI. Edit /home/user/Desktop/starter.scad or create a derived OpenSCAD source file, then export the final geometry as STL. This is a continuous-score optimization task, not a request to match one hidden answer. Case: long lightweight cable-tray bridge. Objective: Maximize useful span-height stiffness proxy per material volume for a long cable-tray bridge. Hard constraints: keep the final STL within envelope [130.0, 38.0, 45.0] mm, keep each bounding-box span at least [124.0, 32.0, 36.0] mm, keep material volume between 52000.0 and 98000.0 mm^3, and keep the required base/contact footprint usable. Optimize for this evaluator metric after hard constraints are checked: (bbox_x_mm * bbox_z_mm) / volume_mm3; longer and deeper bridge geometry with less material receives a higher score. Required outputs: /home/user/Desktop/optimized.stl and /home/user/Desktop/design_summary.json. The benchmark evaluates the real exported STL geometry. Do not read or copy ground_truth, do not edit eval.py, and do not fabricate metric files without producing a valid STL.",
+  "interface": "cli",
+  "possibility_of_env_change": "low",
+  "proxy": false,
+  "quantified_metric": "span_height_per_volume",
+  "related_apps": [
+    "openscad"
+  ],
+  "snapshot": "OpenSCAD2021.01",
+  "source": "https://openscad.org/documentation.html; https://trimesh.org/",
+  "trajectory": "trajectories/"
+}

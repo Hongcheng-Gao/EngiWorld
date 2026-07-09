@@ -1,0 +1,56 @@
+{
+  "id": "quant-cli-openstudio-task-04-ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "difficulty": "hard",
+  "instruction": "CLI-only OpenStudio/EnergyPlus optimization task. Start from /home/user/Desktop/baseline.idf, /home/user/Desktop/weather.epw, and /home/user/Desktop/constraints.json. You may use the OpenStudio CLI/Ruby API, OpenStudio workflow tools, EnergyPlus CLI, and scripts that operate through those command-line interfaces; do not use the GUI. Produce the best feasible design you can under the constraints rather than trying to match one hidden answer. Case: a two-classroom training suite where a lower afternoon peak matters more than chasing the lowest annual kWh. Objective: Minimize peak cooling load for two classrooms using shading, SHGC, thermal mass, precooling, and setpoint tuning while annual EUI and unmet hours remain acceptable. Allowed design variables are the constrained fields in constraints.json, including cooling_setpoint_c, daylight_control_fraction, equipment_w_per_m2, heating_setpoint_c, infiltration_ach, lighting_w_per_m2, people_density_m2, precool_hours, roof_r_value_m2k_w, shade_ratio, thermal_mass_level, wall_r_value_m2k_w, window_shgc, window_u_value_w_m2k, wwr. Preserve the listed space names, thermal zone names, floor area, exterior wall area, and core geometry. The final IDF must keep an ENGIWORLD_OPTIMIZATION_METADATA JSON block with the selected design_variables, model_quantities, source_baseline_sha256, constraints_sha256, and weather_sha256. Required outputs are exactly: /home/user/Desktop/optimized.idf, /home/user/Desktop/run/eplusout.sql, /home/user/Desktop/run/eplusout.err, /home/user/Desktop/energy_report.csv, and /home/user/Desktop/design_summary.json. Run a real EnergyPlus/OpenStudio simulation, for example `energyplus -x -w /home/user/Desktop/weather.epw -d /home/user/Desktop/run /home/user/Desktop/optimized.idf`, or an equivalent OpenStudio workflow that writes eplusout.sql. Do not only hand-write the CSV/JSON reports. The evaluator reparses optimized.idf, checks hashes and hard constraints from constraints.json, reruns EnergyPlus on the submitted model when the CLI is available, reads standard EnergyPlus SQLite tables from the evaluator-owned run, and cross-checks your submitted eplusout.sql, energy_report.csv, and design_summary.json against those metrics and IDF-derived plausibility bounds. It then returns a continuous score in [0, 1]. Hard failures, missing simulation files, inconsistent report values, illegal geometry/load changes, excessive unmet hours, negative or implausibly low energy, modifying eval.py, reading ground_truth, or fabricating metrics that do not agree with the model and SQL will receive score 0.",
+  "source": "https://openstudiocoalition.org/; https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-3.10.0-doc/cli/html/index.html; https://energyplus.net/documentation; https://bigladdersoftware.com/epx/docs/25-1/output-details-and-examples/eplusout-sql.html",
+  "config": [
+    {
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/baseline.idf",
+            "path": "/home/user/Desktop/baseline.idf"
+          },
+          {
+            "local_path": "task-04/init_file/weather.epw",
+            "path": "/home/user/Desktop/weather.epw"
+          },
+          {
+            "local_path": "task-04/init_file/constraints.json",
+            "path": "/home/user/Desktop/constraints.json"
+          }
+        ]
+      },
+      "type": "upload_file"
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        },
+        "type": "upload_file"
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

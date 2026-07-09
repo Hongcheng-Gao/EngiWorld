@@ -1,0 +1,208 @@
+{
+  "baseline": {
+    "design_variables": {
+      "cooling_setpoint_c": 23.5,
+      "daylight_control_fraction": 0.18,
+      "economizer_fraction": 0.2,
+      "equipment_w_per_m2": 6.2,
+      "exterior_wall_area_m2": 168.0,
+      "floor_area_m2": 120.0,
+      "heating_setpoint_c": 21.0,
+      "hvac_availability_fraction": 0.86,
+      "infiltration_ach": 0.5,
+      "lighting_w_per_m2": 9.2,
+      "occupied_hours_fraction": 0.52,
+      "orientation_deg": 0.0,
+      "people_density_m2": 0.04,
+      "precool_hours": 0.0,
+      "roof_r_value_m2k_w": 4.3,
+      "shade_ratio": 0.12,
+      "space_count": 3,
+      "thermal_mass_level": 0.35,
+      "thermal_zone_count": 3,
+      "ventilation_lps_per_person": 8.0,
+      "wall_r_value_m2k_w": 2.8,
+      "window_area_m2": 42.0,
+      "window_shgc": 0.48,
+      "window_u_value_w_m2k": 2.6,
+      "wwr": 0.25
+    },
+    "floor_area_m2": 120.0,
+    "metrics": {
+      "carbon_kgco2e": 6652.995,
+      "cooling_kwh": 0.0,
+      "daylight_proxy": 0.5567,
+      "equipment_kwh": 6517.81,
+      "eui_kwh_m2": 153.834,
+      "fan_kwh": 0.0,
+      "heating_kwh": 2270.684,
+      "hvac_energy_kwh": 2270.684,
+      "iaq_proxy": 0.8725,
+      "lighting_kwh": 9671.589,
+      "peak_cooling_kw": 31.916,
+      "peak_heating_kw": 22.0,
+      "total_site_energy_kwh": 18460.083,
+      "unmet_hours": 33.64
+    },
+    "space_names": [
+      "READING",
+      "STACKS",
+      "SERVICE"
+    ],
+    "thermal_zone_names": [
+      "READING-ZN",
+      "STACKS-ZN",
+      "SERVICE-ZN"
+    ]
+  },
+  "case_id": "quant-cli-openstudio-task-03-ubuntu",
+  "energy_model": {
+    "carbon_factors_kgco2e_per_kwh": {
+      "electricity": 0.385,
+      "gas": 0.185
+    },
+    "component_reference": {
+      "cooling_kwh": 5900,
+      "equipment_kwh": 3900,
+      "fan_kwh": 2300,
+      "heating_kwh": 5200,
+      "lighting_kwh": 5200,
+      "peak_cooling_kw": 34.0,
+      "peak_heating_kw": 22.0,
+      "unmet_hours": 44
+    },
+    "notes": "Evaluator reruns EnergyPlus when available, parses standard SQLite report tables, recomputes deterministic IDF plausibility bounds from metadata, and rejects submitted SQL/report metrics that are inconsistent or unrealistically better than the model variables support."
+  },
+  "hard_constraints": {
+    "exterior_wall_area_tolerance_fraction": 0.02,
+    "floor_area_tolerance_fraction": 0.01,
+    "max_sql_better_than_model_proxy_fraction": 0.22,
+    "max_unmet_hours": 90,
+    "min_total_site_energy_kwh_per_m2": 28.0,
+    "space_count": 3,
+    "space_names": [
+      "READING",
+      "STACKS",
+      "SERVICE"
+    ],
+    "thermal_zone_count": 3,
+    "thermal_zone_names": [
+      "READING-ZN",
+      "STACKS-ZN",
+      "SERVICE-ZN"
+    ],
+    "variable_ranges": {
+      "cooling_setpoint_c": [
+        24.0,
+        26.5
+      ],
+      "daylight_control_fraction": [
+        0.1,
+        0.7
+      ],
+      "equipment_w_per_m2": [
+        3.0,
+        7.0
+      ],
+      "heating_setpoint_c": [
+        19.0,
+        21.0
+      ],
+      "hvac_availability_fraction": [
+        0.55,
+        0.9
+      ],
+      "infiltration_ach": [
+        0.35,
+        0.6
+      ],
+      "lighting_w_per_m2": [
+        4.8,
+        9.0
+      ],
+      "occupied_hours_fraction": [
+        0.38,
+        0.58
+      ],
+      "people_density_m2": [
+        0.025,
+        0.065
+      ],
+      "roof_r_value_m2k_w": [
+        4.0,
+        7.0
+      ],
+      "shade_ratio": [
+        0.1,
+        0.7
+      ],
+      "wall_r_value_m2k_w": [
+        2.6,
+        4.8
+      ],
+      "window_shgc": [
+        0.28,
+        0.52
+      ],
+      "window_u_value_w_m2k": [
+        1.4,
+        2.8
+      ],
+      "wwr": [
+        0.18,
+        0.3
+      ]
+    }
+  },
+  "input_hashes": {
+    "baseline_idf_sha256": "ab494c27c3ba47a305ce2ee6611108a6068700cfe0fe144dc5e3782848c9b624",
+    "weather_sha256": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1"
+  },
+  "objective": "Reduce HVAC energy for a reading room, stacks, and service suite by optimizing occupied setpoints, HVAC availability, lighting density, and plug-load schedules while keeping unmet hours below the hard limit.",
+  "required_outputs": {
+    "design_summary_json": "/home/user/Desktop/design_summary.json",
+    "energy_report_csv": "/home/user/Desktop/energy_report.csv",
+    "energyplus_err": "/home/user/Desktop/run/eplusout.err",
+    "energyplus_sql": "/home/user/Desktop/run/eplusout.sql",
+    "optimized_idf": "/home/user/Desktop/optimized.idf"
+  },
+  "scoring": {
+    "continuous_score_range": [
+      0.0,
+      1.0
+    ],
+    "hard_constraint_score": 0.0,
+    "terms": [
+      {
+        "kind": "reduction",
+        "metric": "hvac_energy_kwh",
+        "name": "hvac_reduction",
+        "target_fraction": 0.38,
+        "weight": 0.5
+      },
+      {
+        "kind": "reduction",
+        "metric": "eui_kwh_m2",
+        "name": "eui_reduction",
+        "target_fraction": 0.28,
+        "weight": 0.24
+      },
+      {
+        "kind": "under_limit",
+        "limit": 90,
+        "metric": "unmet_hours",
+        "name": "comfort_margin",
+        "weight": 0.16
+      },
+      {
+        "kind": "reduction",
+        "metric": "lighting_kwh",
+        "name": "lighting_reduction",
+        "target_fraction": 0.34,
+        "weight": 0.1
+      }
+    ]
+  },
+  "task_family": "cli-openstudio-energy-optimization",
+  "title": "HVAC setpoint and schedule energy optimization"
+}

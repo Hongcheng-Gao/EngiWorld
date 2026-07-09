@@ -1,0 +1,53 @@
+{
+  "id": "opt-ansys-gui-04",
+  "title": "ANSYS GUI heat-sink thermal-resistance optimization",
+  "kind": "thermal",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": "Minimize thermal resistance while preserving fixed thermal interfaces.",
+  "objective_direction": "minimize",
+  "metric_name": "thermal_resistance",
+  "metric_units": "K_per_W",
+  "result_suffixes": [
+    ".rth"
+  ],
+  "submission_files": [
+    "submission.db",
+    "submission.rth"
+  ],
+  "baseline_files": [
+    "baseline_wb_conduction.wbpj",
+    "baseline_wb_conduction.db",
+    "baseline_wb_conduction.rth",
+    "baseline_wb_conduction.rst"
+  ],
+  "fixed_features": [
+    "heat-source face",
+    "cold boundary or ambient condition",
+    "thermal material conductivity",
+    "outer envelope"
+  ],
+  "constraints": {
+    "ambient_temperature_c": 20.0,
+    "heat_power_w": 1.0,
+    "thermal_conductivity": 50.0,
+    "submitted_volume_must_not_exceed_baseline": true
+  },
+  "calibration_status": "pending_vm_calibration",
+  "baseline": {
+    "artifact": "init_file/",
+    "files": [
+      "baseline_wb_conduction.wbpj",
+      "baseline_wb_conduction.db",
+      "baseline_wb_conduction.rth",
+      "baseline_wb_conduction.rst"
+    ],
+    "metric_value": null,
+    "metric_units": "K_per_W",
+    "metric_source": "computed_dynamically_by_eval_on_windows_ansys_vm",
+    "meaning": "visible initial feasible GUI starting point, not a reference optimum"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/"
+  }
+}

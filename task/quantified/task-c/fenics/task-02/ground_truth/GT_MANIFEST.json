@@ -1,0 +1,25 @@
+{
+  "schema_version": 1,
+  "task_id": "opt-fenics-02",
+  "ground_truth_policy": "baseline-only scoring with explicit positive reference sample",
+  "baseline_sample": {
+    "artifact": "init_file/baseline_conductivity_mask.csv",
+    "expected_score": 0.0,
+    "meaning": "visible initial feasible design, not a reference optimum"
+  },
+  "reference_sample": {
+    "artifact": "ground_truth/reference/",
+    "files": [
+      "solve_submission.py",
+      "conductivity_mask.csv",
+      "temperature.xdmf"
+    ],
+    "expected_score_min": 0.05,
+    "meaning": "deterministic feasible improved sample for evaluator sanity checks, not a proven global optimum",
+    "description": "Five-cell-high conductive band from cold boundary to heat source."
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/conductivity_mask.csv",
+    "expected_score": 0.0
+  }
+}

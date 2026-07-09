@@ -1,0 +1,64 @@
+{
+  "critical_requirement": "The OpenSCAD clamp must leave a keepout over L1 and the FreeCAD assembly must report positive clearance over the bulk capacitor.",
+  "domain": "power converter thermal clamp",
+  "key_metrics": {
+    "board_bbox_mm": [
+      104,
+      62,
+      1.6
+    ],
+    "enclosure_bbox_mm": [
+      117.2,
+      75.2,
+      18.6
+    ],
+    "estimated_shell_mass_g": 72.424,
+    "side_clearance_mm": 4.0,
+    "top_clearance_mm": 2.4
+  },
+  "release_decision": "pass",
+  "required_artifacts": [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_export.json",
+    "01_kicad_mechanical_map.csv",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.step",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.obj",
+    "04_blender_review.mtl",
+    "04_blender_scene_report.json",
+    "toolchain_invocation_log.json",
+    "final_release_package.json"
+  ],
+  "software_sequence": [
+    "KiCad",
+    "OpenSCAD",
+    "FreeCAD",
+    "Blender"
+  ],
+  "stage_outputs": {
+    "Blender": [
+      "04_blender_review.obj",
+      "04_blender_review.mtl",
+      "04_blender_scene_report.json"
+    ],
+    "FreeCAD": [
+      "03_freecad_assembly.step",
+      "03_freecad_clearance_report.json"
+    ],
+    "KiCad": [
+      "01_kicad_board.kicad_pcb",
+      "01_kicad_export.json",
+      "01_kicad_mechanical_map.csv"
+    ],
+    "OpenSCAD": [
+      "02_openscad_enclosure.scad",
+      "02_openscad_enclosure.stl",
+      "02_openscad_parameters.json"
+    ]
+  },
+  "task": "task-02",
+  "title": "Buck regulator heat-spreader clamp package"
+}

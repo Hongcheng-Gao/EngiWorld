@@ -1,0 +1,64 @@
+{
+  "id": "multi-cli-3-revit-archicad-openstudio-task-05-windows",
+  "snapshot": "cli3-revit2025-archicad27-openstudio310-win",
+  "difficulty": "hard",
+  "instruction": "Required staged workflow: this task starts from the provided seed file C:\\Users\\user\\Desktop\\init.ifc. Do not start from a blank or unrelated model. You must complete the work in exactly three dependent software stages, in this order; do not skip stages, reorder stages, or generate the final package from scratch in only one tool. Stage 1 - Revit automation/CLI: open C:\\Users\\user\\Desktop\\init.ifc in the Revit automation environment, add UPPER-READING on level 2 while preserving the two-storey massing and stair opening relationship, and export C:\\Users\\user\\Desktop\\stage1.ifc as the Revit BIM intermediate result. During this same Revit stage, derive C:\\Users\\user\\Desktop\\revit_handoff.json from stage1.ifc. The Revit handoff must include source_sha256 for stage1.ifc, software_stage or equivalent value revit, the case id multi-cli-3-revit-archicad-openstudio-task-05-windows, and the required named spaces GROUND-PUBLIC, UPPER-ACTIVITY, UPPER-READING. The Revit-authored IFC must carry these stage-1 coordination tokens: EW3B05, GROUND-PUBLIC, UPPER-ACTIVITY, UPPER-READING, STAIR-OPENING, TWO-STOREY, multi-cli-3-revit-archicad-openstudio-task-05-windows. Stage 2 - Archicad CLI/API: consume C:\\Users\\user\\Desktop\\stage1.ifc and C:\\Users\\user\\Desktop\\revit_handoff.json in Archicad. Use Archicad to validate storey containment, stair opening relation, upper reading boundary, and multi-storey handoff fields, then save C:\\Users\\user\\Desktop\\stage2.ifc. Also create C:\\Users\\user\\Desktop\\archicad_validation_report.json with source_sha256 for stage1.ifc, output_sha256 for stage2.ifc, entity counts, space names, software_stage or equivalent value archicad, Archicad QA status, and any blocking errors as an empty or passed value. Create C:\\Users\\user\\Desktop\\archicad_handoff.json with source_sha256 for stage2.ifc, stage1_sha256 for stage1.ifc, revit_handoff_sha256, software_stage or equivalent value archicad, the required spaces, thermal zones, handoff tokens, building_area_m2, per-space area_m2, per-space storey, weather_file, schedule_set, and construction_set. The Archicad-validated IFC and validation report must carry these stage-2 tokens: ARCHICAD-QA-PASS, STOREY-CONTAINMENT, STAIR-OPENING-RELATION, UPPER-READING-BOUNDARY, GROUND-PUBLIC, UPPER-ACTIVITY, UPPER-READING, multi-cli-3-revit-archicad-openstudio-task-05-windows. The Archicad handoff must carry these tokens for OpenStudio: GROUND-PUBLIC-SCHEDULE, UPPER-ACTIVITY-SCHEDULE, READING-LOW-LIGHTING, MULTI-STOREY-HANDOFF. Stage 3 - OpenStudio CLI/Ruby API: consume C:\\Users\\user\\Desktop\\archicad_handoff.json and use C:\\Users\\user\\Desktop\\stage2.ifc only as the upstream Archicad-validated BIM reference. Generate C:\\Users\\user\\Desktop\\result.osm, C:\\Users\\user\\Desktop\\in.idf, C:\\Users\\user\\Desktop\\flow_report.json, C:\\Users\\user\\Desktop\\model_summary.csv, and C:\\Users\\user\\Desktop\\energy_report.csv from that Archicad handoff. result.osm must include the first 12 characters of sha256(archicad_handoff.json), the first 12 characters of sha256(stage2.ifc), and the weather_file, schedule_set, and construction_set values from archicad_handoff.json. flow_report.json must record consumed_handoff_sha256 for archicad_handoff.json, stage2_sha256 for stage2.ifc, osm_sha256 for result.osm, idf_sha256 for in.idf, and energy_report_sha256 for energy_report.csv. model_summary.csv must include case_id, space_name, thermal_zone, source_handoff_sha256, source_stage2_sha256, area_m2, storey, weather_file, schedule_set, and construction_set for each exported space or thermal zone. in.idf must include the same spaces, thermal zones, EnergyPlus Zone objects, building surfaces, the first 12 characters of sha256(archicad_handoff.json), the first 12 characters of sha256(stage2.ifc), and the same weather_file, schedule_set, and construction_set values. energy_report.csv must include case_id, building_area_m2, space_count, thermal_zone_count, total_site_energy_kwh, peak_load_kw, eui_kwh_m2, source_handoff_sha256, source_stage2_sha256, weather_file, schedule_set, construction_set, plus the exported space and thermal zone names; building_area_m2 must match the sum of model_summary.csv area_m2 values within tolerance. The OpenStudio model should represent GROUND-PUBLIC-ZN, UPPER-ACTIVITY-ZN, and UPPER-READING-ZN with story-aware schedules and reading-room lighting assumptions from the Archicad handoff. Include thermal zones GROUND-PUBLIC-ZN, UPPER-ACTIVITY-ZN, UPPER-READING-ZN, OSM tokens GroundPublicSchedule, UpperActivitySchedule, ReadingLowLighting, BuildingStory:Level 2, and model summary tokens GROUND-PUBLIC, UPPER-ACTIVITY, UPPER-READING. The evaluator checks the dependency chain init.ifc -> stage1.ifc/revit_handoff.json -> stage2.ifc/archicad_handoff.json/archicad_validation_report.json -> result.osm/in.idf/flow_report.json/model_summary.csv/energy_report.csv. Outputs are invalid if any delivered IFC, JSON, OSM, IDF, or CSV is directly created, rewritten, copied, patched, or post-processed outside the appropriate Revit, Archicad, or OpenStudio software stage. The seed is a two-storey community centre with public ground-floor activity and an upper activity area. Keep the space names GROUND-PUBLIC, UPPER-ACTIVITY, UPPER-READING and mark coordinated BIM and handoff data with revision code EW3B05.",
+  "source": "https://www.revitapidocs.com/2022/7efa4eb3-8d94-b8e7-f608-3dbae751331d.htm; https://archicadapi.graphisoft.com/JSONInterfaceDocumentation/; https://archicadapi.graphisoft.com/archicadPythonPackage/archicad.html; https://natlabrockies.github.io/OpenStudio-user-documentation/reference/command_line_interface/; https://openstudiocoalition.org/getting_started/getting_started/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit",
+    "archicad",
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "category": "multi",
+  "interface": "cli",
+  "software_chain": [
+    "revit",
+    "archicad",
+    "openstudio"
+  ],
+  "notes": "OpenStudio is used only to create and inspect OSM and derived model summary artifacts; no external simulator outputs are expected."
+}

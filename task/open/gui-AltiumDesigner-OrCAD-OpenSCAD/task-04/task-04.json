@@ -1,0 +1,83 @@
+﻿{
+  "id": "v-altium-orcad-open-task-04-windows",
+  "snapshot": "altium-orcad-open",
+  "instruction": "Complete the task through graphical EDA workflows in Altium Designer, OrCAD Capture, or OpenSCAD. Do not use scripts or command-line automation to directly generate or edit the deliverable files. Using a GUI EDA workflow, open `tutor2_wrong_values` and correct the specified component values. Requirements: - Write `tutor2_values.edif`, `tutor2_values.schematic.json`, and `value_report.csv`. - Correct `R1`, `R2`, `C1`, and `C2`; leave other components unchanged. [Software] Altium Designer is available at `D:\\Altium\\AD26\\X2.EXE`. OrCAD Capture is available at `D:\\orcad\\tools\\bin\\Capture.exe`. OpenSCAD is available as `openscad`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/tutor2_wrong_values.edif",
+            "path": "C:\\Users\\user\\Desktop\\tutor2_wrong_values.edif"
+          },
+          {
+            "local_path": "task-04/init_file/tutor2_wrong_values.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\tutor2_wrong_values.schematic.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Altium\\AD26\\X2.EXE"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\orcad\\tools\\bin\\Capture.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "open_software_roles": {
+    "candidate_software": [
+      "altium-designer",
+      "cadence-orcad"
+    ],
+    "distractor_software": "openscad",
+    "source_task": "OrCAD task-v/12"
+  }
+}

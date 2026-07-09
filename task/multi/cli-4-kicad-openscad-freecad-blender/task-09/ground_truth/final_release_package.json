@@ -1,0 +1,64 @@
+{
+  "critical_requirement": "The heater zones must be exposed in the Blender material review while the USB and sync connectors get separate side apertures.",
+  "domain": "calibration target electronics mount",
+  "key_metrics": {
+    "board_bbox_mm": [
+      118,
+      92,
+      1.6
+    ],
+    "enclosure_bbox_mm": [
+      131.0,
+      105.0,
+      25.1
+    ],
+    "estimated_shell_mass_g": 121.424,
+    "side_clearance_mm": 4.0,
+    "top_clearance_mm": 3.0
+  },
+  "release_decision": "pass",
+  "required_artifacts": [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_export.json",
+    "01_kicad_mechanical_map.csv",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.step",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.obj",
+    "04_blender_review.mtl",
+    "04_blender_scene_report.json",
+    "toolchain_invocation_log.json",
+    "final_release_package.json"
+  ],
+  "software_sequence": [
+    "KiCad",
+    "OpenSCAD",
+    "FreeCAD",
+    "Blender"
+  ],
+  "stage_outputs": {
+    "Blender": [
+      "04_blender_review.obj",
+      "04_blender_review.mtl",
+      "04_blender_scene_report.json"
+    ],
+    "FreeCAD": [
+      "03_freecad_assembly.step",
+      "03_freecad_clearance_report.json"
+    ],
+    "KiCad": [
+      "01_kicad_board.kicad_pcb",
+      "01_kicad_export.json",
+      "01_kicad_mechanical_map.csv"
+    ],
+    "OpenSCAD": [
+      "02_openscad_enclosure.scad",
+      "02_openscad_enclosure.stl",
+      "02_openscad_parameters.json"
+    ]
+  },
+  "task": "task-09",
+  "title": "Thermal camera calibration target PCB mount"
+}

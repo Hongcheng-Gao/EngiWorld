@@ -1,0 +1,64 @@
+{
+  "commands": [
+    {
+      "command": "kicad-cli pcb export step board_input.kicad_pcb --output board.step && python3 kicad_extract_mechanical_map.py",
+      "inputs": [
+        "board_input.kicad_pcb",
+        "mechanical_requirements.json",
+        "connector_keepouts.csv"
+      ],
+      "outputs": [
+        "01_kicad_board.kicad_pcb",
+        "01_kicad_export.json",
+        "01_kicad_mechanical_map.csv"
+      ],
+      "software": "KiCad"
+    },
+    {
+      "command": "openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
+      "inputs": [
+        "01_kicad_mechanical_map.csv",
+        "enclosure_seed.scad"
+      ],
+      "outputs": [
+        "02_openscad_enclosure.scad",
+        "02_openscad_enclosure.stl",
+        "02_openscad_parameters.json"
+      ],
+      "software": "OpenSCAD"
+    },
+    {
+      "command": "FreeCADCmd freecad_assembly_check.py",
+      "inputs": [
+        "01_kicad_board.kicad_pcb",
+        "02_openscad_enclosure.stl",
+        "02_openscad_parameters.json"
+      ],
+      "outputs": [
+        "03_freecad_assembly.step",
+        "03_freecad_clearance_report.json"
+      ],
+      "software": "FreeCAD"
+    },
+    {
+      "command": "blender --background --python blender_release_review.py",
+      "inputs": [
+        "03_freecad_assembly.step",
+        "03_freecad_clearance_report.json"
+      ],
+      "outputs": [
+        "04_blender_review.obj",
+        "04_blender_review.mtl",
+        "04_blender_scene_report.json"
+      ],
+      "software": "Blender"
+    }
+  ],
+  "required_software_sequence": [
+    "KiCad",
+    "OpenSCAD",
+    "FreeCAD",
+    "Blender"
+  ],
+  "task": "task-05"
+}

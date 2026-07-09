@@ -1,0 +1,36 @@
+{
+  "id": "opt-ansys-gui-04",
+  "title": "ANSYS GUI heat-sink thermal-resistance optimization",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": "Minimize thermal resistance while preserving fixed thermal interfaces.",
+  "fixed_features": [
+    "heat-source face",
+    "cold boundary or ambient condition",
+    "thermal material conductivity",
+    "outer envelope"
+  ],
+  "constraints": {
+    "ambient_temperature_c": 20.0,
+    "heat_power_w": 1.0,
+    "thermal_conductivity": 50.0,
+    "submitted_volume_must_not_exceed_baseline": true
+  },
+  "baseline": {
+    "files": [
+      "baseline_wb_conduction.wbpj",
+      "baseline_wb_conduction.db",
+      "baseline_wb_conduction.rth",
+      "baseline_wb_conduction.rst"
+    ]
+  },
+  "submission": {
+    "files": [
+      "submission.db",
+      "submission.rth"
+    ]
+  },
+  "workflow": {
+    "must_use": "interactive graphical interface"
+  }
+}

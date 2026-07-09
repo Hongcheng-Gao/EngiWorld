@@ -1,0 +1,59 @@
+{
+  "id": "open-choice-cli-bim-task-05-windows",
+  "snapshot": "Revit2025-ArchiCAD27-Abaqus2025",
+  "difficulty": "simple",
+  "instruction": "Open-choice CLI requirement: This environment provides three candidate engineering toolchains, including BIM-capable tools and a distractor tool. Choose an appropriate BIM-capable command-line or official automation workflow from these options to edit C:\\Users\\user\\Desktop\\init.ifc and export the completed IFC4 deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not directly create, rewrite, patch, copy, or post-process IFC outside the selected BIM toolchain. The current model is a simple flat-topped garden gallery. The landscape architect wants it to read more like a light rural pavilion by adding a modest sloped roof, while keeping the single gallery space and the rectangular footprint stable.",
+  "source": "Open-choice BIM environment; evaluation checks IFC deliverable semantics rather than the selected tool.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit",
+    "archicad",
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "category": "open-choice",
+  "interface": "cli",
+  "candidate_app_count": 3
+}

@@ -1,0 +1,50 @@
+{
+  "id": "v-cae-commercial-open-choice-task-05-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Choose a suitable finite-element simulation tool available in the current Windows fused environment. The task must be completed through an interactive graphical workflow. Use the selected finite-element simulation tool to perform a constrained thermal stress analysis (Case B). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch an 8 mm x 8 mm rectangle in the Y-Z plane (Y from 0 to 8, Z from 0 to 8) and extrude along the global X-axis to a length of 120 mm. Material and Section: Define a material named Aluminum with Young's modulus E = 70000 MPa, Poisson's ratio nu = 0.33, and thermal expansion coefficient = 2.3e-5 /K. Create a Solid Homogeneous section using Aluminum and assign it to the entire bar. Assembly: Create one dependent instance of the bar. Analysis Step: Create a Static, General step named Step-Thermal-B. Loads and Boundary Conditions: Apply a predefined temperature field of 20 degC to the whole model in the Initial step. Constrain both end faces with U1 = U2 = U3 = 0: the left end face at X = 0 and the right end face at X = 120 mm. In Step-Thermal-B, apply a predefined temperature field of 100 degC to the whole model. Discretization: Mesh the bar with a global seed size of 6 mm. Assign the element type appropriate three-dimensional solid element formulation and generate the mesh. Job Execution: Create a job named Job-ThermalStress-B, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: save the native model artifact and native solver result artifact on the Desktop.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-v/abaqus/task-15",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

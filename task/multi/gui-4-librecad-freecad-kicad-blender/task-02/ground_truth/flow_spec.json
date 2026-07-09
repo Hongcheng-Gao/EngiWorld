@@ -1,0 +1,185 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-02-ubuntu",
+  "owner": "taozhuo",
+  "title": "Hexagonal air quality wall badge with vent grille",
+  "domain": "environmental_sensor_badge",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G02",
+  "required_files": [
+    "stage1_hex_air_quality_badge.dxf",
+    "stage2_hex_air_quality_badge.stl",
+    "stage2_hex_air_quality_badge_handoff_outline.dxf",
+    "stage3_hex_air_quality_badge_board.kicad_pcb",
+    "stage3_hex_air_quality_badge_board_profile.svg",
+    "stage4_hex_air_quality_badge.glb"
+  ],
+  "dxf": {
+    "file": "stage1_hex_air_quality_badge.dxf",
+    "bbox": [
+      110.0,
+      96.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "VENT",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        55.0,
+        82.0,
+        2.5
+      ],
+      [
+        20.0,
+        22.0,
+        2.5
+      ],
+      [
+        90.0,
+        22.0,
+        2.5
+      ],
+      [
+        55.0,
+        48.0,
+        18.0
+      ]
+    ],
+    "texts": [
+      "EW4G02",
+      "VOC",
+      "CO2",
+      "VENT-7"
+    ],
+    "min_lines": 4,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_hex_air_quality_badge.stl",
+    "bbox": [
+      110.0,
+      96.0,
+      12.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 12
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G02",
+      "VOC-U1",
+      "CO2-U2",
+      "BAT-J1",
+      "VENT-KEEP",
+      "I2C-J2"
+    ]
+  },
+  "glb": {
+    "file": "stage4_hex_air_quality_badge.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_hex_air_quality_badge",
+      "stage3_hex_air_quality_badge_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_hex_air_quality_badge",
+      "stage3_svg_object": "stage3_hex_air_quality_badge_board_profile.svg"
+    }
+  },
+  "diversity_notes": {
+    "geometry": "Hexagonal air quality wall badge with vent grille",
+    "electronic_focus": "a hex PCB with VOC and CO2 sensor locations, battery connector, and a vent keepout",
+    "visualization_focus": "a wall-mounted badge scene showing the grille, three standoffs, and sensor PCB"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_hex_air_quality_badge.dxf",
+    "desktop_path": "/home/user/Desktop/seed_hex_air_quality_badge.dxf"
+  },
+  "generated_by": {
+    "script": "generate_assets.py",
+    "packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy",
+      "xml.sax.saxutils"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_hex_air_quality_badge_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_hex_air_quality_badge_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_hex_air_quality_badge.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_hex_air_quality_badge.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_hex_air_quality_badge_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_hex_air_quality_badge_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_hex_air_quality_badge_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_hex_air_quality_badge_board.kicad_pcb"
+  }
+}

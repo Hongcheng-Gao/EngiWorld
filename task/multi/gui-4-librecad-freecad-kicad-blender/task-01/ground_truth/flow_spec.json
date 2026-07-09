@@ -1,0 +1,195 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-01-ubuntu",
+  "owner": "taozhuo",
+  "title": "DIN rail sensor node enclosure with USB and LED windows",
+  "domain": "industrial_iot_enclosure",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G01",
+  "required_files": [
+    "stage1_sensor_node_enclosure.dxf",
+    "stage2_sensor_node_enclosure.stl",
+    "stage2_sensor_node_enclosure_handoff_outline.dxf",
+    "stage3_sensor_node_enclosure_board.kicad_pcb",
+    "stage3_sensor_node_enclosure_board_profile.svg",
+    "stage4_sensor_node_enclosure.glb"
+  ],
+  "dxf": {
+    "file": "stage1_sensor_node_enclosure.dxf",
+    "bbox": [
+      92.0,
+      58.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "PORT",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        8.0,
+        8.0,
+        2.2
+      ],
+      [
+        84.0,
+        8.0,
+        2.2
+      ],
+      [
+        8.0,
+        50.0,
+        2.2
+      ],
+      [
+        84.0,
+        50.0,
+        2.2
+      ],
+      [
+        72.0,
+        29.0,
+        1.6
+      ],
+      [
+        80.0,
+        29.0,
+        1.6
+      ]
+    ],
+    "texts": [
+      "EW4G01",
+      "USB-C",
+      "LED-A",
+      "LED-B"
+    ],
+    "min_lines": 4,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_sensor_node_enclosure.stl",
+    "bbox": [
+      92.0,
+      58.0,
+      22.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 12
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G01",
+      "MCU-U1",
+      "USB-C-J1",
+      "LED1",
+      "LED2",
+      "SENSOR-J2"
+    ]
+  },
+  "glb": {
+    "file": "stage4_sensor_node_enclosure.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_sensor_node_enclosure",
+      "stage3_sensor_node_enclosure_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_sensor_node_enclosure",
+      "stage3_svg_object": "stage3_sensor_node_enclosure_board_profile.svg"
+    }
+  },
+  "diversity_notes": {
+    "geometry": "DIN rail sensor node enclosure with USB and LED windows",
+    "electronic_focus": "a sensor-node PCB with USB-C connector, MCU, sensor header, and two LED footprints",
+    "visualization_focus": "an assembled enclosure with visible USB window and two translucent LED lenses"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_sensor_node_enclosure.dxf",
+    "desktop_path": "/home/user/Desktop/seed_sensor_node_enclosure.dxf"
+  },
+  "generated_by": {
+    "script": "generate_assets.py",
+    "packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy",
+      "xml.sax.saxutils"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_sensor_node_enclosure_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_sensor_node_enclosure_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_sensor_node_enclosure.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_sensor_node_enclosure.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_sensor_node_enclosure_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_sensor_node_enclosure_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_sensor_node_enclosure_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_sensor_node_enclosure_board.kicad_pcb"
+  }
+}

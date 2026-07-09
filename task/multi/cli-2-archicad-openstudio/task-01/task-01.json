@@ -1,0 +1,62 @@
+{
+  "id": "multi-cli-2-archicad-openstudio-task-01-windows",
+  "snapshot": "cli2-archicad27-openstudio310-win",
+  "difficulty": "hard",
+  "instruction": "Required staged workflow: this task starts from the provided seed file C:\\Users\\user\\Desktop\\init.ifc. Do not start from a blank or unrelated model. You must complete the work in exactly two dependent software stages, in this order; do not skip stages, reorder stages, or generate the final package from scratch in only one tool. Stage 1 - Archicad CLI/API: open C:\\Users\\user\\Desktop\\init.ifc in the Archicad command-line/API environment, preserve the seed model baseline unless the case text explicitly asks for a change, perform the BIM authoring work, and export C:\\Users\\user\\Desktop\\stage1.ifc as the BIM intermediate result. During this same Archicad stage, derive C:\\Users\\user\\Desktop\\handoff.json from stage1.ifc. The handoff must include source_sha256 for stage1.ifc, software_stage or equivalent value archicad, the case id multi-cli-2-archicad-openstudio-task-01-windows, the required space names, thermal-zone names, and handoff tokens needed by OpenStudio. Stage 2 - OpenStudio CLI/Ruby API: consume C:\\Users\\user\\Desktop\\handoff.json and use C:\\Users\\user\\Desktop\\stage1.ifc only as the upstream BIM reference. Generate C:\\Users\\user\\Desktop\\result.osm, C:\\Users\\user\\Desktop\\flow_report.json, and C:\\Users\\user\\Desktop\\model_summary.csv from that Archicad handoff. In addition to the named files, handoff.json must include spaces[] records with name, thermal_zone, floor_area_m2, door_count, window_count and BIM entity counts from stage1.ifc. flow_report.json must include consumed_handoff_sha256, osm_sha256, building_area_m2, room_count, thermal_zone_count, door_count, window_count, window_wall_ratio, surface_count, subsurface_count, weather_file, schedule_set, construction_set, and openstudio_version. model_summary.csv must include columns case_id, space_name, thermal_zone, floor_area_m2, source_handoff_sha256, source_stage1_sha256, energy_use_kwh, and peak_load_w. The evaluator checks these structured values against stage1.ifc, handoff.json, result.osm, flow_report.json, and model_summary.csv rather than accepting a standalone final CSV. flow_report.json must record the consumed handoff hash and the result.osm hash; model_summary.csv must record the consumed handoff hash for each exported space or thermal zone. The evaluator checks the dependency chain init.ifc -> stage1.ifc -> handoff.json -> result.osm/flow_report.json/model_summary.csv. Outputs are invalid if any delivered IFC, JSON, OSM, or CSV is directly created, rewritten, copied, patched, or post-processed outside the appropriate Archicad or OpenStudio software stage. The model is a compact temporary construction-site office shell with one unassigned support room and a south entrance wall. The owner needs a traceable BIM-to-OpenStudio package for site office print/copy handoff. Register the previously unassigned support room as PRINT-COPY, keep the compact office shell, keep one south-facing entrance window, and tag the north and west enclosure as opaque external envelope. The OpenStudio model should carry distinct thermal zones for SITE-OFFICE-ZN, PRINT-COPY-ZN with schedules and load assumptions consistent with those uses. Keep the space names SITE-OFFICE, PRINT-COPY and mark coordinated BIM and handoff data with revision code EW2A01.",
+  "source": "https://archicadapi.graphisoft.com/JSONInterfaceDocumentation/; https://archicadapi.graphisoft.com/archicadPythonPackage/archicad.html; https://www.revitapidocs.com/2022/7efa4eb3-8d94-b8e7-f608-3dbae751331d.htm; https://standards.buildingsmart.org/IFC/RELEASE/IFC4_3/HTML/lexical/IfcSpace.htm; https://natlabrockies.github.io/OpenStudio-user-documentation/reference/command_line_interface/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad",
+    "openstudio"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "category": "multi",
+  "interface": "cli",
+  "software_chain": [
+    "archicad",
+    "openstudio"
+  ],
+  "notes": "OpenStudio is used only to create and inspect OSM and derived model summary artifacts; no external simulator outputs are expected."
+}

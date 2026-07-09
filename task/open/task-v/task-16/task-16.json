@@ -1,0 +1,50 @@
+{
+  "id": "v-cae-commercial-open-choice-task-16-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Choose a suitable finite-element simulation tool available in the current Windows fused environment. The task must be completed through an interactive graphical workflow. Use the selected finite-element simulation tool to build and solve a 2D axisymmetric structural model of a thick-walled cylinder under internal pressure. Physical problem: Axisymmetric thick-walled cylinder under internal pressure. Coordinate system and geometry: - Use the global Cartesian coordinate system for the axisymmetric cross-section. - X is the radial direction. - Y is the axial direction. - The cylinder has an inner diameter of 50 mm and an outer diameter of 100 mm. - Therefore, model the radial domain from X = 25 mm to X = 50 mm. - The axial thickness is 10 mm. - Model the rectangular axisymmetric cross-section: - 25 ≤ X ≤ 50 mm - 0 ≤ Y ≤ 10 mm - Do not model or constrain a symmetry axis at X = 0, because the cylinder has a central hole and the axis is outside the modeled annular cross-section. Model parameters: - Material: linear elastic steel - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Element type: appropriate two-dimensional plane or axisymmetric element formulation with axisymmetric option enabled - Mesh: global element size 5 mm Boundary conditions and load: - Inner cylindrical surface at X = 25 mm: apply an internal pressure of 10 MPa acting on the cylinder wall. - Outer cylindrical surface at X = 50 mm: free surface. - Axial faces: - At Y = 0 mm: constrain axial displacement UY = 0. - At Y = 10 mm: constrain axial displacement UY = 0. - Do not constrain radial displacement UX on the inner or outer cylindrical surfaces. Analysis type: - Static structural analysis. Deliverables: save the native model artifact and native solver result artifact on the Desktop.",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data ; generated open-choice variant from task/task-v/ansys/task-06",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

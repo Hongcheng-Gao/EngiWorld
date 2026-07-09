@@ -1,0 +1,59 @@
+{
+  "id": "open-choice-cli-bim-task-01-windows",
+  "snapshot": "Revit2025-ArchiCAD27-Abaqus2025",
+  "difficulty": "simple",
+  "instruction": "Open-choice CLI requirement: This environment provides three candidate engineering toolchains, including BIM-capable tools and a distractor tool. Choose an appropriate BIM-capable command-line or official automation workflow from these options to edit C:\\Users\\user\\Desktop\\init.ifc and export the completed IFC4 deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not directly create, rewrite, patch, copy, or post-process IFC outside the selected BIM toolchain. The current model is a compact single-storey neighbourhood office with a simple flat-roofed form and a south-facing entrance. The tenant wants the small storage room beside the open work area converted into a print room while the perimeter, reception area, and open office relationship remain intact.",
+  "source": "Open-choice BIM environment; evaluation checks IFC deliverable semantics rather than the selected tool.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit",
+    "archicad",
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "category": "open-choice",
+  "interface": "cli",
+  "candidate_app_count": 3
+}

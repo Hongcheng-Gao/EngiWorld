@@ -1,0 +1,49 @@
+{
+  "id": "opt-ansys-gui-05",
+  "title": "ANSYS GUI cantilever stiffness per mass optimization",
+  "kind": "cantilever",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": "Maximize stiffness per unit mass while respecting stress limit.",
+  "objective_direction": "maximize",
+  "metric_name": "stiffness_per_mass",
+  "metric_units": "N_per_mm_per_mass_unit",
+  "result_suffixes": [
+    ".rst"
+  ],
+  "submission_files": [
+    "submission.db",
+    "submission.rst"
+  ],
+  "baseline_files": [
+    "baseline_apdl_solid_beam.db",
+    "baseline_apdl_solid_beam.rst"
+  ],
+  "fixed_features": [
+    "fixed support face",
+    "loaded face",
+    "500 N load",
+    "outer envelope"
+  ],
+  "constraints": {
+    "force_magnitude": 500.0,
+    "allowable_mises": 160.0,
+    "fixed_support": "one end face",
+    "loaded_region": "opposite end face"
+  },
+  "calibration_status": "pending_vm_calibration",
+  "baseline": {
+    "artifact": "init_file/",
+    "files": [
+      "baseline_apdl_solid_beam.db",
+      "baseline_apdl_solid_beam.rst"
+    ],
+    "metric_value": null,
+    "metric_units": "N_per_mm_per_mass_unit",
+    "metric_source": "computed_dynamically_by_eval_on_windows_ansys_vm",
+    "meaning": "visible initial feasible GUI starting point, not a reference optimum"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/"
+  }
+}

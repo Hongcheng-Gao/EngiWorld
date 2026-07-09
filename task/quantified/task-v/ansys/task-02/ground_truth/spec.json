@@ -1,0 +1,51 @@
+{
+  "id": "opt-ansys-gui-02",
+  "title": "ANSYS GUI buckling factor per mass optimization",
+  "kind": "buckling",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": "Maximize first buckling factor per unit mass.",
+  "objective_direction": "maximize",
+  "metric_name": "first_buckling_factor_per_mass",
+  "metric_units": "1_per_mass_unit",
+  "result_suffixes": [
+    ".rst"
+  ],
+  "submission_files": [
+    "submission.db",
+    "submission.rst"
+  ],
+  "baseline_files": [
+    "baseline_wb_buckling.wbpj",
+    "baseline_wb_buckling.db",
+    "baseline_wb_buckling.rst"
+  ],
+  "fixed_features": [
+    "column length",
+    "pin-style end constraints",
+    "axial compressive load",
+    "linear eigenvalue buckling analysis type"
+  ],
+  "constraints": {
+    "fixed_length_mm": 1000.0,
+    "reference_compressive_load_n": 1.0,
+    "material_E_mpa": 210000.0,
+    "material_nu": 0.3
+  },
+  "calibration_status": "pending_vm_calibration",
+  "baseline": {
+    "artifact": "init_file/",
+    "files": [
+      "baseline_wb_buckling.wbpj",
+      "baseline_wb_buckling.db",
+      "baseline_wb_buckling.rst"
+    ],
+    "metric_value": null,
+    "metric_units": "1_per_mass_unit",
+    "metric_source": "computed_dynamically_by_eval_on_windows_ansys_vm",
+    "meaning": "visible initial feasible GUI starting point, not a reference optimum"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/"
+  }
+}

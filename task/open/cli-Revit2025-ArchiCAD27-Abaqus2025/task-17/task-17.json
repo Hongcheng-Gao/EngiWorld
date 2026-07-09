@@ -1,0 +1,59 @@
+{
+  "id": "open-choice-cli-bim-task-17-windows",
+  "snapshot": "Revit2025-ArchiCAD27-Abaqus2025",
+  "difficulty": "hard",
+  "instruction": "Open-choice CLI requirement: This environment provides three candidate engineering toolchains, including BIM-capable tools and a distractor tool. Choose an appropriate BIM-capable command-line or official automation workflow from these options to edit C:\\Users\\user\\Desktop\\init.ifc and export the completed IFC4 deliverable as C:\\Users\\user\\Desktop\\result.ifc. Do not directly create, rewrite, patch, copy, or post-process IFC outside the selected BIM toolchain. The current model is a small artist studio with a central studio, office, store, pantry, WC, and a light roof profile. The tenant needs a ventilated finishing booth near the store for material work, but the main studio volume and roof silhouette should remain intact. Add the finishing booth, its access door, and a high ventilation window record so the handover model describes the safer workflow.",
+  "source": "Open-choice BIM environment; evaluation checks IFC deliverable semantics rather than the selected tool.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit",
+    "archicad",
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low",
+  "category": "open-choice",
+  "interface": "cli",
+  "candidate_app_count": 3
+}
