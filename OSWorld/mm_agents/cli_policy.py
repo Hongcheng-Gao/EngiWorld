@@ -364,6 +364,7 @@ _PY_ARTIFACT_ASSIGN_RE = re.compile(
 @dataclass(frozen=True)
 class _TaskPolicy:
     domain: str
+    domains: FrozenSet[str]
     allowed_imports: FrozenSet[str]
     allowed_commands: FrozenSet[str]
 
@@ -394,11 +395,37 @@ def _domain_from_task(task_config: Optional[dict]) -> str:
     return _normalize_domain(task_id.split("-task-", 1)[0])
 
 
-def _policy_for(task_config: Optional[dict]) -> _TaskPolicy:
+def _domains_from_task(task_config: Optional[dict]) -> FrozenSet[str]:
+    if not task_config:
+        return frozenset()
+    domains = []
+    related = task_config.get("related_apps")
+    if isinstance(related, (list, tuple)):
+        domains.extend(_normalize_domain(str(item)) for item in related if item)
+    roles = task_config.get("open_software_roles")
+    if isinstance(roles, dict):
+        candidates = roles.get("candidate_software")
+        if isinstance(candidates, (list, tuple)):
+            domains.extend(_normalize_domain(str(item)) for item in candidates if item)
+        distractor = roles.get("distractor_software")
+        if distractor:
+            domains.append(_normalize_domain(str(distractor)))
+    cleaned = [d for d in domains if d]
+    if cleaned:
+        return frozenset(cleaned)
     domain = _domain_from_task(task_config)
-    allowed_imports = _BASE_ALLOWED_IMPORTS | _TARGET_IMPORTS.get(domain, frozenset())
-    allowed_commands = _ALWAYS_ALLOWED_COMMANDS | _TARGET_COMMANDS.get(domain, frozenset())
-    return _TaskPolicy(domain, frozenset(allowed_imports), frozenset(allowed_commands))
+    return frozenset({domain}) if domain else frozenset()
+
+
+def _policy_for(task_config: Optional[dict]) -> _TaskPolicy:
+    domains = _domains_from_task(task_config)
+    allowed_imports = set(_BASE_ALLOWED_IMPORTS)
+    allowed_commands = set(_ALWAYS_ALLOWED_COMMANDS)
+    for domain in domains:
+        allowed_imports.update(_TARGET_IMPORTS.get(domain, frozenset()))
+        allowed_commands.update(_TARGET_COMMANDS.get(domain, frozenset()))
+    label = ",".join(sorted(domains))
+    return _TaskPolicy(label, frozenset(domains), frozenset(allowed_imports), frozenset(allowed_commands))
 
 
 def _strip_command_suffix(token: str) -> str:
@@ -432,7 +459,7 @@ def _iter_imported_modules(script: str) -> Iterable[str]:
 
 
 def _script_uses_target_api(script: str, policy: _TaskPolicy) -> bool:
-    target_imports = _TARGET_IMPORTS.get(policy.domain, frozenset())
+    target_imports = frozenset().union(*(_TARGET_IMPORTS.get(domain, frozenset()) for domain in policy.domains))
     if not target_imports:
         return False
     target_roots = {module.split(".", 1)[0] for module in target_imports}

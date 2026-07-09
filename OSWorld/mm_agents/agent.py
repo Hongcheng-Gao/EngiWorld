@@ -34,6 +34,7 @@ from mm_agents.prompts import (
     build_gui_screenshot_a11y_prompt,
     build_cli_prompt,
     build_cli_text_prompt,
+    build_task_context_prompt,
 )
 
 try:
@@ -734,6 +735,8 @@ class PromptAgent:
         # turn (timeout happened earlier, parse failed in between), runtime
         # feedback goes in first because it's the older fact.
         self._pending_runtime_error: Optional[str] = None
+        self._task_config: Optional[Dict[str, Any]] = None
+        self._task_context_prompt = ""
         # Per-predict() LLM call telemetry. Reset at the start of every
         # call_llm(); each attempt appends one dict (status, provider, model,
         # raw_finish_reason, http_status, usage, latency_ms, error). The runner
@@ -756,6 +759,14 @@ class PromptAgent:
             self.system_message = build_cli_text_prompt()
         self.system_message = self.system_message.format(
             CLIENT_PASSWORD=self.client_password
+        )
+
+    def set_task_config(self, task_config: Optional[Dict[str, Any]]) -> None:
+        """Attach per-task context used to augment the base system prompt."""
+        self._task_config = task_config or None
+        self._task_context_prompt = build_task_context_prompt(
+            self._task_config,
+            eval_mode=self.eval_mode,
         )
 
     def _format_a11y_observation(self, obs: Dict) -> str:
@@ -784,7 +795,10 @@ class PromptAgent:
         """
         Predict the next action(s) based on the current observation.
         """
-        system_message = self.system_message + "\nYou are asked to complete the following task: {}".format(instruction)
+        system_message = self.system_message
+        if self._task_context_prompt:
+            system_message += "\n\n" + self._task_context_prompt
+        system_message += "\nYou are asked to complete the following task: {}".format(instruction)
         if self._first_system_text is None:
             self._first_system_text = system_message
 
@@ -1958,4 +1972,6 @@ class PromptAgent:
         self._first_user_text = None
         self._pending_parse_error = None
         self._pending_runtime_error = None
+        self._task_config = None
+        self._task_context_prompt = ""
         self._llm_attempts = []

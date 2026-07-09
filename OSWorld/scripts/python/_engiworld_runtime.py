@@ -231,11 +231,31 @@ def load_engiworld_task(base_dir: str, domain: str, example_id: str) -> Dict[str
             f"engiworld task spec not found: {cfg!r}. Expected layout: "
             "<test_config_base_dir>/<domain>/<example_id>/<example_id>.json"
         )
-    with open(cfg, "r", encoding="utf-8") as f:
+    with open(cfg, "r", encoding="utf-8-sig") as f:
         task = json.load(f)
     asset_root = os.path.abspath(os.path.join(base_dir, domain))
     _absolutize_local_paths(task, asset_root, cfg)
+    _annotate_task_family(task, base_dir, domain, cfg)
     return task
+
+
+def _annotate_task_family(task: Dict[str, Any], base_dir: str, domain: str, cfg: str) -> None:
+    norm = os.path.abspath(cfg).replace("\\", "/").lower()
+    base_norm = os.path.abspath(base_dir).replace("\\", "/").lower().rstrip("/")
+    domain_norm = str(domain).replace("\\", "/").lower().strip("/")
+    family = None
+    for candidate in ("open", "multi", "quantified"):
+        if (
+            f"/task/{candidate}/" in norm
+            or base_norm.endswith(f"/task/{candidate}")
+            or domain_norm == candidate
+            or domain_norm.startswith(f"{candidate}/")
+        ):
+            family = candidate
+            break
+    if family:
+        task["_engiworld_task_family"] = family
+    task["_engiworld_config_path"] = os.path.abspath(cfg)
 
 
 def _absolutize_local_paths(node: Any, asset_root: str, source_cfg: str) -> None:

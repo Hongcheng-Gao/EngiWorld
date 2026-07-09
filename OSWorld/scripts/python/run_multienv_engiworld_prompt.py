@@ -205,7 +205,12 @@ def _backfill_prompt_artifacts(args: argparse.Namespace) -> None:
                 log.warning("Backfill: cannot load %s/%s: %s", domain, ex_id, exc)
                 continue
             instruction = example.get("instruction", "")
-            sys_text = base_system + "\nYou are asked to complete the following task: {}".format(instruction)
+            agent.set_task_config(example)
+            sys_text = base_system
+            task_context = getattr(agent, "_task_context_prompt", "")
+            if task_context:
+                sys_text += "\n\n" + task_context
+            sys_text += "\nYou are asked to complete the following task: {}".format(instruction)
             try:
                 (ex_dir / "system_prompt.txt").write_text(sys_text, encoding="utf-8")
                 if first_user_text is not None:

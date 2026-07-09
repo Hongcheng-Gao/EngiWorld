@@ -129,6 +129,175 @@ def _join_sections(*sections):
     return "\n\n".join(s for s in sections if s).strip()
 
 
+def _as_list(value):
+    if isinstance(value, (list, tuple)):
+        return [str(x) for x in value if x]
+    if value:
+        return [str(value)]
+    return []
+
+
+def _task_id(task_config):
+    return str((task_config or {}).get("id", "")).lower()
+
+
+def _task_family_path(task_config):
+    raw = str((task_config or {}).get("_engiworld_task_family", "")).strip().lower()
+    return raw.replace("\\", "/").strip("/")
+
+
+def _related_apps(task_config):
+    apps = _as_list((task_config or {}).get("related_apps"))
+    roles = (task_config or {}).get("open_software_roles") or {}
+    if isinstance(roles, dict):
+        apps.extend(_as_list(roles.get("candidate_software")))
+        apps.extend(_as_list(roles.get("distractor_software")))
+    seen = set()
+    ordered = []
+    for app in apps:
+        key = app.strip().lower()
+        if key and key not in seen:
+            seen.add(key)
+            ordered.append(app.strip())
+    return ordered
+
+
+def _is_open_task(task_config):
+    tid = _task_id(task_config)
+    family = _task_family_path(task_config)
+    return (
+        family == "open"
+        or "open_software_roles" in (task_config or {})
+        or "open-choice" in tid
+        or "-open-" in tid
+    )
+
+
+def _is_multi_task(task_config):
+    tid = _task_id(task_config)
+    family = _task_family_path(task_config)
+    snapshot = str((task_config or {}).get("snapshot", "")).lower()
+    return (
+        family == "multi"
+        or tid.startswith("multi-")
+        or tid.startswith("c-cli-4-")
+        or "multi-" in snapshot
+    )
+
+
+def _is_quantified_task(task_config):
+    evaluator = (task_config or {}).get("evaluator") or {}
+    tid = _task_id(task_config)
+    family = _task_family_path(task_config)
+    return (
+        family == "quantified"
+        or evaluator.get("func") == "quantified_score"
+        or "quantified_metric" in (task_config or {})
+        or tid.startswith("q-")
+        or tid.startswith("quant-")
+    )
+
+
+def _metric_prompt(task_config):
+    metric = (task_config or {}).get("quantified_metric")
+    if not isinstance(metric, dict):
+        metric = ((task_config or {}).get("evaluator") or {}).get("metric")
+    if not isinstance(metric, dict):
+        return ""
+    parts = []
+    name = metric.get("name")
+    direction = metric.get("direction")
+    baseline = metric.get("baseline_score")
+    output_field = metric.get("output_field")
+    if name:
+        parts.append(f"metric={name}")
+    if direction:
+        parts.append(f"direction={direction}")
+    if baseline is not None:
+        parts.append(f"baseline_score={baseline}")
+    if output_field:
+        parts.append(f"score_field={output_field}")
+    return "; ".join(parts)
+
+
+def build_task_context_prompt(task_config, eval_mode: str = "") -> str:
+    """Return extra system-prompt guidance for Engiworld task families.
+
+    The base prompts describe the action space. These overlays describe task
+    semantics that only exist in the newer open/multi/quantified categories.
+    """
+    if not task_config:
+        return ""
+
+    sections = []
+    apps = _related_apps(task_config)
+    app_text = ", ".join(apps) if apps else "the applications named in the task"
+    mode = (eval_mode or "").lower()
+    is_gui = mode in {"gui", "computer13", "gui-a11y", "gui-screenshot-a11y"}
+    is_cli = mode in {"cli", "cli-text"}
+
+    if _is_open_task(task_config):
+        roles = task_config.get("open_software_roles") or {}
+        candidates = _as_list(roles.get("candidate_software")) if isinstance(roles, dict) else []
+        distractor = _as_list(roles.get("distractor_software")) if isinstance(roles, dict) else []
+        role_line = ""
+        if candidates or distractor:
+            role_bits = []
+            if candidates:
+                role_bits.append("candidate software: " + ", ".join(candidates))
+            if distractor:
+                role_bits.append("distractor software: " + ", ".join(distractor))
+            role_line = " " + "; ".join(role_bits) + "."
+        sections.append(
+            "=== Open-software task guidance ===\n"
+            f"This task intentionally provides multiple software choices: {app_text}.{role_line}\n"
+            "Do not assume every listed application is equally suitable. Infer the appropriate capable "
+            "software from the input formats, requested deliverables, and task wording, then use that "
+            "software's normal workflow. A distractor application may be present; avoid spending work in "
+            "it unless the task explicitly requires it.\n"
+            "If you choose a software package and it proves unsuitable, switch to another listed candidate "
+            "rather than fabricating files or using unrelated tools."
+        )
+
+    if _is_multi_task(task_config):
+        stage_verb = "GUI applications" if is_gui else "command-line or official scripting interfaces"
+        sections.append(
+            "=== Multi-software handoff task guidance ===\n"
+            f"This task requires a real handoff across multiple engineering applications: {app_text}. "
+            f"Use the required {stage_verb} for each stage named by the instruction.\n"
+            "Do not collapse the task into a single script, one application, or manually fabricated final "
+            "files. Produce every required intermediate artifact and make each later stage consume the "
+            "artifact from the previous stage. Keep explicit evidence of the toolchain when the instruction "
+            "asks for logs, reports, manifests, or stage tokens.\n"
+            "Finish only after all required intermediate and final deliverables exist in the specified "
+            "locations and are mutually consistent."
+        )
+
+    if _is_quantified_task(task_config):
+        metric_text = _metric_prompt(task_config)
+        metric_line = f" Metric metadata: {metric_text}." if metric_text else ""
+        sections.append(
+            "=== Quantified-score task guidance ===\n"
+            "This is a continuous optimization task, not an exact-match task with one hidden answer."
+            f"{metric_line}\n"
+            "Satisfy all hard constraints first, then improve the stated score as much as possible within "
+            "the step budget. The provided ground_truth/reference solution is a baseline, not necessarily "
+            "an optimum. Do not stop merely because the result is valid if there is still an obvious "
+            "score-improving change available.\n"
+            "Do not fabricate score files, metrics, or self-reported success. The evaluator scores the real "
+            "deliverable artifacts, so produce valid optimized outputs through the allowed workflow."
+        )
+
+    if is_cli and sections:
+        sections.append(
+            "For CLI actions in these task families, use only the software listed by the task or the "
+            "official command-line/API tools needed for its required stages. Generic parsing or direct "
+            "artifact editing is still forbidden by the CLI integrity rules."
+        )
+
+    return _join_sections(*sections)
+
+
 _GUI_ENVELOPE = (
     "Return exactly one XML document each time. Do not use Markdown code fences, and do not write any text outside "
     "the XML root.\n"

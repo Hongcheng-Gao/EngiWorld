@@ -180,3 +180,24 @@ def test_allows_target_api_saving_artifact():
         "import bpy\nbpy.ops.wm.save_as_mainfile(filepath='/home/user/Desktop/result.blend')",
         {"id": "blender-task-01-ubuntu"},
     )
+
+
+def test_allows_multi_task_related_app_commands():
+    task = {
+        "id": "c-cli-4-kicad-openscad-freecad-blender-task-01-ubuntu",
+        "related_apps": ["kicad", "openscad", "freecad", "blender"],
+    }
+    validate_cli_action(
+        "bash",
+        "kicad-cli version\nopenscad --version\nfreecadcmd --version\nblender --background --version",
+        task,
+    )
+
+
+def test_related_apps_still_reject_unlisted_software():
+    task = {
+        "id": "c-cli-4-kicad-openscad-freecad-blender-task-01-ubuntu",
+        "related_apps": ["kicad", "openscad", "freecad", "blender"],
+    }
+    with pytest.raises(CliPolicyViolation):
+        validate_cli_action("bash", "abaqus cae noGUI=solve.py", task)

@@ -362,6 +362,7 @@ def run_single_example(agent, env, example, max_steps, instruction, args, exampl
         agent.reset(runtime_logger, vm_ip=env.vm_ip)
     except Exception as e:
         agent.reset(vm_ip=env.vm_ip)
+    _set_agent_task_config(agent, example)
 
     time.sleep(180) # Wait for the environment to be ready
     obs = env._get_obs() # Get the initial observation
@@ -425,6 +426,7 @@ def run_single_example(agent, env, example, max_steps, instruction, args, exampl
                     agent.reset(runtime_logger, vm_ip=env.vm_ip)
                 except Exception:
                     agent.reset(vm_ip=env.vm_ip)
+                _set_agent_task_config(agent, example)
                 time.sleep(180)
                 obs = env._get_obs()
                 done = False
@@ -600,6 +602,12 @@ def setup_logger(example, example_result_dir):
     return runtime_logger
 
 
+def _set_agent_task_config(agent, task_config):
+    setter = getattr(agent, "set_task_config", None)
+    if callable(setter):
+        setter(task_config)
+
+
 # ---- terminal mode (PromptAgent observation_type="terminal") ---------------
 # Output cap per stdout/stderr stream before a "[...truncated]" marker is
 # appended. Keeps any single command from blowing up the model's context.
@@ -654,6 +662,7 @@ def run_single_example_terminal(agent, env, example, max_steps, instruction, arg
         agent.reset(runtime_logger, vm_ip=env.vm_ip)
     except Exception:
         agent.reset(vm_ip=env.vm_ip)
+    _set_agent_task_config(agent, example)
 
     time.sleep(180)  # Same boot wait as the GUI runner — snapshot revert + VM ready.
 
@@ -711,6 +720,7 @@ def run_single_example_terminal(agent, env, example, max_steps, instruction, arg
                     agent.reset(runtime_logger, vm_ip=env.vm_ip)
                 except Exception:
                     agent.reset(vm_ip=env.vm_ip)
+                _set_agent_task_config(agent, example)
                 time.sleep(180)
                 obs = {"bash_runs": [], "images": []}
                 done = False
