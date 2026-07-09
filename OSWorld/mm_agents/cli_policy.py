@@ -22,25 +22,25 @@ class CliPolicyViolation(ValueError):
 
 CLI_POLICY_PROMPT = (
     "=== CLI task integrity rules ===\n"
-    "Use the command-line, batch, headless, or official scripting interface of the target "
-    "application to perform the engineering work. The CLI is for driving that target "
+    "Use the command-line, batch, headless, or official scripting interface of the required "
+    "application(s) to perform the engineering work. The CLI is for driving the required "
     "software, not for replacing it with unrelated file manipulation.\n"
     "The following are forbidden and will be rejected before execution:\n"
     "- Directly reading, inspecting, editing, patching, copying, or fabricating the project/model/answer "
-    "artifact with text, binary, shell, or generic Python file tools instead of using the target application.\n"
+    "artifact with text, binary, shell, or generic Python file tools instead of using the required application(s).\n"
     "  Examples include `cat`, `grep`, `head`, `tail`, `strings`, `xxd`, `hexdump`, `file`, `stat`, "
     "Python `open`, `Path.read_text/read_bytes`, `Path.write_text/write_bytes`, `shutil.copy*`, "
     "`os.rename`, and `os.replace` on engineering artifact files, including when the artifact path is "
     "hidden behind a shell or Python variable.\n"
     "- Installing or using third-party Python packages to parse, generate, repair, or convert "
-    "engineering files, unless the package is the target application's own official Python API.\n"
-    "- Importing or using non-stdlib Python packages unless they are the target application's official API.\n"
-    "- Calling another CAD/CAE/EDA/BIM/graphics application or converter to do the target "
-    "application's work.\n"
+    "engineering files, unless the package is the required application(s)' own official Python API.\n"
+    "- Importing or using non-stdlib Python packages unless they are the required application(s)' official API.\n"
+    "- Calling another CAD/CAE/EDA/BIM/graphics application or converter to do the required "
+    "application(s)' work.\n"
     "- Using interactive text editors or in-place patchers such as vim, nano, notepad, "
     "`sed -i`, `perl -pi`, PowerShell `Set-Content`, or similar direct-edit operations.\n"
     "You may create temporary helper scripts, batch files, logs, and solver input files when "
-    "they are used to drive the target application."
+    "they are used to drive the required application(s)."
 )
 
 
