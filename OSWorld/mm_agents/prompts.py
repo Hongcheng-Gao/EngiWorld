@@ -298,7 +298,7 @@ def build_gui_screenshot_a11y_prompt() -> str:
 def build_cli_prompt() -> str:
     """System prompt for `--eval-mode cli`: terminal stdout obs + bash / python / readimg."""
     return _join_sections(
-        "You operate an Ubuntu computer through `bash` and `python`. Each step you receive the previous turn's "
+        "You operate the task computer through `bash` and `python`. Each step you receive the previous turn's "
         "terminal output (stdout / stderr / returncode) plus any images you requested via `readimg`, and emit one or "
         "more actions.\n"
         "Neither the shell nor the Python interpreter persists across actions or turns: cwd, exported variables, the "
