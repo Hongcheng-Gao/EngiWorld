@@ -56,7 +56,7 @@
     }
   },
   "fixed_ip": false,
-  "id": "c-cli-4-kicad-openscad-freecad-blender-task-06-ubuntu",
+  "id": "c-multi-kicad-openscad-freecad-blender-task-06-ubuntu",
   "instruction": "Battery BMS service-cover enclosure. The desktop contains `/home/user/Desktop/board_input.kicad_pcb`, `/home/user/Desktop/mechanical_requirements.json`, `/home/user/Desktop/connector_keepouts.csv`, `/home/user/Desktop/enclosure_seed.scad`, and `/home/user/Desktop/handoff_notes.md`. Complete this CLI-only engineering handoff by using all four software stages in order: KiCad must extract and normalize the PCB mechanical data, OpenSCAD must build the enclosure or fixture from that KiCad-derived map, FreeCAD must assemble the board and enclosure and check mass/clearance, and Blender must create the final material-coded review scene. The critical requirement is: Cell-stack and service connectors require opposite-side windows and the fuse keepout must remain uncovered.\n\nProduce every required intermediate and final artifact directly on the desktop:\n- `01_kicad_board.kicad_pcb`\n- `01_kicad_export.json`\n- `01_kicad_mechanical_map.csv`\n- `02_openscad_enclosure.scad`\n- `02_openscad_enclosure.stl`\n- `02_openscad_parameters.json`\n- `03_freecad_assembly.step`\n- `03_freecad_clearance_report.json`\n- `04_blender_review.obj`\n- `04_blender_review.mtl`\n- `04_blender_scene_report.json`\n- `toolchain_invocation_log.json`\n- `final_release_package.json`\n\nThe artifacts must form a real handoff chain: the OpenSCAD stage consumes `01_kicad_mechanical_map.csv`, the FreeCAD stage consumes the OpenSCAD STL and parameters plus the KiCad board data, the Blender stage consumes the FreeCAD assembly and clearance report, and `final_release_package.json` summarizes the decision and lists all required artifacts. [Software] Use command-line tools from all four applications: `kicad-cli` or KiCad scripting for the board stage, `openscad` for the parametric enclosure, `FreeCADCmd` or `freecadcmd` for assembly/clearance validation, and `blender --background --python` for the review scene.",
   "possibility_of_env_change": "low",
   "proxy": false,
@@ -68,13 +68,5 @@
   ],
   "snapshot": "kicad-openscad-freecad-blender",
   "source": "https://docs.kicad.org/; https://docs.kicad.org/8.0/en/cli/cli.html; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://wiki.freecad.org/Headless_FreeCAD; https://docs.blender.org/api/4.2/",
-  "trajectory": "trajectories/",
-  "category": "multi",
-  "interface": "cli",
-  "software_chain": [
-    "kicad",
-    "openscad",
-    "freecad",
-    "blender"
-  ]
+  "trajectory": "trajectories/"
 }

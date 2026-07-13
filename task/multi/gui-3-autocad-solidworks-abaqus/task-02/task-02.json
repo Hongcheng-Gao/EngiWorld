@@ -1,5 +1,5 @@
 {
-  "id": "multi-three-autocad-solidworks-abaqus-task-02-windows",
+  "id": "v-multi-autocad-solidworks-abaqus-task-02-windows",
   "snapshot": "Autocad-Solidworks-Abaqus",
   "instruction": "GUI-only requirement: Complete the entire task through the launched graphical user interfaces only. Do not open Terminal, Command Prompt, PowerShell, or any shell. Do not run Python, VBA, macros, Abaqus noGUI, ANSYS command scripts, batch/headless tools, APIs, or helper code that directly generates or edits the deliverable files. Use only the native AutoCAD, SolidWorks, and Abaqus/CAE GUI tools, menus, dialogs, editors, and built-in import, export, save, submit, and solve commands.\n\nThree-software CAE flow: AutoCAD -> SolidWorks -> Abaqus/CAE. No init files are provided; start from blank files.\n\nChain evidence requirement: use the design token EW_ACAD_SW_ABQ_02. In AutoCAD, add a readable label containing EW_ACAD_SW_ABQ_02 and AUTOCAD_TO_SOLIDWORKS on a CHAIN layer in stage1_profile.dxf. In SolidWorks, keep EW_ACAD_SW_ABQ_02, FROM_stage1_profile.dxf, and SOLIDWORKS_TO_ABAQUS encoded in the part/custom properties or STEP export metadata so the text of stage2_geometry.step contains them. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_ACAD_SW_ABQ_02 and IMPORTED_FROM_stage2_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n\n1. In AutoCAD, use GUI drawing tools only to create the 2D profile and save it as C:\\Users\\user\\Desktop\\stage1_profile.dxf. Draw an outer circle with diameter D120 on layer OUTLINE. Draw a centered cutout circle with diameter D50 on layer CUTOUT. Draw eight D6 bolt holes on layer HOLE, evenly spaced on a 90 mm bolt circle.\n2. In SolidWorks, import stage1_profile.dxf through the GUI and create a 10 mm thick flange-cover solid. Create a 2 mm deep circular recessed pressure face in the center region and export C:\\Users\\user\\Desktop\\stage2_geometry.step.\n3. In Abaqus/CAE, import stage2_geometry.step through the GUI and create the finite-element model. Use the model name Model-DxfFlangePressure. Define material Steel with E=210000 MPa and nu=0.3, create a solid section using Steel, and assign it to the flange cover. Create a Static General analysis step named Step-Pressure. Create a set named BOLT_HOLES and a surface named PRESSURE_FACE. Use a coarse first-order linear solid mesh that captures the bolt holes and recessed pressure face without dense bolt-hole refinement; use C3D8R where practical or coarse C3D4 where needed, and do not use quadratic elements. Create a boundary condition named BC-BoltHoles that constrains BOLT_HOLES. Create a pressure load named Pressure-1MPa with magnitude approximately 1.0 MPa on PRESSURE_FACE. Submit the job named Job-DxfFlangePressure and wait for the analysis to complete.\n4. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_profile.dxf, C:\\Users\\user\\Desktop\\stage2_geometry.step, C:\\Users\\user\\Desktop\\Job-DxfFlangePressure.cae, and C:\\Users\\user\\Desktop\\Job-DxfFlangePressure.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\n[Software] Open and use AutoCAD, SolidWorks, and Abaqus/CAE one at a time through the Windows GUI as needed. First use AutoCAD to create the DXF profile, then use SolidWorks to import the DXF and export the STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/; https://help.autodesk.com/view/ACD/2025/ENU/",
@@ -39,12 +39,5 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "category": "multi",
-  "interface": "gui",
-  "software_chain": [
-    "autocad",
-    "solidworks",
-    "abaqus"
-  ]
+  "possibility_of_env_change": "low"
 }

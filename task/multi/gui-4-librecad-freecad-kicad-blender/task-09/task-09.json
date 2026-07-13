@@ -1,5 +1,5 @@
 {
-  "id": "multi-gui-4-librecad-freecad-kicad-blender-task-09-ubuntu",
+  "id": "v-multi-librecad-freecad-kicad-blender-task-09-ubuntu",
   "snapshot": "freecad-librecad-kicad-blender",
   "instruction": "GUI-only requirement: complete the entire task through the launched graphical user interfaces only. Do not open Terminal or any shell, and do not run Python scripts, FreeCADCmd, kicad-cli, Blender background mode, macros, batch/headless tools, APIs, or helper code that directly creates or edits the deliverable files.\n\nRequired four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from the provided seed DXF /home/user/Desktop/seed_wearable_charger_cradle.dxf; do not start from a blank or unrelated drawing. This is a chained workflow: every later stage must read an artifact from the previous stage, and every required intermediate file must be saved on the Desktop. The design token for this task is EW4G09; keep this token visible in the DXF labels and KiCad silkscreen. The Blender output must visibly consume the stage-2 STL and stage-3 SVG through Blender GUI import/export operations.\n\nDesign goal: Wearable charger cradle with pogo pins and strap slots. This case is intentionally different from the other benchmark cases: domain=wearable_charging_cradle, mechanical target=a wearable cradle scene with gold pogo pins and strap-slot geometry highlighted, electronics target=a charger PCB with two pogo pins, charger IC, magnet marker, USB input, and NTC resistor.\n\n1. LibreCAD stage: open the provided seed file /home/user/Desktop/seed_wearable_charger_cradle.dxf in LibreCAD, use it as the starting drawing, complete the required 2D geometry, remove all GUIDE construction entities, and save /home/user/Desktop/stage1_wearable_charger_cradle.dxf. Use millimeters. Use layers OUTLINE, STRAP_SLOT, HOLE, LABEL. The overall drawing envelope must be 105 mm x 48 mm. Include the required circular features: center (18,24) radius 2; center (87,24) radius 2; center (48,24) radius 1.2; center (57,24) radius 1.2; center (52.5,10) radius 2.8; center (52.5,38) radius 2.8. Add readable labels EW4G09, POGO+, POGO-, STRAP on the LABEL layer.\n2. FreeCAD stage: import /home/user/Desktop/stage1_wearable_charger_cradle.dxf in the FreeCAD GUI. Create the 3D mechanical body from that LibreCAD DXF, and export the body as /home/user/Desktop/stage2_wearable_charger_cradle.stl with an approximate bounding size of 105 mm x 48 mm x 20 mm. Then, from the same FreeCAD model, export a top-face or board-interface outline for KiCad as /home/user/Desktop/stage2_wearable_charger_cradle_handoff_outline.dxf. This handoff DXF must represent the same XY envelope as the FreeCAD body and include the visible labels FREECAD_TO_KICAD and EW4G09.\n3. KiCad stage: open KiCad from the GUI, create a PCB from /home/user/Desktop/stage2_wearable_charger_cradle_handoff_outline.dxf by importing the handoff DXF as the Edge.Cuts board outline, and save the KiCad board as /home/user/Desktop/stage3_wearable_charger_cradle_board.kicad_pcb. Add F.SilkS silkscreen text carrying KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the stage2 handoff filename, EW4G09, and these board tokens: EW4G09, POGO-P1, POGO-P2, CHG-U1, MAGNET-M1, USB-J1, NTC-R1. Then use KiCad's GUI plot/export workflow to create the Blender handoff SVG /home/user/Desktop/stage3_wearable_charger_cradle_board_profile.svg from the same Edge.Cuts outline.\n4. Blender stage: open Blender from the GUI. Import /home/user/Desktop/stage2_wearable_charger_cradle.stl with File > Import > STL, then import /home/user/Desktop/stage3_wearable_charger_cradle_board_profile.svg with File > Import > Scalable Vector Graphics (.svg). Keep the imported STL body object and the imported SVG board/profile curves in the scene so the exported GLB carries Blender GUI import evidence such as stage2_wearable_charger_cradle and stage3_wearable_charger_cradle_board_profile.svg. You may leave Blender's default cube/camera/light or remove them; no script, macro, background export, or manual metadata injection is allowed. Export glTF Binary (.glb) from the GUI as /home/user/Desktop/stage4_wearable_charger_cradle.glb.\n\nRequired deliverables on the Desktop: /home/user/Desktop/stage1_wearable_charger_cradle.dxf, /home/user/Desktop/stage2_wearable_charger_cradle.stl, /home/user/Desktop/stage2_wearable_charger_cradle_handoff_outline.dxf, /home/user/Desktop/stage3_wearable_charger_cradle_board.kicad_pcb, /home/user/Desktop/stage3_wearable_charger_cradle_board_profile.svg, /home/user/Desktop/stage4_wearable_charger_cradle.glb. Do not create the deliverables with external scripts or by directly writing DXF/STL/KiCad/SVG/GLB text outside the corresponding GUI application.\n\n[Software] Use LibreCAD first, then FreeCAD, then KiCad, then Blender. Do not skip stages, reorder stages, or recreate the final result in only one software package.",
   "source": "https://docs.librecad.org/en/2.2.0_a/; https://wiki.freecad.org/Manual:Introduction; https://docs.kicad.org/; https://docs.blender.org/manual/en/latest/; package-generated init/stage1-stage3 references from generate_assets.py; downloaded Blender GUI stage4 GT",
@@ -53,37 +53,5 @@
   },
   "proxy": false,
   "fixed_ip": false,
-  "possibility_of_env_change": "low",
-  "difficulty": "hard",
-  "category": "multi",
-  "interface": "gui",
-  "software_chain": [
-    "librecad",
-    "freecad",
-    "kicad",
-    "blender"
-  ],
-  "notes": "Strong four-GUI transfer task. Eval explicitly checks intermediate_outputs: LibreCAD stage1 DXF, FreeCAD STL/handoff DXF, KiCad native board file, KiCad SVG profile handoff, and a Blender GUI-exported GLB carrying imported STL/SVG object evidence.",
-  "eval_dependencies": {
-    "pip_packages": [
-      "ezdxf",
-      "trimesh",
-      "pygltflib",
-      "numpy"
-    ],
-    "vm_preinstalled": true,
-    "used_by_eval": [
-      "ezdxf",
-      "trimesh",
-      "pygltflib",
-      "numpy"
-    ]
-  },
-  "quantified_metric": {
-    "name": "four_gui_transfer_completion",
-    "direction": "maximize",
-    "output_field": "score",
-    "baseline_score": 0.0,
-    "max_score": 1.0
-  }
+  "possibility_of_env_change": "low"
 }
