@@ -257,6 +257,18 @@ def _annotate_task_family(task: Dict[str, Any], base_dir: str, domain: str, cfg:
         task["_engiworld_task_family"] = family
     task["_engiworld_config_path"] = os.path.abspath(cfg)
 
+    # Runtime-only policy context. Keep answer filenames out of task JSON while
+    # still allowing the executor to distinguish a helper script from direct
+    # fabrication of the files that the evaluator will score.
+    ground_truth_dir = os.path.join(os.path.dirname(cfg), "ground_truth")
+    if os.path.isdir(ground_truth_dir):
+        expected_outputs = []
+        for root, _dirs, files in os.walk(ground_truth_dir):
+            for name in files:
+                rel = os.path.relpath(os.path.join(root, name), ground_truth_dir)
+                expected_outputs.append(rel.replace("\\", "/"))
+        task["_engiworld_expected_outputs"] = sorted(expected_outputs)
+
 
 def _absolutize_local_paths(node: Any, asset_root: str, source_cfg: str) -> None:
     if isinstance(node, dict):

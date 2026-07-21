@@ -39,8 +39,15 @@ CLI_POLICY_PROMPT = (
     "application(s)' work.\n"
     "- Using interactive text editors or in-place patchers such as vim, nano, notepad, "
     "`sed -i`, `perl -pi`, PowerShell `Set-Content`, or similar direct-edit operations.\n"
+    "- Parsing task-provided neutral exchange files with generic JSON/XML/text tools, or hand-writing "
+    "a scored text/JSON/CAM output, instead of obtaining the content through the required application(s).\n"
+    "- Hiding a forbidden operation in Base64, hexadecimal, compressed, marshalled, dynamically imported, "
+    "or otherwise encoded code. Encoded payloads are checked before execution.\n"
     "You may create temporary helper scripts, batch files, logs, and solver input files when "
-    "they are used to drive the required application(s)."
+    "they are used to drive the required application(s). Native textual driver sources such as an "
+    "OpenSCAD `.scad` program, a FEniCS Python program, an APDL/input deck, or OpenFOAM dictionaries may "
+    "be edited when that is the normal interface to the required application; the resulting engineering "
+    "answer must still be produced by running that application."
 )
 
 
@@ -174,9 +181,11 @@ _ARTIFACT_EXTENSIONS: FrozenSet[str] = frozenset({
     ".blend", ".skp", ".zpr", ".ztl", ".ifc", ".dwg", ".dxf",
     ".stl", ".step", ".stp", ".iges", ".igs", ".obj", ".fbx", ".3dm",
     ".fcstd", ".cae", ".odb", ".odb_f", ".sim", ".rvt", ".rfa", ".sldprt",
-    ".sldasm", ".slddrw", ".slvs", ".scad",
+    ".sldasm", ".slddrw", ".slvs",
     ".opj", ".olb", ".dra", ".pad", ".pln", ".pla", ".gsm", ".mod",
     ".wbpj", ".agdb", ".mechdat", ".rst", ".cas", ".dat.h5",
+    ".edif", ".ipc2581", ".schematic.json", ".netlist.json",
+    ".nc", ".gcode", ".ngc", ".tap",
 })
 
 _HELPER_EXTENSIONS: FrozenSet[str] = frozenset({
@@ -360,6 +369,58 @@ _PY_ARTIFACT_ASSIGN_RE = re.compile(
     """
 )
 
+_GENERIC_FILE_READ_RE = re.compile(
+    r"""(?ix)
+    \b(?:cat|head|tail|strings|xxd|hexdump|od|grep|awk|sed|Get-Content|Select-String)\b
+    |
+    \b(?:open|Path)\s*\(
+    |
+    \.\s*(?:read|read_text|read_bytes)\s*\(
+    |
+    \b(?:json\.(?:load|loads)|xml\.(?:parse|fromstring)|ElementTree\.parse|ConvertFrom-Json)\b
+    """
+)
+
+_GENERIC_FILE_WRITE_RE = re.compile(
+    r"""(?ix)
+    \b(?:Set-Content|Add-Content|Out-File|Copy-Item|Move-Item|tee)\b
+    |
+    \b(?:cp|mv|copy|move|robocopy|xcopy)\b
+    |
+    (?:^|[;&|])\s*(?:echo|printf|cat)\b[^\n;&|]*>
+    |
+    \bopen\s*\([^\n)]*,\s*[\"'][^\"']*[wax+][^\"']*[\"']
+    |
+    \.\s*(?:write|write_text|write_bytes)\s*\(
+    |
+    \b(?:json\.dump|shutil\.(?:copy|copy2|copyfile|move)|os\.(?:rename|replace))\s*\(
+    """
+)
+
+_ENCODED_EXEC_RE = re.compile(
+    r"""(?ixs)
+    (?:exec|eval|compile)\s*\([^)]{0,500}
+    (?:b64decode|fromhex|marshal\.loads|zlib\.decompress|codecs\.decode)
+    |
+    (?:b64decode|fromhex|marshal\.loads|zlib\.decompress|codecs\.decode)
+    [^\n]{0,500}(?:exec|eval|compile)\s*\(
+    |
+    (?:powershell|pwsh)(?:\.exe)?\b[^\n]*(?:-enc|-encodedcommand)\b
+    |
+    \[Convert\]::FromBase64String\s*\(
+    """
+)
+
+_MACHINE_CODE_EXTENSIONS: FrozenSet[str] = frozenset({
+    ".nc", ".gcode", ".ngc", ".tap",
+})
+_MACHINE_CODE_EXT_RE = "|".join(
+    re.escape(ext) for ext in sorted(_MACHINE_CODE_EXTENSIONS, key=len, reverse=True)
+)
+_MACHINE_CODE_PATH_RE = re.compile(
+    rf"(?i)(?:{_MACHINE_CODE_EXT_RE})(?=$|[^A-Za-z0-9_])"
+)
+
 
 @dataclass(frozen=True)
 class _TaskPolicy:
@@ -464,6 +525,91 @@ def _script_uses_target_api(script: str, policy: _TaskPolicy) -> bool:
         return False
     target_roots = {module.split(".", 1)[0] for module in target_imports}
     return any(module in target_roots for module in _iter_imported_modules(script))
+
+
+def _script_uses_target_command(script: str, policy: _TaskPolicy) -> bool:
+    target_commands = frozenset().union(*(
+        _TARGET_COMMANDS.get(domain, frozenset()) for domain in policy.domains
+    ))
+    for command in target_commands:
+        norm = _strip_command_suffix(command)
+        pattern = re.compile(
+            rf"(?i)(^|[\\/\s'\";&|]){re.escape(norm)}"
+            rf"(?:\.(?:exe|bat|cmd|ps1|sh))?(?=$|[\\/\s'\";&|])"
+        )
+        for match in pattern.finditer(script):
+            tail = script[match.end():match.end() + 80]
+            if not re.match(r"(?is)^\s+(?:--?version|--help|/\?)\b", tail):
+                return True
+    return False
+
+
+def _normalized_task_file_names(values: Iterable[str]) -> FrozenSet[str]:
+    names = set()
+    for value in values:
+        if not isinstance(value, str) or not value.strip():
+            continue
+        normalized = value.replace("\\", "/").rstrip("/")
+        name = normalized.rsplit("/", 1)[-1].strip().lower()
+        if name:
+            names.add(name)
+    return frozenset(names)
+
+
+def _task_input_names(task_config: Optional[dict]) -> FrozenSet[str]:
+    if not task_config:
+        return frozenset()
+    names = []
+    for operation in task_config.get("config") or []:
+        if not isinstance(operation, dict) or operation.get("type") != "upload_file":
+            continue
+        parameters = operation.get("parameters") or {}
+        for file_spec in parameters.get("files") or []:
+            if not isinstance(file_spec, dict):
+                continue
+            names.extend((file_spec.get("path"), file_spec.get("local_path")))
+    return _normalized_task_file_names(name for name in names if name)
+
+
+def _expected_output_names(task_config: Optional[dict]) -> FrozenSet[str]:
+    if not task_config:
+        return frozenset()
+    return _normalized_task_file_names(task_config.get("_engiworld_expected_outputs") or [])
+
+
+def _script_mentions_name(script: str, name: str) -> bool:
+    return bool(re.search(
+        rf"(?i)(?<![A-Za-z0-9_.-]){re.escape(name)}(?![A-Za-z0-9_.-])",
+        script.replace("\\", "/"),
+    ))
+
+
+def _check_task_bound_file_bypass(script: str, policy: _TaskPolicy, task_config: Optional[dict]) -> None:
+    uses_target = _script_uses_target_api(script, policy) or _script_uses_target_command(script, policy)
+
+    # Open-software tasks deliberately use neutral inputs. They still have to
+    # flow through one of the candidate engineering applications; generic
+    # JSON/XML/text parsing is exactly the bypass this task family measures.
+    if (task_config or {}).get("_engiworld_task_family") == "open" and not uses_target:
+        for name in _task_input_names(task_config):
+            if _script_mentions_name(script, name) and _GENERIC_FILE_READ_RE.search(script):
+                raise CliPolicyViolation(
+                    f"directly parsing task input {name!r} is not allowed; use a candidate application's CLI/API"
+                )
+
+    if not uses_target and _GENERIC_FILE_WRITE_RE.search(script):
+        for name in _expected_output_names(task_config):
+            if _script_mentions_name(script, name):
+                raise CliPolicyViolation(
+                    f"directly fabricating scored output {name!r} is not allowed; produce it through the required application"
+                )
+
+
+def _check_encoded_execution(script: str) -> None:
+    if _ENCODED_EXEC_RE.search(script):
+        raise CliPolicyViolation(
+            "encoded or obfuscated code execution is not allowed during CLI evaluation"
+        )
 
 
 def _check_package_install(script: str) -> None:
@@ -607,6 +753,10 @@ def _check_python_artifact_bypass(script: str, policy: _TaskPolicy) -> None:
         raise CliPolicyViolation(
             "direct Python writes to engineering artifact files are not allowed; produce them through the target application"
         )
+    if _MACHINE_CODE_PATH_RE.search(script) and _PY_GENERIC_WRITE_RE.search(script):
+        raise CliPolicyViolation(
+            "hand-writing machine code is not allowed; generate it with the target CAM application's official postprocessor"
+        )
     if not has_artifact_path:
         return
 
@@ -672,6 +822,7 @@ def validate_cli_action(
     policy = _policy_for(task_config)
     if text_only:
         _check_text_only_visual_bypass(kind, script)
+    _check_encoded_execution(script)
     _check_package_install(script)
     _check_direct_editors(script)
     _check_imports(script, policy)
@@ -679,3 +830,4 @@ def validate_cli_action(
     _check_shell_artifact_file_ops(script)
     _check_redirect_artifact_writes(script)
     _check_python_artifact_bypass(script, policy)
+    _check_task_bound_file_bypass(script, policy, task_config)

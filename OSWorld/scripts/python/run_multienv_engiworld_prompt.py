@@ -99,7 +99,7 @@ def parse_args() -> argparse.Namespace:
     )
     parser.add_argument(
         "--eval-mode", dest="eval_mode", type=str, required=True,
-        choices=["gui", "computer13", "gui-a11y", "gui-screenshot-a11y", "cli", "cli-text"],
+        choices=["gui", "computer13", "gui-a11y", "gui-screenshot-a11y", "cli", "cli-text", "extreme"],
         help="评测模式：'gui' = screenshot obs + pyautogui-only (加固) ；"
              "'computer13' = screenshot obs + computer13 action dict ablation ；"
              "'gui-a11y' = accessibility-tree obs + pyautogui-only ablation ；"
@@ -150,6 +150,7 @@ _FIRST_USER_PROMPT_BY_MODE = {
     ),
     "cli": "Terminal observation: no commands have been executed yet.",
     "cli-text": "Terminal observation: no commands have been executed yet.",
+    "extreme": "Unrestricted terminal observation: no commands have been executed yet.",
 }
 
 
@@ -246,7 +247,7 @@ def main() -> None:
     _backfill_prompt_artifacts(args)
     run_single_fn = (
         run_single_example_terminal
-        if args.eval_mode in ("cli", "cli-text")
+        if args.eval_mode in ("cli", "cli-text", "extreme")
         else run_single_example
     )
     run_eval_pool(

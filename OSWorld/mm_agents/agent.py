@@ -34,6 +34,7 @@ from mm_agents.prompts import (
     build_gui_screenshot_a11y_prompt,
     build_cli_prompt,
     build_cli_text_prompt,
+    build_extreme_prompt,
     build_task_context_prompt,
 )
 
@@ -233,10 +234,10 @@ def tag_screenshot(screenshot, accessibility_tree, platform="ubuntu"):
     return marks, drew_nodes, tagged_screenshot, element_list
 
 
-_PYAUTOGUI_FORBIDDEN_IMPORTS = frozenset({
-    "subprocess",
-    "pyperclip",
-    "tkinter",
+_PYAUTOGUI_ALLOWED_IMPORTS = frozenset({
+    "pyautogui",
+    "time",
+    "math",
 })
 
 _PYAUTOGUI_FORBIDDEN_ATTR_CALLS = frozenset({
@@ -261,13 +262,25 @@ _PYAUTOGUI_FORBIDDEN_ATTR_CALLS = frozenset({
     ("shutil", "copytree"),
     ("shutil", "move"),
     ("shutil", "rmtree"),
+    ("pyautogui", "screenshot"),
+    ("pyautogui", "locate"),
+    ("pyautogui", "locateAll"),
+    ("pyautogui", "locateOnScreen"),
+    ("pyautogui", "locateCenterOnScreen"),
+    ("pyautogui", "pixel"),
+    ("pyautogui", "pixelMatchesColor"),
 })
 
 _PYAUTOGUI_FORBIDDEN_BUILTIN_CALLS = frozenset({
+    "open",
     "eval",
     "exec",
     "compile",
     "__import__",
+    "getattr",
+    "setattr",
+    "globals",
+    "locals",
 })
 
 _HOTKEY_ALIAS = {
@@ -286,6 +299,7 @@ _PYAUTOGUI_FORBIDDEN_HOTKEY_COMBOS = frozenset({
     frozenset({"ctrl", "alt", "t"}),    # GNOME / Ubuntu terminal
     frozenset({"win", "t"}),            # Super+T on some Linux WMs
     frozenset({"win", "x"}),            # Windows quick-access menu (PowerShell entry)
+    frozenset({"alt", "f2"}),           # Linux desktop Run command dialog
     frozenset({"ctrl", "alt", "f1"}),   # TTY switch
     frozenset({"ctrl", "alt", "f2"}),
     frozenset({"ctrl", "alt", "f3"}),
@@ -293,6 +307,41 @@ _PYAUTOGUI_FORBIDDEN_HOTKEY_COMBOS = frozenset({
     frozenset({"ctrl", "alt", "f5"}),
     frozenset({"ctrl", "alt", "f6"}),
 })
+
+_GUI_TYPED_SHELL_RE = re.compile(
+    r"""(?ix)
+    ^\s*(?:
+        powershell(?:\.exe)?|pwsh(?:\.exe)?|cmd(?:\.exe)?|command\.com|
+        python(?:3(?:\.\d+)*)?|py|bash|zsh|fish|wsl|terminal|xterm|gnome-terminal
+    )(?:\s|$)
+    |
+    \b(?:-encodedcommand|-enc\s+[A-Za-z0-9+/=]{12,}|Set-Content|Invoke-Expression)\b
+    """
+)
+_GUI_TYPED_CODE_RE = re.compile(
+    r"""(?xm)
+    ^\s*(?:from\s+[A-Za-z_]\w*(?:\.\w+)*\s+import\b|import\s+[A-Za-z_]\w*|def\s+\w+\s*\(|
+           class\s+\w+\s*[:(]|for\s+.+\s+in\s+.+:|while\s+.+:|try\s*:|except\b.+:)
+    |
+    \b(?:exec|eval|compile|__import__)\s*\(
+    |
+    \b(?:Path\s*\([^)]*\)\s*\.\s*(?:read|write)|open\s*\([^)]*,\s*[\"'][^\"']*[wa+])
+    |
+    \b(?:subprocess\.|os\.(?:system|popen|startfile)|b64decode|(?i:FromBase64String))\b
+    """
+)
+_GUI_TYPED_ENGINEERING_SCRIPT_RE = re.compile(
+    r"""(?ixm)
+    ^\s*/(?:PREP7|SOLU|POST1|CLEAR|FILNAME|INPUT|BATCH)\b
+    |
+    ^\s*(?:ET|KEYOPT|MP|NSEL|ESEL|D|F|SF|SFL|SOLVE|ANTYPE|VMESH|AMESH)\s*,
+    |
+    ^\s*\*(?:Heading|Node|Element|Step|Material|Boundary|Cload|Dsload)\b
+    """
+)
+_GUI_BULK_CAD_COMMAND_RE = re.compile(
+    r"(?i)\b(?:rect(?:angle)?|circle|line|polyline|arc|trim|offset|text)\b"
+)
 
 _PYAUTOGUI_REJECT_MSG = (
     "<action type='pyautogui'> only accepts GUI-control operations "
@@ -344,18 +393,38 @@ def _hotkey_combo_forbidden(call: ast.Call) -> bool:
     for a in args:
         norm = _normalize_hotkey_arg(a)
         if norm is None:
-            return False
+            # Dynamic key construction can trivially hide Win+R/Ctrl+Alt+T.
+            # GUI actions have no need to compute a hotkey at runtime.
+            return True
         keys.add(norm)
     if not keys:
         return False
     return frozenset(keys) in _PYAUTOGUI_FORBIDDEN_HOTKEY_COMBOS
 
 
+def _looks_like_gui_bypass_text(value: str) -> bool:
+    if not isinstance(value, str):
+        return False
+    text = value.strip()
+    if not text:
+        return False
+    if _GUI_TYPED_SHELL_RE.search(text):
+        return True
+    if _GUI_TYPED_CODE_RE.search(text):
+        return True
+    if _GUI_TYPED_ENGINEERING_SCRIPT_RE.search(text):
+        return True
+    cad_commands = len(_GUI_BULK_CAD_COMMAND_RE.findall(text))
+    if cad_commands >= 4 and (text.count("\n") >= 3 or len(text) > 160):
+        return True
+    return False
+
+
 def _validate_pyautogui_cdata(code: str) -> None:
     """Reject pyautogui CDATA that uses non-GUI capabilities.
 
     Walks the AST and raises ValueError if any of these are present:
-      * import / from-import of a forbidden top-level module
+      * import / from-import outside the small GUI-only allowlist
       * call of ``<base>.<attr>(...)`` matching the forbidden list
       * call of a bare builtin name (eval / exec / compile / __import__)
       * ``pyautogui.hotkey(...)`` whose normalized key set matches a forbidden
@@ -372,17 +441,20 @@ def _validate_pyautogui_cdata(code: str) -> None:
         raise ValueError(_PYAUTOGUI_REJECT_MSG)
 
     saw_pyautogui_use = False
+    literal_texts = []
 
     for node in ast.walk(tree):
+        if isinstance(node, ast.Constant) and isinstance(node.value, str):
+            literal_texts.append(node.value)
         if isinstance(node, ast.Import):
             for alias in node.names:
                 top = alias.name.split(".", 1)[0]
-                if top in _PYAUTOGUI_FORBIDDEN_IMPORTS:
+                if top not in _PYAUTOGUI_ALLOWED_IMPORTS:
                     raise ValueError(_PYAUTOGUI_REJECT_MSG)
         elif isinstance(node, ast.ImportFrom):
             module = node.module or ""
             top = module.split(".", 1)[0]
-            if top in _PYAUTOGUI_FORBIDDEN_IMPORTS:
+            if top not in _PYAUTOGUI_ALLOWED_IMPORTS:
                 raise ValueError(_PYAUTOGUI_REJECT_MSG)
 
         if isinstance(node, ast.Attribute) and isinstance(node.value, ast.Name):
@@ -400,6 +472,14 @@ def _validate_pyautogui_cdata(code: str) -> None:
             elif isinstance(func, ast.Name):
                 if func.id in _PYAUTOGUI_FORBIDDEN_BUILTIN_CALLS:
                     raise ValueError(_PYAUTOGUI_REJECT_MSG)
+
+    # Inspect both individual literals and their aggregate. The latter catches
+    # scripts assembled as a list of short lines before being typed/pasted into
+    # a terminal or an application's internal command console.
+    if any(_looks_like_gui_bypass_text(value) for value in literal_texts):
+        raise ValueError(_PYAUTOGUI_REJECT_MSG)
+    if literal_texts and _looks_like_gui_bypass_text("\n".join(literal_texts)):
+        raise ValueError(_PYAUTOGUI_REJECT_MSG)
 
     if not saw_pyautogui_use:
         raise ValueError(_PYAUTOGUI_REJECT_MSG)
@@ -526,6 +606,13 @@ def _normalize_computer13_action(payload: Dict[str, Any]) -> Tuple[str, str] | T
         if not isinstance(keys, list) or not keys:
             raise ValueError("computer13 HOTKEY requires a non-empty keys list")
         if _computer13_hotkey_forbidden(keys):
+            raise ValueError(_PYAUTOGUI_REJECT_MSG)
+
+    if action_type == "TYPING":
+        text = params.get("text")
+        if not isinstance(text, str):
+            raise ValueError("computer13 TYPING requires a string text parameter")
+        if _looks_like_gui_bypass_text(text):
             raise ValueError(_PYAUTOGUI_REJECT_MSG)
 
     normalized = {"action_type": action_type, "parameters": params}
@@ -684,10 +771,10 @@ class PromptAgent:
             request_timeout=1800,
             reasoning_effort="high",
     ):
-        if eval_mode not in ("gui", "computer13", "gui-a11y", "gui-screenshot-a11y", "cli", "cli-text"):
+        if eval_mode not in ("gui", "computer13", "gui-a11y", "gui-screenshot-a11y", "cli", "cli-text", "extreme"):
             raise ValueError(
                 "eval_mode must be 'gui', 'computer13', 'gui-a11y', 'gui-screenshot-a11y', "
-                f"'cli', or 'cli-text', got {eval_mode!r}"
+                f"'cli', 'cli-text', or 'extreme', got {eval_mode!r}"
             )
         self.eval_mode = eval_mode
         self.platform = platform
@@ -755,8 +842,10 @@ class PromptAgent:
             self.system_message = build_gui_screenshot_a11y_prompt()
         elif eval_mode == "cli":
             self.system_message = build_cli_prompt()
-        else:
+        elif eval_mode == "cli-text":
             self.system_message = build_cli_text_prompt()
+        else:
+            self.system_message = build_extreme_prompt()
         self.system_message = self.system_message.format(
             CLIENT_PASSWORD=self.client_password
         )
@@ -909,8 +998,8 @@ class PromptAgent:
                         }
                     ]
                 })
-            elif self.eval_mode in ("cli", "cli-text"):
-                image_paths = previous_obs.get("images_paths", []) if self.eval_mode == "cli" else []
+            elif self.eval_mode in ("cli", "cli-text", "extreme"):
+                image_paths = previous_obs.get("images_paths", []) if self.eval_mode != "cli-text" else []
                 text = _format_terminal_text(
                     previous_obs.get("bash_runs", []),
                     image_paths,
@@ -1004,9 +1093,9 @@ class PromptAgent:
                     }
                 ]
             })
-        elif self.eval_mode in ("cli", "cli-text"):
+        elif self.eval_mode in ("cli", "cli-text", "extreme"):
             bash_runs = obs.get("bash_runs") or []
-            images = (obs.get("images") or []) if self.eval_mode == "cli" else []
+            images = (obs.get("images") or []) if self.eval_mode != "cli-text" else []
             self.observations.append({
                 "bash_runs": bash_runs,
                 # store paths only; image bytes are one-shot (model already saw them this turn)
@@ -1018,7 +1107,7 @@ class PromptAgent:
                 "type": "text",
                 "text": _format_terminal_text(bash_runs, [p for (p, _) in images]),
             }]
-            if self.eval_mode == "cli":
+            if self.eval_mode != "cli-text":
                 for path, data in images:
                     if not isinstance(data, (bytes, bytearray)) or not data:
                         # Failure already announced in the text part; do NOT ship an
@@ -1952,8 +2041,8 @@ class PromptAgent:
             actions = parse_computer13_actions(response)
         elif self.eval_mode in ("gui-a11y", "gui-screenshot-a11y"):
             actions = parse_gui_actions(response)
-        elif self.eval_mode in ("cli", "cli-text"):
-            actions = parse_cli_actions(response, allow_readimg=(self.eval_mode == "cli"))
+        elif self.eval_mode in ("cli", "cli-text", "extreme"):
+            actions = parse_cli_actions(response, allow_readimg=(self.eval_mode != "cli-text"))
         else:
             raise ValueError("Invalid eval_mode: " + self.eval_mode)
         self.actions.append(actions)

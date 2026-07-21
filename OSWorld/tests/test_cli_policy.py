@@ -201,3 +201,105 @@ def test_related_apps_still_reject_unlisted_software():
     }
     with pytest.raises(CliPolicyViolation):
         validate_cli_action("bash", "abaqus cae noGUI=solve.py", task)
+
+
+def _open_task_config():
+    return {
+        "id": "c-open-altium-designer-cadence-orcad-openscad-task-01-windows",
+        "related_apps": ["altium-designer", "cadence-orcad", "openscad"],
+        "_engiworld_task_family": "open",
+        "_engiworld_expected_outputs": ["merged_refdes.txt"],
+        "config": [{
+            "type": "upload_file",
+            "parameters": {"files": [{
+                "local_path": "task-01/init_file/design_a.schematic.json",
+                "path": "C:\\Users\\user\\Desktop\\design_a.schematic.json",
+            }]},
+        }],
+    }
+
+
+def test_rejects_open_task_neutral_json_parsing_with_powershell():
+    script = r"""
+$j = Get-Content C:\Users\user\Desktop\design_a.schematic.json -Raw | ConvertFrom-Json
+$j.parts.ref | Set-Content C:\Users\user\Desktop\merged_refdes.txt
+"""
+    with pytest.raises(CliPolicyViolation):
+        validate_cli_action("bash", script, _open_task_config())
+
+
+def test_rejects_open_task_neutral_json_parsing_with_generic_python():
+    script = r"""
+import json
+data = json.load(open(r'C:\Users\user\Desktop\design_a.schematic.json'))
+with open(r'C:\Users\user\Desktop\merged_refdes.txt', 'w') as out:
+    out.write('\n'.join(data['refs']))
+"""
+    with pytest.raises(CliPolicyViolation):
+        validate_cli_action("python", script, _open_task_config())
+
+
+def test_rejects_ifcopenshell_for_non_bonsai_open_task():
+    task = {
+        "id": "c-open-revit-archicad-abaqus-task-01-windows",
+        "related_apps": ["revit", "archicad", "abaqus"],
+    }
+    with pytest.raises(CliPolicyViolation):
+        validate_cli_action(
+            "python",
+            "import ifcopenshell\nmodel = ifcopenshell.open('init.ifc')",
+            task,
+        )
+
+
+def test_rejects_base64_wrapped_execution():
+    with pytest.raises(CliPolicyViolation):
+        validate_cli_action(
+            "python",
+            "import base64\nexec(base64.b64decode(payload).decode())",
+            {"id": "kicad-task-01-ubuntu"},
+        )
+
+
+def test_rejects_manual_gcode_even_with_freecad_import():
+    script = r"""
+import FreeCAD
+out = '/home/user/Desktop/task-01.nc'
+lines = ['G21', 'G90', 'G0 X0 Y0', 'M30']
+with open(out, 'w') as stream:
+    stream.write('\n'.join(lines))
+"""
+    with pytest.raises(CliPolicyViolation):
+        validate_cli_action("python", script, {"id": "freecad-path-task-01-ubuntu"})
+
+
+def test_allows_freecad_path_official_postprocessor():
+    script = r"""
+import FreeCAD
+import Path
+from PathScripts import PathPost
+PathPost.export(job, '/home/user/Desktop/task-01.nc', 'linuxcnc')
+"""
+    validate_cli_action("python", script, {"id": "freecad-path-task-01-ubuntu"})
+
+
+def test_allows_openscad_source_creation_and_compile():
+    script = r"""
+cat > /home/user/Desktop/model.scad <<'SCAD'
+difference() { cube([20, 20, 10]); cylinder(h=10, d=5); }
+SCAD
+openscad -o /home/user/Desktop/model.stl /home/user/Desktop/model.scad
+"""
+    validate_cli_action("bash", script, {"id": "openscad-task-01-ubuntu"})
+
+
+def test_allows_fenics_program_source():
+    script = r"""
+cat > /home/user/Desktop/solve.py <<'PY'
+from fenics import *
+mesh = UnitSquareMesh(16, 16)
+print(mesh.num_cells())
+PY
+python /home/user/Desktop/solve.py
+"""
+    validate_cli_action("bash", script, {"id": "fenics-task-01-ubuntu"})

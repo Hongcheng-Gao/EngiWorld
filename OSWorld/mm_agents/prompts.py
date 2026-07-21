@@ -27,6 +27,9 @@ _PYAUTOGUI_GUIDANCE = (
     "— we supply the observation.\n"
     "This action type is for GUI operations only. If you need to pause for the UI to settle, emit "
     "`<action type=\"wait\"/>` instead of a sleep-only action.\n"
+    "Do not access the filesystem, clipboard, processes, shells, or application APIs from the action code. "
+    "Do not type or paste scripts, macros, command batches, or encoded commands into a terminal or an "
+    "application's internal scripting/command console. Use visible GUI controls for the engineering work.\n"
     "Each pyautogui action runs in a fresh interpreter — no state carries between steps. Short "
     "`time.sleep(0.5)` between calls inside one action is fine when the GUI needs to catch up."
 )
@@ -44,13 +47,16 @@ _COMPUTER13_GUIDANCE = (
     "{{\"action_type\":\"TYPING\",\"parameters\":{{\"text\":\"hello\"}}}}\n"
     "{{\"action_type\":\"HOTKEY\",\"parameters\":{{\"keys\":[\"ctrl\",\"s\"]}}}}\n"
     "{{\"action_type\":\"SCROLL\",\"parameters\":{{\"dx\":0,\"dy\":-5}}}}\n"
+    "TYPING is for ordinary text entry into visible GUI fields. Do not type or paste shell commands, scripts, "
+    "macros, command batches, or encoded payloads into terminals or application consoles.\n"
     "For waiting, failure, or task completion, prefer the XML special signals described above: "
     "`<action type=\"wait\"/>`, `<action type=\"fail\"/>`, or `<action type=\"done\"/>`."
 )
 
 _PYTHON_GUIDANCE = (
     "=== <action type=\"python\"> ===\n"
-    "General-purpose Python: file I/O, parsing, computation, launching processes, querying state, etc. "
+    "Python for computation, orchestration, and helper scripts that drive the required application(s). The CLI "
+    "integrity rules below still govern file I/O, imports, process launching, parsing, and artifact creation. "
     "Each python action runs in a fresh interpreter — no state carries between steps."
 )
 
@@ -78,6 +84,8 @@ _GUI_NO_SHORTCUT = (
     "- Do NOT open a terminal, shell, Run dialog, or file-manager \"open with\" entry to run code that performs the "
     "task. If the task itself is about a terminal application, drive that terminal with mouse and keyboard the way a "
     "human would.\n"
+    "- Do NOT replace GUI operations by entering a script, macro, API program, APDL/command batch, or other bulk "
+    "program into an application's internal console. A visible console is not an exemption from GUI-only evaluation.\n"
     "- Traces that reveal the task was completed outside the application — helper scripts left on disk, shell or "
     "interpreter history showing commands that touched the output artifact — count as a failed run even if the final "
     "file happens to match the expected result."
@@ -192,7 +200,7 @@ _CLI_ENVELOPE = (
     "ls /tmp\n"
     "  ]]></action>\n"
     "  <action type=\"python\"><![CDATA[\n"
-    "# arbitrary Python (subprocess, file I/O, parsing, ...). Fresh interpreter each action.\n"
+    "# Python action. Fresh interpreter each action.\n"
     "import subprocess\n"
     "subprocess.run([\"echo\", \"hi\"], check=True)\n"
     "  ]]></action>\n"
@@ -216,7 +224,7 @@ _CLI_TEXT_ENVELOPE = (
     "ls /tmp\n"
     "  ]]></action>\n"
     "  <action type=\"python\"><![CDATA[\n"
-    "# arbitrary Python (subprocess, file I/O, parsing, ...). Fresh interpreter each action.\n"
+    "# Python action. Fresh interpreter each action.\n"
     "import subprocess\n"
     "subprocess.run([\"echo\", \"hi\"], check=True)\n"
     "  ]]></action>\n"
@@ -336,6 +344,31 @@ def build_cli_text_prompt() -> str:
         _PYTHON_GUIDANCE,
         _CLI_TIMEOUT_GUIDANCE,
         CLI_POLICY_PROMPT,
+        _CLI_FOOTER,
+    )
+
+
+def build_extreme_prompt() -> str:
+    """System prompt for unrestricted extreme tasks."""
+    return _join_sections(
+        "You operate the task computer through unrestricted `bash` and `python` actions. Each step you receive "
+        "the previous turn's terminal output (stdout / stderr / returncode) plus any images you requested via "
+        "`readimg`, and emit one or more actions.",
+        "=== Unrestricted extreme-task mode ===\n"
+        "These tasks are intentionally extremely difficult and impose no task-integrity or anti-bypass "
+        "restrictions. You may use any available method that helps complete the task: inspect, edit, create, copy, "
+        "or convert files directly; install or import packages; invoke any installed application or API; combine "
+        "multiple applications; and automate the GUI from Python.\n"
+        "For GUI work, use `pyautogui` or other available automation from a `python` action. To inspect the current "
+        "screen, save a screenshot from Python and request that image with `readimg`; Python actions run before "
+        "`readimg` actions in the same response. Choose methods solely for effectiveness and task completion.",
+        _CLI_ENVELOPE,
+        _BASH_GUIDANCE,
+        "=== <action type=\"python\"> ===\n"
+        "Unrestricted general-purpose Python for any computation, file operation, process, API, package, or GUI "
+        "automation needed by the task. Each python action runs in a fresh interpreter.",
+        _READIMG_GUIDANCE,
+        _CLI_TIMEOUT_GUIDANCE,
         _CLI_FOOTER,
     )
 

@@ -16,6 +16,18 @@ from mm_agents.cli_policy import CliPolicyViolation, validate_cli_action
 logger = logging.getLogger("desktopenv.experiment")
 
 
+def _validate_terminal_action(kind, script, task_config, eval_mode):
+    """Apply CLI integrity checks except in unrestricted extreme mode."""
+    if eval_mode == "extreme":
+        return
+    validate_cli_action(
+        kind,
+        script,
+        task_config,
+        text_only=eval_mode == "cli-text",
+    )
+
+
 # ---- step-level resume helpers ---------------------------------------------
 # Wired in via `--resume` (default on). When a task is interrupted mid-run, on
 # the next launch we replay the recorded action sequence from traj.jsonl
@@ -218,7 +230,15 @@ def _replay_gui_steps(env, agent, groups, sleep_seconds, bash_timeout):
     return obs, done, completed
 
 
-def _replay_cli_steps(env, agent, groups, sleep_seconds, bash_timeout, task_config=None, text_only=False):
+def _replay_cli_steps(
+    env,
+    agent,
+    groups,
+    sleep_seconds,
+    bash_timeout,
+    task_config=None,
+    eval_mode="cli",
+):
     """Replay a terminal-mode trajectory.
 
     Two obs shapes are in play here and they must not be confused:
@@ -237,6 +257,7 @@ def _replay_cli_steps(env, agent, groups, sleep_seconds, bash_timeout, task_conf
     obs_input = {"bash_runs": [], "images": []}
     done = False
     completed = 0
+    text_only = eval_mode == "cli-text"
     for grp in groups:
         # Mirror predict()'s internal-form append. observations[k] corresponds
         # to the obs that fed predict() at step k+1.
@@ -259,7 +280,7 @@ def _replay_cli_steps(env, agent, groups, sleep_seconds, bash_timeout, task_conf
             if kind in ("bash", "python"):
                 ts = datetime.datetime.now().strftime("%Y%m%d@%H%M%S%f")
                 try:
-                    validate_cli_action(kind, code, task_config, text_only=text_only)
+                    _validate_terminal_action(kind, code, task_config, eval_mode)
                     if kind == "python":
                         result = env.controller.run_python_script(code, timeout=bash_timeout)
                     else:
@@ -670,7 +691,7 @@ def run_single_example_terminal(agent, env, example, max_steps, instruction, arg
     done = False
     step_idx = 0
     bash_timeout = getattr(args, "bash_timeout", _BASH_TIMEOUT_DEFAULT)
-    text_only_cli = getattr(args, "eval_mode", "") == "cli-text"
+    eval_mode = getattr(args, "eval_mode", "")
 
     # Step-level resume (terminal mode): replay recorded bash/readimg actions
     # so the agent picks up where it left off. Same contract as GUI mode.
@@ -702,7 +723,7 @@ def run_single_example_terminal(agent, env, example, max_steps, instruction, arg
                     sleep_seconds=_RESUME_SLEEP_SECONDS,
                     bash_timeout=bash_timeout,
                     task_config=example,
-                    text_only=text_only_cli,
+                    eval_mode=eval_mode,
                 )
                 logger.info(
                     "[resume] replayed %d step(s) for %s; resuming from step %d "
@@ -763,10 +784,10 @@ def run_single_example_terminal(agent, env, example, max_steps, instruction, arg
             logger.info("Step %d %s[%d]: %s", step_idx + 1, kind, i + 1, first_line)
             try:
                 if kind == "python":
-                    validate_cli_action(kind, script, example, text_only=text_only_cli)
+                    _validate_terminal_action(kind, script, example, eval_mode)
                     result = env.controller.run_python_script(script, timeout=bash_timeout)
                 else:
-                    validate_cli_action(kind, script, example, text_only=text_only_cli)
+                    _validate_terminal_action(kind, script, example, eval_mode)
                     result = env.controller.run_bash_script(script, timeout=bash_timeout)
             except SandboxExecuteHardTimeoutError as exc:
                 # Sandbox killed our command for exceeding the per-action
