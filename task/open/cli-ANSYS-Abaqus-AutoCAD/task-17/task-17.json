@@ -1,13 +1,22 @@
 {
   "id": "c-open-abaqus-ansys-autocad-task-17-windows",
   "snapshot": "ANSYS-ABAQUS-AUTOCAD",
-  "instruction": "Choose a suitable finite-element simulation tool available in the current Windows fused environment. Use a command-line or scripting workflow. Use the selected finite-element simulation tool to build and solve a coupled thermal-structural analysis model. Physical problem: A straight steel bar is axially restrained and subjected to a uniform temperature increase. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The bar length is along the X direction. - The bar occupies: - 0 ≤ X ≤ 100 mm - 0 ≤ Y ≤ 10 mm - 0 ≤ Z ≤ 10 mm - The left end face is X = 0. - The right end face is X = 100 mm. Model parameters: - Block size: 100 mm × 10 mm × 10 mm - Material: linear elastic steel with thermal expansion properties: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Coefficient of thermal expansion α = 1.5e-5 /°C - Element type: appropriate three-dimensional structural solid element formulation - Mesh: global element size 5 mm Thermal condition: - Set the reference temperature for thermal strain to 20 °C. - Apply a uniform body temperature of 100 °C to the entire bar. Structural boundary conditions: - Restrain axial expansion by applying UX = 0 on both end faces: - X = 0 - X = 100 mm - Add only the minimum additional constraints required to prevent rigid-body motion in 3D space. For a solid model, this requires fixing translational degrees of freedom at strategically selected nodes on the same end face, for example: - At node (0, 0, 0): fix UY = 0 and UZ = 0. - At node (0, 10, 0): fix UZ = 0. - Do not fully constrain the lateral surfaces. Analysis type: - Static structural analysis with thermal strain. - The temperature field is applied as a uniform body load for thermal strain calculation. Deliverables: save the native model artifact and native solver result artifact on the Desktop, and write `C:/Users/user/Desktop/metrics.json` with numeric fields for the requested metrics.",
+  "instruction": "Choose a suitable tool from ANSYS, Abaqus, and AutoCAD to complete the task. Use a command-line or scripting workflow. Use the selected tool to build and solve a coupled thermal-structural analysis model. Physical problem: A straight steel bar is axially restrained and subjected to a uniform temperature increase. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The bar length is along the X direction. - The bar occupies: - 0 ≤ X ≤ 100 mm - 0 ≤ Y ≤ 10 mm - 0 ≤ Z ≤ 10 mm - The left end face is X = 0. - The right end face is X = 100 mm. Model parameters: - Block size: 100 mm × 10 mm × 10 mm - Material: linear elastic steel with thermal expansion properties: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Coefficient of thermal expansion α = 1.5e-5 /°C - Element type: appropriate three-dimensional structural solid element formulation - Mesh: global element size 5 mm Thermal condition: - Set the reference temperature for thermal strain to 20 °C. - Apply a uniform body temperature of 100 °C to the entire bar. Structural boundary conditions: - Restrain axial expansion by applying UX = 0 on both end faces: - X = 0 - X = 100 mm - Add only the minimum additional constraints required to prevent rigid-body motion in 3D space. For a solid model, this requires fixing translational degrees of freedom at strategically selected nodes on the same end face, for example: - At node (0, 0, 0): fix UY = 0 and UZ = 0. - At node (0, 10, 0): fix UZ = 0. - Do not fully constrain the lateral surfaces. Analysis type: - Static structural analysis with thermal strain. - The temperature field is applied as a uniform body load for thermal strain calculation. Deliverables: save the native model artifact and native solver result artifact on the Desktop, and write `C:/Users/user/Desktop/metrics.json` with numeric fields for the requested metrics. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data ; generated open-choice variant from task/task-c/ansys/task-08",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
       }
     }
   ],
