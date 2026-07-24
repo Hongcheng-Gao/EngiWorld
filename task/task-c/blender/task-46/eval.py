@@ -6,7 +6,7 @@ import subprocess
 import sys
 
 
-FACE_MIN = 200
+FACE_MIN = 100
 FACE_MAX = 5000
 BLEND_PATH = "/home/user/Desktop/answer.blend"
 BLENDER_PATH = os.environ.get("BLENDER_PATH", "blender")

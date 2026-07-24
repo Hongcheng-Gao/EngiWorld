@@ -187,7 +187,7 @@ def main():
     else:
         argv = argv[1:]
     p = argparse.ArgumentParser(description="Evaluate HH02.")
-    p.add_argument("--blend", required=True)
+    p.add_argument("--blend", default=str(DESKTOP / "answer.blend"))
     args = p.parse_args(argv)
     if "bpy" in sys.modules:
         _emit(_run_eval(args.blend))
