@@ -506,7 +506,11 @@ def validate_reports(constraints: dict, variables: dict, proxy: dict, sql_metric
         failures.append("metrics:implausibly_low_total_energy")
     if not metrics_from_energyplus_rerun:
         better_limit = float(hard["max_sql_better_than_model_proxy_fraction"])
-        for metric in ["total_site_energy_kwh", "eui_kwh_m2", "hvac_energy_kwh", "peak_cooling_kw", "peak_heating_kw", "carbon_kgco2e"]:
+        # The proxy assumes nonzero cooling and fan energy, while valid
+        # EnergyPlus Ideal Loads models can report both as zero. Keep the
+        # aggregate and peak plausibility bounds, but do not reject native SQL
+        # solely because its HVAC end-use split is below that approximation.
+        for metric in ["total_site_energy_kwh", "eui_kwh_m2", "peak_cooling_kw", "peak_heating_kw", "carbon_kgco2e"]:
             if float(sql_metrics[metric]) < float(proxy[metric]) * (1.0 - better_limit):
                 failures.append(f"metrics:sql_unrealistically_better_than_idf_proxy:{metric}")
     return failures
