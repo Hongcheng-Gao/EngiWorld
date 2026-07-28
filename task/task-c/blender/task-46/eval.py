@@ -73,7 +73,16 @@ def _have_bpy() -> bool:
 
 def _run_via_blender(blend_path: str) -> bool:
     proc = subprocess.run(
-        [BLENDER_PATH, "--background", "--factory-startup", "--python", __file__],
+        [
+            BLENDER_PATH,
+            "--background",
+            "--factory-startup",
+            "--python",
+            __file__,
+            "--",
+            "--blend",
+            blend_path,
+        ],
         capture_output=True,
         text=True,
         encoding="utf-8",
@@ -87,8 +96,15 @@ def eval_outputs(blend_path, expected=None, postconfig=None):
     return _run_eval(blend_path) if _have_bpy() else _run_via_blender(blend_path)
 
 
+def _parse_blend_path() -> str:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--blend", default=BLEND_PATH)
+    script_args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    return parser.parse_known_args(script_args)[0].blend
+
+
 def main():
-    passed = eval_outputs(BLEND_PATH)
+    passed = eval_outputs(_parse_blend_path())
     print("True" if passed else "False")
     return 0 if passed else 1
 

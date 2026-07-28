@@ -1,7 +1,9 @@
 from __future__ import annotations
 
+import argparse
 import os
 import subprocess
+import sys
 import tempfile
 
 
@@ -107,6 +109,9 @@ def _run_via_blender(blend_path: str) -> bool:
         "--factory-startup",
         "--python",
         __file__,
+        "--",
+        "--blend",
+        blend_path,
     ]
     proc = subprocess.run(cmd, capture_output=True, text=True,
                           encoding="utf-8", errors="replace")
@@ -121,8 +126,20 @@ def _have_bpy() -> bool:
         return False
 
 
+def eval_outputs(blend_path, expected=None, postconfig=None):
+    return _run_eval(blend_path) if _have_bpy() else _run_via_blender(blend_path)
+
+
+def _parse_blend_path() -> str:
+    parser = argparse.ArgumentParser(add_help=False)
+    parser.add_argument("--blend", default=BLEND_PATH)
+    script_args = sys.argv[sys.argv.index("--") + 1:] if "--" in sys.argv else []
+    return parser.parse_known_args(script_args)[0].blend
+
+
 def main() -> int:
-    passed = _run_in_blender(BLEND_PATH, None) if _have_bpy() else _run_via_blender(BLEND_PATH)
+    blend_path = _parse_blend_path()
+    passed = _run_in_blender(blend_path, None) if _have_bpy() else _run_via_blender(blend_path)
     print("True" if passed else "False")
     return 0 if passed else 1
 
