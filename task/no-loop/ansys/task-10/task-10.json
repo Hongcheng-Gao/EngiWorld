@@ -1,0 +1,41 @@
+{
+  "id": "no-loop-ansys-task-10-windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Glass interposer coupon. Generate a complete, standalone source file named 'answer.inp' for this semiconductor engineering task. Create a SOLID185 block sized (25.0, 25.0, 0.7) mm with E=72000.0 MPa and nu=0.22, mesh at 1.5 mm, fix z=0, apply a FY nodal load of -150.0 N to every node on z=0.7, solve statically, save glassinterposer.db, and write maximum equivalent stress to glassinterposer_result.txt. The source must be directly runnable by the target software and save generated artifacts beside the source file. Run it with ANSYS261.exe -b -i answer.inp -o answer.out. Return only the complete contents of 'answer.inp', without Markdown fences, commentary, shell commands, or a second file.",
+  "source": "https://ansyshelp.ansys.com/; https://www.mm.bme.hu/~gyebro/files/ans_help_v182/ans_cmd/Hlp_C_CmdTOC.html",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

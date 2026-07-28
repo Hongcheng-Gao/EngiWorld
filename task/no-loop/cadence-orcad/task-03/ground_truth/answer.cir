@@ -1,0 +1,9 @@
+Low-voltage NMOS sensor readout
+VD d 0 1.2
+VG g 0 0
+M1 d g 0 0 NMOS_CORE W=8u L=0.13u
+.MODEL NMOS_CORE NMOS (LEVEL=1 VTO=0.35 KP=180u LAMBDA=0.03)
+.DC VG 0 1.2 0.01
+.MEASURE DC ID_MID FIND I(VD) AT=0.6
+.PROBE V(*) I(*)
+.END

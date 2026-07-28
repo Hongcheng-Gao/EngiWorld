@@ -1,0 +1,41 @@
+{
+  "id": "no-loop-freecad-task-01-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "BGA substrate and ball array. Generate a complete, standalone source file named 'answer.py' for this semiconductor engineering task. Build BGASubstrate from a (40, 40, 1.2) mm base with a balls feature set of count 36 and characteristic size 1.8 mm. Use Part solids and Boolean operations, save BGASubstrate.FCStd, and export BGASubstrate.step. The source must be directly runnable by the target software and save generated artifacts beside the source file. Run it with FreeCADCmd answer.py. Return only the complete contents of 'answer.py', without Markdown fences, commentary, shell commands, or a second file.",
+  "source": "https://wiki.freecad.org/Headless_FreeCAD; https://wiki.freecad.org/Part_API",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

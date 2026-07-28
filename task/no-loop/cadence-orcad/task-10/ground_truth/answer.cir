@@ -1,0 +1,15 @@
+BJT common-emitter gain stage
+VCC vcc 0 5
+VIN src 0 AC 1m
+CIN src base 1u
+R1 vcc base 100k
+R2 base 0 22k
+RC vcc collector 2k
+RE emitter 0 500
+Q1 collector base emitter QSI
+.MODEL QSI NPN (IS=1e-15 BF=150 VAF=80 CJE=5p CJC=3p TF=0.3n)
+.OP
+.AC DEC 20 10 100MEG
+.MEASURE AC GAIN_DB_1K FIND DB(V(collector)) AT=1K
+.PROBE V(*) I(*)
+.END

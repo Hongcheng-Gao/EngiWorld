@@ -1,0 +1,41 @@
+{
+  "id": "no-loop-calculix-task-03-ubuntu",
+  "snapshot": "CalculiX-2.21",
+  "instruction": "Epoxy die-attach shear coupon. Generate a complete, standalone source file named 'answer.inp' for this semiconductor engineering task. Define one C3D8 DieAttach coupon sized (8.0, 8.0, 0.15) mm with E=5000.0 MPa and nu=0.35. Fix the four z=0 nodes, distribute total load -80.0 N over top nodes in DOF 1, run a static step, and request U, RF, S, and E output. The source must be directly runnable by the target software and save generated artifacts beside the source file. Run it with ccx -i answer. Return only the complete contents of 'answer.inp', without Markdown fences, commentary, shell commands, or a second file.",
+  "source": "https://www.dhondt.de/; https://www.feacluster.com/CalculiX/ccx_2.18/doc/ccx/",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,41 @@
+{
+  "id": "no-loop-fenics-task-02-ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "MOS oxide electrostatic field. Generate a complete, standalone source file named 'answer.py' for this semiconductor engineering task. Solve this layered scalar finite-element model on a 56 by 56 unit-square mesh using P1 elements, coefficient 3.9, left/right values 0.0/1.2, and source 0.0. Write center, mean, and applicable energy or step data to result.json and export the field as mos_oxide.pvd. The source must be directly runnable by the target software and save generated artifacts beside the source file. Run it with python3 answer.py in the FEniCS environment. Return only the complete contents of 'answer.py', without Markdown fences, commentary, shell commands, or a second file.",
+  "source": "https://fenicsproject.org/; https://olddocs.fenicsproject.org/dolfin/latest/python/",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

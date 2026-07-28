@@ -1,0 +1,41 @@
+{
+  "id": "no-loop-abaqus-task-14-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Redistribution-layer line. Generate a complete, standalone source file named 'answer.py' for this semiconductor engineering task. Build a 3D RDLLine block sized (12.0, 0.08, 0.015) mm, assign E=110000.0 MPa and nu=0.34, mesh with C3D8R at nominal size 0.4 mm, fix z=0, apply 5.0 MPa pressure on z=0.015, write the job input, and save RDLLine.cae. The source must be directly runnable by the target software and save generated artifacts beside the source file. Run it with abaqus cae noGUI=answer.py. Return only the complete contents of 'answer.py', without Markdown fences, commentary, shell commands, or a second file.",
+  "source": "https://help.3ds.com/; https://abaqus-docs.mit.edu/2017/English/SIMACAEKERRefMap/simaker-c-ov.htm",
+  "config": [],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
