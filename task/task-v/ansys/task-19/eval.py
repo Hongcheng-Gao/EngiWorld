@@ -1,272 +1,197 @@
-from pathlib import Path
+from __future__ import annotations
+
+import hashlib
+import io
+import math
+import re
+import shutil
+import socket
 import subprocess
+import tempfile
+import zipfile
+from pathlib import Path
 
 
 DESKTOP = Path(r"C:\Users\user\Desktop")
-EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
-MAPDL_PORT = 50119
-JOBNAME = "eval_wb_buckling"
-
 WBPJ_FILE = DESKTOP / "wb_buckling.wbpj"
 DB_FILE = DESKTOP / "wb_buckling.db"
 RESULT_FILE = DESKTOP / "wb_buckling.rst"
-REQUIRED_FILES = [WBPJ_FILE, DB_FILE, RESULT_FILE]
+FILES = (WBPJ_FILE, DB_FILE, RESULT_FILE)
+LICENSE_FILE = DESKTOP / "license.py"
+EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\ansys\bin\winx64\ANSYS261.exe"
+FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
 
 
-def is_nonempty_file(path: Path) -> bool:
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+def digest(path: Path) -> str:
+    value = hashlib.sha256()
+    with path.open("rb") as stream:
+        for chunk in iter(lambda: stream.read(1024 * 1024), b""):
+            value.update(chunk)
+    return value.hexdigest()
 
 
+def require_files() -> dict[Path, str]:
+    for path in FILES:
+        if not path.is_file() or path.stat().st_size <= 0:
+            raise FileNotFoundError(path.name)
+    return {path: digest(path) for path in FILES}
 
-def _is_known_generated_script(name: str) -> bool:
-    return (
-        (name.startswith("eval_") and name.endswith((".bat", ".cmd")))
-        or (name.startswith("tmp") and name.endswith((".jou", ".wbjn")))
+
+def genuine_workbench_project(path: Path) -> bool:
+    data = path.read_bytes()
+    if len(data) < 4096 or data.lstrip().startswith((b"{", b"[")):
+        return False
+    corpus = data.decode("latin-1", errors="ignore")
+    if zipfile.is_zipfile(io.BytesIO(data)):
+        with zipfile.ZipFile(io.BytesIO(data)) as archive:
+            parts = [" ".join(archive.namelist())]
+            for name in archive.namelist():
+                info = archive.getinfo(name)
+                if info.file_size <= 2 * 1024 * 1024:
+                    parts.append(archive.read(name).decode("latin-1", errors="ignore"))
+            corpus = "\n".join(parts)
+    lower = corpus.lower()
+    has_project = "workbench" in lower or "ansys" in lower or "project" in lower
+    has_static = "static structural" in lower or "staticstructural" in lower or "static structural" in lower.replace("_", " ")
+    has_buckling = "eigenvalue buckling" in lower or "eigenvaluebuckling" in lower or "buckling" in lower
+    return has_project and has_static and has_buckling
+
+
+def check_license() -> None:
+    result = subprocess.run(
+        ["python", str(LICENSE_FILE)], cwd=DESKTOP, capture_output=True, text=True,
+        timeout=120, creationflags=0x08000000,
     )
+    output = (result.stdout or "") + (result.stderr or "")
+    if result.returncode != 0 or "[SUCCESS]" not in output:
+        raise RuntimeError("ANSYS license setup failed")
 
 
-def _cleanup_known_generated_scripts(desktop_path: Path) -> None:
-    try:
-        entries = list(desktop_path.iterdir())
-    except Exception:
-        return
-
-    for entry in entries:
-        try:
-            if not entry.is_file():
-                continue
-        except Exception:
-            continue
-
-        name = entry.name.lower()
-        if not _is_known_generated_script(name):
-            continue
-
-        try:
-            entry.unlink()
-        except Exception:
-            pass
+def free_port(start: int) -> int:
+    for port in range(start, start + 100):
+        with socket.socket(socket.AF_INET, socket.SOCK_STREAM) as sock:
+            if sock.connect_ex(("127.0.0.1", port)) != 0:
+                return port
+    raise RuntimeError("no MAPDL port available")
 
 
-def has_forbidden_script_file(desktop_path: Path) -> bool:
-    allowed_names = {"eval.py", "license.py"}
-    forbidden_suffixes = {
-        ".bat",
-        ".cmd",
-        ".ps1",
-        ".vbs",
-        ".js",
-        ".pyw",
-        ".jou",
-        ".wbjn",
-    }
-    try:
-        entries = desktop_path.iterdir()
-    except Exception:
-        return True
-
-    for entry in entries:
-        try:
-            if not entry.is_file():
-                continue
-        except Exception:
-            return True
-
-        name = entry.name.lower()
-        if name in allowed_names:
-            continue
-        if _is_known_generated_script(name):
-            continue
-        if any(name.endswith(ext) for ext in forbidden_suffixes):
-            return True
-
-    return False
+def close(value: float, target: float, tolerance: float) -> bool:
+    return math.isfinite(value) and abs(value - target) <= tolerance
 
 
-def allsel(mapdl) -> None:
-    mapdl.run("ALLSEL,ALL")
-
-
-def node_at(mapdl, x: float, y: float, z: float, tol: float = 1e-3) -> int:
-    allsel(mapdl)
-    mapdl.nsel("S", "LOC", "X", x - tol, x + tol)
-    mapdl.nsel("R", "LOC", "Y", y - tol, y + tol)
-    mapdl.nsel("R", "LOC", "Z", z - tol, z + tol)
-    node = int(mapdl.get_value("NODE", 0, "NUM", "MIN"))
-    allsel(mapdl)
-    if node < 1:
-        raise RuntimeError(f"No node found near ({x}, {y}, {z}).")
-    return node
-
-
-def extract_predictions(mapdl) -> dict:
-    mapdl.resume(DB_FILE.stem, "db")
-    mapdl.post1()
-    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
-    mapdl.set(1, 1)
-
-    multiplier = float(mapdl.get_value("MODE", 1, "FREQ"))
-    top = node_at(mapdl, x=0.0, y=1000.0, z=0.0)
-    top_rotx = float(mapdl.get_value("NODE", top, "ROT", "X"))
-    top_rotz = float(mapdl.get_value("NODE", top, "ROT", "Z"))
-
+def parse_constraints(text: str) -> set[tuple[int, str]]:
     return {
-        "buckling_multiplier": multiplier,
-        "top_rotx_mode1": top_rotx,
-        "top_rotz_mode1": top_rotz,
+        (int(node), label.upper())
+        for node, label in re.findall(r"(?m)^\s*(\d+)\s+(UX|UY|UZ|ROTX|ROTY|ROTZ)\s+" + FLOAT, text)
     }
 
 
-def _kill_ansys_related() -> None:
-    for target in (
-        "ANSYS261.exe",
-        "ansys261.exe",
-        "ANSYS.exe",
-        "ansys.exe",
-        "fluent.exe",
-        "Fluent.exe",
-        "cortex.exe",
-        "Cortex.exe",
-    ):
+def parse_forces(text: str) -> dict[tuple[int, str], float]:
+    values = {}
+    for node, label, value in re.findall(r"(?m)^\s*(\d+)\s+(FX|FY|FZ)\s+(" + FLOAT + r")", text):
+        values[(int(node), label.upper())] = float(value)
+    return values
+
+
+def material_ok(text: str) -> bool:
+    upper = text.upper()
+    ex = re.search(r"\bEX\b\s*[=:]?\s*(" + FLOAT + r")", upper)
+    nu = re.search(r"\bPRXY\b\s*[=:]?\s*(" + FLOAT + r")", upper)
+    return bool(ex and nu and close(float(ex.group(1)), 210000.0, 2.1) and close(float(nu.group(1)), 0.3, 0.003))
+
+
+def inspect_copy(root: Path) -> bool:
+    from ansys.mapdl.core import launch_mapdl
+
+    check_license()
+    mapdl = launch_mapdl(
+        exec_file=EXEC_FILE, run_location=str(root), jobname="eval_task19", nproc=1,
+        port=free_port(56119), override=True, cleanup_on_exit=True,
+    )
+    try:
+        mapdl.resume(str((root / "case").resolve()), "db")
+        mapdl.prep7()
+        mapdl.allsel()
+        if "BEAM188" not in str(mapdl.run("ETLIST,ALL")).upper():
+            return False
+        section_text = str(mapdl.run("SLIST,ALL")).upper()
+        area = re.search(r"\bAREA\s*=\s*(" + FLOAT + r")", section_text)
+        iyy = re.search(r"\bIYY\s*=\s*(" + FLOAT + r")", section_text)
+        izz = re.search(r"\bIZZ\s*=\s*(" + FLOAT + r")", section_text)
+        if not (
+            "RECTANGLE" in section_text
+            and area and iyy and izz
+            and close(float(area.group(1)), 100.0, 0.1)
+            and close(float(iyy.group(1)), 833.333333, 1.0)
+            and close(float(izz.group(1)), 833.333333, 1.0)
+        ):
+            return False
+        if int(mapdl.get_value("ELEM", 0, "COUNT")) != 40:
+            return False
+        if not material_ok(str(mapdl.run("MPLIST,1"))):
+            return False
+
+        node_numbers = [int(value) for value in mapdl.mesh.nnum]
+        coordinates = [[float(item) for item in row] for row in mapdl.mesh.nodes]
+        coordinate_by_node = dict(zip(node_numbers, coordinates))
+        if len(node_numbers) != 41 or len(coordinates) != 41:
+            return False
+        bounds = [(min(row[i] for row in coordinates), max(row[i] for row in coordinates)) for i in range(3)]
+        if not (
+            close(bounds[0][0], 0.0, 1.0e-6) and close(bounds[0][1], 0.0, 1.0e-6)
+            and close(bounds[1][0], 0.0, 1.0e-6) and close(bounds[1][1], 1000.0, 1.0e-5)
+            and close(bounds[2][0], 0.0, 1.0e-6) and close(bounds[2][1], 0.0, 1.0e-6)
+        ):
+            return False
+        bottom = {node for node, xyz in coordinate_by_node.items() if abs(xyz[1]) <= 1.0e-6}
+        top = {node for node, xyz in coordinate_by_node.items() if abs(xyz[1] - 1000.0) <= 1.0e-6}
+        if len(bottom) != 1 or len(top) != 1:
+            return False
+        bottom_node = next(iter(bottom))
+        top_node = next(iter(top))
+        constraints = parse_constraints(str(mapdl.run("DLIST,ALL,ALL")))
+        for dof in ("UX", "UY", "UZ"):
+            if (bottom_node, dof) not in constraints:
+                return False
+        if (top_node, "UX") not in constraints or (top_node, "UZ") not in constraints or (top_node, "UY") in constraints:
+            return False
+        forces = parse_forces(str(mapdl.run("FLIST,ALL,ALL")))
+        if not close(forces.get((top_node, "FY"), float("nan")), -1.0, 1.0e-4):
+            return False
+
+        database_nodes = set(node_numbers)
+        mapdl.finish()
+        mapdl.post1()
+        mapdl.file(str((root / "case").resolve()), "rst")
+        mapdl.set(1, 1)
+        if set(int(value) for value in mapdl.result.mesh.nnum) != database_nodes:
+            return False
+        multiplier = float(mapdl.get_value("MODE", 1, "FREQ"))
+        lateral_x = max(abs(float(value)) for value in mapdl.post_processing.nodal_displacement("X"))
+        lateral_z = max(abs(float(value)) for value in mapdl.post_processing.nodal_displacement("Z"))
+        return 1500.0 < multiplier < 2000.0 and max(lateral_x, lateral_z) > 1.0e-8
+    finally:
         try:
-            subprocess.run(
-                ["taskkill", "/F", "/IM", target],
-                capture_output=True,
-                creationflags=0x08000000,
-            )
+            mapdl.exit(force=True)
         except Exception:
             pass
 
-
-
-
-def _coord_span(arr, axis: int):
-    values = [float(v[axis]) for v in arr]
-    return min(values), max(values)
-
-
-def _within(value: float, target: float, tol: float) -> bool:
-    return abs(value - target) <= tol
-
-
-def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
-    nodes = mapdl.mesh.nodes
-    if nodes is None or len(nodes) < 2:
-        return False
-
-    xmin, xmax = _coord_span(nodes, 0)
-    ymin, ymax = _coord_span(nodes, 1)
-    zmin, zmax = _coord_span(nodes, 2)
-
-    if task_name == "task-01":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 10.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 100.0, 1e-1)
-    if task_name == "task-02":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 1.0, 1e-1)
-    if task_name == "task-03":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 200.0, 1e-1)
-    if task_name == "task-04":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 20.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 20.0, 1e-1)
-    if task_name == "task-05":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 500.0, 5e-1)
-    if task_name == "task-06":
-        return _within(xmin, 25.0, 1e-1) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1)
-    if task_name == "task-07":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
-    if task_name == "task-08":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
-    if task_name == "task-11":
-        return (xmax - xmin) > 10.0 and (ymax - ymin) > 10.0 and (zmax - zmin) > 10.0
-    if task_name == "task-12":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 1000.0, 5e-1)
-    if task_name == "task-13":
-        return _within(ymin, 0.0, 1e-2) and _within(ymax, 50.0, 2e-1)
-    if task_name == "task-14":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 500.0, 5e-1)
-    if task_name == "task-18":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 2e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 100.0, 2e-1)
-    if task_name == "task-19":
-        return _within(ymin, 0.0, 1e-2) and _within(ymax, 1000.0, 5e-1)
-    if task_name == "task-20":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
-
-    return True
-
-
-def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
-    mapdl.resume(DB_FILE.stem, "db")
-    if not _check_bounds_from_instruction(mapdl, task_name):
-        return False
-
-    mapdl.post1()
-    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
-    try:
-        mapdl.set("LAST")
-    except Exception:
-        try:
-            mapdl.set(1, 1)
-        except Exception:
-            return False
-
-    for key, val in pred.items():
-        try:
-            x = float(val)
-        except Exception:
-            return False
-
-        lk = key.lower()
-        if "temp" in lk and not (-1000.0 <= x <= 5000.0):
-            return False
-        if "freq" in lk and not (x > 0.0):
-            return False
-        if "reaction" in lk and abs(x) < 1e-9:
-            return False
-        if ("uy" in lk or "uz" in lk or "ux" in lk or "rot" in lk) and not (-1e6 <= x <= 1e6):
-            return False
-        if ("von_mises" in lk or "seqv" in lk or "stress" in lk) and abs(x) < 1e-9:
-            return False
-        if "final_time" in lk and not (x > 0.0):
-            return False
-
-    return True
 
 def evaluate() -> bool:
-    _kill_ansys_related()
-    _cleanup_known_generated_scripts(DESKTOP)
-
-    if has_forbidden_script_file(DESKTOP):
+    before = require_files()
+    if not genuine_workbench_project(WBPJ_FILE):
         return False
-
-    if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
-        return False
-
-    mapdl = None
-    ok = False
     try:
-        from ansys.mapdl.core import launch_mapdl
-
-        mapdl = launch_mapdl(
-            exec_file=EXEC_FILE,
-            jobname=JOBNAME,
-            run_location=str(DESKTOP),
-            nproc=1,
-            port=MAPDL_PORT,
-            override=True,
-        )
-        pred = extract_predictions(mapdl)
-        ok = passes_process_checks(mapdl, pred, task_name="task-19")
+        with tempfile.TemporaryDirectory(prefix="ansys_task19_eval_", ignore_cleanup_errors=True) as temp:
+            root = Path(temp)
+            shutil.copy2(DB_FILE, root / "case.db")
+            shutil.copy2(RESULT_FILE, root / "case.rst")
+            passed = inspect_copy(root)
     except Exception:
-        ok = False
-    finally:
-        if mapdl is not None:
-            try:
-                mapdl.exit()
-            except Exception:
-                pass
-    return ok
-
-def main() -> None:
-    print("True" if evaluate() else "False")
+        passed = False
+    after = {path: digest(path) for path in FILES}
+    return passed and before == after
 
 
 if __name__ == "__main__":
-    main()
+    print("True" if evaluate() else "False")

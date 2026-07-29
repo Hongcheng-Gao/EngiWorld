@@ -1,7 +1,7 @@
 {
   "id": "v-quantified-ansys-structural-thermal-optimization-task-01-windows",
   "snapshot": "ANSYS-2026R",
-  "instruction": "Use ANSYS to reduce the mass of a load-bearing structural part. Read C:\\Users\\user\\Desktop\\problem_spec.json and start from C:\\Users\\user\\Desktop\\baseline_apdl_hole_plate.db with its baseline result file C:\\Users\\user\\Desktop\\baseline_apdl_hole_plate.rst. Keep the fixed support region, loaded region, material elastic properties, analysis type, mounting and loading interfaces, and outer envelope unchanged. The model uses a consistent N-mm unit system, Young's modulus 210000 MPa, Poisson's ratio 0.3, an allowable equivalent stress of 160 MPa, and a maximum allowed displacement of 0.8 mm. You may remove or redistribute material inside the allowed envelope. Save the final native database as C:\\Users\\user\\Desktop\\submission.db and the final structural result as C:\\Users\\user\\Desktop\\submission.rst.",
+  "instruction": "Use ANSYS to minimize the mass of the tensile plate defined in C:\\Users\\user\\Desktop\\problem_spec.json. Start from C:\\Users\\user\\Desktop\\baseline_apdl_hole_plate.db and its result file C:\\Users\\user\\Desktop\\baseline_apdl_hole_plate.rst. Preserve the specified envelope, two loaded edge interfaces, rigid-body constraints, material, thickness, analysis type, minimum ligaments, and mesh limit. Material may be removed or redistributed only inside the permitted design domain. Solve the final design and save its native database as C:\\Users\\user\\Desktop\\submission.db and its structural result as C:\\Users\\user\\Desktop\\submission.rst.",
   "source": "design-generated quantified CAE optimization task",
   "config": [
     {
@@ -27,17 +27,10 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "python",
-          "C:\\Users\\user\\Desktop\\license.py"
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
-          "-g"
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
         ]
       }
     }
@@ -48,7 +41,7 @@
   ],
   "evaluator": {
     "metric": {
-      "baseline_score": 1.0,
+      "baseline_score": 0.0,
       "direction": "maximize",
       "name": "normalized structural-mass improvement",
       "output_field": "score"
@@ -59,8 +52,12 @@
         "parameters": {
           "files": [
             {
-              "local_path": "task-01/eval.py",
-              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            "local_path": "task-01/eval.py",
+            "path": "C:\\Users\\user\\Desktop\\eval.py"
+            },
+            {
+            "local_path": "_shared/read_only_eval.py",
+            "path": "C:\\Users\\user\\Desktop\\read_only_eval.py"
             }
           ]
         }

@@ -1,40 +1,42 @@
 {
   "id": "opt-ansys-gui-01",
-  "title": "ANSYS GUI load-bearing structure mass optimization",
+  "title": "Tensile hole-plate mass optimization",
   "interface": "gui",
   "primary_software": "ansys",
-  "objective": "Minimize structural mass while satisfying displacement and stress limits.",
-  "fixed_features": [
-    "fixed support region",
-    "loaded region",
-    "mounting and loading interfaces",
-    "outer envelope"
-  ],
-  "constraints": {
+  "objective": {
+    "direction": "minimize",
+    "quantity": "mass",
+    "formula": "mass = density * total retained element volume"
+  },
+  "model": {
+    "analysis": "linear static structural",
     "unit_system": "N-mm",
-    "max_displacement": 0.8,
-    "allowable_mises": 160.0,
-    "envelope_mm": [
-      100.0,
-      50.0,
-      5.0
-    ],
-    "material_E_mpa": 210000.0,
-    "material_nu": 0.3
+    "geometry": {
+      "outer_envelope_mm": {"x": [0.0, 100.0], "y": [0.0, 200.0]},
+      "thickness_mm": 1.0,
+      "baseline_hole": {"center_mm": [50.0, 100.0], "radius_mm": 5.0},
+      "design_domain": "interior of the outer envelope excluding the preserved edge interfaces"
+    },
+    "element": {"family": "PLANE183", "behavior": "plane stress with thickness"},
+    "material": {
+      "youngs_modulus_mpa": 210000.0,
+      "poissons_ratio": 0.3,
+      "density_tonne_per_mm3": 7.85e-9
+    }
   },
-  "baseline": {
-    "files": [
-      "baseline_apdl_hole_plate.db",
-      "baseline_apdl_hole_plate.rst"
-    ]
+  "interfaces": {
+    "left_loaded_edge": {"location": "X = 0 mm", "traction_mpa": -10.0, "direction": "X"},
+    "right_loaded_edge": {"location": "X = 100 mm", "traction_mpa": 10.0, "direction": "X"},
+    "rigid_body_constraints": "minimum nodal displacement constraints needed to suppress rigid-body motion"
   },
-  "submission": {
-    "files": [
-      "submission.db",
-      "submission.rst"
-    ]
+  "constraints": {
+    "maximum_total_displacement_mm": 0.8,
+    "maximum_equivalent_stress_mpa": 160.0,
+    "minimum_ligament_mm": 10.0,
+    "maximum_element_edge_mm": 5.0,
+    "connectivity": "one connected load path between the two loaded interfaces"
   },
-  "workflow": {
-    "must_use": "interactive graphical interface"
-  }
+  "baseline": {"files": ["baseline_apdl_hole_plate.db", "baseline_apdl_hole_plate.rst"]},
+  "submission": {"files": ["submission.db", "submission.rst"]},
+  "workflow": {"must_use": "interactive graphical interface"}
 }

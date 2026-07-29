@@ -1,49 +1,22 @@
 {
   "id": "opt-ansys-gui-05",
-  "title": "ANSYS GUI cantilever stiffness per mass optimization",
-  "kind": "cantilever",
-  "interface": "gui",
-  "primary_software": "ansys",
-  "objective": "Maximize stiffness per unit mass while respecting stress limit.",
+  "title": "Cantilever stiffness-per-mass optimization",
+  "kind": "solid_cantilever",
   "objective_direction": "maximize",
   "metric_name": "stiffness_per_mass",
-  "metric_units": "N_per_mm_per_mass_unit",
-  "result_suffixes": [
-    ".rst"
-  ],
-  "submission_files": [
-    "submission.db",
-    "submission.rst"
-  ],
-  "baseline_files": [
-    "baseline_apdl_solid_beam.db",
-    "baseline_apdl_solid_beam.rst"
-  ],
-  "fixed_features": [
-    "fixed support face",
-    "loaded face",
-    "500 N load",
-    "outer envelope"
-  ],
-  "constraints": {
-    "force_magnitude": 500.0,
-    "allowable_mises": 160.0,
-    "fixed_support": "one end face",
-    "loaded_region": "opposite end face"
+  "metric_units": "N_per_mm_per_tonne",
+  "submission_files": ["submission.db", "submission.rst"],
+  "baseline_files": ["baseline_apdl_solid_beam.db", "baseline_apdl_solid_beam.rst"],
+  "model_contract": {
+    "envelope_mm": {"x": [0.0, 100.0], "y": [0.0, 20.0], "z": [0.0, 20.0]},
+    "preserved_interface_depth_mm": 10.0,
+    "element_family": "SOLID185",
+    "material": {"E_mpa": 210000.0, "nu": 0.3, "density_tonne_per_mm3": 7.85e-9},
+    "loaded_face_force_n": 500.0,
+    "maximum_equivalent_stress_mpa": 160.0,
+    "minimum_load_bearing_width_mm": 4.0,
+    "maximum_element_edge_mm": 5.0
   },
-  "calibration_status": "pending_vm_calibration",
-  "baseline": {
-    "artifact": "init_file/",
-    "files": [
-      "baseline_apdl_solid_beam.db",
-      "baseline_apdl_solid_beam.rst"
-    ],
-    "metric_value": null,
-    "metric_units": "N_per_mm_per_mass_unit",
-    "metric_source": "computed_dynamically_by_eval_on_windows_ansys_vm",
-    "meaning": "visible initial feasible GUI starting point, not a reference optimum"
-  },
-  "invalid_sample": {
-    "artifact": "ground_truth/invalid/"
-  }
+  "baseline": {"artifact": "init_file/", "meaning": "visible initial feasible design"},
+  "invalid_sample": {"artifact": "ground_truth/invalid/"}
 }

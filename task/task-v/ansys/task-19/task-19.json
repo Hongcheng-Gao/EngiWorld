@@ -1,7 +1,7 @@
 {
   "id": "v-ansys-task-19-windows",
   "snapshot": "ANSYS-2026R",
-  "instruction": "Use ANSYS Workbench to complete a linear eigenvalue buckling analysis. Physical problem: A pin-ended straight column is subjected to axial compression. Coordinate system and geometry: - Use the global Cartesian coordinate system. - Model the column as a line body with a beam cross-section. - The column axis is along the global Y direction. - The bottom end is located at Y = 0 mm. - The top end is located at Y = 1000 mm. - The rectangular beam section is: - Width = 10 mm - Height = 10 mm Model parameters: - Line body length: 1000 mm - Section type: rectangular beam section - Section size: 10 mm × 10 mm - Material: Structural Steel with the following linear elastic properties: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Use a consistent N-mm unit system. Boundary conditions: - Bottom end at Y = 0 mm: - Constrain UX = 0, UY = 0, and UZ = 0. - Leave all rotations free. - Top end at Y = 1000 mm: - Constrain UX = 0 and UZ = 0. - Leave UY free. - Leave all rotations free. - Apply an axial compressive reference load of 1 N at the top end in the negative global Y direction. Analysis type: - Linear eigenvalue buckling analysis. - Extract the first buckling mode. Save requirements: - Use C:\\Users\\user\\Desktop as the working location. - Save the Workbench project file as: C:\\Users\\user\\Desktop\\wb_buckling.wbpj - Save the MAPDL-equivalent database file as: C:\\Users\\user\\Desktop\\wb_buckling.db - Save the MAPDL-equivalent structural result file as: C:\\Users\\user\\Desktop\\wb_buckling.rst Run the solver to completion and ensure a result file is generated.",
+  "instruction": "Use ANSYS Workbench to complete a linear eigenvalue buckling analysis of a pin-ended column. Geometry and material: - Use a line body from (0, 0, 0) mm to (0, 1000, 0) mm. - Assign a 10 mm by 10 mm rectangular beam section and Structural Steel with E = 210000 MPa and Poisson's ratio = 0.3. - Use a consistent N-mm unit system. Workbench workflow: - Create a Static Structural system for the 1 N reference compression state. - Create an Eigenvalue Buckling system and link the Static Structural Solution cell to the Eigenvalue Buckling Setup cell. - Use BEAM188 and 40 equal elements along the line body. Boundary conditions and load: - At Y = 0 mm, constrain UX, UY, and UZ while leaving bending rotations free. - At Y = 1000 mm, constrain UX and UZ, leave UY free, and leave bending rotations free. - Apply FY = -1 N at the top end in the Static Structural system. Analysis: - Solve the Static Structural system. - Solve the linked Eigenvalue Buckling system and extract the first buckling mode. Save requirements: - Save a genuine Workbench project as C:\\Users\\user\\Desktop\\wb_buckling.wbpj. - Save the final MAPDL database as C:\\Users\\user\\Desktop\\wb_buckling.db. - Save the final buckling result as C:\\Users\\user\\Desktop\\wb_buckling.rst. - To preserve these exact solver filenames, you may open the Solver Files Directory from Workbench and use the graphical file manager to copy and rename the final database and result files onto the Desktop.",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
@@ -14,17 +14,10 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "python",
-          "C:\\Users\\user\\Desktop\\license.py"
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
-          "-g"
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe'"
         ]
       }
     }

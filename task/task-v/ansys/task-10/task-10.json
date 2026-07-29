@@ -1,7 +1,7 @@
 {
   "id": "v-ansys-task-10-windows",
   "snapshot": "ANSYS-2026R",
-  "instruction": "Use ANSYS Fluent to complete a 2D laminar channel-flow analysis. Physical problem: Two-dimensional laminar flow through a straight rectangular channel. Coordinate system and geometry: - Use a 2D planar model. - Use SI units in Fluent. - The channel length is along the X direction. - The channel height is along the Y direction. - The channel domain should occupy: - 0 ≤ X ≤ 0.200 m - 0 ≤ Y ≤ 0.002 m - The inlet is the boundary at X = 0 m. - The outlet is the boundary at X = 0.200 m. - The bottom wall is the boundary at Y = 0 m. - The top wall is the boundary at Y = 0.002 m. - Name the four boundary zones as: - inlet - outlet - bottom - top Model parameters: - Fluid: water-liquid - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Structured quadrilateral mesh - Element size: 0.5 mm, equivalent to 5.0e-4 m Boundary conditions: - Inlet: - Velocity inlet - Uniform X-velocity = 0.2 m/s - Y-velocity = 0 m/s - Outlet: - Pressure outlet - Gauge pressure = 0 Pa - Top wall: - Stationary no-slip wall - Bottom wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialization: hybrid initialization - Run 500 iterations or until the solution is converged. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\poiseuille_shear.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\poiseuille_shear.dat Run the solver to completion and ensure a result file is generated.",
+  "instruction": "Use the ANSYS Fluent GUI to complete a two-dimensional steady laminar channel-flow analysis. Physical problem: Water flows through a straight two-dimensional rectangular channel. Geometry and coordinate system: - Use a 2D planar model in SI units. - The channel domain occupies 0 <= X <= 0.200 m and 0 <= Y <= 0.002 m. - Name the boundary zones exactly: X = 0 m: inlet; X = 0.200 m: outlet; Y = 0 m: bottom; Y = 0.002 m: top. Mesh: - Use a structured quadrilateral mesh. - Use 400 uniform divisions along the channel length. - Use 20 uniform divisions across the channel height. - The final mesh must contain 8000 quadrilateral cells. Material: - Fluid: water-liquid. - Density = 998.2 kg/m^3. - Dynamic viscosity = 0.001003 Pa*s. - Use constant material properties. Boundary conditions: - inlet: velocity-inlet with X velocity = 0.2 m/s and Y velocity = 0 m/s. - outlet: pressure-outlet with gauge pressure = 0 Pa. - top and bottom: stationary no-slip walls. Solver setup: - Pressure-based solver. - Steady formulation. - Laminar viscous model. - SIMPLE pressure-velocity coupling. - Pressure discretization: Second Order. - Momentum discretization: Second Order Upwind. - Hybrid initialization. - Run 500 iterations. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the case file as C:\\Users\\user\\Desktop\\poiseuille_shear.cas. - Save the data file as C:\\Users\\user\\Desktop\\poiseuille_shear.dat. - Ensure both files contain the final solved state.",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
@@ -14,17 +14,10 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "python",
-          "C:\\Users\\user\\Desktop\\license.py"
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe",
-          "-g"
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe' -ArgumentList '2ddp'"
         ]
       }
     }

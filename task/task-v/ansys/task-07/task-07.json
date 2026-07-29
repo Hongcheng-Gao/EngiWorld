@@ -1,7 +1,7 @@
 {
   "id": "v-ansys-task-07-windows",
   "snapshot": "ANSYS-2026R",
-  "instruction": "Use ANSYS Mechanical APDL to build and solve a 3D solid cantilever beam model. Physical problem: A 3D solid cantilever beam is subjected to a concentrated force at the free end. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The beam length is along the X direction. - The beam height is along the Y direction. - The beam width is along the Z direction. - The beam occupies: - 0 ≤ X ≤ 100 mm - 0 ≤ Y ≤ 10 mm - 0 ≤ Z ≤ 10 mm - The fixed end is the face at X = 0. - The free end is the face at X = 100. - The force application point is the top midpoint of the free end: - X = 100 mm - Y = 10 mm - Z = 5 mm Model parameters: - Beam cross section: 10 mm × 10 mm - Beam length: 100 mm - Material: linear elastic steel - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Element type: SOLID185 - Mesh: global element size 5 mm Boundary conditions and load: - Fully constrain all translational degrees of freedom on the fixed face X = 0. - Apply a concentrated force of 100 N in the negative global Y direction at the top midpoint of the free end, located at (100, 10, 5) mm. Analysis type: - Static structural analysis. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as: C:\\Users\\user\\Desktop\\apdl_solid_beam.db - Save the structural result file as: C:\\Users\\user\\Desktop\\apdl_solid_beam.rst Run the solver to completion and ensure a result file is generated.",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve a 3D solid cantilever beam under an eccentric end load. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The beam occupies 0 <= X <= 150 mm, 0 <= Y <= 20 mm, and 0 <= Z <= 10 mm. - The fixed end is the face X = 0 mm. - The load point is the corner (150, 20, 10) mm on the free end. Model parameters: - Material: linear elastic steel. - Young's modulus E = 210000 MPa. - Poisson's ratio = 0.3. - Element type: SOLID185. Mesh: - Use a mapped/swept hexahedral mesh with a 5 mm element size in X, Y, and Z. - Use 30 divisions along X, 4 divisions along Y, and 2 divisions along Z. Boundary conditions and load: - Fully constrain UX, UY, and UZ on the face X = 0 mm. - Apply a concentrated FY = -200 N at (150, 20, 10) mm. Analysis type: - Static structural analysis. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as C:\\Users\\user\\Desktop\\apdl_eccentric_beam.db. - Save the structural result file as C:\\Users\\user\\Desktop\\apdl_eccentric_beam.rst. - Run the solver to completion and save the final solved state in both files.",
   "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
   "config": [
     {
@@ -14,17 +14,10 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "python",
-          "C:\\Users\\user\\Desktop\\license.py"
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
-          "-g"
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
         ]
       }
     }

@@ -1,55 +1,22 @@
 {
   "id": "opt-ansys-gui-01",
-  "title": "ANSYS GUI load-bearing structure mass optimization",
-  "kind": "bracket",
-  "interface": "gui",
-  "primary_software": "ansys",
-  "objective": "Minimize structural mass while satisfying displacement and stress limits.",
+  "title": "Tensile hole-plate mass optimization",
+  "kind": "plate_mass",
   "objective_direction": "minimize",
   "metric_name": "structural_mass",
-  "metric_units": "model_mass_units",
-  "result_suffixes": [
-    ".rst"
-  ],
-  "submission_files": [
-    "submission.db",
-    "submission.rst"
-  ],
-  "baseline_files": [
-    "baseline_apdl_hole_plate.db",
-    "baseline_apdl_hole_plate.rst"
-  ],
-  "fixed_features": [
-    "fixed support region",
-    "loaded region",
-    "mounting and loading interfaces",
-    "outer envelope"
-  ],
-  "constraints": {
-    "unit_system": "N-mm",
-    "max_displacement": 0.8,
-    "allowable_mises": 160.0,
-    "envelope_mm": [
-      100.0,
-      50.0,
-      5.0
-    ],
-    "material_E_mpa": 210000.0,
-    "material_nu": 0.3
+  "metric_units": "tonne",
+  "submission_files": ["submission.db", "submission.rst"],
+  "baseline_files": ["baseline_apdl_hole_plate.db", "baseline_apdl_hole_plate.rst"],
+  "model_contract": {
+    "envelope_mm": {"x": [0.0, 100.0], "y": [0.0, 200.0], "thickness": 1.0},
+    "element_family": "PLANE183",
+    "material": {"E_mpa": 210000.0, "nu": 0.3, "density_tonne_per_mm3": 7.85e-9},
+    "edge_tractions_mpa": {"left_x": -10.0, "right_x": 10.0},
+    "max_displacement_mm": 0.8,
+    "max_equivalent_stress_mpa": 160.0,
+    "minimum_ligament_mm": 10.0,
+    "maximum_element_edge_mm": 5.0
   },
-  "calibration_status": "pending_vm_calibration",
-  "baseline": {
-    "artifact": "init_file/",
-    "files": [
-      "baseline_apdl_hole_plate.db",
-      "baseline_apdl_hole_plate.rst"
-    ],
-    "metric_value": null,
-    "metric_units": "model_mass_units",
-    "metric_source": "computed_dynamically_by_eval_on_windows_ansys_vm",
-    "meaning": "visible initial feasible GUI starting point, not a reference optimum"
-  },
-  "invalid_sample": {
-    "artifact": "ground_truth/invalid/"
-  }
+  "baseline": {"artifact": "init_file/", "meaning": "visible initial feasible design"},
+  "invalid_sample": {"artifact": "ground_truth/invalid/"}
 }

@@ -1,34 +1,39 @@
 {
   "id": "opt-ansys-gui-03",
-  "title": "ANSYS GUI first-frequency per mass optimization",
+  "title": "Uniform fixed-fixed beam frequency-per-mass optimization",
   "interface": "gui",
   "primary_software": "ansys",
-  "objective": "Maximize first natural frequency per unit mass.",
-  "fixed_features": [
-    "end attachment regions",
-    "fixed boundary conditions",
-    "modal analysis type",
-    "500 mm beam envelope"
-  ],
-  "constraints": {
-    "fixed_length_mm": 500.0,
-    "material_E_mpa": 210000.0,
-    "material_nu": 0.3,
-    "density_tonne_per_mm3": 7.85e-09
+  "objective": {
+    "direction": "maximize",
+    "quantity": "first_frequency_per_mass",
+    "formula": "objective = first positive natural frequency / structural mass"
   },
-  "baseline": {
-    "files": [
-      "baseline_apdl_fixed_beam_modal.db",
-      "baseline_apdl_fixed_beam_modal.rst"
-    ]
+  "model": {
+    "analysis": "undamped modal analysis extracting the first three modes",
+    "unit_system": "N-mm-s",
+    "beam_axis": "global X",
+    "length_mm": 500.0,
+    "element": {"family": "BEAM188", "equal_divisions": 20},
+    "material": {
+      "youngs_modulus_mpa": 210000.0,
+      "poissons_ratio": 0.3,
+      "density_tonne_per_mm3": 7.85e-9
+    }
   },
-  "submission": {
-    "files": [
-      "submission.db",
-      "submission.rst"
-    ]
+  "interfaces": {
+    "left_end": {"location": "X = 0 mm", "constraints": ["UX", "UY", "UZ", "ROTX", "ROTY", "ROTZ"]},
+    "right_end": {"location": "X = 500 mm", "constraints": ["UX", "UY", "UZ", "ROTX", "ROTY", "ROTZ"]}
   },
-  "workflow": {
-    "must_use": "interactive graphical interface"
-  }
+  "design_variables": {
+    "allowed_section_types": ["RECT", "HREC"],
+    "uniform_along_length": true,
+    "outer_width_mm": [6.0, 16.0],
+    "outer_height_mm": [6.0, 16.0],
+    "section_area_mm2": [50.0, 160.0],
+    "hrec_wall_thickness_mm": [1.0, 4.0]
+  },
+  "constraints": {"connectivity": "one continuous beam line with one uniform section"},
+  "baseline": {"files": ["baseline_apdl_fixed_beam_modal.db", "baseline_apdl_fixed_beam_modal.rst"]},
+  "submission": {"files": ["submission.db", "submission.rst"]},
+  "workflow": {"must_use": "interactive graphical interface"}
 }

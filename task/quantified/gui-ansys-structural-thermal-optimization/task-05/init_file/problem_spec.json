@@ -1,34 +1,39 @@
 {
   "id": "opt-ansys-gui-05",
-  "title": "ANSYS GUI cantilever stiffness per mass optimization",
+  "title": "Cantilever stiffness-per-mass optimization",
   "interface": "gui",
   "primary_software": "ansys",
-  "objective": "Maximize stiffness per unit mass while respecting stress limit.",
-  "fixed_features": [
-    "fixed support face",
-    "loaded face",
-    "500 N load",
-    "outer envelope"
-  ],
+  "objective": {
+    "direction": "maximize",
+    "quantity": "stiffness_per_mass",
+    "formula": "objective = (total applied force / absolute area-averaged loaded-face Y displacement) / structural mass"
+  },
+  "model": {
+    "analysis": "linear static structural",
+    "unit_system": "N-mm",
+    "geometry": {
+      "outer_envelope_mm": {"x": [0.0, 100.0], "y": [0.0, 20.0], "z": [0.0, 20.0]},
+      "preserved_interface_depth_mm": 10.0,
+      "design_domain": "10 < X < 90 mm"
+    },
+    "element": {"family": "SOLID185"},
+    "material": {
+      "youngs_modulus_mpa": 210000.0,
+      "poissons_ratio": 0.3,
+      "density_tonne_per_mm3": 7.85e-9
+    }
+  },
+  "interfaces": {
+    "fixed_face": {"location": "X = 0 mm", "constraints": ["UX = 0", "UY = 0", "UZ = 0"]},
+    "loaded_face": {"location": "X = 100 mm", "total_force_n": 500.0, "direction": "negative global Y", "distribution": "uniform over the complete face"}
+  },
   "constraints": {
-    "force_magnitude": 500.0,
-    "allowable_mises": 160.0,
-    "fixed_support": "one end face",
-    "loaded_region": "opposite end face"
+    "maximum_equivalent_stress_mpa": 160.0,
+    "minimum_load_bearing_width_mm": 4.0,
+    "maximum_element_edge_mm": 5.0,
+    "connectivity": "one connected structural load path joining the complete preserved end interfaces"
   },
-  "baseline": {
-    "files": [
-      "baseline_apdl_solid_beam.db",
-      "baseline_apdl_solid_beam.rst"
-    ]
-  },
-  "submission": {
-    "files": [
-      "submission.db",
-      "submission.rst"
-    ]
-  },
-  "workflow": {
-    "must_use": "interactive graphical interface"
-  }
+  "baseline": {"files": ["baseline_apdl_solid_beam.db", "baseline_apdl_solid_beam.rst"]},
+  "submission": {"files": ["submission.db", "submission.rst"]},
+  "workflow": {"must_use": "interactive graphical interface"}
 }
