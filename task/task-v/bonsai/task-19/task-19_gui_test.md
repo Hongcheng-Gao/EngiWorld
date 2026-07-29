@@ -15,9 +15,9 @@ Procedure:
 7. For each room compartment, moved the 3D cursor inside the room and used `Generate Space from Cursor`.
 8. Renamed the five created spaces in the Outliner with `F2`:
    - `IfcSpace/Lab`
-   - `IfcSpace/Prep`
+   - `IfcSpace/Prep Room`
    - `IfcSpace/Office`
-   - `IfcSpace/Store`
+   - `IfcSpace/Storage`
    - `IfcSpace/WC`
 9. Activated the Door Tool and used `Quick Create IfcDoorType`. Bonsai showed an internal representation error, but it still created `IfcDoorType/Unnamed`.
 10. Used the Door Tool's `Add` button five times. For each occurrence, clicked a plausible wall location, accepted the `Add Type Occurrence` dialog with `No Geometry`, and confirmed that `IfcDoor/Door` through `IfcDoor/Door.004` appeared in the Outliner.

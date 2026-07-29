@@ -14,8 +14,8 @@ Procedure:
 6. Activated the Spatial Tool with `Shift+Space`, then `Alt+2`.
 7. For each compartment, moved the 3D cursor inside the room with shift-right-click and used `Generate Space from Cursor`.
 8. Renamed the four generated spaces in the Outliner with `F2`:
-   - `IfcSpace/Reading`
-   - `IfcSpace/Desk`
+   - `IfcSpace/Reading Room`
+   - `IfcSpace/Service Desk`
    - `IfcSpace/Archive`
    - `IfcSpace/WC`
 9. Used the Spatial panel lock toggle in Project Overview to unlock the spatial tree, then deleted the original `IfcSpace/Library Shell` through the GUI so only the four required spaces remained.

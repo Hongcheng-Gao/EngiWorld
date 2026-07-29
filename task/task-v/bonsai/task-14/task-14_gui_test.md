@@ -18,7 +18,7 @@
 4. Renamed the generated `IfcSpace` objects in the Outliner to:
    - `Dining`
    - `Kitchen`
-   - `Store`
+   - `Storage`
    - `WC`
 5. Unlocked the spatial decomposition in the Bonsai Spatial panel and deleted the original seed `Cafe Shell` space, leaving only the four required target spaces.
 6. Verified the seed model already contained the required rectangular shell structure: 8 `IfcWall` elements and 1 `IfcSlab`.
@@ -36,7 +36,7 @@
 
 Before the final eval, I performed a read-only parse of the saved IFC to check the authored element counts:
 
-- `IfcSpace`: 4, names `Dining`, `Kitchen`, `WC`, `Store`
+- `IfcSpace`: 4, names `Dining`, `Kitchen`, `WC`, `Storage`
 - `IfcWall`: 8
 - `IfcWallStandardCase`: 0
 - `IfcSlab`: 1

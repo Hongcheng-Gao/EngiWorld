@@ -26,6 +26,8 @@ def evaluate():
     m=ifcopenshell.open(str(p))
     if len(m.by_type('IfcWall'))!=4 or len(m.by_type('IfcSlab'))!=1 or len(m.by_type('IfcDoor'))!=1: return False
     if len(m.by_type('IfcClassification'))!=1 or len(m.by_type('IfcClassificationReference'))!=3: return False
+    classification=m.by_type('IfcClassification')[0]
+    if not eq(classification.Name,'OmniClass') or not eq(classification.Edition,'2012'): return False
     if len(m.by_type('IfcBuildingElementProxy')): return False
     for cls, items in REFS.items():
         for name, ref in items.items():

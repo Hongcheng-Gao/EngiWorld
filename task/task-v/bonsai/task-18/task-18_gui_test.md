@@ -16,8 +16,8 @@ Procedure:
 8. Renamed the generated spaces in the Outliner with `F2`:
    - `IfcSpace/Play`
    - `IfcSpace/Sleep`
-   - `IfcSpace/Staff`
-   - `IfcSpace/Store`
+   - `IfcSpace/Staff Room`
+   - `IfcSpace/Storage`
    - `IfcSpace/WC`
 9. The original `IfcSpace/Daycare Shell` remained as an extra locked space. After the first evaluator attempts failed, used the Spatial panel lock toggle in Project Overview to unlock the spatial tree and deleted `IfcSpace/Daycare Shell` through the GUI, leaving only the five required named spaces.
 10. Activated the Door Tool from the toolbar and used `Quick Create IfcDoorType`. Bonsai showed an internal representation error, but it still created `IfcDoorType/Unnamed`.

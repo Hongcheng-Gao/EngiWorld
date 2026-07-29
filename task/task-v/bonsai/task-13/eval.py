@@ -139,7 +139,7 @@ def check_forbidden(model):
 
 def check_space_names(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    return all(any(norm(required) in name for name in names) for required in SPEC["space_names"])
+    return sorted(names) == sorted(norm(required) for required in SPEC["space_names"])
 
 
 def shaped_product_bbox(model):

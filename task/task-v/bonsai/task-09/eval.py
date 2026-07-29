@@ -22,7 +22,7 @@ GUI_BYPASS_COMMAND_TOKENS = (
     "openstudio", "energyplus", "blender --background", "revitbatchprocessor",
 )
 
-SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Sales', 'Store', 'WC'], 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 3, 'walls': 6, 'slabs': 1, 'doors': 3, 'windows': 3}, 'forbidden': [], 'overall_span_ranges_m': {'x': (9.0, 11.0), 'y': (5.0, 7.0), 'z': (2.4, 3.8)}}
+SPEC = {'ifc_file': 'result.ifc', 'min_ifc_bytes': 500, 'schema': 'IFC4', 'space_names': ['Sales', 'Storage', 'WC'], 'min_counts': {'projects': 1, 'sites': 1, 'buildings': 1, 'storeys': 1, 'spaces': 3, 'walls': 6, 'slabs': 1, 'doors': 3, 'windows': 3}, 'forbidden': [], 'overall_span_ranges_m': {'x': (9.0, 11.0), 'y': (5.0, 7.0), 'z': (2.4, 3.8)}}
 
 
 def _read_text_safe(path):
@@ -139,7 +139,7 @@ def check_forbidden(model):
 
 def check_space_names(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    return all(any(norm(required) in name for name in names) for required in SPEC["space_names"])
+    return sorted(names) == sorted(norm(required) for required in SPEC["space_names"])
 
 
 def shaped_product_bbox(model):
