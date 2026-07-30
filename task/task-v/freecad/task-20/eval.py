@@ -3,6 +3,7 @@ from __future__ import annotations
 from pathlib import Path
 
 import cadquery as cq
+from OCP.BRepAdaptor import BRepAdaptor_Surface
 
 DESKTOP = Path("/home/user/Desktop")
 
@@ -111,9 +112,27 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-STEP_SPECS = [{'path': '/home/user/Desktop/freecad_task-20_output.step', 'solid_count': 1, 'bbox': [120.0, 60.0, 43.0], 'volume': 85600.0}]
+STEP_SPECS = [{
+    "path": "/home/user/Desktop/freecad_task-20_output.step",
+    "solid_count": 1,
+    "bbox": [120.0, 60.0, 43.0],
+    "volume": 84029.203673,
+    "center": [60.0, 30.0, 10.762267],
+    "area": 21951.238898,
+}]
+HOLE_SPEC = {
+    "radius": 5.0,
+    "axis_x": 60.0,
+    "axis_z": 25.5,
+    "surface_area": 628.318531,
+}
 BBOX_TOL = 0.05
+CENTER_TOL = 0.05
 VOLUME_REL_TOL = 0.01
+AREA_REL_TOL = 0.001
+HOLE_GEOMETRY_TOL = 0.05
+HOLE_DIRECTION_TOL = 0.01
+HOLE_AREA_TOL = 0.5
 
 
 def summarize_step(path: Path):
@@ -129,7 +148,40 @@ def summarize_step(path: Path):
         ys.extend([bbox.ymin, bbox.ymax])
         zs.extend([bbox.zmin, bbox.zmax])
         volume += solid.Volume()
-    return len(solids), [max(xs)-min(xs), max(ys)-min(ys), max(zs)-min(zs)], volume
+    center = solids[0].Center()
+    return (
+        len(solids),
+        [max(xs)-min(xs), max(ys)-min(ys), max(zs)-min(zs)],
+        volume,
+        [center.x, center.y, center.z],
+        sum(solid.Area() for solid in solids),
+        solids[0],
+    )
+
+
+def matching_hole_surface_area(solid) -> float:
+    area = 0.0
+    for face in solid.Faces():
+        if face.geomType() != "CYLINDER":
+            continue
+        cylinder = BRepAdaptor_Surface(face.wrapped).Cylinder()
+        axis = cylinder.Axis()
+        point = axis.Location()
+        direction = axis.Direction()
+        if abs(cylinder.Radius() - HOLE_SPEC["radius"]) > HOLE_GEOMETRY_TOL:
+            continue
+        if abs(point.X() - HOLE_SPEC["axis_x"]) > HOLE_GEOMETRY_TOL:
+            continue
+        if abs(point.Z() - HOLE_SPEC["axis_z"]) > HOLE_GEOMETRY_TOL:
+            continue
+        if abs(direction.X()) > HOLE_DIRECTION_TOL:
+            continue
+        if abs(abs(direction.Y()) - 1.0) > HOLE_DIRECTION_TOL:
+            continue
+        if abs(direction.Z()) > HOLE_DIRECTION_TOL:
+            continue
+        area += face.Area()
+    return area
 
 
 def evaluate() -> bool:
@@ -139,12 +191,22 @@ def evaluate() -> bool:
         path = Path(spec["path"])
         if not path.exists() or path.stat().st_size <= 0:
             return False
-        solid_count, bbox, volume = summarize_step(path)
+        solid_count, bbox, volume, center, area, solid = summarize_step(path)
         if solid_count != spec["solid_count"]:
             return False
         if any(abs(float(a) - float(b)) > BBOX_TOL for a, b in zip(bbox, spec["bbox"])):
             return False
         if abs(volume - float(spec["volume"])) / max(1.0, abs(float(spec["volume"]))) > VOLUME_REL_TOL:
+            return False
+        if any(
+            abs(float(a) - float(b)) > CENTER_TOL
+            for a, b in zip(center, spec["center"])
+        ):
+            return False
+        if abs(area - float(spec["area"])) / max(1.0, abs(float(spec["area"]))) > AREA_REL_TOL:
+            return False
+        hole_area = matching_hole_surface_area(solid)
+        if abs(hole_area - HOLE_SPEC["surface_area"]) > HOLE_AREA_TOL:
             return False
     return True
 

@@ -111,7 +111,15 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-STEP_SPECS = [{'path': '/home/user/Desktop/freecad_task-13_output.step', 'solid_count': 3, 'bbox': [58.0, 33.0, 20.0], 'volume': 3015.928947}]
+STEP_SPEC = {
+    "path": "/home/user/Desktop/freecad_task-13_output.step",
+    "solids": [
+        {"center": [0.0, 0.0, 10.0], "bbox": [8.0, 8.0, 20.0], "volume": 1005.309649},
+        {"center": [25.0, 25.0, 10.0], "bbox": [8.0, 8.0, 20.0], "volume": 1005.309649},
+        {"center": [50.0, 15.0, 0.0], "bbox": [8.0, 20.0, 8.0], "volume": 1005.309649},
+    ],
+}
+POSITION_TOL = 0.05
 BBOX_TOL = 0.05
 VOLUME_REL_TOL = 0.01
 
@@ -121,30 +129,44 @@ def summarize_step(path: Path):
     solids = wp.solids().vals()
     if not solids or any(not solid.isValid() for solid in solids):
         raise ValueError("invalid STEP")
-    xs, ys, zs = [], [], []
-    volume = 0.0
+    summaries = []
     for solid in solids:
         bbox = solid.BoundingBox()
-        xs.extend([bbox.xmin, bbox.xmax])
-        ys.extend([bbox.ymin, bbox.ymax])
-        zs.extend([bbox.zmin, bbox.zmax])
-        volume += solid.Volume()
-    return len(solids), [max(xs)-min(xs), max(ys)-min(ys), max(zs)-min(zs)], volume
+        center = solid.Center()
+        summaries.append({
+            "center": [center.x, center.y, center.z],
+            "bbox": [bbox.xlen, bbox.ylen, bbox.zlen],
+            "volume": solid.Volume(),
+        })
+    return sorted(summaries, key=lambda item: tuple(item["center"]))
 
 
 def evaluate() -> bool:
     if not check_no_gui_bypass(DESKTOP):
         return False
-    for spec in STEP_SPECS:
-        path = Path(spec["path"])
-        if not path.exists() or path.stat().st_size <= 0:
+    path = Path(STEP_SPEC["path"])
+    if not path.exists() or path.stat().st_size <= 0:
+        return False
+    actual_solids = summarize_step(path)
+    expected_solids = STEP_SPEC["solids"]
+    if len(actual_solids) != len(expected_solids):
+        return False
+    for actual, expected in zip(actual_solids, expected_solids):
+        if any(
+            abs(float(a) - float(b)) > POSITION_TOL
+            for a, b in zip(actual["center"], expected["center"])
+        ):
             return False
-        solid_count, bbox, volume = summarize_step(path)
-        if solid_count != spec["solid_count"]:
+        if any(
+            abs(float(a) - float(b)) > BBOX_TOL
+            for a, b in zip(actual["bbox"], expected["bbox"])
+        ):
             return False
-        if any(abs(float(a) - float(b)) > BBOX_TOL for a, b in zip(bbox, spec["bbox"])):
-            return False
-        if abs(volume - float(spec["volume"])) / max(1.0, abs(float(spec["volume"]))) > VOLUME_REL_TOL:
+        if (
+            abs(actual["volume"] - float(expected["volume"]))
+            / max(1.0, abs(float(expected["volume"])))
+            > VOLUME_REL_TOL
+        ):
             return False
     return True
 

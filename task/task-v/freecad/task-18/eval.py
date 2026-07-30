@@ -111,9 +111,31 @@ def check_no_gui_bypass(root):
         return False
     return True
 
-STEP_SPECS = [{'path': '/home/user/Desktop/freecad_task-18_output.step', 'solid_count': 1, 'bbox': [80.0, 40.0, 24.0], 'volume': 60000.0}]
+STEP_SPECS = [{
+    "path": "/home/user/Desktop/freecad_task-18_output.step",
+    "solid_count": 1,
+    "bbox": [80.0, 40.0, 24.0],
+    "volume": 60000.0,
+    "center": [40.0, 20.0, 10.151111],
+    "area": 14328.854382,
+}]
+DOVETAIL_PROBES = [
+    {
+        "center": [40.0, 9.0, 22.5],
+        "size": [70.0, 2.0, 1.0],
+        "material_volume": 140.0,
+    },
+    {
+        "center": [40.0, 9.0, 15.5],
+        "size": [70.0, 2.0, 1.0],
+        "material_volume": 0.0,
+    },
+]
 BBOX_TOL = 0.05
+CENTER_TOL = 0.05
 VOLUME_REL_TOL = 0.01
+AREA_REL_TOL = 0.001
+PROBE_VOLUME_TOL = 0.5
 
 
 def summarize_step(path: Path):
@@ -129,7 +151,15 @@ def summarize_step(path: Path):
         ys.extend([bbox.ymin, bbox.ymax])
         zs.extend([bbox.zmin, bbox.zmax])
         volume += solid.Volume()
-    return len(solids), [max(xs)-min(xs), max(ys)-min(ys), max(zs)-min(zs)], volume
+    center = solids[0].Center()
+    return (
+        len(solids),
+        [max(xs)-min(xs), max(ys)-min(ys), max(zs)-min(zs)],
+        volume,
+        [center.x, center.y, center.z],
+        sum(solid.Area() for solid in solids),
+        solids[0],
+    )
 
 
 def evaluate() -> bool:
@@ -139,13 +169,30 @@ def evaluate() -> bool:
         path = Path(spec["path"])
         if not path.exists() or path.stat().st_size <= 0:
             return False
-        solid_count, bbox, volume = summarize_step(path)
+        solid_count, bbox, volume, center, area, solid = summarize_step(path)
         if solid_count != spec["solid_count"]:
             return False
         if any(abs(float(a) - float(b)) > BBOX_TOL for a, b in zip(bbox, spec["bbox"])):
             return False
         if abs(volume - float(spec["volume"])) / max(1.0, abs(float(spec["volume"]))) > VOLUME_REL_TOL:
             return False
+        if any(
+            abs(float(a) - float(b)) > CENTER_TOL
+            for a, b in zip(center, spec["center"])
+        ):
+            return False
+        if abs(area - float(spec["area"])) / max(1.0, abs(float(spec["area"]))) > AREA_REL_TOL:
+            return False
+        for probe_spec in DOVETAIL_PROBES:
+            probe = (
+                cq.Workplane("XY")
+                .box(*probe_spec["size"])
+                .translate(cq.Vector(*probe_spec["center"]))
+                .val()
+            )
+            material_volume = solid.intersect(probe).Volume()
+            if abs(material_volume - probe_spec["material_volume"]) > PROBE_VOLUME_TOL:
+                return False
     return True
 
 
