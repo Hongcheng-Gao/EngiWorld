@@ -59,7 +59,8 @@ def evaluate(submission_dir: str) -> bool:
     if not test_records:
         return False
     for ln in test_records:
-        if not re.search(r"D\s*\d+\s*A\d+", ln):
+        # EAGLE emits both spaced and compact IPC-D-356A drill/access tokens.
+        if not re.search(r"D\s*\d+\s*A\d+", ln, re.IGNORECASE):
             return False
 
     brd = Path(__file__).resolve().parent / "init_file" / "board.brd"

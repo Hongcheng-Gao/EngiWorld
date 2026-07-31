@@ -65,8 +65,8 @@ to catch. See init_file/README.txt for the defect map.</description>
 <wire x1="5.08" y1="2.54" x2="5.08" y2="-2.54" width="0.254" layer="94"/>
 <wire x1="5.08" y1="-2.54" x2="-5.08" y2="-2.54" width="0.254" layer="94"/>
 <wire x1="-5.08" y1="-2.54" x2="-5.08" y2="2.54" width="0.254" layer="94"/>
-<pin name="IN" x="-7.62" y="1.27" visible="pin" length="short" direction="in"/>
-<pin name="IN" x="-7.62" y="-1.27" visible="pin" length="short" direction="in"/>
+<pin name="IN@1" x="-7.62" y="1.27" visible="pin" length="short" direction="in"/>
+<pin name="IN@2" x="-7.62" y="-1.27" visible="pin" length="short" direction="in"/>
 <pin name="OUT" x="7.62" y="0" visible="pin" length="short" direction="out" rot="R180"/>
 </symbol>
 <symbol name="REG">
@@ -126,14 +126,15 @@ to catch. See init_file/README.txt for the defect map.</description>
 </devices>
 </deviceset>
 <deviceset name="AMP_DUPPIN" prefix="U" uservalue="yes">
-<description>Defect: symbol AMP contains two pins named "IN" (duplicate pin name).</description>
+<description>Defect: symbol AMP contains two pins with the same displayed logical name IN, encoded as IN@1 and IN@2 so the library remains loadable.</description>
 <gates>
 <gate name="G$1" symbol="AMP" x="0" y="0"/>
 </gates>
 <devices>
 <device name="" package="DIP-8">
 <connects>
-<connect gate="G$1" pin="IN" pad="2"/>
+<connect gate="G$1" pin="IN@1" pad="2"/>
+<connect gate="G$1" pin="IN@2" pad="3"/>
 <connect gate="G$1" pin="OUT" pad="6"/>
 </connects>
 <technologies>

@@ -20,6 +20,10 @@
 <library name="rcl">
 <description>Resistors, caps, inductors (stub for merge test)</description>
 <packages>
+<package name="R_AXIAL">
+<pad name="1" x="-3.81" y="0" drill="0.8"/>
+<pad name="2" x="3.81" y="0" drill="0.8"/>
+</package>
 </packages>
 <symbols>
 <symbol name="R-EU">
@@ -34,7 +38,7 @@
 <gate name="G$1" symbol="R-EU" x="0" y="0"/>
 </gates>
 <devices>
-<device name="0207/10">
+<device name="0207/10" package="R_AXIAL">
 <connects>
 <connect gate="G$1" pin="1" pad="1"/>
 <connect gate="G$1" pin="2" pad="2"/>

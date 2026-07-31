@@ -8,8 +8,10 @@ Library -> Consistency Check tool flags:
   - LDO_OK         : clean (no defects; passes Consistency Check).
   - REG_BADPAD     : <connect pad="99"> references a pad that does
                      not exist in SOT23-3. Expect "missing pad" error.
-  - AMP_DUPPIN     : symbol AMP has two <pin> elements named "IN".
-                     Expect "duplicate pin" error.
+  - AMP_DUPPIN     : symbol AMP has two pins with the same displayed
+                     logical name IN, encoded as IN@1 and IN@2 so the
+                     library remains loadable. Report this as a duplicate
+                     logical-pin defect.
   - BUF_UNCOVERED  : symbol BUF has pins IN/OUT/EN; EN is not in any
                      <connect>, and one of the <connect> rows uses
                      pin="NOPE" which does not exist. Expect

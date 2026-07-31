@@ -1,7 +1,7 @@
 {
   "id": "c-eagle-task-15-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "The file `/home/user/Desktop/assembled.brd` is the assembled board to process. Produce pick-and-place CSVs using EAGLE's bundled mountsmd.ulp. Save the outputs as `/home/user/Desktop/pnp_top.csv` and `/home/user/Desktop/pnp_bottom.csv`. Requirements: 1. Both `/home/user/Desktop/pnp_top.csv` and `/home/user/Desktop/pnp_bottom.csv` exist. 2. Header row equals `Name,Value,Package,X,Y,Rotation,Side` in each file. 3. Row count per file equals the number of top-side / bottom-side elements in `/home/user/Desktop/assembled.brd` (by mirror flag). 4. Refdes sets per file match the expected split between sides. 5. Every row's `Side` column matches the file (top/bottom). [Software] On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).",
+  "instruction": "The file `/home/user/Desktop/assembled.brd` is the assembled board. Run EAGLE's bundled `mountsmd.ulp` to obtain the component placements, then normalize its native output into two CSV files named `/home/user/Desktop/pnp_top.csv` and `/home/user/Desktop/pnp_bottom.csv`. Each file must have the header `Name,Value,Package,X,Y,Rotation,Side`; the top file must contain the top-side components with `Side` set to `top`, and the bottom file must contain the bottom-side components with `Side` set to `bottom`. [Software] On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).",
   "source": "https://pcbsync.com/how-to-generate-pick-and-place-files-from-eagle/",
   "config": [
     {

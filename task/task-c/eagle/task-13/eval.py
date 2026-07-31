@@ -6,14 +6,14 @@ from pathlib import Path
 
 
 EXPECTED_PADS = {
-    "1": (-2.35, 0.25),
-    "2": (-2.35, -0.25),
-    "3": (-0.25, -2.35),
-    "4": (0.25, -2.35),
-    "5": (2.35, -0.25),
-    "6": (2.35, 0.25),
-    "7": (0.25, 2.35),
-    "8": (-0.25, 2.35),
+    "1": (-2.35, 0.25, 0.6, 0.25),
+    "2": (-2.35, -0.25, 0.6, 0.25),
+    "3": (-0.25, -2.35, 0.25, 0.6),
+    "4": (0.25, -2.35, 0.25, 0.6),
+    "5": (2.35, -0.25, 0.6, 0.25),
+    "6": (2.35, 0.25, 0.6, 0.25),
+    "7": (0.25, 2.35, 0.25, 0.6),
+    "8": (-0.25, 2.35, 0.25, 0.6),
 }
 
 
@@ -54,6 +54,8 @@ def evaluate(submission_dir: str) -> bool:
         return False
     if {s.get("name") for s in smds} != set(EXPECTED_PADS):
         return False
+    center_x = sum(_parse_float(s.get("x")) or 0.0 for s in smds) / len(smds)
+    center_y = sum(_parse_float(s.get("y")) or 0.0 for s in smds) / len(smds)
     for smd in smds:
         name = smd.get("name") or ""
         x = _parse_float(smd.get("x"))
@@ -62,12 +64,10 @@ def evaluate(submission_dir: str) -> bool:
         dy = _parse_float(smd.get("dy"))
         if None in (x, y, dx, dy):
             return False
-        ex, ey = EXPECTED_PADS[name]
-        if abs(x - ex) > 1e-6 or abs(y - ey) > 1e-6:
+        ex, ey, edx, edy = EXPECTED_PADS[name]
+        if abs((x - center_x) - ex) > 1e-6 or abs((y - center_y) - ey) > 1e-6:
             return False
-        if abs(dx - 0.25) > 1e-6 and abs(dx - 0.6) > 1e-6:
-            return False
-        if abs(dy - 0.25) > 1e-6 and abs(dy - 0.6) > 1e-6:
+        if abs(dx - edx) > 1e-6 or abs(dy - edy) > 1e-6:
             return False
 
     wires21 = [c for c in pkg if c.tag == "wire" and c.get("layer") == "21"]

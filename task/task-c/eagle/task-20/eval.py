@@ -20,6 +20,10 @@ def _plain_texts_l25(root: ET.Element) -> list[ET.Element]:
     return [t for t in plain.findall("text") if t.get("layer") == "25"]
 
 
+def _has_embedded_name(element: ET.Element) -> bool:
+    return any(attribute.get("name") == "NAME" for attribute in element.findall("attribute"))
+
+
 def _centroid(elements: list[ET.Element]) -> tuple[float, float]:
     xs = [float(e.get("x", "0")) for e in elements]
     ys = [float(e.get("y", "0")) for e in elements]
@@ -72,6 +76,7 @@ def evaluate(submission_dir: str) -> bool:
         return False
 
     starter_by_name = {e.get("name"): e for e in starter_elems if e.get("name")}
+    output_by_name = {e.get("name"): e for e in out_elems if e.get("name")}
     for t in texts:
         label = (t.text or "").strip()
         ref = starter_by_name.get(label)
@@ -82,6 +87,9 @@ def evaluate(submission_dir: str) -> bool:
         rx = float(ref.get("x", "nan"))
         ry = float(ref.get("y", "nan"))
         if math.hypot(tx - rx, ty - ry) > 2.0:
+            return False
+        output_element = output_by_name.get(label)
+        if output_element is None or _has_embedded_name(output_element):
             return False
 
     return True
