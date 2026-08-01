@@ -1,0 +1,29 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    location "system";
+    object topoSetDict;
+}
+actions
+(
+    {
+        name movingCells;
+        type cellSet;
+        action new;
+        source cylinderToCell;
+        sourceInfo
+        {
+            p1 (0 0 -2);
+            p2 (0 0 2);
+            radius 1.41;
+        }
+    }
+    {
+        name movingZone;
+        type cellZoneSet;
+        action new;
+        source setToCellZone;
+        sourceInfo { set movingCells; }
+    }
+);

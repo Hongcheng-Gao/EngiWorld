@@ -1,6 +1,6 @@
 {
-  "status": "generated_no_gui_high_quality_eval_passed",
-  "environment": "two-software-solidworks-to-abaqus",
+  "status": "native_generated_strict_eval_passed",
+  "environment": "SolidWorks 2025 SP0 -> Abaqus Learning Edition 2025",
   "task": "task-05",
   "title": "Heatsink Steady Thermal Analysis",
   "chain": "SolidWorks -> Abaqus/CAE",
@@ -8,110 +8,78 @@
   "job_name": "Job-HeatsinkThermal",
   "model_name": "Model-HeatsinkThermal",
   "step_name": "Step-Thermal",
-  "required_files": [
-    {
-      "file": "stage1_geometry.step",
-      "expected_desktop_path": "C:\\Users\\User\\Desktop\\stage1_geometry.step",
-      "purpose": "SolidWorks exported STEP geometry stage"
-    },
-    {
-      "file": "Job-HeatsinkThermal.cae",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-HeatsinkThermal.cae",
-      "purpose": "Abaqus/CAE model database"
-    },
-    {
-      "file": "Job-HeatsinkThermal.odb",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-HeatsinkThermal.odb",
-      "purpose": "Abaqus solved output database"
-    }
-  ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "generation_method": "Non-GUI command/API generation from task instruction only; eval.py not used during generation.",
-  "generated_at_epoch": 1783396625.4009721,
-  "source_instruction_sha256": "cd06a059f726d87a5e8996b551d9a0abf29ed7fafb2bf9b38ce69ba5fd472962",
-  "remote_host": "124.174.11.243",
+  "chain_token": "EW_SW_ABQ_05",
+  "expert_review_resolution": "Specified all eight fin centers plus heat flux, film coefficient, sink temperature, and unit conversion.",
+  "generation_method": "SolidWorks 2025 typed COM geometry construction and native STEP export, followed by Abaqus Learning Edition 2025 noGUI STEP import, native CAE model construction, meshing, job submission, and ODB solve.",
+  "remote_host": "124.174.35.140",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native",
+  "source_instruction_sha256": "66dfa642433ee2f2d608d4a9bcd13e57cbec0d2625b93b835bb3d9a7f8c30334",
+  "generator_provenance": {
+    "solidworks_script_sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf",
+    "abaqus_script_sha256_at_generation": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3",
+    "current_reproducer_abaqus_script_sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3",
+    "upload_download_byte_comparison": "passed",
+    "geometry_created_in": "SolidWorks 2025",
+    "analysis_created_and_solved_in": "Abaqus Learning Edition 2025"
+  },
   "generated_files": [
     {
       "file": "stage1_geometry.step",
-      "size": 94967,
-      "sha256": "e9ebb47f42808aefbf55034d5666b9ddcd37cbeb3fd5cea6f75eb4c165262560",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-05\\stage1_geometry.step"
+      "purpose": "SolidWorks 2025 native STEP handoff",
+      "size": 94621,
+      "sha256": "b2719c1a05fed13a0a3bbe329ebf64bc4ea0806ea02a83a83f520c70659c3898",
+      "generated_at": "2026-08-01T02:59:27.633999+00:00",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native\\task-05\\stage1_geometry.step"
     },
     {
       "file": "Job-HeatsinkThermal.cae",
-      "size": 61440,
-      "sha256": "f29934b12cd3da632297dfc96b126de2cd4b68ffe734e0e1ae6bf1d6314ee28a",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-05\\Job-HeatsinkThermal.cae"
+      "purpose": "Abaqus/CAE native imported model database",
+      "size": 147456,
+      "sha256": "a272d7cc070df58ac7988a74bafbb94176f518d807bf8707fe9a43ab3c731e27",
+      "generated_at": "2026-08-01T02:59:27.639989+00:00",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native\\task-05\\Job-HeatsinkThermal.cae"
     },
     {
       "file": "Job-HeatsinkThermal.odb",
-      "size": 287568,
-      "sha256": "42b17273d9bb5b39361f26651880325294456d83135f5534638f1c7ae3a83089",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-05\\Job-HeatsinkThermal.odb"
+      "purpose": "Abaqus Learning Edition solved output database",
+      "size": 475700,
+      "sha256": "cfbfc83d75dc6c6b3fad916f9394864de8fbadd1a4c0291cf7367f2c721c4b7a",
+      "generated_at": "2026-08-01T02:59:27.642285+00:00",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native\\task-05\\Job-HeatsinkThermal.odb"
     }
   ],
-  "generation_title": "Heatsink Steady Thermal Analysis",
-  "black_box_eval": {
-    "checked_at_epoch": 1783396837.453238,
-    "status": "pass",
-    "returncode": 0,
-    "actual": "True\n",
-    "expected": "True\n",
-    "first_fail": "",
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+  "native_self_check": {
+    "bbox_mm": [
+      80.0,
+      60.0,
+      23.000000000000004
     ],
-    "cleanup_residuals": [],
-    "out_dir": "/tmp/engiworld_multi_gt/eval_results_new_env/two-software-solidworks-to-abaqus__task-05"
-  },
-  "generation_self_check": {
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-HeatsinkThermal.odb",
-    "ok": true,
-    "fields": {
-      "NT11": 255.2941131591797,
-      "HFL": 1000.0
-    },
-    "frames": 2,
-    "elements": 240,
-    "mesh_report": {
-      "elements": 240,
-      "mesh_size": 8.0,
-      "target": 160
-    },
-    "chain_evidence": {
-      "token": "EW_SW_ABQ_05",
-      "cae_set": "CHAIN_EW_SW_ABQ_05_IMPORTED_FROM_STAGE1_GEOMETRY_STEP",
-      "cae_markers": [
-        "EW_SW_ABQ_05",
-        "IMPORTED_FROM_stage1_geometry.step"
-      ]
+    "cells": 1,
+    "faces": 46,
+    "edges": 108,
+    "nodes": 447,
+    "elements": 1247,
+    "mesh_size_mm": 10.0,
+    "latest_odb_field_max_abs": {
+      "GRADT": 0.5030003786087036,
+      "HFL": 0.08551006019115448,
+      "NT11": 273.919921875,
+      "RFL11": 0.0
     }
   },
-  "chain_token": "EW_SW_ABQ_05",
-  "chain_evidence": {
-    "dxf_markers": [],
-    "step_markers": [
-      "EW_SW_ABQ_05",
-      "SOLIDWORKS_TO_ABAQUS"
-    ],
-    "cae_markers": [
-      "EW_SW_ABQ_05",
-      "IMPORTED_FROM_stage1_geometry.step"
-    ],
-    "cae_set": "CHAIN_EW_SW_ABQ_05_IMPORTED_FROM_STAGE1_GEOMETRY_STEP"
+  "strict_validation": {
+    "host": "124.174.35.140",
+    "evaluator_sha256": "25ab36d81d3ace349b5a04da47f396c91eec7e9b78ce57793e590c63bd1b5bbe",
+    "tamper_helper_sha256": "e4999284a934d62c637689070c7698b0a86237c0580113d4451fd8f09abb9562",
+    "baseline": "True",
+    "tampered": "False",
+    "restored": "True",
+    "sequence": "True -> False -> True",
+    "restored_cae_sha256": "a272d7cc070df58ac7988a74bafbb94176f518d807bf8707fe9a43ab3c731e27"
   },
-  "blackbox_eval": {
-    "status": "pass",
-    "host": "124.174.16.95",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-2-solidworks-abaqus__task-05/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
-    ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:10:41Z"
-  }
+  "required_files": [
+    "stage1_geometry.step",
+    "Job-HeatsinkThermal.cae",
+    "Job-HeatsinkThermal.odb"
+  ]
 }

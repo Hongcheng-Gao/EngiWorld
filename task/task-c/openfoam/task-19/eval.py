@@ -1,90 +1,156 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
+import csv
+import math
 import re
+import subprocess
 from pathlib import Path
 
-NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$")
+
+ROOT = Path("/home/user/Desktop")
+CASE = ROOT / "porous"
+RHO = 1000.0
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_nonempty_file(path: Path) -> bool:
-    if not path.exists() or not path.is_file():
-        return False
-    if not is_result_artifact(path):
-        return True
-    return path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
+def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
-def parse_number(token: str) -> float:
-    s = token.strip()
-    if not NUMBER_RE.fullmatch(s):
-        raise ValueError(f"not a plain float token: {token!r}")
-    return float(s)
+def field(path: Path, kind: str) -> list:
+    match = re.search(
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        read(path),
+        re.S,
+    )
+    if not match:
+        raise ValueError(f"missing nonuniform {kind} field")
+    if kind == "vector":
+        values = [
+            tuple(float(value) for value in item.split())
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
+        ]
+    else:
+        values = [float(value) for value in match.group(2).split()]
+    if len(values) != int(match.group(1)):
+        raise ValueError("field count mismatch")
+    return values
 
 
-def parse_single_line_csv_numbers(path: Path, expected_len: int) -> list[float]:
-    lines = [
-        ln.strip()
-        for ln in read_text(path).splitlines()
-        if ln.strip() and not ln.lstrip().startswith("#")
-    ]
-    if len(lines) != 1:
-        raise ValueError("summary must contain exactly one non-comment data line")
-    parts = [p.strip() for p in lines[0].split(",")]
-    if len(parts) != expected_len:
-        raise ValueError(f"expected {expected_len} columns, got {len(parts)}")
-    return [parse_number(p) for p in parts]
+def axial_profile() -> list[tuple[float, float]]:
+    centres = field(CASE / "500/C", "vector")
+    pressure = field(CASE / "500/p", "scalar")
+    velocity = field(CASE / "500/U", "vector")
+    if not (len(centres) == len(pressure) == len(velocity) == 1000):
+        raise ValueError("unexpected field count")
+    stations: dict[float, list[float]] = {}
+    for point, value in zip(centres, pressure):
+        stations.setdefault(point[0], []).append(value)
+    if len(stations) != 100 or any(len(values) != 10 for values in stations.values()):
+        raise ValueError("unexpected station layout")
+    if not 0.095 < sum(item[0] for item in velocity) / len(velocity) < 0.105:
+        raise ValueError("unexpected bulk velocity")
+    return [(x, sum(values) / len(values)) for x, values in sorted(stations.items())]
 
 
-def check_required_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
+def check_case() -> bool:
+    mesh = read(CASE / "system/blockMeshDict")
+    velocity = read(CASE / "0/U")
+    physical = read(CASE / "constant/physicalProperties")
+    reference = read(CASE / "constant/referenceProperties")
+    porosity = read(CASE / "constant/porosityProperties")
+    topology = read(CASE / "system/topoSetDict")
+    control = read(CASE / "system/controlDict")
+    return all(
+        (
+            "(1 0.1 0.01)" in mesh,
+            "(100 10 1)" in mesh,
+            "value uniform (0.1 0 0);" in velocity,
+            re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?6\s*;", physical, re.I) is not None,
+            re.search(r"\brho\s+1000\s*;", reference) is not None,
+            "cellZone porosity;" in porosity,
+            "d (1e8 1e8 1e8);" in porosity,
+            "f (1000 1000 1000);" in porosity,
+            "box (-1 -1 -1) (2 2 2);" in topology,
+            "application porousSimpleFoam;" in control,
+            re.search(r"\bendTime\s+500\s*;", control) is not None,
+        )
+    )
 
 
-def write_result(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
-
-
-def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
-    return abs(a - b) <= tol
-
-def check_task(root: Path) -> bool:
-    required = ['summary.txt']
-    if not check_required_files(root, required):
+def check() -> bool:
+    required = (
+        ROOT / "build_case.py",
+        ROOT / "postprocess.py",
+        ROOT / "summary.txt",
+        ROOT / "axial_pressure.csv",
+        CASE / "log.blockMesh",
+        CASE / "log.checkMesh",
+        CASE / "log.topoSet",
+        CASE / "log.porousSimpleFoam",
+        CASE / "log.writeCellCentres",
+        CASE / "constant/polyMesh/cellZones",
+        CASE / "500/C",
+        CASE / "500/U",
+        CASE / "500/p",
+    )
+    if any(not path.is_file() or path.stat().st_size == 0 for path in required):
+        return False
+    mesh_log = read(CASE / "log.checkMesh")
+    solve_log = read(CASE / "log.porousSimpleFoam")
+    zones = read(CASE / "constant/polyMesh/cellZones")
+    if not (
+        "Mesh OK." in mesh_log
+        and "End" in mesh_log
+        and "Time = 500" in solve_log
+        and "End" in solve_log
+        and "porosity" in zones
+    ):
+        return False
+    mesh_check = subprocess.run(
+        [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "trap - CHLD; . /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/porous",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=120,
+    )
+    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
 
-    values = parse_single_line_csv_numbers(root / "summary.txt", 1)
-    target = [96.275700]
-    return all(close_enough(v, t) for v, t in zip(values, target))
+    profile = axial_profile()
+    delta_p = RHO * (profile[0][1] - profile[-1][1])
+    if not (1000 < delta_p < 50000 and all(left[1] > right[1] for left, right in zip(profile, profile[1:]))):
+        return False
+    with (ROOT / "axial_pressure.csv").open(encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    keys = ("x_m", "p_kinematic_m2ps2", "p_pa")
+    if len(rows) != len(profile) or set(rows[0]) != set(keys):
+        return False
+    for row, (x, value) in zip(rows, profile):
+        actual = tuple(float(row[key]) for key in keys)
+        expected = (x, value, RHO * value)
+        if any(abs(left - right) > 5e-7 for left, right in zip(actual, expected)):
+            return False
 
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
+    lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]
+    if len(lines) != 1:
+        return False
+    reported = float(lines[0])
+    return math.isfinite(reported) and abs(reported - delta_p) <= 5e-7
 
 
 def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
+    try:
+        result = check()
+    except Exception:
+        result = False
+    print("True" if result else "False")
     return 0
 
 

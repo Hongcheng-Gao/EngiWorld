@@ -19,8 +19,6 @@ def is_result_artifact(path: Path) -> bool:
 
 
 def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return True
     return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
@@ -69,6 +67,8 @@ def check_task(root: Path) -> bool:
         "compare.py",
         "job_a.xdmf",
         "job_b.xdmf",
+        "job_a_metrics.json",
+        "job_b_metrics.json",
         "comparison_report.txt",
     ]
     for rel in required:
@@ -82,18 +82,23 @@ def check_task(root: Path) -> bool:
     mises_a, uy_a = data["job_a"]
     mises_b, uy_b = data["job_b"]
 
-    if abs(mises_a - 60.0) / 60.0 > 0.10:
+    metrics_a = json.loads(read_text(root / "job_a_metrics.json"))
+    metrics_b = json.loads(read_text(root / "job_b_metrics.json"))
+    if abs(mises_a - float(metrics_a["max_mises_mpa"])) > 1e-6 * max(1.0, abs(mises_a)):
         return False
-    if abs(abs(uy_a) - 0.1905) / 0.1905 > 0.10:
+    if abs(uy_a - float(metrics_a["tip_uy_mm"])) > 1e-6 * max(1.0, abs(uy_a)):
         return False
-    if abs(mises_b - 120.0) / 120.0 > 0.10:
+    if abs(mises_b - float(metrics_b["max_mises_mpa"])) > 1e-6 * max(1.0, abs(mises_b)):
         return False
-    if abs(abs(uy_b) - 0.381) / 0.381 > 0.10:
+    if abs(uy_b - float(metrics_b["tip_uy_mm"])) > 1e-6 * max(1.0, abs(uy_b)):
         return False
 
-    if "Ratio_Mises" in data and abs(float(data["Ratio_Mises"]) - 2.0) > 0.15:
+    if not (mises_a > 0.0 and mises_b > mises_a and uy_a < 0.0 and uy_b < uy_a):
         return False
-    if "Ratio_Displacement" in data and abs(float(data["Ratio_Displacement"]) - 2.0) > 0.15:
+
+    if "Ratio_Mises" not in data or abs(float(data["Ratio_Mises"]) - 2.0) > 0.02:
+        return False
+    if "Ratio_Displacement" not in data or abs(float(data["Ratio_Displacement"]) - 2.0) > 0.02:
         return False
     return True
 

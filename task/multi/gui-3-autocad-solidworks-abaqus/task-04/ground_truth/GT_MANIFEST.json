@@ -1,9 +1,9 @@
 {
-  "status": "generated_no_gui_high_quality_eval_passed",
+  "status": "native_industrial_chain_generated_blackbox_validated",
   "environment": "three-software-autocad-solidworks-abaqus",
   "task": "task-04",
   "title": "DXF Dogbone Tension Coupon",
-  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "chain": "AutoCAD 2024 -> SolidWorks 2025 -> Abaqus/CAE 2025 LE",
   "no_init_file": true,
   "job_name": "Job-DogboneTension",
   "model_name": "Model-DogboneTension",
@@ -12,17 +12,17 @@
     {
       "file": "stage1_profile.dxf",
       "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
-      "purpose": "AutoCAD completed DXF stage"
+      "purpose": "AutoCAD native DXF stage"
     },
     {
       "file": "stage2_geometry.step",
-      "expected_desktop_path": "C:\\Users\\User\\Desktop\\stage2_geometry.step",
-      "purpose": "SolidWorks exported STEP geometry stage"
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks imported-DXF STEP stage"
     },
     {
       "file": "Job-DogboneTension.cae",
       "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DogboneTension.cae",
-      "purpose": "Abaqus/CAE model database"
+      "purpose": "Abaqus/CAE native model database"
     },
     {
       "file": "Job-DogboneTension.odb",
@@ -30,74 +30,121 @@
       "purpose": "Abaqus solved output database"
     }
   ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "generation_method": "Non-GUI command/API generation from task instruction only; eval.py not used during generation.",
-  "generated_at_epoch": 1783396691.554118,
-  "source_instruction_sha256": "4fc125f99d7fc6a350e73da88f7d820254dbc7d04e201bb28390d1f3ad113fde",
-  "remote_host": "124.174.11.231",
+  "generation_method": "AutoCAD 2024 COM created native layers and entities and saved DXF; SolidWorks 2025 IImportDxfDwgData/LoadFile4 imported that DXF in millimeters, created one native solid, and exported STEP; Abaqus/CAE 2025 LE imported the SolidWorks STEP, built the material/section/mesh/loads, solved the named job, and saved CAE plus ODB. eval.py was not used to generate the artifacts.",
+  "generated_at": "2026-08-01T03:43:06+00:00",
+  "source_instruction_sha256": "438834fd1ec385b6b220c1f169c8582d2832b279ec42a6471a2c32502c452a7a",
+  "remote_host": "124.174.35.166",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native",
+  "uploaded_script_roundtrip_verification": {
+    "status": "pass",
+    "method": "Each uploaded script was downloaded through OSWorld /file and matched byte-for-byte by SHA-256 before generation.",
+    "reproducible_final_scripts": [
+      {
+        "file": "generate_acad_sw_native_batch.py",
+        "size": 13819,
+        "sha256": "ab6ace16d598cae265fe19a9d337485f6f006c261dad12d751f7147498ebb2f0"
+      },
+      {
+        "file": "generate_gui3_abq_native_batch.py",
+        "size": 15779,
+        "sha256": "e3e62b758afeb560a2d47603fdc91f9ce9654506f582aa89576f331f50c0f1b9"
+      },
+      {
+        "file": "generate_sw_native_batch.py",
+        "size": 10220,
+        "sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf"
+      },
+      {
+        "file": "generate_abq_native_batch.py",
+        "size": 21924,
+        "sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3"
+      }
+    ]
+  },
   "generated_files": [
     {
       "file": "stage1_profile.dxf",
-      "size": 1367,
-      "sha256": "8934ae2384238e54b18f0c6eaff82d5742eff7cd567112ae104a649d1656f684",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\stage1_profile.dxf"
+      "size": 80992,
+      "sha256": "8dc0e3c1a46a77afd43c465158e1808e504f79dde0b4249eff7bdbdcd1212396",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-04\\stage1_profile.dxf"
     },
     {
       "file": "stage2_geometry.step",
-      "size": 39576,
-      "sha256": "da37b2a431e519cbfc56bc2a395ee557ffe318684d0696cd4ae25851aaf95d10",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\stage2_geometry.step"
+      "size": 57667,
+      "sha256": "6dca221477e6b26cd6896f6b92d3e2b13851a4c9a0a74c5b99a5a9f2fef5dea6",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-04\\stage2_geometry.step"
     },
     {
       "file": "Job-DogboneTension.cae",
-      "size": 77824,
-      "sha256": "0d09c1baa0d67f9ed8f6b0b5bc19df2a917190b1d6aea25e065ad96b43785cb9",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\Job-DogboneTension.cae"
+      "size": 102400,
+      "sha256": "75d075258476c4e01542d4b05fcb6e806f8e5fce3df9e2684df4b787217a4dd6",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-04\\Job-DogboneTension.cae"
     },
     {
       "file": "Job-DogboneTension.odb",
-      "size": 303152,
-      "sha256": "784c39470285e5132495f5fc432736ccfeed4398eaf3c2b5d819cf1dd399680f",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\Job-DogboneTension.odb"
+      "size": 331676,
+      "sha256": "f9f96cac1a477259f567281168af5b48e91b8be3052936370aab3b2c9005976f",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-04\\Job-DogboneTension.odb"
     }
   ],
-  "generation_title": "DXF Dogbone Tension Coupon",
-  "black_box_eval": {
-    "checked_at_epoch": 1783396837.4559748,
-    "status": "pass",
-    "returncode": 0,
-    "actual": "True\n",
-    "expected": "True\n",
-    "first_fail": "",
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+  "native_generation_self_check": {
+    "bbox": [
+      140.0,
+      40.0,
+      3.0
     ],
-    "cleanup_residuals": [],
-    "out_dir": "/tmp/engiworld_multi_gt/eval_results_new_env/three-software-autocad-solidworks-abaqus__task-04"
+    "cells": 1,
+    "edges": 66,
+    "elements": 486,
+    "faces": 24,
+    "job_status": "None",
+    "mesh_size": 9.0,
+    "nodes": 208,
+    "odb": {
+      "steps": {
+        "Step-Tension": [
+          {
+            "description": "Increment      0: Step Time =    0.000",
+            "fields": {
+              "CF": 0.0,
+              "CM": 0.0,
+              "RF": 0.0,
+              "RM": 0.0,
+              "S": 0.0,
+              "U": 0.0,
+              "UR": 0.0
+            },
+            "value": 0.0
+          },
+          {
+            "description": "Increment      1: Step Time =    1.000",
+            "fields": {
+              "CF": 1000.0,
+              "CM": 0.0,
+              "RF": 171.4488525390625,
+              "RM": 0.0,
+              "S": 17.964828491210938,
+              "U": 0.007998992688953876,
+              "UR": 9.988458259613253e-06
+            },
+            "value": 1.0
+          }
+        ]
+      }
+    },
+    "task": "task-04",
+    "token": "EW_ACAD_SW_ABQ_04"
   },
-  "generation_self_check": {
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-DogboneTension.odb",
-    "ok": true,
-    "fields": {
-      "U": 1.0,
-      "S": 3626.71142578125,
-      "RF": 8157.2548828125
+  "cad_chain_self_check": {
+    "autocad": {
+      "entities": 5,
+      "version": "24.3s (LMS Tech)"
     },
-    "frames": 2,
-    "elements": 236,
-    "mesh_report": {
-      "elements": 236,
-      "mesh_size": 5.0,
-      "target": 160
-    },
-    "chain_evidence": {
-      "token": "EW_ACAD_SW_ABQ_04",
-      "cae_set": "CHAIN_EW_ACAD_SW_ABQ_04_IMPORTED_FROM_STAGE2_GEOMETRY_STEP",
-      "cae_markers": [
-        "EW_ACAD_SW_ABQ_04",
-        "IMPORTED_FROM_stage2_geometry.step"
-      ]
-    }
+    "dxf": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-04\\stage1_profile.dxf",
+    "solidworks_imported_document": "Part2",
+    "step": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-04\\stage2_geometry.step",
+    "task": "task-04",
+    "token": "EW_ACAD_SW_ABQ_04"
   },
   "chain_token": "EW_ACAD_SW_ABQ_04",
   "chain_evidence": {
@@ -113,21 +160,33 @@
     "cae_markers": [
       "EW_ACAD_SW_ABQ_04",
       "IMPORTED_FROM_stage2_geometry.step"
-    ],
-    "cae_set": "CHAIN_EW_ACAD_SW_ABQ_04_IMPORTED_FROM_STAGE2_GEOMETRY_STEP"
+    ]
   },
-  "blackbox_eval": {
+  "blackbox_validation": {
     "status": "pass",
-    "host": "124.174.22.118",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-04/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    "host": "124.174.35.166",
+    "checked_at": "2026-08-01T03:53:09+00:00",
+    "eval_sha256": "a6a2152e9abde71dda1a88b6df56fb641a83916c684eba8f9d124414b3aaaaef",
+    "sequence": [
+      {
+        "label": "baseline",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "a08d1603e999f3dce12f6e606103ed6c781821d153f59f8a4ef667af7a9c90b1"
+      },
+      {
+        "label": "tampered",
+        "expected": "False",
+        "actual": "False",
+        "detail_sha256": "85048b0342610cb24ac9b3f54ae8d6a965f18f4496d23feb41e5f47a81012c78"
+      },
+      {
+        "label": "restored",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "a08d1603e999f3dce12f6e606103ed6c781821d153f59f8a4ef667af7a9c90b1"
+      }
     ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:11:25Z"
+    "summary": "True -> False after native CAE load tamper -> True after restoring the original CAE"
   }
 }

@@ -5,18 +5,36 @@ try:
     from abaqus import mdb, openMdb
     from odbAccess import openOdb
     try:
+        from interaction import *
+        from job import *
+        from load import *
+        from part import *
+        from step import *
+    except Exception:
+        pass
+    try:
         from abaqusConstants import THREE_D, DEFORMABLE_BODY
     except Exception:
         THREE_D = None; DEFORMABLE_BODY = None
 except Exception:
     mdb = None; openMdb = None; openOdb = None; THREE_D = None; DEFORMABLE_BODY = None
-SPEC = {'any_odb_fields': [],
+SPEC = {'allowed_element_types': ['C3D4', 'C3D8R'],
+ 'any_odb_fields': [],
  'bbox': [140, 70, 10],
- 'bbox_tol': 8.0,
+ 'bbox_tol': 1.0,
  'bc_checks': [{'kind': 'constraint', 'name': 'BC-BoltHoles'}],
  'bc_names': ['BC-BoltHoles'],
- 'cad_text': 'DXF Manifold Cover Pressure Analysis',
- 'cae_text': 'DXF Manifold Cover Pressure Analysis',
+ 'cad_text': '1. In AutoCAD, draw a 140 x 70 mm rounded rectangle on OUTLINE with R10 corners. '
+             'Draw six D6 holes on HOLE at (15,15), (70,10), (125,15), (15,55), (70,60), and '
+             '(125,55) mm. On CUTOUT draw a centered 50 x 16 mm obround opening with 8 mm end '
+             'radii and arc centers (53,35) and (87,35) mm. On PRESSURE draw the 90 x 36 mm '
+             'rectangle from (25,17) to (115,53) mm. Save stage1_profile.dxf.',
+ 'cae_text': '3. In Abaqus/CAE, import the STEP into Model-DxfManifoldPressure. Define and assign '
+             'Steel with E=210000 MPa and nu=0.3. Create Static General step Step-Pressure, set '
+             'BOLT_HOLES from all six bores, and surface PRESSURE_FACE on the recessed Z=8 mm '
+             'face. Use first-order C3D4 or C3D8R elements and no more than 1000 nodes. Constrain '
+             'BOLT_HOLES with BC-BoltHoles and apply Pressure-0p8MPa = 0.8 MPa to PRESSURE_FACE. '
+             'Submit Job-DxfManifoldPressure and wait for completion.',
  'chain': 'three',
  'chain_evidence': {'cae_markers': ['EW_ACAD_SW_ABQ_09', 'IMPORTED_FROM_stage2_geometry.step'],
                     'dxf_markers': ['EW_ACAD_SW_ABQ_09', 'AUTOCAD_TO_SOLIDWORKS'],
@@ -25,22 +43,32 @@ SPEC = {'any_odb_fields': [],
                                      'SOLIDWORKS_TO_ABAQUS']},
  'chain_token': 'EW_ACAD_SW_ABQ_09',
  'dxf_checks': {'bbox': [140, 70],
-                'circle_radii': [{'count': 6, 'r': 3}],
-                'layer_line_min': {'CUTOUT': 2, 'PRESSURE': 4},
+                'circles': [[15, 15, 3, 'HOLE'],
+                            [70, 10, 3, 'HOLE'],
+                            [125, 15, 3, 'HOLE'],
+                            [15, 55, 3, 'HOLE'],
+                            [70, 60, 3, 'HOLE'],
+                            [125, 55, 3, 'HOLE']],
+                'layer_line_exact': {'CUTOUT': 2, 'OUTLINE': 4, 'PRESSURE': 1},
                 'layers': ['OUTLINE', 'HOLE', 'CUTOUT', 'PRESSURE', 'CHAIN'],
-                'tol': 1.0},
- 'expected_field_any': ['U', 'S'],
+                'tol': 0.25},
+ 'expected_cells': 1,
  'job_name': 'Job-DxfManifoldPressure',
  'load_checks': [{'kind': 'pressure',
                   'magnitude': 0.8,
                   'name': 'Pressure-0p8MPa',
-                  'rel_tol': 0.35}],
+                  'rel_tol': 0.02}],
  'load_names': ['Pressure-0p8MPa'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
+ 'max_nodes': 1000,
+ 'min_edges': 75,
  'min_elements': 100,
+ 'min_faces': 28,
  'min_frames': 2,
  'model_name': 'Model-DxfManifoldPressure',
+ 'nonzero_odb_any_fields': [],
  'nonzero_odb_fields': ['U', 'S'],
+ 'required_couplings': [],
  'required_files': ['stage1_profile.dxf',
                     'stage2_geometry.step',
                     'Job-DxfManifoldPressure.cae',
@@ -198,9 +226,12 @@ def check_dxf():
         if not (close(got[0],exp[0],tol) and close(got[1],exp[1],tol)): return fail('DXF bbox mismatch got %s expected %s'%(got,exp))
     if ds.get('min_circles') is not None and len(circles) < int(ds['min_circles']): return fail('Too few DXF circles')
     for req in ds.get('circles',[]):
+        if isinstance(req, (list, tuple)):
+            req={'x':req[0], 'y':req[1], 'r':req[2], 'layer':req[3] if len(req)>3 else None}
         found=False
         for c in circles:
-            if close(c['x'],req['x'],ds.get('tol',1.0)) and close(c['y'],req['y'],ds.get('tol',1.0)) and close(c['r'],req['r'],ds.get('tol',1.0)): found=True
+            layer_ok=(not req.get('layer')) or ci(c.get('layer')) == ci(req.get('layer'))
+            if layer_ok and close(c['x'],req['x'],ds.get('tol',1.0)) and close(c['y'],req['y'],ds.get('tol',1.0)) and close(c['r'],req['r'],ds.get('tol',1.0)): found=True
         if not found: return fail('Missing required DXF circle near (%s,%s)'%(req['x'],req['y']))
     for req in ds.get('circle_radii',[]):
         cnt=0
@@ -210,6 +241,9 @@ def check_dxf():
     for layer, min_count in ds.get('layer_line_min',{}).items():
         cnt=len([ln for ln in lines if ci(ln.get('layer')) == ci(layer)])
         if cnt < int(min_count): return fail('Too few DXF line/polyline entities on layer %s: got %s'%(layer,cnt))
+    for layer, expected_count in ds.get('layer_line_exact',{}).items():
+        cnt=len([ln for ln in lines if ci(ln.get('layer')) == ci(layer)])
+        if cnt != int(expected_count): return fail('DXF line/polyline count mismatch on layer %s: got %s expected %s'%(layer,cnt,expected_count))
     return ok('DXF checks passed')
 
 
@@ -231,10 +265,11 @@ def abaqus_step_bbox(path):
         try: geom=mdb.openStep(fileName=path)
         except Exception: geom=mdb.openStep(path)
         part=model.PartFromGeometryFile(name=part_name, geometryFile=geom, combine=False, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-        bb=part.getBoundingBox()
+        bb=part.cells.getBoundingBox()
         low=bb.get('low', None); high=bb.get('high', None)
         if low is None or high is None: return None
-        return [float(high[i])-float(low[i]) for i in range(3)]
+        return {'bbox':[float(high[i])-float(low[i]) for i in range(3)],
+                'cells':len(part.cells), 'faces':len(part.faces), 'edges':len(part.edges)}
     except Exception as e:
         warn('Abaqus STEP fallback failed: '+str(e))
         return None
@@ -255,7 +290,9 @@ try:
         out = {"ok": False, "error": "STEP must contain exactly one solid", "solid_count": len(solids)}
     else:
         box = solids[0].BoundingBox()
-        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen]}
+        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen],
+               "cells": len(solids), "faces": len(solids[0].Faces()),
+               "edges": len(solids[0].Edges())}
 except Exception as exc:
     out = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
 sys.stdout.write("__CQ_BBOX__" + json.dumps(out))
@@ -287,26 +324,32 @@ def check_step():
     if not nonempty(path, 1): return fail('Missing STEP stage: '+path)
     h=head(path,4096).upper()
     if 'ISO-10303' not in h and 'STEP' not in h: return fail('STEP header not recognized')
-    got=None
+    got=None; info={}
     try:
         import cadquery as cq
         wp=cq.importers.importStep(path); solids=wp.solids().vals()
         if len(solids) != 1: return fail('STEP must contain exactly one solid')
         box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]
+        info={'cells':len(solids), 'faces':len(solids[0].Faces()), 'edges':len(solids[0].Edges())}
         log('[PASS] STEP cadquery import succeeded')
     except Exception as e:
         warn('Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: '+str(e))
         ext=external_cadquery_step_bbox(path)
         if ext.get('ok'):
             got=ext.get('bbox')
+            info=ext
             log('[PASS] STEP external cadquery import succeeded')
         elif ext.get('solid_count') is not None:
             return fail('STEP must contain exactly one solid')
         else:
             warn('external cadquery STEP check failed; trying Abaqus STEP import: '+str(ext.get('error','unknown')))
-            got=abaqus_step_bbox(path)
+            info=abaqus_step_bbox(path) or {}
+            got=info.get('bbox')
     if got is None: return fail('STEP geometry could not be validated')
     if not dims_close(got, SPEC['bbox'], SPEC.get('bbox_tol',8.0)): return fail('STEP bbox mismatch got %s expected %s'%(got,SPEC['bbox']))
+    if int(info.get('cells', 0)) != int(SPEC.get('expected_cells',1)): return fail('STEP solid-cell count mismatch got %s expected %s'%(info.get('cells'),SPEC.get('expected_cells',1)))
+    if int(info.get('faces',0)) < int(SPEC.get('min_faces',1)): return fail('STEP has too few faces: '+str(info.get('faces')))
+    if int(info.get('edges',0)) < int(SPEC.get('min_edges',1)): return fail('STEP has too few edges: '+str(info.get('edges')))
     return ok('STEP geometry checks passed')
 
 
@@ -468,26 +511,30 @@ def collect_surfaces(model):
 
 
 def mesh_info(model):
-    coords=[]; elems=0
+    coords=[]; elems=0; nodes=0; element_types=set()
+    repositories=[]
     try:
         for pk in model.parts.keys():
-            p=model.parts[pk]
-            try: elems += len(p.elements)
-            except Exception: pass
-            try:
-                for n in p.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+            repositories.append(model.parts[pk])
     except Exception: pass
     try:
         for ik in model.rootAssembly.instances.keys():
-            inst=model.rootAssembly.instances[ik]
-            try: elems += len(inst.elements)
-            except Exception: pass
-            try:
-                for n in inst.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+            repositories.append(model.rootAssembly.instances[ik])
     except Exception: pass
-    return coords, elems
+    for repo in repositories:
+        try:
+            repo_elems=len(repo.elements)
+            if repo_elems > elems:
+                elems=repo_elems
+                element_types=set([ci(getattr(e,'type','')) for e in repo.elements if ci(getattr(e,'type',''))])
+        except Exception: pass
+        try:
+            repo_nodes=len(repo.nodes)
+            if repo_nodes > nodes:
+                nodes=repo_nodes
+                coords=[tuple(n.coordinates) for n in repo.nodes]
+        except Exception: pass
+    return coords, elems, nodes, element_types
 
 
 def check_material(model):
@@ -506,7 +553,8 @@ def check_material(model):
         try:
             kval=float(mat.conductivity.table[0][0])
         except Exception as ex: return fail('Could not inspect conductivity table: '+str(ex))
-        if abs(kval-float(m['conductivity'])) > max(5.0,0.15*float(m['conductivity'])): return fail('Conductivity mismatch')
+        target=float(m['conductivity'])
+        if abs(kval-target) > max(1.0e-6,0.02*abs(target)): return fail('Conductivity mismatch got %s expected %s'%(kval,target))
     return ok('Material checks passed')
 
 
@@ -667,7 +715,7 @@ def parse_inp(path):
             vals=[parse_float_token(p) for p in parts[1:]]
             vals=[v for v in vals if v is not None]
             data['flux'].append({'target':target,'values':vals,'card':card,'parts':parts})
-        elif card == '*film':
+        elif card in ('*film','*sfilm'):
             vals=[parse_float_token(p) for p in parts[1:]]
             vals=[v for v in vals if v is not None]
             data['film'].append({'target':target,'values':vals,'parts':parts})
@@ -740,14 +788,29 @@ def check_constraint_bc(model, name):
     return fail('BC '+name+' does not constrain any displacement DOF')
 
 
-def check_convection(model, name):
-    if has(model.boundaryConditions, name): return ok('Convection boundary condition found '+name)
+def check_convection(model, req):
+    name=req.get('name')
+    obj=None
+    if has(model.boundaryConditions, name): obj=get_obj(model.boundaryConditions,name)
     try:
-        if has(model.interactions, name): return ok('Convection interaction found '+name)
+        if has(model.interactions, name): obj=get_obj(model.interactions,name)
     except Exception: pass
     data=get_inp_data(model)
-    if inp_entries_for(data, 'film', name): return ok('Convection film card found '+name)
-    return fail('Missing convection interaction or boundary condition '+name)
+    entries=inp_entries_for(data, 'film', name)
+    if not entries and len(data.get('film',[])) == 1: entries=list(data.get('film',[]))
+    if obj is None and not entries: return fail('Missing convection interaction or boundary condition '+name)
+    observed=[]
+    if obj is not None:
+        for attr in ('filmCoeff','sinkTemperature'):
+            v=numeric_attr(obj,attr)
+            if v is not None: observed.append(v)
+    for entry in entries: observed.extend(entry.get('values',[]))
+    for key in ('film_coeff','sink_temperature'):
+        if key not in req: continue
+        target=float(req[key])
+        if not any(close_rel(v,target,abs_tol=max(1.0e-8,abs(target)*0.01),rel_tol=0.02) for v in observed):
+            return fail('Convection %s mismatch for %s'%(key,name))
+    return ok('Convection parameters found '+name)
 
 
 def check_bc_specs(model):
@@ -755,14 +818,14 @@ def check_bc_specs(model):
         kind=req.get('kind','constraint')
         name=req.get('name')
         if kind == 'convection':
-            if not check_convection(model,name): return False
+            if not check_convection(model,req): return False
         else:
             if not check_constraint_bc(model,name): return False
     return True
 
 
 def close_magnitude(v, target, req):
-    return close_rel(abs(v), abs(float(target)), abs_tol=float(req.get('abs_tol', max(1.0, abs(float(target))*0.02))), rel_tol=float(req.get('rel_tol',0.20)))
+    return close_rel(abs(v), abs(float(target)), abs_tol=float(req.get('abs_tol', max(1.0e-9, abs(float(target))*0.02))), rel_tol=float(req.get('rel_tol',0.20)))
 
 
 def inp_value_matches(value, req):
@@ -780,7 +843,9 @@ def force_like_ok(obj, req, model=None):
     if vals:
         sign=req.get('sign')
         mag=req.get('magnitude')
+        component=ci(req.get('component'))
         for attr,v in vals:
+            if component and ci(attr) != component: continue
             if mag is not None and not close_magnitude(v, mag, req):
                 continue
             if sign == 'positive' and v <= 0.0: continue
@@ -794,6 +859,10 @@ def force_like_ok(obj, req, model=None):
         data=get_inp_data(model)
         for entry in inp_entries_for(data, 'cload', region):
             v=entry.get('value')
+            component=ci(req.get('component'))
+            if component:
+                expected_dof={'CF1':1,'CF2':2,'CF3':3}.get(component)
+                if expected_dof is not None and entry.get('dof') != expected_dof: continue
             if req.get('magnitude') is None:
                 if v is not None and abs(v) > 1.0e-9: return True
             elif inp_value_matches(v, req): return True
@@ -849,10 +918,10 @@ def check_load_specs(model):
             if not inp_card_has_value(model, 'pressure', region, req=req): return fail('Pressure magnitude mismatch for '+name)
         elif kind == 'heat_flux':
             if load is None: return fail('Missing heat flux load '+name)
-            vals=numeric_values(load)
-            if vals and any(abs(v) > 1.0e-12 for attr,v in vals): continue
+            mag=numeric_attr(load,'magnitude')
+            if mag is not None and req.get('magnitude') is not None and close_magnitude(mag,req.get('magnitude'),req): continue
             region=object_region_name(load) or name
-            if not inp_card_has_value(model, 'flux', region, req=req): return fail('Heat flux load '+name+' has no readable magnitude')
+            if not inp_card_has_value(model, 'flux', region, req=req): return fail('Heat flux magnitude mismatch for '+name)
         elif kind == 'force_or_displacement':
             matched=False
             if load is not None and force_like_ok(load, req, model): matched=True
@@ -888,10 +957,19 @@ def check_cae():
         if nn(name) not in set_names: return fail('Missing set '+name)
     for name in SPEC.get('required_surfaces',[]):
         if nn(name) not in surf_names: return fail('Missing surface '+name)
+    for name in SPEC.get('required_couplings',[]):
+        try: constraints=model.constraints
+        except Exception: return fail('Cannot inspect model constraints')
+        obj=get_obj(constraints,name)
+        if obj is None or 'COUPL' not in ci(cls(obj)): return fail('Missing coupling constraint '+name)
     if not check_bc_specs(model): return False
     if not check_load_specs(model): return False
-    coords, elems = mesh_info(model)
+    coords, elems, nodes, element_types = mesh_info(model)
     if elems < int(SPEC.get('min_elements',1)): return fail('Too few mesh elements')
+    if nodes > int(SPEC.get('max_nodes',1000000000)): return fail('Mesh exceeds node limit got %s max %s'%(nodes,SPEC.get('max_nodes')))
+    allowed=set([ci(x) for x in SPEC.get('allowed_element_types',[])])
+    if allowed and (not element_types or not element_types.issubset(allowed)):
+        return fail('Disallowed or unreadable element types: %s allowed %s'%(sorted(element_types),sorted(allowed)))
     if coords:
         spans=[]
         for ax in range(3):

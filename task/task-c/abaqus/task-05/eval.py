@@ -20,8 +20,10 @@ import traceback
 
 TASK_ID = 'task-05'
 PROCESS_SPEC = {'artifact': {'job_name': 'Job-BlockTension', 'model_name': 'Model-BlockTension', 'step_name': 'Step-Load'},
- 'process': {'geometry': {'bbox_spans': {'x': 120.0, 'y': 12.0, 'z': 8.0}, 'tol': 0.25},
-             'load_signatures': [{'magnitude': 8.33, 'step': 'Step-Load', 'tol': 0.6, 'type_any': ['PRESSURE']}],
+ 'process': {'bc_signatures': [{'dofs': {'u1': 'SET', 'u2': 'SET', 'u3': 'SET'}, 'step': 'Initial'}],
+             'geometry': {'bbox_spans': {'x': 120.0, 'y': 12.0, 'z': 8.0}, 'tol': 0.25},
+             'kinematic_coupling': {'min_count': 1},
+             'load_signatures': [{'component': 'cf1', 'component_value': 800.0, 'sign': 'positive', 'step': 'Step-Load', 'tol': 1.0, 'type_any': ['CONCENTRATEDFORCE']}],
              'materials': [{'E': 70000.0, 'name': 'Aluminum', 'nu': 0.33}],
              'mesh': {'main_element_type': 'C3D8R', 'seed_sizes': [4.0], 'seed_tol': 0.5},
              'min_counts': {'boundary_conditions': 1, 'loads': 1},
@@ -552,6 +554,10 @@ def check_required_sets(model, part_obj, set_names):
 
 
 def bc_matches_req(bc_obj, req):
+    tokens = req.get('type_any', [])
+    if tokens and not any(ci(token) in class_name(bc_obj) for token in tokens):
+        return False
+
     step_req = req.get('step', None)
     if step_req is not None:
         cstep = getattr(bc_obj, 'createStepName', None)
@@ -602,6 +608,13 @@ def check_bcs(model, bc_specs, min_count=None):
                 matched = True
                 break
         if not matched:
+            try:
+                model.keywordBlock.synchVersions(storeNodesAndElements=False)
+                keyword_text = '\n'.join(str(x) for x in model.keywordBlock.sieBlocks).upper()
+                matched = '*BOUNDARY' in keyword_text and 'ENCASTRE' in keyword_text
+            except Exception:
+                matched = False
+        if not matched:
             return fail('Required BC signature not found: ' + str(req))
 
     return True
@@ -650,6 +663,10 @@ def load_matches_req(load_obj, req):
             return False
         if sign == 'negative' and vf >= 0.0:
             return False
+        if 'component_value' in req:
+            tol = float(req.get('tol', ABS_TOL))
+            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+                return False
 
     return True
 
@@ -949,6 +966,20 @@ def check_keyword_bcs_loads_b(model, proc):
                 matched = True
             if 'MOMENT' in tp and '*CLOAD' in text:
                 matched = True
+            if 'CONCENTRATEDFORCE' in tp and '*CLOAD' in text:
+                matched = True
+        component_code = {'CF1': '1', 'CF2': '2', 'CF3': '3', 'CM1': '4', 'CM2': '5', 'CM3': '6'}.get(ci(req.get('component', '')))
+        component_value = safe_float(req.get('component_value', None), None)
+        if matched and component_code and component_value is not None:
+            matched = False
+            for line in text.splitlines():
+                fields = [field.strip() for field in line.split(',')]
+                if len(fields) < 3 or fields[1] != component_code:
+                    continue
+                observed = safe_float(fields[2], None)
+                if observed is not None and close_enough(observed, component_value, tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3):
+                    matched = True
+                    break
         if not matched:
             return fail('Keyword load signature not found for any of %s' % str(types))
 

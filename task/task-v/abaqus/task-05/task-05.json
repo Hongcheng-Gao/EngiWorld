@@ -1,39 +1,26 @@
 {
   "id": "v-abaqus-task-05-windows",
   "snapshot": "ABAQUS-2025L",
-  "instruction": "Use Abaqus to perform a tensile analysis of a rectangular solid block. Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a rectangle from (0, 0) to (12, 8) in the Y-Z plane and extrude along the global X-axis to a length of 120 mm. This produces a block with cross-section 12 mm x 8 mm and overall length 120 mm. Material and Section: Define a material named Aluminum with Young's modulus E = 70000 MPa and Poisson's ratio nu = 0.33. Create a Solid Homogeneous section using Aluminum and assign it to the entire block. Assembly: Create one dependent instance of the block. Analysis Step: Create a Static, General step named Step-Load. Loads and Boundary Conditions: Apply an Encastre boundary condition to the end face at X = 0. Apply a uniform pressure of 8.33 MPa to the end face at X = 120 mm, acting in the global positive X direction. This pressure is equivalent to a total tensile force of 800 N over the 12 mm x 8 mm cross-section. Discretization: Mesh the block with a global seed size of 4 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-BlockTension, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Open the output database. Review the S11 stress contour at the mid-section (X approximately 60 mm). Query the U1 displacement at the node located at the center of the free end face (X = 120 mm, Y = 6 mm, Z = 4 mm). Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-BlockTension.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-BlockTension.odb. Run the solver to completion and ensure a result file is generated.",
+  "instruction": "Complete the task entirely in the Abaqus/CAE graphical user interface. Use the N-mm-MPa unit system. Create a 3D deformable solid block 120 mm long in global X with a 12 mm by 8 mm Y-Z cross-section. Define Aluminum with E = 70000 MPa and nu = 0.33, assign a solid homogeneous section, and create one dependent instance. Create a Static, General step named Step-Load. Apply Encastre to the X = 0 end face. At the center of the X = 120 mm end face, create a reference point at (120, 6, 4), kinematically couple the complete end face to it, and apply a concentrated force CF1 = +800 N at the reference point. This coupled force, rather than pressure, must produce tension in +X. Mesh the block with C3D8R elements and a global seed size of 4 mm. Create and run Job-BlockTension. Review S11 near X = 60 mm and U1 at the loaded reference point. Save C:\\Users\\user\\Desktop\\Job-BlockTension.cae and C:\\Users\\user\\Desktop\\Job-BlockTension.odb.",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    },
+    { "type": "upload_file", "parameters": { "files": [] } },
     {
       "type": "launch",
       "parameters": {
-        "command": [
-          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
-          "cae"
-        ]
+        "command": ["C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat", "cae"]
       }
     }
   ],
   "trajectory": "trajectories/",
-  "related_apps": [
-    "abaqus"
-  ],
+  "related_apps": ["abaqus"],
   "evaluator": {
     "postconfig": [
       {
         "type": "upload_file",
         "parameters": {
           "files": [
-            {
-              "local_path": "task-05/eval.py",
-              "path": "C:\\Users\\user\\Desktop\\eval.py"
-            }
+            { "local_path": "task-05/eval.py", "path": "C:\\Users\\user\\Desktop\\eval.py" }
           ]
         }
       }
@@ -44,12 +31,7 @@
       "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
+    "expected": { "type": "rule", "rules": { "expected": "True\n" } }
   },
   "proxy": false,
   "fixed_ip": false,

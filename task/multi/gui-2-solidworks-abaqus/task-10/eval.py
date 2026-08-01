@@ -5,6 +5,14 @@ try:
     from abaqus import mdb, openMdb
     from odbAccess import openOdb
     try:
+        from interaction import *
+        from job import *
+        from load import *
+        from part import *
+        from step import *
+    except Exception:
+        pass
+    try:
         from abaqusConstants import THREE_D, DEFORMABLE_BODY
     except Exception:
         THREE_D = None; DEFORMABLE_BODY = None
@@ -12,31 +20,43 @@ except Exception:
     mdb = None; openMdb = None; openOdb = None; THREE_D = None; DEFORMABLE_BODY = None
 SPEC = {'any_odb_fields': [],
  'bbox': [100, 60, 12],
- 'bbox_tol': 8.0,
+ 'bbox_tol': 0.2,
  'bc_checks': [{'kind': 'constraint', 'name': 'BC-BoltHoles'}],
  'bc_names': ['BC-BoltHoles'],
- 'cad_text': 'Pipe Clamp Half-Ring Static Analysis',
- 'cae_text': 'Pipe Clamp Half-Ring Static Analysis',
+ 'cad_text': 'Pipe Clamp Plate Static Analysis',
+ 'cae_text': 'Pipe Clamp Plate Static Analysis',
  'chain': 'two',
  'chain_evidence': {'cae_markers': ['EW_SW_ABQ_10', 'IMPORTED_FROM_stage1_geometry.step'],
                     'step_markers': ['EW_SW_ABQ_10', 'SOLIDWORKS_TO_ABAQUS']},
  'chain_token': 'EW_SW_ABQ_10',
  'dxf_checks': None,
- 'expected_field_any': ['U', 'S'],
+ 'expected_field_any': ['U', 'S', 'RF', 'CF'],
+ 'geometry_checks': {'allowed_element_types': ['C3D4', 'C3D8R'],
+                     'cells': 1,
+                     'edges': 42,
+                     'faces': 16,
+                     'max_nodes': 1000,
+                     'min_nodes': 100,
+                     'part_count': 1,
+                     'sets': {'BOLT_HOLES': {'min_faces': 2}, 'CLAMP_BORE': {'min_faces': 1}},
+                     'surfaces': {'CLAMP_BORE_SURFACE': {'min_faces': 1}}},
  'job_name': 'Job-PipeClampLoad',
- 'load_checks': [{'kind': 'force',
+ 'load_checks': [{'component': 'CF2',
+                  'kind': 'force',
                   'magnitude': 1000.0,
                   'name': 'Load-Clamp1000N',
-                  'rel_tol': 0.35,
+                  'rel_tol': 0.02,
                   'sign': 'negative'}],
  'load_names': ['Load-Clamp1000N'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
- 'min_elements': 90,
+ 'min_elements': 300,
  'min_frames': 2,
  'model_name': 'Model-PipeClampLoad',
- 'nonzero_odb_fields': ['U', 'S'],
+ 'nonzero_odb_fields': ['U', 'S', 'CF'],
+ 'odb_max_abs_checks': [{'field': 'CF', 'magnitude': 1000.0, 'rel_tol': 0.02}],
+ 'required_constraints': ['Coupling-ClampBore'],
  'required_files': ['stage1_geometry.step', 'Job-PipeClampLoad.cae', 'Job-PipeClampLoad.odb'],
- 'required_odb_fields': ['U', 'S'],
+ 'required_odb_fields': ['U', 'S', 'RF', 'CF'],
  'required_sets': ['BOLT_HOLES', 'CLAMP_BORE'],
  'required_surfaces': ['CLAMP_BORE_SURFACE'],
  'section_material': 'Steel',
@@ -44,7 +64,7 @@ SPEC = {'any_odb_fields': [],
  'step_kind': 'STATIC',
  'step_name': 'Step-ClampLoad',
  'task_no': 10,
- 'title': 'Pipe Clamp Half-Ring Static Analysis'}
+ 'title': 'Pipe Clamp Plate Static Analysis'}
 DETAILS=[]
 FORBIDDEN=set(['.py','.pyw','.ipynb','.bat','.cmd','.ps1','.psm1','.vbs','.js','.mjs','.scr','.macro','.bas','.vba','.ahk','.sh'])
 DELIVERABLE_EXTS=set(['.step','.stp','.dxf','.cae','.odb'])
@@ -457,6 +477,122 @@ def collect_surfaces(model):
     return out
 
 
+def region_coordinates(region):
+    coords=[]
+    try:
+        for node in region.nodes: coords.append(tuple(float(x) for x in node.coordinates))
+    except Exception: pass
+    if coords: return coords
+    for attr in ['vertices','faces','edges']:
+        try:
+            for item in getattr(region,attr):
+                value=getattr(item,'pointOn',None)
+                if value and hasattr(value[0],'__iter__'): value=value[0]
+                if value is not None: coords.append(tuple(float(x) for x in value))
+        except Exception: pass
+    return coords
+
+
+def coordinate_bounds(coords):
+    if not coords: return None
+    low=[]; high=[]
+    for axis in range(3):
+        values=[p[axis] for p in coords if len(p)>axis]
+        if not values: return None
+        low.append(min(values)); high.append(max(values))
+    return low,high
+
+
+def check_named_region(repo, name, req, context):
+    key=find_key(repo,name)
+    if key is None: return fail('Missing %s %s'%(context,name))
+    try: region=repo[key]
+    except Exception as e: return fail('Cannot inspect %s %s: %s'%(context,name,e))
+    if req.get('min_faces') is not None:
+        try: count=len(region.faces)
+        except Exception: count=0
+        if count < int(req['min_faces']): return fail('%s %s has too few faces: %s'%(context,name,count))
+    expected_low=req.get('bounds_low'); expected_high=req.get('bounds_high')
+    if expected_low is not None or expected_high is not None:
+        observed=coordinate_bounds(region_coordinates(region))
+        if observed is None: return fail('%s %s has no inspectable coordinates'%(context,name))
+        low,high=observed; tol=float(req.get('tol',1.0))
+        if expected_low is not None:
+            for axis in range(3):
+                if abs(float(low[axis])-float(expected_low[axis])) > tol:
+                    return fail('%s %s low bound mismatch got %s expected %s'%(context,name,low,expected_low))
+        if expected_high is not None:
+            for axis in range(3):
+                if abs(float(high[axis])-float(expected_high[axis])) > tol:
+                    return fail('%s %s high bound mismatch got %s expected %s'%(context,name,high,expected_high))
+    return True
+
+
+def check_geometry_details(model):
+    spec=SPEC.get('geometry_checks') or {}
+    if not spec: return True
+    parts=[]
+    try:
+        for key in model.parts.keys():
+            part=model.parts[key]
+            if len(part.cells) or len(part.faces) or len(part.elements): parts.append(part)
+    except Exception as e: return fail('Cannot inspect part topology: '+str(e))
+    expected_parts=int(spec.get('part_count',1))
+    if len(parts) != expected_parts: return fail('Expected exactly %s nonempty analysis part(s), got %s'%(expected_parts,len(parts)))
+    part=parts[0]
+    if spec.get('cells') is not None and len(part.cells) != int(spec['cells']):
+        return fail('Analysis part must contain exactly %s connected solid cell(s), got %s'%(spec['cells'],len(part.cells)))
+    if spec.get('faces') is not None and len(part.faces) != int(spec['faces']):
+        return fail('Analysis part face count mismatch got %s expected %s'%(len(part.faces),spec['faces']))
+    if spec.get('edges') is not None and len(part.edges) != int(spec['edges']):
+        return fail('Analysis part edge count mismatch got %s expected %s'%(len(part.edges),spec['edges']))
+    if spec.get('min_faces') is not None and len(part.faces) < int(spec['min_faces']):
+        return fail('Analysis part topology has too few faces: %s'%len(part.faces))
+    if spec.get('min_edges') is not None and len(part.edges) < int(spec['min_edges']):
+        return fail('Analysis part topology has too few edges: %s'%len(part.edges))
+    node_count=len(part.nodes); element_count=len(part.elements)
+    if spec.get('min_nodes') is not None and node_count < int(spec['min_nodes']):
+        return fail('Analysis mesh has too few nodes: %s'%node_count)
+    if spec.get('max_nodes') is not None and node_count > int(spec['max_nodes']):
+        return fail('Analysis mesh exceeds Learning Edition node limit: %s'%node_count)
+    allowed=set([ci(x) for x in spec.get('allowed_element_types',[])])
+    observed=set()
+    try:
+        for element in part.elements:
+            value=ci(getattr(element,'type',''))
+            if value: observed.add(value)
+    except Exception: pass
+    if allowed and observed and not observed.issubset(allowed):
+        return fail('Unexpected element types: %s'%sorted(observed))
+    observed_bounds=None
+    try:
+        box=part.cells.getBoundingBox()
+        observed_bounds=(tuple(float(x) for x in box['low']),tuple(float(x) for x in box['high']))
+    except Exception: pass
+    if observed_bounds is None:
+        vertex_coords=[]
+        try:
+            for vertex in part.vertices:
+                value=vertex.pointOn[0]
+                vertex_coords.append(tuple(float(x) for x in value))
+        except Exception: pass
+        observed_bounds=coordinate_bounds(vertex_coords)
+    if observed_bounds is None: return fail('Analysis part has no inspectable geometry bounds')
+    low,high=observed_bounds
+    dims=[high[i]-low[i] for i in range(3)]
+    if not dims_close(dims,SPEC['bbox'],0.1): return fail('Analysis part bbox mismatch got %s expected %s'%(dims,SPEC['bbox']))
+    assembly=model.rootAssembly
+    for name,req in spec.get('sets',{}).items():
+        if not check_named_region(assembly.sets,name,req,'assembly set'): return False
+    for name,req in spec.get('surfaces',{}).items():
+        if not check_named_region(assembly.surfaces,name,req,'assembly surface'): return False
+    try: constraints=model.constraints
+    except Exception: constraints={}
+    for name in SPEC.get('required_constraints',[]):
+        if not has(constraints,name): return fail('Missing coupling/constraint '+name)
+    return ok('Geometry topology, named regions, mesh, and coupling checks passed')
+
+
 def mesh_info(model):
     coords=[]; elems=0
     try:
@@ -496,7 +632,7 @@ def check_material(model):
         try:
             kval=float(mat.conductivity.table[0][0])
         except Exception as ex: return fail('Could not inspect conductivity table: '+str(ex))
-        if abs(kval-float(m['conductivity'])) > max(5.0,0.15*float(m['conductivity'])): return fail('Conductivity mismatch')
+        if abs(kval-float(m['conductivity'])) > max(1.0e-6,0.05*abs(float(m['conductivity']))): return fail('Conductivity mismatch')
     return ok('Material checks passed')
 
 
@@ -657,7 +793,7 @@ def parse_inp(path):
             vals=[parse_float_token(p) for p in parts[1:]]
             vals=[v for v in vals if v is not None]
             data['flux'].append({'target':target,'values':vals,'card':card,'parts':parts})
-        elif card == '*film':
+        elif card in ('*film','*sfilm'):
             vals=[parse_float_token(p) for p in parts[1:]]
             vals=[v for v in vals if v is not None]
             data['film'].append({'target':target,'values':vals,'parts':parts})
@@ -730,13 +866,39 @@ def check_constraint_bc(model, name):
     return fail('BC '+name+' does not constrain any displacement DOF')
 
 
-def check_convection(model, name):
-    if has(model.boundaryConditions, name): return ok('Convection boundary condition found '+name)
+def check_convection(model, name, req=None):
+    req=req or {}
+    obj=None
+    if has(model.boundaryConditions, name): obj=get_obj(model.boundaryConditions,name)
     try:
-        if has(model.interactions, name): return ok('Convection interaction found '+name)
+        if obj is None and has(model.interactions, name): obj=get_obj(model.interactions,name)
     except Exception: pass
+    if obj is not None:
+        expected_coeff=req.get('film_coeff')
+        expected_sink=req.get('sink_temperature')
+        complete=True
+        if expected_coeff is not None:
+            observed=numeric_attr(obj,'filmCoeff')
+            if observed is None: complete=False
+            elif not close_rel(observed,expected_coeff,abs_tol=1.0e-9,rel_tol=float(req.get('rel_tol',0.05))):
+                return fail('Convection film coefficient mismatch for '+name)
+        if expected_sink is not None:
+            observed=numeric_attr(obj,'sinkTemperature')
+            if observed is None: complete=False
+            elif not close_rel(observed,expected_sink,abs_tol=1.0e-6,rel_tol=float(req.get('rel_tol',0.05))):
+                return fail('Convection sink temperature mismatch for '+name)
+        if complete: return ok('Convection interaction found '+name)
     data=get_inp_data(model)
-    if inp_entries_for(data, 'film', name): return ok('Convection film card found '+name)
+    entries=inp_entries_for(data, 'film', name)
+    if not entries and len(data.get('film',[])) == 1: entries=data.get('film',[])
+    if entries:
+        values=[]
+        for entry in entries: values.extend(entry.get('values',[]))
+        if req.get('film_coeff') is not None and not any(close_rel(v,req['film_coeff'],abs_tol=1.0e-9,rel_tol=float(req.get('rel_tol',0.05))) for v in values):
+            return fail('Convection film coefficient mismatch for '+name)
+        if req.get('sink_temperature') is not None and not any(close_rel(v,req['sink_temperature'],abs_tol=1.0e-6,rel_tol=float(req.get('rel_tol',0.05))) for v in values):
+            return fail('Convection sink temperature mismatch for '+name)
+        return ok('Convection film card found '+name)
     return fail('Missing convection interaction or boundary condition '+name)
 
 
@@ -745,7 +907,7 @@ def check_bc_specs(model):
         kind=req.get('kind','constraint')
         name=req.get('name')
         if kind == 'convection':
-            if not check_convection(model,name): return False
+            if not check_convection(model,name,req): return False
         else:
             if not check_constraint_bc(model,name): return False
     return True
@@ -770,7 +932,9 @@ def force_like_ok(obj, req, model=None):
     if vals:
         sign=req.get('sign')
         mag=req.get('magnitude')
+        component=ci(req.get('component',''))
         for attr,v in vals:
+            if component and ci(attr) != component: continue
             if mag is not None and not close_magnitude(v, mag, req):
                 continue
             if sign == 'positive' and v <= 0.0: continue
@@ -784,6 +948,10 @@ def force_like_ok(obj, req, model=None):
         data=get_inp_data(model)
         for entry in inp_entries_for(data, 'cload', region):
             v=entry.get('value')
+            component=ci(req.get('component',''))
+            if component:
+                dof={'CF1':1,'CF2':2,'CF3':3,'CM1':4,'CM2':5,'CM3':6}.get(component)
+                if dof is not None and int(entry.get('dof') or -1) != dof: continue
             if req.get('magnitude') is None:
                 if v is not None and abs(v) > 1.0e-9: return True
             elif inp_value_matches(v, req): return True
@@ -840,9 +1008,11 @@ def check_load_specs(model):
         elif kind == 'heat_flux':
             if load is None: return fail('Missing heat flux load '+name)
             vals=numeric_values(load)
-            if vals and any(abs(v) > 1.0e-12 for attr,v in vals): continue
+            if vals:
+                if req.get('magnitude') is None and any(abs(v) > 1.0e-12 for attr,v in vals): continue
+                if req.get('magnitude') is not None and any(close_magnitude(v,req.get('magnitude'),req) for attr,v in vals): continue
             region=object_region_name(load) or name
-            if not inp_card_has_value(model, 'flux', region, req=req): return fail('Heat flux load '+name+' has no readable magnitude')
+            if not inp_card_has_value(model, 'flux', region, req=req): return fail('Heat flux magnitude mismatch for '+name)
         elif kind == 'force_or_displacement':
             matched=False
             if load is not None and force_like_ok(load, req, model): matched=True
@@ -878,6 +1048,7 @@ def check_cae():
         if nn(name) not in set_names: return fail('Missing set '+name)
     for name in SPEC.get('required_surfaces',[]):
         if nn(name) not in surf_names: return fail('Missing surface '+name)
+    if not check_geometry_details(model): return False
     if not check_bc_specs(model): return False
     if not check_load_specs(model): return False
     coords, elems = mesh_info(model)
@@ -910,6 +1081,19 @@ def field_nonzero(field):
             if n > 5000: break
     except Exception: return False
     return False
+
+
+def field_max_abs(field):
+    maximum=0.0
+    try:
+        for value in field.values:
+            data=getattr(value,'data',None)
+            values=data if hasattr(data,'__iter__') else [data]
+            for item in values:
+                try: maximum=max(maximum,abs(float(item)))
+                except Exception: pass
+    except Exception: return None
+    return maximum
 
 
 def odb_frame(frames, idx):
@@ -967,6 +1151,15 @@ def check_odb():
             key=find_key(last_frame.fieldOutputs, f)
             if key is None: return fail('Required nonzero ODB field missing: '+str(f))
             if not field_nonzero(last_frame.fieldOutputs[key]): return fail('ODB field appears to be zero: '+str(f))
+        for req in SPEC.get('odb_max_abs_checks',[]):
+            field_name=req.get('field')
+            key=find_key(last_frame.fieldOutputs,field_name)
+            if key is None: return fail('ODB field missing for magnitude check: '+str(field_name))
+            observed=field_max_abs(last_frame.fieldOutputs[key])
+            if observed is None: return fail('ODB field magnitude unreadable: '+str(field_name))
+            target=float(req.get('magnitude',0.0)); rel=float(req.get('rel_tol',0.05)); abs_tol=float(req.get('abs_tol',1.0e-6))
+            if abs(observed-target) > max(abs_tol,abs(target)*rel):
+                return fail('ODB field %s max magnitude mismatch got %s expected %s'%(field_name,observed,target))
         any_nonzero=SPEC.get('nonzero_odb_any_fields',[])
         if any_nonzero:
             matched=False

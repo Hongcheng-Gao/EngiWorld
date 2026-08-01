@@ -1,55 +1,35 @@
 {
   "id": "c-fenics-task-20-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given two input files `/home/user/Desktop/job_a.py` and `/home/user/Desktop/job_b.py`. Complete automated multi-job management and comparison reporting: 1. Write automation script `/home/user/Desktop/run_pipeline.py` (or shell script): - Run `job_a` and `job_b` in serial - Ensure each script outputs its own XDMF result file - Monitor completion by checking generated files 2. Write post-processing script `/home/user/Desktop/compare.py`: - Read displacement fields from `job_a.xdmf` and `job_b.xdmf` - Extract each job's maximum Mises stress and free-end `UY` - Compute ratios: `job_b / job_a` 3. Generate comparison report `/home/user/Desktop/comparison_report.txt` in this format: `Job, Max_Mises, Tip_UY` `job_a, xx, xx` `job_b, xx, xx` `Ratio_Mises, xx` `Ratio_Displacement, xx` [Software] Run your scripts with Python in an environment where dolfinx is installed (e.g. `import dolfinx`).",
-  "source": "https://github.com/fenics/dolfinx",
+  "instruction": "You are given two complete DOLFINx 0.10 linear-elasticity jobs, /home/user/Desktop/job_a.py and /home/user/Desktop/job_b.py. Both model the same 100 mm x 10 mm x 10 mm steel cantilever with E = 210000 MPa and nu = 0.3; job_a applies -100 N total Y force to the free end and job_b applies -200 N. Work only from the command line. Create /home/user/Desktop/run_pipeline.py to run job_a.py and job_b.py serially and fail unless each creates its .xdmf and _metrics.json files. Create /home/user/Desktop/compare.py to read the two metric files, verify the XDMF files exist, compute job_b/job_a ratios for maximum von Mises stress and free-end UY, and write /home/user/Desktop/comparison_report.txt with exactly these four CSV rows: job_a,max_mises,tip_uy; job_b,max_mises,tip_uy; Ratio_Mises,value; Ratio_Displacement,value. Run the pipeline and comparison scripts. Do not use a GUI.",
+  "source": "https://github.com/FEniCS/dolfinx",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
-          {
-            "local_path": "task-20/init_file/job_a.py",
-            "path": "/home/user/Desktop/job_a.py"
-          },
-          {
-            "local_path": "task-20/init_file/job_b.py",
-            "path": "/home/user/Desktop/job_b.py"
-          }
+          { "local_path": "task-20/init_file/job_a.py", "path": "/home/user/Desktop/job_a.py" },
+          { "local_path": "task-20/init_file/job_b.py", "path": "/home/user/Desktop/job_b.py" }
         ]
       }
     }
   ],
   "trajectory": "trajectories/",
-  "related_apps": [
-    "fenics"
-  ],
+  "related_apps": ["fenics"],
   "evaluator": {
     "postconfig": [
       {
         "type": "upload_file",
         "parameters": {
           "files": [
-            {
-              "local_path": "task-20/eval.py",
-              "path": "/home/user/Desktop/eval.py"
-            }
+            { "local_path": "task-20/eval.py", "path": "/home/user/Desktop/eval.py" }
           ]
         }
       }
     ],
     "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
+    "result": { "type": "vm_command_line", "command": "python3 /home/user/Desktop/eval.py", "shell": "true" },
+    "expected": { "type": "rule", "rules": { "expected": "True\n" } }
   },
   "proxy": false,
   "fixed_ip": false,

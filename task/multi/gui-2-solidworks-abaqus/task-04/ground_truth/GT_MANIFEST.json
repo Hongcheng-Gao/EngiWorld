@@ -1,6 +1,6 @@
 {
-  "status": "generated_no_gui_high_quality_eval_passed",
-  "environment": "two-software-solidworks-to-abaqus",
+  "status": "native_generated_strict_eval_passed",
+  "environment": "SolidWorks 2025 SP0 -> Abaqus Learning Edition 2025",
   "task": "task-04",
   "title": "Lug Plate Bearing Load",
   "chain": "SolidWorks -> Abaqus/CAE",
@@ -8,111 +8,81 @@
   "job_name": "Job-LugBearing",
   "model_name": "Model-LugBearing",
   "step_name": "Step-Bearing",
-  "required_files": [
-    {
-      "file": "stage1_geometry.step",
-      "expected_desktop_path": "C:\\Users\\User\\Desktop\\stage1_geometry.step",
-      "purpose": "SolidWorks exported STEP geometry stage"
-    },
-    {
-      "file": "Job-LugBearing.cae",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-LugBearing.cae",
-      "purpose": "Abaqus/CAE model database"
-    },
-    {
-      "file": "Job-LugBearing.odb",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-LugBearing.odb",
-      "purpose": "Abaqus solved output database"
-    }
-  ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "generation_method": "Non-GUI command/API generation from task instruction only; eval.py not used during generation.",
-  "generated_at_epoch": 1783396621.687574,
-  "source_instruction_sha256": "dcbbee5d3cbf35151f4afc8149c87b9c8e121d092fc100dd403bb940ec0a4de2",
-  "remote_host": "124.174.11.243",
+  "chain_token": "EW_SW_ABQ_04",
+  "expert_review_resolution": "Specified all three hole centers and a unique +X 2000 N distributing-coupling load.",
+  "generation_method": "SolidWorks 2025 typed COM geometry construction and native STEP export, followed by Abaqus Learning Edition 2025 noGUI STEP import, native CAE model construction, meshing, job submission, and ODB solve.",
+  "remote_host": "124.174.35.140",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native",
+  "source_instruction_sha256": "c09ab54fd09eae6aa2ccd9795196d8def6f091d26a9e0703c9caf300d1d63764",
+  "generator_provenance": {
+    "solidworks_script_sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf",
+    "abaqus_script_sha256_at_generation": "59e1f87366580b39bb1db73950087d479f781dfa6180b83d16f07291b3dfa3e9",
+    "current_reproducer_abaqus_script_sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3",
+    "upload_download_byte_comparison": "passed",
+    "geometry_created_in": "SolidWorks 2025",
+    "analysis_created_and_solved_in": "Abaqus Learning Edition 2025"
+  },
   "generated_files": [
     {
       "file": "stage1_geometry.step",
-      "size": 31916,
-      "sha256": "481cf7ee1829a1da9ab142bf3979f667b472d042146b8a12e90c446dddb6a494",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\stage1_geometry.step"
+      "purpose": "SolidWorks 2025 native STEP handoff",
+      "size": 34544,
+      "sha256": "6282a7f410d1d02d93ee4d8d49cae843a6d76abd078a780284f4027a8f95a233",
+      "generated_at": "2026-08-01T02:59:27.622676+00:00",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native\\task-04\\stage1_geometry.step"
     },
     {
       "file": "Job-LugBearing.cae",
-      "size": 73728,
-      "sha256": "ee1d936568a11655d59a3c36544104f847575f17438a6c2d59069c2ed33f3f08",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\Job-LugBearing.cae"
+      "purpose": "Abaqus/CAE native imported model database",
+      "size": 81920,
+      "sha256": "68f624c43150b46b5ea635692f884457fc4965dc02e5904bcdd1ecd80e270c23",
+      "generated_at": "2026-08-01T02:59:27.628666+00:00",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native\\task-04\\Job-LugBearing.cae"
     },
     {
       "file": "Job-LugBearing.odb",
-      "size": 318172,
-      "sha256": "515442b321c5d43466dbde62ea118c860c090c83511145d4e63bf348234b3dbb",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-04\\Job-LugBearing.odb"
+      "purpose": "Abaqus Learning Edition solved output database",
+      "size": 353200,
+      "sha256": "89bb4d10462e758846781cfd21528552972d9230513ab3b20d0e201f7013e6b9",
+      "generated_at": "2026-08-01T02:59:27.630937+00:00",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_sw_abq_native\\task-04\\Job-LugBearing.odb"
     }
   ],
-  "generation_title": "Lug Plate Bearing Load",
-  "black_box_eval": {
-    "checked_at_epoch": 1783396837.452609,
-    "status": "pass",
-    "returncode": 0,
-    "actual": "True\n",
-    "expected": "True\n",
-    "first_fail": "",
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+  "native_self_check": {
+    "bbox_mm": [
+      100.0,
+      45.000000000000014,
+      8.0
     ],
-    "cleanup_residuals": [],
-    "out_dir": "/tmp/engiworld_multi_gt/eval_results_new_env/two-software-solidworks-to-abaqus__task-04"
-  },
-  "generation_self_check": {
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-LugBearing.odb",
-    "ok": true,
-    "fields": {
-      "U": 0.10000000149011612,
-      "S": 424.86785888671875,
-      "RF": 5641.46728515625
-    },
-    "frames": 2,
-    "elements": 249,
-    "mesh_report": {
-      "elements": 249,
-      "mesh_size": 6.0,
-      "target": 160
-    },
-    "chain_evidence": {
-      "token": "EW_SW_ABQ_04",
-      "cae_set": "CHAIN_EW_SW_ABQ_04_IMPORTED_FROM_STAGE1_GEOMETRY_STEP",
-      "cae_markers": [
-        "EW_SW_ABQ_04",
-        "IMPORTED_FROM_stage1_geometry.step"
-      ]
+    "cells": 1,
+    "faces": 13,
+    "edges": 33,
+    "nodes": 242,
+    "elements": 728,
+    "mesh_size_mm": 10.0,
+    "latest_odb_field_max_abs": {
+      "CF": 2000.0,
+      "CM": 0.0,
+      "RF": 304.75738525390625,
+      "RM": 0.0,
+      "S": 17.55872917175293,
+      "U": 0.0025089005939662457,
+      "UR": 5.444432099466212e-05
     }
   },
-  "chain_token": "EW_SW_ABQ_04",
-  "chain_evidence": {
-    "dxf_markers": [],
-    "step_markers": [
-      "EW_SW_ABQ_04",
-      "SOLIDWORKS_TO_ABAQUS"
-    ],
-    "cae_markers": [
-      "EW_SW_ABQ_04",
-      "IMPORTED_FROM_stage1_geometry.step"
-    ],
-    "cae_set": "CHAIN_EW_SW_ABQ_04_IMPORTED_FROM_STAGE1_GEOMETRY_STEP"
+  "strict_validation": {
+    "host": "124.174.35.140",
+    "evaluator_sha256": "4864dba863d4005ff7157bfbbb74d327da3430b52d07f283d76c1f9105d8b230",
+    "tamper_helper_sha256": "e4999284a934d62c637689070c7698b0a86237c0580113d4451fd8f09abb9562",
+    "baseline": "True",
+    "tampered": "False",
+    "restored": "True",
+    "sequence": "True -> False -> True",
+    "restored_cae_sha256": "68f624c43150b46b5ea635692f884457fc4965dc02e5904bcdd1ecd80e270c23"
   },
-  "blackbox_eval": {
-    "status": "pass",
-    "host": "124.174.16.95",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-2-solidworks-abaqus__task-04/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
-    ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:10:36Z"
-  }
+  "required_files": [
+    "stage1_geometry.step",
+    "Job-LugBearing.cae",
+    "Job-LugBearing.odb"
+  ]
 }

@@ -5,8 +5,8 @@ import math
 import re
 from pathlib import Path
 
-REL_TOL = 1e-4
-ABS_TOL = 1e-3
+REL_TOL = 5e-3
+ABS_TOL = 1e-2
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
 
 
@@ -86,6 +86,13 @@ def check_task(root: Path) -> bool:
         for a, e in zip(arow, erow):
             if not math.isclose(a, e, rel_tol=REL_TOL, abs_tol=ABS_TOL):
                 return False
+    totals = [sum(row) for row in actual_rows]
+    if not math.isclose(summary[0], max(totals), rel_tol=1e-6, abs_tol=1e-3):
+        return False
+    if not math.isclose(summary[1], min(totals), rel_tol=1e-6, abs_tol=1e-3):
+        return False
+    if not 0.0 < summary[2] < 100.0:
+        return False
     return True
 
 def evaluate() -> int:

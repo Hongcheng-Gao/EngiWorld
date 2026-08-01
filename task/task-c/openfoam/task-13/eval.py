@@ -1,90 +1,171 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
+import csv
+import math
 import re
+import subprocess
 from pathlib import Path
 
-NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$")
+
+ROOT = Path("/home/user/Desktop")
+CASE = ROOT / "cylinder_fo"
+COEFFICIENTS = CASE / "postProcessing/forces/0/forceCoeffs.dat"
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_nonempty_file(path: Path) -> bool:
-    if not path.exists() or not path.is_file():
-        return False
-    if not is_result_artifact(path):
-        return True
-    return path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
+def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
-def parse_number(token: str) -> float:
-    s = token.strip()
-    if not NUMBER_RE.fullmatch(s):
-        raise ValueError(f"not a plain float token: {token!r}")
-    return float(s)
+def field(path: Path, kind: str) -> list:
+    match = re.search(
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
+        read(path),
+        re.S,
+    )
+    if not match:
+        raise ValueError(f"missing {kind} field")
+    if kind == "vector":
+        return [
+            tuple(float(value) for value in item.split())
+            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+        ]
+    return [float(value) for value in match.group(1).split()]
 
 
-def parse_single_line_csv_numbers(path: Path, expected_len: int) -> list[float]:
-    lines = [
-        ln.strip()
-        for ln in read_text(path).splitlines()
-        if ln.strip() and not ln.lstrip().startswith("#")
-    ]
-    if len(lines) != 1:
-        raise ValueError("summary must contain exactly one non-comment data line")
-    parts = [p.strip() for p in lines[0].split(",")]
-    if len(parts) != expected_len:
-        raise ValueError(f"expected {expected_len} columns, got {len(parts)}")
-    return [parse_number(p) for p in parts]
+def coefficient_history() -> list[tuple[float, float, float]]:
+    values = []
+    for line in read(COEFFICIENTS).splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith("#"):
+            continue
+        row = [float(value) for value in stripped.split()]
+        if len(row) >= 4:
+            values.append((row[0], row[2], row[3]))
+    return values
 
 
-def check_required_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
+def check_case() -> bool:
+    mesh = read(CASE / "system/blockMeshDict")
+    velocity = read(CASE / "0/U")
+    physical = read(CASE / "constant/physicalProperties")
+    momentum = read(CASE / "constant/momentumTransport")
+    control = read(CASE / "system/controlDict")
+    return all(
+        (
+            mesh.count("hex (") == 8,
+            mesh.count("(40 12 1)") == 8,
+            mesh.count("arc ") == 32,
+            "type wall;" in mesh,
+            "internalField uniform (1 0.01 0);" in velocity,
+            "value uniform (1 0 0);" in velocity,
+            re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?3\s*;", physical, re.I)
+            is not None,
+            "simulationType laminar;" in momentum,
+            re.search(r"\bendTime\s+20\s*;", control) is not None,
+            re.search(r"\bdeltaT\s+0\.0025\s*;", control) is not None,
+            "type forceCoeffs;" in control,
+            "patches (cylinder);" in control,
+            "Aref 0.001;" in control,
+        )
+    )
 
 
-def write_result(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
-
-
-def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
-    return abs(a - b) <= tol
-
-def check_task(root: Path) -> bool:
-    required = ['summary.txt']
-    if not check_required_files(root, required):
+def check() -> bool:
+    required = (
+        ROOT / "build_case.py",
+        ROOT / "postprocess.py",
+        ROOT / "summary.txt",
+        ROOT / "force_history.csv",
+        CASE / "log.blockMesh",
+        CASE / "log.checkMesh",
+        CASE / "log.pimpleFoam",
+        CASE / "20/U",
+        CASE / "20/p",
+        COEFFICIENTS,
+    )
+    if any(not path.is_file() or path.stat().st_size == 0 for path in required):
+        return False
+    solve_log = read(CASE / "log.pimpleFoam")
+    check_log = read(CASE / "log.checkMesh")
+    if (
+        "End" not in read(CASE / "log.blockMesh")
+        or "Mesh OK." not in check_log
+        or "End" not in check_log
+        or "End" not in solve_log
+        or "Time = 20" not in solve_log
+    ):
+        return False
+    mesh_check = subprocess.run(
+        [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "trap - CHLD; . /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/cylinder_fo",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=120,
+    )
+    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
+        return False
+    velocity = field(CASE / "20/U", "vector")
+    pressure = field(CASE / "20/p", "scalar")
+    if not (len(velocity) == len(pressure) == 3840):
         return False
 
-    values = parse_single_line_csv_numbers(root / "summary.txt", 2)
-    target = [0.000000, 2779.664887]
-    return all(close_enough(v, t) for v, t in zip(values, target))
+    history = coefficient_history()
+    window = [row for row in history if row[0] >= 10.0]
+    if len(window) < 100:
+        return False
+    cl_mean = sum(row[2] for row in window) / len(window)
+    cd_mean = sum(row[1] for row in window) / len(window)
+    cl_rms = math.sqrt(sum((row[2] - cl_mean) ** 2 for row in window) / len(window))
+    cd_rms = math.sqrt(sum((row[1] - cd_mean) ** 2 for row in window) / len(window))
+    zero_crossings = sum(
+        (left[2] - cl_mean) * (right[2] - cl_mean) < 0
+        for left, right in zip(window, window[1:])
+    )
+    if not (
+        abs(cl_mean) < 0.1
+        and 0.5 < cd_mean < 2.5
+        and cl_rms > 0.05
+        and cd_rms < 0.1
+        and zero_crossings >= 5
+    ):
+        return False
 
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
+    keys = ("time_s", "cd", "cl")
+    with (ROOT / "force_history.csv").open(encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    if len(rows) != len(history) or set(rows[0]) != set(keys):
+        return False
+    for row, expected in zip(rows, history):
+        actual = tuple(float(row[key]) for key in keys)
+        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, expected)):
+            return False
+
+    values = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]
+    if len(values) != 1:
+        return False
+    parts = [item.strip() for item in values[0].split(",")]
+    if len(parts) != 2:
+        return False
+    reported = tuple(float(value) for value in parts)
+    expected = (cl_mean, cd_mean)
+    return all(math.isfinite(value) for value in reported) and all(
+        abs(actual - target) <= 5.0e-7 for actual, target in zip(reported, expected)
+    )
 
 
 def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
+    try:
+        result = check()
+    except Exception:
+        result = False
+    print("True" if result else "False")
     return 0
 
 

@@ -1,14 +1,187 @@
 {
-  "status": "generated",
-  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "status": "native_industrial_chain_generated_blackbox_validated",
+  "environment": "three-software-autocad-solidworks-abaqus",
+  "task": "task-10",
   "title": "DXF Corrugated Panel Buckling Analysis",
+  "chain": "AutoCAD 2024 -> SolidWorks 2025 -> Abaqus/CAE 2025 LE",
+  "no_init_file": true,
   "job_name": "Job-DxfCorrugatedPanelBuckle",
+  "model_name": "Model-DxfCorrugatedPanelBuckle",
+  "step_name": "Step-Buckle",
+  "required_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+      "purpose": "AutoCAD native DXF stage"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks imported-DXF STEP stage"
+    },
+    {
+      "file": "Job-DxfCorrugatedPanelBuckle.cae",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfCorrugatedPanelBuckle.cae",
+      "purpose": "Abaqus/CAE native model database"
+    },
+    {
+      "file": "Job-DxfCorrugatedPanelBuckle.odb",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfCorrugatedPanelBuckle.odb",
+      "purpose": "Abaqus solved output database"
+    }
+  ],
+  "generation_method": "AutoCAD 2024 COM created native layers and entities and saved DXF; SolidWorks 2025 IImportDxfDwgData/LoadFile4 imported that DXF in millimeters, created one native solid, and exported STEP; Abaqus/CAE 2025 LE imported the SolidWorks STEP, built the material/section/mesh/loads, solved the named job, and saved CAE plus ODB. eval.py was not used to generate the artifacts.",
+  "generated_at": "2026-08-01T03:43:06+00:00",
+  "source_instruction_sha256": "81cb12c8c51f8be0b397e24564e4e1e2024dc4d51c365bf5deef4c747f46694e",
+  "remote_host": "124.174.35.166",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native",
+  "uploaded_script_roundtrip_verification": {
+    "status": "pass",
+    "method": "Each uploaded script was downloaded through OSWorld /file and matched byte-for-byte by SHA-256 before generation.",
+    "reproducible_final_scripts": [
+      {
+        "file": "generate_acad_sw_native_batch.py",
+        "size": 13819,
+        "sha256": "ab6ace16d598cae265fe19a9d337485f6f006c261dad12d751f7147498ebb2f0"
+      },
+      {
+        "file": "generate_gui3_abq_native_batch.py",
+        "size": 15779,
+        "sha256": "e3e62b758afeb560a2d47603fdc91f9ce9654506f582aa89576f331f50c0f1b9"
+      },
+      {
+        "file": "generate_sw_native_batch.py",
+        "size": 10220,
+        "sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf"
+      },
+      {
+        "file": "generate_abq_native_batch.py",
+        "size": 21924,
+        "sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3"
+      }
+    ]
+  },
+  "generated_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "size": 81129,
+      "sha256": "e1ccfcf8d731b7e7ece8babdcac3b1cbf534e38c9de2006943311396b8271758",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-10\\stage1_profile.dxf"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "size": 43259,
+      "sha256": "8e26b83016b21c03f0cc55f44b3224dc8d51c27ce94032867e659c68a8daddf3",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-10\\stage2_geometry.step"
+    },
+    {
+      "file": "Job-DxfCorrugatedPanelBuckle.cae",
+      "size": 94208,
+      "sha256": "e4dde6a55efb53161f974f7452350d63b45938d4646cc3cddd40616ac2d0cca4",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-10\\Job-DxfCorrugatedPanelBuckle.cae"
+    },
+    {
+      "file": "Job-DxfCorrugatedPanelBuckle.odb",
+      "size": 376864,
+      "sha256": "09f31c1a1be1f558c9ae7ae74ed98c4ae14d780edf27e9eda68aa0c6d1fdcb8e",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-10\\Job-DxfCorrugatedPanelBuckle.odb"
+    }
+  ],
+  "native_generation_self_check": {
+    "bbox": [
+      200.0,
+      60.0,
+      5.999999999999999
+    ],
+    "cells": 1,
+    "edges": 48,
+    "elements": 1015,
+    "faces": 18,
+    "job_status": "None",
+    "mesh_size": 12.0,
+    "nodes": 376,
+    "odb": {
+      "steps": {
+        "Step-Buckle": [
+          {
+            "description": "Increment      0: Base State",
+            "fields": {
+              "RF": 0.0,
+              "RM": 0.0,
+              "U": 0.0,
+              "UR": 0.0
+            },
+            "value": 0.0
+          },
+          {
+            "description": "Mode         1: EigenValue =   93.885",
+            "fields": {
+              "RF": 2524.331298828125,
+              "RM": 0.0,
+              "U": 1.0,
+              "UR": 0.007704812567681074
+            },
+            "value": 1.0
+          },
+          {
+            "description": "Mode         2: EigenValue =   838.26",
+            "fields": {
+              "RF": 11539.4521484375,
+              "RM": 0.0,
+              "U": 1.0,
+              "UR": 0.011287668719887733
+            },
+            "value": 2.0
+          },
+          {
+            "description": "Mode         3: EigenValue =   1661.5",
+            "fields": {
+              "RF": 7062.00830078125,
+              "RM": 0.0,
+              "U": 1.0,
+              "UR": 0.007433239370584488
+            },
+            "value": 3.0
+          },
+          {
+            "description": "Mode         4: EigenValue =   2282.3",
+            "fields": {
+              "RF": 30220.376953125,
+              "RM": 0.0,
+              "U": 1.0,
+              "UR": 0.01845400780439377
+            },
+            "value": 4.0
+          },
+          {
+            "description": "Mode         5: EigenValue =   4485.1",
+            "fields": {
+              "RF": 57161.6484375,
+              "RM": 0.0,
+              "U": 1.0,
+              "UR": 0.021947244182229042
+            },
+            "value": 5.0
+          }
+        ]
+      }
+    },
+    "task": "task-10",
+    "token": "EW_ACAD_SW_ABQ_10"
+  },
+  "cad_chain_self_check": {
+    "autocad": {
+      "entities": 7,
+      "version": "24.3s (LMS Tech)"
+    },
+    "dxf": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-10\\stage1_profile.dxf",
+    "solidworks_imported_document": "Part2",
+    "step": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-10\\stage2_geometry.step",
+    "task": "task-10",
+    "token": "EW_ACAD_SW_ABQ_10"
+  },
   "chain_token": "EW_ACAD_SW_ABQ_10",
   "chain_evidence": {
-    "cae_markers": [
-      "EW_ACAD_SW_ABQ_10",
-      "IMPORTED_FROM_stage2_geometry.step"
-    ],
     "dxf_markers": [
       "EW_ACAD_SW_ABQ_10",
       "AUTOCAD_TO_SOLIDWORKS"
@@ -17,85 +190,37 @@
       "EW_ACAD_SW_ABQ_10",
       "FROM_stage1_profile.dxf",
       "SOLIDWORKS_TO_ABAQUS"
+    ],
+    "cae_markers": [
+      "EW_ACAD_SW_ABQ_10",
+      "IMPORTED_FROM_stage2_geometry.step"
     ]
   },
-  "required_files": [
-    {
-      "file": "stage1_profile.dxf",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf"
-    },
-    {
-      "file": "stage2_geometry.step",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step"
-    },
-    {
-      "file": "Job-DxfCorrugatedPanelBuckle.cae",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfCorrugatedPanelBuckle.cae"
-    },
-    {
-      "file": "Job-DxfCorrugatedPanelBuckle.odb",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfCorrugatedPanelBuckle.odb"
-    }
-  ],
-  "generated_files": [
-    {
-      "file": "stage1_profile.dxf",
-      "size": 1383,
-      "sha256": "988cd0ce2e5bddf24425a298fea0997ea4f960d802e2a14338c0ada0807efb65"
-    },
-    {
-      "file": "stage2_geometry.step",
-      "size": 60707,
-      "sha256": "0e0c541c5af0603aa84df08865015b8b57db0f238fa9c5ac3c40d05b5536570f"
-    },
-    {
-      "file": "Job-DxfCorrugatedPanelBuckle.cae",
-      "size": 57344,
-      "sha256": "ecbd26c3501ff182266d263c7c735a0ba7cf22b15bd97f5dddcc51d8ffe45171"
-    },
-    {
-      "file": "Job-DxfCorrugatedPanelBuckle.odb",
-      "size": 207660,
-      "sha256": "1c24140a6d68d53fce55591e37d70dae294e96210fbf50c87b82f2cb878ec4bd"
-    }
-  ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "instruction_hash": "7ddbcdabb21c0e5f344a3825656ff9f851c1059595a03ac89472a3b5e8d629c0",
-  "generated_at": "2026-07-07T10:06:22.339064+00:00",
-  "generation_self_check": {
-    "ok": true,
-    "frames": 6,
-    "elements": 120,
-    "fields": {
-      "U": 1.0
-    },
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-DxfCorrugatedPanelBuckle.odb",
-    "mesh_report": {
-      "elements": 120,
-      "mesh_size": 10.0
-    },
-    "chain_evidence": {
-      "token": "EW_ACAD_SW_ABQ_10",
-      "cae_set": "EW_ACAD_SW_ABQ_10_IMPORTED_FROM_stage2_geometry_step",
-      "cae_markers": [
-        "EW_ACAD_SW_ABQ_10",
-        "IMPORTED_FROM_stage2_geometry.step"
-      ]
-    }
-  },
-  "generation_method": "noGUI/API scripted ground_truth generation; GUI-only restriction remains part of task instruction for agents",
-  "blackbox_eval": {
+  "blackbox_validation": {
     "status": "pass",
-    "host": "124.174.22.118",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-10/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    "host": "124.174.35.166",
+    "checked_at": "2026-08-01T03:53:09+00:00",
+    "eval_sha256": "d7d0a9e98bf385cd9987d742ebb2c89cc52568a2206bebf73b40ef241d47f69d",
+    "sequence": [
+      {
+        "label": "baseline",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "2ccdd4c21050e8e0271c711dacd15763fde1ce1825621ee9f0648e78f0e8a450"
+      },
+      {
+        "label": "tampered",
+        "expected": "False",
+        "actual": "False",
+        "detail_sha256": "b3a547d1a449f21f1a4ccd5a03c0145dc278b1dbc97a715e576992a04acc33bf"
+      },
+      {
+        "label": "restored",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "2ccdd4c21050e8e0271c711dacd15763fde1ce1825621ee9f0648e78f0e8a450"
+      }
     ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:11:57Z"
+    "summary": "True -> False after native CAE load tamper -> True after restoring the original CAE"
   }
 }

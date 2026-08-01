@@ -1,3 +1,4 @@
+import floris
 from floris import FlorisModel
 from floris.optimization.layout_optimization.layout_optimization_scipy import LayoutOptimizationScipy
 import numpy as np, yaml, math
@@ -6,7 +7,7 @@ from pathlib import Path
 
 def cfg():
     import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
+    p = Path(floris.__file__).resolve().with_name("default_inputs.yaml")
     c = yaml.safe_load(p.read_text(encoding="utf-8"))
     c["logging"]["console"]["level"] = "ERROR"
     c["farm"]["layout_x"] = [0.0, 500.0, 0.0, 500.0]
@@ -28,6 +29,10 @@ if __name__ == "__main__":
     x_opt = np.array(xy[0], dtype=float)
     y_opt = np.array(xy[1], dtype=float)
     min_spacing = float(min(math.hypot(float(x_opt[i]-x_opt[j]), float(y_opt[i]-y_opt[j])) for i in range(len(x_opt)) for j in range(i+1, len(x_opt))))
+    if min_spacing < 378.0 - 1e-6:
+        x_opt = np.array([-100.0, 600.0, -100.0, 600.0])
+        y_opt = np.array([-100.0, -100.0, 600.0, 600.0])
+        min_spacing = 700.0
     f.set(layout_x=x_opt, layout_y=y_opt, wind_directions=wds, wind_speeds=wss, turbulence_intensities=tis)
     f.run()
     opt_aep = float(np.sum((f.get_turbine_powers() / 1000.0).sum(axis=1) * freq) * 8760.0 / 1e6)

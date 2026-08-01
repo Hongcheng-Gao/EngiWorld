@@ -1,90 +1,188 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
-import json
+import csv
+import hashlib
+import math
 import re
+import subprocess
 from pathlib import Path
 
-NUMBER_RE = re.compile(r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?$")
+
+ROOT = Path("/home/user/Desktop")
+CASE = ROOT / "cylinder_snappy"
+STL_SHA256 = "e5901f31b9024d86c25ca7c508193dfefeb300b24c008cb15d3010412ad3d54e"
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_nonempty_file(path: Path) -> bool:
-    if not path.exists() or not path.is_file():
-        return False
-    if not is_result_artifact(path):
-        return True
-    return path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
+def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
-def parse_number(token: str) -> float:
-    s = token.strip()
-    if not NUMBER_RE.fullmatch(s):
-        raise ValueError(f"not a plain float token: {token!r}")
-    return float(s)
-
-
-def parse_single_line_csv_numbers(path: Path, expected_len: int) -> list[float]:
-    lines = [
-        ln.strip()
-        for ln in read_text(path).splitlines()
-        if ln.strip() and not ln.lstrip().startswith("#")
+def latest_time() -> Path:
+    times = [
+        path
+        for path in CASE.iterdir()
+        if path.is_dir() and re.fullmatch(r"\d+(?:\.\d+)?", path.name) and float(path.name) > 0
     ]
-    if len(lines) != 1:
-        raise ValueError("summary must contain exactly one non-comment data line")
-    parts = [p.strip() for p in lines[0].split(",")]
-    if len(parts) != expected_len:
-        raise ValueError(f"expected {expected_len} columns, got {len(parts)}")
-    return [parse_number(p) for p in parts]
+    if not times:
+        raise FileNotFoundError("no computed time directory")
+    return max(times, key=lambda path: float(path.name))
 
 
-def check_required_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
+def internal_count(path: Path, kind: str) -> int:
+    match = re.search(rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)", read(path))
+    if not match:
+        raise ValueError(f"missing nonuniform {kind} field")
+    return int(match.group(1))
 
 
-def write_result(path: Path, value: int) -> None:
-    path.parent.mkdir(parents=True, exist_ok=True)
-    path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
+def patch_values(path: Path, patch: str) -> list[float]:
+    text = read(path)
+    block = re.search(rf"\b{re.escape(patch)}\s*\{{(.*?)\n\s*\}}", text, re.S)
+    if not block:
+        raise ValueError(f"missing {patch} boundary field")
+    values = re.search(
+        r"value\s+nonuniform\s+List<scalar>\s+(\d+)\s*\((.*?)\)\s*;",
+        block.group(1),
+        re.S,
+    )
+    if not values:
+        raise ValueError(f"missing nonuniform values on {patch}")
+    result = [float(value) for value in values.group(2).split()]
+    if len(result) != int(values.group(1)):
+        raise ValueError("boundary face-count mismatch")
+    return result
 
 
-def close_enough(a: float, b: float, tol: float = 1e-3) -> bool:
-    return abs(a - b) <= tol
+def cylinder_faces() -> int:
+    boundary = read(CASE / "constant/polyMesh/boundary")
+    block = re.search(r"\bcylinder\s*\{(.*?)\n\s*\}", boundary, re.S)
+    if not block:
+        raise ValueError("missing cylinder mesh patch")
+    match = re.search(r"\bnFaces\s+(\d+)\s*;", block.group(1))
+    if not match:
+        raise ValueError("missing cylinder face count")
+    return int(match.group(1))
 
-def check_task(root: Path) -> bool:
-    required = ['summary.txt']
-    if not check_required_files(root, required):
+
+def check_case() -> bool:
+    stl = CASE / "constant/triSurface/cylinder.stl"
+    if hashlib.sha256(stl.read_bytes()).hexdigest() != STL_SHA256:
+        return False
+    mesh = read(CASE / "system/blockMeshDict")
+    snappy = read(CASE / "system/snappyHexMeshDict")
+    velocity = read(CASE / "0/U")
+    kinetic = read(CASE / "0/k")
+    dissipation = read(CASE / "0/epsilon")
+    physical = read(CASE / "constant/physicalProperties")
+    momentum = read(CASE / "constant/momentumTransport")
+    control = read(CASE / "system/controlDict")
+    return all(
+        (
+            "(2 1 -0.005)" in mesh,
+            "(160 80 1)" in mesh,
+            'file "cylinder.stl";' in snappy,
+            "level (2 3);" in snappy,
+            "locationInMesh (0.1 0.5 0);" in snappy,
+            "nSurfaceLayers 3;" in snappy,
+            "expansionRatio 1.2;" in snappy,
+            "finalLayerThickness 0.4;" in snappy,
+            "internalField uniform (3 0 0);" in velocity,
+            "internalField uniform 0.03375;" in kinetic,
+            "internalField uniform 0.1458;" in dissipation,
+            re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?6\s*;", physical, re.I)
+            is not None,
+            "simulationType RAS;" in momentum,
+            "model realizableKE;" in momentum,
+            re.search(r"\bendTime\s+500\s*;", control) is not None,
+            "type yPlus;" in control,
+        )
+    )
+
+
+def check() -> bool:
+    final = latest_time()
+    required = (
+        ROOT / "build_case.py",
+        ROOT / "postprocess.py",
+        ROOT / "summary.txt",
+        ROOT / "yplus_surface.csv",
+        CASE / "log.surfaceFeatures",
+        CASE / "log.blockMesh",
+        CASE / "log.snappyHexMesh",
+        CASE / "log.checkMesh",
+        CASE / "log.simpleFoam",
+        final / "U",
+        final / "p",
+        final / "k",
+        final / "epsilon",
+        final / "nut",
+        final / "yPlus",
+    )
+    if any(not path.is_file() or path.stat().st_size == 0 for path in required):
+        return False
+    if final.name != "500":
+        return False
+    mesh_log = read(CASE / "log.checkMesh")
+    snappy_log = read(CASE / "log.snappyHexMesh")
+    solve_log = read(CASE / "log.simpleFoam")
+    if not (
+        "Mesh OK." in mesh_log
+        and "End" in mesh_log
+        and "Layer mesh :" in snappy_log
+        and "Added 4416 out of 4416 cells (100%)." in snappy_log
+        and "End" in snappy_log
+        and "Time = 500" in solve_log
+        and "End" in solve_log
+    ):
+        return False
+    mesh_check = subprocess.run(
+        [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "trap - CHLD; . /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/cylinder_snappy",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=120,
+    )
+    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
+        return False
+    cells = internal_count(final / "U", "vector")
+    if cells != 22672 or internal_count(final / "p", "scalar") != cells:
         return False
 
-    values = parse_single_line_csv_numbers(root / "summary.txt", 1)
-    target = [30.000000]
-    return all(close_enough(v, t) for v, t in zip(values, target))
+    values = patch_values(final / "yPlus", "cylinder")
+    if len(values) != cylinder_faces() or len(values) != 1472:
+        return False
+    average = sum(values) / len(values)
+    if not (all(math.isfinite(value) and value >= 0 for value in values) and 20.0 < average < 80.0):
+        return False
 
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
+    with (ROOT / "yplus_surface.csv").open(encoding="utf-8", newline="") as stream:
+        rows = list(csv.DictReader(stream))
+    if len(rows) != len(values) or set(rows[0]) != {"face_index", "yplus"}:
+        return False
+    for index, (row, expected) in enumerate(zip(rows, values)):
+        if int(row["face_index"]) != index or abs(float(row["yplus"]) - expected) > 5.0e-7:
+            return False
+
+    lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]
+    if len(lines) != 1:
+        return False
+    reported = float(lines[0])
+    return math.isfinite(reported) and abs(reported - average) <= 5.0e-7
 
 
 def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
+    try:
+        result = check()
+    except Exception:
+        result = False
+    print("True" if result else "False")
     return 0
 
 

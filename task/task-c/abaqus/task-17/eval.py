@@ -19,15 +19,16 @@ import math
 import traceback
 
 TASK_ID = 'task-17'
-PROCESS_SPEC = {'artifact': {'job_name': 'Job-ThermalStress', 'model_name': 'Model-ThermalStress', 'step_name': 'Step-ThermalStress'},
- 'process': {'bc_signatures': [{'dofs': {'u1': 0.0, 'u2': 0.0, 'u3': 0.0}, 'step': 'Initial'}],
-             'geometry': {'bbox_spans': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'tol': 0.2},
-             'materials': [{'E': 210000.0, 'expansion': 1.2e-05, 'name': 'Steel', 'nu': 0.3}],
-             'mesh': {'main_element_type': 'C3D8R', 'seed_sizes': [5.0], 'seed_tol': 0.6},
-             'min_counts': {'boundary_conditions': 2, 'loads': 0},
+PROCESS_SPEC = {'artifact': {'job_name': 'Job-ThermalBend', 'model_name': 'Model-ThermalBend', 'step_name': 'Step-ThermalBend'},
+ 'process': {'bc_signatures': [{'dofs': {'u1': 'SET', 'u2': 'SET', 'u3': 'SET'}, 'step': 'Initial'}],
+             'geometry': {'bbox_spans': {'x': 100.0, 'y': 20.0, 'z': 4.0}, 'tol': 0.2},
+             'materials': [{'E': 70000.0, 'expansion': 2.3e-05, 'name': 'Aluminum', 'nu': 0.33}],
+             'mesh': {'main_element_type': 'C3D8R', 'seed_sizes': [4.0], 'seed_tol': 0.6},
+             'min_counts': {'boundary_conditions': 1, 'loads': 0},
              'predefined_temperatures': [{'magnitude': 20.0, 'step': 'Initial'},
-                                         {'magnitude': 120.0, 'step': 'Step-ThermalStress'}],
-             'section': {'material_names': ['Steel'], 'type': 'SOLID'},
+                                         {'magnitude': 120.0, 'step': 'Step-ThermalBend'}],
+             'required_sets': ['FIXED_END', 'HOT_HALF'],
+             'section': {'material_names': ['Aluminum'], 'type': 'SOLID'},
              'step': {'kind': 'STATIC'}},
  'solver': {'min_frames': 2}}
 
@@ -554,6 +555,10 @@ def check_required_sets(model, part_obj, set_names):
 
 
 def bc_matches_req(bc_obj, req):
+    tokens = req.get('type_any', [])
+    if tokens and not any(ci(token) in class_name(bc_obj) for token in tokens):
+        return False
+
     step_req = req.get('step', None)
     if step_req is not None:
         cstep = getattr(bc_obj, 'createStepName', None)
@@ -603,6 +608,13 @@ def check_bcs(model, bc_specs, min_count=None):
             if bc_matches_req(bc, req):
                 matched = True
                 break
+        if not matched:
+            try:
+                model.keywordBlock.synchVersions(storeNodesAndElements=False)
+                keyword_text = '\n'.join(str(x) for x in model.keywordBlock.sieBlocks).upper()
+                matched = '*BOUNDARY' in keyword_text and 'ENCASTRE' in keyword_text
+            except Exception:
+                matched = False
         if not matched:
             return fail('Required BC signature not found: ' + str(req))
 
@@ -802,6 +814,17 @@ def check_predefined_temperature(model, reqs):
                 break
 
         if not matched:
+            try:
+                model.keywordBlock.synchVersions(storeNodesAndElements=False)
+                keyword_text = '\n'.join(str(x) for x in model.keywordBlock.sieBlocks).upper()
+                value_token = str(float(mag_req)).rstrip('0').rstrip('.') if mag_req is not None else ''
+                if names_equal(step_req, 'Initial'):
+                    matched = '*INITIAL CONDITIONS, TYPE=TEMPERATURE' in keyword_text and (', ' + value_token) in keyword_text
+                else:
+                    matched = '*TEMPERATURE' in keyword_text and (', ' + value_token) in keyword_text
+            except Exception:
+                matched = False
+        if not matched:
             return fail('Required temperature predefined field not found: ' + str(req))
 
     return True
@@ -922,6 +945,11 @@ def check_cae_process(cae_path):
         return False, model
     if proc.get('contact', None):
         ok('Contact check passed')
+
+    if not check_predefined_temperature(model, proc.get('predefined_temperatures', [])):
+        return False, model
+    if proc.get('predefined_temperatures', []):
+        ok('Predefined temperature check passed')
 
 
     return True, model

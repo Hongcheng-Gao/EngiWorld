@@ -1,30 +1,20 @@
 {
   "id": "c-abaqus-task-17-windows",
   "snapshot": "ABAQUS-2025L",
-  "instruction": "Use Abaqus via the Command Line Interface (CLI) to perform a thermal stress analysis. Use the N-mm-MPa unit system. Part: Create a 3D Deformable Solid part using Extrusion. Sketch a 10 mm x 10 mm rectangle in the Y-Z plane (Y from 0 to 10, Z from 0 to 10). Extrude along the global X-axis to a length of 100 mm. Property: Create a material named Steel. Set Young's modulus E = 210000 MPa, Poisson's ratio nu = 0.3, and thermal expansion coefficient = 1.2e-5 /K. Assembly: Create one dependent instance of the bar. Step: Create a Static, General step named Step-ThermalStress. Load: Apply a predefined temperature field of 20 degC to the whole model in the Initial step. Fix both end faces with U1 = U2 = U3 = 0: the left end face at X = 0 and the right end face at X = 100 mm. In Step-ThermalStress, apply a predefined temperature field of 120 degC to the whole model. Mesh: Apply a global seed size of 5 mm. Assign element type C3D8R and generate the mesh. Job: Create a job named Job-ThermalStress, submit it for analysis, and wait for successful completion. Save: Save the model database to C:\\Users\\user\\Desktop\\Job-ThermalStress.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-ThermalStress.odb. [Software] To start Abaqus/CAE, run `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae` (adjust path to your install).",
+  "instruction": "Use Abaqus from the command line to analyze thermal bending of a cantilever plate in the N-mm-MPa unit system. Create a 3D deformable solid plate spanning X = 0 to 100 mm, Y = 0 to 20 mm, and Z = 0 to 4 mm. Partition it at Y = 10 mm so the upper and lower halves are separate cell regions. Define Aluminum with E = 70000 MPa, nu = 0.33, and thermal expansion coefficient 2.3e-5 /K; assign a solid homogeneous section to the whole plate. Create one dependent instance and a Static, General step named Step-ThermalBend. Apply Encastre only to the X = 0 end. Apply an initial temperature of 20 degC to the whole plate. In Step-ThermalBend, set only the upper half, Y = 10 to 20 mm, to 120 degC; the lower half must remain at 20 degC. Create named sets FIXED_END and HOT_HALF. Mesh with C3D8R elements and a 4 mm global seed. Create and run Job-ThermalBend. Review U2 at the free end and the S11 bending-stress distribution. Save C:\\Users\\user\\Desktop\\Job-ThermalBend.cae and C:\\Users\\user\\Desktop\\Job-ThermalBend.odb.",
   "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
   "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": []
-      }
-    }
+    { "type": "upload_file", "parameters": { "files": [] } }
   ],
   "trajectory": "trajectories/",
-  "related_apps": [
-    "abaqus"
-  ],
+  "related_apps": ["abaqus"],
   "evaluator": {
     "postconfig": [
       {
         "type": "upload_file",
         "parameters": {
           "files": [
-            {
-              "local_path": "task-17/eval.py",
-              "path": "C:\\Users\\user\\Desktop\\eval.py"
-            }
+            { "local_path": "task-17/eval.py", "path": "C:\\Users\\user\\Desktop\\eval.py" }
           ]
         }
       }
@@ -35,12 +25,7 @@
       "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
       "shell": "true"
     },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
+    "expected": { "type": "rule", "rules": { "expected": "True\n" } }
   },
   "proxy": false,
   "fixed_ip": false,

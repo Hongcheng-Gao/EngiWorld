@@ -1,9 +1,9 @@
 {
-  "status": "generated_no_gui_high_quality_eval_passed",
+  "status": "native_industrial_chain_generated_blackbox_validated",
   "environment": "three-software-autocad-solidworks-abaqus",
   "task": "task-03",
   "title": "DXF Heat Plate Thermal Analysis",
-  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "chain": "AutoCAD 2024 -> SolidWorks 2025 -> Abaqus/CAE 2025 LE",
   "no_init_file": true,
   "job_name": "Job-HeatPlateThermal",
   "model_name": "Model-HeatPlateThermal",
@@ -12,17 +12,17 @@
     {
       "file": "stage1_profile.dxf",
       "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
-      "purpose": "AutoCAD completed DXF stage"
+      "purpose": "AutoCAD native DXF stage"
     },
     {
       "file": "stage2_geometry.step",
-      "expected_desktop_path": "C:\\Users\\User\\Desktop\\stage2_geometry.step",
-      "purpose": "SolidWorks exported STEP geometry stage"
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks imported-DXF STEP stage"
     },
     {
       "file": "Job-HeatPlateThermal.cae",
       "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-HeatPlateThermal.cae",
-      "purpose": "Abaqus/CAE model database"
+      "purpose": "Abaqus/CAE native model database"
     },
     {
       "file": "Job-HeatPlateThermal.odb",
@@ -30,73 +30,115 @@
       "purpose": "Abaqus solved output database"
     }
   ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "generation_method": "Non-GUI command/API generation from task instruction only; eval.py not used during generation.",
-  "generated_at_epoch": 1783396691.073607,
-  "source_instruction_sha256": "d79b787e7dc9ebf4c638594bdc43a265fbb35ab6cf3b376e39417bd0918e26a2",
-  "remote_host": "124.174.11.231",
+  "generation_method": "AutoCAD 2024 COM created native layers and entities and saved DXF; SolidWorks 2025 IImportDxfDwgData/LoadFile4 imported that DXF in millimeters, created one native solid, and exported STEP; Abaqus/CAE 2025 LE imported the SolidWorks STEP, built the material/section/mesh/loads, solved the named job, and saved CAE plus ODB. eval.py was not used to generate the artifacts.",
+  "generated_at": "2026-08-01T03:43:06+00:00",
+  "source_instruction_sha256": "fcf0538b31dfa8bfef05c17ef415390acccdade51a0397ded935659c99cd4ad9",
+  "remote_host": "124.174.35.166",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native",
+  "uploaded_script_roundtrip_verification": {
+    "status": "pass",
+    "method": "Each uploaded script was downloaded through OSWorld /file and matched byte-for-byte by SHA-256 before generation.",
+    "reproducible_final_scripts": [
+      {
+        "file": "generate_acad_sw_native_batch.py",
+        "size": 13819,
+        "sha256": "ab6ace16d598cae265fe19a9d337485f6f006c261dad12d751f7147498ebb2f0"
+      },
+      {
+        "file": "generate_gui3_abq_native_batch.py",
+        "size": 15779,
+        "sha256": "e3e62b758afeb560a2d47603fdc91f9ce9654506f582aa89576f331f50c0f1b9"
+      },
+      {
+        "file": "generate_sw_native_batch.py",
+        "size": 10220,
+        "sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf"
+      },
+      {
+        "file": "generate_abq_native_batch.py",
+        "size": 21924,
+        "sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3"
+      }
+    ]
+  },
   "generated_files": [
     {
       "file": "stage1_profile.dxf",
-      "size": 1015,
-      "sha256": "4fffcefae4744070c57b04e01257b7cff8879b11789441f962cb1b93956546fc",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-03\\stage1_profile.dxf"
+      "size": 82281,
+      "sha256": "5922713f70c6ac900dfc21b05eb58d04bfba7e6f3222f70f72edc82c95e1298a",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-03\\stage1_profile.dxf"
     },
     {
       "file": "stage2_geometry.step",
-      "size": 136988,
-      "sha256": "a9d4a047c33743004e6d5e8f9a9ab4a0e4adffd4a745657af421d36725217501",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-03\\stage2_geometry.step"
+      "size": 153734,
+      "sha256": "691d6c7ec66abc8173261f6930a426f89717289e5143b7bce36fb2cdd88ae556",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-03\\stage2_geometry.step"
     },
     {
       "file": "Job-HeatPlateThermal.cae",
-      "size": 65536,
-      "sha256": "f3ac952a2165dab72fd7ff0c545461be3bed3ff869a756e43571379764f1c993",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-03\\Job-HeatPlateThermal.cae"
+      "size": 229376,
+      "sha256": "d29530f902602a1f9c517acdd033b5c1b96fa2dd30a101cbe02a1a0d24196587",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-03\\Job-HeatPlateThermal.cae"
     },
     {
       "file": "Job-HeatPlateThermal.odb",
-      "size": 425700,
-      "sha256": "3f276b1783b55066a65cc8e71f85df505e9c1da5583696c690b59197db23a611",
-      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_multi_gt_hq\\artifacts\\task-03\\Job-HeatPlateThermal.odb"
+      "size": 646680,
+      "sha256": "10dd4e55a2730d67541d8456b98bfbd495009a6c558df7125efdca791d5ec6a2",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-03\\Job-HeatPlateThermal.odb"
     }
   ],
-  "generation_title": "DXF Heat Plate Thermal Analysis",
-  "black_box_eval": {
-    "checked_at_epoch": 1783396837.455363,
-    "status": "pass",
-    "returncode": 0,
-    "actual": "True\n",
-    "expected": "True\n",
-    "first_fail": "",
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+  "native_generation_self_check": {
+    "bbox": [
+      80.0,
+      60.0,
+      21.0
     ],
-    "cleanup_residuals": [],
-    "out_dir": "/tmp/engiworld_multi_gt/eval_results_new_env/three-software-autocad-solidworks-abaqus__task-03"
+    "cells": 1,
+    "edges": 180,
+    "elements": 1944,
+    "faces": 68,
+    "job_status": "None",
+    "mesh_size": 9.0,
+    "nodes": 658,
+    "odb": {
+      "steps": {
+        "Step-Thermal": [
+          {
+            "description": "Increment      0: Step Time =    0.000",
+            "fields": {
+              "GRADT": 0.0,
+              "HFL": 0.0,
+              "NT11": 0.0,
+              "RFL11": 0.0
+            },
+            "value": 0.0
+          },
+          {
+            "description": "Increment      1: Step Time =    1.000",
+            "fields": {
+              "GRADT": 0.5054212808609009,
+              "HFL": 0.08592161536216736,
+              "NT11": 253.51519775390625,
+              "RFL11": 0.0
+            },
+            "value": 1.0
+          }
+        ]
+      }
+    },
+    "task": "task-03",
+    "token": "EW_ACAD_SW_ABQ_03"
   },
-  "generation_self_check": {
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-HeatPlateThermal.odb",
-    "ok": true,
-    "fields": {
-      "NT11": 243.5294189453125,
-      "HFL": 1000.0
+  "cad_chain_self_check": {
+    "autocad": {
+      "entities": 16,
+      "version": "24.3s (LMS Tech)"
     },
-    "frames": 2,
-    "elements": 520,
-    "mesh_report": {
-      "elements": 520,
-      "mesh_size": 6.0,
-      "target": 240
-    },
-    "chain_evidence": {
-      "token": "EW_ACAD_SW_ABQ_03",
-      "cae_set": "CHAIN_EW_ACAD_SW_ABQ_03_IMPORTED_FROM_STAGE2_GEOMETRY_STEP",
-      "cae_markers": [
-        "EW_ACAD_SW_ABQ_03",
-        "IMPORTED_FROM_stage2_geometry.step"
-      ]
-    }
+    "dxf": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-03\\stage1_profile.dxf",
+    "solidworks_imported_document": "Part2",
+    "step": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-03\\stage2_geometry.step",
+    "task": "task-03",
+    "token": "EW_ACAD_SW_ABQ_03"
   },
   "chain_token": "EW_ACAD_SW_ABQ_03",
   "chain_evidence": {
@@ -112,21 +154,33 @@
     "cae_markers": [
       "EW_ACAD_SW_ABQ_03",
       "IMPORTED_FROM_stage2_geometry.step"
-    ],
-    "cae_set": "CHAIN_EW_ACAD_SW_ABQ_03_IMPORTED_FROM_STAGE2_GEOMETRY_STEP"
+    ]
   },
-  "blackbox_eval": {
+  "blackbox_validation": {
     "status": "pass",
-    "host": "124.174.22.118",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-03/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    "host": "124.174.35.166",
+    "checked_at": "2026-08-01T03:53:09+00:00",
+    "eval_sha256": "84d845f28c3b03a40039f3f79add1b96195fcba7bbe60929f293ce4a8905c5be",
+    "sequence": [
+      {
+        "label": "baseline",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "a5df77f29c73cb109a9f203347e2ece90f9f642ff74e6109ea9ee02bd7f162b0"
+      },
+      {
+        "label": "tampered",
+        "expected": "False",
+        "actual": "False",
+        "detail_sha256": "5e34f0e9d40415f8b531f1e5271ad74657719afd44f70fc36e981561343a4061"
+      },
+      {
+        "label": "restored",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "a5df77f29c73cb109a9f203347e2ece90f9f642ff74e6109ea9ee02bd7f162b0"
+      }
     ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:11:21Z"
+    "summary": "True -> False after native CAE load tamper -> True after restoring the original CAE"
   }
 }

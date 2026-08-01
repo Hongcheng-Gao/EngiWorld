@@ -1,0 +1,34 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    object controlDict;
+}
+application pimpleFoam;
+startFrom startTime;
+startTime 0;
+stopAt endTime;
+endTime 2;
+deltaT 0.001;
+writeControl runTime;
+writeInterval 0.25;
+writeFormat ascii;
+writePrecision 10;
+writeCompression off;
+timeFormat general;
+timePrecision 8;
+runTimeModifiable false;
+functions
+{
+    bodyForces
+    {
+        type forces;
+        libs ("libforces.so");
+        writeControl timeStep;
+        writeInterval 1;
+        patches (cylinder);
+        rho rhoInf;
+        rhoInf 1;
+        CofR (0 0 0);
+    }
+}

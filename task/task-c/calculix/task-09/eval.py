@@ -1,77 +1,119 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import math
+import re
 from pathlib import Path
 
-ABS_TOL = 1e-6
-REL_TOL = 1e-4
+
+ROOT = Path("/home/user/Desktop")
+ABS_TOL = 1e-5
+REL_TOL = 2e-4
+TIP_NODES = {11, 111, 211, 311}
+EXPECTED = (33.694774019, 887.666260495)
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return path.exists() and path.is_file()
-    return path.exists() and path.is_file() and path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
+def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
-def parse_csv_values(path: Path) -> list[str]:
-    content = read_text(path).strip()
-    if not content:
-        return []
-    return [p.strip() for p in content.split(",")]
+def close(actual: float, expected: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= max(
+        ABS_TOL, REL_TOL * max(1.0, abs(expected))
+    )
 
 
-def close_enough(actual: float, target: float) -> bool:
-    limit = max(ABS_TOL, REL_TOL * max(1.0, abs(target)))
-    return abs(actual - target) <= limit
+def parse_summary(path: Path) -> tuple[float, float]:
+    values = [float(value.strip()) for value in read(path).strip().split(",")]
+    if len(values) != 2:
+        raise ValueError("summary must contain two comma-separated values")
+    return values[0], values[1]
 
 
-def check_task(root: Path) -> bool:
-    required = ['ssd.inp', 'summary.txt']
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    actual_parts = parse_csv_values(root / "summary.txt")
-    expected_vals = [1.0, 1.0]
+def parse_frequency_response(path: Path) -> list[tuple[float, float]]:
+    lines = read(path).splitlines()
+    frequency_header = re.compile(r"F R E Q U E N C Y\s+([+\-0-9.Ee]+) \(CYCLES/TIME\)")
+    displacement_header = re.compile(r"displacements .* for set TIP and time", re.I)
+    row = re.compile(r"^\s*(\d+)\s+([+\-0-9.Ee]+)\s+([+\-0-9.Ee]+)\s+([+\-0-9.Ee]+)")
+    response: list[tuple[float, float]] = []
+    frequency: float | None = None
+    components: list[float] = []
+    index = 0
+    while index < len(lines):
+        match = frequency_header.search(lines[index])
+        if match:
+            frequency = float(match.group(1))
+            components = []
+        elif frequency is not None and displacement_header.search(lines[index]):
+            uy: list[float] = []
+            for candidate in lines[index + 1 : index + 10]:
+                result = row.match(candidate)
+                if result and int(result.group(1)) in TIP_NODES:
+                    uy.append(float(result.group(3)))
+                    if len(uy) == len(TIP_NODES):
+                        break
+            if len(uy) == len(TIP_NODES):
+                components.append(sum(uy) / len(uy))
+                if len(components) == 2:
+                    response.append((frequency, math.hypot(components[0], components[1])))
+                    frequency = None
+        index += 1
+    if len(response) < 20:
+        raise ValueError("incomplete steady-state response data")
+    return response
 
-    if len(actual_parts) != len(expected_vals):
+
+def valid_input(path: Path) -> bool:
+    raw = read(path)
+    text = re.sub(r"\s+", "", raw.lower())
+    loads = [
+        float(value)
+        for value in re.findall(r"(?:^|\n)\s*(?:11|111|211|311)\s*,\s*2\s*,\s*([+\-0-9.eE]+)", raw)
+        if float(value) > 0.0
+    ]
+    return all(
+        token in text
+        for token in (
+            "*frequency,storage=yes",
+            "*steadystatedynamics",
+            "1.0,100.0,20",
+            "*modaldamping,rayleigh",
+            ",,5.0,1.0e-5",
+            "*nodeprint,nset=tip",
+            "*nodefile,nset=tip",
+            "fixed,1,3,0.0",
+        )
+    ) and math.isclose(sum(loads), 100.0, abs_tol=1e-9)
+
+
+def check() -> bool:
+    required = (
+        "ssd.inp",
+        "ssd.dat",
+        "ssd.frd",
+        "ssd.eig",
+        "postprocess.py",
+        "summary.txt",
+    )
+    if any(not (ROOT / name).is_file() or (ROOT / name).stat().st_size == 0 for name in required):
+        return False
+    if not valid_input(ROOT / "ssd.inp"):
         return False
 
-    try:
-        actual_vals = [float(v) for v in actual_parts]
-    except (TypeError, ValueError):
-        return False
-
-    for a, g in zip(actual_vals, expected_vals):
-        if not close_enough(a, g):
-            return False
-
-    return True
-
-
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
+    peak = max(parse_frequency_response(ROOT / "ssd.dat"), key=lambda point: point[1])
+    summary = parse_summary(ROOT / "summary.txt")
+    return all(
+        close(actual, expected)
+        for actual, expected in zip((*peak, *summary), (*EXPECTED, *EXPECTED))
+    )
 
 
 def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
+    try:
+        result = check()
+    except Exception:
+        result = False
+    print("True" if result else "False")
     return 0
 
 

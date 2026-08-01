@@ -1,0 +1,80 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    object snappyHexMeshDict;
+}
+castellatedMesh true;
+snap true;
+addLayers true;
+
+geometry
+{
+    cylinder
+    {
+        type triSurfaceMesh;
+        file "cylinder.stl";
+    }
+}
+
+castellatedMeshControls
+{
+    maxLocalCells 500000;
+    maxGlobalCells 1000000;
+    minRefinementCells 0;
+    nCellsBetweenLevels 2;
+    resolveFeatureAngle 30;
+    features ();
+    refinementSurfaces
+    {
+        cylinder
+        {
+            level (2 3);
+            patchInfo { type wall; }
+        }
+    }
+    refinementRegions {};
+    locationInMesh (0.1 0.5 0);
+    allowFreeStandingZoneFaces true;
+}
+
+snapControls
+{
+    nSmoothPatch 3;
+    tolerance 2.0;
+    nSolveIter 30;
+    nRelaxIter 5;
+    nFeatureSnapIter 15;
+    implicitFeatureSnap true;
+    explicitFeatureSnap false;
+    multiRegionFeatureSnap false;
+}
+
+addLayersControls
+{
+    relativeSizes true;
+    layers
+    {
+        cylinder { nSurfaceLayers 3; }
+    }
+    expansionRatio 1.2;
+    finalLayerThickness 0.4;
+    minThickness 0.1;
+    nGrow 0;
+    featureAngle 60;
+    nRelaxIter 3;
+    nSmoothSurfaceNormals 1;
+    nSmoothNormals 3;
+    nSmoothThickness 10;
+    maxFaceThicknessRatio 0.5;
+    maxThicknessToMedialRatio 0.3;
+    minMedialAxisAngle 90;
+    nBufferCellsNoExtrude 0;
+    nLayerIter 50;
+}
+
+meshQualityControls
+{
+    #include "meshQualityDict"
+}
+mergeTolerance 1e-6;

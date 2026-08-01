@@ -1,0 +1,32 @@
+<?xml version="1.0"?>
+<!DOCTYPE Xdmf SYSTEM "Xdmf.dtd" []>
+<Xdmf Version="3.0" xmlns:xi="https://www.w3.org/2001/XInclude">
+  <Domain>
+    <Grid Name="mesh" GridType="Uniform">
+      <Topology TopologyType="Hexahedron" NumberOfElements="80" NodesPerElement="8">
+        <DataItem Dimensions="80 8" NumberType="Int" Format="HDF">job_a.h5:/Mesh/mesh/topology</DataItem>
+      </Topology>
+      <Geometry GeometryType="XYZ">
+        <DataItem Dimensions="189 3" Format="HDF">job_a.h5:/Mesh/mesh/geometry</DataItem>
+      </Geometry>
+    </Grid>
+    <Grid Name="displacement" GridType="Collection" CollectionType="Temporal">
+      <Grid Name="displacement" GridType="Uniform">
+        <xi:include xpointer="xpointer(/Xdmf/Domain/Grid[@GridType='Uniform'][1]/*[self::Topology or self::Geometry])" />
+        <Time Value="0" />
+        <Attribute Name="displacement" AttributeType="Vector" Center="Node">
+          <DataItem Dimensions="189 3" Format="HDF">job_a.h5:/Function/displacement/0</DataItem>
+        </Attribute>
+      </Grid>
+    </Grid>
+    <Grid Name="von_mises" GridType="Collection" CollectionType="Temporal">
+      <Grid Name="von_mises" GridType="Uniform">
+        <xi:include xpointer="xpointer(/Xdmf/Domain/Grid[@GridType='Uniform'][1]/*[self::Topology or self::Geometry])" />
+        <Time Value="0" />
+        <Attribute Name="von_mises" AttributeType="Scalar" Center="Cell">
+          <DataItem Dimensions="80 1" Format="HDF">job_a.h5:/Function/von_mises/0</DataItem>
+        </Attribute>
+      </Grid>
+    </Grid>
+  </Domain>
+</Xdmf>

@@ -1,14 +1,147 @@
 {
-  "status": "generated",
-  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "status": "native_industrial_chain_generated_blackbox_validated",
+  "environment": "three-software-autocad-solidworks-abaqus",
+  "task": "task-07",
   "title": "DXF Finned Heat Sink Thermal Analysis",
+  "chain": "AutoCAD 2024 -> SolidWorks 2025 -> Abaqus/CAE 2025 LE",
+  "no_init_file": true,
   "job_name": "Job-DxfFinnedSinkThermal",
+  "model_name": "Model-DxfFinnedSinkThermal",
+  "step_name": "Step-Thermal",
+  "required_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+      "purpose": "AutoCAD native DXF stage"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks imported-DXF STEP stage"
+    },
+    {
+      "file": "Job-DxfFinnedSinkThermal.cae",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfFinnedSinkThermal.cae",
+      "purpose": "Abaqus/CAE native model database"
+    },
+    {
+      "file": "Job-DxfFinnedSinkThermal.odb",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfFinnedSinkThermal.odb",
+      "purpose": "Abaqus solved output database"
+    }
+  ],
+  "generation_method": "AutoCAD 2024 COM created native layers and entities and saved DXF; SolidWorks 2025 IImportDxfDwgData/LoadFile4 imported that DXF in millimeters, created one native solid, and exported STEP; Abaqus/CAE 2025 LE imported the SolidWorks STEP, built the material/section/mesh/loads, solved the named job, and saved CAE plus ODB. eval.py was not used to generate the artifacts.",
+  "generated_at": "2026-08-01T03:43:06+00:00",
+  "source_instruction_sha256": "f648f1e5175a1483530914153539060d4ebb75251a7b1ef4961489d858684983",
+  "remote_host": "124.174.35.166",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native",
+  "uploaded_script_roundtrip_verification": {
+    "status": "pass",
+    "method": "Each uploaded script was downloaded through OSWorld /file and matched byte-for-byte by SHA-256 before generation.",
+    "reproducible_final_scripts": [
+      {
+        "file": "generate_acad_sw_native_batch.py",
+        "size": 13819,
+        "sha256": "ab6ace16d598cae265fe19a9d337485f6f006c261dad12d751f7147498ebb2f0"
+      },
+      {
+        "file": "generate_gui3_abq_native_batch.py",
+        "size": 15779,
+        "sha256": "e3e62b758afeb560a2d47603fdc91f9ce9654506f582aa89576f331f50c0f1b9"
+      },
+      {
+        "file": "generate_sw_native_batch.py",
+        "size": 10220,
+        "sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf"
+      },
+      {
+        "file": "generate_abq_native_batch.py",
+        "size": 21924,
+        "sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3"
+      }
+    ]
+  },
+  "generated_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "size": 82013,
+      "sha256": "18006233e3396c114a00eb75566334b3f45b7df93670ed2daa0bd1dfd60b7650",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-07\\stage1_profile.dxf"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "size": 116455,
+      "sha256": "e37d852e1b312e93d9f538a27a2e11082e3c216b358b91bb1aefbf690ae76e46",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-07\\stage2_geometry.step"
+    },
+    {
+      "file": "Job-DxfFinnedSinkThermal.cae",
+      "size": 172032,
+      "sha256": "5e6fe3e3c5a50ac066d1b7d2da35850b90c83bc4acb6b29872b88ec957793724",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-07\\Job-DxfFinnedSinkThermal.cae"
+    },
+    {
+      "file": "Job-DxfFinnedSinkThermal.odb",
+      "size": 585240,
+      "sha256": "ab4cf8442c2a5c08f0f32fe595b9bdb4097d7005f09fe924331db43cf603b913",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-07\\Job-DxfFinnedSinkThermal.odb"
+    }
+  ],
+  "native_generation_self_check": {
+    "bbox": [
+      90.0,
+      70.0,
+      24.000000000000004
+    ],
+    "cells": 1,
+    "edges": 132,
+    "elements": 1686,
+    "faces": 54,
+    "job_status": "None",
+    "mesh_size": 10.0,
+    "nodes": 587,
+    "odb": {
+      "steps": {
+        "Step-Thermal": [
+          {
+            "description": "Increment      0: Step Time =    0.000",
+            "fields": {
+              "GRADT": 0.0,
+              "HFL": 0.0,
+              "NT11": 0.0,
+              "RFL11": 0.0
+            },
+            "value": 0.0
+          },
+          {
+            "description": "Increment      1: Step Time =    1.000",
+            "fields": {
+              "GRADT": 0.570638120174408,
+              "HFL": 0.09700848162174225,
+              "NT11": 305.95599365234375,
+              "RFL11": 0.0
+            },
+            "value": 1.0
+          }
+        ]
+      }
+    },
+    "task": "task-07",
+    "token": "EW_ACAD_SW_ABQ_07"
+  },
+  "cad_chain_self_check": {
+    "autocad": {
+      "entities": 14,
+      "version": "24.3s (LMS Tech)"
+    },
+    "dxf": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-07\\stage1_profile.dxf",
+    "solidworks_imported_document": "Part2",
+    "step": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-07\\stage2_geometry.step",
+    "task": "task-07",
+    "token": "EW_ACAD_SW_ABQ_07"
+  },
   "chain_token": "EW_ACAD_SW_ABQ_07",
   "chain_evidence": {
-    "cae_markers": [
-      "EW_ACAD_SW_ABQ_07",
-      "IMPORTED_FROM_stage2_geometry.step"
-    ],
     "dxf_markers": [
       "EW_ACAD_SW_ABQ_07",
       "AUTOCAD_TO_SOLIDWORKS"
@@ -17,87 +150,37 @@
       "EW_ACAD_SW_ABQ_07",
       "FROM_stage1_profile.dxf",
       "SOLIDWORKS_TO_ABAQUS"
+    ],
+    "cae_markers": [
+      "EW_ACAD_SW_ABQ_07",
+      "IMPORTED_FROM_stage2_geometry.step"
     ]
   },
-  "required_files": [
-    {
-      "file": "stage1_profile.dxf",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf"
-    },
-    {
-      "file": "stage2_geometry.step",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step"
-    },
-    {
-      "file": "Job-DxfFinnedSinkThermal.cae",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfFinnedSinkThermal.cae"
-    },
-    {
-      "file": "Job-DxfFinnedSinkThermal.odb",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfFinnedSinkThermal.odb"
-    }
-  ],
-  "generated_files": [
-    {
-      "file": "stage1_profile.dxf",
-      "size": 1948,
-      "sha256": "a91f579f3e3730d180d82b4d16918e0e4ff8e7625355c4c6651a7408a8be1802"
-    },
-    {
-      "file": "stage2_geometry.step",
-      "size": 140026,
-      "sha256": "1b32dd9ba4b7bdc514e135e703330771e3abafbaed80dc73f14a3880cceed1f1"
-    },
-    {
-      "file": "Job-DxfFinnedSinkThermal.cae",
-      "size": 69632,
-      "sha256": "b3cb737045338c93bd45987477e007bdd8ead2367722e7ca5f7c5416da034bd3"
-    },
-    {
-      "file": "Job-DxfFinnedSinkThermal.odb",
-      "size": 351968,
-      "sha256": "ae9f465dda10fd0959ae32f2d4085d46a10b15dc307cb199645547269cb4f35f"
-    }
-  ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "instruction_hash": "2cda067c1cf8cd768510a1ca25019c062b5290309b136b4047bbb72e7e9cde20",
-  "generated_at": "2026-07-07T10:08:03.633955+00:00",
-  "generation_self_check": {
-    "ok": true,
-    "frames": 2,
-    "elements": 331,
-    "fields": {
-      "NT11": 20.060293197631836,
-      "HFL": 0.25
-    },
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-DxfFinnedSinkThermal.odb",
-    "mesh_report": {
-      "elements": 331,
-      "nodes": 702,
-      "mesh_size": 24.0
-    },
-    "chain_evidence": {
-      "token": "EW_ACAD_SW_ABQ_07",
-      "cae_set": "EW_ACAD_SW_ABQ_07_IMPORTED_FROM_stage2_geometry_step",
-      "cae_markers": [
-        "EW_ACAD_SW_ABQ_07",
-        "IMPORTED_FROM_stage2_geometry.step"
-      ]
-    }
-  },
-  "generation_method": "noGUI/API scripted ground_truth generation; GUI-only restriction remains part of task instruction for agents",
-  "blackbox_eval": {
+  "blackbox_validation": {
     "status": "pass",
-    "host": "124.174.22.118",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-07/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    "host": "124.174.35.166",
+    "checked_at": "2026-08-01T03:53:09+00:00",
+    "eval_sha256": "8775137de5e1ffbe93b2b786ebf62ec4b373e1b8a82c10bf820b5a2a31f74035",
+    "sequence": [
+      {
+        "label": "baseline",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "a5df77f29c73cb109a9f203347e2ece90f9f642ff74e6109ea9ee02bd7f162b0"
+      },
+      {
+        "label": "tampered",
+        "expected": "False",
+        "actual": "False",
+        "detail_sha256": "5e34f0e9d40415f8b531f1e5271ad74657719afd44f70fc36e981561343a4061"
+      },
+      {
+        "label": "restored",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "a5df77f29c73cb109a9f203347e2ece90f9f642ff74e6109ea9ee02bd7f162b0"
+      }
     ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:11:40Z"
+    "summary": "True -> False after native CAE load tamper -> True after restoring the original CAE"
   }
 }

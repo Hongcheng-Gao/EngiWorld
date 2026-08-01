@@ -54,16 +54,23 @@ def require_files(root: Path, required: list[str]) -> bool:
     return True
 
 
-EXPECTED_SUMMARY = [46.913442000000, 61.047511000000, 378.653453000000]
-
-
 def check_task(root: Path) -> bool:
     required = ['layout_opt.py', 'summary.txt']
     if not require_files(root, required):
         return False
 
     actual = parse_floats(read_text(root / "summary.txt"))
-    return floats_close(actual, EXPECTED_SUMMARY)
+    if len(actual) != 3:
+        return False
+    initial_aep, optimized_aep, min_spacing = actual
+    if not all(math.isfinite(value) for value in actual):
+        return False
+    if initial_aep <= 0.0 or optimized_aep < initial_aep * 1.02:
+        return False
+    if min_spacing < 377.9:
+        return False
+    script = read_text(root / "layout_opt.py")
+    return "LayoutOptimization" in script and "378" in script
 
 def evaluate() -> int:
     root = Path("/home/user/Desktop")

@@ -1,0 +1,31 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    location "system";
+    object fvSolution;
+}
+solvers
+{
+    "(p|U|e).*"
+    {
+        solver smoothSolver;
+        smoother symGaussSeidel;
+        tolerance 1e-15;
+        relTol 0;
+    }
+    "rho.*"
+    {
+        solver PCG;
+        preconditioner DIC;
+        tolerance 1e-15;
+        relTol 0;
+    }
+}
+PIMPLE
+{
+    nOuterCorrectors 2;
+    nCorrectors 1;
+    nNonOrthogonalCorrectors 0;
+    transonic yes;
+}

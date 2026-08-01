@@ -1,77 +1,99 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import math
+import re
 from pathlib import Path
 
-ABS_TOL = 1e-6
-REL_TOL = 1e-4
+
+ROOT = Path("/home/user/Desktop")
+TIP_NODES = {11, 111, 211, 311}
+EXPECTED = (0.1008207, 0.000007788)
+ABS_TOL = 2e-6
+REL_TOL = 2e-4
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
-
-
-def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return path.exists() and path.is_file()
-    return path.exists() and path.is_file() and path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
+def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
-def parse_csv_values(path: Path) -> list[str]:
-    content = read_text(path).strip()
-    if not content:
-        return []
-    return [p.strip() for p in content.split(",")]
+def close(actual: float, expected: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= max(
+        ABS_TOL, REL_TOL * max(1.0, abs(expected))
+    )
 
 
-def close_enough(actual: float, target: float) -> bool:
-    limit = max(ABS_TOL, REL_TOL * max(1.0, abs(target)))
-    return abs(actual - target) <= limit
+def summary(path: Path) -> tuple[float, float]:
+    values = [float(value.strip()) for value in read(path).strip().split(",")]
+    if len(values) != 2:
+        raise ValueError("summary must contain two values")
+    return values[0], values[1]
 
 
-def check_task(root: Path) -> bool:
-    required = ['earthquake.inp', 'summary.txt']
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    actual_parts = parse_csv_values(root / "summary.txt")
-    expected_vals = [1.0, 1.0]
+def history(path: Path) -> list[tuple[float, float]]:
+    lines = read(path).splitlines()
+    header = re.compile(r"displacements .* for set TIP and time\s+([+\-0-9.Ee]+)", re.I)
+    row = re.compile(r"^\s*(\d+)\s+([+\-0-9.Ee]+)\s+([+\-0-9.Ee]+)\s+([+\-0-9.Ee]+)")
+    result: list[tuple[float, float]] = []
+    for index, line in enumerate(lines):
+        match = header.search(line)
+        if not match:
+            continue
+        uy: list[float] = []
+        for candidate in lines[index + 1 : index + 10]:
+            node = row.match(candidate)
+            if node and int(node.group(1)) in TIP_NODES:
+                uy.append(float(node.group(3)))
+                if len(uy) == len(TIP_NODES):
+                    break
+        if len(uy) == len(TIP_NODES):
+            result.append((float(match.group(1)), sum(uy) / len(uy)))
+    if len(result) < 200:
+        raise ValueError("incomplete fixed-increment transient history")
+    return result
 
-    if len(actual_parts) != len(expected_vals):
+
+def valid_input(path: Path) -> bool:
+    text = re.sub(r"\s+", "", read(path).lower())
+    return "*basemotion" not in text and all(
+        token in text
+        for token in (
+            "*amplitude,name=amp-1,time=totaltime",
+            "0.0,0.0,0.5,1.0,1.0,0.0,2.0,0.0",
+            "*dynamic,direct",
+            "0.01,2.0",
+            "*boundary,amplitude=amp-1",
+            "base,2,2,0.1",
+            "base,1,1,0.0",
+            "base,3,3,0.0",
+            "*nodeprint,nset=tip,frequency=1",
+            "*nodefile,nset=tip",
+        )
+    )
+
+
+def check() -> bool:
+    required = ("earthquake.inp", "earthquake.dat", "earthquake.frd", "earthquake.sta", "postprocess.py", "summary.txt")
+    if any(not (ROOT / name).is_file() or (ROOT / name).stat().st_size == 0 for name in required):
         return False
-
-    try:
-        actual_vals = [float(v) for v in actual_parts]
-    except (TypeError, ValueError):
+    if not valid_input(ROOT / "earthquake.inp"):
         return False
-
-    for a, g in zip(actual_vals, expected_vals):
-        if not close_enough(a, g):
-            return False
-
-    return True
-
-
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
+    response = history(ROOT / "earthquake.dat")
+    peak = max(abs(uy) for _, uy in response)
+    final_time, final = max(response, key=lambda point: point[0])
+    reported = summary(ROOT / "summary.txt")
+    return close(final_time, 2.0) and all(
+        close(actual, expected)
+        for actual, expected in zip((peak, final, *reported), (*EXPECTED, *EXPECTED))
+    )
 
 
 def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
+    try:
+        result = check()
+    except Exception:
+        result = False
+    print("True" if result else "False")
     return 0
 
 

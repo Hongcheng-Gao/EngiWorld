@@ -1,3 +1,4 @@
+import floris
 from floris import FlorisModel
 import numpy as np, yaml
 from pathlib import Path
@@ -5,7 +6,7 @@ from pathlib import Path
 
 def cfg():
     import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
+    p = Path(floris.__file__).resolve().with_name("default_inputs.yaml")
     c = yaml.safe_load(p.read_text(encoding="utf-8"))
     c["logging"]["console"]["level"] = "ERROR"
     d = 126.0

@@ -19,15 +19,14 @@ import math
 import traceback
 
 TASK_ID = 'task-11'
-PROCESS_SPEC = {'artifact': {'job_name': 'Job-Beam', 'model_name': 'Model-Beam', 'step_name': 'Step-Load'},
- 'process': {'bc_signatures': [{'dofs': {'u1': 0.0, 'u2': 0.0, 'u3': 0.0, 'ur2': 0.0, 'ur3': 0.0}, 'step': 'Initial'},
-                               {'dofs': {'u2': 0.0, 'u3': 0.0, 'ur2': 0.0, 'ur3': 0.0}, 'step': 'Initial'}],
-             'geometry': {'bbox_spans': {'x': 200.0, 'y': 10.0, 'z': 10.0}, 'tol': 0.3},
-             'kinematic_coupling': {'min_count': 2},
-             'load_signatures': [{'magnitude': 0.1, 'step': 'Step-Load', 'tol': 0.02, 'type_any': ['PRESSURE']}],
+PROCESS_SPEC = {'artifact': {'job_name': 'Job-Torsion', 'model_name': 'Model-Torsion', 'step_name': 'Step-Twist'},
+ 'process': {'bc_signatures': [{'dofs': {'u1': 'SET', 'u2': 'SET', 'u3': 'SET'}, 'step': 'Initial'}],
+             'geometry': {'bbox_spans': {'x': 150.0, 'y': 20.0, 'z': 10.0}, 'tol': 0.3},
+             'kinematic_coupling': {'min_count': 1},
+             'load_signatures': [{'component': 'cm1', 'component_value': 5000.0, 'sign': 'positive', 'step': 'Step-Twist', 'tol': 2.0, 'type_any': ['MOMENT']}],
              'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
              'mesh': {'main_element_type': 'C3D8R', 'seed_sizes': [5.0], 'seed_tol': 0.7},
-             'min_counts': {'boundary_conditions': 2, 'loads': 1},
+             'min_counts': {'boundary_conditions': 1, 'loads': 1},
              'section': {'material_names': ['Steel'], 'type': 'SOLID'},
              'step': {'kind': 'STATIC'}},
  'solver': {'min_frames': 2}}
@@ -555,6 +554,10 @@ def check_required_sets(model, part_obj, set_names):
 
 
 def bc_matches_req(bc_obj, req):
+    tokens = req.get('type_any', [])
+    if tokens and not any(ci(token) in class_name(bc_obj) for token in tokens):
+        return False
+
     step_req = req.get('step', None)
     if step_req is not None:
         cstep = getattr(bc_obj, 'createStepName', None)
@@ -605,6 +608,13 @@ def check_bcs(model, bc_specs, min_count=None):
                 matched = True
                 break
         if not matched:
+            try:
+                model.keywordBlock.synchVersions(storeNodesAndElements=False)
+                keyword_text = '\n'.join(str(x) for x in model.keywordBlock.sieBlocks).upper()
+                matched = '*BOUNDARY' in keyword_text and 'ENCASTRE' in keyword_text
+            except Exception:
+                matched = False
+        if not matched:
             return fail('Required BC signature not found: ' + str(req))
 
     return True
@@ -653,6 +663,10 @@ def load_matches_req(load_obj, req):
             return False
         if sign == 'negative' and vf >= 0.0:
             return False
+        if 'component_value' in req:
+            tol = float(req.get('tol', ABS_TOL))
+            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+                return False
 
     return True
 
@@ -956,6 +970,18 @@ def check_keyword_bcs_loads_b(model, proc):
                 ok = True
             if 'SURFACETRACTION' in tp and ('*DSLOAD' in text or 'TRVEC' in text):
                 ok = True
+        component_code = {'CF1': '1', 'CF2': '2', 'CF3': '3', 'CM1': '4', 'CM2': '5', 'CM3': '6'}.get(ci(req.get('component', '')))
+        component_value = safe_float(req.get('component_value', None), None)
+        if ok and component_code and component_value is not None:
+            ok = False
+            for line in text.splitlines():
+                fields = [field.strip() for field in line.split(',')]
+                if len(fields) < 3 or fields[1] != component_code:
+                    continue
+                observed = safe_float(fields[2], None)
+                if observed is not None and close_enough(observed, component_value, tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3):
+                    ok = True
+                    break
         if not ok:
             return fail('Keyword load fallback not found for %s' % str(types))
 

@@ -1,14 +1,145 @@
 {
-  "status": "generated",
-  "chain": "AutoCAD -> SolidWorks -> Abaqus/CAE",
+  "status": "native_industrial_chain_generated_blackbox_validated",
+  "environment": "three-software-autocad-solidworks-abaqus",
+  "task": "task-09",
   "title": "DXF Manifold Cover Pressure Analysis",
+  "chain": "AutoCAD 2024 -> SolidWorks 2025 -> Abaqus/CAE 2025 LE",
+  "no_init_file": true,
   "job_name": "Job-DxfManifoldPressure",
+  "model_name": "Model-DxfManifoldPressure",
+  "step_name": "Step-Pressure",
+  "required_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+      "purpose": "AutoCAD native DXF stage"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step",
+      "purpose": "SolidWorks imported-DXF STEP stage"
+    },
+    {
+      "file": "Job-DxfManifoldPressure.cae",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.cae",
+      "purpose": "Abaqus/CAE native model database"
+    },
+    {
+      "file": "Job-DxfManifoldPressure.odb",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.odb",
+      "purpose": "Abaqus solved output database"
+    }
+  ],
+  "generation_method": "AutoCAD 2024 COM created native layers and entities and saved DXF; SolidWorks 2025 IImportDxfDwgData/LoadFile4 imported that DXF in millimeters, created one native solid, and exported STEP; Abaqus/CAE 2025 LE imported the SolidWorks STEP, built the material/section/mesh/loads, solved the named job, and saved CAE plus ODB. eval.py was not used to generate the artifacts.",
+  "generated_at": "2026-08-01T03:43:06+00:00",
+  "source_instruction_sha256": "893b0ebffa19200f69b0f8ccb1372a0a8ee35bbf57d8f972bb22634c42e8372d",
+  "remote_host": "124.174.35.166",
+  "remote_root": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native",
+  "uploaded_script_roundtrip_verification": {
+    "status": "pass",
+    "method": "Each uploaded script was downloaded through OSWorld /file and matched byte-for-byte by SHA-256 before generation.",
+    "reproducible_final_scripts": [
+      {
+        "file": "generate_acad_sw_native_batch.py",
+        "size": 13819,
+        "sha256": "ab6ace16d598cae265fe19a9d337485f6f006c261dad12d751f7147498ebb2f0"
+      },
+      {
+        "file": "generate_gui3_abq_native_batch.py",
+        "size": 15779,
+        "sha256": "e3e62b758afeb560a2d47603fdc91f9ce9654506f582aa89576f331f50c0f1b9"
+      },
+      {
+        "file": "generate_sw_native_batch.py",
+        "size": 10220,
+        "sha256": "320b96a1ea8d51a62711a2c77d590d73d1b9e05d40e37ac9348e5dcc8be85aaf"
+      },
+      {
+        "file": "generate_abq_native_batch.py",
+        "size": 21924,
+        "sha256": "1cc646b2c8368b1e222339f1bc45471e977a97991ce64c2edf6c698b5d7631f3"
+      }
+    ]
+  },
+  "generated_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "size": 83089,
+      "sha256": "9bec2eefe5b63dbeb2d374cd665e20ddd27335ac1b48d0fa43fdcd6be328ad68",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-09\\stage1_profile.dxf"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "size": 80291,
+      "sha256": "d2683ab8e128877ca87145aea20705459663b785988ecf5198b9e11241039ba9",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-09\\stage2_geometry.step"
+    },
+    {
+      "file": "Job-DxfManifoldPressure.cae",
+      "size": 139264,
+      "sha256": "0368c847c89b1d0469ed0ef3dec4c13dd4e8b958d5308f86b6402b3ef838c037",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-09\\Job-DxfManifoldPressure.cae"
+    },
+    {
+      "file": "Job-DxfManifoldPressure.odb",
+      "size": 396220,
+      "sha256": "e4a0bb95ce2ab8c9dc2eca7bf2a140af5f5d62401eb426cce271c74798a4e84a",
+      "remote_path": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-09\\Job-DxfManifoldPressure.odb"
+    }
+  ],
+  "native_generation_self_check": {
+    "bbox": [
+      140.0,
+      70.00000000000003,
+      10.0
+    ],
+    "cells": 1,
+    "edges": 87,
+    "elements": 1758,
+    "faces": 32,
+    "job_status": "None",
+    "mesh_size": 10.0,
+    "nodes": 540,
+    "odb": {
+      "steps": {
+        "Step-Pressure": [
+          {
+            "description": "Increment      0: Step Time =    0.000",
+            "fields": {
+              "RF": 0.0,
+              "S": 0.0,
+              "U": 0.0
+            },
+            "value": 0.0
+          },
+          {
+            "description": "Increment      1: Step Time =    1.000",
+            "fields": {
+              "RF": 252.40406799316406,
+              "S": 8.766938209533691,
+              "U": 0.0010473105357959867
+            },
+            "value": 1.0
+          }
+        ]
+      }
+    },
+    "task": "task-09",
+    "token": "EW_ACAD_SW_ABQ_09"
+  },
+  "cad_chain_self_check": {
+    "autocad": {
+      "entities": 20,
+      "version": "24.3s (LMS Tech)"
+    },
+    "dxf": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-09\\stage1_profile.dxf",
+    "solidworks_imported_document": "Part2",
+    "step": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_acad_sw_abq_native\\task-09\\stage2_geometry.step",
+    "task": "task-09",
+    "token": "EW_ACAD_SW_ABQ_09"
+  },
   "chain_token": "EW_ACAD_SW_ABQ_09",
   "chain_evidence": {
-    "cae_markers": [
-      "EW_ACAD_SW_ABQ_09",
-      "IMPORTED_FROM_stage2_geometry.step"
-    ],
     "dxf_markers": [
       "EW_ACAD_SW_ABQ_09",
       "AUTOCAD_TO_SOLIDWORKS"
@@ -17,87 +148,37 @@
       "EW_ACAD_SW_ABQ_09",
       "FROM_stage1_profile.dxf",
       "SOLIDWORKS_TO_ABAQUS"
+    ],
+    "cae_markers": [
+      "EW_ACAD_SW_ABQ_09",
+      "IMPORTED_FROM_stage2_geometry.step"
     ]
   },
-  "required_files": [
-    {
-      "file": "stage1_profile.dxf",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf"
-    },
-    {
-      "file": "stage2_geometry.step",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step"
-    },
-    {
-      "file": "Job-DxfManifoldPressure.cae",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.cae"
-    },
-    {
-      "file": "Job-DxfManifoldPressure.odb",
-      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.odb"
-    }
-  ],
-  "generated_files": [
-    {
-      "file": "stage1_profile.dxf",
-      "size": 1865,
-      "sha256": "f91cdd1958e3edfddc1bdf0c971af964ab444e1fbc55097474c618f717c99302"
-    },
-    {
-      "file": "stage2_geometry.step",
-      "size": 36084,
-      "sha256": "1896ced3bac730da002378d6044a26f3af9102e8bf160c97fe30c353cc621df2"
-    },
-    {
-      "file": "Job-DxfManifoldPressure.cae",
-      "size": 86016,
-      "sha256": "721bbef3f966b04480479e4afbdcc8baaf0c889e8e18dafbdfc2f614b1cc735e"
-    },
-    {
-      "file": "Job-DxfManifoldPressure.odb",
-      "size": 328768,
-      "sha256": "d8c2d68efc90f1ccd722441cc78ca55c7da0207a2fb939ef203d2cbe9d35f439"
-    }
-  ],
-  "manual_generation_note": "Generate these files in the Windows GUI environment by following the task JSON. Copy the completed files into this ground_truth directory, then run the evaluator in Abaqus noGUI for GT-positive validation.",
-  "instruction_hash": "4bc31121c383ce44fb6e230f59c133eb253d9d56fbdaf831567d615361d887ce",
-  "generated_at": "2026-07-07T10:06:16.269923+00:00",
-  "generation_self_check": {
-    "ok": true,
-    "frames": 2,
-    "elements": 274,
-    "fields": {
-      "U": 6.460976146627218e-05,
-      "S": 0.9478082060813904,
-      "RF": 67.94847106933594
-    },
-    "odb_path": "C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.odb",
-    "mesh_report": {
-      "elements": 274,
-      "mesh_size": 10.0
-    },
-    "chain_evidence": {
-      "token": "EW_ACAD_SW_ABQ_09",
-      "cae_set": "EW_ACAD_SW_ABQ_09_IMPORTED_FROM_stage2_geometry_step",
-      "cae_markers": [
-        "EW_ACAD_SW_ABQ_09",
-        "IMPORTED_FROM_stage2_geometry.step"
-      ]
-    }
-  },
-  "generation_method": "noGUI/API scripted ground_truth generation; GUI-only restriction remains part of task instruction for agents",
-  "blackbox_eval": {
+  "blackbox_validation": {
     "status": "pass",
-    "host": "124.174.22.118",
-    "result_json": "/tmp/engiworld_gui23_expand_gt/eval_results/gui-3-autocad-solidworks-abaqus__task-09/result.json",
-    "actual": "True\n",
-    "expected": "True\n",
-    "returncode": 0,
-    "first_fail": null,
-    "warnings": [
-      "[WARN] Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: No module named 'cadquery'"
+    "host": "124.174.35.166",
+    "checked_at": "2026-08-01T03:53:09+00:00",
+    "eval_sha256": "e9fdc6697e214ea1ef98f879cca741b0dffa7bec19f166856088b0354755c3bc",
+    "sequence": [
+      {
+        "label": "baseline",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "e4f9408e6ce7eab19c86ae6f33d7e290fe624bc025cafcc4b04187bcaa11e218"
+      },
+      {
+        "label": "tampered",
+        "expected": "False",
+        "actual": "False",
+        "detail_sha256": "fab2a8b6214654d9abb3dff7a3eef8ca6cb962ef7b50bd5a8a5d981fbc5c89bb"
+      },
+      {
+        "label": "restored",
+        "expected": "True",
+        "actual": "True",
+        "detail_sha256": "e4f9408e6ce7eab19c86ae6f33d7e290fe624bc025cafcc4b04187bcaa11e218"
+      }
     ],
-    "cleanup_residuals": [],
-    "evaluated_at": "2026-07-07T10:11:52Z"
+    "summary": "True -> False after native CAE load tamper -> True after restoring the original CAE"
   }
 }
