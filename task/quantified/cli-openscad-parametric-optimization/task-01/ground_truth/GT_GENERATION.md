@@ -10,4 +10,4 @@ Workflow:
 - run the task evaluator with `python3 /home/user/Desktop/eval.py`
 - save the CLI-exported STL and evaluator metrics as this ground truth
 
-The reference is not a unique answer. The evaluator assigns a continuous score from the submitted STL geometry. The reference metrics in this directory and in `eval.py` are measured from the actual OpenSCAD CLI export.
+The reference is not a unique answer. The evaluator first requires one connected, watertight solid, a quantified z=0 contact base, and straight fins with enforceable minimum thickness and externally open spacing. It then assigns a continuous geometry-proxy score using the connected exterior-shell area minus the bottom contact area, divided by material volume. This is not a thermal or CFD result. The reference metrics in this directory and in `eval.py` are measured from the actual OpenSCAD CLI export.

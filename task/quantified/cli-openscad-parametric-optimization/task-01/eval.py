@@ -3,14 +3,54 @@ from __future__ import annotations
 
 import json
 import os
-import sys
 from pathlib import Path
 
 import numpy as np
 import trimesh
 
-CASE_SPEC = {'case_id': 'quant-cli-openscad-parametric-task-01-ubuntu', 'token': 'EWQSCAD01', 'title': 'compact controller heat sink with dense straight fins', 'objective': 'Maximize exposed cooling surface per material volume for a compact controller heat sink.', 'metric_kind': 'surface_per_volume', 'metric_description': 'surface_area_mm2 / volume_mm3; higher exposed cooling area per material volume receives a higher score', 'reference_design': 'dense straight-fin heat sink with a thin base plate', 'envelope_mm': [80.0, 50.0, 28.0], 'min_bbox_mm': [76.0, 46.0, 24.0], 'min_volume_mm3': 14500.0, 'max_volume_mm3': 54000.0, 'base_thickness_mm': 4.0, 'starter_block_size': [73.6, 41.0, 10.64], 'starter_block_center': [40.0, 25.0, 9.32], 'optimized_boxes': [{'name': 'fin_1', 'size': [1.7, 46.0, 24.0], 'center': [5.85, 25.0, 16.0]}, {'name': 'fin_2', 'size': [1.7, 46.0, 24.0], 'center': [12.68, 25.0, 16.0]}, {'name': 'fin_3', 'size': [1.7, 46.0, 24.0], 'center': [19.51, 25.0, 16.0]}, {'name': 'fin_4', 'size': [1.7, 46.0, 24.0], 'center': [26.340000000000003, 25.0, 16.0]}, {'name': 'fin_5', 'size': [1.7, 46.0, 24.0], 'center': [33.17, 25.0, 16.0]}, {'name': 'fin_6', 'size': [1.7, 46.0, 24.0], 'center': [40.00000000000001, 25.0, 16.0]}, {'name': 'fin_7', 'size': [1.7, 46.0, 24.0], 'center': [46.830000000000005, 25.0, 16.0]}, {'name': 'fin_8', 'size': [1.7, 46.0, 24.0], 'center': [53.66000000000001, 25.0, 16.0]}, {'name': 'fin_9', 'size': [1.7, 46.0, 24.0], 'center': [60.49000000000001, 25.0, 16.0]}, {'name': 'fin_10', 'size': [1.7, 46.0, 24.0], 'center': [67.32000000000001, 25.0, 16.0]}, {'name': 'fin_11', 'size': [1.7, 46.0, 24.0], 'center': [74.15, 25.0, 16.0]}], 'hard_constraints': ['Produce the required open geometry output file rather than only reporting metrics.', 'Stay inside the stated bounding envelope and above the minimum useful spans.', 'Stay within the stated material-volume range.', 'Do not read ground_truth, edit eval.py, or fabricate score/metric files.'], 'invalid_conditions': ['Missing, unparsable, empty, or implausibly small STL geometry.', 'Bounding-box or volume hard-constraint violation.', 'Self-reported metrics without valid geometry.', 'Native project files used as the only deliverable.'], 'baseline_metrics': {'bbox_mm': [80.0, 50.0, 14.64], 'volume_mm3': 48107.264, 'surface_area_mm2': 17513.888, 'surface_per_volume': 0.36405912}, 'reference_metrics': {'bbox_mm': [80.0, 50.0, 28.0], 'volume_mm3': 36644.8, 'surface_area_mm2': 34225.6, 'surface_per_volume': 0.93398245}, 'reference_score': {'metric_kind': 'surface_per_volume', 'metric_value': 0.93398245, 'surface_per_volume': 0.93398245, 'raw_efficiency_score': 1.0, 'volume_factor': 1.0, 'height_factor': 1.0, 'score': 1.0}}
+
+CASE_SPEC = {
+    "case_id": "quant-cli-openscad-parametric-task-01-ubuntu",
+    "token": "EWQSCAD01",
+    "title": "compact controller heat sink with straight external airflow channels",
+    "objective": (
+        "Maximize externally exposed geometric surface area per material volume. "
+        "This is a geometry-only proxy, not a thermal simulation."
+    ),
+    "metric_kind": "external_surface_per_volume",
+    "metric_description": (
+        "(single connected exterior-shell area minus the base contact area) / material volume"
+    ),
+    "envelope_min_mm": [0.0, 0.0, 0.0],
+    "envelope_max_mm": [80.0, 50.0, 28.0],
+    "min_bbox_mm": [76.0, 46.0, 24.0],
+    "min_volume_mm3": 14500.0,
+    "max_volume_mm3": 54000.0,
+    "base_thickness_mm": 4.0,
+    "min_contact_area_mm2": 3800.0,
+    "min_contact_span_mm": [76.0, 46.0],
+    "min_fin_thickness_mm": 1.5,
+    "min_fin_gap_mm": 3.0,
+    "min_fin_count": 6,
+    "max_fin_count": 16,
+    "min_fin_run_mm": 44.0,
+    "min_fin_top_z_mm": 24.0,
+    "baseline_metrics": {
+        "bbox_mm": [80.0, 50.0, 14.64],
+        "volume_mm3": 48107.264,
+        "external_surface_area_mm2": 7478.688,
+        "external_surface_per_volume": 0.15545860,
+    },
+    "reference_metrics": {
+        "bbox_mm": [80.0, 50.0, 28.0],
+        "volume_mm3": 36644.8,
+        "external_surface_area_mm2": 30225.6,
+        "external_surface_per_volume": 0.82482644,
+    },
+}
+
 DESKTOP = Path(os.environ.get("ENGIWORLD_EVAL_DIR") or os.environ.get("OUTPUT_ROOT") or "/home/user/Desktop")
+TOL = 0.15
 
 
 def clamp(value, low=0.0, high=1.0):
@@ -29,41 +69,157 @@ def as_mesh(obj):
 def load_stl(path: Path):
     if not path.is_file() or path.stat().st_size < 500:
         raise ValueError("optimized.stl missing or too small")
-    mesh = as_mesh(trimesh.load_mesh(str(path), file_type="stl", process=False))
+    mesh = as_mesh(trimesh.load_mesh(str(path), file_type="stl", process=True))
     if mesh.vertices is None or len(mesh.vertices) < 8 or len(mesh.faces) < 12:
         raise ValueError("optimized.stl has too little mesh geometry")
     return mesh
 
 
-def metrics(mesh):
+def connected_shell_count(mesh):
+    """Count edge-connected surface shells without depending on scipy."""
+    faces = np.asarray(mesh.faces, dtype=np.int64)
+    parent = np.arange(len(faces), dtype=np.int64)
+
+    def find(item):
+        while parent[item] != item:
+            parent[item] = parent[parent[item]]
+            item = parent[item]
+        return int(item)
+
+    def union(a, b):
+        ra, rb = find(int(a)), find(int(b))
+        if ra != rb:
+            parent[rb] = ra
+
+    edge_owner = {}
+    for face_index, face in enumerate(faces):
+        a, b, c = (int(x) for x in face)
+        for edge in ((a, b), (b, c), (c, a)):
+            key = tuple(sorted(edge))
+            if key in edge_owner:
+                union(face_index, edge_owner[key])
+            else:
+                edge_owner[key] = face_index
+    return len({find(index) for index in range(len(faces))})
+
+
+def projected_xy_area(triangles):
+    if len(triangles) == 0:
+        return 0.0
+    edge_a = triangles[:, 1, :2] - triangles[:, 0, :2]
+    edge_b = triangles[:, 2, :2] - triangles[:, 0, :2]
+    return float(0.5 * np.abs(edge_a[:, 0] * edge_b[:, 1] - edge_a[:, 1] * edge_b[:, 0]).sum())
+
+
+def projected_area(triangles, axes):
+    if len(triangles) == 0:
+        return 0.0
+    points = triangles[:, :, axes]
+    edge_a = points[:, 1] - points[:, 0]
+    edge_b = points[:, 2] - points[:, 0]
+    return float(0.5 * np.abs(edge_a[:, 0] * edge_b[:, 1] - edge_a[:, 1] * edge_b[:, 0]).sum())
+
+
+def base_contact_metrics(mesh):
+    triangles = np.asarray(mesh.triangles, dtype=float)
     bounds = np.asarray(mesh.bounds, dtype=float)
-    dims = (bounds[1] - bounds[0]).tolist()
-    volume = abs(float(mesh.volume))
-    area = float(mesh.area)
+    min_z = float(bounds[0][2])
+    bottom_mask = np.max(np.abs(triangles[:, :, 2] - min_z), axis=1) <= TOL
+    bottom = triangles[bottom_mask]
+    if len(bottom) == 0:
+        return {
+            "base_contact_area_mm2": 0.0,
+            "base_contact_span_mm": [0.0, 0.0],
+            "base_x_edge_wall_area_mm2": 0.0,
+            "base_y_edge_wall_area_mm2": 0.0,
+        }
+    xy = bottom[:, :, :2].reshape((-1, 2))
+    spans = np.max(xy, axis=0) - np.min(xy, axis=0)
+    base_top = min_z + CASE_SPEC["base_thickness_mm"] + TOL
+    near_base = np.max(triangles[:, :, 2], axis=1) <= base_top
+    at_x_edge = (
+        (np.max(np.abs(triangles[:, :, 0] - bounds[0][0]), axis=1) <= TOL)
+        | (np.max(np.abs(triangles[:, :, 0] - bounds[1][0]), axis=1) <= TOL)
+    )
+    at_y_edge = (
+        (np.max(np.abs(triangles[:, :, 1] - bounds[0][1]), axis=1) <= TOL)
+        | (np.max(np.abs(triangles[:, :, 1] - bounds[1][1]), axis=1) <= TOL)
+    )
     return {
-        "bbox_mm": [round(float(x), 4) for x in dims],
-        "volume_mm3": round(volume, 4),
-        "surface_area_mm2": round(area, 4),
-        "surface_per_volume": round(area / max(volume, 1e-9), 8),
+        "base_contact_area_mm2": round(projected_xy_area(bottom), 4),
+        "base_contact_span_mm": [round(float(x), 4) for x in spans],
+        "base_x_edge_wall_area_mm2": round(projected_area(triangles[near_base & at_x_edge], [1, 2]), 4),
+        "base_y_edge_wall_area_mm2": round(projected_area(triangles[near_base & at_y_edge], [0, 2]), 4),
     }
 
 
-def metric_value(m):
-    dims = m["bbox_mm"]
-    vol = max(m["volume_mm3"], 1e-9)
-    surface = m["surface_area_mm2"]
-    kind = CASE_SPEC["metric_kind"]
-    if kind == "surface_per_volume":
-        return surface / vol
-    if kind == "footprint_per_volume":
-        return (dims[0] * dims[1]) / vol
-    if kind == "span_height_per_volume":
-        return (dims[0] * dims[2]) / vol
-    if kind == "clearance_surface_mix":
-        return 0.72 * (surface / vol) + 0.28 * ((dims[1] * dims[2]) / vol)
-    if kind == "low_profile_surface_density":
-        return (surface / vol) * clamp(1.0 - 0.35 * max(0.0, dims[2] - CASE_SPEC["target_height_mm"]) / max(CASE_SPEC["envelope_mm"][2] - CASE_SPEC["target_height_mm"], 1.0), 0.65, 1.05)
-    raise ValueError("unknown metric_kind: " + str(kind))
+def straight_fin_metrics(mesh):
+    """Measure paired, long Y-facing sides of straight fins above the base."""
+    triangles = np.asarray(mesh.triangles, dtype=float)
+    normals = np.asarray(mesh.face_normals, dtype=float)
+    planes = {}
+    for tri, normal in zip(triangles, normals):
+        if abs(float(normal[0])) < 0.98 or np.ptp(tri[:, 0]) > TOL:
+            continue
+        y_span = float(np.ptp(tri[:, 1]))
+        z_span = float(np.ptp(tri[:, 2]))
+        if y_span < CASE_SPEC["min_fin_run_mm"] - TOL or z_span < 18.0:
+            continue
+        x = round(float(np.mean(tri[:, 0])), 3)
+        entry = planes.setdefault(x, {"area_yz": 0.0, "y_min": 1e9, "y_max": -1e9, "z_min": 1e9, "z_max": -1e9})
+        edge_a = tri[1, 1:] - tri[0, 1:]
+        edge_b = tri[2, 1:] - tri[0, 1:]
+        entry["area_yz"] += 0.5 * abs(float(edge_a[0] * edge_b[1] - edge_a[1] * edge_b[0]))
+        entry["y_min"] = min(entry["y_min"], float(np.min(tri[:, 1])))
+        entry["y_max"] = max(entry["y_max"], float(np.max(tri[:, 1])))
+        entry["z_min"] = min(entry["z_min"], float(np.min(tri[:, 2])))
+        entry["z_max"] = max(entry["z_max"], float(np.max(tri[:, 2])))
+
+    valid_planes = []
+    for x, data in planes.items():
+        if (
+            data["area_yz"] >= 700.0
+            and data["y_max"] - data["y_min"] >= CASE_SPEC["min_fin_run_mm"] - TOL
+            and data["z_min"] <= CASE_SPEC["base_thickness_mm"] + TOL
+            and data["z_max"] >= CASE_SPEC["min_fin_top_z_mm"] - TOL
+        ):
+            valid_planes.append(x)
+    valid_planes.sort()
+
+    thicknesses = []
+    gaps = []
+    if len(valid_planes) % 2 == 0:
+        thicknesses = [valid_planes[i + 1] - valid_planes[i] for i in range(0, len(valid_planes), 2)]
+        gaps = [valid_planes[i + 2] - valid_planes[i + 1] for i in range(0, len(valid_planes) - 2, 2)]
+    return {
+        "fin_count": len(thicknesses),
+        "fin_thicknesses_mm": [round(float(x), 4) for x in thicknesses],
+        "fin_gaps_mm": [round(float(x), 4) for x in gaps],
+        "fin_side_plane_count": len(valid_planes),
+    }
+
+
+def metrics(mesh):
+    bounds = np.asarray(mesh.bounds, dtype=float)
+    dims = bounds[1] - bounds[0]
+    volume = float(mesh.volume)
+    contact = base_contact_metrics(mesh)
+    external_area = float(mesh.area) - contact["base_contact_area_mm2"]
+    result = {
+        "bounds_min_mm": [round(float(x), 4) for x in bounds[0]],
+        "bounds_max_mm": [round(float(x), 4) for x in bounds[1]],
+        "bbox_mm": [round(float(x), 4) for x in dims],
+        "volume_mm3": round(volume, 4),
+        "exterior_shell_area_mm2": round(float(mesh.area), 4),
+        "external_surface_area_mm2": round(external_area, 4),
+        "external_surface_per_volume": round(external_area / max(volume, 1e-9), 8),
+        "watertight": bool(mesh.is_watertight),
+        "winding_consistent": bool(mesh.is_winding_consistent),
+        "connected_shell_count": connected_shell_count(mesh),
+    }
+    result.update(contact)
+    result.update(straight_fin_metrics(mesh))
+    return result
 
 
 def design_summary_errors():
@@ -85,18 +241,21 @@ def design_summary_errors():
 
 
 def score_from_metrics(m):
-    eff = metric_value(m)
-    baseline = metric_value(CASE_SPEC["baseline_metrics"])
-    reference = metric_value(CASE_SPEC["reference_metrics"])
+    eff = m["external_surface_per_volume"]
+    baseline = CASE_SPEC["baseline_metrics"]["external_surface_per_volume"]
+    reference = CASE_SPEC["reference_metrics"]["external_surface_per_volume"]
     raw = (eff - baseline) / max(reference - baseline, 1e-9)
-    vol = m["volume_mm3"]
-    volume_factor = clamp((CASE_SPEC["max_volume_mm3"] - vol) / max(CASE_SPEC["max_volume_mm3"] - CASE_SPEC["reference_metrics"]["volume_mm3"], 1.0), 0.0, 1.10)
-    height_factor = clamp(m["bbox_mm"][2] / max(CASE_SPEC["envelope_mm"][2], 1e-9), 0.75, 1.0)
+    volume_factor = clamp(
+        (CASE_SPEC["max_volume_mm3"] - m["volume_mm3"])
+        / max(CASE_SPEC["max_volume_mm3"] - CASE_SPEC["reference_metrics"]["volume_mm3"], 1.0),
+        0.0,
+        1.10,
+    )
+    height_factor = clamp(m["bbox_mm"][2] / CASE_SPEC["envelope_max_mm"][2], 0.75, 1.0)
     score = clamp(0.88 * raw + 0.08 * volume_factor + 0.04 * height_factor)
     return {
         "metric_kind": CASE_SPEC["metric_kind"],
         "metric_value": round(eff, 8),
-        "surface_per_volume": round(m["surface_area_mm2"] / max(m["volume_mm3"], 1e-9), 8),
         "raw_efficiency_score": round(clamp(raw), 6),
         "volume_factor": round(volume_factor, 6),
         "height_factor": round(height_factor, 6),
@@ -106,17 +265,40 @@ def score_from_metrics(m):
 
 def hard_errors(m):
     errors = []
-    dims = m["bbox_mm"]
-    for i, (got, max_allowed) in enumerate(zip(dims, CASE_SPEC["envelope_mm"])):
-        if got > max_allowed + 1.0:
-            errors.append(f"bbox_axis_{i}:too_large:{got}>{max_allowed}")
-    for i, (got, min_allowed) in enumerate(zip(dims, CASE_SPEC["min_bbox_mm"])):
-        if got < min_allowed - 1.0:
-            errors.append(f"bbox_axis_{i}:too_small:{got}<{min_allowed}")
+    for axis, (got, expected) in enumerate(zip(m["bounds_min_mm"], CASE_SPEC["envelope_min_mm"])):
+        if abs(got - expected) > TOL:
+            errors.append(f"bounds_min_axis_{axis}:must_be_{expected}:got_{got}")
+    for axis, (got, maximum) in enumerate(zip(m["bounds_max_mm"], CASE_SPEC["envelope_max_mm"])):
+        if got > maximum + TOL:
+            errors.append(f"bounds_max_axis_{axis}:too_large:{got}>{maximum}")
+    for axis, (got, minimum) in enumerate(zip(m["bbox_mm"], CASE_SPEC["min_bbox_mm"])):
+        if got < minimum - TOL:
+            errors.append(f"bbox_axis_{axis}:too_small:{got}<{minimum}")
     if not (CASE_SPEC["min_volume_mm3"] <= m["volume_mm3"] <= CASE_SPEC["max_volume_mm3"]):
         errors.append(f"volume:outside_range:{m['volume_mm3']}")
-    if m["surface_area_mm2"] <= 0 or m["surface_per_volume"] <= 0:
-        errors.append("surface_metric:non_positive")
+    if not m["watertight"] or not m["winding_consistent"] or m["volume_mm3"] <= 0:
+        errors.append("solid:must_be_watertight_positive_and_winding_consistent")
+    if m["connected_shell_count"] != 1:
+        errors.append(f"solid:must_have_one_connected_exterior_shell:got_{m['connected_shell_count']}")
+    if m["base_contact_area_mm2"] < CASE_SPEC["min_contact_area_mm2"]:
+        errors.append(f"base_contact_area:too_small:{m['base_contact_area_mm2']}")
+    for axis, (got, minimum) in enumerate(zip(m["base_contact_span_mm"], CASE_SPEC["min_contact_span_mm"])):
+        if got < minimum - TOL:
+            errors.append(f"base_contact_span_axis_{axis}:too_small:{got}<{minimum}")
+    min_x_walls = 2.0 * CASE_SPEC["min_contact_span_mm"][1] * CASE_SPEC["base_thickness_mm"]
+    min_y_walls = 2.0 * CASE_SPEC["min_contact_span_mm"][0] * CASE_SPEC["base_thickness_mm"]
+    if m["base_x_edge_wall_area_mm2"] < min_x_walls - 1.0:
+        errors.append(f"base_thickness:x_edge_walls_too_small:{m['base_x_edge_wall_area_mm2']}")
+    if m["base_y_edge_wall_area_mm2"] < min_y_walls - 1.0:
+        errors.append(f"base_thickness:y_edge_walls_too_small:{m['base_y_edge_wall_area_mm2']}")
+    if not (CASE_SPEC["min_fin_count"] <= m["fin_count"] <= CASE_SPEC["max_fin_count"]):
+        errors.append(f"fin_count:outside_range:{m['fin_count']}")
+    if any(value < CASE_SPEC["min_fin_thickness_mm"] - TOL for value in m["fin_thicknesses_mm"]):
+        errors.append(f"fin_thickness:below_{CASE_SPEC['min_fin_thickness_mm']}_mm")
+    if any(value < CASE_SPEC["min_fin_gap_mm"] - TOL for value in m["fin_gaps_mm"]):
+        errors.append(f"fin_gap:below_{CASE_SPEC['min_fin_gap_mm']}_mm")
+    if m["external_surface_area_mm2"] <= 0 or m["external_surface_per_volume"] <= 0:
+        errors.append("external_surface_metric:non_positive")
     return errors
 
 
@@ -130,17 +312,14 @@ def write_result(result):
 
 
 def main():
-    errors = []
     try:
         m = metrics(load_stl(DESKTOP / "optimized.stl"))
-        errors.extend(design_summary_errors())
-        errors.extend(hard_errors(m))
+        errors = design_summary_errors() + hard_errors(m)
         score_bits = score_from_metrics(m)
-        score = 0.0 if errors else score_bits["score"]
         result = {
             "case_id": CASE_SPEC["case_id"],
             "valid": not errors,
-            "score": round(score, 6),
+            "score": 0.0 if errors else score_bits["score"],
             "errors": errors,
             "metrics": m | score_bits,
             "baseline_metrics": CASE_SPEC["baseline_metrics"],

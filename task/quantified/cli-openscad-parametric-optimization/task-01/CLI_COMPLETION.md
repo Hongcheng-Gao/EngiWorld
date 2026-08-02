@@ -21,12 +21,16 @@ Result:
 - reference score: `1.0`
 - bbox: `[80.0, 50.0, 28.0]`
 - volume: `36644.8`
-- surface area: `34225.6`
-- metric `surface_per_volume`: `0.93398245`
+- connected exterior-shell area: `34225.6`
+- excluded bottom contact area: `4000.0`
+- scored external surface area: `30225.6`
+- metric `external_surface_per_volume`: `0.82482644`
+- fins: `11`, thickness `1.7`, clear gap `5.13`
 - cleanup: desktop verified empty after the run
 
 Changes saved:
+- regenerated `init_file/baseline.stl` as the actual single exterior boundary of `starter.scad`, without duplicate internal contact faces
 - replaced `ground_truth/optimized.stl` with the actual OpenSCAD CLI export
 - updated `ground_truth/design_summary.json`, `reference_metrics.json`, and `score.json`
 - updated `eval.py` reference metrics and reference score
-- no instruction or task config change was required
+- instruction, constraints, GT metadata, and evaluator were synchronized on 2026-08-02 to define this as a geometry-only proxy and enforce solid, base-contact, fin-thickness, and airflow-gap requirements

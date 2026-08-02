@@ -1,8 +1,9 @@
+// Editable baseline. Replace the solid upper block with 6-16 Y-running fins.
+// Final constraints: base >= 4 mm, fin thickness >= 1.5 mm, clear gap >= 3 mm.
+base_size = [80, 50, 4];
+starter_block_size = [73.6, 41, 10.64];
+
 union() {
-	translate(v = [40.0, 25.0, 2.0]) {
-		cube(center = true, size = [80.0, 50.0, 4.0]);
-	}
-	translate(v = [40.0, 25.0, 9.32]) {
-		cube(center = true, size = [73.6, 41.0, 10.64]);
-	}
+    translate([0, 0, 0]) cube(base_size);
+    translate([3.2, 4.5, 4]) cube(starter_block_size);
 }

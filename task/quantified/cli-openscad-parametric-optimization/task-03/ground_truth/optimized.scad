@@ -1,3 +1,5 @@
+// Reference beam proxy: continuous base, two longitudinal high-I webs, and
+// four transverse ties under the documented simple-support/center-load case.
 union() {
 	translate(v = [65.0, 19.0, 2.0]) {
 		cube(center = true, size = [130.0, 38.0, 4.0]);

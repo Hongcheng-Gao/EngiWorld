@@ -1,8 +1,10 @@
+// Editable baseline for the documented x=2/128 mm simple-support and
+// 100 N center-load proxy. Replace the low solid block with a connected,
+// high-I longitudinal load path while preserving support and load patches.
+base_size = [130, 38, 4];
+starter_block_size = [119.6, 31.16, 17.1];
+
 union() {
-	translate(v = [65.0, 19.0, 2.0]) {
-		cube(center = true, size = [130.0, 38.0, 4.0]);
-	}
-	translate(v = [65.0, 19.0, 12.55]) {
-		cube(center = true, size = [119.6, 31.16, 17.1]);
-	}
+    cube(base_size);
+    translate([5.2, 3.42, 4]) cube(starter_block_size);
 }

@@ -1,3 +1,5 @@
+// Reference geometry-proxy design: 11 externally open Y-running channels.
+// 1.7 mm fins exceed the 1.5 mm minimum; 5.13 mm gaps exceed the 3 mm minimum.
 union() {
 	translate(v = [40.0, 25.0, 2.0]) {
 		cube(center = true, size = [80.0, 50.0, 4.0]);
