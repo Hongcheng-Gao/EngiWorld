@@ -140,6 +140,46 @@ def _segment_points(doc):
     return _dedupe(points)
 
 
+def _outline_segments(doc):
+    segments = []
+    for entity in doc.modelspace():
+        if entity.dxftype() == "LINE":
+            start, end = entity.dxf.start, entity.dxf.end
+            segments.append(((float(start.x), float(start.y)), (float(end.x), float(end.y))))
+        elif entity.dxftype() == "LWPOLYLINE":
+            points = [(float(p[0]), float(p[1])) for p in entity.get_points("xy")]
+            segments.extend(zip(points, points[1:]))
+            if entity.closed and len(points) > 2:
+                segments.append((points[-1], points[0]))
+    return segments
+
+
+def _edge_present(segments, start, end, tol=0.15):
+    return any(
+        (_point_close(a, start, tol) and _point_close(b, end, tol))
+        or (_point_close(a, end, tol) and _point_close(b, start, tol))
+        for a, b in segments
+    )
+
+
+def _trapezoid_edges_present(doc, points):
+    ys = sorted(set(round(p[1], 3) for p in points))
+    if len(ys) != 2:
+        return False
+    bottom = sorted([p for p in points if _close(p[1], ys[0])])
+    top = sorted([p for p in points if _close(p[1], ys[1])])
+    if len(bottom) != 2 or len(top) != 2:
+        return False
+    expected_edges = (
+        (bottom[0], bottom[1]),
+        (bottom[1], top[1]),
+        (top[1], top[0]),
+        (top[0], bottom[0]),
+    )
+    segments = _outline_segments(doc)
+    return all(_edge_present(segments, start, end) for start, end in expected_edges)
+
+
 def _trapezoid_center(points):
     if len(points) != 4:
         return None
@@ -166,12 +206,12 @@ def _find_trapezoid(doc):
             continue
         pts = _dedupe([(float(p[0]), float(p[1])) for p in entity.get_points("xy")])
         center = _trapezoid_center(pts)
-        if center is not None:
+        if center is not None and _trapezoid_edges_present(doc, pts):
             return center
     points = _segment_points(doc)
     for candidate in itertools.combinations(points, 4):
         center = _trapezoid_center(candidate)
-        if center is not None:
+        if center is not None and _trapezoid_edges_present(doc, candidate):
             return center
     return None
 

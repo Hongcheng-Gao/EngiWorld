@@ -2,12 +2,14 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import struct
 import zipfile
 import xml.etree.ElementTree as ET
 from pathlib import Path
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
+SOURCE_NAME = "task-019_initial.scad"
 
 
 
@@ -142,9 +144,12 @@ SPEC = {'output': 'task-019_output.stl',
              'x_span': 3.0,
              'y_span': 2.5,
              'min_points': 4},
-            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [2.0, 3.0], 'tol': 0.4},
-            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [7.0, 8.0], 'tol': 0.4},
-            {'kind': 'box_outline', 'xs': [-7.0, 7.0], 'ys': [-10.0, -9.0], 'zs': [12.0, 13.0], 'tol': 0.4}]}
+            {'kind': 'rectangular_recess', 'x_range': [-7.0, 7.0], 'front_y': -10.0,
+             'depth': 1.0, 'z_range': [2.0, 3.0], 'tol': 0.15},
+            {'kind': 'rectangular_recess', 'x_range': [-7.0, 7.0], 'front_y': -10.0,
+             'depth': 1.0, 'z_range': [7.0, 8.0], 'tol': 0.15},
+            {'kind': 'rectangular_recess', 'x_range': [-7.0, 7.0], 'front_y': -10.0,
+             'depth': 1.0, 'z_range': [12.0, 13.0], 'tol': 0.15}]}
 
 
 def _parse_stl(path: Path):
@@ -365,6 +370,48 @@ def _has_box_outline(mesh: Mesh, check):
     return True
 
 
+def _planar_patch_covers(mesh: Mesh, axis, value, ranges, tol):
+    points = []
+    for tri in mesh.triangles:
+        if not all(abs(point[axis] - value) <= tol for point in tri):
+            continue
+        for point in tri:
+            if all(lo - tol <= point[idx] <= hi + tol for idx, (lo, hi) in ranges.items()):
+                points.append(point)
+    if not points:
+        return False
+    return all(
+        abs(min(point[idx] for point in points) - lo) <= tol
+        and abs(max(point[idx] for point in points) - hi) <= tol
+        for idx, (lo, hi) in ranges.items()
+    )
+
+
+def _has_rectangular_recess(mesh: Mesh, check):
+    x0, x1 = [float(value) for value in check["x_range"]]
+    front_y = float(check["front_y"])
+    back_y = front_y + float(check["depth"])
+    z0, z1 = [float(value) for value in check["z_range"]]
+    tol = float(check.get("tol", 0.2))
+    # A true front-face recess exposes a back wall, two end walls, and a top
+    # and bottom wall with the requested width, cut-in depth, and height.
+    if not _planar_patch_covers(
+        mesh, 1, back_y, {0: (x0, x1), 2: (z0, z1)}, tol
+    ):
+        return False
+    for x in (x0, x1):
+        if not _planar_patch_covers(
+            mesh, 0, x, {1: (front_y, back_y), 2: (z0, z1)}, tol
+        ):
+            return False
+    for z in (z0, z1):
+        if not _planar_patch_covers(
+            mesh, 2, z, {0: (x0, x1), 1: (front_y, back_y)}, tol
+        ):
+            return False
+    return True
+
+
 def _cluster_count(values, gap):
     if not values:
         return 0
@@ -405,6 +452,33 @@ def _has_raised_region(mesh: Mesh, check):
         max(p[0] for p in pts) - min(p[0] for p in pts) >= float(check["x_span"])
         and max(p[1] for p in pts) - min(p[1] for p in pts) >= float(check["y_span"])
     )
+
+
+def _source_number(text: str, name: str):
+    match = re.search(
+        rf"(?m)^\s*{re.escape(name)}\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+))\s*;",
+        text,
+    )
+    return float(match.group(1)) if match else None
+
+
+def _source_matches_instruction(path: Path) -> bool:
+    if not path.is_file() or path.stat().st_size <= 0:
+        return False
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    if _source_number(text, "label_height") != 0.8:
+        return False
+    if _source_number(text, "groove_depth") != 1.0:
+        return False
+
+    compact = re.sub(r"\s+", "", re.sub(r"//.*", "", text))
+    required = (
+        'translate([17.5,0,5])linear_extrude(height=label_height)text("5",size=3.2,font="LiberationSans:style=Regular",halign="center",valign="center");',
+        'translate([12.5,0,10])linear_extrude(height=label_height)text("10",size=2.6,font="LiberationSans:style=Regular",halign="center",valign="center");',
+        'translate([0,0,15])linear_extrude(height=label_height)text("15",size=4,font="LiberationSans:style=Regular",halign="center",valign="center");',
+        'for(z=[2.5,7.5,12.5]){translate([0,-10+groove_depth/2,z])cube([14,groove_depth,1],center=true);}',
+    )
+    return all(token in compact for token in required)
 
 
 def _has_steps(mesh: Mesh, check):
@@ -529,6 +603,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_rect_outline(mesh, check)
     if kind == "box_outline":
         return _has_box_outline(mesh, check)
+    if kind == "rectangular_recess":
+        return _has_rectangular_recess(mesh, check)
     if kind == "raised":
         return _has_raised(mesh, check)
     if kind == "raised_region":
@@ -587,6 +663,8 @@ def evaluate() -> bool:
         return False
     path = OUTPUT_ROOT / SPEC["output"]
     if not path.exists() or path.stat().st_size <= 0:
+        return False
+    if not _source_matches_instruction(OUTPUT_ROOT / SOURCE_NAME):
         return False
     suffix = path.suffix.lower()
     if suffix == ".dxf":

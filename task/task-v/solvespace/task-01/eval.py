@@ -261,6 +261,19 @@ def _has_segment(segments, start, end, layer=None):
 
 
 
+def _has_exact_edge(segments, start, end, tol=0.1):
+
+    return any(
+
+        (_point_close(a, start, tol) and _point_close(b, end, tol))
+
+        or (_point_close(a, end, tol) and _point_close(b, start, tol))
+
+        for a, b, _layer in segments
+
+    )
+
+
 def _has_rectangle(doc, width, height):
 
     segs = _segments(doc)
@@ -269,7 +282,7 @@ def _has_rectangle(doc, width, height):
 
     return all(
 
-        _has_segment(segs, corners[i], corners[(i + 1) % 4])
+        _has_exact_edge(segs, corners[i], corners[(i + 1) % 4])
 
         for i in range(4)
 

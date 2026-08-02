@@ -116,16 +116,23 @@ def check_no_gui_bypass(root):
 
 SPEC = {'output': 'task-005_output.stl',
  'bbox': [120.0, 70.0, 50.0],
- 'bbox_tol': 2.0,
- 'min_triangles': 600,
- 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 20.0, 'span': 49.0, 'bins': 24},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 10.0, 'span': 49.0, 'bins': 18},
-            {'kind': 'cylinder', 'axis': 'x', 'center': [0.0, 25.0], 'radius': 11.0, 'span': 118.0, 'bins': 18},
-            {'kind': 'cylinder', 'axis': 'y', 'center': [0.0, 25.0], 'radius': 8.0, 'span': 68.0, 'bins': 16},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-28.0, -18.0], 'radius': 2.5, 'span': 8.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-28.0, 18.0], 'radius': 2.5, 'span': 8.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [28.0, -18.0], 'radius': 2.5, 'span': 8.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [28.0, 18.0], 'radius': 2.5, 'span': 8.0, 'bins': 10}]}
+ 'bbox_tol': 0.75,
+ 'center': [0.0, 0.0, 25.0],
+ 'center_tol': 0.5,
+ 'watertight': True,
+ 'volume': 126817.0,
+ 'volume_tol': 2500.0,
+ 'checks': [{'kind': 'box_outline', 'xs': [-60.0, 60.0], 'ys': [-35.0, 35.0], 'zs': [0.0, 8.0], 'tol': 0.5},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 20.0, 'span': 41.0, 'axial_bounds': [8.0, 50.0], 'bins': 24},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 10.0, 'span': 49.0, 'axial_bounds': [0.0, 50.0], 'bins': 18},
+            {'kind': 'cylinder', 'axis': 'x', 'center': [0.0, 25.0], 'radius': 11.0, 'span': 118.0, 'axial_bounds': [-60.0, 60.0], 'bins': 18},
+            {'kind': 'cylinder', 'axis': 'x', 'center': [0.0, 25.0], 'radius': 6.0, 'span': 118.0, 'axial_bounds': [-60.0, 60.0], 'bins': 14},
+            {'kind': 'cylinder', 'axis': 'y', 'center': [0.0, 25.0], 'radius': 8.0, 'span': 68.0, 'axial_bounds': [-35.0, 35.0], 'bins': 16},
+            {'kind': 'cylinder', 'axis': 'y', 'center': [0.0, 25.0], 'radius': 4.0, 'span': 68.0, 'axial_bounds': [-35.0, 35.0], 'bins': 12},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-28.0, -18.0], 'radius': 2.5, 'span': 7.5, 'axial_bounds': [0.0, 8.0], 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-28.0, 18.0], 'radius': 2.5, 'span': 7.5, 'axial_bounds': [0.0, 8.0], 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [28.0, -18.0], 'radius': 2.5, 'span': 7.5, 'axial_bounds': [0.0, 8.0], 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [28.0, 18.0], 'radius': 2.5, 'span': 7.5, 'axial_bounds': [0.0, 8.0], 'bins': 10}]}
 
 
 def _parse_stl(path: Path):
@@ -277,7 +284,35 @@ def _has_cylinder(mesh: Mesh, check):
     if len(bins) < int(check.get("bins", 10)):
         return False
     axials = [axis for _, axis in points]
-    return max(axials) - min(axials) >= float(check.get("span", 0.0))
+    if max(axials) - min(axials) < float(check.get("span", 0.0)):
+        return False
+    if "axial_bounds" in check:
+        expected_min, expected_max = [float(value) for value in check["axial_bounds"]]
+        axial_tol = float(check.get("axial_tol", 0.75))
+        if abs(min(axials) - expected_min) > axial_tol or abs(max(axials) - expected_max) > axial_tol:
+            return False
+    return True
+
+
+def _mesh_is_watertight(mesh: Mesh):
+    edge_counts = {}
+    for triangle in mesh.triangles:
+        points = [tuple(round(value, 4) for value in point) for point in triangle]
+        for start, end in ((points[0], points[1]), (points[1], points[2]), (points[2], points[0])):
+            edge = tuple(sorted((start, end)))
+            edge_counts[edge] = edge_counts.get(edge, 0) + 1
+    return bool(edge_counts) and all(count == 2 for count in edge_counts.values())
+
+
+def _mesh_volume(mesh: Mesh):
+    total = 0.0
+    for triangle in mesh.triangles:
+        a, b, c = triangle
+        cross_x = b[1] * c[2] - b[2] * c[1]
+        cross_y = b[2] * c[0] - b[0] * c[2]
+        cross_z = b[0] * c[1] - b[1] * c[0]
+        total += a[0] * cross_x + a[1] * cross_y + a[2] * cross_z
+    return abs(total) / 6.0
 
 
 def _has_circle_at(mesh: Mesh, check):
@@ -555,6 +590,10 @@ def _evaluate_mesh(path: Path) -> bool:
         center_tol = float(SPEC.get("center_tol", tol))
         if any(abs(a - b) > center_tol for a, b in zip(mesh.center, SPEC["center"])):
             return False
+    if SPEC.get("watertight") and not _mesh_is_watertight(mesh):
+        return False
+    if "volume" in SPEC and abs(_mesh_volume(mesh) - float(SPEC["volume"])) > float(SPEC.get("volume_tol", 1.0)):
+        return False
     return all(_run_mesh_check(mesh, check) for check in SPEC.get("checks", []))
 
 

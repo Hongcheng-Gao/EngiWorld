@@ -118,13 +118,13 @@ SPEC = {'output': 'task-003_output.stl',
  'bbox': [100.0, 46.0, 24.0],
  'bbox_tol': 1.0,
  'min_triangles': 500,
- 'checks': [{'kind': 'slot', 'center': [0.0, -13.0], 'length': 72.0, 'width': 6.0, 'span': 20.0},
-            {'kind': 'slot', 'center': [0.0, 13.0], 'length': 72.0, 'width': 6.0, 'span': 20.0},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-38.0, -16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-38.0, 16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [38.0, -16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [38.0, 16.0], 'radius': 2.5, 'span': 23.0, 'bins': 10},
-            {'kind': 'raised', 'z_min': 18.0, 'x_span': 80.0, 'y_span': 30.0},
+ 'checks': [{'kind': 'slot', 'center': [0.0, -13.0], 'length': 72.0, 'width': 6.0, 'span': 20.0, 'axial_range': [0.0, 20.0]},
+            {'kind': 'slot', 'center': [0.0, 13.0], 'length': 72.0, 'width': 6.0, 'span': 20.0, 'axial_range': [0.0, 20.0]},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-38.0, -16.0], 'radius': 2.5, 'span': 23.0, 'axial_range': [0.0, 24.0], 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-38.0, 16.0], 'radius': 2.5, 'span': 23.0, 'axial_range': [0.0, 24.0], 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [38.0, -16.0], 'radius': 2.5, 'span': 23.0, 'axial_range': [0.0, 24.0], 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [38.0, 16.0], 'radius': 2.5, 'span': 23.0, 'axial_range': [0.0, 24.0], 'bins': 10},
+            {'kind': 'box_outline', 'xs': [-40.0, 40.0], 'ys': [-15.0, 15.0], 'zs': [18.0, 19.5], 'tol': 0.75},
             {'kind': 'box_outline', 'xs': [-42.0, 42.0], 'ys': [-21.0, 21.0], 'zs': [0.0, 24.0], 'tol': 1.0}]}
 
 
@@ -277,6 +277,12 @@ def _has_cylinder(mesh: Mesh, check):
     if len(bins) < int(check.get("bins", 10)):
         return False
     axials = [axis for _, axis in points]
+    axial_range = check.get("axial_range")
+    if axial_range:
+        endpoint_tol = float(check.get("axial_tol", 0.75))
+        if (abs(min(axials) - float(axial_range[0])) > endpoint_tol or
+                abs(max(axials) - float(axial_range[1])) > endpoint_tol):
+            return False
     return max(axials) - min(axials) >= float(check.get("span", 0.0))
 
 
@@ -304,7 +310,11 @@ def _has_slot(mesh: Mesh, check):
     width = float(check["width"])
     span = float(check["span"])
     tol = float(check.get("tol", 0.8))
-    pts = [p for p in mesh.vertices if abs(p[0] - cx) <= length / 2 + tol and abs(p[1] - cy) <= width / 2 + tol]
+    axial_range = check.get("axial_range")
+    pts = [p for p in mesh.vertices
+           if abs(p[0] - cx) <= length / 2 + tol
+           and abs(p[1] - cy) <= width / 2 + tol
+           and (not axial_range or float(axial_range[0]) - tol <= p[2] <= float(axial_range[1]) + tol)]
     if len(pts) < 8:
         return False
     if max(p[2] for p in pts) - min(p[2] for p in pts) < span:
@@ -316,6 +326,9 @@ def _has_slot(mesh: Mesh, check):
     offset = (length - width) / 2
     left = {"axis": "z", "center": [cx - offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
     right = {"axis": "z", "center": [cx + offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
+    if axial_range:
+        left["axial_range"] = axial_range
+        right["axial_range"] = axial_range
     return _has_cylinder(mesh, left) and _has_cylinder(mesh, right)
 
 

@@ -1,7 +1,7 @@
 $fn = 48;
 
-label_height = 0;
-groove_depth = 0;
+label_height = 0.8;
+groove_depth = 1;
 
 module step_block() {
   difference() {

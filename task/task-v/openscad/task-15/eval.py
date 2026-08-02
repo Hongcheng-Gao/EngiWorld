@@ -119,7 +119,9 @@ SPEC = {'output': 'task-014_output.stl',
  'bbox_tol': 1.5,
  'min_triangles': 500,
  'checks': [{'kind': 'box_outline', 'xs': [-40.0, 40.0], 'ys': [-28.0, 28.0], 'zs': [0.0, 8.0], 'tol': 1.0},
-            {'kind': 'cylinder', 'axis': 'x', 'center': [0.0, 34.0], 'radius': 6.0, 'span': 78.0, 'bins': 16},
+            {'kind': 'box_outline', 'xs': [-33.0, -27.0], 'ys': [-18.0, 18.0], 'zs': [8.0, 52.0], 'tol': 1.0},
+            {'kind': 'box_outline', 'xs': [27.0, 33.0], 'ys': [-18.0, 18.0], 'zs': [8.0, 52.0], 'tol': 1.0},
+            {'kind': 'cylinder', 'axis': 'x', 'center': [0.0, 34.0], 'radius': 6.0, 'span': 65.0, 'bins': 16},
             {'kind': 'cylinder', 'axis': 'z', 'center': [-25.0, -15.0], 'radius': 3.0, 'span': 7.0, 'bins': 10},
             {'kind': 'cylinder', 'axis': 'z', 'center': [-25.0, 15.0], 'radius': 3.0, 'span': 7.0, 'bins': 10},
             {'kind': 'cylinder', 'axis': 'z', 'center': [25.0, -15.0], 'radius': 3.0, 'span': 7.0, 'bins': 10},
@@ -129,7 +131,13 @@ SPEC = {'output': 'task-014_output.stl',
              'x_range': [-30.0, 30.0],
              'y_range': [12.0, 26.0],
              'z_range': [8.0, 44.0],
-             'gap': 30.0}]}
+             'gap': 30.0},
+            {'kind': 'vertices',
+             'points': [[-33.0, 26.0, 8.0], [-33.0, 18.0, 28.5714],
+                        [-27.0, 26.0, 8.0], [-27.0, 18.0, 28.5714],
+                        [27.0, 26.0, 8.0], [27.0, 18.0, 28.5714],
+                        [33.0, 26.0, 8.0], [33.0, 18.0, 28.5714]],
+             'tol': 1.0}]}
 
 
 def _parse_stl(path: Path):
@@ -326,6 +334,11 @@ def _has_slot(mesh: Mesh, check):
 def _near_vertex(mesh: Mesh, target, tol):
     tx, ty, tz = target
     return any(abs(x - tx) <= tol and abs(y - ty) <= tol and abs(z - tz) <= tol for x, y, z in mesh.vertices)
+
+
+def _has_vertices(mesh: Mesh, check):
+    tol = float(check.get("tol", 0.75))
+    return all(_near_vertex(mesh, point, tol) for point in check["points"])
 
 
 def _has_rect_outline(mesh: Mesh, check):
@@ -530,6 +543,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_rect_outline(mesh, check)
     if kind == "box_outline":
         return _has_box_outline(mesh, check)
+    if kind == "vertices":
+        return _has_vertices(mesh, check)
     if kind == "raised":
         return _has_raised(mesh, check)
     if kind == "steps":

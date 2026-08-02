@@ -118,6 +118,7 @@ def check_no_gui_bypass(root):
 TARGET = "final_ss_gui_17.dxf"
 
 TOL = 0.75
+OUTLINE_TOL = 0.15
 
 
 
@@ -261,15 +262,46 @@ def _has_segment(segs, start, end, straight=True):
 
 
 
-def _has_arc_segment(segs, start, end):
+def _has_exact_straight_segment(segs, start, end):
 
     return any(
 
-        abs(bulge) > 0.2 and ((_point_close(a, start) and _point_close(b, end)) or (_point_close(a, end) and _point_close(b, start)))
+        abs(bulge) <= 0.01
+
+        and ((_point_close(a, start, OUTLINE_TOL) and _point_close(b, end, OUTLINE_TOL))
+
+             or (_point_close(a, end, OUTLINE_TOL) and _point_close(b, start, OUTLINE_TOL)))
 
         for a, b, bulge in segs
 
     )
+
+
+def _has_arc_segment(segs, start, end, radius):
+
+    for a, b, bulge in segs:
+
+        if not ((_point_close(a, start, OUTLINE_TOL) and _point_close(b, end, OUTLINE_TOL))
+
+                or (_point_close(a, end, OUTLINE_TOL) and _point_close(b, start, OUTLINE_TOL))):
+
+            continue
+
+        if abs(bulge) <= 1e-9:
+
+            continue
+
+        chord = math.hypot(b[0] - a[0], b[1] - a[1])
+
+        derived_radius = chord * (1.0 + bulge * bulge) / (4.0 * abs(bulge))
+
+        sweep = abs(4.0 * math.atan(bulge))
+
+        if abs(derived_radius - radius) <= OUTLINE_TOL and abs(sweep - math.pi) <= math.radians(1.0):
+
+            return True
+
+    return False
 
 
 
@@ -285,7 +317,13 @@ def _has_arc_entity(doc, center, radius, endpoints):
 
         c = entity.dxf.center
 
-        if not (_point_close((c.x, c.y), center) and _close(entity.dxf.radius, radius)):
+        if not (_point_close((c.x, c.y), center, OUTLINE_TOL) and _close(entity.dxf.radius, radius, OUTLINE_TOL)):
+
+            continue
+
+        sweep = (float(entity.dxf.end_angle) - float(entity.dxf.start_angle)) % 360.0
+
+        if abs(sweep - 180.0) > 1.0:
 
             continue
 
@@ -297,7 +335,7 @@ def _has_arc_entity(doc, center, radius, endpoints):
 
             actual.append((c.x + entity.dxf.radius * math.cos(radians), c.y + entity.dxf.radius * math.sin(radians)))
 
-        if all(any(_point_close(p, q) for p in actual) for q in endpoints):
+        if all(any(_point_close(p, q, OUTLINE_TOL) for p in actual) for q in endpoints):
 
             return True
 
@@ -333,27 +371,23 @@ def _has_bridge_outline(doc):
 
     return (
 
-        _has_segment(segs, (18, 36), (132, 36))
+        _has_exact_straight_segment(segs, (18, 36), (132, 36))
 
-        and _has_segment(segs, (18, 0), (132, 0))
+        and _has_exact_straight_segment(segs, (18, 0), (132, 0))
 
         and (
 
-            _has_arc_segment(segs, (18, 0), (18, 36))
+            _has_arc_segment(segs, (18, 0), (18, 36), 18)
 
             or _has_arc_entity(doc, (18, 18), 18, [(18, 0), (18, 36)])
-
-            or _has_circle(doc, (18, 18), 18)
 
         )
 
         and (
 
-            _has_arc_segment(segs, (132, 36), (132, 0))
+            _has_arc_segment(segs, (132, 36), (132, 0), 18)
 
             or _has_arc_entity(doc, (132, 18), 18, [(132, 36), (132, 0)])
-
-            or _has_circle(doc, (132, 18), 18)
 
         )
 

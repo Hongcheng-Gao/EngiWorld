@@ -1,4 +1,6 @@
-// Generated with SolidPython2 for OpenSCAD task-038
+// Coordinate reference for task-038. Preserve this bracket while adding ribs:
+// base x=[-50,50], y=[-30,30], z=[0,5]
+// upright x=[-50,50], y=[25,30], z=[5,40]
 $fn = 64;
 
 union() {

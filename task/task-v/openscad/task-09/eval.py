@@ -117,17 +117,18 @@ def check_no_gui_bypass(root):
 SPEC = {'output': 'task-017_output.stl',
  'bbox': [88.0, 88.0, 12.0],
  'bbox_tol': 1.0,
+ 'require_single_closed_component': True,
  'min_triangles': 700,
- 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, -26.0], 'radius': 5.0, 'span': 11.0, 'bins': 14},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, 26.0], 'radius': 5.0, 'span': 11.0, 'bins': 14},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, -26.0], 'radius': 5.0, 'span': 11.0, 'bins': 14},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, 26.0], 'radius': 5.0, 'span': 11.0, 'bins': 14},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, 0.0], 'radius': 4.0, 'span': 11.0, 'bins': 12},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, 0.0], 'radius': 4.0, 'span': 11.0, 'bins': 12},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, -26.0], 'radius': 4.0, 'span': 11.0, 'bins': 12},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 26.0], 'radius': 4.0, 'span': 11.0, 'bins': 12},
-            {'kind': 'slot', 'center': [0.0, 39.0], 'length': 44.0, 'width': 5.0, 'span': 10.0},
-            {'kind': 'slot', 'center': [0.0, -39.0], 'length': 44.0, 'width': 5.0, 'span': 10.0}]}
+ 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, -26.0], 'radius': 5.0, 'axial_range': [8.0, 12.0], 'span': 3.5, 'bins': 14},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, 26.0], 'radius': 5.0, 'axial_range': [8.0, 12.0], 'span': 3.5, 'bins': 14},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, -26.0], 'radius': 5.0, 'axial_range': [8.0, 12.0], 'span': 3.5, 'bins': 14},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, 26.0], 'radius': 5.0, 'axial_range': [8.0, 12.0], 'span': 3.5, 'bins': 14},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-26.0, 0.0], 'radius': 4.0, 'axial_range': [0.0, 8.0], 'span': 7.5, 'bins': 12},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [26.0, 0.0], 'radius': 4.0, 'axial_range': [0.0, 8.0], 'span': 7.5, 'bins': 12},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, -26.0], 'radius': 4.0, 'axial_range': [0.0, 8.0], 'span': 7.5, 'bins': 12},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 26.0], 'radius': 4.0, 'axial_range': [0.0, 8.0], 'span': 7.5, 'bins': 12},
+            {'kind': 'slot', 'center': [0.0, 39.0], 'length': 44.0, 'width': 5.0, 'axial_range': [0.0, 8.0], 'span': 7.5},
+            {'kind': 'slot', 'center': [0.0, -39.0], 'length': 44.0, 'width': 5.0, 'axial_range': [0.0, 8.0], 'span': 7.5}]}
 
 
 def _parse_stl(path: Path):
@@ -279,7 +280,16 @@ def _has_cylinder(mesh: Mesh, check):
     if len(bins) < int(check.get("bins", 10)):
         return False
     axials = [axis for _, axis in points]
-    return max(axials) - min(axials) >= float(check.get("span", 0.0))
+    if max(axials) - min(axials) < float(check.get("span", 0.0)):
+        return False
+    axial_range = check.get("axial_range")
+    if axial_range:
+        end_tol = float(check.get("end_tol", 0.6))
+        if min(axials) > float(axial_range[0]) + end_tol:
+            return False
+        if max(axials) < float(axial_range[1]) - end_tol:
+            return False
+    return True
 
 
 def _has_circle_at(mesh: Mesh, check):
@@ -306,7 +316,11 @@ def _has_slot(mesh: Mesh, check):
     width = float(check["width"])
     span = float(check["span"])
     tol = float(check.get("tol", 0.8))
-    pts = [p for p in mesh.vertices if abs(p[0] - cx) <= length / 2 + tol and abs(p[1] - cy) <= width / 2 + tol]
+    axial_range = check.get("axial_range")
+    pts = [p for p in mesh.vertices
+           if abs(p[0] - cx) <= length / 2 + tol
+           and abs(p[1] - cy) <= width / 2 + tol
+           and (not axial_range or float(axial_range[0]) - 0.75 <= p[2] <= float(axial_range[1]) + 0.75)]
     if len(pts) < 8:
         return False
     if max(p[2] for p in pts) - min(p[2] for p in pts) < span:
@@ -316,9 +330,38 @@ def _has_slot(mesh: Mesh, check):
     if max(p[1] for p in pts) - min(p[1] for p in pts) < width - 0.8:
         return False
     offset = (length - width) / 2
-    left = {"axis": "z", "center": [cx - offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
-    right = {"axis": "z", "center": [cx + offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5}
+    left = {"axis": "z", "center": [cx - offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5, "axial_range": axial_range}
+    right = {"axis": "z", "center": [cx + offset, cy], "radius": width / 2, "span": span, "bins": 4, "tol": 0.5, "axial_range": axial_range}
     return _has_cylinder(mesh, left) and _has_cylinder(mesh, right)
+
+
+def _is_single_closed_component(mesh: Mesh):
+    if not mesh.triangles:
+        return False
+    edge_faces = {}
+    for face_index, tri in enumerate(mesh.triangles):
+        vertices = [tuple(round(value, 3) for value in point) for point in tri]
+        if len(set(vertices)) != 3:
+            return False
+        for index in range(3):
+            edge = tuple(sorted((vertices[index], vertices[(index + 1) % 3])))
+            edge_faces.setdefault(edge, []).append(face_index)
+    if any(len(faces) != 2 for faces in edge_faces.values()):
+        return False
+    adjacency = [set() for _ in mesh.triangles]
+    for faces in edge_faces.values():
+        first, second = faces
+        adjacency[first].add(second)
+        adjacency[second].add(first)
+    visited = {0}
+    pending = [0]
+    while pending:
+        face = pending.pop()
+        for neighbor in adjacency[face]:
+            if neighbor not in visited:
+                visited.add(neighbor)
+                pending.append(neighbor)
+    return len(visited) == len(mesh.triangles)
 
 
 def _near_vertex(mesh: Mesh, target, tol):
@@ -542,6 +585,8 @@ def _evaluate_mesh(path: Path) -> bool:
     if len(mesh.triangles) < int(SPEC.get("min_triangles", 1)):
         return False
     if len(mesh.vertices) < int(SPEC.get("min_vertices", 8)):
+        return False
+    if SPEC.get("require_single_closed_component") and not _is_single_closed_component(mesh):
         return False
     tol = float(SPEC.get("bbox_tol", 1.0))
     if "bbox" in SPEC and not _bbox_ok(mesh, SPEC["bbox"], tol):

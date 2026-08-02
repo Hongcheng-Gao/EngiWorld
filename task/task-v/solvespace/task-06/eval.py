@@ -145,6 +145,37 @@ def _segment_points(doc):
     return _dedupe(points)
 
 
+def _outline_segments(doc):
+    segments = []
+    for entity in doc.modelspace():
+        if entity.dxftype() == "LINE":
+            start, end = entity.dxf.start, entity.dxf.end
+            segments.append(((float(start.x), float(start.y)), (float(end.x), float(end.y))))
+        elif entity.dxftype() == "LWPOLYLINE":
+            points = [(float(p[0]), float(p[1])) for p in entity.get_points("xy")]
+            segments.extend(zip(points, points[1:]))
+            if entity.closed and len(points) > 2:
+                segments.append((points[-1], points[0]))
+    return segments
+
+
+def _edge_present(segments, start, end, tol=0.15):
+    return any(
+        (_point_close(a, start, tol) and _point_close(b, end, tol))
+        or (_point_close(a, end, tol) and _point_close(b, start, tol))
+        for a, b in segments
+    )
+
+
+def _hex_edges_present(doc, points, center):
+    ordered = sorted(points, key=lambda p: math.atan2(p[1] - center[1], p[0] - center[0]))
+    segments = _outline_segments(doc)
+    return all(
+        _edge_present(segments, ordered[index], ordered[(index + 1) % 6])
+        for index in range(6)
+    )
+
+
 def _regular_hex_center(points):
     if len(points) != 6:
         return None
@@ -167,12 +198,12 @@ def _hex_center(doc):
             continue
         pts = _dedupe([(float(p[0]), float(p[1])) for p in entity.get_points("xy")])
         center = _regular_hex_center(pts)
-        if center is not None:
+        if center is not None and _hex_edges_present(doc, pts, center):
             return center
     points = _segment_points(doc)
     for candidate in itertools.combinations(points, 6):
         center = _regular_hex_center(candidate)
-        if center is not None:
+        if center is not None and _hex_edges_present(doc, candidate, center):
             return center
     return None
 
@@ -194,6 +225,8 @@ def evaluate():
     if not path.exists() or path.stat().st_size <= 0:
         return False
     doc = ezdxf.readfile(path)
+    if int(doc.header.get("$INSUNITS", 0)) != 4:
+        return False
     center = _hex_center(doc)
     if center is None:
         return False

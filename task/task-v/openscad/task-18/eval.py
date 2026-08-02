@@ -120,15 +120,23 @@ SPEC = {'output': 'task-016_output.stl',
  'min_triangles': 650,
  'checks': [{'kind': 'slot', 'center': [-25.0, 0.0], 'length': 24.0, 'width': 6.0, 'span': 6.0},
             {'kind': 'slot', 'center': [25.0, 0.0], 'length': 24.0, 'width': 6.0, 'span': 6.0},
-            {'kind': 'cylinder', 'axis': 'y', 'center': [-30.0, 32.0], 'radius': 3.0, 'span': 68.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'y', 'center': [30.0, 32.0], 'radius': 3.0, 'span': 68.0, 'bins': 10},
-            {'kind': 'rib_clusters',
-             'count': 4,
-             'x_range': [-36.0, 36.0],
-             'y_range': [8.0, 34.0],
-             'z_range': [8.0, 55.0],
-             'gap': 8.0},
-            {'kind': 'box_outline', 'xs': [-50.0, 50.0], 'ys': [-35.0, 35.0], 'zs': [0.0, 6.0], 'tol': 1.0}]}
+            {'kind': 'cylinder', 'axis': 'y', 'center': [-30.0, 32.0], 'radius': 3.0,
+             'axial_range': [28.5, 35.5], 'span': 5.5, 'bins': 10},
+            {'kind': 'cylinder', 'axis': 'y', 'center': [30.0, 32.0], 'radius': 3.0,
+             'axial_range': [28.5, 35.5], 'span': 5.5, 'bins': 10},
+            {'kind': 'vertices',
+             'points': [[-50.0, -35.0, 0.0], [50.0, -35.0, 0.0],
+                        [-50.0, -35.0, 6.0], [50.0, -35.0, 6.0],
+                        [-50.0, 29.0, 6.0], [50.0, 29.0, 6.0],
+                        [-50.0, 29.0, 60.0], [50.0, 29.0, 60.0],
+                        [-50.0, 35.0, 0.0], [50.0, 35.0, 0.0],
+                        [-50.0, 35.0, 60.0], [50.0, 35.0, 60.0]],
+             'tol': 0.8},
+            {'kind': 'rib_prisms',
+             'centers': [-36.0, -12.0, 12.0, 36.0],
+             'thickness': 2.0,
+             'profile': [[8.0, 6.0], [29.0, 6.0], [29.0, 55.0]],
+             'tol': 0.45}]}
 
 
 def _parse_stl(path: Path):
@@ -349,6 +357,22 @@ def _has_box_outline(mesh: Mesh, check):
     return True
 
 
+def _has_vertices(mesh: Mesh, check):
+    tol = float(check.get("tol", 0.75))
+    return all(_near_vertex(mesh, point, tol) for point in check["points"])
+
+
+def _has_rib_prisms(mesh: Mesh, check):
+    half_thickness = float(check["thickness"]) / 2.0
+    tol = float(check.get("tol", 0.5))
+    for center in check["centers"]:
+        for x in (float(center) - half_thickness, float(center) + half_thickness):
+            for y, z in check["profile"]:
+                if not _near_vertex(mesh, (x, float(y), float(z)), tol):
+                    return False
+    return True
+
+
 def _cluster_count(values, gap):
     if not values:
         return 0
@@ -529,6 +553,10 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_rect_outline(mesh, check)
     if kind == "box_outline":
         return _has_box_outline(mesh, check)
+    if kind == "vertices":
+        return _has_vertices(mesh, check)
+    if kind == "rib_prisms":
+        return _has_rib_prisms(mesh, check)
     if kind == "raised":
         return _has_raised(mesh, check)
     if kind == "steps":
