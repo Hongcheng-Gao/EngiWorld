@@ -1,6 +1,46 @@
 from __future__ import annotations
-OUTPUT_FILE = 'guih16_fire_evacuation_completed.dxf'
-SPEC = {'no_layers': ['GUIDE'], 'segments': [{'layer': 'WALL', 'start': (0, 0), 'end': (8000, 0)}, {'layer': 'WALL', 'start': (8000, 0), 'end': (8000, 5000)}, {'layer': 'WALL', 'start': (8000, 5000), 'end': (0, 5000)}, {'layer': 'WALL', 'start': (0, 5000), 'end': (0, 0)}, {'layer': 'WALL', 'start': (2600, 0), 'end': (2600, 2100)}, {'layer': 'WALL', 'start': (2600, 3000), 'end': (2600, 5000)}, {'layer': 'WALL', 'start': (5200, 0), 'end': (5200, 5000)}, {'layer': 'WALL', 'start': (0, 2500), 'end': (8000, 2500)}, {'layer': 'EXIT', 'start': (1200, 1200), 'end': (300, 300)}, {'layer': 'EXIT', 'start': (4200, 3700), 'end': (3900, 4900)}, {'layer': 'EXIT', 'start': (7000, 1600), 'end': (7800, 300)}], 'arcs': [{'layer': 'DOOR', 'center': (2600, 2100), 'radius': 800, 'start': 0, 'end': 90}, {'layer': 'DOOR', 'center': (5200, 2500), 'radius': 800, 'start': 0, 'end': 90}, {'layer': 'DOOR', 'center': (7600, 0), 'radius': 800, 'start': 0, 'end': 90}], 'inserts': [{'name': 'EXTINGUISHER', 'insert': (1200, 1200)}, {'name': 'EXTINGUISHER', 'insert': (4200, 3700)}, {'name': 'EXTINGUISHER', 'insert': (7000, 1600)}], 'texts': [{'layer': 'TEXT', 'text': 'FIRE EVAC PLAN'}, {'layer': 'TEXT', 'text': 'LEGEND'}, {'layer': 'TEXT', 'text': 'EXIT'}], 'text_min_counts': [{'layer': 'TEXT', 'text': 'EXIT', 'min': 3}]}
+OUTPUT_FILE = "guih16_fire_evacuation_completed.dxf"
+SPEC = {
+    "no_layers": ["GUIDE"],
+    "segments": [
+        {"layer": "WALL", "start": (0, 0), "end": (6800, 0)},
+        {"layer": "WALL", "start": (7600, 0), "end": (8000, 0)},
+        {"layer": "WALL", "start": (8000, 0), "end": (8000, 5000)},
+        {"layer": "WALL", "start": (8000, 5000), "end": (0, 5000)},
+        {"layer": "WALL", "start": (0, 5000), "end": (0, 0)},
+        {"layer": "WALL", "start": (2600, 0), "end": (2600, 1300)},
+        {"layer": "WALL", "start": (2600, 2100), "end": (2600, 5000)},
+        {"layer": "WALL", "start": (5200, 0), "end": (5200, 2500)},
+        {"layer": "WALL", "start": (5200, 3300), "end": (5200, 5000)},
+        {"layer": "WALL", "start": (0, 2500), "end": (5200, 2500)},
+        {"layer": "WALL", "start": (6000, 2500), "end": (8000, 2500)},
+        {"layer": "EXIT", "start": (1200, 1200), "end": (300, 300)},
+        {"layer": "EXIT", "start": (4200, 3700), "end": (3900, 4900)},
+        {"layer": "EXIT", "start": (7000, 1600), "end": (7800, 300)},
+    ],
+    "clear_wall_spans": [
+        {"layer": "WALL", "start": (2600, 1300), "end": (2600, 2100)},
+        {"layer": "WALL", "start": (5200, 2500), "end": (5200, 3300)},
+        {"layer": "WALL", "start": (5200, 2500), "end": (6000, 2500)},
+        {"layer": "WALL", "start": (6800, 0), "end": (7600, 0)},
+    ],
+    "arcs": [
+        {"layer": "DOOR", "center": (2600, 2100), "radius": 800, "start": 270, "end": 360},
+        {"layer": "DOOR", "center": (5200, 2500), "radius": 800, "start": 0, "end": 90},
+        {"layer": "DOOR", "center": (7600, 0), "radius": 800, "start": 90, "end": 180},
+    ],
+    "inserts": [
+        {"name": "EXTINGUISHER", "insert": (1200, 1200)},
+        {"name": "EXTINGUISHER", "insert": (4200, 3700)},
+        {"name": "EXTINGUISHER", "insert": (7000, 1600)},
+    ],
+    "texts": [
+        {"layer": "TEXT", "text": "FIRE EVAC PLAN"},
+        {"layer": "TEXT", "text": "LEGEND"},
+        {"layer": "TEXT", "text": "EXIT"},
+    ],
+    "text_min_counts": [{"layer": "TEXT", "text": "EXIT", "min": 3}],
+}
 
 
 from pathlib import Path
@@ -166,6 +206,47 @@ def same_segment(seg, start, end, tol=TOL):
 
 def has_segment(doc, layer, start, end, tol=TOL):
     return any(same_segment(seg, start, end, tol) for seg in iter_segments(doc, layer))
+
+
+def wall_span_is_clear(doc, layer, start, end, tol=TOL):
+    sx, sy = xy(start)
+    ex, ey = xy(end)
+
+    if close(sx, ex, tol):
+        lower, upper = sorted((sy, ey))
+        inner_lower, inner_upper = lower + tol, upper - tol
+        for first, second in iter_segments(doc, layer):
+            ax, ay = xy(first)
+            bx, by = xy(second)
+            if close(ax, sx, tol) and close(bx, sx, tol):
+                seg_lower, seg_upper = sorted((ay, by))
+                if min(seg_upper, inner_upper) > max(seg_lower, inner_lower):
+                    return False
+            elif not close(ax, bx, 1e-9) and (ax - sx) * (bx - sx) <= 0:
+                fraction = (sx - ax) / (bx - ax)
+                crossing_y = ay + fraction * (by - ay)
+                if -1e-9 <= fraction <= 1.0 + 1e-9 and inner_lower < crossing_y < inner_upper:
+                    return False
+        return True
+
+    if close(sy, ey, tol):
+        lower, upper = sorted((sx, ex))
+        inner_lower, inner_upper = lower + tol, upper - tol
+        for first, second in iter_segments(doc, layer):
+            ax, ay = xy(first)
+            bx, by = xy(second)
+            if close(ay, sy, tol) and close(by, sy, tol):
+                seg_lower, seg_upper = sorted((ax, bx))
+                if min(seg_upper, inner_upper) > max(seg_lower, inner_lower):
+                    return False
+            elif not close(ay, by, 1e-9) and (ay - sy) * (by - sy) <= 0:
+                fraction = (sy - ay) / (by - ay)
+                crossing_x = ax + fraction * (bx - ax)
+                if -1e-9 <= fraction <= 1.0 + 1e-9 and inner_lower < crossing_x < inner_upper:
+                    return False
+        return True
+
+    return False
 
 
 def has_circle(doc, layer, center, radius, tol=TOL):
@@ -385,6 +466,9 @@ def check_spec(doc):
             return False
     for item in SPEC.get("segments", []):
         if not has_segment(doc, item["layer"], item["start"], item["end"]):
+            return False
+    for item in SPEC.get("clear_wall_spans", []):
+        if not wall_span_is_clear(doc, item["layer"], item["start"], item["end"]):
             return False
     for item in SPEC.get("slots", []):
         if not has_slot(doc, item["layer"], item["center"], item["length"], item["width"]):
