@@ -8,9 +8,9 @@ from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop"))
 TASK = json.loads(r"""{
-  "instruction_tail": "Sculpt repeated inspection ridges with enough contrast for visual alignment while avoiding noisy spikes.",
+  "instruction_tail": "Optimize a turbine-inspection ridge height field. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Sculpt the repeated inspection ridges as geometry in the OBJ surface. No image texture, alpha, UV mask, or polypaint is evaluated.",
   "kind": "turbine",
-  "metric": "target texture fit and ridge preservation",
+  "metric": "procedural ridge height-field RMSE with span, mean-height, and face-count penalties",
   "target": {
     "amp": 0.28,
     "freq": 6.0,

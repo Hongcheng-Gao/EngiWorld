@@ -19,17 +19,35 @@
 <libraries>
 <library name="linear">
 <packages></packages>
-<symbols></symbols>
+<symbols>
+<symbol name="555">
+<wire x1="-7.62" y1="-10.16" x2="7.62" y2="-10.16" width="0.4064" layer="94"/>
+<wire x1="7.62" y1="-10.16" x2="7.62" y2="10.16" width="0.4064" layer="94"/>
+<wire x1="7.62" y1="10.16" x2="-7.62" y2="10.16" width="0.4064" layer="94"/>
+<wire x1="-7.62" y1="10.16" x2="-7.62" y2="-10.16" width="0.4064" layer="94"/>
+<pin name="TR" x="-10.16" y="7.62" length="short" direction="in"/>
+<pin name="Q" x="10.16" y="7.62" length="short" direction="out" rot="R180"/>
+<pin name="R" x="-10.16" y="2.54" length="short" direction="in" function="dot"/>
+<pin name="CV" x="-10.16" y="-2.54" length="short" direction="in"/>
+<pin name="THR" x="10.16" y="-2.54" length="short" direction="in" rot="R180"/>
+<pin name="DIS" x="10.16" y="2.54" length="short" direction="in" rot="R180"/>
+<pin name="V+" x="10.16" y="-7.62" length="short" direction="pwr" rot="R180"/>
+<pin name="GND" x="-10.16" y="-7.62" length="short" direction="pwr"/>
+</symbol>
+</symbols>
 <devicesets>
 <deviceset name="*555" prefix="IC">
-<gates><gate name="G$1" symbol="555N" x="0" y="0"/></gates>
+<gates><gate name="G$1" symbol="555" x="0" y="0"/></gates>
 <devices><device name="N" package=""></device></devices>
 </deviceset>
 </devicesets>
 </library>
 <library name="rcl">
 <packages></packages>
-<symbols></symbols>
+<symbols>
+<symbol name="R-EU"><wire x1="-2.54" y1="0" x2="2.54" y2="0" width="0.254" layer="94"/><pin name="1" x="-5.08" y="0" length="short" direction="pas"/><pin name="2" x="5.08" y="0" length="short" direction="pas" rot="R180"/></symbol>
+<symbol name="C-EU"><wire x1="-0.635" y1="2.54" x2="-0.635" y2="-2.54" width="0.254" layer="94"/><wire x1="0.635" y1="2.54" x2="0.635" y2="-2.54" width="0.254" layer="94"/><pin name="1" x="-5.08" y="0" length="short" direction="pas"/><pin name="2" x="5.08" y="0" length="short" direction="pas" rot="R180"/></symbol>
+</symbols>
 <devicesets>
 <deviceset name="R-EU_" prefix="R" uservalue="yes">
 <gates><gate name="G$1" symbol="R-EU" x="0" y="0"/></gates>
@@ -43,7 +61,9 @@
 </library>
 <library name="led">
 <packages></packages>
-<symbols></symbols>
+<symbols>
+<symbol name="LED"><wire x1="-1.27" y1="1.27" x2="1.27" y2="0" width="0.254" layer="94"/><wire x1="1.27" y1="0" x2="-1.27" y2="-1.27" width="0.254" layer="94"/><pin name="A" x="-5.08" y="0" length="short" direction="pas"/><pin name="C" x="5.08" y="0" length="short" direction="pas" rot="R180"/></symbol>
+</symbols>
 <devicesets>
 <deviceset name="LED" prefix="LED" uservalue="yes">
 <gates><gate name="G$1" symbol="LED" x="0" y="0"/></gates>
@@ -53,7 +73,10 @@
 </library>
 <library name="supply1">
 <packages></packages>
-<symbols></symbols>
+<symbols>
+<symbol name="GND"><pin name="GND" x="0" y="2.54" visible="off" length="short" direction="sup" rot="R270"/></symbol>
+<symbol name="VCC"><pin name="VCC" x="0" y="-2.54" visible="off" length="short" direction="sup" rot="R90"/></symbol>
+</symbols>
 <devicesets>
 <deviceset name="GND" prefix="GND">
 <gates><gate name="1" symbol="GND" x="0" y="0"/></gates>
@@ -103,8 +126,8 @@
 <net name="VCC" class="0">
 <segment>
 <pinref part="VCC1" gate="VCC" pin="VCC"/>
-<pinref part="IC1" gate="G$1" pin="VCC"/>
-<pinref part="IC1" gate="G$1" pin="RESET"/>
+<pinref part="IC1" gate="G$1" pin="V+"/>
+<pinref part="IC1" gate="G$1" pin="R"/>
 <pinref part="C2" gate="G$1" pin="1"/>
 <pinref part="R1" gate="G$1" pin="2"/>
 <pinref part="R3" gate="G$1" pin="2"/>
@@ -124,7 +147,7 @@
 </net>
 <net name="OUT" class="0">
 <segment>
-<pinref part="IC1" gate="G$1" pin="OUT"/>
+<pinref part="IC1" gate="G$1" pin="Q"/>
 <pinref part="R3" gate="G$1" pin="1"/>
 <wire x1="66.04" y1="55.88" x2="86.36" y2="55.88" width="0.1524" layer="91"/>
 </segment>
@@ -132,7 +155,7 @@
 <net name="THRES" class="0">
 <segment>
 <pinref part="IC1" gate="G$1" pin="THR"/>
-<pinref part="IC1" gate="G$1" pin="TRIG"/>
+<pinref part="IC1" gate="G$1" pin="TR"/>
 <pinref part="R2" gate="G$1" pin="2"/>
 <pinref part="C1" gate="G$1" pin="1"/>
 <wire x1="30.48" y1="45.72" x2="30.48" y2="50.8" width="0.1524" layer="91"/>

@@ -8,9 +8,9 @@ from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop"))
 TASK = json.loads(r"""{
-  "instruction_tail": "Sculpt a symmetric thumb pocket with a deep center depression and soft transitions.",
+  "instruction_tail": "Optimize a symmetric thumb-rest pocket. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Create a centered pocket with soft shoulders. The exact field targets about Z=-0.58 at the center, so a useful center-depth band is approximately 0.52 to 0.62 OBJ units below Z=0.",
   "kind": "thumb",
-  "metric": "thumb pocket depth, symmetry, and transition smoothness",
+  "metric": "thumb-pocket height-field RMSE with span, mean-height, and face-count penalties",
   "target": {
     "amp": 0.36,
     "freq": 2.0,

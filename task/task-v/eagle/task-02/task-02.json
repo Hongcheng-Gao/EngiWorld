@@ -1,7 +1,7 @@
 {
   "id": "v-eagle-task-02-ubuntu",
   "snapshot": "eagle-7.7.0",
-  "instruction": "Repair `broken_amp.sch` with minimal edits and save the corrected schematic as `/home/user/Desktop/answer.sch`. Do not redraw the circuit. Requirements: 1. The output must be well-formed XML. 2. Every `<net>` in every `<sheet>` must have at least 2 `<pinref>` entries across its `<segment>` children. 3. No two `<net>` elements within the same sheet may share the same `name`. 4. Every genuine resistor, capacitor, or inductor part whose refdes begins with `R`, `C`, or `L` followed by a digit must have a non-empty `value`. 5. Every `<pinref part=\"X\".../>` must reference a part `X` defined in the `<parts>` block. 6. Keep the total `<part>` count and total `<net>` count unchanged from the source schematic. The seeded defects are exactly four issues of those kinds: one duplicate net name, one single-pin net, one empty R/C/L value, and one orphan pin reference. Fix only what is needed to satisfy the conditions above.",
+  "instruction": "Repair `broken_amp.sch` with minimal edits and save `/home/user/Desktop/answer.sch`; do not redraw the circuit. Preserve the total part and net counts. Fix the four seeded structural faults: one duplicate net name, one net with only a single pin reference, one empty R/C/L value, and one physical part/gate/pin assignment that is incorrectly shared by two nets. Every final net must have at least two pin references, net names must be unique within a sheet, every R/C/L refdes must have a nonempty value, every pin reference must name a defined part, and each physical pin may belong to only one net.",
   "source": "https://www.autodesk.com/products/fusion-360/blog/schematic-basics-part-3-erc/",
   "config": [
     {

@@ -36,7 +36,7 @@
     "metric": {
       "baseline_score": 88.307,
       "direction": "maximize",
-      "name": "thumb pocket depth, symmetry, and transition smoothness",
+      "name": "thumb-pocket height-field RMSE with span, mean-height, and face-count penalties",
       "output_field": "score"
     },
     "postconfig": [
@@ -60,7 +60,7 @@
   },
   "fixed_ip": false,
   "id": "v-quantified-zbrush-surface-optimization-task-04-windows",
-  "instruction": "Optimize thumb-rest clay sculpt. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape as much as possible, then export `C:\\Users\\user\\Desktop\\optimized.obj`. The evaluator returns a continuous score for thumb pocket depth, symmetry, and transition smoothness where higher is better; the supplied ground_truth is only a baseline/reference solution. Sculpt a symmetric thumb pocket with a deep center depression and soft transitions.",
+  "instruction": "Optimize a symmetric thumb-rest pocket. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Create a centered pocket with soft shoulders. The exact field targets about Z=-0.58 at the center, so a useful center-depth band is approximately 0.52 to 0.62 OBJ units below Z=0.\n\nThe continuous score is computed directly from the exported OBJ. X and Y are normalized independently to [-1, 1] using the output bounding box, while Z remains in OBJ units. The target height field is `-0.36*exp(-4.5*(x^2+0.65*y^2)) + 0.16*exp(-16*(abs(x)-0.55)^2)*(1-0.3*y^2) - 0.22*exp(-8*y^2)`. Let RMSE be the root-mean-square difference between each vertex Z and that target, and let H be the mean absolute vertex height. The score is `max(0, 100 - 110*RMSE - 15*abs(H-0.13) - 8*abs(X_span-2) - 8*abs(Y_span-2) - face_penalty)`, where `face_penalty = 0.03*(300-face_count)` below 300 faces, `0.002*(face_count-8000)` above 8000 faces, and zero otherwise. Higher is better. The supplied ground truth is a baseline/reference solution, not a required optimum.",
   "possibility_of_env_change": "low",
   "proxy": false,
   "related_apps": [

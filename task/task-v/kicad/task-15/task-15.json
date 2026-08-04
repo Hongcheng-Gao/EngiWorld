@@ -1,7 +1,7 @@
 {
   "id": "v-kicad-task-15-ubuntu",
   "snapshot": "kicad-10.0.2",
-  "instruction": "Teardrop Generation The file `board.kicad_pcb` is a routed PCB with 3 footprints (R1, R2, C1), each with 2 SMD pads, and one via. No teardrops are present. The file `/home/user/Desktop/NO_TEAR.txt` lists one net name per line that must be excluded from teardrop generation. Add teardrops to every pad and via whose net is NOT listed in /home/user/Desktop/NO_TEAR.txt. Represent each teardrop as a (zone...) block with a (teardrop yes) attribute and a (filled_polygon...) child defining the teardrop shape. Requirements: 1. The output contains at least 7 teardrop zone blocks. 2. Teardrop zones exist for nets SIG_A, GND, and VCC. 3. No teardrop zones for any net listed in /home/user/Desktop/NO_TEAR.txt. 4. Each teardrop zone has a (teardrop yes) attribute and a (filled_polygon...) with at least 3 (xy...) points. 5. The original via count (1) and pad count (6) must remain unchanged. Write /home/user/Desktop/answer.kicad_pcb.",
+  "instruction": "Teardrop Generation. The opened `board.kicad_pcb` is routed and contains six SMD pads plus one via. `NO_TEAR.txt` lists net names to exclude. In PCB Editor, add pad/via teardrops to every eligible connection whose net is not listed, refill the board, and save `/home/user/Desktop/answer.kicad_pcb`.\n\nThe saved board must contain at least seven native teardrop zone blocks, including SIG_A, GND, and VCC and none for an excluded net. Each teardrop zone must use KiCad's native `(attr (teardrop (type padvia)))` form and contain a filled polygon with at least three points. Preserve the original one via and six pads.",
   "source": "https://docs.kicad.org/9.0/en/; https://docs.kicad.org/9.0/en/pcbnew/pcbnew.html",
   "config": [
     {

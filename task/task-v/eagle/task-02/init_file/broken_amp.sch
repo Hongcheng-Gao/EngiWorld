@@ -6212,7 +6212,7 @@ High-speed diodes (Philips)</description>
 <pinref part="IC1" gate="G$1" pin="OSC1"/>
 <pinref part="C5" gate="G$1" pin="2"/>
 <pinref part="Q1" gate="G$1" pin="2"/>
-<pinref part="GHOST_PART" gate="G$1" pin="1"/>
+<pinref part="Q1" gate="G$1" pin="1"/>
 </segment>
 </net>
 <net name="N$4" class="0">

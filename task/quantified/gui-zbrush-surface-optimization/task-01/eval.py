@@ -8,9 +8,9 @@ from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop"))
 TASK = json.loads(r"""{
-  "instruction_tail": "Sculpt a comfortable grip surface with three longitudinal grooves and a smooth center ridge.",
+  "instruction_tail": "Optimize an ergonomic grip relief surface. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Form three longitudinal grooves with a smooth central ridge.",
   "kind": "grip",
-  "metric": "profile fit, groove definition, and smoothness",
+  "metric": "target height-field RMSE with span, mean-height, and face-count penalties",
   "target": {
     "amp": 0.32,
     "freq": 3.0,

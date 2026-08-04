@@ -18,10 +18,26 @@
     <schematic xreflabel="%F%N/%S.%C%R" xrefpart="/%S.%C%R">
       <libraries>
         <library name="linear">
-          <devicesets>
+          <symbols>
+<symbol name="555">
+<wire x1="-7.62" y1="-10.16" x2="7.62" y2="-10.16" width="0.4064" layer="94"/>
+<wire x1="7.62" y1="-10.16" x2="7.62" y2="10.16" width="0.4064" layer="94"/>
+<wire x1="7.62" y1="10.16" x2="-7.62" y2="10.16" width="0.4064" layer="94"/>
+<wire x1="-7.62" y1="10.16" x2="-7.62" y2="-10.16" width="0.4064" layer="94"/>
+<pin name="TR" x="-10.16" y="7.62" length="short" direction="in"/>
+<pin name="Q" x="10.16" y="7.62" length="short" direction="out" rot="R180"/>
+<pin name="R" x="-10.16" y="2.54" length="short" direction="in" function="dot"/>
+<pin name="CV" x="-10.16" y="-2.54" length="short" direction="in"/>
+<pin name="THR" x="10.16" y="-2.54" length="short" direction="in" rot="R180"/>
+<pin name="DIS" x="10.16" y="2.54" length="short" direction="in" rot="R180"/>
+<pin name="V+" x="10.16" y="-7.62" length="short" direction="pwr" rot="R180"/>
+<pin name="GND" x="-10.16" y="-7.62" length="short" direction="pwr"/>
+</symbol>
+</symbols>
+<devicesets>
             <deviceset name="*555">
               <gates>
-                <gate name="G$1" symbol="*555" x="0" y="0" />
+                <gate name="G$1" symbol="555" x="0" y="0" />
               </gates>
               <devices>
                 <device name="">
@@ -34,7 +50,11 @@
           </devicesets>
         </library>
         <library name="rcl">
-          <devicesets>
+          <symbols>
+<symbol name="R"><wire x1="-2.54" y1="0" x2="2.54" y2="0" width="0.254" layer="94"/><pin name="1" x="-5.08" y="0" length="short" direction="pas"/><pin name="2" x="5.08" y="0" length="short" direction="pas" rot="R180"/></symbol>
+<symbol name="C"><wire x1="-0.635" y1="2.54" x2="-0.635" y2="-2.54" width="0.254" layer="94"/><wire x1="0.635" y1="2.54" x2="0.635" y2="-2.54" width="0.254" layer="94"/><pin name="1" x="-5.08" y="0" length="short" direction="pas"/><pin name="2" x="5.08" y="0" length="short" direction="pas" rot="R180"/></symbol>
+</symbols>
+<devicesets>
             <deviceset name="R">
               <gates>
                 <gate name="G$1" symbol="R" x="0" y="0" />
@@ -62,7 +82,10 @@
           </devicesets>
         </library>
         <library name="led">
-          <devicesets>
+          <symbols>
+<symbol name="LED"><wire x1="-1.27" y1="1.27" x2="1.27" y2="0" width="0.254" layer="94"/><wire x1="1.27" y1="0" x2="-1.27" y2="-1.27" width="0.254" layer="94"/><pin name="A" x="-5.08" y="0" length="short" direction="pas"/><pin name="C" x="5.08" y="0" length="short" direction="pas" rot="R180"/></symbol>
+</symbols>
+<devicesets>
             <deviceset name="LED">
               <gates>
                 <gate name="G$1" symbol="LED" x="0" y="0" />
@@ -108,7 +131,8 @@
               <segment>
                 <wire x1="10" y1="10" x2="65" y2="10" width="0.1524" layer="91" />
                 <label x="12" y="10" size="1.778" layer="95" />
-                <pinref part="U1" gate="G$1" pin="VCC" />
+                <pinref part="U1" gate="G$1" pin="V+" />
+                <pinref part="U1" gate="G$1" pin="R" />
                 <pinref part="R1" gate="G$1" pin="1" />
                 <pinref part="C2" gate="G$1" pin="1" />
               </segment>
@@ -120,15 +144,15 @@
                 <pinref part="U1" gate="G$1" pin="GND" />
                 <pinref part="C1" gate="G$1" pin="2" />
                 <pinref part="C2" gate="G$1" pin="2" />
-                <pinref part="LED1" gate="G$1" pin="K" />
+                <pinref part="LED1" gate="G$1" pin="C" />
               </segment>
             </net>
             <net name="TRIG_THRES" class="0">
               <segment>
                 <wire x1="10" y1="26" x2="65" y2="26" width="0.1524" layer="91" />
                 <label x="12" y="26" size="1.778" layer="95" />
-                <pinref part="U1" gate="G$1" pin="TRIG" />
-                <pinref part="U1" gate="G$1" pin="THRES" />
+                <pinref part="U1" gate="G$1" pin="TR" />
+                <pinref part="U1" gate="G$1" pin="THR" />
                 <pinref part="C1" gate="G$1" pin="1" />
                 <pinref part="R2" gate="G$1" pin="2" />
               </segment>
@@ -137,7 +161,7 @@
               <segment>
                 <wire x1="10" y1="34" x2="65" y2="34" width="0.1524" layer="91" />
                 <label x="12" y="34" size="1.778" layer="95" />
-                <pinref part="U1" gate="G$1" pin="DISCH" />
+                <pinref part="U1" gate="G$1" pin="DIS" />
                 <pinref part="R1" gate="G$1" pin="2" />
                 <pinref part="R2" gate="G$1" pin="1" />
               </segment>
@@ -146,7 +170,7 @@
               <segment>
                 <wire x1="10" y1="42" x2="65" y2="42" width="0.1524" layer="91" />
                 <label x="12" y="42" size="1.778" layer="95" />
-                <pinref part="U1" gate="G$1" pin="OUT" />
+                <pinref part="U1" gate="G$1" pin="Q" />
                 <pinref part="LED1" gate="G$1" pin="A" />
               </segment>
             </net>
@@ -154,7 +178,7 @@
               <segment>
                 <wire x1="10" y1="50" x2="65" y2="50" width="0.1524" layer="91" />
                 <label x="12" y="50" size="1.778" layer="95" />
-                <pinref part="U1" gate="G$1" pin="CTRL" />
+                <pinref part="U1" gate="G$1" pin="CV" />
               </segment>
             </net>
           </nets>

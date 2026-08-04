@@ -163,7 +163,8 @@ def check():
     if not {"VCC", "GND", "TRIG_THRES", "DISCH", "OUT", "CTRL"}.issubset(net_names):
         return False
     pinrefs = {(p.get("part"), p.get("pin")) for p in root.findall(".//pinref")}
-    return ("U1", "OUT") in pinrefs and ("LED1", "A") in pinrefs and ("U1", "TRIG") in pinrefs and ("U1", "THRES") in pinrefs
+    required_u1 = {("U1", pin) for pin in ("V+", "GND", "TR", "THR", "DIS", "Q", "CV", "R")}
+    return required_u1.issubset(pinrefs) and ("LED1", "A") in pinrefs
 
 
 if __name__ == "__main__":

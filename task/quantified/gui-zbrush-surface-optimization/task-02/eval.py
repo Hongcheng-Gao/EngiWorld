@@ -8,9 +8,9 @@ from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop"))
 TASK = json.loads(r"""{
-  "instruction_tail": "Create a weathered-rock surface that has strong planar breaks without collapsing the overall volume.",
+  "instruction_tail": "Optimize a weathered-rock planar-break surface. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Create strong, coherent planar breaks by fitting the specified height field; this task scores the open surface geometry and does not use or infer enclosed volume.",
   "kind": "rock",
-  "metric": "facet contrast with volume stability",
+  "metric": "planar-break height-field RMSE with span, mean-height, and face-count penalties",
   "target": {
     "amp": 0.42,
     "freq": 5.0,

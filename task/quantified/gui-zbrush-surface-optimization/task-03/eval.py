@@ -8,9 +8,9 @@ from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop"))
 TASK = json.loads(r"""{
-  "instruction_tail": "Shape the compression map so the sealing band is high and continuous while the outer rim stays flat.",
+  "instruction_tail": "Optimize a gasket sealing-band relief surface. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Make the annular sealing band high and uniform while keeping the outer area flat; the measured quantity is sealing-band height uniformity, not material compression inferred from the OBJ.",
   "kind": "gasket",
-  "metric": "seal compression uniformity and edge flatness",
+  "metric": "sealing-band height-field RMSE with span, mean-height, and face-count penalties",
   "target": {
     "amp": 0.24,
     "freq": 4.0,
