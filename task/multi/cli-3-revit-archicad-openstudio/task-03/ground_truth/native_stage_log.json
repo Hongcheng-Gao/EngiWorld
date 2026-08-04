@@ -1,0 +1,61 @@
+{
+  "schema_version": 1,
+  "stages": [
+    {
+      "stage": "revit",
+      "executable": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+      "product_version": "25.0.0.0",
+      "automation_entry": "C:\\ProgramData\\Autodesk\\Revit\\Addins\\2025\\EngiWorld.BimBridge.addin",
+      "command": "Revit.exe /language ENU /nosplash (ENGIWORLD_BIM_STAGE=revit)",
+      "started_utc": "2026-07-06T10:49:33Z",
+      "finished_utc": "2026-07-06T10:50:51Z",
+      "exit_code": 0,
+      "input_file": "init.ifc",
+      "input_sha256": "fcd73db6fa6da281372b326290865d039074ec77b00a9e6b98f52e76022a4c1c",
+      "output_file": "stage1.ifc",
+      "output_sha256": "64778083ed2a113bbf8cb8e02c78cf29d199b1274a2c030830f387bc1cfe1d0a",
+      "handoff_file": "revit_handoff.json",
+      "handoff_sha256": "ae749ee8cebd0d2df2fdd7f583cdee9e9b01613cdb48e2dc07a52a0145f40a8c"
+    },
+    {
+      "stage": "archicad",
+      "executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe",
+      "product_version": "Archicad 27.0.0 R1 build 6000",
+      "automation_entry": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe",
+      "command": "IFCCommandServerApp.exe --job workflow_spec.json --input-ifc stage1.ifc --translator archicad_ifc4_translator.json --output-ifc stage2.ifc",
+      "started_utc": "2026-07-06T10:51:02Z",
+      "finished_utc": "2026-07-06T10:51:44Z",
+      "exit_code": 0,
+      "input_file": "stage1.ifc",
+      "input_sha256": "64778083ed2a113bbf8cb8e02c78cf29d199b1274a2c030830f387bc1cfe1d0a",
+      "input_handoff_sha256": "ae749ee8cebd0d2df2fdd7f583cdee9e9b01613cdb48e2dc07a52a0145f40a8c",
+      "output_file": "stage2.ifc",
+      "output_sha256": "2981d7f2ba4f960059b1f3d78a8808b2d95f9241fdac814968ecd9ef41fac4d5",
+      "handoff_file": "archicad_handoff.json",
+      "handoff_sha256": "ee46334618c65b0042db6d7fe965ab3fb01b7f13f388463cba8779fb4e84b634",
+      "validation_report_sha256": "dce0e6122bf3669fc005166cfde5a58b0df65d104c9a92e74bf0d03c43bc5c31",
+      "translator_sha256": "0dcc1b632112be3cfcd66f65532c978c9cfa0c6097382f717d0c736e30daabed"
+    },
+    {
+      "stage": "openstudio",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "invoked_executable": "/tmp/openstudio-3.10.0-arm64/bin/openstudio",
+      "product_version": "3.10.0+ce46db07de",
+      "automation_entry": "/Users/leiyu/workspace/Engiworld/task/multi/cli-3-revit-archicad-openstudio/_common/openstudio_ifc_to_energy.rb",
+      "command": "openstudio.exe openstudio_ifc_to_energy.rb --spec workflow_spec.json --handoff archicad_handoff.json --ifc stage2.ifc --weather weather.epw",
+      "started_utc": "2026-08-04T10:35:32Z",
+      "finished_utc": "2026-08-04T10:35:32Z",
+      "exit_code": 0,
+      "input_file": "stage2.ifc",
+      "input_sha256": "2981d7f2ba4f960059b1f3d78a8808b2d95f9241fdac814968ecd9ef41fac4d5",
+      "input_handoff_sha256": "ee46334618c65b0042db6d7fe965ab3fb01b7f13f388463cba8779fb4e84b634",
+      "output_file": "result.osm",
+      "output_sha256": "08aef9cfdbf424d63948c301cfc6f522653a1fc36890020f958cd40062fdd907",
+      "idf_sha256": "5506f1750c477f11b72d72ea3832bbc138366440eb47d6a940c18013fc561f04",
+      "workflow_sha256": "6c16fc85ed1464fd70f4a94ef11570f80d3f6dfefbdfa629ad3149e4fe275e20",
+      "energyplus_executable": "/tmp/openstudio-3.10.0-arm64/EnergyPlus/energyplus",
+      "eplusout_sql_sha256": "2468f71ec9e8619d27b569ed1fb486b1140c5b7d4c1fac329ccf3019fc513714",
+      "eplusout_err_sha256": "fcb6de31689bb80d9905b9a47db184aee5f1c11cedde28fe13485aa42eee8d42"
+    }
+  ]
+}

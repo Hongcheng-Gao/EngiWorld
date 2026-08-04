@@ -6,7 +6,11 @@ import csv
 import hashlib
 import json
 import math
+import os
 import re
+import shutil
+import sqlite3
+import subprocess
 import sys
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Set, Tuple
@@ -30,7 +34,14 @@ CASE_SPEC = {
     "in.idf",
     "flow_report.json",
     "model_summary.csv",
-    "energy_report.csv"
+    "energy_report.csv",
+    "workflow_spec.json",
+    "archicad_ifc4_translator.json",
+    "weather.epw",
+    "native_stage_log.json",
+    "workflow.osw",
+    "run/eplusout.sql",
+    "run/eplusout.err"
   ],
   "required_spaces": [
     "COMMUNITY-ACTIVITY",
@@ -358,6 +369,372 @@ def parse_ifc(path: Path, label: str, errors: List[str]) -> Dict[str, Any]:
     info["root_ids"] = root_ids
     info["names"] = names
     return info
+
+
+def regex_ifc_root_ids(text: str) -> Set[str]:
+    return {
+        match.group(1)
+        for match in re.finditer(
+            r"#\d+\s*=\s*IFC[A-Z0-9_]+\s*\(\s*'([0-9A-Za-z_$]{22})'",
+            text,
+            flags=re.IGNORECASE,
+        )
+    }
+
+
+def regex_ifc_spaces(text: str) -> Dict[str, str]:
+    spaces: Dict[str, str] = {}
+    pattern = re.compile(
+        r"#\d+\s*=\s*IFCSPACE\s*\(\s*'(?P<guid>[0-9A-Za-z_$]{22})'(?P<body>[^;]*?)\);",
+        flags=re.IGNORECASE | re.DOTALL,
+    )
+    for match in pattern.finditer(text):
+        strings = re.findall(r"'([^']*)'", match.group("body"))
+        for candidate in strings:
+            normalized = norm(candidate)
+            for required in CASE_SPEC["required_spaces"]:
+                if normalized == norm(required):
+                    spaces[required] = match.group("guid")
+    return spaces
+
+
+def check_global_id_retention(
+    upstream: Dict[str, Any],
+    downstream: Dict[str, Any],
+    minimum: float,
+    errors: List[str],
+    label: str,
+) -> None:
+    upstream_ids = set(upstream.get("root_ids") or []) or regex_ifc_root_ids(upstream["text"])
+    downstream_ids = set(downstream.get("root_ids") or []) or regex_ifc_root_ids(downstream["text"])
+    if not upstream_ids:
+        errors.append(f"{label}:upstream_has_no_ifcroot_globalids")
+        return
+    retained = len(upstream_ids & downstream_ids) / len(upstream_ids)
+    if retained < minimum:
+        errors.append(f"{label}:globalid_retention_too_low:{retained:.3f}<{minimum:.3f}")
+
+
+def check_workflow_contract(path: Path, translator_path: Path, errors: List[str]) -> Dict[str, Any]:
+    spec = load_json(path)
+    if spec.get("case_id") != CASE_SPEC["case_id"]:
+        errors.append("workflow_spec.json:case_id_mismatch")
+    fixed = spec.get("fixed_software")
+    if not isinstance(fixed, dict):
+        errors.append("workflow_spec.json:missing_fixed_software")
+    else:
+        expected_versions = {"revit": "2025", "archicad": "27", "openstudio": "3.10.0"}
+        for software, version in expected_versions.items():
+            if software not in fixed or not contains_token(fixed[software], version):
+                errors.append(f"workflow_spec.json:unpinned_{software}_version")
+            if software in fixed and not contains_token(fixed[software], "executable"):
+                errors.append(f"workflow_spec.json:missing_{software}_executable")
+    exchange = spec.get("ifc_exchange")
+    if not isinstance(exchange, dict) or not contains_token(exchange, "IFC4"):
+        errors.append("workflow_spec.json:missing_ifc4_exchange_contract")
+    spec_spaces = spec.get("spaces")
+    if not isinstance(spec_spaces, list):
+        errors.append("workflow_spec.json:missing_spaces")
+    else:
+        for required in CASE_SPEC["required_spaces"]:
+            matches = [row for row in spec_spaces if isinstance(row, dict) and row.get("name") == required]
+            if len(matches) != 1:
+                errors.append(f"workflow_spec.json:space_definition_count:{required}:{len(matches)}")
+                continue
+            row = matches[0]
+            geometry = row.get("energy_geometry")
+            semantics = row.get("energy_semantics")
+            if not isinstance(geometry, dict) or any(numeric_from_any(geometry.get(key)) in (None, 0.0) for key in ("width_m", "depth_m", "height_m")):
+                errors.append(f"workflow_spec.json:invalid_energy_geometry:{required}")
+            if not isinstance(semantics, dict) or any(numeric_from_any(semantics.get(key)) is None for key in ("people_per_m2", "lighting_w_per_m2", "equipment_w_per_m2", "outdoor_air_l_per_s_person")):
+                errors.append(f"workflow_spec.json:invalid_energy_semantics:{required}")
+    translator = load_json(translator_path)
+    if translator.get("archicad_major_version") != 27 or translator.get("schema") != "IFC4":
+        errors.append("archicad_ifc4_translator.json:version_or_schema_mismatch")
+    if not contains_token(translator, "IfcSpace") or not contains_token(translator, "space_boundaries"):
+        errors.append("archicad_ifc4_translator.json:missing_space_exchange_settings")
+    return spec
+
+
+def check_archicad_entity_counts(report: Dict[str, Any], stage2_info: Dict[str, Any], errors: List[str]) -> None:
+    rows = find_values(report, "entity_counts") + find_values(report, "ifc_counts")
+    counts = next((row for row in rows if isinstance(row, dict)), None)
+    if counts is None:
+        errors.append("archicad_validation_report:missing_entity_counts")
+        return
+    normalized_counts = {norm(key): numeric_from_any(value) for key, value in counts.items()}
+    for cls in IFC_CLASSES:
+        reported = normalized_counts.get(norm(cls))
+        actual = stage2_info["counts"].get(cls, 0)
+        if reported is None or int(round(reported)) != actual:
+            errors.append(f"archicad_validation_report:entity_count_mismatch:{cls}:{reported}!={actual}")
+
+
+def check_handoff_ifc_space_identity(data: Dict[str, Any], stage2_info: Dict[str, Any], spec: Dict[str, Any], errors: List[str]) -> None:
+    ifc_spaces = regex_ifc_spaces(stage2_info["text"])
+    rows = structured_rows(data, ("spaces", "rooms", "ifc_spaces"))
+    spec_rows = {row.get("name"): row for row in spec.get("spaces", []) if isinstance(row, dict)}
+    for required in CASE_SPEC["required_spaces"]:
+        matching = [row for row in rows if str(row.get("name", "")) == required]
+        if len(matching) != 1:
+            errors.append(f"archicad_handoff.json:space_row_count:{required}:{len(matching)}")
+            continue
+        row = matching[0]
+        if row.get("ifc_guid") != ifc_spaces.get(required):
+            errors.append(f"archicad_handoff.json:ifc_guid_mismatch:{required}")
+        spec_row = spec_rows.get(required, {})
+        geometry = spec_row.get("energy_geometry", {}) if isinstance(spec_row, dict) else {}
+        rectangle_area = numeric_from_any(geometry.get("width_m"))
+        depth = numeric_from_any(geometry.get("depth_m"))
+        reported_area = numeric_from_any(row.get("area_m2"))
+        if rectangle_area is None or depth is None or reported_area is None or abs(rectangle_area * depth - reported_area) > max(0.2, reported_area * 0.01):
+            errors.append(f"archicad_handoff.json:energy_geometry_area_mismatch:{required}")
+        semantics = spec_row.get("energy_semantics", {}) if isinstance(spec_row, dict) else {}
+        for key in ("schedule_category", "people_per_m2", "lighting_w_per_m2", "equipment_w_per_m2", "outdoor_air_l_per_s_person"):
+            if key not in semantics:
+                errors.append(f"workflow_spec.json:space_missing_semantic:{required}:{key}")
+                continue
+            expected = semantics[key]
+            delivered = row.get(key)
+            if isinstance(expected, (int, float)):
+                delivered_number = numeric_from_any(delivered)
+                if delivered_number is None or abs(delivered_number - float(expected)) > 1e-6:
+                    errors.append(f"archicad_handoff.json:space_semantic_mismatch:{required}:{key}")
+            elif str(delivered) != str(expected):
+                errors.append(f"archicad_handoff.json:space_semantic_mismatch:{required}:{key}")
+
+
+def check_ifc_native_header(info: Dict[str, Any], filename: str, software: str, errors: List[str], label: str) -> None:
+    header = info["text"][:5000]
+    if not re.search(rf"FILE_NAME\s*\(\s*'{re.escape(filename)}'", header, flags=re.IGNORECASE):
+        errors.append(f"{label}:file_name_header_mismatch")
+    if software.upper() not in header.upper():
+        errors.append(f"{label}:native_software_header_missing:{software}")
+
+
+def check_ifc_space_semantics(path: Path, handoff: Dict[str, Any] | None, errors: List[str], label: str) -> None:
+    try:
+        import ifcopenshell  # type: ignore
+        import ifcopenshell.util.element  # type: ignore
+    except Exception:
+        errors.append(f"{label}:ifcopenshell_required_for_semantic_validation")
+        return
+    try:
+        model = ifcopenshell.open(str(path))
+    except Exception as exc:
+        errors.append(f"{label}:ifcopenshell_parse_failed:{type(exc).__name__}")
+        return
+    spaces = {str(space.Name): space for space in model.by_type("IfcSpace") if getattr(space, "Name", None)}
+    handoff_rows = {
+        str(row.get("name")): row
+        for row in (structured_rows(handoff, ("spaces", "rooms", "ifc_spaces")) if handoff else [])
+    }
+    for required in CASE_SPEC["required_spaces"]:
+        space = spaces.get(required)
+        if space is None:
+            errors.append(f"{label}:missing_named_ifcspace:{required}")
+            continue
+        if not space.ObjectPlacement or not space.Representation:
+            errors.append(f"{label}:space_missing_geometry:{required}")
+        if not any(rel.is_a("IfcRelAggregates") and rel.RelatingObject.is_a("IfcBuildingStorey") for rel in getattr(space, "Decomposes", [])):
+            errors.append(f"{label}:space_not_aggregated_by_storey:{required}")
+        psets = ifcopenshell.util.element.get_psets(space, psets_only=True)
+        qtos = ifcopenshell.util.element.get_psets(space, qtos_only=True)
+        energy = psets.get("EngiWorld_EnergyHandoff", {})
+        quantities = qtos.get("Qto_SpaceBaseQuantities", {})
+        if not energy:
+            errors.append(f"{label}:space_missing_energy_pset:{required}")
+        if numeric_from_any(quantities.get("GrossFloorArea")) in (None, 0.0):
+            errors.append(f"{label}:space_missing_gross_floor_area:{required}")
+        if handoff:
+            row = handoff_rows.get(required, {})
+            if str(getattr(space, "GlobalId", "")) != str(row.get("ifc_guid", "")):
+                errors.append(f"{label}:space_globalid_handoff_mismatch:{required}")
+            if numeric_from_any(row.get("area_m2")) is not None and numeric_from_any(quantities.get("GrossFloorArea")) is not None:
+                if abs(float(row["area_m2"]) - float(quantities["GrossFloorArea"])) > 0.05:
+                    errors.append(f"{label}:space_area_handoff_mismatch:{required}")
+            property_map = {
+                "thermal_zone": "ThermalZone",
+                "schedule_category": "ScheduleCategory",
+                "lighting_w_per_m2": "LightingPowerDensityWPerM2",
+                "equipment_w_per_m2": "EquipmentPowerDensityWPerM2",
+                "people_per_m2": "PeoplePerM2",
+                "outdoor_air_l_per_s_person": "OutdoorAirLPerSPerson",
+            }
+            for handoff_key, pset_key in property_map.items():
+                delivered, ifc_value = row.get(handoff_key), energy.get(pset_key)
+                if isinstance(delivered, (int, float)):
+                    if numeric_from_any(ifc_value) is None or abs(float(delivered) - float(ifc_value)) > 1e-6:
+                        errors.append(f"{label}:space_property_handoff_mismatch:{required}:{handoff_key}")
+                elif str(delivered) != str(ifc_value):
+                    errors.append(f"{label}:space_property_handoff_mismatch:{required}:{handoff_key}")
+
+
+def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]) -> None:
+    data = load_json(path)
+    stages = data.get("stages")
+    if not isinstance(stages, list) or [stage.get("stage") for stage in stages if isinstance(stage, dict)] != ["revit", "archicad", "openstudio"]:
+        errors.append("native_stage_log.json:stage_order_mismatch")
+        return
+    expectations = [
+        ("revit", "Revit 2025", paths["init.ifc"], paths["stage1.ifc"]),
+        ("archicad", "Archicad 27", paths["stage1.ifc"], paths["stage2.ifc"]),
+        ("openstudio", "3.10.0", paths["stage2.ifc"], paths["result.osm"]),
+    ]
+    for stage, version_token, source, output in expectations:
+        row = next((item for item in stages if isinstance(item, dict) and item.get("stage") == stage), {})
+        if numeric_from_any(row.get("exit_code")) != 0:
+            errors.append(f"native_stage_log.json:{stage}:nonzero_exit")
+        if not contains_token(row, version_token):
+            errors.append(f"native_stage_log.json:{stage}:version_mismatch")
+        if not str(row.get("executable", "")).lower().endswith(".exe"):
+            errors.append(f"native_stage_log.json:{stage}:missing_native_executable")
+        if not str(row.get("automation_entry", "")).strip():
+            errors.append(f"native_stage_log.json:{stage}:missing_automation_entry")
+        if str(row.get("input_sha256", "")).lower() != sha256_file(source):
+            errors.append(f"native_stage_log.json:{stage}:input_sha256_mismatch")
+        if str(row.get("output_sha256", "")).lower() != sha256_file(output):
+            errors.append(f"native_stage_log.json:{stage}:output_sha256_mismatch")
+        if not row.get("started_utc") or not row.get("finished_utc"):
+            errors.append(f"native_stage_log.json:{stage}:missing_timestamps")
+    archicad = stages[1]
+    if str(archicad.get("input_handoff_sha256", "")).lower() != sha256_file(paths["revit_handoff.json"]):
+        errors.append("native_stage_log.json:archicad:input_handoff_sha256_mismatch")
+    openstudio = stages[2]
+    if str(openstudio.get("input_handoff_sha256", "")).lower() != sha256_file(paths["archicad_handoff.json"]):
+        errors.append("native_stage_log.json:openstudio:input_handoff_sha256_mismatch")
+    for key, filename in (("idf_sha256", "in.idf"), ("workflow_sha256", "workflow.osw"), ("eplusout_sql_sha256", "run/eplusout.sql"), ("eplusout_err_sha256", "run/eplusout.err")):
+        if str(openstudio.get(key, "")).lower() != sha256_file(paths[filename]):
+            errors.append(f"native_stage_log.json:openstudio:{key}_mismatch")
+
+
+def sql_table_exists(conn: sqlite3.Connection, name: str) -> bool:
+    return conn.execute("select 1 from sqlite_master where type in ('table','view') and name = ?", (name,)).fetchone() is not None
+
+
+def read_energyplus_sql(path: Path, required_zones: List[str], errors: List[str], label: str) -> Dict[str, Any]:
+    if path.stat().st_size < 4096:
+        errors.append(f"{label}:too_small")
+        return {}
+    try:
+        conn = sqlite3.connect(str(path))
+    except Exception as exc:
+        errors.append(f"{label}:open_failed:{type(exc).__name__}")
+        return {}
+    result: Dict[str, Any] = {}
+    try:
+        required_tables = ("Simulations", "Zones", "ReportDataDictionary", "ReportData", "Time", "TabularDataWithStrings")
+        for table in required_tables:
+            if not sql_table_exists(conn, table):
+                errors.append(f"{label}:missing_standard_table:{table}")
+        if errors and any(error.startswith(f"{label}:missing_standard_table") for error in errors):
+            return result
+        version_row = conn.execute("select EnergyPlusVersion from Simulations limit 1").fetchone()
+        result["version"] = str(version_row[0]) if version_row else ""
+        if "25.1" not in result["version"]:
+            errors.append(f"{label}:energyplus_version_not_25_1")
+        zone_rows = conn.execute("select ZoneName, FloorArea from Zones where IsPartOfTotalArea = 1").fetchall()
+        result["zones"] = {str(name).upper(): float(area or 0.0) for name, area in zone_rows}
+        for zone in required_zones:
+            if zone.upper() not in result["zones"]:
+                errors.append(f"{label}:missing_zone:{zone}")
+        energy_row = conn.execute(
+            "select Units, Value from TabularDataWithStrings "
+            "where ReportName='AnnualBuildingUtilityPerformanceSummary' "
+            "and TableName='Site and Source Energy' and RowName='Total Site Energy' "
+            "and ColumnName='Total Energy' limit 1"
+        ).fetchone()
+        if not energy_row:
+            errors.append(f"{label}:missing_total_site_energy")
+        else:
+            units, value = str(energy_row[0]).upper(), float(str(energy_row[1]).strip())
+            result["total_site_energy_kwh"] = value * 277.7777777778 if units == "GJ" else value
+            if result["total_site_energy_kwh"] <= 0:
+                errors.append(f"{label}:nonpositive_total_site_energy")
+    except Exception as exc:
+        errors.append(f"{label}:query_failed:{type(exc).__name__}:{exc}")
+    finally:
+        conn.close()
+    return result
+
+
+def check_energyplus_outputs(paths: Dict[str, Path], handoff: Dict[str, Any], errors: List[str]) -> Dict[str, Any]:
+    err_text = read_text(paths["run/eplusout.err"])
+    if "EnergyPlus Completed Successfully" not in err_text:
+        errors.append("eplusout.err:simulation_not_successful")
+    if re.search(r"\*\*\s+Fatal\s+\*\*", err_text, flags=re.IGNORECASE):
+        errors.append("eplusout.err:fatal_error")
+    metrics = read_energyplus_sql(paths["run/eplusout.sql"], CASE_SPEC["required_zones"], errors, "eplusout.sql")
+    space_rows = structured_rows(handoff, ("spaces", "rooms", "ifc_spaces"))
+    zone_area_by_name = metrics.get("zones", {})
+    for row in space_rows:
+        zone = str(row.get("thermal_zone", "")).upper()
+        handoff_area = numeric_from_any(row.get("area_m2"))
+        sql_area = numeric_from_any(zone_area_by_name.get(zone))
+        if handoff_area is None or sql_area is None or abs(handoff_area - sql_area) > max(0.5, handoff_area * 0.02):
+            errors.append(f"eplusout.sql:zone_area_mismatch:{zone}")
+    with paths["energy_report.csv"].open("r", encoding="utf-8", newline="") as handle:
+        report_rows = list(csv.DictReader(handle))
+    if report_rows and metrics.get("total_site_energy_kwh") is not None:
+        reported = numeric_value(report_rows[0], "total_site_energy_kwh")
+        actual = float(metrics["total_site_energy_kwh"])
+        if reported is None or abs(reported - actual) > max(1.0, actual * 0.01):
+            errors.append("energy_report.csv:total_site_energy_mismatch_with_sql")
+        sql_hash = next((str(value).lower() for key, value in report_rows[0].items() if norm(key) == norm("simulation_sql_sha256")), "")
+        if sql_hash != sha256_file(paths["run/eplusout.sql"]):
+            errors.append("energy_report.csv:simulation_sql_sha256_mismatch")
+    flow = load_json(paths["flow_report.json"])
+    for key, filename in (("eplusout_sql_sha256", "run/eplusout.sql"), ("eplusout_err_sha256", "run/eplusout.err"), ("workflow_sha256", "workflow.osw")):
+        if not any_hash_field(flow, key, sha256_file(paths[filename])):
+            errors.append(f"flow_report:{key}_mismatch")
+    return metrics
+
+
+def find_energyplus_binary() -> str | None:
+    configured = os.environ.get("ENGIWORLD_ENERGYPLUS_EXE")
+    candidates = [
+        configured,
+        shutil.which("energyplus"),
+        r"C:\openstudio-3.10.0\EnergyPlus\energyplus.exe",
+        r"C:\openstudio-3.10.0\bin\energyplus.exe",
+    ]
+    for candidate in candidates:
+        if candidate and Path(candidate).is_file():
+            return str(candidate)
+    return None
+
+
+def rerun_energyplus(paths: Dict[str, Path], submitted_metrics: Dict[str, Any], errors: List[str]) -> None:
+    binary = find_energyplus_binary()
+    if not binary:
+        errors.append("energyplus_cli:not_found")
+        return
+    rerun_dir = paths["in.idf"].parent / "_eval_energyplus_rerun"
+    shutil.rmtree(rerun_dir, ignore_errors=True)
+    rerun_dir.mkdir(parents=True, exist_ok=True)
+    try:
+        proc = subprocess.run(
+            [binary, "-x", "-w", str(paths["weather.epw"]), "-d", str(rerun_dir), str(paths["in.idf"])],
+            text=True,
+            capture_output=True,
+            timeout=300,
+        )
+    except Exception as exc:
+        errors.append(f"energyplus_rerun:failed:{type(exc).__name__}:{exc}")
+        return
+    if proc.returncode != 0:
+        errors.append(f"energyplus_rerun:nonzero_exit:{proc.returncode}")
+        return
+    rerun_err = rerun_dir / "eplusout.err"
+    rerun_sql = rerun_dir / "eplusout.sql"
+    if not rerun_err.is_file() or "EnergyPlus Completed Successfully" not in read_text(rerun_err):
+        errors.append("energyplus_rerun:simulation_not_successful")
+        return
+    rerun_metrics = read_energyplus_sql(rerun_sql, CASE_SPEC["required_zones"], errors, "energyplus_rerun.sql")
+    submitted = numeric_from_any(submitted_metrics.get("total_site_energy_kwh"))
+    rerun = numeric_from_any(rerun_metrics.get("total_site_energy_kwh"))
+    if submitted is None or rerun is None or abs(submitted - rerun) > max(1.0, rerun * 0.01):
+        errors.append("energyplus_rerun:total_site_energy_mismatch")
 
 
 def check_ifc_basic(
@@ -740,6 +1117,8 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     if errors:
         return False, errors
 
+    workflow_spec = check_workflow_contract(paths["workflow_spec.json"], paths["archicad_ifc4_translator.json"], errors)
+
     init_path = paths["init.ifc"]
     init_info = check_ifc_basic(
         init_path,
@@ -760,7 +1139,10 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     if CASE_SPEC.get("min_roofs", 0):
         stage1_min_counts["IfcRoof"] = CASE_SPEC.get("min_roofs", 0)
     stage1_info = check_ifc_basic(stage1, CASE_SPEC["stage1_tokens"], stage1_min_counts, errors, "stage1.ifc")
+    check_ifc_native_header(stage1_info, "stage1.ifc", "Autodesk Revit", errors, "stage1.ifc")
+    check_ifc_space_semantics(stage1, None, errors, "stage1.ifc")
     check_stage_derives_from_init(init_path, stage1, init_info, stage1_info, errors)
+    check_global_id_retention(init_info, stage1_info, 0.70, errors, "init_to_stage1")
 
     if CASE_SPEC["mode"] == "two_stage":
         handoff = paths["handoff.json"]
@@ -797,8 +1179,11 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
         stage2 = paths["stage2.ifc"]
         stage2_min_counts = dict(stage1_min_counts)
         stage2_info = check_ifc_basic(stage2, CASE_SPEC["stage2_tokens"], stage2_min_counts, errors, "stage2.ifc")
+        check_ifc_native_header(stage2_info, "stage2.ifc", "GRAPHISOFT Archicad", errors, "stage2.ifc")
         check_stage2_derives_from_stage1(stage1, stage2, stage1_info, stage2_info, errors)
-        check_validation_report(paths["archicad_validation_report.json"], stage1, stage2, CASE_SPEC["required_spaces"], CASE_SPEC["stage2_tokens"], errors)
+        check_global_id_retention(stage1_info, stage2_info, 0.70, errors, "stage1_to_stage2")
+        archicad_report = check_validation_report(paths["archicad_validation_report.json"], stage1, stage2, CASE_SPEC["required_spaces"], CASE_SPEC["stage2_tokens"], errors)
+        check_archicad_entity_counts(archicad_report, stage2_info, errors)
         archicad_handoff = paths["archicad_handoff.json"]
         archicad_handoff_data = check_handoff(
             archicad_handoff,
@@ -813,6 +1198,8 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
         )
         if not any_hash_field(archicad_handoff_data, "stage1_sha256", sha256_file(stage1)):
             errors.append("archicad_handoff.json:stage1_sha256_mismatch")
+        check_handoff_ifc_space_identity(archicad_handoff_data, stage2_info, workflow_spec, errors)
+        check_ifc_space_semantics(stage2, archicad_handoff_data, errors, "stage2.ifc")
         archicad_model = collect_archicad_energy_model(archicad_handoff_data, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors)
         archicad_handoff_hash = sha256_file(archicad_handoff)
         stage2_hash = sha256_file(stage2)
@@ -823,6 +1210,9 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
         check_flow_report(paths["flow_report.json"], archicad_handoff, paths["result.osm"], CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors, idf_path=paths["in.idf"], energy_report_path=paths["energy_report.csv"], stage2_path=stage2, metadata=metadata)
         check_model_summary_csv(paths["model_summary.csv"], archicad_handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], CASE_SPEC.get("summary_tokens", []), errors, stage2_hash=stage2_hash, expected_area_m2=expected_area, metadata=metadata)
         check_energy_report_csv(paths["energy_report.csv"], archicad_handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors, stage2_hash=stage2_hash, expected_area_m2=expected_area, metadata=metadata)
+        check_native_stage_log(paths["native_stage_log.json"], paths, errors)
+        submitted_metrics = check_energyplus_outputs(paths, archicad_handoff_data, errors)
+        rerun_energyplus(paths, submitted_metrics, errors)
 
     return not errors, errors
 
@@ -840,4 +1230,3 @@ def main() -> None:
 
 if __name__ == "__main__":
     main()
-

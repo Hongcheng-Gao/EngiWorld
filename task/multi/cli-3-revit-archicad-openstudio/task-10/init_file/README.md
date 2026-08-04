@@ -1,1 +1,1 @@
-This directory contains the task seed `init.ifc`. At VM runtime it is uploaded to `C:\Users\user\Desktop\init.ifc` and must be consumed by the Revit stage.
+This directory contains the task-10 three-storey program-stack seed and its executable workflow contract for one retained space per level, hosted openings, a Level 3 roof, and reception/studio/archive energy uses.

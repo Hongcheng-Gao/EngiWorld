@@ -1,3 +1,23 @@
 # Ground-truth generation notes
 
-Generated on the remote Windows OSWorld instance. The run records Revit add-in, Archicad IFC command server, and OpenStudio CLI provenance in `gt_manifest.json` and in the handoff files. The generated artifacts preserve the Revit -> Archicad -> OpenStudio dependency hashes checked by `eval.py`.
+This case uses the pinned Revit 2025, Archicad 27 build 6000, OpenStudio 3.10.0,
+and EnergyPlus 25.1.0 workflow recorded in `native_stage_log.json`. Its
+case-specific IFC spaces are `GARDEN-GALLERY` (39.44 m2), `ENTRY-NICHE` (5.80 m2), totaling 45.24 m2. Each space
+has geometry, storey containment, base quantities, and an
+`EngiWorld_EnergyHandoff` property set; Archicad retains the space GlobalIds.
+
+Run the supplied stages in order on the Windows task image:
+
+```powershell
+powershell -ExecutionPolicy Bypass -File C:\Users\user\Desktop\run_revit_stage.ps1
+powershell -ExecutionPolicy Bypass -File C:\Users\user\Desktop\run_archicad_stage.ps1
+powershell -ExecutionPolicy Bypass -File C:\Users\user\Desktop\run_openstudio_stage.ps1
+```
+
+The OpenStudio converter verifies `stage2.ifc` and the keyed Archicad handoff,
+builds separate geometry, zones, loads, schedules, outdoor air, thermostats and
+constructions, forward-translates `in.idf`, and runs an annual simulation. The
+evaluator parses the IFC semantic graph, reconciles Archicad entity counts,
+opens standard EnergyPlus SQLite tables, checks zone areas and reported energy,
+and reruns `in.idf` independently. Ground-truth validation returned `True` with
+no errors.

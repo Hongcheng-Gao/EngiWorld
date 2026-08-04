@@ -1,1 +1,1 @@
-This directory contains the task seed `init.ifc`. At VM runtime it is uploaded to `C:\Users\user\Desktop\init.ifc` and must be consumed by the Revit stage.
+This directory contains the task-07 library-annex seed and its executable workflow contract for five geometric spaces, hosted openings, and distinct public, reading, stack, staff, and support energy uses.

@@ -1,0 +1,22 @@
+{
+  "schema_version": 1,
+  "case_id": "multi-cli-3-revit-archicad-openstudio-task-05-windows",
+  "revision": "EW3B05",
+  "fixed_software": {
+    "revit": {"major_version": 2025, "executable": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe", "automation_entry": "C:\\ProgramData\\Autodesk\\Revit\\Addins\\2025\\EngiWorld.BimBridge.addin"},
+    "archicad": {"major_version": 27, "minimum_build": 6000, "executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe", "automation_entry": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe"},
+    "openstudio": {"version": "3.10.0", "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe", "energyplus_version": "25.1.0"}
+  },
+  "ifc_exchange": {"schema": "IFC4", "model_view": "ReferenceView", "space_boundary_level": 2, "minimum_global_id_retention": 0.7, "required_property_sets": ["Pset_SpaceCommon", "Qto_SpaceBaseQuantities", "EngiWorld_EnergyHandoff"]},
+  "revit_stage": {"input": "init.ifc", "output": "stage1.ifc", "handoff": "revit_handoff.json", "operation": "Preserve the two-storey massing, consolidate the ground public area, split Level 2 into activity and reading rooms, and retain a geometric stair opening.", "required_tokens": ["EW3B05", "GROUND-PUBLIC", "UPPER-ACTIVITY", "UPPER-READING", "STAIR-OPENING", "TWO-STOREY", "multi-cli-3-revit-archicad-openstudio-task-05-windows"]},
+  "archicad_stage": {"input": "stage1.ifc", "output": "stage2.ifc", "translator": "archicad_ifc4_translator.json", "operation": "Validate storey containment, stair opening relation and upper reading boundary, then export multi-storey energy fields keyed by IfcSpace GlobalId.", "required_tokens": ["ARCHICAD-QA-PASS", "STOREY-CONTAINMENT", "STAIR-OPENING-RELATION", "UPPER-READING-BOUNDARY", "GROUND-PUBLIC", "UPPER-ACTIVITY", "UPPER-READING", "multi-cli-3-revit-archicad-openstudio-task-05-windows"]},
+  "storeys": [{"name": "Level 1", "z_m": 0.0}, {"name": "Level 2", "z_m": 3.0}],
+  "opening_geometry": {"ifc_guid": "0QFjUApCH818ZKNssvtIXM", "storey": "Level 2", "host_slab_index": 1, "x_m": 4.0, "y_m": 2.4, "z_m": 3.0, "width_m": 2.0, "depth_m": 2.0, "height_m": 0.3},
+  "spaces": [
+    {"name": "GROUND-PUBLIC", "ifc_guid": "3Wgih0yJ93kwR5eUsrhivc", "thermal_zone": "GROUND-PUBLIC-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 0.0, "y_m": 0.0, "z_m": 0.0, "width_m": 9.6, "depth_m": 6.8, "height_m": 3.0}, "energy_semantics": {"schedule_category": "GROUND-PUBLIC-SCHEDULE", "people_per_m2": 0.12, "lighting_w_per_m2": 9.0, "equipment_w_per_m2": 5.0, "outdoor_air_l_per_s_person": 9.0}},
+    {"name": "UPPER-ACTIVITY", "ifc_guid": "3Wgih0yJ93kwR5eUsrhivZ", "thermal_zone": "UPPER-ACTIVITY-ZN", "storey": "Level 2", "energy_geometry": {"x_m": 0.0, "y_m": 0.0, "z_m": 3.0, "width_m": 7.0, "depth_m": 6.8, "height_m": 3.0}, "energy_semantics": {"schedule_category": "UPPER-ACTIVITY-SCHEDULE", "people_per_m2": 0.10, "lighting_w_per_m2": 8.0, "equipment_w_per_m2": 5.0, "outdoor_air_l_per_s_person": 9.0}},
+    {"name": "UPPER-READING", "ifc_guid": "0Ybsqn52HTpfkBfT2QZGgT", "thermal_zone": "UPPER-READING-ZN", "storey": "Level 2", "energy_geometry": {"x_m": 7.0, "y_m": 0.0, "z_m": 3.0, "width_m": 2.8, "depth_m": 6.8, "height_m": 3.0}, "energy_semantics": {"schedule_category": "READING-LOW-LIGHTING", "people_per_m2": 0.06, "lighting_w_per_m2": 4.0, "equipment_w_per_m2": 2.0, "outdoor_air_l_per_s_person": 7.5}}
+  ],
+  "handoff_tokens": ["GROUND-PUBLIC-SCHEDULE", "UPPER-ACTIVITY-SCHEDULE", "READING-LOW-LIGHTING", "MULTI-STOREY-HANDOFF"],
+  "osm_tokens": ["GroundPublicSchedule", "UpperActivitySchedule", "ReadingLowLighting", "BuildingStory:Level 2"]
+}

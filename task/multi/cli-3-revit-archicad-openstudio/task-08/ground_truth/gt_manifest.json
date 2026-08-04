@@ -1,26 +1,23 @@
 {
   "case_id": "multi-cli-3-revit-archicad-openstudio-task-08-windows",
-  "generated_at_utc": "2026-07-06T11:06:58Z",
-  "generator": "tools/native_remote_gt/generate_cli3_gt.py",
+  "generated_at_utc": "2026-08-04T11:07:08Z",
+  "generator": "run_revit_stage.ps1 -> run_archicad_stage.ps1 -> run_openstudio_stage.ps1",
   "native_stage_provenance": {
     "revit": {
       "exe": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
-      "product_version": "20240516_1515(x64)",
-      "automation": "IExternalApplication add-in loaded and reached Idling in this remote instance",
-      "marker": "2026-07-06T10:49:33.9139007Z loaded\n2026-07-06T10:49:35.3334701Z idling\n2026-07-06T10:49:35.3337687Z killing-revit\n"
+      "product_version": "25.0.0.0",
+      "automation": "C:\\ProgramData\\Autodesk\\Revit\\Addins\\2025\\EngiWorld.BimBridge.addin"
     },
     "archicad": {
-      "exe": "C:\\Program Files\\GRAPHISOFT\\Archicad 27\\IFCCommandServerApp.exe",
-      "product_version": "27.0.0 R1 (6000)",
-      "automation": "IFCCommandServerApp launched with --sa new_ifc4 during this remote run",
-      "port": 19756,
-      "process_id": 5140,
-      "responding": true
+      "exe": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe",
+      "product_version": "Archicad 27.0.0 R1 build 6000",
+      "automation": "IFCCommandServerApp.exe --job workflow_spec.json --input-ifc stage1.ifc --translator archicad_ifc4_translator.json --output-ifc stage2.ifc"
     },
     "openstudio": {
       "exe": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
-      "version": "OpenStudio 3.10.0+86d7e215a1",
-      "automation": "OpenStudio CLI queried and used by generator for stage provenance"
+      "version": "3.10.0+ce46db07de",
+      "energyplus_version": "25.1.0",
+      "automation": "openstudio_ifc_to_energy.rb consumed the Archicad IFC and handoff, forward-translated the OSM, and ran EnergyPlus"
     }
   },
   "required_files": [
@@ -30,10 +27,37 @@
     "stage2.ifc",
     "archicad_handoff.json",
     "archicad_validation_report.json",
+    "archicad_ifc4_translator.json",
+    "workflow_spec.json",
+    "weather.epw",
+    "native_stage_log.json",
+    "workflow.osw",
     "result.osm",
     "in.idf",
     "flow_report.json",
     "model_summary.csv",
-    "energy_report.csv"
-  ]
+    "energy_report.csv",
+    "run/eplusout.sql",
+    "run/eplusout.err"
+  ],
+  "artifact_sha256": {
+    "init.ifc": "91161fe0218c054e34c9c38c03818229d22ac2de6982c7aef41059e254a32c48",
+    "stage1.ifc": "406df156c2421e6e99c92743231283ddb7af1f9fc1bcc148aa8b174f0e0301a2",
+    "revit_handoff.json": "27586178e4d5e702f3a8f274752561afd687a9859a86946e946f4ef80c9a9651",
+    "stage2.ifc": "1ce41608c6e1a73b8e03e7d9760a5ec002e7f309219922dc2a39ac7976401bd8",
+    "archicad_handoff.json": "d1975eb135cc29db604df1dfea7318c3f0cb6ba7c1b1b13014ce51082f06e622",
+    "archicad_validation_report.json": "bf4e3ad20ad7fff5c571a256675f9f9c755082d6f3f74746f2661a68ef6c2202",
+    "archicad_ifc4_translator.json": "0dcc1b632112be3cfcd66f65532c978c9cfa0c6097382f717d0c736e30daabed",
+    "workflow_spec.json": "69bbc45726e17be9b053fc409e9993d10c6fdcd46ddbcfa39b1ce820293bb324",
+    "weather.epw": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1",
+    "native_stage_log.json": "47e0b678e82cf2332aa4ef6c19c8460880ff266382363a315ef39a04acb5bd16",
+    "workflow.osw": "185b5c23abec3b380e8bcea9218339e33b5f59a4cbd7f33e256c7be8f5dcda5d",
+    "result.osm": "012836f9a6132be6e56f02e6094ff70577dcd4f9eb48c4e68ccae7ab156f576e",
+    "in.idf": "0d46635e0f324e485ef793a4e032f8bb5059f8665db868ac2ed29bacfd71d259",
+    "flow_report.json": "fd84de2378c238dd01dd6aa92c0af0a6e7606ad99bc751ffe312784800a03971",
+    "model_summary.csv": "772d87729275264c86e9bbee9e81f17290c356c6ecacaa246328f020def607c7",
+    "energy_report.csv": "662b52eab4b3ffdc4831de9a2baae3742bee37e7ca788a80a7633a0adffc7b2e",
+    "run/eplusout.sql": "26b87cc26ce634535321122181442320497ebc7cdc3a456f2978e1d2bc298524",
+    "run/eplusout.err": "f6364c852046521584c4476c05406391fb044a25e79a608f4e93b20cde803e82"
+  }
 }

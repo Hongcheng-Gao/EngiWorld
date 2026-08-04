@@ -1,7 +1,7 @@
 {
   "case_id": "multi-cli-3-revit-archicad-openstudio-task-01-windows",
-  "generated_at_utc": "2026-07-06T11:06:58Z",
-  "generator": "tools/native_remote_gt/generate_cli3_gt.py",
+  "generated_at_utc": "2026-08-04T10:24:49Z",
+  "generator": "run_revit_stage.ps1 -> run_archicad_stage.ps1 -> run_openstudio_stage.ps1",
   "native_stage_provenance": {
     "revit": {
       "exe": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
@@ -19,8 +19,9 @@
     },
     "openstudio": {
       "exe": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
-      "version": "OpenStudio 3.10.0+86d7e215a1",
-      "automation": "OpenStudio CLI queried and used by generator for stage provenance"
+      "version": "OpenStudio 3.10.0+ce46db07de",
+      "energyplus_version": "25.1.0-1c11a3d85f",
+      "automation": "openstudio_ifc_to_energy.rb consumed the Archicad IFC and handoff, forward-translated the OSM, and ran EnergyPlus"
     }
   },
   "required_files": [
@@ -30,10 +31,37 @@
     "stage2.ifc",
     "archicad_handoff.json",
     "archicad_validation_report.json",
+    "archicad_ifc4_translator.json",
+    "workflow_spec.json",
+    "weather.epw",
+    "native_stage_log.json",
+    "workflow.osw",
     "result.osm",
     "in.idf",
     "flow_report.json",
     "model_summary.csv",
-    "energy_report.csv"
-  ]
+    "energy_report.csv",
+    "run/eplusout.sql",
+    "run/eplusout.err"
+  ],
+  "artifact_sha256": {
+    "init.ifc": "8dd67e0b51fe183df7657e38763652a3cf666ef5f8ad7f210cc844d743f1018f",
+    "stage1.ifc": "e50f1a642938e4f000488d65e17cb900f145b74baabfb0d5d4a36b9307e9574d",
+    "revit_handoff.json": "958e6d09cf410188783587f4d7c633191a5c69bec917e0ca7a673bf295fe1a35",
+    "stage2.ifc": "b7926e906bf406384453a5189a207c6572b3d078ee1796f60556b7aea631e58d",
+    "archicad_handoff.json": "cbcbb2c36eb3aa274b3440b65c0531cbb72590e1fd963c5e27e646e2263d3fc7",
+    "archicad_validation_report.json": "f918cd953598cb553afa1785b8164cb55377a40f8956d9bfa1a5d91dd91a6acf",
+    "archicad_ifc4_translator.json": "0dcc1b632112be3cfcd66f65532c978c9cfa0c6097382f717d0c736e30daabed",
+    "workflow_spec.json": "9b4d55340a7a5f29ececa796f2765b7bff697efbe5a1bc4de4fba54eb52a3f75",
+    "weather.epw": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1",
+    "native_stage_log.json": "8131d50ecef70ad3edd9edb1e9da638bc808ca10199ed23abc0e63b87f51c2a1",
+    "workflow.osw": "a08557955a286d47028c62154bd4a88059365c2c5774c5876ce0cd57828a206e",
+    "result.osm": "61b53d282c3b4269ce8ca0a4529af104f7f11b85b378e88ede9dc5768380fb7d",
+    "in.idf": "9f151284a5fd6939addc08ab51bf7f461b991b10620942aa7698d04f1bd893c7",
+    "flow_report.json": "78e5b87c5fa2f39a3eca13f9998efa77018f81cd5462f2f18cbe85d5a0444e7a",
+    "model_summary.csv": "1b649ef634743365bd91b7615d6b5f76f0ddf5f176f9814e672502723014323a",
+    "energy_report.csv": "d8728e6bc66c09605cad3f73bf95adc6caade1586e707b94661205751ac47684",
+    "run/eplusout.sql": "52762f7fa6b7ce7381bf73c3a36a586ae1781bcd15ccb3aaf6944683b7271317",
+    "run/eplusout.err": "cb7c653c3d8cbe9f3524ad50372ec7eef76e8c294a6bc244c1752640ac1023a9"
+  }
 }

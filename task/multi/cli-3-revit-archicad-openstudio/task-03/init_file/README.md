@@ -1,1 +1,1 @@
-This directory contains the task seed `init.ifc`. At VM runtime it is uploaded to `C:\Users\user\Desktop\init.ifc` and must be consumed by the Revit stage.
+This directory contains the task-03 clinic seed and its executable workflow contract. The pinned IFC translator, three native stage launchers, OpenStudio converter, weather file, and specification are uploaded to the Desktop and must be run in stage order.

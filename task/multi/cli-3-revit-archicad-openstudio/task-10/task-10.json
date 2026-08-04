@@ -1,53 +1,42 @@
 {
   "id": "c-multi-revit-archicad-openstudio-task-10-windows",
   "snapshot": "cli3-revit2025-archicad27-openstudio310-win",
-  "instruction": "Software locations: Revit 2025 launcher: C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe; Archicad 27 launcher: C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe; OpenStudio 3.10.0 CLI: C:\\openstudio-3.10.0\\bin\\openstudio.exe. Required staged workflow: this task starts from the provided seed file C:\\Users\\user\\Desktop\\init.ifc. Do not start from a blank or unrelated model. You must complete the work in exactly three dependent software stages, in this order; do not skip stages, reorder stages, or generate the final package from scratch in only one tool. Stage 1 - Revit automation/CLI: open C:\\Users\\user\\Desktop\\init.ifc in the Revit automation environment, organize the levels as RECEPTION-L1, STUDIO-L2, and ARCHIVE-L3 while preserving the three-storey stack, and export C:\\Users\\user\\Desktop\\stage1.ifc as the Revit BIM intermediate result. During this same Revit stage, derive C:\\Users\\user\\Desktop\\revit_handoff.json from stage1.ifc. The Revit handoff must include source_sha256 for stage1.ifc, software_stage or equivalent value revit, the case id multi-cli-3-revit-archicad-openstudio-task-10-windows, and the required named spaces RECEPTION-L1, STUDIO-L2, ARCHIVE-L3. The Revit-authored IFC must carry these stage-1 coordination tokens: EW3B10, RECEPTION-L1, STUDIO-L2, ARCHIVE-L3, THREE-STOREY-STACK, multi-cli-3-revit-archicad-openstudio-task-10-windows. Stage 2 - Archicad CLI/API: consume C:\\Users\\user\\Desktop\\stage1.ifc and C:\\Users\\user\\Desktop\\revit_handoff.json in Archicad. Use Archicad to validate one function group per level, archive low lighting, studio high load, and three-storey handoff fields, then save C:\\Users\\user\\Desktop\\stage2.ifc. Also create C:\\Users\\user\\Desktop\\archicad_validation_report.json with source_sha256 for stage1.ifc, output_sha256 for stage2.ifc, entity counts, space names, software_stage or equivalent value archicad, Archicad QA status, and any blocking errors as an empty or passed value. Create C:\\Users\\user\\Desktop\\archicad_handoff.json with source_sha256 for stage2.ifc, stage1_sha256 for stage1.ifc, revit_handoff_sha256, software_stage or equivalent value archicad, the required spaces, thermal zones, handoff tokens, building_area_m2, per-space area_m2, per-space storey, weather_file, schedule_set, and construction_set. The Archicad-validated IFC and validation report must carry these stage-2 tokens: ARCHICAD-QA-PASS, ONE-FUNCTION-GROUP-PER-LEVEL, ARCHIVE-LOW-LIGHTING, STUDIO-HIGH-LOAD, RECEPTION-L1, STUDIO-L2, ARCHIVE-L3, multi-cli-3-revit-archicad-openstudio-task-10-windows. The Archicad handoff must carry these tokens for OpenStudio: RECEPTION-PUBLIC-LOAD, STUDIO-HIGH-EQUIPMENT, ARCHIVE-LOW-LIGHTING, THREE-STOREY-HANDOFF. Stage 3 - OpenStudio CLI/Ruby API: consume C:\\Users\\user\\Desktop\\archicad_handoff.json and use C:\\Users\\user\\Desktop\\stage2.ifc only as the upstream Archicad-validated BIM reference. Generate C:\\Users\\user\\Desktop\\result.osm, C:\\Users\\user\\Desktop\\in.idf, C:\\Users\\user\\Desktop\\flow_report.json, C:\\Users\\user\\Desktop\\model_summary.csv, and C:\\Users\\user\\Desktop\\energy_report.csv from that Archicad handoff. result.osm must include the first 12 characters of sha256(archicad_handoff.json), the first 12 characters of sha256(stage2.ifc), and the weather_file, schedule_set, and construction_set values from archicad_handoff.json. flow_report.json must record consumed_handoff_sha256 for archicad_handoff.json, stage2_sha256 for stage2.ifc, osm_sha256 for result.osm, idf_sha256 for in.idf, and energy_report_sha256 for energy_report.csv. model_summary.csv must include case_id, space_name, thermal_zone, source_handoff_sha256, source_stage2_sha256, area_m2, storey, weather_file, schedule_set, and construction_set for each exported space or thermal zone. in.idf must include the same spaces, thermal zones, EnergyPlus Zone objects, building surfaces, the first 12 characters of sha256(archicad_handoff.json), the first 12 characters of sha256(stage2.ifc), and the same weather_file, schedule_set, and construction_set values. energy_report.csv must include case_id, building_area_m2, space_count, thermal_zone_count, total_site_energy_kwh, peak_load_kw, eui_kwh_m2, source_handoff_sha256, source_stage2_sha256, weather_file, schedule_set, construction_set, plus the exported space and thermal zone names; building_area_m2 must match the sum of model_summary.csv area_m2 values within tolerance. The OpenStudio model should represent RECEPTION-L1-ZN, STUDIO-L2-ZN, and ARCHIVE-L3-ZN with reception, studio, archive, and level-3 story assumptions from the Archicad handoff. Include thermal zones RECEPTION-L1-ZN, STUDIO-L2-ZN, ARCHIVE-L3-ZN, OSM tokens ReceptionPublicLoad, StudioHighEquipment, ArchiveLowLighting, BuildingStory:Level 3, and model summary tokens RECEPTION-L1, STUDIO-L2, ARCHIVE-L3. The evaluator checks the dependency chain init.ifc -> stage1.ifc/revit_handoff.json -> stage2.ifc/archicad_handoff.json/archicad_validation_report.json -> result.osm/in.idf/flow_report.json/model_summary.csv/energy_report.csv. Outputs are invalid if any delivered IFC, JSON, OSM, IDF, or CSV is directly created, rewritten, copied, patched, or post-processed outside the appropriate Revit, Archicad, or OpenStudio software stage. The seed is a three-storey vertical shell intended to carry one functional group per level. Keep the space names RECEPTION-L1, STUDIO-L2, ARCHIVE-L3 and mark coordinated BIM and handoff data with revision code EW3B10.",
-  "source": "https://www.revitapidocs.com/2022/7efa4eb3-8d94-b8e7-f608-3dbae751331d.htm; https://archicadapi.graphisoft.com/JSONInterfaceDocumentation/; https://archicadapi.graphisoft.com/archicadPythonPackage/archicad.html; https://natlabrockies.github.io/OpenStudio-user-documentation/reference/command_line_interface/; https://openstudiocoalition.org/getting_started/getting_started/",
+  "instruction": "Use the pinned Desktop workflow only: Revit 2025, Archicad 27 build 6000 or newer, OpenStudio 3.10.0, and EnergyPlus 25.1.0. Starting from init.ifc and workflow_spec.json, run run_revit_stage.ps1, run_archicad_stage.ps1, and run_openstudio_stage.ps1 in exact order. Do not hand-author delivered IFC, OSM, IDF, SQL, JSON, or CSV. Revit must retain and rename the original three geometric storey spaces as RECEPTION-L1, STUDIO-L2 and ARCHIVE-L3, preserve all three original GlobalIds and correct Level 1/2/3 containment, create a geometric Level 3 pitched roof, and provide one door plus one window per level with geometric IfcOpeningElement, IfcRelVoidsElement and IfcRelFillsElement relationships. It must export stage1.ifc and revit_handoff.json. Archicad must import stage1.ifc using the supplied IFC4 translator, retain GlobalIds, storeys and hosted-opening relationships, validate one function per level plus reception, studio and archive energy properties, and export stage2.ifc, archicad_validation_report.json and archicad_handoff.json keyed by actual IfcSpace GlobalIds. OpenStudio must consume stage2.ifc and that handoff, create three separate thermal zones on the correct stories with handed-off public, high-equipment and low-lighting schedules, loads and outdoor air, forward-translate result.osm to in.idf, and run a real annual EnergyPlus simulation. Deliver all stage artifacts, native_stage_log.json, workflow.osw, result.osm, in.idf, flow_report.json, model_summary.csv, energy_report.csv, run\\eplusout.sql, and run\\eplusout.err. Preserve EW3B10, THREE-STOREY-STACK, GEOMETRIC-FILLINGS and workflow_spec.json tokens. Evaluation parses IFC space/storey geometry, quantities, properties, GlobalIds, roof geometry and every door/window host-opening relation, reconciles Archicad entity counts and handoff values, opens standard EnergyPlus SQLite tables, checks per-zone areas and nonzero simulated energy, and independently reruns EnergyPlus; hashes, tokens, or self-reported JSON alone do not pass.",
+  "source": "https://help.autodesk.com/view/RVT/2025/ENU/?guid=Revit_API_Revit_API_Developers_Guide_html; https://help.graphisoft.com/AC/27/INT/_AC27_Help/121_IFC/121_IFC-3.htm; https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-3.10.0-doc/cli/html/index.html; https://bigladdersoftware.com/epx/docs/25-1/output-details-and-examples/eplusout-sql.html",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
-          {
-            "local_path": "task-10/init_file/init.ifc",
-            "path": "C:\\Users\\user\\Desktop\\init.ifc"
-          }
+          {"local_path": "task-10/init_file/init.ifc", "path": "C:\\Users\\user\\Desktop\\init.ifc"},
+          {"local_path": "task-10/init_file/workflow_spec.json", "path": "C:\\Users\\user\\Desktop\\workflow_spec.json"},
+          {"local_path": "task-10/init_file/weather.epw", "path": "C:\\Users\\user\\Desktop\\weather.epw"},
+          {"local_path": "_common/archicad_ifc4_translator.json", "path": "C:\\Users\\user\\Desktop\\archicad_ifc4_translator.json"},
+          {"local_path": "_common/run_revit_stage.ps1", "path": "C:\\Users\\user\\Desktop\\run_revit_stage.ps1"},
+          {"local_path": "_common/run_archicad_stage.ps1", "path": "C:\\Users\\user\\Desktop\\run_archicad_stage.ps1"},
+          {"local_path": "_common/openstudio_ifc_to_energy.rb", "path": "C:\\Users\\user\\Desktop\\openstudio_ifc_to_energy.rb"},
+          {"local_path": "_common/run_openstudio_stage.ps1", "path": "C:\\Users\\user\\Desktop\\run_openstudio_stage.ps1"}
         ]
       }
     }
   ],
   "trajectory": "trajectories/",
-  "related_apps": [
-    "revit",
-    "archicad",
-    "openstudio"
-  ],
+  "related_apps": ["revit", "archicad", "openstudio"],
   "evaluator": {
     "postconfig": [
       {
         "type": "upload_file",
         "parameters": {
           "files": [
-            {
-              "local_path": "task-10/eval.py",
-              "path": "C:\\Users\\user\\Desktop\\eval.py"
-            }
+            {"local_path": "task-10/eval.py", "path": "C:\\Users\\user\\Desktop\\eval.py"},
+            {"local_path": "_common/eval_three_stage.py", "path": "C:\\Users\\user\\Desktop\\eval_three_stage.py"}
           ]
         }
       }
     ],
     "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python C:\\Users\\user\\Desktop\\eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
+    "result": {"type": "vm_command_line", "command": "python C:\\Users\\user\\Desktop\\eval.py", "shell": "true"},
+    "expected": {"type": "rule", "rules": {"expected": "True\n"}}
   },
   "proxy": false,
   "fixed_ip": false,
