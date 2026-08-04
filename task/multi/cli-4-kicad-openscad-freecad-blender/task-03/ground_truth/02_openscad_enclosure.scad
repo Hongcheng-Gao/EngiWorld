@@ -1,10 +1,6 @@
 // Task 03: RF daughtercard shield-can and inspection scene
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [72.000, 48.000, 1.200];
-enclosure = [84.400, 60.400, 14.200];
-wall = 2.200;
-lid_clearance = 1.800;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=5.980, h=wall + board[2]);

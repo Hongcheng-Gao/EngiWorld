@@ -1,10 +1,6 @@
 // Task 05: Pogo-pin bed adapter with board-derived pin field
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [94.000, 70.000, 1.600];
-enclosure = [107.600, 83.600, 20.400];
-wall = 2.800;
-lid_clearance = 5.000;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=6.900, h=wall + board[2]);

@@ -1,10 +1,6 @@
 // Task 04: Motor-controller vibration tray handoff
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [128.000, 86.000, 1.600];
-enclosure = [142.400, 100.400, 26.400];
-wall = 3.200;
-lid_clearance = 3.600;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=8.050, h=wall + board[2]);

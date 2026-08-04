@@ -1,10 +1,6 @@
 // Task 09: Thermal camera calibration target PCB mount
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [118.000, 92.000, 1.600];
-enclosure = [131.000, 105.000, 25.100];
-wall = 2.500;
-lid_clearance = 3.000;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=6.900, h=wall + board[2]);

@@ -90,7 +90,8 @@ EXPECTED_JSON = json.loads(r"""{
       }
     ],
     "software_stage": "KiCad",
-    "task": "task-09"
+    "task": "task-09",
+    "openscad_parameter_handoff": "01_kicad_parameters.scad"
   },
   "02_openscad_parameters.json": {
     "board_bbox_mm": [
@@ -104,7 +105,6 @@ EXPECTED_JSON = json.loads(r"""{
       105.0,
       25.1
     ],
-    "input_mechanical_map": "01_kicad_mechanical_map.csv",
     "lid_clearance_mm": 3.0,
     "mesh": "02_openscad_enclosure.stl",
     "software_stage": "OpenSCAD",
@@ -112,7 +112,9 @@ EXPECTED_JSON = json.loads(r"""{
     "standoff_count": 4,
     "task": "task-09",
     "wall_mm": 2.5,
-    "window_count": 2
+    "window_count": 2,
+    "input_parameter_handoff": "01_kicad_parameters.scad",
+    "source_mechanical_map": "01_kicad_mechanical_map.csv"
   },
   "03_freecad_clearance_report.json": {
     "assembly_step": "03_freecad_assembly.step",
@@ -138,7 +140,8 @@ EXPECTED_JSON = json.loads(r"""{
     "minimum_side_clearance_mm": 4.0,
     "minimum_top_clearance_mm": 3.0,
     "software_stage": "FreeCAD",
-    "task": "task-09"
+    "task": "task-09",
+    "assembly_mesh": "03_freecad_assembly.obj"
   },
   "04_blender_scene_report.json": {
     "camera": {
@@ -154,7 +157,7 @@ EXPECTED_JSON = json.loads(r"""{
     ],
     "decision": "pass",
     "inputs": [
-      "03_freecad_assembly.step",
+      "03_freecad_assembly.obj",
       "03_freecad_clearance_report.json"
     ],
     "materials": [
@@ -201,10 +204,12 @@ EXPECTED_JSON = json.loads(r"""{
       "01_kicad_board.kicad_pcb",
       "01_kicad_export.json",
       "01_kicad_mechanical_map.csv",
+      "01_kicad_parameters.scad",
       "02_openscad_enclosure.scad",
       "02_openscad_enclosure.stl",
       "02_openscad_parameters.json",
       "03_freecad_assembly.step",
+      "03_freecad_assembly.obj",
       "03_freecad_clearance_report.json",
       "04_blender_review.obj",
       "04_blender_review.mtl",
@@ -226,12 +231,14 @@ EXPECTED_JSON = json.loads(r"""{
       ],
       "FreeCAD": [
         "03_freecad_assembly.step",
+        "03_freecad_assembly.obj",
         "03_freecad_clearance_report.json"
       ],
       "KiCad": [
         "01_kicad_board.kicad_pcb",
         "01_kicad_export.json",
-        "01_kicad_mechanical_map.csv"
+        "01_kicad_mechanical_map.csv",
+        "01_kicad_parameters.scad"
       ],
       "OpenSCAD": [
         "02_openscad_enclosure.scad",
@@ -245,7 +252,7 @@ EXPECTED_JSON = json.loads(r"""{
   "toolchain_invocation_log.json": {
     "commands": [
       {
-        "command": "kicad-cli pcb export step board_input.kicad_pcb --output board.step && python3 kicad_extract_mechanical_map.py",
+        "command": "kicad-cli pcb export step board_input.kicad_pcb --output board.step && python3 kicad_extract_mechanical_map.py --emit-scad 01_kicad_parameters.scad",
         "inputs": [
           "board_input.kicad_pcb",
           "mechanical_requirements.json",
@@ -254,14 +261,15 @@ EXPECTED_JSON = json.loads(r"""{
         "outputs": [
           "01_kicad_board.kicad_pcb",
           "01_kicad_export.json",
-          "01_kicad_mechanical_map.csv"
+          "01_kicad_mechanical_map.csv",
+          "01_kicad_parameters.scad"
         ],
         "software": "KiCad"
       },
       {
         "command": "openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
         "inputs": [
-          "01_kicad_mechanical_map.csv",
+          "01_kicad_parameters.scad",
           "enclosure_seed.scad"
         ],
         "outputs": [
@@ -280,6 +288,7 @@ EXPECTED_JSON = json.loads(r"""{
         ],
         "outputs": [
           "03_freecad_assembly.step",
+          "03_freecad_assembly.obj",
           "03_freecad_clearance_report.json"
         ],
         "software": "FreeCAD"
@@ -287,7 +296,7 @@ EXPECTED_JSON = json.loads(r"""{
       {
         "command": "blender --background --python blender_release_review.py",
         "inputs": [
-          "03_freecad_assembly.step",
+          "03_freecad_assembly.obj",
           "03_freecad_clearance_report.json"
         ],
         "outputs": [
@@ -310,9 +319,11 @@ EXPECTED_JSON = json.loads(r"""{
 EXPECTED_TEXT_SHA256 = json.loads(r"""{
   "01_kicad_board.kicad_pcb": "94c522ef3d53c1af1f09d12fe68e4a6f6e10dfb258913168c9d25adab4baf4b1",
   "01_kicad_mechanical_map.csv": "ca885f900dedac0b4fd44f2dc700bc29e923a23a5f3ee50dfb4134e5ab6f7ba4",
-  "02_openscad_enclosure.scad": "55c9c69946c92f4123bf59911367670e0a906bf4fd56657ccc3978d619e93b13",
-  "02_openscad_enclosure.stl": "f714b2799a31e9f97bba870b9ec49b0e734a49f74aa385488087cca9842a966a",
+  "01_kicad_parameters.scad": "fac2cde4b697810a36db8cd6611c7acc244f1e3906ea5abd621dee55cce2e356",
+  "02_openscad_enclosure.scad": "2d83d2923de7a8d4c2e68f13669a3e8d712fce245fdf083da0cf7e0206502f20",
+  "02_openscad_enclosure.stl": "b1384413a7b59064004436068a73d9609bf266f75f734961296e30e26cff0860",
   "03_freecad_assembly.step": "0c739a0688215635dbf4a6bd70ee5c3c41a7f1100fae8e2881a9fd458c6b037b",
+  "03_freecad_assembly.obj": "e7db6100a0646453608447870a48b30723defb01ec77b3a8ccdc40fbc92309ca",
   "04_blender_review.mtl": "992c2628c54b4f619ad489f0ca0a02c4a7b999c5b16869ce46e2cec69edf2ad2",
   "04_blender_review.obj": "39d819c65cb6b5efdd1d21ef8f5a90d2343cfd3d8af0d9c3207810e5b223a5fd"
 }""")
@@ -320,10 +331,12 @@ REQUIRED_ARTIFACTS = [
   "01_kicad_board.kicad_pcb",
   "01_kicad_export.json",
   "01_kicad_mechanical_map.csv",
+  "01_kicad_parameters.scad",
   "02_openscad_enclosure.scad",
   "02_openscad_enclosure.stl",
   "02_openscad_parameters.json",
   "03_freecad_assembly.step",
+  "03_freecad_assembly.obj",
   "03_freecad_clearance_report.json",
   "04_blender_review.obj",
   "04_blender_review.mtl",
@@ -341,6 +354,30 @@ def norm_text(text: str) -> str:
 
 def sha_text(path: Path) -> str:
     return hashlib.sha256(norm_text(path.read_text(encoding="utf-8")).encode("utf-8")).hexdigest()
+
+
+def sha_stl_geometry(path: Path) -> str:
+    facets = []
+    triangle = []
+    for line in path.read_text(encoding="utf-8").splitlines():
+        fields = line.split()
+        if len(fields) != 4 or fields[0] != "vertex":
+            continue
+        vertex = tuple(0.0 if abs(float(value)) < 1e-12 else round(float(value), 9) for value in fields[1:])
+        triangle.append(vertex)
+        if len(triangle) == 3:
+            facets.append(tuple(sorted(triangle)))
+            triangle = []
+    if triangle or not facets:
+        raise ValueError("invalid or empty ASCII STL")
+    canonical = json.dumps(sorted(facets), separators=(",", ":"))
+    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+
+
+def sha_artifact(path: Path) -> str:
+    if path.suffix.lower() == ".stl":
+        return sha_stl_geometry(path)
+    return sha_text(path)
 
 
 def main() -> bool:
@@ -366,7 +403,7 @@ def main() -> bool:
         if not path.exists():
             continue
         try:
-            if sha_text(path) != expected_sha:
+            if sha_artifact(path) != expected_sha:
                 errors.append(f"text mismatch {name}")
         except Exception as exc:
             errors.append(f"text read failure {name}: {exc}")

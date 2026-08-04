@@ -1,10 +1,6 @@
 // Task 08: High-current busbar insulator carrier
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [176.000, 38.000, 1.600];
-enclosure = [190.000, 52.000, 23.600];
-wall = 3.000;
-lid_clearance = 6.000;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=8.050, h=wall + board[2]);

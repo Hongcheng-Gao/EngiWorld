@@ -1,10 +1,6 @@
 // Task 07: Optical encoder readhead alignment carrier
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [66.000, 42.000, 1.000];
-enclosure = [78.000, 54.000, 12.200];
-wall = 2.000;
-lid_clearance = 1.200;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=5.520, h=wall + board[2]);

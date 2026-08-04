@@ -1,10 +1,6 @@
 // Task 02: Buck regulator heat-spreader clamp package
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [104.000, 62.000, 1.600];
-enclosure = [117.200, 75.200, 18.600];
-wall = 2.600;
-lid_clearance = 2.400;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=6.900, h=wall + board[2]);

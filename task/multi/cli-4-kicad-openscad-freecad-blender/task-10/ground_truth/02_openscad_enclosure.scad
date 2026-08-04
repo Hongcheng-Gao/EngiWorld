@@ -1,10 +1,6 @@
 // Task 10: GNSS antenna keepout enclosure flow
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [82.000, 82.000, 1.200];
-enclosure = [95.400, 95.400, 35.400];
-wall = 2.700;
-lid_clearance = 7.500;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=6.440, h=wall + board[2]);

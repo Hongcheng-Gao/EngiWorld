@@ -1,10 +1,6 @@
 // Task 01: Environmental sensor pod board-to-enclosure release
-// OpenSCAD stage generated from 01_kicad_mechanical_map.csv.
-$fn = 64;
-board = [86.000, 54.000, 1.600];
-enclosure = [100.000, 68.000, 18.800];
-wall = 3.000;
-lid_clearance = 4.200;
+// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+include <01_kicad_parameters.scad>;
 
 module standoff(x, y) {
   translate([x, y, board[2]]) cylinder(d=7.360, h=wall + board[2]);
