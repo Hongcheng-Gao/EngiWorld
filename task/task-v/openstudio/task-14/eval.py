@@ -8,7 +8,7 @@ import tempfile
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
-SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 0}, 'space_names': ['Office1', 'Office2'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 0, 'fixed_window_count': 0, 'bbox_spans_m': [10.0, 5.0, 3.2], 'floor_area_m2': 50.0, 'exterior_wall_area_m2': 96.0, 'window_area_m2': 0, 'hvac': {'ideal_loads': 0, 'equipment_lists': 2, 'thermostats': 0}, 'loads': {'min_schedules': 2, 'people': 2, 'lights': 2, 'electric_equipment': 0, 'space_types': 1}}
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 0}, 'space_names': ['Office1', 'Office2'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 0, 'fixed_window_count': 0, 'bbox_spans_m': [10.0, 5.0, 3.2], 'floor_area_m2': 50.0, 'exterior_wall_area_m2': 96.0, 'window_area_m2': 0, 'hvac': {'ideal_loads': 0, 'equipment_lists': 2, 'thermostats': 0}, 'loads': {'min_schedules': 2, 'people': 1, 'people_definitions': 1, 'lights': 1, 'lights_definitions': 1, 'electric_equipment': 0, 'space_types': 1, 'space_type_name': 'OfficeType'}}
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -333,13 +333,33 @@ def check_loads(objects):
     loads = SPEC.get("loads", {})
     mapping = {
         "people": "OS:People",
+        "people_definitions": "OS:People:Definition",
         "lights": "OS:Lights",
+        "lights_definitions": "OS:Lights:Definition",
         "electric_equipment": "OS:ElectricEquipment",
         "space_types": "OS:SpaceType",
     }
     if len(by_type(objects, "OS:Schedule:Ruleset")) < loads.get("min_schedules", 0):
         return False
-    return all(len(by_type(objects, object_type)) == expected for key, object_type in mapping.items() for expected in [loads.get(key, 0)])
+    if not all(len(by_type(objects, object_type)) == expected for key, object_type in mapping.items() for expected in [loads.get(key, 0)]):
+        return False
+    space_type = by_type(objects, "OS:SpaceType")[0]
+    if name(space_type) != loads.get("space_type_name"):
+        return False
+    space_type_handle = handle(space_type)
+    if any(space["fields"][2] != space_type_handle for space in by_type(objects, "OS:Space")):
+        return False
+    people = by_type(objects, "OS:People")[0]
+    lights = by_type(objects, "OS:Lights")[0]
+    if people["fields"][2] != handle(by_type(objects, "OS:People:Definition")[0]):
+        return False
+    if lights["fields"][2] != handle(by_type(objects, "OS:Lights:Definition")[0]):
+        return False
+    if people["fields"][3] != space_type_handle or lights["fields"][3] != space_type_handle:
+        return False
+    schedule_handles = {handle(obj) for obj in by_type(objects, "OS:Schedule:Ruleset")}
+    load_schedule_handles = {people["fields"][4], lights["fields"][4]}
+    return len(load_schedule_handles) == 2 and load_schedule_handles <= schedule_handles
 
 
 def evaluate():

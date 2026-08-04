@@ -2,4 +2,4 @@
 
 This is a feasible reference solution for `quant-cli-openstudio-task-01-ubuntu`, not a unique optimum. It contains the required optimized IDF, EnergyPlus-style SQL output, CSV report, design summary, and score.json. The evaluator does not compare submissions to these files; it recomputes continuous score from the submitted artifacts.
 
-Regenerated on remote instance `124.174.37.4` using EnergyPlus CLI `25.2.0-cf7368216c`, then downloaded back into this repository.
+The reference artifacts use EnergyPlus 25.2 output compatible with OpenStudio CLI/SDK 3.11.0. Task execution and evaluator reruns use the standard OpenStudio OSW entry point, which invokes that bundled engine and retains `run/eplusout.sql` and `run/eplusout.err`.

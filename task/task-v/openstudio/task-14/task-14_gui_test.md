@@ -1,8 +1,8 @@
 # GUI Test Report: task-14
 
-Result: PASS-GUI
+Result: PASS-GUI after task update
 
-No task package files were modified.
+The task now validates one people load and one lighting load attached to `OfficeType`, inherited by both spaces.
 
 ## Environment
 
@@ -16,8 +16,8 @@ No task package files were modified.
 2. Opened Space Types and created a new space type, then renamed it to `OfficeType`.
 3. Opened Spaces > Properties and assigned `OfficeType` to both `Office1` and `Office2` by dragging the model space type into each Space Type cell.
 4. Returned to Space Types > Loads.
-5. Switched the right panel to Library, expanded People Definitions, and dragged two people definitions into the `OfficeType` load table.
-6. Expanded Lights Definitions and dragged two lights definitions into the `OfficeType` load table.
+5. Switched the right panel to Library, expanded People Definitions, and dragged one people definition into the `OfficeType` load table.
+6. Expanded Lights Definitions and dragged one lights definition into the `OfficeType` load table, then assigned a different valid ruleset from the People load.
 7. Saved the model as `/home/user/Desktop/result.osm` through the OpenStudio GUI.
 
 ## Verification
@@ -25,11 +25,12 @@ No task package files were modified.
 Downloaded `result.osm` and confirmed object counts:
 
 - `OS:Space`: 2
-- `OS:People`: 2
-- `OS:Lights`: 2
+- `OS:People`: 1, attached to `OfficeType`
+- `OS:Lights`: 1, attached to `OfficeType`
 - `OS:ElectricEquipment`: 0
 - `OS:Schedule:Ruleset`: 2
 - `OS:SpaceType`: 1
+- The People and Lights instances reference their respective definitions and distinct valid rulesets.
 
 Evaluator command:
 

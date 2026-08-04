@@ -8,7 +8,7 @@ import tempfile
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
-SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 0}, 'space_names': ['EastOffice', 'WestOffice'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'window_count': 0, 'fixed_window_count': 0, 'bbox_spans_m': [12.0, 6.0, 3.2], 'floor_area_m2': 72.0, 'exterior_wall_area_m2': 115.2, 'window_area_m2': 0, 'hvac': {'ideal_loads': 0, 'equipment_lists': 2, 'thermostats': 0}, 'loads': {'min_schedules': 0, 'people': 0, 'lights': 0, 'electric_equipment': 0, 'space_types': 0}}
+SPEC = {'required_outputs': {'result.osm': 500}, 'object_counts': {'OS:BuildingStory': 1, 'OS:Space': 2, 'OS:ThermalZone': 2, 'OS:Surface': 12, 'OS:SubSurface': 0}, 'space_names': ['EastOffice', 'WestOffice'], 'surface_counts': {'Floor': 2, 'RoofCeiling': 2, 'Wall': 8}, 'outside_boundary_counts': {'Ground': 2, 'Outdoors': 8, 'Surface': 2}, 'surface_pairs': [('WestOffice East Wall', 'EastOffice West Wall')], 'window_count': 0, 'fixed_window_count': 0, 'bbox_spans_m': [12.0, 6.0, 3.2], 'floor_area_m2': 72.0, 'exterior_wall_area_m2': 115.2, 'window_area_m2': 0, 'hvac': {'ideal_loads': 0, 'equipment_lists': 2, 'thermostats': 0}, 'loads': {'min_schedules': 0, 'people': 0, 'lights': 0, 'electric_equipment': 0, 'space_types': 0}}
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -198,9 +198,11 @@ def surface_data(objects):
         points = parse_vertices(fields, 11)
         result.append({
             "handle": handle(obj),
+            "name": name(obj),
             "type": fields[2],
             "space": fields[4],
             "obc": fields[5],
+            "obc_object": fields[6],
             "vertices": points,
             "area": polygon_area_3d(points),
         })
@@ -292,6 +294,23 @@ def check_counts(objects, data):
     return True
 
 
+def check_surface_pairs(data):
+    surfaces_by_name = {surface["name"]: surface for surface in data["surfaces"]}
+    expected_surface_names = set()
+    for first_name, second_name in SPEC.get("surface_pairs", []):
+        first = surfaces_by_name.get(first_name)
+        second = surfaces_by_name.get(second_name)
+        if not first or not second:
+            return False
+        if first["obc"] != "Surface" or second["obc"] != "Surface":
+            return False
+        if first["obc_object"] != second["handle"] or second["obc_object"] != first["handle"]:
+            return False
+        expected_surface_names.update((first_name, second_name))
+    actual_surface_names = {surface["name"] for surface in data["surfaces"] if surface["obc"] == "Surface"}
+    return actual_surface_names == expected_surface_names
+
+
 def check_space_links(objects, data):
     stories = {handle(obj) for obj in by_type(objects, "OS:BuildingStory")}
     zones = {handle(obj) for obj in by_type(objects, "OS:ThermalZone")}
@@ -352,6 +371,7 @@ def evaluate():
     data = metrics(objects)
     return (
         check_counts(objects, data)
+        and check_surface_pairs(data)
         and check_space_links(objects, data)
         and check_geometry(data)
         and check_hvac(objects)

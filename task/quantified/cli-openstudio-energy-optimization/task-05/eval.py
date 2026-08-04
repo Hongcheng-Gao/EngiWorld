@@ -16,6 +16,51 @@ from pathlib import Path
 MARKER_BEGIN = "ENGIWORLD_OPTIMIZATION_METADATA_BEGIN"
 MARKER_END = "ENGIWORLD_OPTIMIZATION_METADATA_END"
 
+OPENSTUDIO_IDF_MEASURE_RB = r"""class UseOptimizedIdf < OpenStudio::Measure::EnergyPlusMeasure
+  def name; 'Use Optimized IDF'; end
+  def description; 'Loads the evaluator-owned optimized IDF.'; end
+  def modeler_description; 'Replaces the translated workspace before bundled EnergyPlus runs.'; end
+  def arguments(workspace)
+    args = OpenStudio::Measure::OSArgumentVector.new
+    args << OpenStudio::Measure::OSArgument.makeStringArgument('idf_path', true)
+    args
+  end
+  def run(workspace, runner, user_arguments)
+    super(workspace, runner, user_arguments)
+    return false unless runner.validateUserArguments(arguments(workspace), user_arguments)
+    source_path = runner.getStringArgumentValue('idf_path', user_arguments)
+    loaded = OpenStudio::IdfFile.load(OpenStudio::Path.new(source_path))
+    if loaded.empty?
+      runner.registerError("Cannot load optimized IDF: #{source_path}")
+      return false
+    end
+    workspace.removeObjects(workspace.objects.map(&:handle))
+    source_objects = loaded.get.objects
+    added_objects = workspace.addObjects(source_objects)
+    if added_objects.size != source_objects.size
+      runner.registerError('Could not transfer every optimized IDF object')
+      return false
+    end
+    true
+  end
+end
+UseOptimizedIdf.new.registerWithApplication
+"""
+
+OPENSTUDIO_IDF_MEASURE_XML = """<?xml version="1.0"?>
+<measure><schema_version>3.1</schema_version><name>use_optimized_idf</name>
+<uid>8f9e0f71-f587-4abc-946f-7d41d8290595</uid><version_id>96129dac-770e-4f4e-9187-a3a165b10595</version_id>
+<version_modified>2026-08-04T00:00:00Z</version_modified><xml_checksum>00000000</xml_checksum>
+<class_name>UseOptimizedIdf</class_name><display_name>Use Optimized IDF</display_name>
+<description>Loads the evaluator-owned optimized IDF.</description><modeler_description>Replaces the translated workspace.</modeler_description>
+<arguments><argument><name>idf_path</name><display_name>Optimized IDF path</display_name><description>Absolute IDF path.</description>
+<type>String</type><required>true</required><model_dependent>false</model_dependent></argument></arguments>
+<outputs/><provenances/><tags/><attributes>
+<attribute><name>Measure Type</name><value>EnergyPlusMeasure</value><datatype>string</datatype></attribute>
+<attribute><name>Measure Language</name><value>Ruby</value><datatype>string</datatype></attribute>
+</attributes><files><file><filename>measure.rb</filename><filetype>rb</filetype><usage_type>script</usage_type><checksum>00000000</checksum></file></files></measure>
+"""
+
 
 def desktop() -> Path:
     configured = os.environ.get("ENGIWORLD_DESKTOP")
@@ -52,50 +97,70 @@ def metric_close(a: float, b: float, rel: float = 0.03, abs_tol: float = 0.05) -
     return abs(float(a) - float(b)) <= max(abs_tol, rel * max(abs(float(a)), abs(float(b)), 1.0))
 
 
-def find_energyplus_binary() -> str | None:
+def find_openstudio_cli() -> str | None:
     candidates = [
-        shutil.which("energyplus"),
-        "/usr/local/bin/energyplus",
-        "/usr/bin/energyplus",
-        "/opt/EnergyPlus/energyplus",
+        shutil.which("openstudio"),
+        "/usr/local/bin/openstudio",
+        "/usr/bin/openstudio",
     ]
     for candidate in candidates:
         if candidate and Path(candidate).is_file():
             return str(candidate)
     for parent in [Path("/usr/local"), Path("/opt")]:
         if parent.exists():
-            for path in parent.glob("**/energyplus"):
+            for path in parent.glob("openstudio*/bin/openstudio"):
                 if path.is_file():
                     return str(path)
     return None
 
 
-def run_energyplus_for_evaluation(paths: dict[str, Path]) -> tuple[dict[str, Path] | None, list[str]]:
-    if os.environ.get("ENGIWORLD_SKIP_EPLUS_RERUN") == "1":
+def run_openstudio_for_evaluation(paths: dict[str, Path]) -> tuple[dict[str, Path] | None, list[str]]:
+    if os.environ.get("ENGIWORLD_SKIP_OPENSTUDIO_RERUN") == "1":
         return None, []
-    binary = find_energyplus_binary()
-    if not binary:
-        return None, ["energyplus_cli:not_found"]
-    run_dir = DESKTOP / "_eval_energyplus_rerun"
-    shutil.rmtree(run_dir, ignore_errors=True)
-    run_dir.mkdir(parents=True, exist_ok=True)
+    cli = find_openstudio_cli()
+    if not cli:
+        return None, ["openstudio_cli:not_found"]
+    workflow_root = DESKTOP / "_eval_openstudio_workflow"
+    shutil.rmtree(workflow_root, ignore_errors=True)
+    workflow_root.mkdir(parents=True, exist_ok=True)
+    shutil.copy2(paths["optimized"], workflow_root / "optimized.idf")
+    shutil.copy2(paths["weather"], workflow_root / "weather.epw")
+    measure_dir = workflow_root / "measures" / "use_optimized_idf"
+    measure_dir.mkdir(parents=True, exist_ok=True)
+    (measure_dir / "measure.rb").write_text(OPENSTUDIO_IDF_MEASURE_RB, encoding="utf-8")
+    (measure_dir / "measure.xml").write_text(OPENSTUDIO_IDF_MEASURE_XML, encoding="utf-8")
+    workflow = {
+        "file_format_version": "0.1",
+        "weather_file": "weather.epw",
+        "measure_paths": ["measures"],
+        "run_options": {"cleanup": False},
+        "steps": [
+            {
+                "measure_dir_name": "use_optimized_idf",
+                "arguments": {"idf_path": str(workflow_root / "optimized.idf")},
+            }
+        ],
+    }
+    workflow_path = workflow_root / "workflow.osw"
+    workflow_path.write_text(json.dumps(workflow, indent=2) + "\n", encoding="utf-8")
     proc = subprocess.run(
-        [binary, "-x", "-w", str(paths["weather"]), "-d", str(run_dir), str(paths["optimized"])],
+        [cli, "run", "-w", str(workflow_path), "--show-stdout"],
         text=True,
         capture_output=True,
         timeout=240,
     )
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip().replace("\n", " ")[:500]
-        return None, [f"energyplus_rerun:failed:{detail}"]
+        return None, [f"openstudio_workflow_rerun:failed:{detail}"]
+    run_dir = workflow_root / "run"
     rerun = {"sql": run_dir / "eplusout.sql", "err": run_dir / "eplusout.err"}
     if not rerun["sql"].is_file():
-        return None, ["energyplus_rerun:missing_eplusout_sql"]
+        return None, ["openstudio_workflow_rerun:missing_eplusout_sql"]
     if not rerun["err"].is_file():
-        return None, ["energyplus_rerun:missing_eplusout_err"]
+        return None, ["openstudio_workflow_rerun:missing_eplusout_err"]
     err_text = rerun["err"].read_text(encoding="utf-8", errors="replace")
     if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text:
-        return None, ["energyplus_rerun:simulation_not_successful"]
+        return None, ["openstudio_workflow_rerun:simulation_not_successful"]
     return rerun, []
 
 
@@ -599,15 +664,15 @@ def main() -> None:
     failures.extend(submitted_sql_errors)
     analysis_sql_metrics = submitted_sql_metrics
     scoring_sql_source = "submitted_sql"
-    rerun_paths, rerun_errors = run_energyplus_for_evaluation(paths)
+    rerun_paths, rerun_errors = run_openstudio_for_evaluation(paths)
     failures.extend(rerun_errors)
     if rerun_paths:
         rerun_metrics, rerun_sql_errors = read_sql_metrics(rerun_paths["sql"], area_m2=area_m2, proxy=proxy)
-        failures.extend([f"energyplus_rerun:{error}" for error in rerun_sql_errors])
+        failures.extend([f"openstudio_workflow_rerun:{error}" for error in rerun_sql_errors])
         if not rerun_sql_errors:
             failures.extend(compare_submitted_sql_to_rerun(submitted_sql_metrics, rerun_metrics))
             analysis_sql_metrics = rerun_metrics
-            scoring_sql_source = "evaluator_energyplus_rerun"
+            scoring_sql_source = "evaluator_openstudio_workflow_rerun"
     report, report_errors = read_energy_report(paths["report"])
     failures.extend(report_errors)
     try:
@@ -619,7 +684,7 @@ def main() -> None:
         failures.append("design_summary.json:missing_or_empty")
 
     if variables and proxy and not submitted_sql_errors and not report_errors and summary:
-        failures.extend(validate_reports(constraints, variables, proxy, analysis_sql_metrics, report, summary, paths, scoring_sql_source == "evaluator_energyplus_rerun"))
+        failures.extend(validate_reports(constraints, variables, proxy, analysis_sql_metrics, report, summary, paths, scoring_sql_source == "evaluator_openstudio_workflow_rerun"))
 
     clean_metrics = {k: v for k, v in analysis_sql_metrics.items() if not k.startswith("_")}
     if failures:
