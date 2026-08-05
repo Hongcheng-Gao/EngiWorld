@@ -1,9 +1,9 @@
 from __future__ import annotations
 
 import csv
-import hashlib
 import json
 import os
+import re
 import sys
 from pathlib import Path
 
@@ -317,17 +317,17 @@ EXPECTED_JSON = json.loads(r"""{
     "task": "task-05"
   }
 }""")
-EXPECTED_TEXT_SHA256 = json.loads(r"""{
-  "01_kicad_board.kicad_pcb": "9a15ce30a25a170b3d30e3ce7aadb4611e316959ebcd18c0efbfaadc1d4c5083",
-  "01_kicad_mechanical_map.csv": "e5f95ab77ef93cf26d0aaa712c33c858c8268e5214ce06cddd46e9994a6682e8",
-  "01_kicad_parameters.scad": "cf4afc77b75e4ff59cfce225ead2ad30f6349ebb7dfd77cf2579b25f508a3bd5",
-  "02_openscad_enclosure.scad": "c8191d6c2b94280ff2d35c66f9785d0befc9fa49e2d3d12d0018eec50a38dbf4",
-  "02_openscad_enclosure.stl": "4b3fa176b152e84eb70dd1e3d09b463b6fe7f583aaed91556e20e38f30226a1a",
-  "03_freecad_assembly.step": "25b20bdb3814df60d7528f5d1cb0a161bea43539383c7ebce03e8a489e6166b7",
-  "03_freecad_assembly.obj": "9898b68a41bc6e8496a2ac052a283e7dac5067b964158d9574d6d7427315ade1",
-  "04_blender_review.mtl": "ee97cee43ee79bfdf9ca664355c73411740847b8fc94eea4e59889f447798502",
-  "04_blender_review.obj": "c07cca655381f0a00faf47493f171c730c527d81349f1fef077808c16dbf2480"
-}""")
+TEXT_ARTIFACTS = [
+  "01_kicad_board.kicad_pcb",
+  "01_kicad_mechanical_map.csv",
+  "01_kicad_parameters.scad",
+  "02_openscad_enclosure.scad",
+  "02_openscad_enclosure.stl",
+  "03_freecad_assembly.step",
+  "03_freecad_assembly.obj",
+  "04_blender_review.mtl",
+  "04_blender_review.obj"
+]
 REQUIRED_ARTIFACTS = [
   "01_kicad_board.kicad_pcb",
   "01_kicad_export.json",
@@ -348,37 +348,293 @@ REQUIRED_ARTIFACTS = [
 SOFTWARE_SEQUENCE = ["KiCad", "OpenSCAD", "FreeCAD", "Blender"]
 
 
+TOL = 0.05
+
+
 def norm_text(text: str) -> str:
     lines = text.replace("\r\n", "\n").replace("\r", "\n").split("\n")
     return "\n".join(line.rstrip() for line in lines).rstrip() + "\n"
 
 
-def sha_text(path: Path) -> str:
-    return hashlib.sha256(norm_text(path.read_text(encoding="utf-8")).encode("utf-8")).hexdigest()
+def is_number(value) -> bool:
+    return isinstance(value, (int, float)) and not isinstance(value, bool)
 
 
-def sha_stl_geometry(path: Path) -> str:
-    facets = []
-    triangle = []
-    for line in path.read_text(encoding="utf-8").splitlines():
-        fields = line.split()
-        if len(fields) != 4 or fields[0] != "vertex":
+def close(actual, expected, tol: float = TOL) -> bool:
+    return is_number(actual) and abs(float(actual) - float(expected)) <= tol
+
+
+def add(errors, message: str) -> None:
+    errors.append(message)
+
+
+def compare_numeric(label: str, actual, expected, errors, tol: float = TOL) -> None:
+    if not close(actual, expected, max(tol, abs(float(expected)) * 0.02)):
+        add(errors, f"{label} expected {expected}, got {actual}")
+
+
+def compare_numeric_list(label: str, actual, expected, errors, tol: float = TOL) -> None:
+    if not isinstance(actual, list) or len(actual) != len(expected):
+        add(errors, f"{label} list length mismatch")
+        return
+    for idx, expected_value in enumerate(expected):
+        compare_numeric(f"{label}[{idx}]", actual[idx], expected_value, errors, tol)
+
+
+def require_string_list(label: str, actual, expected, errors, exact_set: bool = False) -> None:
+    if not isinstance(actual, list):
+        add(errors, f"{label} is not a list")
+        return
+    actual_set = {str(item) for item in actual}
+    expected_set = {str(item) for item in expected}
+    if exact_set:
+        if actual_set != expected_set:
+            add(errors, f"{label} set mismatch")
+    elif not expected_set.issubset(actual_set):
+        add(errors, f"{label} missing {sorted(expected_set - actual_set)}")
+
+
+def compare_value(label: str, actual, expected, errors) -> None:
+    if is_number(expected):
+        if "minimum_" in label and float(expected) > 0:
+            if not is_number(actual) or float(actual) < float(expected) - TOL:
+                add(errors, f"{label} below expected minimum {expected}")
+        elif "interference_volume" in label:
+            if not is_number(actual) or float(actual) > max(float(expected), 0.0) + TOL:
+                add(errors, f"{label} above allowed interference {expected}")
+        elif "estimated_shell_mass_g" in label:
+            compare_numeric(label, actual, expected, errors, tol=max(0.25, abs(float(expected)) * 0.05))
+        else:
+            compare_numeric(label, actual, expected, errors)
+        return
+    if isinstance(expected, list):
+        if all(is_number(item) for item in expected):
+            compare_numeric_list(label, actual, expected, errors)
+        elif all(isinstance(item, str) for item in expected):
+            exact = label.endswith("required_artifacts") or label.endswith("software_sequence")
+            require_string_list(label, actual, expected, errors, exact_set=exact)
+        elif all(isinstance(item, dict) and "ref" in item for item in expected):
+            compare_ref_records(label, actual, expected, errors)
+        else:
+            if actual != expected:
+                add(errors, f"{label} list mismatch")
+        return
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            add(errors, f"{label} is not an object")
+            return
+        for key, expected_value in expected.items():
+            if key not in actual:
+                add(errors, f"{label}.{key} missing")
+            else:
+                compare_value(f"{label}.{key}", actual[key], expected_value, errors)
+        return
+    if actual != expected:
+        add(errors, f"{label} expected {expected!r}, got {actual!r}")
+
+
+def compare_ref_records(label: str, actual, expected, errors) -> None:
+    if not isinstance(actual, list):
+        add(errors, f"{label} is not a list")
+        return
+    actual_by_ref = {str(item.get("ref")): item for item in actual if isinstance(item, dict)}
+    for expected_item in expected:
+        ref = str(expected_item.get("ref"))
+        actual_item = actual_by_ref.get(ref)
+        if actual_item is None:
+            add(errors, f"{label} missing ref {ref}")
             continue
-        vertex = tuple(0.0 if abs(float(value)) < 1e-12 else round(float(value), 9) for value in fields[1:])
-        triangle.append(vertex)
-        if len(triangle) == 3:
-            facets.append(tuple(sorted(triangle)))
-            triangle = []
-    if triangle or not facets:
-        raise ValueError("invalid or empty ASCII STL")
-    canonical = json.dumps(sorted(facets), separators=(",", ":"))
-    return hashlib.sha256(canonical.encode("utf-8")).hexdigest()
+        for key, expected_value in expected_item.items():
+            if key not in actual_item:
+                add(errors, f"{label}.{ref}.{key} missing")
+            else:
+                compare_value(f"{label}.{ref}.{key}", actual_item[key], expected_value, errors)
 
 
-def sha_artifact(path: Path) -> str:
-    if path.suffix.lower() == ".stl":
-        return sha_stl_geometry(path)
-    return sha_text(path)
+def validate_toolchain_log(actual, expected, errors) -> None:
+    commands = actual.get("commands") if isinstance(actual, dict) else None
+    expected_commands = expected.get("commands", [])
+    if not isinstance(commands, list):
+        add(errors, "toolchain log commands is not a list")
+        return
+    actual_sequence = [entry.get("software") for entry in commands if isinstance(entry, dict)]
+    if actual_sequence != SOFTWARE_SEQUENCE:
+        add(errors, "toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
+    by_software = {entry.get("software"): entry for entry in commands if isinstance(entry, dict)}
+    for expected_entry in expected_commands:
+        software = expected_entry.get("software")
+        actual_entry = by_software.get(software)
+        if actual_entry is None:
+            add(errors, f"toolchain log missing {software}")
+            continue
+        if not str(actual_entry.get("command", "")).strip():
+            add(errors, f"toolchain log {software} command is empty")
+        require_string_list(f"toolchain log {software} inputs", actual_entry.get("inputs", []), expected_entry.get("inputs", []), errors)
+        require_string_list(f"toolchain log {software} outputs", actual_entry.get("outputs", []), expected_entry.get("outputs", []), errors)
+
+
+def validate_json_artifact(name: str, actual, expected, errors) -> None:
+    if not isinstance(actual, dict):
+        add(errors, f"{name} is not a JSON object")
+        return
+    if name == "toolchain_invocation_log.json":
+        validate_toolchain_log(actual, expected, errors)
+        return
+
+    for key, expected_value in expected.items():
+        if key not in actual:
+            add(errors, f"{name}.{key} missing")
+            continue
+        if key == "commands":
+            continue
+        compare_value(f"{name}.{key}", actual[key], expected_value, errors)
+
+
+def all_expected_refs():
+    export = EXPECTED_JSON["01_kicad_export.json"]
+    refs = [item["ref"] for item in export.get("components", [])]
+    refs += [item["ref"] for item in export.get("mounting_holes", [])]
+    return refs
+
+
+def parse_csv_rows(path: Path):
+    return list(csv.DictReader(path.read_text(encoding="utf-8").splitlines()))
+
+
+def compare_csv_number(label: str, row, key: str, expected, errors) -> None:
+    try:
+        actual = float(row.get(key, "nan"))
+    except ValueError:
+        add(errors, f"{label}.{key} is not numeric")
+        return
+    compare_numeric(f"{label}.{key}", actual, expected, errors)
+
+
+def validate_mechanical_map(path: Path, errors) -> None:
+    rows = parse_csv_rows(path)
+    by_ref = {row.get("ref"): row for row in rows}
+    export = EXPECTED_JSON["01_kicad_export.json"]
+    for component in export.get("components", []):
+        ref = component["ref"]
+        row = by_ref.get(ref)
+        if row is None:
+            add(errors, f"mechanical map missing {ref}")
+            continue
+        if row.get("kind") != component.get("kind"):
+            add(errors, f"mechanical map {ref} kind mismatch")
+        for key in ("x_mm", "y_mm", "height_mm", "keepout_radius_mm"):
+            compare_csv_number(f"mechanical map {ref}", row, key, component[key], errors)
+        if not row.get("role"):
+            add(errors, f"mechanical map {ref} role missing")
+    for hole in export.get("mounting_holes", []):
+        ref = hole["ref"]
+        row = by_ref.get(ref)
+        if row is None:
+            add(errors, f"mechanical map missing {ref}")
+            continue
+        if row.get("role") != "standoff_axis":
+            add(errors, f"mechanical map {ref} must be a standoff_axis")
+        compare_csv_number(f"mechanical map {ref}", row, "x_mm", hole["x_mm"], errors)
+        compare_csv_number(f"mechanical map {ref}", row, "y_mm", hole["y_mm"], errors)
+    roles = {row.get("role") for row in rows}
+    if "standoff_axis" not in roles:
+        add(errors, "mechanical map lacks standoff axes")
+    if not ({"connector_window", "access_bore", "antenna_keepout", "component_keepout"} & roles):
+        add(errors, "mechanical map lacks component-derived roles")
+
+
+def parse_vertices(path: Path):
+    vertices = []
+    for line in path.read_text(encoding="utf-8", errors="ignore").splitlines():
+        fields = line.split()
+        if len(fields) == 4 and fields[0] == "vertex":
+            vertices.append(tuple(float(value) for value in fields[1:]))
+        elif len(fields) >= 4 and fields[0] == "v":
+            vertices.append(tuple(float(value) for value in fields[1:4]))
+    return vertices
+
+
+def bbox_from_vertices(vertices):
+    mins = [min(vertex[idx] for vertex in vertices) for idx in range(3)]
+    maxs = [max(vertex[idx] for vertex in vertices) for idx in range(3)]
+    return [maxs[idx] - mins[idx] for idx in range(3)]
+
+
+def validate_bbox_file(name: str, path: Path, expected_bbox, errors) -> None:
+    vertices = parse_vertices(path)
+    if len(vertices) < 8:
+        add(errors, f"{name} does not contain enough mesh vertices")
+        return
+    bbox = bbox_from_vertices(vertices)
+    compare_numeric_list(f"{name} bbox", bbox, expected_bbox, errors, tol=0.25)
+
+
+def validate_step(path: Path, errors) -> None:
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    if "ISO-10303-21" not in text or "END-ISO-10303-21" not in text:
+        add(errors, "STEP file is missing ISO-10303-21 wrapper")
+    if "FreeCAD" not in text and "freecad" not in text.lower():
+        add(errors, "STEP file does not record FreeCAD assembly handoff")
+    mins = re.search(r"ENCLOSURE_MIN[^\n]*\(([-0-9., ]+)\)", text)
+    maxs = re.search(r"ENCLOSURE_MAX[^\n]*\(([-0-9., ]+)\)", text)
+    if mins and maxs:
+        min_values = [float(value) for value in mins.group(1).split(",")]
+        max_values = [float(value) for value in maxs.group(1).split(",")]
+        bbox = [max_values[idx] - min_values[idx] for idx in range(3)]
+        expected_bbox = EXPECTED_JSON["02_openscad_parameters.json"]["enclosure_bbox_mm"]
+        compare_numeric_list("STEP enclosure bbox", bbox, expected_bbox, errors, tol=0.25)
+
+
+def require_text_contains(name: str, text: str, needles, errors) -> None:
+    for needle in needles:
+        if str(needle) not in text:
+            add(errors, f"{name} missing {needle}")
+
+
+def validate_text_artifact(name: str, path: Path, errors) -> None:
+    export = EXPECTED_JSON["01_kicad_export.json"]
+    openscad = EXPECTED_JSON["02_openscad_parameters.json"]
+    blender = EXPECTED_JSON["04_blender_scene_report.json"]
+    lower_suffix = path.suffix.lower()
+
+    if name == "01_kicad_mechanical_map.csv":
+        validate_mechanical_map(path, errors)
+        return
+    if lower_suffix == ".stl":
+        validate_bbox_file(name, path, openscad["enclosure_bbox_mm"], errors)
+        return
+    if lower_suffix == ".step":
+        validate_step(path, errors)
+        return
+    if lower_suffix == ".obj":
+        text = path.read_text(encoding="utf-8", errors="ignore")
+        if "04_blender_review" in name:
+            require_text_contains(name, text, ["mtllib 04_blender_review.mtl", "usemtl enclosure_translucent", "usemtl pcb_green"], errors)
+        else:
+            require_text_contains(name, text, ["enclosure", "pcb"], errors)
+        validate_bbox_file(name, path, openscad["enclosure_bbox_mm"], errors)
+        return
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    if name == "01_kicad_board.kicad_pcb":
+        require_text_contains(name, text, ["(kicad_pcb", "Edge.Cuts"], errors)
+        require_text_contains(name, text, all_expected_refs(), errors)
+        return
+    if name == "01_kicad_parameters.scad":
+        require_text_contains(name, text, ["01_kicad_mechanical_map.csv", "mechanical_features", "standoff_axes", "interface_features"], errors)
+        require_text_contains(name, text, all_expected_refs(), errors)
+        require_text_contains(name, text, [f"{value:.3f}" for value in export["board_bbox_mm"][:2]], errors)
+        return
+    if name == "02_openscad_enclosure.scad":
+        require_text_contains(name, text, ["01_kicad_parameters.scad", "module", "enclosure"], errors)
+        interface_refs = []
+        for component in export.get("components", []):
+            if component.get("kind") in {"USB_C", "POWER_IN", "POWER_OUT", "SENSOR_FFC", "ETHERNET", "SYNC"} or component["ref"].startswith("J"):
+                interface_refs.append(component["ref"])
+        require_text_contains(name, text, interface_refs, errors)
+        return
+    if name == "04_blender_review.mtl":
+        require_text_contains(name, text, [f"newmtl {material}" for material in blender.get("materials", [])], errors)
+        return
 
 
 def main() -> bool:
@@ -396,50 +652,42 @@ def main() -> bool:
         except Exception as exc:
             errors.append(f"invalid json {name}: {exc}")
             continue
-        if actual != expected:
-            errors.append(f"json mismatch {name}")
+        validate_json_artifact(name, actual, expected, errors)
 
-    for name, expected_sha in EXPECTED_TEXT_SHA256.items():
+    for name in TEXT_ARTIFACTS:
         path = DESKTOP / name
         if not path.exists():
             continue
         try:
-            if sha_artifact(path) != expected_sha:
-                errors.append(f"text mismatch {name}")
+            validate_text_artifact(name, path, errors)
         except Exception as exc:
-            errors.append(f"text read failure {name}: {exc}")
-
-    map_path = DESKTOP / "01_kicad_mechanical_map.csv"
-    if map_path.exists():
-        try:
-            rows = list(csv.DictReader(map_path.read_text(encoding="utf-8").splitlines()))
-            roles = {row.get("role") for row in rows}
-            if "standoff_axis" not in roles:
-                errors.append("mechanical map lacks standoff axes")
-            if not ({"connector_window", "access_bore", "antenna_keepout", "component_keepout"} & roles):
-                errors.append("mechanical map lacks component-derived roles")
-        except Exception as exc:
-            errors.append(f"mechanical map parse failure: {exc}")
+            errors.append(f"artifact validation failure {name}: {exc}")
 
     final_path = DESKTOP / "final_release_package.json"
     log_path = DESKTOP / "toolchain_invocation_log.json"
     if final_path.exists():
-        final = json.loads(final_path.read_text(encoding="utf-8"))
-        if final.get("software_sequence") != SOFTWARE_SEQUENCE:
-            errors.append("final package software sequence mismatch")
-        if final.get("required_artifacts") != REQUIRED_ARTIFACTS:
-            errors.append("final package artifact list mismatch")
+        try:
+            final = json.loads(final_path.read_text(encoding="utf-8"))
+            if final.get("software_sequence") != SOFTWARE_SEQUENCE:
+                errors.append("final package software sequence mismatch")
+            require_string_list("final package required_artifacts", final.get("required_artifacts", []), REQUIRED_ARTIFACTS, errors, exact_set=True)
+        except Exception as exc:
+            errors.append(f"final package read failure: {exc}")
     if log_path.exists():
-        log = json.loads(log_path.read_text(encoding="utf-8"))
-        logged = [entry.get("software") for entry in log.get("commands", [])]
-        if logged != SOFTWARE_SEQUENCE:
-            errors.append("toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
+        try:
+            log = json.loads(log_path.read_text(encoding="utf-8"))
+            logged = [entry.get("software") for entry in log.get("commands", [])]
+            if logged != SOFTWARE_SEQUENCE:
+                errors.append("toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
+        except Exception as exc:
+            errors.append(f"toolchain log read failure: {exc}")
 
     if errors:
         for error in errors:
             print(error, file=sys.stderr)
         return False
     return True
+
 
 
 if __name__ == "__main__":

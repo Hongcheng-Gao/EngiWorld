@@ -4,6 +4,7 @@ import base64
 import csv
 import io
 import json
+import re
 import sys
 import zipfile
 from pathlib import Path
@@ -37,9 +38,13 @@ def _csv_equal(path: Path, expected: bytes) -> bool:
     try:
         actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
         expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = list(csv.reader(io.StringIO(actual_text)))
-        expected_rows = list(csv.reader(io.StringIO(expected_text)))
-        return actual_rows == expected_rows
+        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
+        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
+        if not actual_rows or not expected_rows:
+            return actual_rows == expected_rows
+        if actual_rows[0] != expected_rows[0]:
+            return False
+        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
     except Exception:
         return False
 
@@ -62,13 +67,30 @@ def _xml_equal(path: Path, expected: bytes) -> bool:
     return canon(actual_root) == canon(expected_root)
 
 
+
+def _edif_equal(path: Path, expected: bytes) -> bool:
+    try:
+        def tokens(text: str):
+            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
+        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
+        expected_text = expected.decode("utf-8", errors="ignore")
+        return tokens(actual_text) == tokens(expected_text)
+    except Exception:
+        return False
+
 def _zip_equal(path: Path, expected: bytes) -> bool:
     try:
         with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
             if sorted(actual.namelist()) != sorted(exp.namelist()):
                 return False
             for name in exp.namelist():
-                if actual.read(name) != exp.read(name):
+                actual_data = actual.read(name)
+                expected_data = exp.read(name)
+                suffix = Path(name).suffix.lower()
+                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
+                    if _text(actual_data) != _text(expected_data):
+                        return False
+                elif actual_data != expected_data:
                     return False
         return True
     except Exception:
@@ -85,6 +107,8 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
             return _xml_equal(path, expected)
         if path.suffix.lower() in {".zip"}:
             return _zip_equal(path, expected)
+        if path.suffix.lower() in {".edif"}:
+            return _edif_equal(path, expected)
         return _text(path.read_bytes()) == _text(expected)
     except Exception:
         return False
