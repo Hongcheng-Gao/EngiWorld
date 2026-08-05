@@ -6,9 +6,13 @@ import base64
 
 import importlib.util
 
+import re
+
 import shutil
 
 import tempfile
+
+import struct
 
 import zlib
 
@@ -205,24 +209,250 @@ def _resolve_arg(spec: str):
     return spec
 
 
-def _panel_route_settings_present(root: Path) -> bool:
+_CFB_FREE = 0xFFFFFFFF
+_CFB_END = 0xFFFFFFFE
+_CFB_NO_STREAM = 0xFFFFFFFF
 
+
+def _cfb_chain(table: list[int], start: int) -> list[int]:
+    chain = []
+    seen = set()
+    current = start
+    while (
+        current not in {_CFB_FREE, _CFB_END}
+        and 0 <= current < len(table)
+        and current not in seen
+    ):
+        seen.add(current)
+        chain.append(current)
+        current = table[current]
+    return chain
+
+
+def _read_cfb_stream(path: Path, stream_path: tuple[str, ...]) -> bytes | None:
+    """Read a named stream from an OLE/CFB PcbDoc without external packages."""
     try:
+        data = path.read_bytes()
+        if data[:8] != b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1":
+            return None
+        sector_size = 1 << struct.unpack_from("<H", data, 30)[0]
+        mini_sector_size = 1 << struct.unpack_from("<H", data, 32)[0]
+        if sector_size < 512 or mini_sector_size < 8:
+            return None
 
-        data = (Path(root) / "wifi_panel.PcbDoc").read_bytes()
+        def sector(number: int) -> bytes:
+            begin = (number + 1) * sector_size
+            return data[begin:begin + sector_size]
 
-    except OSError:
+        fat_count = struct.unpack_from("<I", data, 44)[0]
+        directory_start = struct.unpack_from("<I", data, 48)[0]
+        mini_stream_cutoff = struct.unpack_from("<I", data, 56)[0]
+        mini_fat_start = struct.unpack_from("<I", data, 60)[0]
+        mini_fat_count = struct.unpack_from("<I", data, 64)[0]
+        difat_start = struct.unpack_from("<I", data, 68)[0]
+        difat_count = struct.unpack_from("<I", data, 72)[0]
 
+        difat = list(struct.unpack_from("<109I", data, 76))
+        current = difat_start
+        for _ in range(difat_count):
+            values = struct.unpack(
+                f"<{sector_size // 4}I", sector(current)
+            )
+            difat.extend(values[:-1])
+            current = values[-1]
+        fat_sectors = [
+            number for number in difat
+            if number not in {_CFB_FREE, _CFB_END}
+        ][:fat_count]
+        fat = []
+        for number in fat_sectors:
+            values = struct.unpack(f"<{sector_size // 4}I", sector(number))
+            fat.extend(values)
+
+        directory = b"".join(
+            sector(number) for number in _cfb_chain(fat, directory_start)
+        )
+        entries = []
+        for offset in range(0, len(directory), 128):
+            entry = directory[offset:offset + 128]
+            if len(entry) < 128:
+                break
+            name_length = struct.unpack_from("<H", entry, 64)[0]
+            name = entry[:max(0, name_length - 2)].decode(
+                "utf-16le", errors="ignore"
+            )
+            entries.append({
+                "name": name,
+                "type": entry[66],
+                "left": struct.unpack_from("<I", entry, 68)[0],
+                "right": struct.unpack_from("<I", entry, 72)[0],
+                "child": struct.unpack_from("<I", entry, 76)[0],
+                "start": struct.unpack_from("<I", entry, 116)[0],
+                "size": struct.unpack_from("<Q", entry, 120)[0],
+            })
+        if not entries:
+            return None
+
+        root = entries[0]
+        root_stream = b"".join(
+            sector(number) for number in _cfb_chain(fat, root["start"])
+        )[:root["size"]]
+        mini_fat = []
+        if mini_fat_count:
+            raw = b"".join(
+                sector(number) for number in _cfb_chain(fat, mini_fat_start)
+            )[:mini_fat_count * sector_size]
+            mini_fat = list(struct.unpack(
+                f"<{len(raw) // 4}I", raw
+            ))
+
+        def children(index: int) -> list[int]:
+            result = []
+            seen = set()
+
+            def visit(node: int) -> None:
+                if (
+                    node == _CFB_NO_STREAM
+                    or node >= len(entries)
+                    or node in seen
+                ):
+                    return
+                seen.add(node)
+                visit(entries[node]["left"])
+                result.append(node)
+                visit(entries[node]["right"])
+
+            visit(entries[index]["child"])
+            return result
+
+        index = 0
+        for component in stream_path:
+            index = next(
+                child for child in children(index)
+                if entries[child]["name"] == component
+            )
+        stream = entries[index]
+        if stream["size"] < mini_stream_cutoff:
+            chunks = []
+            for number in _cfb_chain(mini_fat, stream["start"]):
+                begin = number * mini_sector_size
+                chunks.append(root_stream[begin:begin + mini_sector_size])
+            return b"".join(chunks)[:stream["size"]]
+        return b"".join(
+            sector(number) for number in _cfb_chain(fat, stream["start"])
+        )[:stream["size"]]
+    except (OSError, IndexError, StopIteration, struct.error, ValueError):
+        return None
+
+
+def _metadata_value(data: bytes, key: str) -> str | None:
+    text = data.decode("latin1", errors="ignore")
+    match = re.search(
+        rf"(?:^|\|){re.escape(key)}=([^|\x00]*)", text
+    )
+    return match.group(1) if match else None
+
+
+def _route_geometry_valid(data: bytes) -> bool:
+    """Validate a 10 mil, axis-aligned, closed route around the panel."""
+    if len(data) == 0 or len(data) % 54 != 0:
         return False
 
+    # Altium serializes a Track record as a 54-byte record. The record type
+    # at byte 5 is 57, endpoints are signed 32-bit internal coordinates at
+    # byte 18, and width is at byte 34 (1/10000 mil).
+    tracks = []
+    for offset in range(0, len(data), 54):
+        record = data[offset:offset + 54]
+        if record[5] != 57:
+            continue
+        x1, y1, x2, y2, width = struct.unpack_from("<iiiii", record, 18)
+        if width == 100000 and (x1 != x2 or y1 != y2):
+            tracks.append((x1, y1, x2, y2))
+    if len(tracks) < 4:
+        return False
+
+    tolerance = 1000  # 0.1 mil, allowing normal serialization rounding.
+
+    node_positions = []
+
+    def node_key(x: int, y: int) -> int:
+        for index, (node_x, node_y) in enumerate(node_positions):
+            if abs(x - node_x) <= tolerance and abs(y - node_y) <= tolerance:
+                return index
+        node_positions.append((x, y))
+        return len(node_positions) - 1
+
+    edges = []
+    nodes = {}
+    for x1, y1, x2, y2 in tracks:
+        if abs(x2 - x1) <= tolerance and abs(y2 - y1) <= tolerance:
+            continue
+        if abs(x2 - x1) > tolerance and abs(y2 - y1) > tolerance:
+            return False
+        a = node_key(x1, y1)
+        b = node_key(x2, y2)
+        edges.append((a, b))
+        nodes.setdefault(a, []).append(b)
+        nodes.setdefault(b, []).append(a)
+    if len(edges) < 4 or not nodes or any(len(adj) != 2 for adj in nodes.values()):
+        return False
+
+    visited = set()
+    stack = [next(iter(nodes))]
+    while stack:
+        node = stack.pop()
+        if node in visited:
+            continue
+        visited.add(node)
+        stack.extend(neighbor for neighbor in nodes[node] if neighbor not in visited)
+    if visited != set(nodes):
+        return False
+
+    xs = [point for track in tracks for point in (track[0], track[2])]
+    ys = [point for track in tracks for point in (track[1], track[3])]
+    expected = (10000000, 58425197, 10000000, 56500000)
+    if any(abs(actual - target) > 20000 for actual, target in zip(
+        (min(xs), max(xs), min(ys), max(ys)), expected
+    )):
+        return False
+
+    min_x, max_x, min_y, max_y = expected
+    for x1, y1, x2, y2 in tracks:
+        horizontal = abs(y2 - y1) <= tolerance
+        vertical = abs(x2 - x1) <= tolerance
+        if horizontal and min_y - tolerance <= y1 <= min_y + tolerance:
+            if min(x1, x2) < min_x - tolerance or max(x1, x2) > max_x + tolerance:
+                return False
+        elif horizontal and max_y - tolerance <= y1 <= max_y + tolerance:
+            if min(x1, x2) < min_x - tolerance or max(x1, x2) > max_x + tolerance:
+                return False
+        elif vertical and min_x - tolerance <= x1 <= min_x + tolerance:
+            if min(y1, y2) < min_y - tolerance or max(y1, y2) > max_y + tolerance:
+                return False
+        elif vertical and max_x - tolerance <= x1 <= max_x + tolerance:
+            if min(y1, y2) < min_y - tolerance or max(y1, y2) > max_y + tolerance:
+                return False
+        else:
+            return False
+    return True
+
+
+def _panel_route_settings_present(root: Path) -> bool:
+    try:
+        path = Path(root) / "wifi_panel.PcbDoc"
+        data = path.read_bytes()
+        board = _read_cfb_stream(path, ("Board6", "Data"))
+        tracks = _read_cfb_stream(path, ("Tracks6", "Data"))
+    except OSError:
+        return False
     return (
-
-        b"ROUTETOOLPATHLAYER=MECHANICAL32" in data
-
-        and b"TRACKWIDTH=10mil" in data
-
-        and b"RouteToolPath" in data
-
+        board is not None
+        and tracks is not None
+        and _metadata_value(board, "ROUTETOOLPATHLAYER") == "MECHANICAL32"
+        and _metadata_value(board, "TRACKWIDTH") == "10mil"
+        and b"RouteToolPath" in board
+        and _route_geometry_valid(tracks)
     )
 
 
