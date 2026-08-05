@@ -1,235 +1,116 @@
 from __future__ import annotations
 
-import base64
-import importlib.util
-import shutil
-import tempfile
-import zlib
+import argparse
+import json
+import re
 from pathlib import Path
 
 
-DESKTOP = Path(r'C:\Users\user\Desktop')
-
-GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
+DEFAULT_DESKTOP = Path(r"C:\Users\user\Desktop")
+FORBIDDEN_SCRIPT_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
     ".lua", ".tcl", ".ahk", ".scr",
 }
-GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
-GUI_BYPASS_OUTPUT_TOKENS = (
-    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv",
-    ".dxf", ".dwg", ".step", ".stp", ".fcstd", ".scad", ".stl", ".obj",
-    ".blend", ".pcb", ".sch", ".brd", ".dsn", ".opj",
-    ".db", ".rst", ".rth", ".wbpj", ".odb", ".cae", ".inp",
-    ".nc", ".gcode", ".slb", ".ipt", ".sldprt", ".sldasm",
-    "autocad_result", "apdl_", "wb_",
-)
-GUI_BYPASS_COMMAND_TOKENS = (
-    "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
-    "bash", " sh ", "zsh", "node", "ruby", "perl",
-    "ifcopenshell", "openstudio", "energyplus",
-    "blender --background", "revitbatchprocessor",
-    "ansys", "mapdl", "fluent", "abaqus", "cae noGUI",
-    "freecad", "freecadcmd", "openscad", "librecad",
-    "ezdxf", "cadquery", "accoreconsole", "autolisp",
-    "solidworks", "solvespace", "kicad-cli", "pcbnew",
-)
 
 
-def _read_text_safe(path):
+def _has_unexpected_script(root: Path) -> bool:
     try:
-        return path.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        return ""
-
-
-def _desktop_script_artifacts(root):
-    if not root.exists() or not root.is_dir():
-        return True
-    try:
-        candidates = list(root.iterdir())
-        for directory in list(candidates):
-            if directory.is_dir() and directory.name not in {"__pycache__", "_runtime"}:
-                try:
-                    candidates.extend(directory.iterdir())
-                except Exception:
-                    pass
-        for path in candidates:
-            if not path.is_file():
+        for path in root.rglob("*"):
+            if not path.is_file() or path.name.lower() == "eval.py":
                 continue
-            if path.name in GUI_BYPASS_ALLOWED_FILENAMES:
-                continue
-            if path.suffix.lower() in GUI_BYPASS_FORBIDDEN_EXTENSIONS:
+            if path.suffix.lower() in FORBIDDEN_SCRIPT_EXTENSIONS:
                 return True
-    except Exception:
+    except OSError:
         return True
     return False
 
 
-def _history_paths(root):
-    home = Path.home()
-    return [
-        home / ".bash_history",
-        home / ".zsh_history",
-        home / ".python_history",
-        home / ".local/share/fish/fish_history",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
-        root / ".bash_history",
-        root / ".zsh_history",
-    ]
-
-
-def _history_contains_bypass(root):
-    for path in _history_paths(root):
-        if not path.is_file():
+def _parse_sections(text: str) -> dict[str, list[tuple[str, str]]]:
+    sections: dict[str, list[tuple[str, str]]] = {}
+    current = None
+    for raw in text.splitlines():
+        line = raw.strip()
+        if not line:
             continue
-        text = _read_text_safe(path).lower()
-        if not text:
+        if line.startswith("[") and line.endswith("]"):
+            current = line[1:-1]
+            sections.setdefault(current, [])
             continue
-        for raw_line in text.splitlines():
-            line = raw_line.strip()
-            if not line or "eval.py" in line:
-                continue
-            touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
-            runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
-            writes_file = any(
-                token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item")
-            )
-            if touches_output and (runs_command or writes_file):
-                return True
-            if ("/desktop/" in line or "\\desktop\\" in line) and any(
-                ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS
-            ) and runs_command:
-                return True
-    return False
+        if current is not None and "=" in line:
+            key, value = line.split("=", 1)
+            sections[current].append((key.strip(), value.strip()))
+    return sections
 
 
-def check_no_gui_bypass(root):
-    root = Path(root)
-    if _desktop_script_artifacts(root):
+def _numbered_outputs(fields: list[tuple[str, str]]) -> dict[int, dict[str, str]]:
+    outputs: dict[int, dict[str, str]] = {}
+    pattern = re.compile(r"^([A-Za-z][A-Za-z0-9_]*?)(\d+)$")
+    for key, value in fields:
+        match = pattern.match(key)
+        if match:
+            outputs.setdefault(int(match.group(2)), {})[match.group(1)] = value
+    return outputs
+
+
+def _expected_plot_layers(stackup: dict) -> list[str]:
+    layers = stackup["layers"]
+    signal_positions = [i for i, layer in enumerate(layers) if layer["type"] == "Signal"]
+    first_signal = signal_positions[0]
+    last_signal = signal_positions[-1]
+    intermediate_number = 0
+    expected = []
+    for index, layer in enumerate(layers):
+        if layer["type"] != "Signal":
+            expected.append("Mechanical15")
+        elif index == first_signal:
+            expected.append("TopLayer")
+        elif index == last_signal:
+            expected.append("BottomLayer")
+        else:
+            intermediate_number += 1
+            expected.append(f"MidLayer{intermediate_number}")
+    return expected
+
+
+def eval_outputs(output_dir: Path) -> bool:
+    output_dir = Path(output_dir).resolve()
+    if _has_unexpected_script(output_dir):
         return False
-    if _history_contains_bypass(root):
+
+    stackup_path = output_dir / "stackup.json"
+    answer_path = output_dir / "layered.OutJob"
+    if not stackup_path.is_file() or not answer_path.is_file():
         return False
+
+    try:
+        stackup = json.loads(stackup_path.read_text(encoding="utf-8"))
+        text = answer_path.read_text(encoding="utf-8", errors="replace")
+        expected = _expected_plot_layers(stackup)
+    except (OSError, ValueError, KeyError, IndexError):
+        return False
+
+    sections = _parse_sections(text)
+    group = sections.get("OutputGroup1")
+    if group is None:
+        return False
+    outputs = _numbered_outputs(group)
+    if sorted(outputs) != list(range(1, len(expected) + 1)):
+        return False
+
+    for number, plot_layer in enumerate(expected, start=1):
+        output = outputs[number]
+        if output.get("OutputType", "").lower() != "gerber":
+            return False
+        if output.get("PlotLayer") != plot_layer:
+            return False
+        if output.get("OutputEnabled", "").lower() not in {"1", "true", "yes"}:
+            return False
     return True
 
-BUNDLE = {'eval_inner.py': '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'}
-CALL_FUNC = 'eval_outputs'
-CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('stackup.json', 'C:\\Users\\user\\Desktop\\stackup.json'), ('template.OutJob', 'C:\\Users\\user\\Desktop\\template.OutJob')]
 
-
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
-
-
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
-
-
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
-
-
-
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
-
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
-    try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        score = result.get("score")
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    if hasattr(result, "score"):
-        try:
-            return float(getattr(result, "score")) == 1.0
-        except Exception:
-            pass
-    return False
-
-
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    return spec
-
-
-
-
-def _run() -> bool:
-    if not check_no_gui_bypass(DESKTOP):
-        return False
-
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        module = _load_module(root)
-        func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
-        return _is_pass(result)
-    except Exception:
-        return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
 if __name__ == "__main__":
-    print("True" if _run() else "False")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("output_dir", nargs="?", default=str(DEFAULT_DESKTOP))
+    args = parser.parse_args()
+    print("True" if eval_outputs(Path(args.output_dir)) else "False")

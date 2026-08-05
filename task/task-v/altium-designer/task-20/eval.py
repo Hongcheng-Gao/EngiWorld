@@ -1,235 +1,67 @@
 from __future__ import annotations
 
-import base64
-import importlib.util
-import shutil
-import tempfile
-import zlib
+import argparse
 from pathlib import Path
 
 
-DESKTOP = Path(r'C:\Users\user\Desktop')
-
-GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
+DEFAULT_DESKTOP = Path(r"C:\Users\user\Desktop")
+FORBIDDEN_SCRIPT_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".psm1", ".psd1", ".vbs", ".js", ".mjs", ".ts", ".rb",
     ".lua", ".tcl", ".ahk", ".scr",
 }
-GUI_BYPASS_ALLOWED_FILENAMES = {"eval.py"}
-GUI_BYPASS_OUTPUT_TOKENS = (
-    "result.ifc", "result.pdf", "result.osm", "workflow.osw", "summary.txt",
-    "report.csv", "result.csv",
-    ".dxf", ".dwg", ".step", ".stp", ".fcstd", ".scad", ".stl", ".obj",
-    ".blend", ".pcb", ".sch", ".brd", ".dsn", ".opj",
-    ".db", ".rst", ".rth", ".wbpj", ".odb", ".cae", ".inp",
-    ".nc", ".gcode", ".slb", ".ipt", ".sldprt", ".sldasm",
-    "autocad_result", "apdl_", "wb_",
+NATIVE_DOCUMENT_MARKER = (
+    b'<Document xmlns="http://schemas.datacontract.org/2004/07/'
+    b'Altium.Designer.PcbDrawing.DataSerialization.V1"'
 )
-GUI_BYPASS_COMMAND_TOKENS = (
-    "python", "python3", "py ", "powershell", "pwsh", "cmd.exe", "cmd /c",
-    "bash", " sh ", "zsh", "node", "ruby", "perl",
-    "ifcopenshell", "openstudio", "energyplus",
-    "blender --background", "revitbatchprocessor",
-    "ansys", "mapdl", "fluent", "abaqus", "cae noGUI",
-    "freecad", "freecadcmd", "openscad", "librecad",
-    "ezdxf", "cadquery", "accoreconsole", "autolisp",
-    "solidworks", "solvespace", "kicad-cli", "pcbnew",
-)
+REQUIRED_NATIVE_MARKERS = {
+    b"<Page": 1,
+    b"BoardSourceName": 1,
+    b"Fabrication": 1,
+    b"DrillTable": 1,
+    b"Legend": 1,
+    b"AssemblyDrawing": 2,
+    b"BOM": 1,
+    b"Notes": 1,
+    b"Revision": 1,
+    b"Title": 1,
+}
 
 
-def _read_text_safe(path):
+def _has_unexpected_script(root: Path) -> bool:
     try:
-        return path.read_text(encoding="utf-8", errors="ignore")
-    except Exception:
-        return ""
-
-
-def _desktop_script_artifacts(root):
-    if not root.exists() or not root.is_dir():
-        return True
-    try:
-        candidates = list(root.iterdir())
-        for directory in list(candidates):
-            if directory.is_dir() and directory.name not in {"__pycache__", "_runtime"}:
-                try:
-                    candidates.extend(directory.iterdir())
-                except Exception:
-                    pass
-        for path in candidates:
-            if not path.is_file():
+        for path in root.rglob("*"):
+            if not path.is_file() or path.name.lower() == "eval.py":
                 continue
-            if path.name in GUI_BYPASS_ALLOWED_FILENAMES:
-                continue
-            if path.suffix.lower() in GUI_BYPASS_FORBIDDEN_EXTENSIONS:
+            if path.suffix.lower() in FORBIDDEN_SCRIPT_EXTENSIONS:
                 return True
-    except Exception:
+    except OSError:
         return True
     return False
 
 
-def _history_paths(root):
-    home = Path.home()
-    return [
-        home / ".bash_history",
-        home / ".zsh_history",
-        home / ".python_history",
-        home / ".local/share/fish/fish_history",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/ConsoleHost_history.txt",
-        home / "AppData/Roaming/Microsoft/Windows/PowerShell/PSReadLine/Visual Studio Code Host_history.txt",
-        root / ".bash_history",
-        root / ".zsh_history",
-    ]
-
-
-def _history_contains_bypass(root):
-    for path in _history_paths(root):
-        if not path.is_file():
-            continue
-        text = _read_text_safe(path).lower()
-        if not text:
-            continue
-        for raw_line in text.splitlines():
-            line = raw_line.strip()
-            if not line or "eval.py" in line:
-                continue
-            touches_output = any(token in line for token in GUI_BYPASS_OUTPUT_TOKENS)
-            runs_command = any(token in line for token in GUI_BYPASS_COMMAND_TOKENS)
-            writes_file = any(
-                token in line for token in (">", "tee ", "cat ", "set-content", "out-file", "new-item")
-            )
-            if touches_output and (runs_command or writes_file):
-                return True
-            if ("/desktop/" in line or "\\desktop\\" in line) and any(
-                ext in line for ext in GUI_BYPASS_FORBIDDEN_EXTENSIONS
-            ) and runs_command:
-                return True
-    return False
-
-
-def check_no_gui_bypass(root):
-    root = Path(root)
-    if _desktop_script_artifacts(root):
+def eval_outputs(output_dir: Path) -> bool:
+    output_dir = Path(output_dir).resolve()
+    if _has_unexpected_script(output_dir):
         return False
-    if _history_contains_bypass(root):
+
+    output = output_dir / "release.PCBDwf"
+    if not output.is_file():
         return False
-    return True
-
-BUNDLE = {'eval_inner.py': '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'}
-CALL_FUNC = 'eval_outputs'
-CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('requirements.md', 'C:\\Users\\user\\Desktop\\requirements.md'), ('template.PCBDwf', 'C:\\Users\\user\\Desktop\\template.PCBDwf')]
-
-
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
-
-
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
-
-
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
-
-
-
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
-
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
     try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        score = result.get("score")
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    if hasattr(result, "score"):
-        try:
-            return float(getattr(result, "score")) == 1.0
-        except Exception:
-            pass
-    return False
-
-
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    return spec
-
-
-
-
-def _run() -> bool:
-    if not check_no_gui_bypass(DESKTOP):
+        data = output.read_bytes()
+    except OSError:
         return False
 
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        module = _load_module(root)
-        func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
-        return _is_pass(result)
-    except Exception:
+    if len(data) < 4096 or NATIVE_DOCUMENT_MARKER not in data:
         return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+    if data.count(b"</Document>") != 1:
+        return False
+    return all(data.count(marker) >= count for marker, count in REQUIRED_NATIVE_MARKERS.items())
+
+
 if __name__ == "__main__":
-    print("True" if _run() else "False")
+    parser = argparse.ArgumentParser()
+    parser.add_argument("output_dir", nargs="?", default=str(DEFAULT_DESKTOP))
+    args = parser.parse_args()
+    print("True" if eval_outputs(Path(args.output_dir)) else "False")

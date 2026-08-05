@@ -205,10 +205,34 @@ def _resolve_arg(spec: str):
     return spec
 
 
+def _panel_route_settings_present(root: Path) -> bool:
+
+    try:
+
+        data = (Path(root) / "wifi_panel.PcbDoc").read_bytes()
+
+    except OSError:
+
+        return False
+
+    return (
+
+        b"ROUTETOOLPATHLAYER=MECHANICAL32" in data
+
+        and b"TRACKWIDTH=10mil" in data
+
+        and b"RouteToolPath" in data
+
+    )
+
 
 
 
 def _run() -> bool:
+
+    if not _panel_route_settings_present(DESKTOP):
+
+        return False
 
     import uuid
 
