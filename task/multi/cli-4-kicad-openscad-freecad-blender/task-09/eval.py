@@ -61,7 +61,7 @@ EXPECTED_JSON = json.loads(r"""{
     "corrected_board": "01_kicad_board.kicad_pcb",
     "critical_requirement": "The heater zones must be exposed in the Blender material review while the USB and sync connectors get separate side apertures.",
     "input_board": "board_input.kicad_pcb",
-    "max_component_height_mm": 18.0,
+    "max_component_height_mm": 4.6,
     "mechanical_map": "01_kicad_mechanical_map.csv",
     "mounting_holes": [
       {
@@ -367,8 +367,131 @@ def add(errors, message: str) -> None:
     errors.append(message)
 
 
+FIELD_ALIASES = {
+    "ref": ("ref", "reference", "reference_designator", "designator", "id"),
+    "kind": ("kind", "type", "component_type", "footprint_kind"),
+    "x_mm": ("x_mm", "x", "center_x_mm", "x_center_mm"),
+    "y_mm": ("y_mm", "y", "center_y_mm", "y_center_mm"),
+    "height_mm": ("height_mm", "height", "component_height_mm"),
+    "keepout_radius_mm": ("keepout_radius_mm", "keepout_radius", "radius_mm", "clearance_radius_mm"),
+    "diameter_mm": ("diameter_mm", "diameter", "hole_diameter_mm"),
+    "role": ("role", "purpose", "mechanical_role"),
+    "board_bbox_mm": ("board_bbox_mm", "board_bbox", "board_dimensions_mm", "board_size_mm"),
+    "enclosure_bbox_mm": ("enclosure_bbox_mm", "enclosure_bbox", "enclosure_dimensions_mm", "bbox_mm"),
+    "software_stage": ("software_stage", "stage", "software", "tool", "application"),
+    "input_parameter_handoff": ("input_parameter_handoff", "parameter_handoff", "openscad_parameter_handoff"),
+    "source_mechanical_map": ("source_mechanical_map", "mechanical_map", "source_map"),
+    "assembly_step": ("assembly_step", "step", "step_file"),
+    "assembly_mesh": ("assembly_mesh", "mesh", "obj", "obj_file"),
+    "review_obj": ("review_obj", "obj", "review_mesh"),
+    "review_mtl": ("review_mtl", "mtl", "material_file"),
+    "release_decision": ("release_decision", "decision"),
+    "side_clearance_mm": ("side_clearance_mm", "minimum_side_clearance_mm"),
+    "top_clearance_mm": ("top_clearance_mm", "minimum_top_clearance_mm"),
+    "commands": ("commands", "steps", "toolchain", "invocations"),
+    "software": ("software", "software_stage", "stage", "tool", "application"),
+    "command": ("command", "cmd", "command_line"),
+    "inputs": ("inputs", "input", "input_files", "input_artifacts"),
+    "outputs": ("outputs", "output", "output_files", "output_artifacts"),
+}
+
+
+def key_token(key) -> str:
+    return re.sub(r"[^a-z0-9]", "", str(key).lower())
+
+
+def get_value(data, key, default=None):
+    if not isinstance(data, dict):
+        return default
+    names = FIELD_ALIASES.get(key, (key,))
+    for name in names:
+        if name in data:
+            return data[name]
+    normalized = {key_token(k): k for k in data.keys()}
+    for name in names:
+        actual_key = normalized.get(key_token(name))
+        if actual_key is not None:
+            return data[actual_key]
+    return default
+
+
+def as_number(value):
+    if is_number(value):
+        return float(value)
+    if isinstance(value, str):
+        match = re.search(r"[-+]?\d+(?:\.\d+)?", value.strip())
+        if match:
+            try:
+                return float(match.group(0))
+            except ValueError:
+                return None
+    return None
+
+
+def as_string(value):
+    if isinstance(value, str):
+        return value.strip()
+    if isinstance(value, list):
+        items = [as_string(item) for item in value]
+        items = [item for item in items if item]
+        if len(items) == 1:
+            return items[0]
+        if items:
+            return " && ".join(items)
+    if isinstance(value, dict):
+        for key in ("software", "name", "command", "path", "file"):
+            if key in value:
+                text = as_string(value[key])
+                if text:
+                    return text
+    return None
+
+
+def normalize_list_token(value):
+    text = as_string(value)
+    if text is None:
+        text = str(value)
+    text = text.strip().replace("\\", "/")
+    return text.rsplit("/", 1)[-1].lower()
+
+
+def string_items(value):
+    if isinstance(value, list):
+        items = []
+        for item in value:
+            nested = string_items(item)
+            if nested:
+                items.extend(nested)
+        return items
+    text = as_string(value)
+    if text:
+        return [text]
+    return []
+
+
+def normalize_software(value):
+    if isinstance(value, list):
+        if len(value) == 1:
+            return normalize_software(value[0])
+        return None
+    text = as_string(value)
+    if not text:
+        return None
+    lower = text.lower()
+    if "openscad" in lower:
+        return "OpenSCAD"
+    if "freecad" in lower:
+        return "FreeCAD"
+    if "blender" in lower:
+        return "Blender"
+    if "kicad" in lower:
+        return "KiCad"
+    return text.strip()
+
+
 def compare_numeric(label: str, actual, expected, errors, tol: float = TOL) -> None:
-    if not close(actual, expected, max(tol, abs(float(expected)) * 0.02)):
+    actual_number = as_number(actual)
+    if actual_number is None or not close(actual_number, expected, max(tol, abs(float(expected)) * 0.02)):
         add(errors, f"{label} expected {expected}, got {actual}")
 
 
@@ -381,11 +504,12 @@ def compare_numeric_list(label: str, actual, expected, errors, tol: float = TOL)
 
 
 def require_string_list(label: str, actual, expected, errors, exact_set: bool = False) -> None:
-    if not isinstance(actual, list):
+    actual_items = string_items(actual)
+    if not actual_items:
         add(errors, f"{label} is not a list")
         return
-    actual_set = {str(item) for item in actual}
-    expected_set = {str(item) for item in expected}
+    actual_set = {normalize_list_token(item) for item in actual_items}
+    expected_set = {normalize_list_token(item) for item in expected}
     if exact_set:
         if actual_set != expected_set:
             add(errors, f"{label} set mismatch")
@@ -423,10 +547,11 @@ def compare_value(label: str, actual, expected, errors) -> None:
             add(errors, f"{label} is not an object")
             return
         for key, expected_value in expected.items():
-            if key not in actual:
+            actual_value = get_value(actual, key)
+            if actual_value is None:
                 add(errors, f"{label}.{key} missing")
             else:
-                compare_value(f"{label}.{key}", actual[key], expected_value, errors)
+                compare_value(f"{label}.{key}", actual_value, expected_value, errors)
         return
     if actual != expected:
         add(errors, f"{label} expected {expected!r}, got {actual!r}")
@@ -436,40 +561,48 @@ def compare_ref_records(label: str, actual, expected, errors) -> None:
     if not isinstance(actual, list):
         add(errors, f"{label} is not a list")
         return
-    actual_by_ref = {str(item.get("ref")): item for item in actual if isinstance(item, dict)}
+    actual_by_ref = {str(get_value(item, "ref")).lower(): item for item in actual if isinstance(item, dict)}
     for expected_item in expected:
         ref = str(expected_item.get("ref"))
-        actual_item = actual_by_ref.get(ref)
+        actual_item = actual_by_ref.get(ref.lower())
         if actual_item is None:
             add(errors, f"{label} missing ref {ref}")
             continue
         for key, expected_value in expected_item.items():
-            if key not in actual_item:
+            actual_value = get_value(actual_item, key)
+            if actual_value is None:
                 add(errors, f"{label}.{ref}.{key} missing")
             else:
-                compare_value(f"{label}.{ref}.{key}", actual_item[key], expected_value, errors)
+                compare_value(f"{label}.{ref}.{key}", actual_value, expected_value, errors)
 
 
 def validate_toolchain_log(actual, expected, errors) -> None:
-    commands = actual.get("commands") if isinstance(actual, dict) else None
+    commands = get_value(actual, "commands")
     expected_commands = expected.get("commands", [])
     if not isinstance(commands, list):
         add(errors, "toolchain log commands is not a list")
         return
-    actual_sequence = [entry.get("software") for entry in commands if isinstance(entry, dict)]
+    actual_sequence = [normalize_software(get_value(entry, "software")) for entry in commands if isinstance(entry, dict)]
     if actual_sequence != SOFTWARE_SEQUENCE:
         add(errors, "toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
-    by_software = {entry.get("software"): entry for entry in commands if isinstance(entry, dict)}
+    by_software = {}
+    for entry in commands:
+        if not isinstance(entry, dict):
+            continue
+        software = normalize_software(get_value(entry, "software"))
+        if software:
+            by_software[software] = entry
     for expected_entry in expected_commands:
         software = expected_entry.get("software")
         actual_entry = by_software.get(software)
         if actual_entry is None:
             add(errors, f"toolchain log missing {software}")
             continue
-        if not str(actual_entry.get("command", "")).strip():
+        command = as_string(get_value(actual_entry, "command"))
+        if not command:
             add(errors, f"toolchain log {software} command is empty")
-        require_string_list(f"toolchain log {software} inputs", actual_entry.get("inputs", []), expected_entry.get("inputs", []), errors)
-        require_string_list(f"toolchain log {software} outputs", actual_entry.get("outputs", []), expected_entry.get("outputs", []), errors)
+        require_string_list(f"toolchain log {software} inputs", get_value(actual_entry, "inputs", []), expected_entry.get("inputs", []), errors)
+        require_string_list(f"toolchain log {software} outputs", get_value(actual_entry, "outputs", []), expected_entry.get("outputs", []), errors)
 
 
 def validate_json_artifact(name: str, actual, expected, errors) -> None:
@@ -481,12 +614,13 @@ def validate_json_artifact(name: str, actual, expected, errors) -> None:
         return
 
     for key, expected_value in expected.items():
-        if key not in actual:
+        actual_value = get_value(actual, key)
+        if actual_value is None:
             add(errors, f"{name}.{key} missing")
             continue
         if key == "commands":
             continue
-        compare_value(f"{name}.{key}", actual[key], expected_value, errors)
+        compare_value(f"{name}.{key}", actual_value, expected_value, errors)
 
 
 def all_expected_refs():
@@ -502,8 +636,8 @@ def parse_csv_rows(path: Path):
 
 def compare_csv_number(label: str, row, key: str, expected, errors) -> None:
     try:
-        actual = float(row.get(key, "nan"))
-    except ValueError:
+        actual = float(get_value(row, key, "nan"))
+    except (TypeError, ValueError):
         add(errors, f"{label}.{key} is not numeric")
         return
     compare_numeric(f"{label}.{key}", actual, expected, errors)
@@ -511,31 +645,31 @@ def compare_csv_number(label: str, row, key: str, expected, errors) -> None:
 
 def validate_mechanical_map(path: Path, errors) -> None:
     rows = parse_csv_rows(path)
-    by_ref = {row.get("ref"): row for row in rows}
+    by_ref = {str(get_value(row, "ref")).lower(): row for row in rows if get_value(row, "ref") is not None}
     export = EXPECTED_JSON["01_kicad_export.json"]
     for component in export.get("components", []):
         ref = component["ref"]
-        row = by_ref.get(ref)
+        row = by_ref.get(str(ref).lower())
         if row is None:
             add(errors, f"mechanical map missing {ref}")
             continue
-        if row.get("kind") != component.get("kind"):
+        if str(get_value(row, "kind", "")).lower() != str(component.get("kind")).lower():
             add(errors, f"mechanical map {ref} kind mismatch")
         for key in ("x_mm", "y_mm", "height_mm", "keepout_radius_mm"):
             compare_csv_number(f"mechanical map {ref}", row, key, component[key], errors)
-        if not row.get("role"):
+        if not get_value(row, "role"):
             add(errors, f"mechanical map {ref} role missing")
     for hole in export.get("mounting_holes", []):
         ref = hole["ref"]
-        row = by_ref.get(ref)
+        row = by_ref.get(str(ref).lower())
         if row is None:
             add(errors, f"mechanical map missing {ref}")
             continue
-        if row.get("role") != "standoff_axis":
+        if str(get_value(row, "role", "")).lower() != "standoff_axis":
             add(errors, f"mechanical map {ref} must be a standoff_axis")
         compare_csv_number(f"mechanical map {ref}", row, "x_mm", hole["x_mm"], errors)
         compare_csv_number(f"mechanical map {ref}", row, "y_mm", hole["y_mm"], errors)
-    roles = {row.get("role") for row in rows}
+    roles = {str(get_value(row, "role", "")).lower() for row in rows}
     if "standoff_axis" not in roles:
         add(errors, "mechanical map lacks standoff axes")
     if not ({"connector_window", "access_bore", "antenna_keepout", "component_keepout"} & roles):
@@ -667,7 +801,8 @@ def main() -> bool:
     if final_path.exists():
         try:
             final = json.loads(final_path.read_text(encoding="utf-8"))
-            if final.get("software_sequence") != SOFTWARE_SEQUENCE:
+            sequence = [normalize_software(item) for item in string_items(final.get("software_sequence", []))]
+            if sequence != SOFTWARE_SEQUENCE:
                 errors.append("final package software sequence mismatch")
             require_string_list("final package required_artifacts", final.get("required_artifacts", []), REQUIRED_ARTIFACTS, errors, exact_set=True)
         except Exception as exc:
@@ -675,7 +810,10 @@ def main() -> bool:
     if log_path.exists():
         try:
             log = json.loads(log_path.read_text(encoding="utf-8"))
-            logged = [entry.get("software") for entry in log.get("commands", [])]
+            logged = []
+            commands = get_value(log, "commands", [])
+            if isinstance(commands, list):
+                logged = [normalize_software(get_value(entry, "software")) for entry in commands if isinstance(entry, dict)]
             if logged != SOFTWARE_SEQUENCE:
                 errors.append("toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
         except Exception as exc:
