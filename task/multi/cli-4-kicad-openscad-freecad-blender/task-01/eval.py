@@ -61,7 +61,7 @@ EXPECTED_JSON = json.loads(r"""{
     "corrected_board": "01_kicad_board.kicad_pcb",
     "critical_requirement": "USB-C and sensor FFC side windows must align to their KiCad footprint centers while preserving the lid clearance above U1.",
     "input_board": "board_input.kicad_pcb",
-    "max_component_height_mm": 10.0,
+    "max_component_height_mm": 4.6,
     "mechanical_map": "01_kicad_mechanical_map.csv",
     "mounting_holes": [
       {
@@ -382,7 +382,10 @@ def require_string_list(label: str, actual, expected, errors, exact_set: bool = 
     if not isinstance(actual, list):
         add(errors, f"{label} is not a list")
         return
-    actual_set = {str(item) for item in actual}
+    invalid = [idx for idx, item in enumerate(actual) if not isinstance(item, str)]
+    if invalid:
+        add(errors, f"{label} contains non-string items at indexes {invalid}")
+    actual_set = {item for item in actual if isinstance(item, str)}
     expected_set = {str(item) for item in expected}
     if exact_set:
         if actual_set != expected_set:
@@ -454,18 +457,31 @@ def validate_toolchain_log(actual, expected, errors) -> None:
     if not isinstance(commands, list):
         add(errors, "toolchain log commands is not a list")
         return
-    actual_sequence = [entry.get("software") for entry in commands if isinstance(entry, dict)]
+    actual_sequence = []
+    by_software = {}
+    for index, entry in enumerate(commands):
+        if not isinstance(entry, dict):
+            add(errors, f"toolchain log command {index} is not an object")
+            continue
+        software = entry.get("software")
+        if not isinstance(software, str) or not software.strip():
+            add(errors, f"toolchain log command {index} software is not a non-empty string")
+            continue
+        actual_sequence.append(software)
+        if software in by_software:
+            add(errors, f"toolchain log contains duplicate {software} command records")
+        by_software[software] = entry
     if actual_sequence != SOFTWARE_SEQUENCE:
         add(errors, "toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
-    by_software = {entry.get("software"): entry for entry in commands if isinstance(entry, dict)}
     for expected_entry in expected_commands:
         software = expected_entry.get("software")
         actual_entry = by_software.get(software)
         if actual_entry is None:
             add(errors, f"toolchain log missing {software}")
             continue
-        if not str(actual_entry.get("command", "")).strip():
-            add(errors, f"toolchain log {software} command is empty")
+        command = actual_entry.get("command")
+        if not isinstance(command, str) or not command.strip():
+            add(errors, f"toolchain log {software} command is not a non-empty string")
         require_string_list(f"toolchain log {software} inputs", actual_entry.get("inputs", []), expected_entry.get("inputs", []), errors)
         require_string_list(f"toolchain log {software} outputs", actual_entry.get("outputs", []), expected_entry.get("outputs", []), errors)
 
@@ -495,20 +511,32 @@ def all_expected_refs():
 
 
 def parse_csv_rows(path: Path):
-    return list(csv.DictReader(path.read_text(encoding="utf-8").splitlines()))
+    reader = csv.DictReader(path.read_text(encoding="utf-8").splitlines())
+    return list(reader.fieldnames or []), list(reader)
 
 
 def compare_csv_number(label: str, row, key: str, expected, errors) -> None:
     try:
         actual = float(row.get(key, "nan"))
-    except ValueError:
+    except (TypeError, ValueError):
         add(errors, f"{label}.{key} is not numeric")
         return
     compare_numeric(f"{label}.{key}", actual, expected, errors)
 
 
 def validate_mechanical_map(path: Path, errors) -> None:
-    rows = parse_csv_rows(path)
+    columns, rows = parse_csv_rows(path)
+    required_columns = [
+        "ref", "kind", "x_mm", "y_mm", "height_mm",
+        "keepout_radius_mm", "role",
+    ]
+    missing_columns = [column for column in required_columns if column not in columns]
+    if missing_columns:
+        add(errors, f"mechanical map missing columns {missing_columns}")
+    refs = [row.get("ref") for row in rows if row.get("ref")]
+    duplicate_refs = sorted({ref for ref in refs if refs.count(ref) > 1})
+    if duplicate_refs:
+        add(errors, f"mechanical map contains duplicate refs {duplicate_refs}")
     by_ref = {row.get("ref"): row for row in rows}
     export = EXPECTED_JSON["01_kicad_export.json"]
     for component in export.get("components", []):
@@ -646,10 +674,9 @@ def main() -> bool:
             continue
         try:
             actual = json.loads(path.read_text(encoding="utf-8"))
+            validate_json_artifact(name, actual, expected, errors)
         except Exception as exc:
-            errors.append(f"invalid json {name}: {exc}")
-            continue
-        validate_json_artifact(name, actual, expected, errors)
+            errors.append(f"JSON validation failure {name}: {exc}")
 
     for name in TEXT_ARTIFACTS:
         path = DESKTOP / name
@@ -660,25 +687,6 @@ def main() -> bool:
         except Exception as exc:
             errors.append(f"artifact validation failure {name}: {exc}")
 
-    final_path = DESKTOP / "final_release_package.json"
-    log_path = DESKTOP / "toolchain_invocation_log.json"
-    if final_path.exists():
-        try:
-            final = json.loads(final_path.read_text(encoding="utf-8"))
-            if final.get("software_sequence") != SOFTWARE_SEQUENCE:
-                errors.append("final package software sequence mismatch")
-            require_string_list("final package required_artifacts", final.get("required_artifacts", []), REQUIRED_ARTIFACTS, errors, exact_set=True)
-        except Exception as exc:
-            errors.append(f"final package read failure: {exc}")
-    if log_path.exists():
-        try:
-            log = json.loads(log_path.read_text(encoding="utf-8"))
-            logged = [entry.get("software") for entry in log.get("commands", [])]
-            if logged != SOFTWARE_SEQUENCE:
-                errors.append("toolchain log does not use KiCad -> OpenSCAD -> FreeCAD -> Blender")
-        except Exception as exc:
-            errors.append(f"toolchain log read failure: {exc}")
-
     if errors:
         for error in errors:
             print(error, file=sys.stderr)
@@ -688,4 +696,9 @@ def main() -> bool:
 
 
 if __name__ == "__main__":
-    print("True" if main() else "False")
+    try:
+        passed = main()
+    except Exception as exc:
+        print(f"evaluator failure: {exc}", file=sys.stderr)
+        passed = False
+    print("True" if passed else "False")

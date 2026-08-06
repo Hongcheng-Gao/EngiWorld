@@ -1,0 +1,206 @@
+{
+  "contract_version": 1,
+  "general_rules": {
+    "json_root": "Every JSON artifact listed below must have a JSON object as its root.",
+    "numbers": "Use JSON numbers without unit suffixes. Lengths are millimetres, mass is grams, and volume is cubic millimetres.",
+    "filenames": "Use the artifact filenames exactly as written in this contract.",
+    "extra_fields": "Additional descriptive fields and additional CSV columns are allowed, but every required field and column must be present."
+  },
+  "csv_artifacts": {
+    "01_kicad_mechanical_map.csv": {
+      "header": [
+        "ref",
+        "kind",
+        "x_mm",
+        "y_mm",
+        "height_mm",
+        "keepout_radius_mm",
+        "role"
+      ],
+      "row_rules": [
+        "Write one row for every KiCad component and mounting hole used by the mechanical handoff.",
+        "ref, kind, position, height, and keepout radius come from board_input.kicad_pcb and connector_keepouts.csv.",
+        "Use role=standoff_axis for mounting holes.",
+        "Use role=connector_window, access_bore, antenna_keepout, or component_keepout as appropriate for component-derived geometry."
+      ]
+    }
+  },
+  "json_artifacts": {
+    "01_kicad_export.json": {
+      "required_fields": {
+        "board_bbox_mm": "number[3]: [width, height, board thickness] extracted from KiCad",
+        "components": "array of component objects",
+        "corrected_board": "string: 01_kicad_board.kicad_pcb",
+        "critical_requirement": "string copied from mechanical_requirements.json",
+        "input_board": "string: board_input.kicad_pcb",
+        "max_component_height_mm": "number: maximum height_mm among the component objects",
+        "mechanical_map": "string: 01_kicad_mechanical_map.csv",
+        "mounting_holes": "array of mounting-hole objects",
+        "openscad_parameter_handoff": "string: 01_kicad_parameters.scad",
+        "software_stage": "string: KiCad",
+        "task": "string copied from mechanical_requirements.json"
+      },
+      "component_object": {
+        "required_fields": {
+          "ref": "string",
+          "kind": "string",
+          "x_mm": "number",
+          "y_mm": "number",
+          "height_mm": "number",
+          "keepout_radius_mm": "number"
+        }
+      },
+      "mounting_hole_object": {
+        "required_fields": {
+          "ref": "string",
+          "x_mm": "number",
+          "y_mm": "number",
+          "diameter_mm": "number"
+        }
+      }
+    },
+    "02_openscad_parameters.json": {
+      "required_fields": {
+        "board_bbox_mm": "number[3] copied from 01_kicad_export.json",
+        "critical_requirement": "string copied from mechanical_requirements.json",
+        "enclosure_bbox_mm": "number[3] measured from the generated OpenSCAD enclosure",
+        "input_parameter_handoff": "string: 01_kicad_parameters.scad",
+        "lid_clearance_mm": "number",
+        "mesh": "string: 02_openscad_enclosure.stl",
+        "software_stage": "string: OpenSCAD",
+        "source": "string: 02_openscad_enclosure.scad",
+        "source_mechanical_map": "string: 01_kicad_mechanical_map.csv",
+        "standoff_count": "integer",
+        "task": "string copied from mechanical_requirements.json",
+        "wall_mm": "number",
+        "window_count": "integer: number of required connector/access openings"
+      }
+    },
+    "03_freecad_clearance_report.json": {
+      "required_fields": {
+        "assembly_mesh": "string: 03_freecad_assembly.obj",
+        "assembly_step": "string: 03_freecad_assembly.step",
+        "board_bbox_mm": "number[3] copied from the KiCad export",
+        "decision": "string: pass when the required clearances and interference checks pass",
+        "enclosure_bbox_mm": "number[3] copied from the OpenSCAD parameters",
+        "estimated_shell_mass_g": "number computed from the assembled enclosure",
+        "inputs": "string array containing 01_kicad_board.kicad_pcb, 02_openscad_enclosure.stl, and 02_openscad_parameters.json",
+        "interference_volume_mm3": "number computed by FreeCAD",
+        "keepout_count": "integer: number of component-derived keepouts checked",
+        "minimum_side_clearance_mm": "number computed by FreeCAD",
+        "minimum_top_clearance_mm": "number computed by FreeCAD",
+        "software_stage": "string: FreeCAD",
+        "task": "string copied from mechanical_requirements.json"
+      }
+    },
+    "04_blender_scene_report.json": {
+      "required_fields": {
+        "camera": "object with name=release_review_camera, projection=orthographic, and view=top_oblique",
+        "collections": "string array containing KiCad_board, OpenSCAD_enclosure, FreeCAD_clearance_overlays, and critical_keepouts",
+        "decision": "string: pass when review-scene checks pass",
+        "inputs": "string array containing 03_freecad_assembly.obj and 03_freecad_clearance_report.json",
+        "materials": "string array containing enclosure_translucent, pcb_green, and keepout_warning",
+        "mesh_qc": "object with integer fields missing_material_slots, nonmanifold_edges, and unlabeled_keepouts; all must be 0 for pass",
+        "review_mtl": "string: 04_blender_review.mtl",
+        "review_obj": "string: 04_blender_review.obj",
+        "software_stage": "string: Blender",
+        "task": "string copied from mechanical_requirements.json",
+        "visible_keepouts": "string array containing every critical reference that must be visible in the review"
+      }
+    },
+    "final_release_package.json": {
+      "required_fields": {
+        "critical_requirement": "string copied from mechanical_requirements.json",
+        "domain": "string copied from mechanical_requirements.json",
+        "key_metrics": "object described below",
+        "release_decision": "string: pass when all stages pass",
+        "required_artifacts": "string array containing all 15 output artifacts named in the instruction",
+        "software_sequence": "string array exactly [KiCad, OpenSCAD, FreeCAD, Blender]",
+        "stage_outputs": "object mapping KiCad, OpenSCAD, FreeCAD, and Blender to their output filename arrays",
+        "task": "string copied from mechanical_requirements.json",
+        "title": "string copied from mechanical_requirements.json"
+      },
+      "key_metrics": {
+        "required_fields": {
+          "board_bbox_mm": "number[3]",
+          "enclosure_bbox_mm": "number[3]",
+          "estimated_shell_mass_g": "number",
+          "side_clearance_mm": "number",
+          "top_clearance_mm": "number"
+        }
+      }
+    },
+    "toolchain_invocation_log.json": {
+      "required_fields": {
+        "commands": "array of exactly four command records in KiCad, OpenSCAD, FreeCAD, Blender order"
+      },
+      "command_record": {
+        "required_fields": {
+          "software": "string",
+          "command": "non-empty string containing the command actually run",
+          "inputs": "string array",
+          "outputs": "string array"
+        }
+      },
+      "standard_example": {
+        "commands": [
+          {
+            "software": "KiCad",
+            "command": "<actual KiCad command or command chain>",
+            "inputs": [
+              "board_input.kicad_pcb",
+              "mechanical_requirements.json",
+              "connector_keepouts.csv"
+            ],
+            "outputs": [
+              "01_kicad_board.kicad_pcb",
+              "01_kicad_export.json",
+              "01_kicad_mechanical_map.csv",
+              "01_kicad_parameters.scad"
+            ]
+          },
+          {
+            "software": "OpenSCAD",
+            "command": "<actual OpenSCAD command>",
+            "inputs": [
+              "01_kicad_parameters.scad",
+              "enclosure_seed.scad"
+            ],
+            "outputs": [
+              "02_openscad_enclosure.scad",
+              "02_openscad_enclosure.stl",
+              "02_openscad_parameters.json"
+            ]
+          },
+          {
+            "software": "FreeCAD",
+            "command": "<actual FreeCAD command>",
+            "inputs": [
+              "01_kicad_board.kicad_pcb",
+              "02_openscad_enclosure.stl",
+              "02_openscad_parameters.json"
+            ],
+            "outputs": [
+              "03_freecad_assembly.step",
+              "03_freecad_assembly.obj",
+              "03_freecad_clearance_report.json"
+            ]
+          },
+          {
+            "software": "Blender",
+            "command": "<actual Blender command>",
+            "inputs": [
+              "03_freecad_assembly.obj",
+              "03_freecad_clearance_report.json"
+            ],
+            "outputs": [
+              "04_blender_review.obj",
+              "04_blender_review.mtl",
+              "04_blender_scene_report.json"
+            ]
+          }
+        ]
+      }
+    }
+  }
+}
