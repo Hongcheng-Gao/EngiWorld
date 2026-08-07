@@ -1,130 +1,170 @@
 from __future__ import annotations
 
-import base64
 import csv
-import io
 import json
 import re
 import sys
-import zipfile
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
-EXPECTED = {
-  "bcd_install.edif": "KGVkaWYgQkNECiAgKGVkaWZWZXJzaW9uIDIgMCAwKQogIChlZGlmTGV2ZWwgMCkKICAoa2V5d29yZE1hcCAoa2V5d29yZExldmVsIDApKQogIChzdGF0dXMgKHdyaXR0ZW4gKHRpbWVTdGFtcCAyMDI2IDcgNSAwIDAgMCkgKHByb2dyYW0gIkVuZ2l3b3JsZE5ldXRyYWwiKSkpCiAgKGxpYnJhcnkgQkNECiAgICAoY2VsbCBCQ0QgKGNlbGxUeXBlIEdFTkVSSUMpKQogICkKICAoZGVzaWduIEJDRAogICAgKGluc3RhbmNlIFUzMAogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfMzAiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBJbnN0YWxsIChzdHJpbmcgIlkiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVMzEKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzMxIikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgSW5zdGFsbCAoc3RyaW5nICJZIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgICAoaW5zdGFuY2UgVTMyCiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJCQ0RfQ0VMTF8zMiIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJCQ0QiKSkKICAgICAgKHByb3BlcnR5IEluc3RhbGwgKHN0cmluZyAiTiIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgKQogICAgKGluc3RhbmNlIFUzMwogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfMzMiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBJbnN0YWxsIChzdHJpbmcgIlkiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVMzQKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzM0IikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgSW5zdGFsbCAoc3RyaW5nICJOIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgICAoaW5zdGFuY2UgVTM1CiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJCQ0RfQ0VMTF8zNSIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJCQ0QiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVMzYKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzM2IikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgKQogICAgKGluc3RhbmNlIFUzNwogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfMzciKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgICAoaW5zdGFuY2UgVTM4CiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJCQ0RfQ0VMTF8zOCIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJCQ0QiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVMzkKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzM5IikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgKQogICAgKGluc3RhbmNlIFU0MAogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfNDAiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgICAoaW5zdGFuY2UgVTQxCiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJCQ0RfQ0VMTF80MSIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJCQ0QiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVNDIKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzQyIikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgKQogICAgKGluc3RhbmNlIFU0MwogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfNDMiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgICAoaW5zdGFuY2UgVTQ0CiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJCQ0RfQ0VMTF80NCIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJCQ0QiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVNDUKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzQ1IikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgKQogICAgKGluc3RhbmNlIFU0NgogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfNDYiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgICAoaW5zdGFuY2UgVTQ3CiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJCQ0RfQ0VMTF80NyIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJCQ0QiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICkKICAgIChpbnN0YW5jZSBVNDgKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkJDRF9DRUxMXzQ4IikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIkJDRCIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgKQogICAgKGluc3RhbmNlIFU0OQogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQkNEX0NFTExfNDkiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiQkNEIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICApCiAgKQopCg==",
-  "bcd_install.schematic.json": "ewogICJjb21wb25lbnRzIjogWwogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHsKICAgICAgICAiSW5zdGFsbCI6ICJZIgogICAgICB9LAogICAgICAicmVmIjogIlUzMCIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF8zMCIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjogewogICAgICAgICJJbnN0YWxsIjogIlkiCiAgICAgIH0sCiAgICAgICJyZWYiOiAiVTMxIiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzMxIgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiQkNEIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7CiAgICAgICAgIkluc3RhbGwiOiAiTiIKICAgICAgfSwKICAgICAgInJlZiI6ICJVMzIiLAogICAgICAidmFsdWUiOiAiQkNEX0NFTExfMzIiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHsKICAgICAgICAiSW5zdGFsbCI6ICJZIgogICAgICB9LAogICAgICAicmVmIjogIlUzMyIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF8zMyIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjogewogICAgICAgICJJbnN0YWxsIjogIk4iCiAgICAgIH0sCiAgICAgICJyZWYiOiAiVTM0IiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzM0IgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiQkNEIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7fSwKICAgICAgInJlZiI6ICJVMzUiLAogICAgICAidmFsdWUiOiAiQkNEX0NFTExfMzUiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHt9LAogICAgICAicmVmIjogIlUzNiIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF8zNiIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiVTM3IiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzM3IgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiQkNEIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7fSwKICAgICAgInJlZiI6ICJVMzgiLAogICAgICAidmFsdWUiOiAiQkNEX0NFTExfMzgiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHt9LAogICAgICAicmVmIjogIlUzOSIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF8zOSIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiVTQwIiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzQwIgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiQkNEIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7fSwKICAgICAgInJlZiI6ICJVNDEiLAogICAgICAidmFsdWUiOiAiQkNEX0NFTExfNDEiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHt9LAogICAgICAicmVmIjogIlU0MiIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF80MiIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiVTQzIiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzQzIgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiQkNEIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7fSwKICAgICAgInJlZiI6ICJVNDQiLAogICAgICAidmFsdWUiOiAiQkNEX0NFTExfNDQiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHt9LAogICAgICAicmVmIjogIlU0NSIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF80NSIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiVTQ2IiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzQ2IgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiQkNEIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7fSwKICAgICAgInJlZiI6ICJVNDciLAogICAgICAidmFsdWUiOiAiQkNEX0NFTExfNDciCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJCQ0QiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHt9LAogICAgICAicmVmIjogIlU0OCIsCiAgICAgICJ2YWx1ZSI6ICJCQ0RfQ0VMTF80OCIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIkJDRCIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiVTQ5IiwKICAgICAgInZhbHVlIjogIkJDRF9DRUxMXzQ5IgogICAgfQogIF0sCiAgImZvcm1hdCI6ICJlbmdpd29ybGQtbmV1dHJhbC1zY2hlbWF0aWMtdjEiLAogICJuYW1lIjogIkJDRCIsCiAgInByb3BlcnRpZXMiOiB7fSwKICAic2NoZW1hdGljcyI6IFsKICAgIHsKICAgICAgImhpZXJfYmxvY2tzIjogW10sCiAgICAgICJuYW1lIjogIkJDRCIsCiAgICAgICJwYWdlcyI6IFsKICAgICAgICAiQkNEIgogICAgICBdCiAgICB9CiAgXQp9Cg==",
-  "install_properties.csv": "UmVmZXJlbmNlLEluc3RhbGwNClUzMCxZDQpVMzEsWQ0KVTMyLE4NClUzMyxZDQpVMzQsTg0K"
-}
+
+REF_KEYS = {"ref", "reference", "refdes", "referencedesignator", "designator"}
+VALUE_KEYS = {"value", "componentvalue", "partvalue"}
 
 
 def _desktop() -> Path:
     return Path(__file__).resolve().parent
 
 
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
+def _norm(value: object) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
 
 
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
+def _json_components(path: Path) -> dict[str, dict[str, object]]:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    found: dict[str, dict[str, object]] = {}
+
+    def visit(value: object, parent_key: str = "") -> None:
+        if isinstance(value, dict):
+            normalized = {_norm(key): item for key, item in value.items()}
+            ref = next((normalized[key] for key in REF_KEYS if key in normalized), None)
+            if ref is None and re.fullmatch(r"[A-Za-z]+\d+", parent_key):
+                ref = parent_key
+            if ref is not None:
+                ref_text = str(ref).strip().upper()
+                properties: dict[str, object] = {}
+                for key, item in value.items():
+                    if _norm(key) in {"properties", "property", "parameters", "attributes", "fields"} and isinstance(item, dict):
+                        properties.update(item)
+                    elif _norm(key) not in REF_KEYS:
+                        properties.setdefault(key, item)
+                component_value = next((normalized[key] for key in VALUE_KEYS if key in normalized), None)
+                candidate = {"value": component_value, "properties": properties}
+                if ref_text and (ref_text not in found or len(properties) > len(found[ref_text]["properties"])):
+                    found[ref_text] = candidate
+            for key, item in value.items():
+                visit(item, str(key))
+        elif isinstance(value, list):
+            for item in value:
+                visit(item, parent_key)
+
+    visit(data)
+    return found
 
 
-def _json_equal(path: Path, expected: bytes) -> bool:
-    try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
-        return False
+def _atom(node: object) -> str:
+    if isinstance(node, str):
+        if len(node) >= 2 and node[0] == node[-1] == '"':
+            return node[1:-1].replace(r'\"', '"').replace(r"\\", "\\")
+        return node
+    if isinstance(node, list) and node:
+        if _norm(node[0]) == "rename" and len(node) >= 3:
+            return _atom(node[-1])
+        if len(node) >= 2:
+            return _atom(node[1])
+    return ""
 
 
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
-            return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
-        return False
+def _walk(node: object):
+    if isinstance(node, list):
+        yield node
+        for child in node:
+            yield from _walk(child)
 
 
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
+def _edif_components(path: Path) -> dict[str, dict[str, object]]:
+    tokens = re.findall(r'"(?:\\.|[^"\\])*"|[()]|[^\s()]+', path.read_text(encoding="utf-8-sig", errors="ignore"))
+    roots: list[object] = []
+    stack: list[list[object]] = []
+    for token in tokens:
+        if token == "(":
+            node: list[object] = []
+            (stack[-1] if stack else roots).append(node)
+            stack.append(node)
+        elif token == ")":
+            if not stack:
+                raise ValueError("unbalanced EDIF")
+            stack.pop()
+        elif stack:
+            stack[-1].append(token)
+    if stack:
+        raise ValueError("unbalanced EDIF")
 
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
-        )
-
-    return canon(actual_root) == canon(expected_root)
-
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
+    result: dict[str, dict[str, object]] = {}
+    for node in _walk(roots):
+        if not node or _norm(node[0]) != "instance" or len(node) < 2:
+            continue
+        ref = _atom(node[1]).strip().upper()
+        properties: dict[str, object] = {}
+        for child in _walk(node[2:]):
+            if child and _norm(child[0]) == "property" and len(child) >= 3:
+                properties[_atom(child[1])] = _atom(child[2])
+        for key, value in properties.items():
+            if _norm(key) in REF_KEYS and str(value).strip():
+                ref = str(value).strip().upper()
+        value = next((item for key, item in properties.items() if _norm(key) in VALUE_KEYS), None)
+        if ref:
+            result[ref] = {"value": value, "properties": properties}
+    return result
 
 
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+def _property(component: dict[str, object], *names: str) -> object | None:
+    aliases = {_norm(name) for name in names}
+    properties = component.get("properties", {})
+    if not isinstance(properties, dict):
+        return None
+    return next((value for key, value in properties.items() if _norm(key) in aliases), None)
+
+
+def _same_text(left: object, right: object) -> bool:
+    return re.sub(r"\s+", "", str(left)).casefold() == re.sub(r"\s+", "", str(right)).casefold()
+
+
+def _install(value: object) -> str | None:
+    normalized = _norm(value)
+    if normalized in {"y", "yes", "true", "1", "installed", "fitted", "populate", "populated"}:
+        return "Y"
+    if normalized in {"n", "no", "false", "0", "notinstalled", "notfitted", "dnp", "donotpopulate"}:
+        return "N"
+    return None
+
+
+def _csv_rows(path: Path) -> list[tuple[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_norm(name): name for name in (reader.fieldnames or [])}
+        ref_header = next((headers[name] for name in REF_KEYS if name in headers), None)
+        install_header = next((headers[name] for name in {"install", "fitted", "populate"} if name in headers), None)
+        if not ref_header or not install_header:
+            raise ValueError("missing CSV columns")
+        return [(str(row[ref_header]).strip().upper(), str(row[install_header]).strip()) for row in reader]
 
 
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    required = [desktop / "bcd_install.edif", desktop / "bcd_install.schematic.json", desktop / "install_properties.csv"]
+    if not all(path.is_file() and path.stat().st_size for path in required):
+        return False
+    try:
+        source = _json_components(desktop / "bcd.schematic.json")
+        json_output = _json_components(required[1])
+        edif_output = _edif_components(required[0])
+        expected_install = {"U30": "Y", "U31": "Y", "U32": "N", "U33": "Y", "U34": "N"}
+        if set(json_output) != set(source) or not set(source).issubset(edif_output):
             return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+        for ref, original in source.items():
+            for output in (json_output, edif_output):
+                if not _same_text(output[ref].get("value"), original.get("value")):
+                    return False
+                install = _property(output[ref], "Install", "Fitted", "Populate")
+                if ref in expected_install:
+                    if _install(install) != expected_install[ref]:
+                        return False
+                elif install not in (None, ""):
+                    return False
+        rows = _csv_rows(required[2])
+        return len(rows) == len(expected_install) and {ref: _install(value) for ref, value in rows} == expected_install
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

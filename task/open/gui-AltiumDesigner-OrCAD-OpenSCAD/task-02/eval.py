@@ -1,130 +1,178 @@
 from __future__ import annotations
 
-import base64
 import csv
-import io
 import json
 import re
 import sys
-import zipfile
+from collections import Counter
 from pathlib import Path
-from xml.etree import ElementTree as ET
 
-EXPECTED = {
-  "annotation_report.csv": "T2xkUmVmLE5ld1JlZg0KUj8sUjEwMQ0KUj8sUjEwMg0KQz8sQzIwMQ0KVT8sVTMwMQ0KWD8sWDkwMQ0K",
-  "tutor2_reannotated.edif": "KGVkaWYgVFVUT1IyCiAgKGVkaWZWZXJzaW9uIDIgMCAwKQogIChlZGlmTGV2ZWwgMCkKICAoa2V5d29yZE1hcCAoa2V5d29yZExldmVsIDApKQogIChzdGF0dXMgKHdyaXR0ZW4gKHRpbWVTdGFtcCAyMDI2IDcgNSAwIDAgMCkgKHByb2dyYW0gIkVuZ2l3b3JsZE5ldXRyYWwiKSkpCiAgKGxpYnJhcnkgVFVUT1IyCiAgICAoY2VsbCBUVVRPUjIgKGNlbGxUeXBlIEdFTkVSSUMpKQogICkKICAoZGVzaWduIFRVVE9SMgogICAgKGluc3RhbmNlIFIxMDEKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIlJFUyIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJUVVRPUjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICkKICAgIChpbnN0YW5jZSBSMTAyCiAgICAgIChwcm9wZXJ0eSBWYWx1ZSAoc3RyaW5nICJSRVMiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiVFVUT1IyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICApCiAgICAoaW5zdGFuY2UgQzIwMQogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiQ0FQIikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIlRVVE9SMiIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgKQogICAgKGluc3RhbmNlIFUzMDEKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIklDIikpCiAgICAgIChwcm9wZXJ0eSBQYWdlIChzdHJpbmcgIlRVVE9SMiIpKQogICAgICAocHJvcGVydHkgUElOXzEgKHN0cmluZyAiMSIpKQogICAgICAocHJvcGVydHkgUElOXzIgKHN0cmluZyAiMiIpKQogICAgICAocHJvcGVydHkgUElOXzMgKHN0cmluZyAiMyIpKQogICAgICAocHJvcGVydHkgUElOXzQgKHN0cmluZyAiNCIpKQogICAgICAocHJvcGVydHkgUElOXzUgKHN0cmluZyAiNSIpKQogICAgICAocHJvcGVydHkgUElOXzYgKHN0cmluZyAiNiIpKQogICAgICAocHJvcGVydHkgUElOXzcgKHN0cmluZyAiNyIpKQogICAgICAocHJvcGVydHkgUElOXzggKHN0cmluZyAiOCIpKQogICAgKQogICAgKGluc3RhbmNlIFg5MDEKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIk1JU0MiKSkKICAgICAgKHByb3BlcnR5IFBhZ2UgKHN0cmluZyAiVFVUT1IyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMSAoc3RyaW5nICIxIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMiAoc3RyaW5nICIyIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fMyAoc3RyaW5nICIzIikpCiAgICAgIChwcm9wZXJ0eSBQSU5fNCAoc3RyaW5nICI0IikpCiAgICAgIChwcm9wZXJ0eSBQSU5fNSAoc3RyaW5nICI1IikpCiAgICAgIChwcm9wZXJ0eSBQSU5fNiAoc3RyaW5nICI2IikpCiAgICAgIChwcm9wZXJ0eSBQSU5fNyAoc3RyaW5nICI3IikpCiAgICAgIChwcm9wZXJ0eSBQSU5fOCAoc3RyaW5nICI4IikpCiAgICApCiAgICAoaW5zdGFuY2UgRDEKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIjFONDE0OCIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJUVVRPUjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICkKICAgIChpbnN0YW5jZSBTMQogICAgICAocHJvcGVydHkgVmFsdWUgKHN0cmluZyAiU1dfU1BTVCIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJUVVRPUjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICAgKHByb3BlcnR5IFBJTl80IChzdHJpbmcgIjQiKSkKICAgICAgKHByb3BlcnR5IFBJTl81IChzdHJpbmcgIjUiKSkKICAgICAgKHByb3BlcnR5IFBJTl82IChzdHJpbmcgIjYiKSkKICAgICAgKHByb3BlcnR5IFBJTl83IChzdHJpbmcgIjciKSkKICAgICAgKHByb3BlcnR5IFBJTl84IChzdHJpbmcgIjgiKSkKICAgICkKICAgIChpbnN0YW5jZSBCVDEKICAgICAgKHByb3BlcnR5IFZhbHVlIChzdHJpbmcgIkNSMjAzMiIpKQogICAgICAocHJvcGVydHkgUGFnZSAoc3RyaW5nICJUVVRPUjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8xIChzdHJpbmcgIjEiKSkKICAgICAgKHByb3BlcnR5IFBJTl8yIChzdHJpbmcgIjIiKSkKICAgICAgKHByb3BlcnR5IFBJTl8zIChzdHJpbmcgIjMiKSkKICAgICAgKHByb3BlcnR5IFBJTl80IChzdHJpbmcgIjQiKSkKICAgICAgKHByb3BlcnR5IFBJTl81IChzdHJpbmcgIjUiKSkKICAgICAgKHByb3BlcnR5IFBJTl82IChzdHJpbmcgIjYiKSkKICAgICAgKHByb3BlcnR5IFBJTl83IChzdHJpbmcgIjciKSkKICAgICAgKHByb3BlcnR5IFBJTl84IChzdHJpbmcgIjgiKSkKICAgICkKICApCikK",
-  "tutor2_reannotated.schematic.json": "ewogICJjb21wb25lbnRzIjogWwogICAgewogICAgICAicGFnZSI6ICJUVVRPUjIiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiUjEwMSIsCiAgICAgICJ2YWx1ZSI6ICJSRVMiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJUVVRPUjIiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiUjEwMiIsCiAgICAgICJ2YWx1ZSI6ICJSRVMiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJUVVRPUjIiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiQzIwMSIsCiAgICAgICJ2YWx1ZSI6ICJDQVAiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJUVVRPUjIiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIiwKICAgICAgICAiNCIsCiAgICAgICAgIjUiLAogICAgICAgICI2IiwKICAgICAgICAiNyIsCiAgICAgICAgIjgiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiVTMwMSIsCiAgICAgICJ2YWx1ZSI6ICJJQyIKICAgIH0sCiAgICB7CiAgICAgICJwYWdlIjogIlRVVE9SMiIsCiAgICAgICJwaW5zIjogWwogICAgICAgICIxIiwKICAgICAgICAiMiIsCiAgICAgICAgIjMiLAogICAgICAgICI0IiwKICAgICAgICAiNSIsCiAgICAgICAgIjYiLAogICAgICAgICI3IiwKICAgICAgICAiOCIKICAgICAgXSwKICAgICAgInByb3BlcnRpZXMiOiB7fSwKICAgICAgInJlZiI6ICJYOTAxIiwKICAgICAgInZhbHVlIjogIk1JU0MiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJUVVRPUjIiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiRDEiLAogICAgICAidmFsdWUiOiAiMU40MTQ4IgogICAgfSwKICAgIHsKICAgICAgInBhZ2UiOiAiVFVUT1IyIiwKICAgICAgInBpbnMiOiBbCiAgICAgICAgIjEiLAogICAgICAgICIyIiwKICAgICAgICAiMyIsCiAgICAgICAgIjQiLAogICAgICAgICI1IiwKICAgICAgICAiNiIsCiAgICAgICAgIjciLAogICAgICAgICI4IgogICAgICBdLAogICAgICAicHJvcGVydGllcyI6IHt9LAogICAgICAicmVmIjogIlMxIiwKICAgICAgInZhbHVlIjogIlNXX1NQU1QiCiAgICB9LAogICAgewogICAgICAicGFnZSI6ICJUVVRPUjIiLAogICAgICAicGlucyI6IFsKICAgICAgICAiMSIsCiAgICAgICAgIjIiLAogICAgICAgICIzIiwKICAgICAgICAiNCIsCiAgICAgICAgIjUiLAogICAgICAgICI2IiwKICAgICAgICAiNyIsCiAgICAgICAgIjgiCiAgICAgIF0sCiAgICAgICJwcm9wZXJ0aWVzIjoge30sCiAgICAgICJyZWYiOiAiQlQxIiwKICAgICAgInZhbHVlIjogIkNSMjAzMiIKICAgIH0KICBdLAogICJmb3JtYXQiOiAiZW5naXdvcmxkLW5ldXRyYWwtc2NoZW1hdGljLXYxIiwKICAibmFtZSI6ICJUVVRPUjIiLAogICJwcm9wZXJ0aWVzIjoge30sCiAgInNjaGVtYXRpY3MiOiBbCiAgICB7CiAgICAgICJoaWVyX2Jsb2NrcyI6IFtdLAogICAgICAibmFtZSI6ICJUVVRPUjIiLAogICAgICAicGFnZXMiOiBbCiAgICAgICAgIlRVVE9SMiIKICAgICAgXQogICAgfQogIF0KfQo="
-}
+
+REF_KEYS = {"ref", "reference", "refdes", "referencedesignator", "designator"}
+VALUE_KEYS = {"value", "componentvalue", "partvalue"}
 
 
 def _desktop() -> Path:
     return Path(__file__).resolve().parent
 
 
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
+def _norm(value: object) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
 
 
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
+def _json_components(path: Path) -> dict[str, dict[str, object]]:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    found: dict[str, dict[str, object]] = {}
+
+    def visit(value: object, parent_key: str = "") -> None:
+        if isinstance(value, dict):
+            normalized = {_norm(key): item for key, item in value.items()}
+            ref = next((normalized[key] for key in REF_KEYS if key in normalized), None)
+            if ref is None and re.fullmatch(r"[A-Za-z]+\d+", parent_key):
+                ref = parent_key
+            if ref is not None:
+                ref_text = str(ref).strip().upper()
+                properties: dict[str, object] = {}
+                for key, item in value.items():
+                    if _norm(key) in {"properties", "property", "parameters", "attributes", "fields"} and isinstance(item, dict):
+                        properties.update(item)
+                    elif _norm(key) not in REF_KEYS:
+                        properties.setdefault(key, item)
+                component_value = next((normalized[key] for key in VALUE_KEYS if key in normalized), None)
+                candidate = {"value": component_value, "properties": properties}
+                if ref_text and (ref_text not in found or len(properties) > len(found[ref_text]["properties"])):
+                    found[ref_text] = candidate
+            for key, item in value.items():
+                visit(item, str(key))
+        elif isinstance(value, list):
+            for item in value:
+                visit(item, parent_key)
+
+    visit(data)
+    return found
 
 
-def _json_equal(path: Path, expected: bytes) -> bool:
-    try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
-        return False
+def _atom(node: object) -> str:
+    if isinstance(node, str):
+        if len(node) >= 2 and node[0] == node[-1] == '"':
+            return node[1:-1].replace(r'\"', '"').replace(r"\\", "\\")
+        return node
+    if isinstance(node, list) and node:
+        if _norm(node[0]) == "rename" and len(node) >= 3:
+            return _atom(node[-1])
+        if len(node) >= 2:
+            return _atom(node[1])
+    return ""
 
 
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
+def _walk(node: object):
+    if isinstance(node, list):
+        yield node
+        for child in node:
+            yield from _walk(child)
+
+
+def _edif_components(path: Path) -> dict[str, dict[str, object]]:
+    tokens = re.findall(r'"(?:\\.|[^"\\])*"|[()]|[^\s()]+', path.read_text(encoding="utf-8-sig", errors="ignore"))
+    roots: list[object] = []
+    stack: list[list[object]] = []
+    for token in tokens:
+        if token == "(":
+            node: list[object] = []
+            (stack[-1] if stack else roots).append(node)
+            stack.append(node)
+        elif token == ")":
+            if not stack:
+                raise ValueError("unbalanced EDIF")
+            stack.pop()
+        elif stack:
+            stack[-1].append(token)
+    if stack:
+        raise ValueError("unbalanced EDIF")
+
+    result: dict[str, dict[str, object]] = {}
+    for node in _walk(roots):
+        if not node or _norm(node[0]) != "instance" or len(node) < 2:
+            continue
+        ref = _atom(node[1]).strip().upper()
+        properties: dict[str, object] = {}
+        for child in _walk(node[2:]):
+            if child and _norm(child[0]) == "property" and len(child) >= 3:
+                properties[_atom(child[1])] = _atom(child[2])
+        for key, value in properties.items():
+            if _norm(key) in REF_KEYS and str(value).strip():
+                ref = str(value).strip().upper()
+        value = next((item for key, item in properties.items() if _norm(key) in VALUE_KEYS), None)
+        if ref:
+            result[ref] = {"value": value, "properties": properties}
+    return result
+
+
+def _csv_rows(path: Path) -> list[tuple[str, str]]:
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_norm(name): name for name in (reader.fieldnames or [])}
+        old_header = next((headers[name] for name in {"oldref", "oldreference", "beforeref"} if name in headers), None)
+        new_header = next((headers[name] for name in {"newref", "newreference", "afterref"} if name in headers), None)
+        if not old_header or not new_header:
+            raise ValueError("missing CSV columns")
+        return [(str(row[old_header]).strip().upper(), str(row[new_header]).strip().upper()) for row in reader]
+
+
+def _same_text(left: object, right: object) -> bool:
+    return re.sub(r"\s+", "", str(left)).casefold() == re.sub(r"\s+", "", str(right)).casefold()
+
+
+def _valid_generated_refs(refs: set[str], placeholders: list[dict[str, object]]) -> bool:
+    expected_prefixes = Counter(str(item["ref"])[:-1].upper() for item in placeholders)
+    actual_by_prefix: dict[str, list[int]] = {}
+    for ref in refs:
+        match = re.fullmatch(r"([A-Z]+)(\d+)", ref)
+        if not match or int(match.group(2)) < 1:
             return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
+        actual_by_prefix.setdefault(match.group(1), []).append(int(match.group(2)))
+    if Counter({prefix: len(numbers) for prefix, numbers in actual_by_prefix.items()}) != expected_prefixes:
         return False
-
-
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
-
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
-        )
-
-    return canon(actual_root) == canon(expected_root)
-
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
-
-
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+    return all(sorted(numbers) == list(range(min(numbers), min(numbers) + len(numbers))) for numbers in actual_by_prefix.values())
 
 
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    required = [desktop / "tutor2_reannotated.edif", desktop / "tutor2_reannotated.schematic.json", desktop / "annotation_report.csv"]
+    if not all(path.is_file() and path.stat().st_size for path in required):
+        return False
+    try:
+        source_data = json.loads((desktop / "tutor2_unannotated.schematic.json").read_text(encoding="utf-8-sig"))
+        source_items = source_data.get("components")
+        if not isinstance(source_items, list):
             return False
-        if not _bytes_equal(path, _decode(rel)):
+        placeholders = [item for item in source_items if isinstance(item, dict) and str(item.get("ref", "")).endswith("?")]
+        preserved = {
+            str(item["ref"]).strip().upper(): str(item.get("value", "")).strip()
+            for item in source_items if isinstance(item, dict) and not str(item.get("ref", "")).endswith("?")
+        }
+        json_output = _json_components(required[1])
+        edif_output = _edif_components(required[0])
+        if len(json_output) != len(source_items) or not set(preserved).issubset(json_output):
             return False
-    return True
+        generated = set(json_output) - set(preserved)
+        if not _valid_generated_refs(generated, placeholders) or set(json_output) != set(preserved) | generated:
+            return False
+        if not set(json_output).issubset(edif_output):
+            return False
+        for ref, value in preserved.items():
+            if not _same_text(json_output[ref].get("value"), value) or not _same_text(edif_output[ref].get("value"), value):
+                return False
+        expected_values = Counter((str(item["ref"])[:-1].upper(), str(item.get("value", "")).casefold()) for item in placeholders)
+        for output in (json_output, edif_output):
+            generated_values = Counter((re.match(r"[A-Z]+", ref).group(), str(output[ref].get("value", "")).casefold()) for ref in generated)
+            if generated_values != expected_values:
+                return False
+        rows = _csv_rows(required[2])
+        expected_old = Counter(str(item["ref"]).strip().upper() for item in placeholders)
+        return Counter(old for old, _ in rows) == expected_old and Counter(new for _, new in rows) == Counter(generated)
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

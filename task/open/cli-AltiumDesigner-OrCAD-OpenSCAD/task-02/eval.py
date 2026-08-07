@@ -1,128 +1,94 @@
 from __future__ import annotations
 
-import base64
-import csv
-import io
 import json
-import re
 import sys
-import zipfile
+from collections import Counter
 from pathlib import Path
-from xml.etree import ElementTree as ET
-
-EXPECTED = {
-  "flat.json": "ewogICJoaWVyX2Jsb2NrX2V4cGFuc2lvbnMiOiBbCiAgICB7CiAgICAgICJjaGlsZCI6ICJIQUxGQUREIiwKICAgICAgInBhcmVudCI6ICJGVUxMQUREIiwKICAgICAgInJlZiI6ICJIQTEiCiAgICB9LAogICAgewogICAgICAiY2hpbGQiOiAiSEFMRkFERCIsCiAgICAgICJwYXJlbnQiOiAiRlVMTEFERCIsCiAgICAgICJyZWYiOiAiSEEyIgogICAgfQogIF0sCiAgInJvb3Rfc2NoZW1hdGljIjogIkZVTExBREQiLAogICJ0b3RhbF9wcmltaXRpdmVfcGFydHMiOiA1Cn0K"
-}
 
 
 def _desktop() -> Path:
     return Path(__file__).resolve().parent
 
 
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
-
-
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
-
-
-def _json_equal(path: Path, expected: bytes) -> bool:
+def _integer(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
     try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
-        return False
+        number = int(value)
+    except (TypeError, ValueError):
+        return None
+    return number if str(number) == str(value).strip() or isinstance(value, int) else None
 
 
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
-            return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
-        return False
+def _source_semantics(path: Path) -> tuple[str, int, Counter[tuple[str, str, str]]]:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    schematics = data.get("schematics")
+    components = data.get("components")
+    if not isinstance(schematics, list) or not isinstance(components, list):
+        raise ValueError("invalid source")
 
+    root = str(data.get("properties", {}).get("root") or data.get("name") or "").strip()
+    by_name = {str(item.get("name", "")).strip(): item for item in schematics if isinstance(item, dict)}
+    if not root or root not in by_name:
+        raise ValueError("missing root")
 
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
-
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
+    own_parts: dict[str, int] = {}
+    all_blocks: Counter[tuple[str, str, str]] = Counter()
+    children: dict[str, list[str]] = {}
+    for name, schematic in by_name.items():
+        pages = {str(page).strip() for page in schematic.get("pages", [])}
+        own_parts[name] = sum(
+            1 for component in components
+            if isinstance(component, dict) and str(component.get("page", "")).strip() in pages
         )
+        children[name] = []
+        for block in schematic.get("hier_blocks", []):
+            if not isinstance(block, dict):
+                raise ValueError("invalid hierarchy block")
+            parent = str(block.get("parent", name)).strip()
+            ref = str(block.get("ref", "")).strip()
+            child = str(block.get("child", "")).strip()
+            if not parent or not ref or not child:
+                raise ValueError("incomplete hierarchy block")
+            all_blocks[(parent, ref, child)] += 1
+            children[name].append(child)
 
-    return canon(actual_root) == canon(expected_root)
+    def flattened_count(name: str, active: frozenset[str] = frozenset()) -> int:
+        if name in active or name not in own_parts:
+            raise ValueError("cyclic or missing hierarchy")
+        return own_parts[name] + sum(flattened_count(child, active | {name}) for child in children[name])
 
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
-
-
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+    return root, flattened_count(root), all_blocks
 
 
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    output = desktop / "flat.json"
+    if not output.is_file():
+        return False
+    try:
+        expected_root, expected_count, expected_blocks = _source_semantics(desktop / "fulladd.schematic.json")
+        actual = json.loads(output.read_text(encoding="utf-8-sig"))
+        if not isinstance(actual, dict):
             return False
-        if not _bytes_equal(path, _decode(rel)):
+        if str(actual.get("root_schematic", "")).strip() != expected_root:
             return False
-    return True
+        if _integer(actual.get("total_primitive_parts")) != expected_count:
+            return False
+        expansions = actual.get("hier_block_expansions")
+        if not isinstance(expansions, list):
+            return False
+        actual_blocks: Counter[tuple[str, str, str]] = Counter()
+        for block in expansions:
+            if not isinstance(block, dict):
+                return False
+            record = tuple(str(block.get(key, "")).strip() for key in ("parent", "ref", "child"))
+            if not all(record):
+                return False
+            actual_blocks[record] += 1
+        return actual_blocks == expected_blocks
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

@@ -1,128 +1,78 @@
 from __future__ import annotations
 
-import base64
-import csv
-import io
 import json
-import re
 import sys
-import zipfile
+from collections import Counter
 from pathlib import Path
-from xml.etree import ElementTree as ET
-
-EXPECTED = {
-  "hierarchy.json": "ewogICJyb290IjogIkZVTExBREQiLAogICJzY2hlbWF0aWNzIjogewogICAgIkZVTExBREQiOiB7CiAgICAgICJwYWdlX2NvdW50IjogMSwKICAgICAgInJlZmVyZW5jZWRfaGllcl9ibG9ja3MiOiBbCiAgICAgICAgIkhBTEZBREQiLAogICAgICAgICJIQUxGQUREIgogICAgICBdLAogICAgICAidG90YWxfcGFydHMiOiAxCiAgICB9LAogICAgIkhBTEZBREQiOiB7CiAgICAgICJwYWdlX2NvdW50IjogMSwKICAgICAgInJlZmVyZW5jZWRfaGllcl9ibG9ja3MiOiBbXSwKICAgICAgInRvdGFsX3BhcnRzIjogMgogICAgfQogIH0KfQo="
-}
 
 
 def _desktop() -> Path:
     return Path(__file__).resolve().parent
 
 
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
-
-
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
-
-
-def _json_equal(path: Path, expected: bytes) -> bool:
+def _integer(value: object) -> int | None:
+    if isinstance(value, bool):
+        return None
     try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
-        return False
+        return int(value)
+    except (TypeError, ValueError):
+        return None
 
 
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
-            return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
-        return False
-
-
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
-
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
+def _expected(path: Path) -> tuple[str, dict[str, tuple[int, int, Counter[str]]]]:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    components = data.get("components")
+    schematics = data.get("schematics")
+    if not isinstance(components, list) or not isinstance(schematics, list):
+        raise ValueError("invalid source")
+    root = str(data.get("properties", {}).get("root") or data.get("name") or "").strip()
+    result: dict[str, tuple[int, int, Counter[str]]] = {}
+    for schematic in schematics:
+        if not isinstance(schematic, dict):
+            raise ValueError("invalid schematic")
+        name = str(schematic.get("name", "")).strip()
+        pages = [str(page).strip() for page in schematic.get("pages", [])]
+        blocks = schematic.get("hier_blocks", [])
+        if not name or not isinstance(blocks, list):
+            raise ValueError("invalid hierarchy")
+        total_parts = sum(
+            1 for component in components
+            if isinstance(component, dict) and str(component.get("page", "")).strip() in set(pages)
         )
-
-    return canon(actual_root) == canon(expected_root)
-
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
-
-
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+        child_names = Counter(str(block.get("child", "")).strip() for block in blocks if isinstance(block, dict))
+        if "" in child_names:
+            raise ValueError("missing hierarchy child")
+        result[name] = (len(pages), total_parts, child_names)
+    return root, result
 
 
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    output = desktop / "hierarchy.json"
+    if not output.is_file():
+        return False
+    try:
+        expected_root, expected_schematics = _expected(desktop / "fulladd.schematic.json")
+        actual = json.loads(output.read_text(encoding="utf-8-sig"))
+        if not isinstance(actual, dict) or str(actual.get("root", "")).strip() != expected_root:
             return False
-        if not _bytes_equal(path, _decode(rel)):
+        schematics = actual.get("schematics")
+        if not isinstance(schematics, dict) or set(schematics) != set(expected_schematics):
             return False
-    return True
+        for name, (page_count, total_parts, child_names) in expected_schematics.items():
+            entry = schematics.get(name)
+            if not isinstance(entry, dict):
+                return False
+            blocks = entry.get("referenced_hier_blocks")
+            if not isinstance(blocks, list):
+                return False
+            if _integer(entry.get("page_count")) != page_count or _integer(entry.get("total_parts")) != total_parts:
+                return False
+            if Counter(str(child).strip() for child in blocks) != child_names:
+                return False
+        return True
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":
