@@ -1,21 +1,438 @@
 {
-  "critical_requirement": "Every pogo target in KiCad must become a matching access bore in the OpenSCAD adapter and remain visible in Blender.",
+  "artifact_policy": {
+    "extras_allowed": true,
+    "membership": "required_artifacts must be a subset of produced_artifacts"
+  },
+  "artifact_sha256": {
+    "01_kicad_board.kicad_pcb": "51743afb48aefa5bd0e43bc45192e39577ee8d5957db9bff707091e1d453bbca",
+    "01_kicad_board.step": "2f45478527c4c8ac943438ac4ee664975cd86eb3bcd85b6ea5c430e3d7fb1ab7",
+    "01_kicad_export.json": "b09e54e073ef98558ab0da95b289047e1b0bf0a3e9766a2d59ef9af0e9034d32",
+    "01_kicad_mechanical_map.csv": "e5f29fd25f1eb995cdf0d4cb12f9a71cb962ee8d86f46c4c15306215bf67c84e",
+    "01_kicad_parameters.scad": "6fd3e1bd95fe6ddae1e125a53df5e7df0fd32d94081efdd8e3781e42b19e3597",
+    "02_openscad_enclosure.scad": "c5ce2deaaf0ceccb96154816a842b30f929900d4e26631923f260fe48a57a96f",
+    "02_openscad_enclosure.stl": "d546ce80bd870cfed1e71d873651e96b7929aab65788c83682d401935411c9ad",
+    "02_openscad_parameters.json": "75310bc47b1fd3e6141c78d81a7688c17b937d153606afeb5be04c6712685711",
+    "03_freecad_assembly.obj": "9ea5fcc3a94bc7a1b6961ea1a999a7b966de574131501b59764cf653bf220838",
+    "03_freecad_assembly.step": "321e6899333b461d2d7ea264ae2672f843f751a3bed1a7d403f620b2bf047d1f",
+    "03_freecad_clearance_report.json": "edfa9520099b073f3d72b525d981343f1cbead4e6565f92e4a064e5b8d38a722",
+    "04_blender_review.blend": "83416f72deb04537f117c3880451774ebab77cead5a7edb686ae9e9ce979ca15",
+    "04_blender_review.mtl": "600898120257688a4f5d61c2365bec54a6c727aa27ce76d95d9e3585bf31c8bc",
+    "04_blender_review.obj": "bc51534f07b650080a9c5e38302c127e89a64a03f4060bb777254cea15500cda",
+    "04_blender_review.png": "f311f315ccbc9a5c1aacf230f11228ca5fb74d131190be483e5d45aab03c92a0",
+    "04_blender_scene_report.json": "11a152a4581e0b0e232be5b1028c65adfe2304bd0a0c8c39229c330e53291bfd",
+    "toolchain_invocation_log.json": "137a7c318f35407b91fc94999f6ee4179c75861aca073d87ebd1cb3af9b7f478"
+  },
+  "checks": {
+    "all_required_artifacts_present": true,
+    "blender_decision": true,
+    "blender_freecad_metrics_match": true,
+    "blender_mesh_qc": true,
+    "blender_native_outputs_nonempty": true,
+    "blender_native_outputs_recorded": true,
+    "blender_overlay_features": true,
+    "blender_overlay_geometry": true,
+    "blender_overlay_materials": true,
+    "blender_real_roles": true,
+    "bridge_artifact_present": true,
+    "geometry_access_j1": true,
+    "geometry_access_tp1": true,
+    "geometry_access_tp2": true,
+    "geometry_access_tp3": true,
+    "geometry_access_tp4": true,
+    "geometry_enclosure_bbox": true,
+    "geometry_enclosure_mass": true,
+    "geometry_enclosure_parts_sum": true,
+    "geometry_enclosure_solid_count": true,
+    "geometry_freecad_boolean_checks": true,
+    "geometry_freecad_decision": true,
+    "geometry_freecad_required_fields": true,
+    "geometry_interference": true,
+    "geometry_lid_bounds": true,
+    "geometry_lid_mass": true,
+    "geometry_lid_present": true,
+    "geometry_lid_separation": true,
+    "geometry_report_all_pass": true,
+    "geometry_side_clearances": true,
+    "geometry_standoffs": true,
+    "geometry_top_clearance": true,
+    "geometry_tray_bounds": true,
+    "geometry_tray_mass": true,
+    "geometry_tray_present": true,
+    "ordered_productive_sequence": true,
+    "productive_entries_have_versions": true,
+    "required_and_bridge_hashes": true,
+    "required_subset_of_produced_artifacts": true,
+    "tool_versions_present": true
+  },
+  "critical_requirement": "Every TP1-TP4 pogo target must have a one-to-one, axis-aligned, continuous Z_PLUS access path through a matching lid bore, and those accesses must remain visible in Blender.",
   "domain": "production test fixture adapter",
+  "extra_artifacts": [
+    "01_kicad_board.step"
+  ],
+  "generated_at_utc": "2026-08-07T22:02:11.362634+00:00",
+  "geometry_checks": {
+    "access_j1": true,
+    "access_tp1": true,
+    "access_tp2": true,
+    "access_tp3": true,
+    "access_tp4": true,
+    "enclosure_bbox": true,
+    "enclosure_mass": true,
+    "enclosure_parts_sum": true,
+    "enclosure_solid_count": true,
+    "freecad_boolean_checks": true,
+    "freecad_decision": true,
+    "freecad_required_fields": true,
+    "interference": true,
+    "lid_bounds": true,
+    "lid_mass": true,
+    "lid_present": true,
+    "lid_separation": true,
+    "side_clearances": true,
+    "standoffs": true,
+    "top_clearance": true,
+    "tray_bounds": true,
+    "tray_mass": true,
+    "tray_present": true
+  },
+  "hash_policy": "The 16 required non-self artifacts and productive KiCad STEP bridge are SHA-256 hashed.",
   "key_metrics": {
+    "access_checks": {
+      "J1": {
+        "access_type": "side_window",
+        "bounds_mm": [
+          -11.0,
+          38.5,
+          7.4,
+          11.0,
+          42.3,
+          13.4
+        ],
+        "center_error_mm": 0.0,
+        "direction": "Y_PLUS",
+        "finished_height_mm": 6.0,
+        "finished_width_mm": 22.0,
+        "guard_distances_mm": {
+          "x_minus_mm": 42.8,
+          "x_plus_mm": 42.8,
+          "z_minus_mm": 7.4,
+          "z_plus_to_tray_top_mm": 4.1
+        },
+        "guard_material_fractions": {
+          "x_minus": 1.0,
+          "x_plus": 1.0,
+          "z_minus": 1.0,
+          "z_plus": 1.0
+        },
+        "height_error_mm": 0.0,
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 4.1,
+        "ref": "J1",
+        "residual_material_volume_mm3": 0.0,
+        "through": true,
+        "width_error_mm": 0.0
+      },
+      "TP1": {
+        "access_type": "top_bore",
+        "axis_error_mm": 5e-06,
+        "bore_center_xy_mm": [
+          -21.999995,
+          -12.0
+        ],
+        "center_probe_empty": true,
+        "cutter_z_bounds_mm": [
+          17.1,
+          20.9
+        ],
+        "diameter_error_mm": 5e-06,
+        "direction": "Z_PLUS",
+        "finished_diameter_mm": 4.999995,
+        "finished_diameter_x_mm": 4.99999,
+        "finished_diameter_y_mm": 4.999999,
+        "guard_material_fraction": 1.0,
+        "guard_probe_radius_mm": 3.5,
+        "guard_sample_count": 32,
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 2.0,
+        "path_z_bounds_mm": [
+          8.4,
+          20.9
+        ],
+        "radial_material_boundaries_mm": {
+          "x_minus": 2.49999,
+          "x_plus": 2.5,
+          "y_minus": 2.5,
+          "y_plus": 2.5
+        },
+        "ref": "TP1",
+        "residual_material_volume_mm3": 0.039187,
+        "through": true,
+        "x_mm": -22.0,
+        "y_mm": -12.0
+      },
+      "TP2": {
+        "access_type": "top_bore",
+        "axis_error_mm": 5e-06,
+        "bore_center_xy_mm": [
+          -5.999995,
+          -12.0
+        ],
+        "center_probe_empty": true,
+        "cutter_z_bounds_mm": [
+          17.1,
+          20.9
+        ],
+        "diameter_error_mm": 5e-06,
+        "direction": "Z_PLUS",
+        "finished_diameter_mm": 4.999995,
+        "finished_diameter_x_mm": 4.99999,
+        "finished_diameter_y_mm": 4.999999,
+        "guard_material_fraction": 1.0,
+        "guard_probe_radius_mm": 3.5,
+        "guard_sample_count": 32,
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 2.0,
+        "path_z_bounds_mm": [
+          8.4,
+          20.9
+        ],
+        "radial_material_boundaries_mm": {
+          "x_minus": 2.49999,
+          "x_plus": 2.5,
+          "y_minus": 2.5,
+          "y_plus": 2.5
+        },
+        "ref": "TP2",
+        "residual_material_volume_mm3": 0.039247,
+        "through": true,
+        "x_mm": -6.0,
+        "y_mm": -12.0
+      },
+      "TP3": {
+        "access_type": "top_bore",
+        "axis_error_mm": 5e-06,
+        "bore_center_xy_mm": [
+          10.000005,
+          -12.0
+        ],
+        "center_probe_empty": true,
+        "cutter_z_bounds_mm": [
+          17.1,
+          20.9
+        ],
+        "diameter_error_mm": 5e-06,
+        "direction": "Z_PLUS",
+        "finished_diameter_mm": 4.999995,
+        "finished_diameter_x_mm": 4.99999,
+        "finished_diameter_y_mm": 4.999999,
+        "guard_material_fraction": 1.0,
+        "guard_probe_radius_mm": 3.5,
+        "guard_sample_count": 32,
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 2.0,
+        "path_z_bounds_mm": [
+          8.4,
+          20.9
+        ],
+        "radial_material_boundaries_mm": {
+          "x_minus": 2.49999,
+          "x_plus": 2.5,
+          "y_minus": 2.5,
+          "y_plus": 2.5
+        },
+        "ref": "TP3",
+        "residual_material_volume_mm3": 0.039208,
+        "through": true,
+        "x_mm": 10.0,
+        "y_mm": -12.0
+      },
+      "TP4": {
+        "access_type": "top_bore",
+        "axis_error_mm": 5e-06,
+        "bore_center_xy_mm": [
+          26.000005,
+          -12.0
+        ],
+        "center_probe_empty": true,
+        "cutter_z_bounds_mm": [
+          17.1,
+          20.9
+        ],
+        "diameter_error_mm": 5e-06,
+        "direction": "Z_PLUS",
+        "finished_diameter_mm": 4.999995,
+        "finished_diameter_x_mm": 4.99999,
+        "finished_diameter_y_mm": 4.999999,
+        "guard_material_fraction": 1.0,
+        "guard_probe_radius_mm": 3.5,
+        "guard_sample_count": 32,
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 2.0,
+        "path_z_bounds_mm": [
+          8.4,
+          20.9
+        ],
+        "radial_material_boundaries_mm": {
+          "x_minus": 2.49999,
+          "x_plus": 2.5,
+          "y_minus": 2.5,
+          "y_plus": 2.5
+        },
+        "ref": "TP4",
+        "residual_material_volume_mm3": 0.039187,
+        "through": true,
+        "x_mm": 26.0,
+        "y_mm": -12.0
+      }
+    },
     "board_bbox_mm": [
-      94,
-      70,
+      94.0,
+      70.0,
       1.6
     ],
+    "component_top_clearances_mm": {
+      "J1": 5.0,
+      "TP1": null,
+      "TP2": null,
+      "TP3": null,
+      "TP4": null
+    },
     "enclosure_bbox_mm": [
-      107.6,
-      83.6,
+      107.599998,
+      83.599998,
       20.4
     ],
-    "estimated_shell_mass_g": 94.66,
-    "side_clearance_mm": 4.0,
-    "top_clearance_mm": 5.0
+    "enclosure_mass_g": 78.591564,
+    "enclosure_volume_mm3": 65492.96987,
+    "lid_mass_g": 29.960695,
+    "lid_separation_mm": 0.1,
+    "lid_volume_mm3": 24967.245716,
+    "minimum_side_clearance_mm": 4.0,
+    "minimum_top_clearance_mm": 5.0,
+    "side_clearances_mm": {
+      "X_MINUS": 4.0,
+      "X_PLUS": 4.0,
+      "Y_MINUS": 4.0,
+      "Y_PLUS": 4.0
+    },
+    "standoff_checks": {
+      "MH1": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          -40.0,
+          -28.0
+        ],
+        "bore_diameter_mm": 3.199999,
+        "bore_z_max_mm": 7.1,
+        "bore_z_min_mm": 2.3,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          -40.0,
+          -28.0
+        ],
+        "outer_diameter_mm": 6.900002,
+        "present_material_fraction": 0.999086,
+        "ref": "MH1",
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": -40.0,
+        "y_mm": -28.0
+      },
+      "MH2": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          40.0,
+          -28.0
+        ],
+        "bore_diameter_mm": 3.199999,
+        "bore_z_max_mm": 7.1,
+        "bore_z_min_mm": 2.3,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          40.0,
+          -28.0
+        ],
+        "outer_diameter_mm": 6.900002,
+        "present_material_fraction": 0.999086,
+        "ref": "MH2",
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": 40.0,
+        "y_mm": -28.0
+      },
+      "MH3": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          -40.0,
+          28.0
+        ],
+        "bore_diameter_mm": 3.199999,
+        "bore_z_max_mm": 7.1,
+        "bore_z_min_mm": 2.3,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          -40.0,
+          28.0
+        ],
+        "outer_diameter_mm": 6.900002,
+        "present_material_fraction": 0.999086,
+        "ref": "MH3",
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": -40.0,
+        "y_mm": 28.0
+      },
+      "MH4": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          40.0,
+          28.0
+        ],
+        "bore_diameter_mm": 3.199999,
+        "bore_z_max_mm": 7.1,
+        "bore_z_min_mm": 2.3,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          40.0,
+          28.0
+        ],
+        "outer_diameter_mm": 6.900002,
+        "present_material_fraction": 0.999086,
+        "ref": "MH4",
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": 40.0,
+        "y_mm": 28.0
+      }
+    },
+    "tray_mass_g": 48.630869,
+    "tray_volume_mm3": 40525.724154,
+    "unintended_interference_volume_mm3": 0.0
   },
+  "produced_artifacts": [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
+    "01_kicad_export.json",
+    "01_kicad_mechanical_map.csv",
+    "01_kicad_parameters.scad",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.obj",
+    "03_freecad_assembly.step",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
+    "04_blender_review.mtl",
+    "04_blender_review.obj",
+    "04_blender_review.png",
+    "04_blender_scene_report.json",
+    "final_release_package.json",
+    "toolchain_invocation_log.json"
+  ],
   "release_decision": "pass",
   "required_artifacts": [
     "01_kicad_board.kicad_pcb",
@@ -28,8 +445,10 @@
     "03_freecad_assembly.step",
     "03_freecad_assembly.obj",
     "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
     "04_blender_review.obj",
     "04_blender_review.mtl",
+    "04_blender_review.png",
     "04_blender_scene_report.json",
     "toolchain_invocation_log.json",
     "final_release_package.json"
@@ -42,8 +461,10 @@
   ],
   "stage_outputs": {
     "Blender": [
+      "04_blender_review.blend",
       "04_blender_review.obj",
       "04_blender_review.mtl",
+      "04_blender_review.png",
       "04_blender_scene_report.json"
     ],
     "FreeCAD": [
@@ -55,7 +476,8 @@
       "01_kicad_board.kicad_pcb",
       "01_kicad_export.json",
       "01_kicad_mechanical_map.csv",
-      "01_kicad_parameters.scad"
+      "01_kicad_parameters.scad",
+      "01_kicad_board.step"
     ],
     "OpenSCAD": [
       "02_openscad_enclosure.scad",
@@ -64,5 +486,11 @@
     ]
   },
   "task": "task-05",
-  "title": "Pogo-pin bed adapter with board-derived pin field"
+  "title": "Pogo-pin bed adapter with board-derived pin field",
+  "tool_versions": {
+    "Blender": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)",
+    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
+    "KiCad": "10.0.2",
+    "OpenSCAD": "OpenSCAD version 2021.01"
+  }
 }

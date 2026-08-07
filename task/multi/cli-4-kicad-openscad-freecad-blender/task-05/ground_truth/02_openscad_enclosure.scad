@@ -1,29 +1,62 @@
-// Task 05: Pogo-pin bed adapter with board-derived pin field
-// OpenSCAD stage consumes the KiCad-generated 01_kicad_parameters.scad handoff.
+// Task 05 tray/lid generated from the trusted KiCad parameter handoff.
+// Input map SHA-256: e5f29fd25f1eb995cdf0d4cb12f9a71cb962ee8d86f46c4c15306215bf67c84e
+// Input parameter SHA-256: 6fd3e1bd95fe6ddae1e125a53df5e7df0fd32d94081efdd8e3781e42b19e3597
 include <01_kicad_parameters.scad>;
 
-module standoff(x, y) {
-  translate([x, y, board[2]]) cylinder(d=6.900, h=wall + board[2]);
-}
-module keepout_window(x, y, r) {
-  translate([x, y, enclosure[2]/2]) cube([2*r, wall*3, enclosure[2]], center=true);
-}
-module enclosure_shell() {
+module tray_shell() {
   difference() {
-    translate([-enclosure[0]/2, -enclosure[1]/2, 0]) cube(enclosure);
-    translate([-board[0]/2, -board[1]/2, wall]) cube([board[0], board[1], enclosure[2]]);
-    // J1 EDGE_CONN side/service keepout
-    keepout_window(0.000, 33.000, 11.000);
+    translate([-package_bbox[0]/2, -package_bbox[1]/2, 0])
+      cube([package_bbox[0], package_bbox[1], tray_outer_top_z]);
+    translate([-cavity_xy[0]/2, -cavity_xy[1]/2, base_thickness])
+      cube([cavity_xy[0], cavity_xy[1], tray_outer_top_z-base_thickness+access_overcut]);
   }
 }
-// MH1 copied from KiCad at (-40.000, -28.000)
-// MH2 copied from KiCad at (40.000, -28.000)
-// MH3 copied from KiCad at (-40.000, 28.000)
-// MH4 copied from KiCad at (40.000, 28.000)
-union() {
-  enclosure_shell();
-  standoff(-40.000, -28.000);
-  standoff(40.000, -28.000);
-  standoff(-40.000, 28.000);
-  standoff(40.000, 28.000);
+
+module standoff(axis) {
+  translate([axis[1], axis[2], base_thickness])
+    cylinder(d=standoff_od, h=standoff_height);
 }
+
+module structural_tray() {
+  union() {
+    tray_shell();
+    for (axis = standoff_axes) standoff(axis);
+  }
+}
+
+module mounting_bores() {
+  for (axis = standoff_axes)
+    translate([axis[1], axis[2], base_thickness-standoff_bore_overcut])
+      cylinder(d=standoff_bore, h=standoff_height+2*standoff_bore_overcut);
+}
+
+module bounded_side_windows() {
+  for (access = side_windows)
+    translate([access[2], access[3], access[4]])
+      cube([access[5]-access[2], access[6]-access[3], access[7]-access[4]]);
+}
+
+module installed_tray() {
+  difference() {
+    structural_tray();
+    mounting_bores();
+    bounded_side_windows();
+  }
+}
+
+module lid_bores() {
+  for (access = top_bores)
+    translate([access[1], access[2], access[4]])
+      cylinder(d=access[3], h=access[5]-access[4]);
+}
+
+module separate_lid() {
+  difference() {
+    translate([-package_bbox[0]/2, -package_bbox[1]/2, lid_inner_z])
+      cube([package_bbox[0], package_bbox[1], lid_thickness]);
+    lid_bores();
+  }
+}
+
+installed_tray();
+separate_lid();
