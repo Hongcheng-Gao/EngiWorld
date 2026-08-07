@@ -1,23 +1,23 @@
-// KiCad-generated OpenSCAD parameter handoff.
-// Source: 01_kicad_mechanical_map.csv and 01_kicad_board.kicad_pcb.
-$fn = 64;
-board = [118.000, 92.000, 1.600];
-enclosure = [131.000, 105.000, 25.100];
-wall = 2.500;
-lid_clearance = 3.000;
-
-// [reference, kind, x_mm, y_mm, height_mm, keepout_radius_mm, role]
-mechanical_features = [
-  ["U1", "THERMAL_SENSOR", 0.000, 18.000, 2.000, 8.000, "component_keepout"],
-  ["H1", "HEATER_ZONE", -24.000, -12.000, 1.000, 18.000, "component_keepout"],
-  ["H2", "HEATER_ZONE", 24.000, -12.000, 1.000, 18.000, "component_keepout"],
-  ["J1", "USB_C", -56.000, 0.000, 4.600, 10.000, "connector_window"],
-  ["J2", "SYNC", 56.000, 0.000, 4.000, 8.000, "connector_window"],
-  ["MH1", "MOUNTING_HOLE", -50.000, -38.000, 0.000, 1.500, "standoff_axis"],
-  ["MH2", "MOUNTING_HOLE", 50.000, -38.000, 0.000, 1.500, "standoff_axis"],
-  ["MH3", "MOUNTING_HOLE", -50.000, 38.000, 0.000, 1.500, "standoff_axis"],
-  ["MH4", "MOUNTING_HOLE", 50.000, 38.000, 0.000, 1.500, "standoff_axis"],
-];
-
-standoff_axes = [for (f = mechanical_features) if (f[6] == "standoff_axis") [f[2], f[3], f[5], f[0]]];
-interface_features = [for (f = mechanical_features) if (f[6] == "connector_window" || f[6] == "access_bore" || f[6] == "antenna_keepout") [f[2], f[3], f[5], f[0], f[6]]];
+// Generated from task-09 KiCad and frozen mechanical contract.
+// source_mechanical_map = 01_kicad_mechanical_map.csv
+// input_board_sha256 = 13c5104ac106f040fe21b55b150ae727be28b11811c3f9d0bf30bb040a7d851e
+board_bbox = [118.000000, 92.000000, 1.600000];
+package_bbox = [131.000000, 105.000000, 25.100000];
+cavity_bounds = [-63.000000, -50.000000, 63.000000, 50.000000];
+wall_mm = 2.500000;
+base_mm = 2.500000;
+tray_top_z = 22.500000;
+lid_inner_z = 22.600000;
+lid_thickness = 2.500000;
+board_bottom_z = 13.400000;
+board_top_z = 15.000000;
+standoff_outer_diameter = 6.900000;
+standoff_bore_diameter = 3.200000;
+standoff_height = 10.900000;
+standoff_bore_z = [2.000000, 13.900000];
+standoff_axes = [["MH1", -50.000000, -38.000000], ["MH2", 50.000000, -38.000000], ["MH3", -50.000000, 38.000000], ["MH4", 50.000000, 38.000000]];
+mechanical_features = [["U1", "THERMAL_SENSOR", 0.000000, 18.000000, 2.000000, 8.000000, 16.000000, 16.000000, 2.000000, "box"], ["J1", "USB_C", -56.000000, 0.000000, 4.600000, 10.000000, 14.000000, 20.000000, 4.600000, "box"], ["J2", "SYNC", 56.000000, 0.000000, 4.000000, 8.000000, 14.000000, 16.000000, 4.000000, "box"], ["H1", "HEATER_ZONE", -24.000000, -12.000000, 1.000000, 18.000000, 36.000000, 36.000000, 1.000000, "cylinder"], ["H2", "HEATER_ZONE", 24.000000, -12.000000, 1.000000, 18.000000, 36.000000, 36.000000, 1.000000, "cylinder"]];
+interface_features = [["J1", "X_MINUS", -66.000000, -10.000000, 14.200000, -62.500000, 10.000000, 20.400000, 20.000000, 6.200000], ["J2", "X_PLUS", 62.500000, -8.000000, 14.200000, 66.000000, 8.000000, 19.800000, 16.000000, 5.600000], ["H1", "Z_PLUS", -24.000000, -12.000000, 36.000000, 22.100000, 25.600000, 16.000000, 25.600000, 15.000000, 25.600000], ["H2", "Z_PLUS", 24.000000, -12.000000, 36.000000, 22.100000, 25.600000, 16.000000, 25.600000, 15.000000, 25.600000]];
+side_windows = [["J1", "X_MINUS", -66.000000, -10.000000, 14.200000, -62.500000, 10.000000, 20.400000, 20.000000, 6.200000], ["J2", "X_PLUS", 62.500000, -8.000000, 14.200000, 66.000000, 8.000000, 19.800000, 16.000000, 5.600000]];
+side_paths = [["J1", "X_MINUS", -66.000000, -10.000000, 14.200000, -49.000000, 10.000000, 20.400000, 20.000000, 6.200000], ["J2", "X_PLUS", 49.000000, -8.000000, 14.200000, 66.000000, 8.000000, 19.800000, 16.000000, 5.600000]];
+top_keepout_openings = [["H1", "Z_PLUS", -24.000000, -12.000000, 36.000000, 22.100000, 25.600000, 16.000000, 25.600000, 15.000000, 25.600000], ["H2", "Z_PLUS", 24.000000, -12.000000, 36.000000, 22.100000, 25.600000, 16.000000, 25.600000, 15.000000, 25.600000]];
