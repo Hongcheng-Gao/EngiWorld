@@ -1,23 +1,24 @@
-// KiCad-generated OpenSCAD parameter handoff.
-// Source: 01_kicad_mechanical_map.csv and 01_kicad_board.kicad_pcb.
-$fn = 64;
-board = [66.000, 42.000, 1.000];
-enclosure = [78.000, 54.000, 12.200];
-wall = 2.000;
-lid_clearance = 1.200;
-
-// [reference, kind, x_mm, y_mm, height_mm, keepout_radius_mm, role]
-mechanical_features = [
-  ["U1", "OPTICAL_ASIC", 0.000, 0.000, 0.800, 6.000, "component_keepout"],
-  ["LED1", "EMITTER", -16.000, 0.000, 1.500, 4.000, "component_keepout"],
-  ["PD1", "PHOTODIODE", 16.000, 0.000, 1.200, 4.000, "component_keepout"],
-  ["J1", "FLEX", 0.000, -20.000, 2.800, 8.000, "connector_window"],
-  ["FID1", "FIDUCIAL", -24.000, 14.000, 0.100, 2.000, "component_keepout"],
-  ["MH1", "MOUNTING_HOLE", -26.000, -16.000, 0.000, 1.200, "standoff_axis"],
-  ["MH2", "MOUNTING_HOLE", 26.000, -16.000, 0.000, 1.200, "standoff_axis"],
-  ["MH3", "MOUNTING_HOLE", -26.000, 16.000, 0.000, 1.200, "standoff_axis"],
-  ["MH4", "MOUNTING_HOLE", 26.000, 16.000, 0.000, 1.200, "standoff_axis"],
-];
-
-standoff_axes = [for (f = mechanical_features) if (f[6] == "standoff_axis") [f[2], f[3], f[5], f[0]]];
-interface_features = [for (f = mechanical_features) if (f[6] == "connector_window" || f[6] == "access_bore" || f[6] == "antenna_keepout") [f[2], f[3], f[5], f[0], f[6]]];
+// Generated from task-07 KiCad and frozen mechanical contract.
+// source_mechanical_map = 01_kicad_mechanical_map.csv
+// input_board_sha256 = 0bc077bbb6b64705d4187783f5084d2a58133f9641ae7b961b95d37ae94e321d
+board_bbox = [66.000000, 42.000000, 1.000000];
+package_bbox = [78.000000, 54.000000, 12.200000];
+cavity_bounds = [-37.000000, -25.000000, 37.000000, 25.000000];
+wall_mm = 2.000000;
+base_mm = 2.000000;
+tray_top_z = 10.100000;
+lid_inner_z = 10.200000;
+lid_thickness = 2.000000;
+board_bottom_z = 5.200000;
+board_top_z = 6.200000;
+standoff_outer_diameter = 5.600000;
+standoff_bore_diameter = 2.600000;
+standoff_height = 3.200000;
+standoff_bore_z = [1.500000, 5.700000];
+standoff_axes = [["MH1", -26.000000, -16.000000], ["MH2", 26.000000, -16.000000], ["MH3", -26.000000, 16.000000], ["MH4", 26.000000, 16.000000]];
+mechanical_features = [["U1", "OPTICAL_ASIC", 0.000000, 0.000000, 0.800000, 6.000000, 12.000000, 12.000000, 0.800000, "box"], ["LED1", "EMITTER", -16.000000, 0.000000, 1.500000, 4.000000, 8.000000, 8.000000, 1.500000, "cylinder"], ["PD1", "PHOTODIODE", 16.000000, 0.000000, 1.200000, 4.000000, 8.000000, 8.000000, 1.200000, "cylinder"], ["J1", "FLEX", 0.000000, -20.000000, 2.800000, 8.000000, 16.000000, 10.000000, 2.800000, "box"], ["FID1", "FIDUCIAL", -24.000000, 14.000000, 0.100000, 2.000000, 4.000000, 4.000000, 0.100000, "cylinder"]];
+interface_features = [["J1", "Y_MINUS", -8.000000, -27.500000, 5.400000, 8.000000, -24.500000, 9.800000, 16.000000, 4.400000]];
+side_windows = [["J1", "Y_MINUS", -8.000000, -27.500000, 5.400000, 8.000000, -24.500000, 9.800000, 16.000000, 4.400000]];
+optical_start = [-16.000000, 0.000000, 8.200000];
+optical_end = [16.000000, 0.000000, 8.200000];
+optical_radius = 0.500000;
