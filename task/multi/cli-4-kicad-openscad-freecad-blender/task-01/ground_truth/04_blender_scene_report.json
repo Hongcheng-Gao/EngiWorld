@@ -1,36 +1,82 @@
 {
-  "camera": {
-    "name": "release_review_camera",
-    "projection": "orthographic",
-    "view": "top_oblique"
-  },
+  "active_camera": "release_review_camera",
   "collections": [
+    "FreeCAD_clearance_overlays",
+    "FreeCAD_components",
     "KiCad_board",
     "OpenSCAD_enclosure",
-    "FreeCAD_clearance_overlays",
     "critical_keepouts"
   ],
   "decision": "pass",
   "inputs": [
-    "03_freecad_assembly.obj",
+    "03_freecad_assembly_for_blender.obj",
     "03_freecad_clearance_report.json"
   ],
-  "materials": [
-    "enclosure_translucent",
-    "pcb_green",
-    "keepout_warning"
-  ],
-  "mesh_qc": {
-    "missing_material_slots": 0,
-    "nonmanifold_edges": 0,
-    "unlabeled_keepouts": 0
+  "material_assignments": {
+    "Component envelope D002": [
+      "component_neutral"
+    ],
+    "Component envelope J003": [
+      "component_neutral"
+    ],
+    "Component envelope J004": [
+      "component_neutral"
+    ],
+    "Component envelope U003": [
+      "component_neutral"
+    ],
+    "Component envelope U004": [
+      "component_neutral"
+    ],
+    "J1_X_MINUS_Aperture_Overlay": [
+      "keepout_warning"
+    ],
+    "J2_X_PLUS_Aperture_Overlay": [
+      "keepout_warning"
+    ],
+    "KiCad PCB board001": [
+      "pcb_green"
+    ],
+    "OpenSCAD enclosure shell with lid001": [
+      "enclosure_translucent"
+    ],
+    "U1_Lid_Clearance_Overlay": [
+      "clearance_ok"
+    ]
   },
+  "materials": [
+    "clearance_ok",
+    "component_neutral",
+    "enclosure_translucent",
+    "keepout_warning",
+    "pcb_green"
+  ],
+  "native_scene": "04_blender_review.blend",
+  "object_roles": {
+    "Component envelope D002": "component_envelope",
+    "Component envelope J003": "component_envelope",
+    "Component envelope J004": "component_envelope",
+    "Component envelope U003": "component_envelope",
+    "Component envelope U004": "component_envelope",
+    "J1_X_MINUS_Aperture_Overlay": "window_overlay",
+    "J2_X_PLUS_Aperture_Overlay": "window_overlay",
+    "KiCad PCB board001": "pcb",
+    "OpenSCAD enclosure shell with lid001": "enclosure",
+    "U1_Lid_Clearance_Overlay": "clearance_overlay"
+  },
+  "render": "04_blender_review.png",
   "review_mtl": "04_blender_review.mtl",
   "review_obj": "04_blender_review.obj",
+  "role_counts": {
+    "component_envelope": 5,
+    "enclosure": 1,
+    "pcb": 1
+  },
   "software_stage": "Blender",
   "task": "task-01",
   "visible_keepouts": [
     "J1",
     "J2"
-  ]
+  ],
+  "visible_u1_clearance_mm": 7.1
 }
