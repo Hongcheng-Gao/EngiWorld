@@ -1,37 +1,53 @@
 {
-  "commands": [
+  "actual_invocations": [
     {
-      "command": "kicad-cli pcb export step board_input.kicad_pcb --output board.step && python3 kicad_extract_mechanical_map.py --emit-scad 01_kicad_parameters.scad",
+      "command": "python3 /tmp/engiworld-task04-internal/task04_prepare.py /home/user/Desktop",
       "inputs": [
         "board_input.kicad_pcb",
         "mechanical_requirements.json",
-        "connector_keepouts.csv"
+        "connector_keepouts.csv",
+        "enclosure_seed.scad",
+        "handoff_notes.md"
       ],
       "outputs": [
         "01_kicad_board.kicad_pcb",
         "01_kicad_export.json",
         "01_kicad_mechanical_map.csv",
-        "01_kicad_parameters.scad"
-      ],
-      "software": "KiCad"
-    },
-    {
-      "command": "openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
-      "inputs": [
         "01_kicad_parameters.scad",
-        "enclosure_seed.scad"
-      ],
-      "outputs": [
         "02_openscad_enclosure.scad",
-        "02_openscad_enclosure.stl",
         "02_openscad_parameters.json"
       ],
-      "software": "OpenSCAD"
+      "software": "Python handoff generator"
     },
     {
-      "command": "FreeCADCmd freecad_assembly_check.py",
+      "command": "cd /home/user/Desktop && /home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage kicad-cli pcb export step --force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb",
       "inputs": [
-        "01_kicad_board.kicad_pcb",
+        "01_kicad_board.kicad_pcb"
+      ],
+      "outputs": [
+        "01_kicad_board.step"
+      ],
+      "software": "KiCad",
+      "version": "10.0.2"
+    },
+    {
+      "command": "cd /home/user/Desktop && openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
+      "inputs": [
+        "01_kicad_parameters.scad",
+        "02_openscad_enclosure.scad"
+      ],
+      "outputs": [
+        "02_openscad_enclosure.stl"
+      ],
+      "software": "OpenSCAD",
+      "version": "OpenSCAD version 2021.01"
+    },
+    {
+      "command": "ENGIWORLD_WORKDIR=/home/user/Desktop freecadcmd /tmp/engiworld-task04-internal/task04_freecad_stage.py",
+      "inputs": [
+        "01_kicad_board.step",
+        "01_kicad_export.json",
+        "01_kicad_mechanical_map.csv",
         "02_openscad_enclosure.stl",
         "02_openscad_parameters.json"
       ],
@@ -40,21 +56,110 @@
         "03_freecad_assembly.obj",
         "03_freecad_clearance_report.json"
       ],
-      "software": "FreeCAD"
+      "software": "FreeCAD",
+      "version": "FreeCAD 0.21.2 Revision: 33771 (Git)"
     },
     {
-      "command": "blender --background --python blender_release_review.py",
+      "command": "/home/user/Applications/blender-4.2.3-linux-x64/blender --background --factory-startup --python /tmp/engiworld-task04-internal/task04_blender_stage.py -- /home/user/Desktop",
       "inputs": [
         "03_freecad_assembly.obj",
         "03_freecad_clearance_report.json"
       ],
       "outputs": [
+        "04_blender_review.blend",
         "04_blender_review.obj",
         "04_blender_review.mtl",
+        "04_blender_review.png",
         "04_blender_scene_report.json"
       ],
-      "software": "Blender"
+      "software": "Blender",
+      "version": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)"
     }
+  ],
+  "commands": [
+    {
+      "command": "cd /home/user/Desktop && /home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage kicad-cli pcb export step --force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb",
+      "inputs": [
+        "01_kicad_board.kicad_pcb"
+      ],
+      "outputs": [
+        "01_kicad_board.step"
+      ],
+      "software": "KiCad",
+      "version": "10.0.2"
+    },
+    {
+      "command": "cd /home/user/Desktop && openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
+      "inputs": [
+        "01_kicad_parameters.scad",
+        "02_openscad_enclosure.scad"
+      ],
+      "outputs": [
+        "02_openscad_enclosure.stl"
+      ],
+      "software": "OpenSCAD",
+      "version": "OpenSCAD version 2021.01"
+    },
+    {
+      "command": "ENGIWORLD_WORKDIR=/home/user/Desktop freecadcmd /tmp/engiworld-task04-internal/task04_freecad_stage.py",
+      "inputs": [
+        "01_kicad_board.step",
+        "01_kicad_export.json",
+        "01_kicad_mechanical_map.csv",
+        "02_openscad_enclosure.stl",
+        "02_openscad_parameters.json"
+      ],
+      "outputs": [
+        "03_freecad_assembly.step",
+        "03_freecad_assembly.obj",
+        "03_freecad_clearance_report.json"
+      ],
+      "software": "FreeCAD",
+      "version": "FreeCAD 0.21.2 Revision: 33771 (Git)"
+    },
+    {
+      "command": "/home/user/Applications/blender-4.2.3-linux-x64/blender --background --factory-startup --python /tmp/engiworld-task04-internal/task04_blender_stage.py -- /home/user/Desktop",
+      "inputs": [
+        "03_freecad_assembly.obj",
+        "03_freecad_clearance_report.json"
+      ],
+      "outputs": [
+        "04_blender_review.blend",
+        "04_blender_review.obj",
+        "04_blender_review.mtl",
+        "04_blender_review.png",
+        "04_blender_scene_report.json"
+      ],
+      "software": "Blender",
+      "version": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)"
+    }
+  ],
+  "generated_at_utc": "2026-08-07T04:57:51.099650+00:00",
+  "generated_on_host": "iv-yes96gsu80bw80d01mgl",
+  "preparation": {
+    "command": "python3 /tmp/engiworld-task04-internal/task04_prepare.py /home/user/Desktop",
+    "inputs": [
+      "board_input.kicad_pcb",
+      "mechanical_requirements.json",
+      "connector_keepouts.csv",
+      "enclosure_seed.scad",
+      "handoff_notes.md"
+    ],
+    "outputs": [
+      "01_kicad_board.kicad_pcb",
+      "01_kicad_export.json",
+      "01_kicad_mechanical_map.csv",
+      "01_kicad_parameters.scad",
+      "02_openscad_enclosure.scad",
+      "02_openscad_parameters.json"
+    ],
+    "software": "Python handoff generator"
+  },
+  "productive_software_sequence": [
+    "KiCad",
+    "OpenSCAD",
+    "FreeCAD",
+    "Blender"
   ],
   "required_software_sequence": [
     "KiCad",
@@ -62,5 +167,11 @@
     "FreeCAD",
     "Blender"
   ],
-  "task": "task-04"
+  "task": "task-04",
+  "tool_versions": {
+    "Blender": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)",
+    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
+    "KiCad": "10.0.2",
+    "OpenSCAD": "OpenSCAD version 2021.01"
+  }
 }
