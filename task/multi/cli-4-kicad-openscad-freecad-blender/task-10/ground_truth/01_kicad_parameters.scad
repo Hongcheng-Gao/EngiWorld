@@ -1,23 +1,24 @@
-// KiCad-generated OpenSCAD parameter handoff.
-// Source: 01_kicad_mechanical_map.csv and 01_kicad_board.kicad_pcb.
-$fn = 64;
-board = [82.000, 82.000, 1.200];
-enclosure = [95.400, 95.400, 35.400];
-wall = 2.700;
-lid_clearance = 7.500;
-
-// [reference, kind, x_mm, y_mm, height_mm, keepout_radius_mm, role]
-mechanical_features = [
-  ["A1", "PATCH_ANTENNA", 0.000, 16.000, 5.200, 24.000, "antenna_keepout"],
-  ["U1", "GNSS_SOC", -14.000, -18.000, 1.100, 7.000, "component_keepout"],
-  ["J1", "SMA_EDGE", 40.000, -12.000, 7.200, 12.000, "connector_window"],
-  ["BT1", "BACKUP_CELL", -30.000, 26.000, 4.800, 11.000, "component_keepout"],
-  ["TP1", "RF_TEST", 18.000, -30.000, 0.200, 3.000, "access_bore"],
-  ["MH1", "MOUNTING_HOLE", -34.000, -34.000, 0.000, 1.400, "standoff_axis"],
-  ["MH2", "MOUNTING_HOLE", 34.000, -34.000, 0.000, 1.400, "standoff_axis"],
-  ["MH3", "MOUNTING_HOLE", -34.000, 34.000, 0.000, 1.400, "standoff_axis"],
-  ["MH4", "MOUNTING_HOLE", 34.000, 34.000, 0.000, 1.400, "standoff_axis"],
-];
-
-standoff_axes = [for (f = mechanical_features) if (f[6] == "standoff_axis") [f[2], f[3], f[5], f[0]]];
-interface_features = [for (f = mechanical_features) if (f[6] == "connector_window" || f[6] == "access_bore" || f[6] == "antenna_keepout") [f[2], f[3], f[5], f[0], f[6]]];
+// Generated from task-10 KiCad and frozen mechanical contract.
+// source_mechanical_map = 01_kicad_mechanical_map.csv
+// input_board_sha256 = be5aa3b020990feda1e9a74f8245d6f9664c398dd7121c0f6c54c9962f632417
+board_bbox = [82.000000, 82.000000, 1.200000];
+package_bbox = [95.400000, 95.400000, 35.400000];
+cavity_bounds = [-45.000000, -45.000000, 45.000000, 45.000000];
+wall_mm = 2.700000;
+base_mm = 2.700000;
+tray_top_z = 32.600000;
+lid_inner_z = 32.700000;
+lid_thickness = 2.700000;
+board_bottom_z = 16.800000;
+board_top_z = 18.000000;
+standoff_outer_diameter = 6.400000;
+standoff_bore_diameter = 3.000000;
+standoff_height = 14.100000;
+standoff_bore_z = [2.200000, 17.300000];
+standoff_axes = [["MH1", -34.000000, -34.000000], ["MH2", 34.000000, -34.000000], ["MH3", -34.000000, 34.000000], ["MH4", 34.000000, 34.000000]];
+mechanical_features = [["A1", "PATCH_ANTENNA", 0.000000, 16.000000, 5.200000, 24.000000, 32.000000, 32.000000, 5.200000, "box"], ["U1", "GNSS_SOC", -14.000000, -18.000000, 1.100000, 7.000000, 14.000000, 14.000000, 1.100000, "box"], ["J1", "SMA_EDGE", 40.000000, -12.000000, 7.200000, 12.000000, 10.000000, 24.000000, 7.200000, "box"], ["BT1", "BACKUP_CELL", -30.000000, 26.000000, 4.800000, 11.000000, 12.000000, 12.000000, 4.800000, "cylinder"], ["TP1", "RF_TEST", 18.000000, -30.000000, 0.200000, 3.000000, 2.000000, 2.000000, 0.200000, "cylinder"]];
+interface_features = [["J1", "X_PLUS", 44.500000, -24.000000, 17.200000, 48.200000, 0.000000, 26.000000, 24.000000, 8.800000], ["TP1", "Z_PLUS", 18.000000, -30.000000, 6.000000, 32.200000, 35.900000, 18.200000, 35.900000], ["A1", "Z_PLUS", 0.000000, 16.000000, 24.000000, 23.200000, 32.700000]];
+side_windows = [["J1", "X_PLUS", 44.500000, -24.000000, 17.200000, 48.200000, 0.000000, 26.000000, 24.000000, 8.800000]];
+side_paths = [["J1", "X_PLUS", 35.000000, -24.000000, 17.200000, 48.200000, 0.000000, 26.000000, 24.000000, 8.800000]];
+top_bores = [["TP1", "Z_PLUS", 18.000000, -30.000000, 6.000000, 32.200000, 35.900000, 18.200000, 35.900000]];
+reserved_volumes = [["A1", "Z_PLUS", 0.000000, 16.000000, 24.000000, 23.200000, 32.700000]];
