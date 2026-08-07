@@ -1,16 +1,56 @@
 {
-  "critical_requirement": "The shield window must exclude J1 while keeping the RFIC inside the protected volume.",
+  "access_center_tolerance_mm": 0.25,
+  "access_overcut_mm": 0.5,
+  "axis_tolerance_mm": 0.05,
+  "base_thickness_mm": 2.2,
+  "board_bottom_z_mm": 3.2,
+  "component_bodies": {
+    "J1": {"bbox_mm": [8.0, 8.0, 2.4], "shape": "box"},
+    "J2": {"bbox_mm": [12.0, 10.0, 3.8], "shape": "box"},
+    "TP1": {"bbox_mm": [3.0, 3.0, 0.2], "shape": "box"},
+    "U1": {"bbox_mm": [10.0, 10.0, 0.9], "shape": "box"},
+    "Y1": {"bbox_mm": [7.0, 5.0, 2.0], "shape": "box"}
+  },
+  "coordinate_system": {
+    "origin": "PCB outline center projected onto the package bottom outer face",
+    "x_axis": "PCB long axis; X_PLUS follows increasing KiCad X",
+    "y_axis": "PCB short axis; Y_PLUS follows increasing KiCad Y",
+    "z_axis": "normal to the PCB; Z_PLUS points from the package base toward the covering lid"
+  },
+  "critical_requirement": "The U1 keepout envelope must be fully inside the RF shield protected volume, while the J1 keepout envelope must be fully outside it and J1 remains externally accessible.",
   "domain": "RF shielded daughtercard",
-  "expected_enclosure_bbox_mm": [
-    84.4,
-    60.4,
-    14.2
-  ],
+  "enclosure_material": "ABS-ESD",
+  "enclosure_material_density_g_cm3": 1.09,
+  "expected_enclosure_bbox_mm": [84.4, 60.4, 12.2],
+  "geometry_tolerance_mm": 0.1,
   "handoff_rule": "KiCad coordinates are authoritative; every later stage must consume the previous stage artifacts.",
-  "lid_clearance_mm": 1.8,
-  "material": "ABS-ESD",
-  "material_density_g_cm3": 1.09,
+  "interference_volume_tolerance_mm3": 0.1,
+  "lid_clearance_above_tallest_component_mm": 1.8,
+  "lid_thickness_mm": 2.2,
+  "mass_report_relative_tolerance": 0.02,
+  "minimum_access_guard_mm": 1.0,
+  "minimum_side_clearance_mm": 4.0,
   "mount_hole_diameter_mm": 2.6,
+  "protected_volume": {
+    "center_ref": "U1",
+    "inner_bbox_xy_mm": [24.0, 22.0],
+    "must_contain_keepout_refs": ["U1"],
+    "must_exclude_keepout_refs": ["J1"],
+    "z_max_mm": 8.8,
+    "z_min_source": "nominal_pcb_top"
+  },
+  "schema_version": 2,
+  "shield": {
+    "inner_bbox_xy_mm": [24.0, 22.0],
+    "inner_top_z_mm": 8.8,
+    "material": "tin-plated steel",
+    "material_density_g_cm3": 7.85,
+    "outer_top_z_mm": 9.8,
+    "wall_thickness_mm": 1.0
+  },
+  "standoff_bore_diameter_mm": 2.8,
+  "standoff_height_mm": 1.0,
+  "standoff_outer_diameter_mm": 5.8,
   "task": "task-03",
   "title": "RF daughtercard shield-can and inspection scene",
   "wall_mm": 2.2

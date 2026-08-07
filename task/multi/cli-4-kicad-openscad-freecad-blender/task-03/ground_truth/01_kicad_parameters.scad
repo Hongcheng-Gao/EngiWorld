@@ -1,23 +1,59 @@
-// KiCad-generated OpenSCAD parameter handoff.
-// Source: 01_kicad_mechanical_map.csv and 01_kicad_board.kicad_pcb.
+// KiCad-derived Task 03 OpenSCAD parameter handoff.
+// Source map SHA-256: f3d68f70b06402aa1429e5333d23c4cedf50cddd1cb1b93778b5081a119f6de3
 $fn = 64;
-board = [72.000, 48.000, 1.200];
-enclosure = [84.400, 60.400, 14.200];
-wall = 2.200;
-lid_clearance = 1.800;
+board = [72.000000, 48.000000, 1.200000];
+enclosure = [84.400000, 60.400000, 12.200000];
+cavity = [80.000000, 56.000000, 7.800000];
+wall = 2.200000;
+base_thickness = 2.200000;
+lid_thickness = 2.200000;
+board_bottom_z = 3.200000;
+board_top_z = 4.400000;
+lid_inner_z = 10.000000;
+standoff_height = 1.000000;
+standoff_od = 5.800000;
+standoff_bore = 2.800000;
+access_overcut = 0.500000;
+shield_center = [0.000000, 0.000000];
+shield_inner_xy = [24.000000, 22.000000];
+shield_wall = 1.000000;
+shield_inner_top_z = 8.800000;
+shield_outer_top_z = 9.800000;
+protected_volume = [-12.000000, -11.000000, 4.400000, 12.000000, 11.000000, 8.800000];
 
-// [reference, kind, x_mm, y_mm, height_mm, keepout_radius_mm, role]
+// [ref, kind, x, y, height, keepout_radius, body_x, body_y, role]
 mechanical_features = [
-  ["U1", "RFIC", 0.000, 0.000, 0.900, 8.000, "component_keepout"],
-  ["Y1", "TCXO", -18.000, 12.000, 2.000, 5.000, "component_keepout"],
-  ["J1", "UFL_ANT", 32.000, 0.000, 2.400, 7.000, "connector_window"],
-  ["J2", "MEZZ_CONN", -32.000, -12.000, 3.800, 9.000, "connector_window"],
-  ["TP1", "TEST_PAD", 12.000, -18.000, 0.200, 3.000, "access_bore"],
-  ["MH1", "MOUNTING_HOLE", -30.000, -18.000, 0.000, 1.300, "standoff_axis"],
-  ["MH2", "MOUNTING_HOLE", 30.000, -18.000, 0.000, 1.300, "standoff_axis"],
-  ["MH3", "MOUNTING_HOLE", -30.000, 18.000, 0.000, 1.300, "standoff_axis"],
-  ["MH4", "MOUNTING_HOLE", 30.000, 18.000, 0.000, 1.300, "standoff_axis"],
+  ["MH1", "MOUNTING_HOLE", -30.000000, -18.000000, 0.000000, 0.000000, 0.000000, 0.000000, "standoff_axis"],
+  ["MH2", "MOUNTING_HOLE", 30.000000, -18.000000, 0.000000, 0.000000, 0.000000, 0.000000, "standoff_axis"],
+  ["MH3", "MOUNTING_HOLE", -30.000000, 18.000000, 0.000000, 0.000000, 0.000000, 0.000000, "standoff_axis"],
+  ["MH4", "MOUNTING_HOLE", 30.000000, 18.000000, 0.000000, 0.000000, 0.000000, 0.000000, "standoff_axis"],
+  ["U1", "RFIC", 0.000000, 0.000000, 0.900000, 8.000000, 10.000000, 10.000000, "component_keepout"],
+  ["Y1", "TCXO", -18.000000, 12.000000, 2.000000, 5.000000, 7.000000, 5.000000, "component_keepout"],
+  ["J1", "UFL_ANT", 32.000000, 0.000000, 2.400000, 7.000000, 8.000000, 8.000000, "connector_window"],
+  ["J2", "MEZZ_CONN", -32.000000, -12.000000, 3.800000, 9.000000, 12.000000, 10.000000, "connector_window"],
+  ["TP1", "TEST_PAD", 12.000000, -18.000000, 0.200000, 3.000000, 3.000000, 3.000000, "access_bore"],
 ];
-
-standoff_axes = [for (f = mechanical_features) if (f[6] == "standoff_axis") [f[2], f[3], f[5], f[0]]];
-interface_features = [for (f = mechanical_features) if (f[6] == "connector_window" || f[6] == "access_bore" || f[6] == "antenna_keepout") [f[2], f[3], f[5], f[0], f[6]]];
+// [ref, x, y]
+standoff_axes = [
+  ["MH1", -30.000000, -18.000000],
+  ["MH2", 30.000000, -18.000000],
+  ["MH3", -30.000000, 18.000000],
+  ["MH4", 30.000000, 18.000000],
+];
+// [ref, direction, xmin, ymin, zmin, xmax, ymax, zmax]
+side_accesses = [
+  ["J1", "X_PLUS", 28.000000, -7.000000, 3.600000, 42.700000, 7.000000, 7.600000],
+  ["J2", "X_MINUS", -42.700000, -22.000000, 3.600000, -26.000000, -2.000000, 9.000000],
+];
+// [ref, x, y, diameter, zmin, zmax]
+top_accesses = [
+  ["TP1", 12.000000, -18.000000, 6.000000, 4.600000, 12.700000],
+];
+// [ref, x, y, radius, zmin, zmax]
+keepout_volumes = [
+  ["U1", 0.000000, 0.000000, 8.000000, 4.400000, 5.300000],
+  ["Y1", -18.000000, 12.000000, 5.000000, 4.400000, 6.400000],
+  ["J1", 32.000000, 0.000000, 7.000000, 4.400000, 6.800000],
+  ["J2", -32.000000, -12.000000, 9.000000, 4.400000, 8.200000],
+  ["TP1", 12.000000, -18.000000, 3.000000, 4.400000, 4.600000],
+];
