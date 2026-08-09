@@ -265,9 +265,13 @@ def score_from_metrics(m):
 
 def hard_errors(m):
     errors = []
-    for axis, (got, expected) in enumerate(zip(m["bounds_min_mm"], CASE_SPEC["envelope_min_mm"])):
-        if abs(got - expected) > TOL:
-            errors.append(f"bounds_min_axis_{axis}:must_be_{expected}:got_{got}")
+    for axis, (got, minimum) in enumerate(zip(m["bounds_min_mm"], CASE_SPEC["envelope_min_mm"])):
+        if got < minimum - TOL:
+            errors.append(f"bounds_min_axis_{axis}:below_envelope:{got}<{minimum}")
+    if abs(m["bounds_min_mm"][2] - CASE_SPEC["envelope_min_mm"][2]) > TOL:
+        errors.append(
+            f"base_contact_z:must_be_{CASE_SPEC['envelope_min_mm'][2]}:got_{m['bounds_min_mm'][2]}"
+        )
     for axis, (got, maximum) in enumerate(zip(m["bounds_max_mm"], CASE_SPEC["envelope_max_mm"])):
         if got > maximum + TOL:
             errors.append(f"bounds_max_axis_{axis}:too_large:{got}>{maximum}")

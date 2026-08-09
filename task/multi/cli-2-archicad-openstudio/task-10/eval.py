@@ -389,15 +389,46 @@ def check_handoff(
                 errors.append(f"{label}:space_area_nonpositive:{name}")
         except Exception:
             errors.append(f"{label}:space_area_invalid:{name}")
-    if not has_any_key_like(data, ("bim_counts", "ifc_counts", "entity_counts")):
-        errors.append(f"{label}:missing_bim_counts")
-    for cls in ("IfcSpace", "IfcDoor", "IfcWindow"):
-        for val in find_values(data, cls):
+        for count_key in ("door_count", "window_count"):
             try:
-                if int(val) > stage1_info["counts"].get(cls, 0):
-                    errors.append(f"{label}:bim_count_exceeds_stage1:{cls}")
-            except Exception:
-                pass
+                raw_count = rec.get(count_key)
+                count_value = float(raw_count)
+                if isinstance(raw_count, bool) or count_value < 0 or not count_value.is_integer():
+                    raise ValueError
+            except (TypeError, ValueError):
+                errors.append(f"{label}:space_invalid_{count_key}:{name}")
+    for count_key, cls, minimum in (
+        ("door_count", "IfcDoor", int(CASE_SPEC.get("min_doors", 0))),
+        ("window_count", "IfcWindow", int(CASE_SPEC.get("min_windows", 0))),
+    ):
+        try:
+            reported_total = sum(int(rec[count_key]) for rec in records)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if reported_total < minimum:
+            errors.append(f"{label}:{count_key}_below_case_minimum:{reported_total}<{minimum}")
+        actual_total = int(stage1_info["counts"].get(cls, 0))
+        if reported_total > actual_total:
+            errors.append(f"{label}:{count_key}_exceeds_stage1:{reported_total}>{actual_total}")
+    count_sections = (
+        find_values(data, "bim_counts")
+        + find_values(data, "ifc_counts")
+        + find_values(data, "entity_counts")
+    )
+    bim_counts = next((value for value in count_sections if isinstance(value, dict)), None)
+    if bim_counts is None:
+        errors.append(f"{label}:missing_bim_counts")
+    else:
+        normalized_counts = {norm(key): value for key, value in bim_counts.items()}
+        for cls in IFC_CLASSES:
+            try:
+                reported = int(normalized_counts[norm(cls)])
+            except (KeyError, TypeError, ValueError):
+                errors.append(f"{label}:missing_or_invalid_bim_count:{cls}")
+                continue
+            actual = int(stage1_info["counts"].get(cls, 0))
+            if reported != actual:
+                errors.append(f"{label}:bim_count_mismatch:{cls}:{reported}!={actual}")
     return data
 
 
@@ -424,6 +455,8 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
     up = text.upper()
     if "OS:VERSION" not in up:
         errors.append("result.osm:no_os_version")
+    if not re.search(r"\bOS:VERSION\s*,[^;]*\b3\.10\.0\s*;", text, flags=re.IGNORECASE | re.DOTALL):
+        errors.append("result.osm:openstudio_version_not_3_10_0")
     require_tokens(text, required_spaces, errors, "result.osm:spaces")
     require_tokens(text, required_zones, errors, "result.osm:zones")
     require_tokens(text, required_tokens, errors, "result.osm:tokens")
@@ -469,8 +502,11 @@ def check_flow_report(
     require_tokens(data, CASE_SPEC["software_chain"], errors, "flow_report:software_chain")
     if not has_any_key_like(data, ("software_chain", "stage_sequence", "stages")):
         errors.append("flow_report:missing_stage_sequence")
-    if not find_values(data, "openstudio_version") and not contains_token(data, "OpenStudio"):
+    version_values = [str(value).strip() for value in find_values(data, "openstudio_version")]
+    if not version_values:
         errors.append("flow_report:missing_openstudio_version")
+    elif not any(value.startswith("3.10.0") for value in version_values):
+        errors.append("flow_report:openstudio_version_not_3_10_0")
 
     for key in ("building_area_m2", "room_count", "thermal_zone_count", "door_count", "window_count", "window_wall_ratio", "surface_count", "subsurface_count"):
         if first_number(data, key) is None:
@@ -497,10 +533,23 @@ def check_flow_report(
         errors.append("flow_report:surface_count_mismatch_osm")
     if first_number(data, "subsurface_count") is not None and int(first_number(data, "subsurface_count") or 0) != osm_counts["subsurface_count"]:
         errors.append("flow_report:subsurface_count_mismatch_osm")
+    handoff_records = extract_space_records(handoff_data, [], "handoff.json")
     for key, cls in (("door_count", "IfcDoor"), ("window_count", "IfcWindow")):
         val = first_number(data, key)
-        if val is not None and int(round(val)) > stage1_info["counts"].get(cls, 0):
+        if val is None:
+            continue
+        if not float(val).is_integer():
+            errors.append(f"flow_report:{key}_not_integer")
+            continue
+        rounded = int(val)
+        if rounded > stage1_info["counts"].get(cls, 0):
             errors.append(f"flow_report:{key}_exceeds_stage1")
+        try:
+            handoff_total = sum(int(rec[key]) for rec in handoff_records)
+        except (KeyError, TypeError, ValueError):
+            continue
+        if rounded != handoff_total:
+            errors.append(f"flow_report:{key}_mismatch_handoff:{rounded}!={handoff_total}")
     wwr = first_number(data, "window_wall_ratio")
     if wwr is not None and not (0.0 <= wwr <= 0.95):
         errors.append("flow_report:window_wall_ratio_out_of_range")
@@ -537,7 +586,7 @@ def check_model_summary_csv(
     total_energy = 0.0
     for row in rows:
         row_case = next((str(v) for k, v in row.items() if norm(k) == norm("case_id")), "")
-        if row_case and row_case != CASE_SPEC["case_id"]:
+        if row_case != CASE_SPEC["case_id"]:
             errors.append("model_summary.csv:case_id_mismatch")
             break
         name = next((str(v) for k, v in row.items() if norm(k) == norm("space_name")), "")
@@ -545,11 +594,11 @@ def check_model_summary_csv(
         seen_spaces.add(norm(name))
         seen_zones.add(norm(zone))
         val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-        if val and val != handoff_hash.lower():
+        if val != handoff_hash.lower():
             errors.append("model_summary.csv:source_handoff_sha256_mismatch")
             break
         stage_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage1_sha256")), "")
-        if stage_val and stage_val != stage1_hash.lower():
+        if stage_val != stage1_hash.lower():
             errors.append("model_summary.csv:source_stage1_sha256_mismatch")
             break
         try:
@@ -611,6 +660,12 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     if CASE_SPEC.get("min_roofs", 0):
         stage1_min_counts["IfcRoof"] = CASE_SPEC.get("min_roofs", 0)
     stage1_info = check_ifc_basic(stage1, CASE_SPEC["stage1_tokens"], stage1_min_counts, errors, "stage1.ifc")
+    stage1_header = stage1_info["text"][:5000].upper()
+    is_archicad_27 = "ARCHICAD 27" in stage1_header or bool(
+        re.search(r"IFCAPPLICATION\([^;]*'27'[^;]*'ARCHICAD", stage1_header)
+    )
+    if "IFCOPENSHELL" in stage1_header or not is_archicad_27:
+        errors.append("stage1.ifc:archicad_version_not_27")
     check_stage_derives_from_init(init_path, stage1, init_info, stage1_info, errors)
 
     handoff = paths["handoff.json"]

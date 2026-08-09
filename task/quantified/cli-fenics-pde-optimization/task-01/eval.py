@@ -1,10 +1,12 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import os
 import re
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -30,15 +32,7 @@ TASK = {
 }
 
 EXPECTED_BASELINE_GRID = [[0.35 for _ in range(20)] for _ in range(10)]
-FENICS_MARKERS = (
-    "fenics",
-    "dolfin",
-    "dolfinx",
-    "ufl",
-    "functionspace",
-    "vectorfunctionspace",
-    "linearvariationalproblem",
-)
+LEGACY_FENICS_MODULES = {"dolfin", "fenics"}
 
 
 def clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
@@ -80,22 +74,87 @@ def assert_baseline_is_unchanged(grid: list[list[float]]) -> None:
                 raise ValueError("baseline density file was modified")
 
 
+def dotted_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = dotted_name(node.value)
+        return f"{prefix}.{node.attr}" if prefix else node.attr
+    return ""
+
+
+def check_solver_script(path: Path) -> None:
+    if not path.exists() or not path.is_file() or path.stat().st_size <= 0:
+        raise ValueError("missing solve_submission.py")
+    source = path.read_text(encoding="utf-8", errors="strict")
+    try:
+        tree = ast.parse(source, filename=path.name)
+    except SyntaxError as exc:
+        raise ValueError("solve_submission.py is not valid Python") from exc
+
+    imports: set[str] = set()
+    calls: set[str] = set()
+    literals: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name.split(".")[0].lower() for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.add(node.module.split(".")[0].lower())
+        elif isinstance(node, ast.Call):
+            calls.add(dotted_name(node.func).lower().split(".")[-1])
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            literals.add(node.value.lower())
+
+    if not imports.intersection(LEGACY_FENICS_MODULES):
+        raise ValueError("solve_submission.py must import legacy FEniCS/DOLFIN")
+    required_groups = (
+        {"mesh", "rectanglemesh", "unitsquaremesh", "unitcubemesh"},
+        {"functionspace", "vectorfunctionspace"},
+        {"trialfunction", "trialfunctions"},
+        {"testfunction", "testfunctions"},
+        {"solve", "linearvariationalsolver", "nonlinearvariationalsolver"},
+        {"xdmffile"},
+    )
+    if any(not calls.intersection(group) for group in required_groups):
+        raise ValueError("solve_submission.py lacks a complete DOLFIN solve-and-write workflow")
+    for filename in ("density_field.csv", "displacement.xdmf"):
+        if not any(filename in literal for literal in literals):
+            raise ValueError(f"solve_submission.py does not reference {filename}")
+
+
+def local_tag(element: ET.Element) -> str:
+    return element.tag.rsplit("}", 1)[-1].lower()
+
+
+def check_xdmf_artifact(path: Path) -> None:
+    if not path.exists() or not path.is_file() or path.stat().st_size <= 0:
+        raise ValueError("missing displacement.xdmf")
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError as exc:
+        raise ValueError("displacement.xdmf is not valid XML") from exc
+    if local_tag(root) != "xdmf":
+        raise ValueError("displacement.xdmf has no Xdmf root")
+    tags = [local_tag(element) for element in root.iter()]
+    for required in ("domain", "grid", "topology", "geometry", "attribute", "dataitem"):
+        if required not in tags:
+            raise ValueError(f"displacement.xdmf is missing {required} data")
+    attributes = [element for element in root.iter() if local_tag(element) == "attribute"]
+    if not any(any(local_tag(child) == "dataitem" for child in element.iter()) for element in attributes):
+        raise ValueError("displacement.xdmf contains no field values")
+    text = path.read_text(encoding="utf-8", errors="ignore")
+    for raw_ref in re.findall(r"[^\"'<>\s]+\.h5", text):
+        ref_path = Path(raw_ref.split(":", 1)[0])
+        candidates = [path.parent / ref_path, path.parent / ref_path.name]
+        if not any(candidate.exists() and candidate.is_file() and candidate.stat().st_size > 0 for candidate in candidates):
+            raise ValueError(f"missing XDMF companion file: {ref_path.name}")
+
+
 def check_submission_artifacts() -> None:
     solve_script = ROOT / "solve_submission.py"
     xdmf_path = ROOT / "displacement.xdmf"
-    if not solve_script.exists() or not solve_script.is_file() or solve_script.stat().st_size <= 0:
-        raise ValueError("missing solve_submission.py")
-    script_text = solve_script.read_text(encoding="utf-8", errors="ignore").lower()
-    if not any(marker in script_text for marker in FENICS_MARKERS):
-        raise ValueError("solve_submission.py does not show a FEniCS workflow")
-    if not xdmf_path.exists() or not xdmf_path.is_file() or xdmf_path.stat().st_size <= 0:
-        raise ValueError("missing displacement.xdmf")
-    xdmf_text = xdmf_path.read_text(encoding="utf-8", errors="ignore")
-    for raw_ref in re.findall(r"[^\"'<>\s]+\.h5", xdmf_text):
-        ref_path = Path(raw_ref)
-        candidates = [xdmf_path.parent / ref_path, xdmf_path.parent / ref_path.name]
-        if not any(candidate.exists() and candidate.stat().st_size > 0 for candidate in candidates):
-            raise ValueError(f"missing XDMF companion file: {ref_path.name}")
+    check_solver_script(solve_script)
+    check_xdmf_artifact(xdmf_path)
 
 
 def cell_density(grid: list[list[float]], x: float, y: float) -> float:

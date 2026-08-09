@@ -12,6 +12,7 @@ import shutil
 import sqlite3
 import subprocess
 import sys
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Set, Tuple
 
@@ -352,11 +353,27 @@ def check_workflow_contract(path: Path, translator_path: Path, errors: List[str]
         errors.append("workflow_spec.json:missing_fixed_software")
     else:
         expected_versions = {"revit": "2025", "archicad": "27", "openstudio": "3.10.0"}
+        expected_executables = {
+            "revit": r"C:\Program Files\Autodesk\Revit 2025\Revit.exe",
+            "archicad": r"C:\Program Files\Graphisoft\Archicad 27\Archicad Starter.exe",
+            "openstudio": r"C:\openstudio-3.10.0\bin\openstudio.exe",
+        }
         for software, version in expected_versions.items():
             if software not in fixed or not contains_token(fixed[software], version):
                 errors.append(f"workflow_spec.json:unpinned_{software}_version")
             if software in fixed and not contains_token(fixed[software], "executable"):
                 errors.append(f"workflow_spec.json:missing_{software}_executable")
+            delivered = fixed.get(software, {})
+            executable = delivered.get("executable") if isinstance(delivered, dict) else None
+            normalized_executable = str(executable or "").replace("/", "\\").casefold()
+            if normalized_executable != expected_executables[software].casefold():
+                errors.append(f"workflow_spec.json:unexpected_{software}_executable")
+        archicad_fixed = fixed.get("archicad", {})
+        if not isinstance(archicad_fixed, dict) or numeric_from_any(archicad_fixed.get("minimum_build")) is None or float(archicad_fixed["minimum_build"]) < 6000:
+            errors.append("workflow_spec.json:archicad_minimum_build_below_6000")
+        openstudio_fixed = fixed.get("openstudio", {})
+        if not isinstance(openstudio_fixed, dict) or str(openstudio_fixed.get("energyplus_version", "")) != "25.1.0":
+            errors.append("workflow_spec.json:energyplus_version_not_25_1_0")
     exchange = spec.get("ifc_exchange")
     if not isinstance(exchange, dict) or not contains_token(exchange, "IFC4"):
         errors.append("workflow_spec.json:missing_ifc4_exchange_contract")
@@ -534,6 +551,35 @@ def check_filling_geometry_and_relations(path: Path, errors: List[str], label: s
                 errors.append(f"{label}:{ifc_class.lower()}_opening_not_voiding_wall:{name}")
 
 
+def check_workflow_osw(path: Path, paths: Dict[str, Path], errors: List[str]) -> None:
+    workflow = load_json(path)
+    expected_scalars = {
+        "name": CASE_SPEC["case_id"],
+        "seed_file": "result.osm",
+        "weather_file": "weather.epw",
+        "run_directory": "run",
+    }
+    for key, expected in expected_scalars.items():
+        if str(workflow.get(key, "")).replace("\\", "/").rstrip("/") != expected:
+            errors.append(f"workflow.osw:{key}_mismatch")
+    if str(workflow.get("osw_version", "")) != "3.10":
+        errors.append("workflow.osw:version_not_3_10")
+    if str(workflow.get("source_stage2_sha256", "")).lower() != sha256_file(paths["stage2.ifc"]):
+        errors.append("workflow.osw:source_stage2_sha256_mismatch")
+    if str(workflow.get("source_handoff_sha256", "")).lower() != sha256_file(paths["archicad_handoff.json"]):
+        errors.append("workflow.osw:source_handoff_sha256_mismatch")
+    steps = workflow.get("steps")
+    if not isinstance(steps, list) or not any(
+        isinstance(step, dict)
+        and contains_token(step.get("measure_dir_name", ""), "EngiWorldIfcHandoffToEnergyModel")
+        and contains_token(step.get("arguments", {}), "stage2.ifc")
+        and contains_token(step.get("arguments", {}), "archicad_handoff.json")
+        for step in steps
+    ):
+        errors.append("workflow.osw:missing_ifc_handoff_conversion_step")
+
+
+
 def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]) -> None:
     data = load_json(path)
     stages = data.get("stages")
@@ -541,32 +587,112 @@ def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]
         errors.append("native_stage_log.json:stage_order_mismatch")
         return
     expectations = [
-        ("revit", "Revit 2025", paths["init.ifc"], paths["stage1.ifc"]),
-        ("archicad", "Archicad 27", paths["stage1.ifc"], paths["stage2.ifc"]),
-        ("openstudio", "3.10.0", paths["stage2.ifc"], paths["result.osm"]),
+        (
+            "revit",
+            r"C:\Program Files\Autodesk\Revit 2025\Revit.exe",
+            r"C:\ProgramData\Autodesk\Revit\Addins\2025\EngiWorld.BimBridge.addin",
+            paths["init.ifc"],
+            paths["stage1.ifc"],
+            "init.ifc",
+            "stage1.ifc",
+            ("Revit.exe", "ENGIWORLD_BIM_STAGE=revit"),
+        ),
+        (
+            "archicad",
+            r"C:\Program Files\Graphisoft\Archicad 27\Archicad Starter.exe",
+            r"C:\Program Files\Graphisoft\Archicad 27\IFCCommandServerApp.exe",
+            paths["stage1.ifc"],
+            paths["stage2.ifc"],
+            "stage1.ifc",
+            "stage2.ifc",
+            ("IFCCommandServerApp.exe", "workflow_spec.json", "archicad_ifc4_translator.json"),
+        ),
+        (
+            "openstudio",
+            r"C:\openstudio-3.10.0\bin\openstudio.exe",
+            r"C:\Users\user\Desktop\openstudio_ifc_to_energy.rb",
+            paths["stage2.ifc"],
+            paths["result.osm"],
+            "stage2.ifc",
+            "result.osm",
+            ("openstudio.exe", "openstudio_ifc_to_energy.rb", "archicad_handoff.json", "weather.epw"),
+        ),
     ]
-    for stage, version_token, source, output in expectations:
+
+    def windows_path(value: Any) -> str:
+        return str(value or "").replace("/", "\\").casefold()
+
+    parsed_times: List[Tuple[datetime, datetime]] = []
+    for stage, expected_executable, expected_automation, source, output, input_name, output_name, command_tokens in expectations:
         row = next((item for item in stages if isinstance(item, dict) and item.get("stage") == stage), {})
         if numeric_from_any(row.get("exit_code")) != 0:
             errors.append(f"native_stage_log.json:{stage}:nonzero_exit")
-        if not contains_token(row, version_token):
+        product_version = str(row.get("product_version", ""))
+        version_valid = (
+            (stage == "revit" and bool(re.match(r"^25\.", product_version)))
+            or (stage == "archicad" and contains_token(product_version, "Archicad 27") and bool(re.search(r"\bbuild\s+(?:[6-9]\d{3}|\d{5,})\b", product_version, flags=re.IGNORECASE)))
+            or (stage == "openstudio" and product_version.startswith("3.10.0"))
+        )
+        if not version_valid:
             errors.append(f"native_stage_log.json:{stage}:version_mismatch")
-        if not str(row.get("executable", "")).lower().endswith(".exe"):
-            errors.append(f"native_stage_log.json:{stage}:missing_native_executable")
-        if not str(row.get("automation_entry", "")).strip():
-            errors.append(f"native_stage_log.json:{stage}:missing_automation_entry")
+        declared_executable = str(row.get("executable", ""))
+        invoked_executable = str(row.get("invoked_executable", declared_executable))
+        if windows_path(declared_executable) != windows_path(expected_executable):
+            errors.append(f"native_stage_log.json:{stage}:unexpected_executable")
+        if windows_path(invoked_executable) != windows_path(expected_executable):
+            errors.append(f"native_stage_log.json:{stage}:invoked_executable_not_pinned_windows_binary")
+        automation_entry = str(row.get("automation_entry", "")).strip()
+        if windows_path(automation_entry) != windows_path(expected_automation):
+            errors.append(f"native_stage_log.json:{stage}:unexpected_automation_entry")
+        if str(row.get("input_file", "")).replace("\\", "/") != input_name:
+            errors.append(f"native_stage_log.json:{stage}:input_file_mismatch")
+        if str(row.get("output_file", "")).replace("\\", "/") != output_name:
+            errors.append(f"native_stage_log.json:{stage}:output_file_mismatch")
+        command = str(row.get("command", ""))
+        if any(token.casefold() not in command.casefold() for token in command_tokens):
+            errors.append(f"native_stage_log.json:{stage}:command_mismatch")
         if str(row.get("input_sha256", "")).lower() != sha256_file(source):
             errors.append(f"native_stage_log.json:{stage}:input_sha256_mismatch")
         if str(row.get("output_sha256", "")).lower() != sha256_file(output):
             errors.append(f"native_stage_log.json:{stage}:output_sha256_mismatch")
         if not row.get("started_utc") or not row.get("finished_utc"):
             errors.append(f"native_stage_log.json:{stage}:missing_timestamps")
+        else:
+            try:
+                started = datetime.fromisoformat(str(row["started_utc"]).replace("Z", "+00:00"))
+                finished = datetime.fromisoformat(str(row["finished_utc"]).replace("Z", "+00:00"))
+                if started.tzinfo is None or finished.tzinfo is None:
+                    raise ValueError("timestamps must include a UTC offset")
+                if finished < started:
+                    errors.append(f"native_stage_log.json:{stage}:timestamps_reversed")
+                parsed_times.append((started, finished))
+            except (TypeError, ValueError):
+                errors.append(f"native_stage_log.json:{stage}:invalid_timestamps")
+    if len(parsed_times) == 3:
+        for index in range(1, len(parsed_times)):
+            if parsed_times[index][0] < parsed_times[index - 1][1]:
+                errors.append("native_stage_log.json:stages_overlap_or_out_of_order")
+                break
+    revit = stages[0]
+    if str(revit.get("handoff_sha256", "")).lower() != sha256_file(paths["revit_handoff.json"]):
+        errors.append("native_stage_log.json:revit:handoff_sha256_mismatch")
     archicad = stages[1]
     if str(archicad.get("input_handoff_sha256", "")).lower() != sha256_file(paths["revit_handoff.json"]):
         errors.append("native_stage_log.json:archicad:input_handoff_sha256_mismatch")
+    for key, filename in (
+        ("handoff_sha256", "archicad_handoff.json"),
+        ("validation_report_sha256", "archicad_validation_report.json"),
+        ("translator_sha256", "archicad_ifc4_translator.json"),
+    ):
+        if str(archicad.get(key, "")).lower() != sha256_file(paths[filename]):
+            errors.append(f"native_stage_log.json:archicad:{key}_mismatch")
     openstudio = stages[2]
     if str(openstudio.get("input_handoff_sha256", "")).lower() != sha256_file(paths["archicad_handoff.json"]):
         errors.append("native_stage_log.json:openstudio:input_handoff_sha256_mismatch")
+    energyplus_executable = str(openstudio.get("energyplus_executable", ""))
+    normalized_energyplus = windows_path(energyplus_executable)
+    if not normalized_energyplus.startswith("c:\\openstudio-3.10.0\\") or not normalized_energyplus.endswith("\\energyplus.exe"):
+        errors.append("native_stage_log.json:openstudio:energyplus_executable_not_windows_native")
     for key, filename in (("idf_sha256", "in.idf"), ("workflow_sha256", "workflow.osw"), ("eplusout_sql_sha256", "run/eplusout.sql"), ("eplusout_err_sha256", "run/eplusout.err")):
         if str(openstudio.get(key, "")).lower() != sha256_file(paths[filename]):
             errors.append(f"native_stage_log.json:openstudio:{key}_mismatch")
@@ -853,6 +979,8 @@ def check_osm(
     up = text.upper()
     if "OS:VERSION" not in up:
         errors.append("result.osm:no_os_version")
+    if not re.search(r"\bOS:VERSION\s*,[^;]*\b3\.10\.0\s*;", text, flags=re.IGNORECASE | re.DOTALL):
+        errors.append("result.osm:openstudio_version_not_3_10_0")
     require_tokens(text, required_spaces, errors, "result.osm:spaces")
     require_tokens(text, required_zones, errors, "result.osm:zones")
     require_tokens(text, required_tokens, errors, "result.osm:tokens")
@@ -885,6 +1013,8 @@ def check_idf(
     up = text.upper()
     if "VERSION," not in up or "BUILDING," not in up:
         errors.append("in.idf:not_energyplus_idf_like")
+    if not re.search(r"\bVERSION\s*,\s*25\.1(?:\.0)?\s*;", text, flags=re.IGNORECASE | re.DOTALL):
+        errors.append("in.idf:energyplus_version_not_25_1")
     require_tokens(text, required_spaces, errors, "in.idf:spaces")
     require_tokens(text, required_zones, errors, "in.idf:zones")
     require_tokens(text, required_tokens, errors, "in.idf:tokens")
@@ -949,7 +1079,7 @@ def check_energy_report_csv(
     require_metadata_tokens(text, metadata or {}, errors, "energy_report.csv")
     row = rows[0]
     row_case = next((str(v) for k, v in row.items() if norm(k) == norm("case_id")), "")
-    if row_case and row_case != CASE_SPEC["case_id"]:
+    if row_case != CASE_SPEC["case_id"]:
         errors.append("energy_report.csv:case_id_mismatch")
     hash_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
     if hash_val != handoff_hash.lower():
@@ -995,6 +1125,8 @@ def check_flow_report(
     metadata: Dict[str, str] | None = None,
 ) -> Dict[str, Any]:
     data = load_json(path)
+    if data.get("case_id") != CASE_SPEC["case_id"]:
+        errors.append("flow_report:case_id_mismatch")
     if not any_hash_field(data, "consumed_handoff_sha256", sha256_file(handoff_path)):
         errors.append("flow_report:consumed_handoff_sha256_mismatch")
     if not any_hash_field(data, "osm_sha256", sha256_file(osm_path)):
@@ -1011,8 +1143,11 @@ def check_flow_report(
     require_metadata_tokens(data, metadata or {}, errors, "flow_report")
     if not has_any_key_like(data, ("software_chain", "stage_sequence", "stages")):
         errors.append("flow_report:missing_stage_sequence")
-    if not find_values(data, "openstudio_version") and not contains_token(data, "OpenStudio"):
+    version_values = [str(value) for value in find_values(data, "openstudio_version")]
+    if not version_values:
         errors.append("flow_report:missing_openstudio_version")
+    elif not any(value.startswith("3.10.0") for value in version_values):
+        errors.append("flow_report:openstudio_version_not_3_10_0")
     return data
 
 
@@ -1052,18 +1187,22 @@ def check_model_summary_csv(
     require_tokens(text, required_tokens, errors, "model_summary.csv:tokens")
     require_metadata_tokens(text, metadata or {}, errors, "model_summary.csv")
     total_area = 0.0
+    seen_spaces: List[str] = []
+    seen_zones: List[str] = []
     for row in rows:
         row_case = next((str(v) for k, v in row.items() if norm(k) == norm("case_id")), "")
-        if row_case and row_case != CASE_SPEC["case_id"]:
+        if row_case != CASE_SPEC["case_id"]:
             errors.append("model_summary.csv:case_id_mismatch")
             break
+        seen_spaces.append(str(row_value(row, "space_name") or ""))
+        seen_zones.append(str(row_value(row, "thermal_zone") or ""))
         val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-        if val and val != handoff_hash.lower():
+        if val != handoff_hash.lower():
             errors.append("model_summary.csv:source_handoff_sha256_mismatch")
             break
         if stage2_hash:
             stage2_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage2_sha256")), "")
-            if stage2_val and stage2_val != stage2_hash.lower():
+            if stage2_val != stage2_hash.lower():
                 errors.append("model_summary.csv:source_stage2_sha256_mismatch")
                 break
         area = numeric_value(row, "area_m2")
@@ -1071,6 +1210,12 @@ def check_model_summary_csv(
             errors.append("model_summary.csv:invalid_area_m2")
             break
         total_area += area
+    for required in required_spaces:
+        if sum(norm(value) == norm(required) for value in seen_spaces) != 1:
+            errors.append(f"model_summary.csv:space_row_count:{required}")
+    for required in required_zones:
+        if sum(norm(value) == norm(required) for value in seen_zones) != 1:
+            errors.append(f"model_summary.csv:zone_row_count:{required}")
     if expected_area_m2 and total_area and abs(total_area - expected_area_m2) > max(1.0, expected_area_m2 * 0.05):
         errors.append("model_summary.csv:area_sum_mismatch_with_handoff")
 
@@ -1186,6 +1331,7 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
         check_flow_report(paths["flow_report.json"], archicad_handoff, paths["result.osm"], CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors, idf_path=paths["in.idf"], energy_report_path=paths["energy_report.csv"], stage2_path=stage2, metadata=metadata)
         check_model_summary_csv(paths["model_summary.csv"], archicad_handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], CASE_SPEC.get("summary_tokens", []), errors, stage2_hash=stage2_hash, expected_area_m2=expected_area, metadata=metadata)
         check_energy_report_csv(paths["energy_report.csv"], archicad_handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors, stage2_hash=stage2_hash, expected_area_m2=expected_area, metadata=metadata)
+        check_workflow_osw(paths["workflow.osw"], paths, errors)
         check_native_stage_log(paths["native_stage_log.json"], paths, errors)
         submitted_metrics = check_energyplus_outputs(paths, archicad_handoff_data, errors)
         rerun_energyplus(paths, submitted_metrics, errors)

@@ -1,17 +1,19 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import json
 import math
 import os
 import re
+import xml.etree.ElementTree as ET
 from collections import deque
 from pathlib import Path
 
 ROOT = Path(os.environ.get("EVAL_ROOT", "/home/user/Desktop"))
 TASK = {'id': 'opt-fenics-03', 'title': 'FEniCS conductive network equivalent-conductance optimization', 'kind': 'conductance', 'interface': 'cli', 'primary_software': 'fenics', 'objective': 'Maximize equivalent conductance between two fixed electrodes under area and keepout constraints.', 'objective_direction': 'maximize', 'metric_name': 'effective_conductance', 'metric_units': 'normalized_S', 'design_file': 'conductive_mask.csv', 'result_file': 'potential.xdmf', 'required_outputs': ['conductive_mask.csv', 'solve_submission.py', 'potential.xdmf'], 'domain': {'width': 1.0, 'height': 1.0, 'unit': 'm'}, 'design_grid': {'rows': 20, 'cols': 20, 'row_axis': 'y', 'col_axis': 'x', 'row_0_location': 'bottom edge', 'col_0_location': 'left electrode'}, 'solver_mesh': {'nx': 40, 'ny': 40, 'cell_type': 'triangle'}, 'material': {'void_conductivity': 0.001, 'conductor_conductivity': 1.0}, 'electrical': {'left_electrode': 'x = 0', 'right_electrode': 'x = width', 'left_electrode_voltage': 1.0, 'right_electrode_voltage': 0.0, 'insulated_boundaries': ['y = 0', 'y = height']}, 'keepout_cells': [[8, 8], [8, 9], [8, 10], [8, 11], [9, 8], [9, 9], [9, 10], [9, 11], [10, 8], [10, 9], [10, 10], [10, 11], [11, 8], [11, 9], [11, 10], [11, 11]], 'design_budget': {'type': 'conductive_area_fraction', 'max_fraction': 0.25, 'threshold': 0.5}, 'constraints': {'mask_min': 0.0, 'mask_max': 1.0, 'electrodes_must_be_connected': True}, 'calibration_status': 'pending_vm_calibration', 'baseline': {'file': 'baseline_conductive_mask.csv', 'artifact': 'init_file/baseline_conductive_mask.csv', 'metric_value': None, 'metric_units': 'normalized_S', 'metric_source': 'computed_dynamically_by_eval_on_fenics_vm'}, 'invalid_sample': {'artifact': 'ground_truth/invalid/conductive_mask.csv'}}
-FENICS_MARKERS = ("fenics", "dolfin", "dolfinx", "ufl", "functionspace", "trialfunction", "testfunction", "solve")
+LEGACY_FENICS_MODULES = {"dolfin", "fenics"}
 
 
 def clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
@@ -105,24 +107,97 @@ def connected_lr(grid: list[list[float]], threshold: float) -> bool:
     return False
 
 
+def assert_baseline_is_unchanged(grid: list[list[float]]) -> None:
+    kind = TASK["kind"]
+    for row, values in enumerate(grid):
+        for col, actual in enumerate(values):
+            if kind == "heat":
+                expected = 1.0 if row == 10 and col % 2 == 0 else 0.0
+            elif kind == "conductance":
+                expected = 1.0 if row == 7 else 0.0
+            elif kind == "permeability":
+                expected = 1.0
+            else:
+                raise ValueError("unsupported baseline kind")
+            if abs(actual - expected) > 1.0e-9:
+                raise ValueError("baseline design file was modified")
+
+
+def dotted_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = dotted_name(node.value)
+        return f"{prefix}.{node.attr}" if prefix else node.attr
+    return ""
+
+
 def check_solve_script() -> None:
     path = ROOT / "solve_submission.py"
     if not path.exists() or not path.is_file() or path.stat().st_size <= 0:
         raise ValueError("missing solve_submission.py")
-    text = path.read_text(encoding="utf-8", errors="ignore").lower()
-    if not any(marker in text for marker in FENICS_MARKERS):
-        raise ValueError("solve_submission.py does not show a FEniCS workflow")
+    source = path.read_text(encoding="utf-8", errors="strict")
+    try:
+        tree = ast.parse(source, filename=path.name)
+    except SyntaxError as exc:
+        raise ValueError("solve_submission.py is not valid Python") from exc
+
+    imports: set[str] = set()
+    calls: set[str] = set()
+    literals: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name.split(".")[0].lower() for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.add(node.module.split(".")[0].lower())
+        elif isinstance(node, ast.Call):
+            calls.add(dotted_name(node.func).lower().split(".")[-1])
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            literals.add(node.value.lower())
+
+    if not imports.intersection(LEGACY_FENICS_MODULES):
+        raise ValueError("solve_submission.py must import legacy FEniCS/DOLFIN")
+    required_groups = (
+        {"mesh", "rectanglemesh", "unitsquaremesh", "unitcubemesh"},
+        {"functionspace", "vectorfunctionspace"},
+        {"trialfunction", "trialfunctions"},
+        {"testfunction", "testfunctions"},
+        {"solve", "linearvariationalsolver", "nonlinearvariationalsolver"},
+        {"xdmffile"},
+    )
+    if any(not calls.intersection(group) for group in required_groups):
+        raise ValueError("solve_submission.py lacks a complete DOLFIN solve-and-write workflow")
+    for filename in (TASK["design_file"], TASK["result_file"]):
+        if not any(filename.lower() in literal for literal in literals):
+            raise ValueError(f"solve_submission.py does not reference {filename}")
+
+
+def local_tag(element: ET.Element) -> str:
+    return element.tag.rsplit("}", 1)[-1].lower()
 
 
 def check_xdmf_artifact(filename: str) -> None:
     path = ROOT / filename
     if not path.exists() or not path.is_file() or path.stat().st_size <= 0:
         raise ValueError(f"missing {filename}")
+    try:
+        root = ET.parse(path).getroot()
+    except ET.ParseError as exc:
+        raise ValueError(f"{filename} is not valid XML") from exc
+    if local_tag(root) != "xdmf":
+        raise ValueError(f"{filename} has no Xdmf root")
+    tags = [local_tag(element) for element in root.iter()]
+    for required in ("domain", "grid", "topology", "geometry", "attribute", "dataitem"):
+        if required not in tags:
+            raise ValueError(f"{filename} is missing {required} data")
+    attributes = [element for element in root.iter() if local_tag(element) == "attribute"]
+    if not any(any(local_tag(child) == "dataitem" for child in element.iter()) for element in attributes):
+        raise ValueError(f"{filename} contains no field values")
     text = path.read_text(encoding="utf-8", errors="ignore")
     for raw_ref in re.findall(r"[^\"'<>\s]+\.h5", text):
-        ref = Path(raw_ref)
+        ref = Path(raw_ref.split(":", 1)[0])
         candidates = [path.parent / ref, path.parent / ref.name]
-        if not any(candidate.exists() and candidate.stat().st_size > 0 for candidate in candidates):
+        if not any(candidate.exists() and candidate.is_file() and candidate.stat().st_size > 0 for candidate in candidates):
             raise ValueError(f"missing XDMF companion file: {ref.name}")
 
 
@@ -275,6 +350,8 @@ def metric_from_artifact(path: Path) -> float:
     if TASK["kind"] == "parameters":
         return parameter_rmse(read_params(path))
     grid = read_grid(path)
+    if path.name == TASK["baseline"]["file"]:
+        assert_baseline_is_unchanged(grid)
     validate_grid(grid)
     return scalar_metric_with_dolfin(grid)
 
