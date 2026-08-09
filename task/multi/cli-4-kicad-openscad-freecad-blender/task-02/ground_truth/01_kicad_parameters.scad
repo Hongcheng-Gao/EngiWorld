@@ -1,23 +1,29 @@
-// KiCad-generated OpenSCAD parameter handoff.
-// Source: 01_kicad_mechanical_map.csv and 01_kicad_board.kicad_pcb.
+// KiCad-derived Task 02 OpenSCAD parameter handoff.
+// Source map SHA-256: aa23616766c9679e420b656f42ec366d770c9152e6bfb53739d21be5004ff0bc
 $fn = 64;
-board = [104.000, 62.000, 1.600];
-enclosure = [117.200, 75.200, 18.600];
-wall = 2.600;
-lid_clearance = 2.400;
-
-// [reference, kind, x_mm, y_mm, height_mm, keepout_radius_mm, role]
-mechanical_features = [
-  ["U1", "REGULATOR_QFN", -8.000, 0.000, 1.000, 5.000, "component_keepout"],
-  ["L1", "INDUCTOR", 18.000, 4.000, 6.400, 12.000, "component_keepout"],
-  ["C1", "BULK_CAP", 34.000, -18.000, 8.200, 8.000, "component_keepout"],
-  ["J1", "POWER_IN", -48.000, 12.000, 5.000, 10.500, "connector_window"],
-  ["J2", "POWER_OUT", 48.000, -12.000, 5.000, 10.500, "connector_window"],
-  ["MH1", "MOUNTING_HOLE", -44.000, -24.000, 0.000, 1.500, "standoff_axis"],
-  ["MH2", "MOUNTING_HOLE", 44.000, -24.000, 0.000, 1.500, "standoff_axis"],
-  ["MH3", "MOUNTING_HOLE", -44.000, 24.000, 0.000, 1.500, "standoff_axis"],
-  ["MH4", "MOUNTING_HOLE", 44.000, 24.000, 0.000, 1.500, "standoff_axis"],
+board = [104.000000, 62.000000, 1.600000];
+enclosure = [117.200000, 75.200000, 18.600000];
+cavity = [112.000000, 70.000000, 13.400000];
+wall = 2.600000;
+base_thickness = 2.600000;
+lid_thickness = 2.600000;
+board_bottom_z = 3.800000;
+board_top_z = 5.400000;
+lid_inner_z = 16.000000;
+standoff_height = 1.200000;
+standoff_od = 6.600000;
+standoff_bore = 3.200000;
+overcut = 0.500000;
+standoff_axes = [
+  ["MH1", -44.000000, -24.000000],
+  ["MH2", 44.000000, -24.000000],
+  ["MH3", -44.000000, 24.000000],
+  ["MH4", 44.000000, 24.000000],
 ];
-
-standoff_axes = [for (f = mechanical_features) if (f[6] == "standoff_axis") [f[2], f[3], f[5], f[0]]];
-interface_features = [for (f = mechanical_features) if (f[6] == "connector_window" || f[6] == "access_bore" || f[6] == "antenna_keepout") [f[2], f[3], f[5], f[0], f[6]]];
+apertures = [
+  ["J1", "X_MINUS", -59.100000, 1.500000, 4.700000, -55.500000, 22.500000, 11.100000],
+  ["J2", "X_PLUS", 55.500000, -22.500000, 4.700000, 59.100000, -1.500000, 11.100000],
+];
+l1_keepout = [18.000000, 4.000000, 12.000000, 5.400000, 16.000000];
+c1_clearance = [34.000000, -18.000000, 8.000000, 13.600000, 16.000000];
+u1_contact = [-8.000000, 0.000000, 6.000000, 6.000000, 6.400000, 16.000000];

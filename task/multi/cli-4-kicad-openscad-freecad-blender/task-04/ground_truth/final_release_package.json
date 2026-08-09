@@ -1,24 +1,379 @@
 {
-  "critical_requirement": "The tray ribs must not enter the MOSFET bank keepouts and the phase terminal window must be on the X+ side.",
+  "artifact_policy": {
+    "extras_allowed": true,
+    "membership": "required_artifacts must be a subset of produced_artifacts"
+  },
+  "artifact_sha256": {
+    "01_kicad_board.kicad_pcb": "7593a5f09a194f770b6070d87da3da689434c368dae049eec3e95a2053d74d72",
+    "01_kicad_board.step": "2898475dbf671f5b07fd94d6fcd0bdcce41f72112a20760e2914c168cb661a4c",
+    "01_kicad_export.json": "0323ac30ef4b32abe64c59e6e1f26f08572b037af50f44abbcf862ee86df3bf5",
+    "01_kicad_mechanical_map.csv": "a95e43a307b43a59dee372801111bf89a2c11ec5aa672969767d49f14b8dfc0e",
+    "01_kicad_parameters.scad": "98f9b803344c5d4357071a0bc2b27cc617b024d4f79f4a85029ce09587a2cd4d",
+    "02_openscad_enclosure.scad": "4a925101cc8cb4674813ea0d008dc1eea521ce79d004052f21bfa0bec5b3b416",
+    "02_openscad_enclosure.stl": "ed83cd7e14e10311a5c58562bfb91d43eaf8615472d35cbcf41a997520643672",
+    "02_openscad_parameters.json": "5a7fb6cdb606b11231bae5478f57027bc9d843057c685378b0a3ffe73a89c706",
+    "03_freecad_assembly.obj": "fba99cbf6fe0ba40b06d6cc18011e9b265caa152899685f7bdada825b98c5052",
+    "03_freecad_assembly.step": "4ced64a7ae50f82f1af54d2c7d0b05974e5b898cd27657fc745907220b433496",
+    "03_freecad_clearance_report.json": "dc9078638ac3a4c9aa02be9e902eb9daa8c6451318fc7a69ea0940048d519fab",
+    "04_blender_review.blend": "de4be1e80b388af8200a9d59f922c9ee4eb687f4d2b35ad1e05827ed1c898f05",
+    "04_blender_review.mtl": "4a944bd1b3d58db0ba622c8d9b9ac106f5a0b52d1551e9683793b458c214e476",
+    "04_blender_review.obj": "6b0400000377992b3042cc60ff2495d6ac19fd92337754ae60dd55b30e91ca4c",
+    "04_blender_review.png": "481bbc0281e9f6edc202b8e4c4706f583159de1ce1679d0bb7db14893ceb7b8c",
+    "04_blender_scene_report.json": "b73aec168ab47f2dfeb6db2b4806635abd341495d7a84b183dad9d2b43a3e892",
+    "toolchain_invocation_log.json": "1766f31d13a9faa5eb9bb7d7d6c5ad87dd359d86fab1610e0157a4bfa067f094"
+  },
+  "checks": {
+    "all_required_artifacts_present": true,
+    "blender_decision": true,
+    "blender_freecad_metrics_match": true,
+    "blender_mesh_qc": true,
+    "blender_native_outputs_nonempty": true,
+    "blender_native_outputs_recorded": true,
+    "blender_overlay_features": true,
+    "blender_overlay_materials": true,
+    "blender_real_roles": true,
+    "geometry_access_j1": true,
+    "geometry_access_j2": true,
+    "geometry_enclosure_bbox": true,
+    "geometry_enclosure_mass": true,
+    "geometry_enclosure_parts_sum": true,
+    "geometry_enclosure_solid_count": true,
+    "geometry_freecad_boolean_checks": true,
+    "geometry_freecad_decision": true,
+    "geometry_freecad_required_fields": true,
+    "geometry_interference": true,
+    "geometry_lid_bounds": true,
+    "geometry_lid_mass": true,
+    "geometry_lid_present": true,
+    "geometry_lid_separation": true,
+    "geometry_report_all_pass": true,
+    "geometry_ribs": true,
+    "geometry_side_clearances": true,
+    "geometry_standoffs": true,
+    "geometry_top_clearance": true,
+    "geometry_tray_bounds": true,
+    "geometry_tray_mass": true,
+    "geometry_tray_present": true,
+    "ordered_productive_sequence": true,
+    "productive_entries_have_versions": true,
+    "required_nonself_hashes": true,
+    "required_subset_of_produced_artifacts": true,
+    "tool_versions_present": true
+  },
+  "critical_requirement": "Both required tray ribs must exist, remain outside every Q1-Q3 projected MOSFET keepout column, and the J1 phase-terminal window must pass through the X_PLUS wall.",
   "domain": "rugged motor controller tray",
+  "extra_artifacts": [],
+  "generated_at_utc": "2026-08-07T04:57:51.099650+00:00",
+  "geometry_checks": {
+    "access_j1": true,
+    "access_j2": true,
+    "enclosure_bbox": true,
+    "enclosure_mass": true,
+    "enclosure_parts_sum": true,
+    "enclosure_solid_count": true,
+    "freecad_boolean_checks": true,
+    "freecad_decision": true,
+    "freecad_required_fields": true,
+    "interference": true,
+    "lid_bounds": true,
+    "lid_mass": true,
+    "lid_present": true,
+    "lid_separation": true,
+    "ribs": true,
+    "side_clearances": true,
+    "standoffs": true,
+    "top_clearance": true,
+    "tray_bounds": true,
+    "tray_mass": true,
+    "tray_present": true
+  },
+  "hash_policy": "Exactly the 17 required non-self artifacts are SHA-256 hashed.",
   "key_metrics": {
+    "access_checks": {
+      "J1": {
+        "access_type": "side_window",
+        "bounds_mm": [
+          52.0,
+          -14.0,
+          9.6,
+          71.7,
+          14.0,
+          20.6
+        ],
+        "center_error_mm": 0.0,
+        "direction": "X_PLUS",
+        "finished_height_mm": 11.0,
+        "finished_width_mm": 28.0,
+        "guard_distances_mm": {
+          "y_minus_mm": 36.2,
+          "y_plus_mm": 36.2,
+          "z_minus_mm": 9.6,
+          "z_plus_to_tray_top_mm": 2.5
+        },
+        "guard_material_fractions": {
+          "y_minus": 0.999999,
+          "y_plus": 0.999999,
+          "z_minus": 0.999999,
+          "z_plus": 0.999999
+        },
+        "height_error_mm": 0.0,
+        "measured_wall_opening": {
+          "center_y_mm": 0.0,
+          "center_z_mm": 15.1,
+          "height_mm": 11.0,
+          "width_mm": 28.0
+        },
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 2.5,
+        "residual_material_volume_mm3": 0.0,
+        "through": true,
+        "width_error_mm": 0.0
+      },
+      "J2": {
+        "access_type": "side_window",
+        "bounds_mm": [
+          -71.7,
+          -26.0,
+          9.6,
+          -53.0,
+          -10.0,
+          15.6
+        ],
+        "center_error_mm": 0.0,
+        "direction": "X_MINUS",
+        "finished_height_mm": 6.0,
+        "finished_width_mm": 16.0,
+        "guard_distances_mm": {
+          "y_minus_mm": 24.2,
+          "y_plus_mm": 60.2,
+          "z_minus_mm": 9.6,
+          "z_plus_to_tray_top_mm": 7.5
+        },
+        "guard_material_fractions": {
+          "y_minus": 0.999999,
+          "y_plus": 0.999999,
+          "z_minus": 0.999999,
+          "z_plus": 0.999999
+        },
+        "height_error_mm": 0.0,
+        "measured_wall_opening": {
+          "center_y_mm": -18.0,
+          "center_z_mm": 12.6,
+          "height_mm": 6.0,
+          "width_mm": 16.0
+        },
+        "minimum_guard_material_present": true,
+        "minimum_guard_mm": 7.5,
+        "residual_material_volume_mm3": 0.0,
+        "through": true,
+        "width_error_mm": 0.0
+      }
+    },
     "board_bbox_mm": [
-      128,
-      86,
+      128.0,
+      86.0,
       1.6
     ],
     "enclosure_bbox_mm": [
-      142.4,
-      100.4,
+      142.399994,
+      100.400002,
       26.4
     ],
-    "estimated_shell_mass_g": 150.489,
-    "side_clearance_mm": 4.0,
-    "top_clearance_mm": 3.6
+    "enclosure_mass_g": 131.215057,
+    "enclosure_volume_mm3": 122630.893931,
+    "lid_mass_g": 48.952773,
+    "lid_separation_mm": 0.1,
+    "lid_volume_mm3": 45750.255495,
+    "minimum_side_clearance_mm": 4.0,
+    "minimum_top_clearance_mm": 3.600001,
+    "rib_checks": {
+      "RIB_NEG_Y": {
+        "bounds_mm": [
+          -52.0,
+          -33.5,
+          3.2,
+          52.0,
+          -30.5,
+          5.7
+        ],
+        "expected_volume_mm3": 780.0,
+        "measured_volume_mm3": 779.999941,
+        "present": true,
+        "present_material_fraction": 1.0,
+        "q_keepout_checks": {
+          "Q1": {
+            "intersection_mm3": 0.0,
+            "minimum_required_separation_mm": 2.0,
+            "passes": true,
+            "separation_mm": 22.5
+          },
+          "Q2": {
+            "intersection_mm3": 0.0,
+            "minimum_required_separation_mm": 2.0,
+            "passes": true,
+            "separation_mm": 22.5
+          },
+          "Q3": {
+            "intersection_mm3": 0.0,
+            "minimum_required_separation_mm": 2.0,
+            "passes": true,
+            "separation_mm": 22.5
+          }
+        }
+      },
+      "RIB_POS_Y": {
+        "bounds_mm": [
+          -52.0,
+          32.5,
+          3.2,
+          52.0,
+          35.5,
+          5.7
+        ],
+        "expected_volume_mm3": 780.0,
+        "measured_volume_mm3": 779.999956,
+        "present": true,
+        "present_material_fraction": 1.0,
+        "q_keepout_checks": {
+          "Q1": {
+            "intersection_mm3": 0.0,
+            "minimum_required_separation_mm": 2.0,
+            "passes": true,
+            "separation_mm": 4.5
+          },
+          "Q2": {
+            "intersection_mm3": 0.0,
+            "minimum_required_separation_mm": 2.0,
+            "passes": true,
+            "separation_mm": 4.5
+          },
+          "Q3": {
+            "intersection_mm3": 0.0,
+            "minimum_required_separation_mm": 2.0,
+            "passes": true,
+            "separation_mm": 4.5
+          }
+        }
+      }
+    },
+    "standoff_checks": {
+      "MH1": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          -54.0,
+          -36.0
+        ],
+        "bore_diameter_mm": 3.699997,
+        "bore_z_max_mm": 9.5,
+        "bore_z_min_mm": -0.5,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          -54.0,
+          -36.0
+        ],
+        "outer_diameter_mm": 8.0,
+        "present_material_fraction": 0.998005,
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": -54.0,
+        "y_mm": -36.0
+      },
+      "MH2": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          54.0,
+          -36.0
+        ],
+        "bore_diameter_mm": 3.699997,
+        "bore_z_max_mm": 9.5,
+        "bore_z_min_mm": -0.5,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          54.0,
+          -36.0
+        ],
+        "outer_diameter_mm": 8.0,
+        "present_material_fraction": 0.998005,
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": 54.0,
+        "y_mm": -36.0
+      },
+      "MH3": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          -54.0,
+          36.0
+        ],
+        "bore_diameter_mm": 3.699997,
+        "bore_z_max_mm": 9.5,
+        "bore_z_min_mm": -0.5,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          -54.0,
+          36.0
+        ],
+        "outer_diameter_mm": 8.0,
+        "present_material_fraction": 0.998084,
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": -54.0,
+        "y_mm": 36.0
+      },
+      "MH4": {
+        "axis_error_mm": 0.0,
+        "bore_center_xy_mm": [
+          54.0,
+          36.0
+        ],
+        "bore_diameter_mm": 3.699997,
+        "bore_z_max_mm": 9.5,
+        "bore_z_min_mm": -0.5,
+        "concentric_error_mm": 0.0,
+        "continuous_bore": true,
+        "outer_center_xy_mm": [
+          54.0,
+          36.0
+        ],
+        "outer_diameter_mm": 8.0,
+        "present_material_fraction": 0.998084,
+        "residual_bore_material_volume_mm3": 0.0,
+        "standoff_present": true,
+        "x_mm": 54.0,
+        "y_mm": 36.0
+      }
+    },
+    "tray_mass_g": 82.262277,
+    "tray_volume_mm3": 76880.632529,
+    "unintended_interference_volume_mm3": 0.0
   },
+  "produced_artifacts": [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
+    "01_kicad_export.json",
+    "01_kicad_mechanical_map.csv",
+    "01_kicad_parameters.scad",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.obj",
+    "03_freecad_assembly.step",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
+    "04_blender_review.mtl",
+    "04_blender_review.obj",
+    "04_blender_review.png",
+    "04_blender_scene_report.json",
+    "final_release_package.json",
+    "toolchain_invocation_log.json"
+  ],
   "release_decision": "pass",
   "required_artifacts": [
     "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
     "01_kicad_export.json",
     "01_kicad_mechanical_map.csv",
     "01_kicad_parameters.scad",
@@ -28,8 +383,10 @@
     "03_freecad_assembly.step",
     "03_freecad_assembly.obj",
     "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
     "04_blender_review.obj",
     "04_blender_review.mtl",
+    "04_blender_review.png",
     "04_blender_scene_report.json",
     "toolchain_invocation_log.json",
     "final_release_package.json"
@@ -42,8 +399,10 @@
   ],
   "stage_outputs": {
     "Blender": [
+      "04_blender_review.blend",
       "04_blender_review.obj",
       "04_blender_review.mtl",
+      "04_blender_review.png",
       "04_blender_scene_report.json"
     ],
     "FreeCAD": [
@@ -55,7 +414,8 @@
       "01_kicad_board.kicad_pcb",
       "01_kicad_export.json",
       "01_kicad_mechanical_map.csv",
-      "01_kicad_parameters.scad"
+      "01_kicad_parameters.scad",
+      "01_kicad_board.step"
     ],
     "OpenSCAD": [
       "02_openscad_enclosure.scad",
@@ -64,5 +424,11 @@
     ]
   },
   "task": "task-04",
-  "title": "Motor-controller vibration tray handoff"
+  "title": "Motor-controller vibration tray handoff",
+  "tool_versions": {
+    "Blender": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)",
+    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
+    "KiCad": "10.0.2",
+    "OpenSCAD": "OpenSCAD version 2021.01"
+  }
 }

@@ -1,127 +1,58 @@
 from __future__ import annotations
 
-import base64
-import csv
-import io
 import json
-import re
+import math
+import os
 import sys
-import zipfile
 from pathlib import Path
 from xml.etree import ElementTree as ET
 
-EXPECTED = {
-  "stackup_report.json": "ewogICJhdmVyYWdlX2RpZWxlY3RyaWNfY29uc3RhbnQiOiA0LjA2NjcsCiAgImxheWVyX2NvdW50IjogNiwKICAicGxhbmVfbGF5ZXJzIjogWwogICAgIkdORDEiLAogICAgIlBXUjEiCiAgXSwKICAic2lnbmFsX2xheWVycyI6IFsKICAgICJUT1AiLAogICAgIlNJRzIiLAogICAgIlNJRzMiLAogICAgIkJPVFRPTSIKICBdCn0K"
-}
 
-
-def _desktop() -> Path:
-    return Path(__file__).resolve().parent
-
-
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
-
-
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
-
-
-def _json_equal(path: Path, expected: bytes) -> bool:
-    try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
-        return False
-
-
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
-            return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
-        return False
-
-
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
-
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
-        )
-
-    return canon(actual_root) == canon(expected_root)
-
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
-
-
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
 
 
 def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    source_path = DESKTOP / "hsd_fpga.ipc2581"
+    report_path = DESKTOP / "stackup_report.json"
+    if not source_path.is_file() or not report_path.is_file():
+        return False
+    try:
+        root = ET.parse(source_path).getroot()
+        report = json.loads(report_path.read_text(encoding="utf-8"))
+        if not isinstance(report, dict):
             return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
+        layers = root.findall("./Stackup/Layer")
+        names = [layer.attrib["name"] for layer in layers]
+        signal = [layer.attrib["name"] for layer in layers if layer.attrib["type"].casefold() == "signal"]
+        planes = [layer.attrib["name"] for layer in layers if layer.attrib["type"].casefold() == "plane"]
+        dielectric = [float(layer.attrib["dielectric_constant"]) for layer in layers]
+    except (OSError, KeyError, TypeError, ValueError, ET.ParseError, json.JSONDecodeError):
+        return False
+
+    if not layers or len(names) != len(set(names)):
+        return False
+    if set(report) != {
+        "average_dielectric_constant",
+        "layer_count",
+        "layers",
+        "plane_layers",
+        "signal_layers",
+    }:
+        return False
+    try:
+        average = float(report["average_dielectric_constant"])
+        count = int(report["layer_count"])
+    except (TypeError, ValueError):
+        return False
+    expected_average = sum(dielectric) / len(dielectric)
+    if not math.isfinite(average) or abs(average - expected_average) > 5e-5:
+        return False
+    if count != len(layers):
+        return False
+    if report["layers"] != names:
+        return False
+    if report["signal_layers"] != signal or report["plane_layers"] != planes:
+        return False
     return True
 
 

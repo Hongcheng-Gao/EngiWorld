@@ -1,35 +1,73 @@
 {
+  "artifact_sha256": {
+    "01_kicad_board.kicad_pcb": "ef30ca31f4cfcef83b48cfcc5cf411de69f93e193ef7456d3a9fafee67831af1",
+    "01_kicad_board.step": "a525b817d59e573ad8c21538610060eb305a4b385c0c0a95aa1dab1e4f23e7e3",
+    "01_kicad_export.json": "cdfeb30a4ef48725d4021175465d870834fb3443216a52f3765c66e41b846825",
+    "01_kicad_mechanical_map.csv": "c999cd1ca91771298d82bd2c82f6ea6ded1dd55cb864fd420768199dbae181b0",
+    "02_openscad_enclosure.scad": "7bfa01fce0c89f6f756fe0f4d66635a3b5f48659a829758dcd91554ded84c89b",
+    "02_openscad_enclosure.stl": "cfdbb503a2e68a5656a32235b04dd4c648e96734c2ac5461590e803bf88ae8f5",
+    "02_openscad_parameters.json": "4f2ec678b00bedbcaba04199339d7d0a94ff3a1a9f0feae5bf414f0ea99132ce",
+    "03_freecad_assembly.step": "78f955f335dca5932654a84c7eaf2d4ac58dfd344147a28da199a515c77392e9",
+    "03_freecad_assembly_for_blender.obj": "bdf40a0dca58c48126bbb716ddffd94feebbc94b8ab945f9e9adfba9919c9f6f",
+    "03_freecad_clearance_report.json": "1d5ffcd99f10498f84e6d7d7c2aa3bcd7e23dd5c08511f78cbbf29c534bcd912",
+    "04_blender_review.blend": "b9d7ed751d7a944553e9c79dad7fd6d415d4a696bc6799ba6e50117003757cdb",
+    "04_blender_review.mtl": "8eeed6112d690dc3702e9c415a5b569b6069dfa7d3f5642c22ffeee34c21d33c",
+    "04_blender_review.obj": "f6dfc64f63377f40da5b6764067e5cb452011a3d6cc0de9e91f2b9481a81055b",
+    "04_blender_review.png": "59515f1a8124ab969528b11349c1f7baae14e02fc2c45d54d9b95dba66a46973",
+    "04_blender_scene_report.json": "97af41e373b0fe51a522219efee8aee0281abae5b8d7ff576944026648f5c79e",
+    "toolchain_invocation_log.json": "6bd92379464c22a8d227b2f67e785d21c5e596e6734458921ddb9eae0824c55b"
+  },
+  "checks": {
+    "aperture_geometry_checks_pass": true,
+    "blender_roles_and_materials_pass": true,
+    "blender_scene_check_pass": true,
+    "freecad_boolean_checks_pass": true,
+    "geometry_metrics_pass": true,
+    "required_artifacts_present": true,
+    "software_sequence_recorded": true
+  },
   "critical_requirement": "USB-C and sensor FFC side windows must align to their KiCad footprint centers while preserving the lid clearance above U1.",
   "domain": "sealed sensor electronics pod",
+  "generated_at_utc": "2026-08-07T20:24:23.250281+00:00",
   "key_metrics": {
     "board_bbox_mm": [
-      86,
-      54,
+      86.0,
+      54.0,
       1.6
     ],
     "enclosure_bbox_mm": [
       100.0,
       68.0,
-      18.8
+      18.799999
     ],
-    "estimated_shell_mass_g": 82.735,
-    "side_clearance_mm": 4.0,
-    "top_clearance_mm": 4.2
+    "enclosure_volume_mm3": 52935.497759,
+    "estimated_shell_mass_g": 69.874857,
+    "interference_volume_mm3": 0.0,
+    "minimum_component_lid_clearance_mm": 4.6,
+    "nominal_side_clearances_mm": {
+      "X_MINUS": 4.0,
+      "X_PLUS": 4.0,
+      "Y_MINUS": 4.0,
+      "Y_PLUS": 4.0
+    },
+    "u1_lid_clearance_mm": 7.1
   },
   "release_decision": "pass",
   "required_artifacts": [
     "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
     "01_kicad_export.json",
     "01_kicad_mechanical_map.csv",
-    "01_kicad_parameters.scad",
     "02_openscad_enclosure.scad",
     "02_openscad_enclosure.stl",
     "02_openscad_parameters.json",
     "03_freecad_assembly.step",
-    "03_freecad_assembly.obj",
+    "03_freecad_assembly_for_blender.obj",
     "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
     "04_blender_review.obj",
     "04_blender_review.mtl",
+    "04_blender_review.png",
     "04_blender_scene_report.json",
     "toolchain_invocation_log.json",
     "final_release_package.json"
@@ -42,20 +80,22 @@
   ],
   "stage_outputs": {
     "Blender": [
+      "04_blender_review.blend",
       "04_blender_review.obj",
       "04_blender_review.mtl",
+      "04_blender_review.png",
       "04_blender_scene_report.json"
     ],
     "FreeCAD": [
       "03_freecad_assembly.step",
-      "03_freecad_assembly.obj",
+      "03_freecad_assembly_for_blender.obj",
       "03_freecad_clearance_report.json"
     ],
     "KiCad": [
       "01_kicad_board.kicad_pcb",
+      "01_kicad_board.step",
       "01_kicad_export.json",
-      "01_kicad_mechanical_map.csv",
-      "01_kicad_parameters.scad"
+      "01_kicad_mechanical_map.csv"
     ],
     "OpenSCAD": [
       "02_openscad_enclosure.scad",
@@ -64,5 +104,11 @@
     ]
   },
   "task": "task-01",
-  "title": "Environmental sensor pod board-to-enclosure release"
+  "title": "Environmental sensor pod board-to-enclosure release",
+  "tool_versions": {
+    "Blender": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)",
+    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
+    "KiCad": "10.0.2",
+    "OpenSCAD": "OpenSCAD version 2021.01"
+  }
 }

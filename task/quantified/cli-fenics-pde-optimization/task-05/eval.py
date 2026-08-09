@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import json
 import math
@@ -11,7 +12,7 @@ from pathlib import Path
 
 ROOT = Path(os.environ.get("EVAL_ROOT", "/home/user/Desktop"))
 TASK = {'id': 'opt-fenics-05', 'title': 'FEniCS PDE parameter-inversion observation-error optimization', 'kind': 'parameters', 'interface': 'cli', 'primary_software': 'fenics', 'objective': 'Minimize RMSE between fixed observations and the forward model prediction.', 'objective_direction': 'minimize', 'metric_name': 'observation_rmse', 'metric_units': 'normalized_observation_units', 'design_file': 'parameters.json', 'result_file': 'predictions.json', 'required_outputs': ['parameters.json', 'solve_submission.py', 'predictions.json'], 'parameter_bounds': {'E': [50000.0, 250000.0], 'k': [1.0, 20.0], 'alpha': [0.01, 0.25]}, 'physics': {'mechanical_load': 0.8, 'thermal_load': 1.2}, 'observations': [{'x': 0.15, 'value': 0.12100390762744567}, {'x': 0.3, 'value': 0.20992902378535888}, {'x': 0.45, 'value': 0.25869975091084596}, {'x': 0.6, 'value': 0.26325194756686726}, {'x': 0.75, 'value': 0.22441885824506286}, {'x': 0.9, 'value': 0.1477494769390637}], 'design_variable': {'file': 'parameters.json', 'required_keys': ['E', 'k', 'alpha']}, 'calibration_status': 'pending_vm_calibration', 'baseline': {'file': 'baseline_parameters.json', 'artifact': 'init_file/baseline_parameters.json', 'metric_value': None, 'metric_units': 'normalized_observation_units', 'metric_source': 'computed_dynamically_by_eval_on_fenics_vm'}, 'invalid_sample': {'artifact': 'ground_truth/invalid/parameters.json'}}
-FENICS_MARKERS = ("fenics", "dolfin", "dolfinx", "ufl", "functionspace", "trialfunction", "testfunction", "solve")
+LEGACY_FENICS_MODULES = {"dolfin", "fenics"}
 
 
 def clamp(value: float, lo: float = 0.0, hi: float = 1.0) -> float:
@@ -105,13 +106,61 @@ def connected_lr(grid: list[list[float]], threshold: float) -> bool:
     return False
 
 
+def assert_baseline_is_unchanged(params: dict[str, float]) -> None:
+    expected = {"E": 90000.0, "k": 4.0, "alpha": 0.18}
+    if set(params) != set(expected):
+        raise ValueError("baseline parameter file was modified")
+    for key, value in expected.items():
+        if abs(params[key] - value) > 1.0e-12:
+            raise ValueError("baseline parameter file was modified")
+
+
+def dotted_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = dotted_name(node.value)
+        return f"{prefix}.{node.attr}" if prefix else node.attr
+    return ""
+
+
 def check_solve_script() -> None:
     path = ROOT / "solve_submission.py"
     if not path.exists() or not path.is_file() or path.stat().st_size <= 0:
         raise ValueError("missing solve_submission.py")
-    text = path.read_text(encoding="utf-8", errors="ignore").lower()
-    if not any(marker in text for marker in FENICS_MARKERS):
-        raise ValueError("solve_submission.py does not show a FEniCS workflow")
+    source = path.read_text(encoding="utf-8", errors="strict")
+    try:
+        tree = ast.parse(source, filename=path.name)
+    except SyntaxError as exc:
+        raise ValueError("solve_submission.py is not valid Python") from exc
+
+    imports: set[str] = set()
+    calls: set[str] = set()
+    literals: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name.split(".")[0].lower() for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.add(node.module.split(".")[0].lower())
+        elif isinstance(node, ast.Call):
+            calls.add(dotted_name(node.func).lower().split(".")[-1])
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            literals.add(node.value.lower())
+
+    if not imports.intersection(LEGACY_FENICS_MODULES):
+        raise ValueError("solve_submission.py must import legacy FEniCS/DOLFIN")
+    required_groups = (
+        {"mesh", "rectanglemesh", "intervalmesh", "unitsquaremesh", "unitintervalmesh"},
+        {"functionspace", "vectorfunctionspace"},
+        {"trialfunction", "trialfunctions"},
+        {"testfunction", "testfunctions"},
+        {"solve", "linearvariationalsolver", "nonlinearvariationalsolver"},
+    )
+    if any(not calls.intersection(group) for group in required_groups):
+        raise ValueError("solve_submission.py lacks a complete DOLFIN PDE workflow")
+    for filename in ("problem_spec.json", "parameters.json", "predictions.json"):
+        if not any(filename in literal for literal in literals):
+            raise ValueError(f"solve_submission.py does not reference {filename}")
 
 
 def check_xdmf_artifact(filename: str) -> None:
@@ -133,6 +182,59 @@ def check_predictions_artifact() -> None:
     data = json.loads(path.read_text(encoding="utf-8"))
     if not isinstance(data, (dict, list)):
         raise ValueError("predictions.json must be a JSON object or list")
+    params = read_params(ROOT / TASK["design_file"])
+    parameter_copy = data.get("parameters") if isinstance(data, dict) else None
+    if parameter_copy is not None:
+        if not isinstance(parameter_copy, dict):
+            raise ValueError("predictions parameters must be an object")
+        for key in TASK["parameter_bounds"]:
+            try:
+                copied = float(parameter_copy[key])
+            except (KeyError, TypeError, ValueError) as exc:
+                raise ValueError("predictions parameters do not match parameters.json") from exc
+            if not math.isclose(copied, params[key], rel_tol=1.0e-10, abs_tol=1.0e-12):
+                raise ValueError("predictions parameters do not match parameters.json")
+
+    payload = data.get("predictions") if isinstance(data, dict) and "predictions" in data else data
+    observed: dict[float, float] = {}
+    reported_observations: dict[float, float] = {}
+    if isinstance(payload, list):
+        if len(payload) != len(TASK["observations"]):
+            raise ValueError("predictions.json has the wrong number of predictions")
+        for index, item in enumerate(payload):
+            if isinstance(item, dict):
+                x = float(item.get("x", TASK["observations"][index]["x"]))
+                raw_prediction = item.get("prediction", item.get("value"))
+                if raw_prediction is None:
+                    raise ValueError("prediction row is missing a value")
+                prediction = float(raw_prediction)
+                if "observation" in item:
+                    reported_observations[x] = float(item["observation"])
+            else:
+                x = float(TASK["observations"][index]["x"])
+                prediction = float(item)
+            observed[x] = prediction
+    elif isinstance(payload, dict):
+        for key, value in payload.items():
+            if key == "parameters":
+                continue
+            observed[float(key)] = float(value)
+    else:
+        raise ValueError("predictions.json has an unsupported prediction layout")
+
+    if len(observed) != len(TASK["observations"]):
+        raise ValueError("predictions.json has duplicate or missing observation points")
+    for observation in TASK["observations"]:
+        x = float(observation["x"])
+        matches = [value for point, value in observed.items() if math.isclose(point, x, rel_tol=0.0, abs_tol=1.0e-12)]
+        if len(matches) != 1 or not math.isfinite(matches[0]):
+            raise ValueError("predictions.json does not cover the fixed observation points")
+        reported = [value for point, value in reported_observations.items() if math.isclose(point, x, rel_tol=0.0, abs_tol=1.0e-12)]
+        if reported and not math.isclose(reported[0], float(observation["value"]), rel_tol=1.0e-10, abs_tol=1.0e-12):
+            raise ValueError("predictions.json changes an observation")
+        expected = forward_parameter_model(x, params)
+        if not math.isclose(matches[0], expected, rel_tol=1.0e-8, abs_tol=1.0e-10):
+            raise ValueError("predictions.json is inconsistent with parameters.json")
 
 
 def scalar_metric_with_dolfin(grid: list[list[float]]) -> float:
@@ -178,7 +280,10 @@ def parameter_rmse(params: dict[str, float]) -> float:
 
 def metric_from_artifact(path: Path) -> float:
     if TASK["kind"] == "parameters":
-        return parameter_rmse(read_params(path))
+        params = read_params(path)
+        if path.name == TASK["baseline"]["file"]:
+            assert_baseline_is_unchanged(params)
+        return parameter_rmse(params)
     grid = read_grid(path)
     validate_grid(grid)
     return scalar_metric_with_dolfin(grid)

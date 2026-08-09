@@ -16,15 +16,36 @@
     55.0,
     32.0
   ],
+  "envelope_bounds_mm": {
+    "min": [0.0, 0.0, 0.0],
+    "max": [100.0, 55.0, 32.0]
+  },
+  "functional_geometry": {
+    "solid": "one watertight, winding-consistent, edge-connected positive-volume solid",
+    "base_contact": {
+      "z_mm": 0.0,
+      "min_footprint_coverage_ratio": 0.8,
+      "min_largest_component_ratio": 0.95
+    },
+    "finger_probe": {
+      "z_mm": 24.0,
+      "count_range": [4, 16],
+      "min_measured_thickness_mm": 2.0,
+      "min_clear_gap_mm": 3.0,
+      "min_open_ratio": 0.35,
+      "orientation": "either principal direction is allowed"
+    }
+  },
   "hard_constraints": [
-    "Produce the required open geometry output file rather than only reporting metrics.",
-    "Stay inside the stated bounding envelope and above the minimum useful spans.",
+    "Produce the required STL as one watertight, winding-consistent, edge-connected positive-volume solid rather than only reporting metrics.",
+    "Stay inside the stated coordinate envelope and above the minimum useful spans.",
     "Stay within the stated material-volume range.",
+    "Retain the quantified continuous z=0 base contact and separated tall-finger geometry at the z=24 mm probe.",
     "Do not read ground_truth, edit eval.py, or fabricate score/metric files."
   ],
   "invalid_conditions": [
     "Missing, unparsable, empty, or implausibly small STL geometry.",
-    "Bounding-box or volume hard-constraint violation.",
+    "Bounding-box, coordinate-envelope, volume, solid-validity, base-contact, finger-count, thickness, gap, or openness violation.",
     "Self-reported metrics without valid geometry.",
     "Native project files used as the only deliverable."
   ],

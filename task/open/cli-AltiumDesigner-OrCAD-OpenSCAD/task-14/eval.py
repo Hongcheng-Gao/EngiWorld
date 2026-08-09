@@ -1,129 +1,78 @@
 from __future__ import annotations
 
-import base64
-import csv
-import io
 import json
+import os
 import re
 import sys
-import zipfile
 from pathlib import Path
-from xml.etree import ElementTree as ET
-
-EXPECTED = {
-  "board_summary.json": "ewogICJjb21wb25lbnRfY291bnQiOiA0LAogICJsYXllcl9jb3VudCI6IDQsCiAgIm5ldF9jb3VudCI6IDQsCiAgInZpYV9jb3VudCI6IDMKfQo=",
-  "plan.json": "ewogICJmYWJfcmVhZHkiOiB0cnVlLAogICJtaW5fZHJpbGxfbWlsIjogMTAsCiAgInJlcXVpcmVkX291dHB1dHMiOiBbCiAgICAiZ2VyYmVyIiwKICAgICJkcmlsbCIsCiAgICAiaXBjMzU2IgogIF0KfQo="
-}
 
 
-def _desktop() -> Path:
-    return Path(__file__).resolve().parent
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
 
 
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
-
-
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
-
-
-def _json_equal(path: Path, expected: bytes) -> bool:
-    try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
-        return False
-
-
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
-            return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
-        return False
-
-
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
-
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
-        )
-
-    return canon(actual_root) == canon(expected_root)
-
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
-
-
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+def _load_json(name: str):
+    return json.loads((DESKTOP / name).read_text(encoding="utf-8"))
 
 
 def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    required = (
+        "demo.pcb.json",
+        "rules.txt",
+        "base_padstack.txt",
+        "devices.json",
+        "board_summary.json",
+        "plan.json",
+    )
+    if not all((DESKTOP / name).is_file() for name in required):
+        return False
+    try:
+        board = _load_json("demo.pcb.json")
+        devices = _load_json("devices.json")
+        summary = _load_json("board_summary.json")
+        plan = _load_json("plan.json")
+        rules = (DESKTOP / "rules.txt").read_text(encoding="utf-8")
+        padstacks = (DESKTOP / "base_padstack.txt").read_text(encoding="utf-8")
+        clearance_match = re.search(r"Min\s+clearance\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*mil", rules, re.I)
+        drill_match = re.search(r"Min\s+drill\s*:\s*([0-9]+(?:\.[0-9]+)?)\s*mil", rules, re.I)
+        if not clearance_match or not drill_match:
             return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+        min_clearance = float(clearance_match.group(1))
+        min_drill = float(drill_match.group(1))
+        padstack_drills = [
+            float(parts[1])
+            for line in padstacks.splitlines()
+            if len(parts := line.split()) >= 3
+        ]
+    except (OSError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+
+    expected_summary = {
+        "component_count": len(board.get("components", [])),
+        "layer_count": len(board.get("layers", [])),
+        "net_count": len(board.get("nets", [])),
+        "via_count": len(board.get("vias", [])),
+    }
+    if summary != expected_summary:
+        return False
+
+    blockers = [
+        violation.get("id")
+        for violation in board.get("violations", [])
+        if str(violation.get("severity", "")).casefold() == "error"
+    ]
+    variants = devices.get("assembly_variants")
+    if not isinstance(variants, list) or not all(isinstance(item, str) for item in variants):
+        return False
+    expected_plan = {
+        "assembly_variants": variants,
+        "blocking_violation_ids": blockers,
+        "fab_ready": not blockers,
+        "min_clearance_mil": min_clearance,
+        "min_drill_mil": min_drill,
+    }
+    if plan != expected_plan:
+        return False
+    return bool(padstack_drills) and min(padstack_drills) == min_drill
 
 
 if __name__ == "__main__":

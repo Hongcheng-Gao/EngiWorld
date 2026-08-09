@@ -1,24 +1,169 @@
 {
-  "critical_requirement": "The shield window must exclude J1 while keeping the RFIC inside the protected volume.",
+  "artifact_policy": {
+    "extras_allowed": true,
+    "membership": "required_artifacts must be a subset of produced_artifacts"
+  },
+  "artifact_sha256": {
+    "01_kicad_board.kicad_pcb": "b33cf315ed063f69cf4fe3bd80f8f929963a4de817a76df8882b891da96001fe",
+    "01_kicad_board.step": "920f931992727e871cc3ed84221ddd2efbc5eb54274af71116f353bc65fc851c",
+    "01_kicad_export.json": "df9528048efdab03fb4d03520ce79f846956a4bc8c38ad53495fda6ec4b9318f",
+    "01_kicad_mechanical_map.csv": "f3d68f70b06402aa1429e5333d23c4cedf50cddd1cb1b93778b5081a119f6de3",
+    "01_kicad_parameters.scad": "d6977f38fd5c3b5e56093e974d6acbb894f89cfd9b1b5a45e592e8994699fd67",
+    "02_openscad_enclosure.scad": "2bb8aacb26ec31a1ebd8b45b493e7e19468ff8af0a94e3e1f936415ba066a27c",
+    "02_openscad_enclosure.stl": "9c4b672b5e8944b3039e13d883a0fefd955816669f5edc2fa9b75c132726b1df",
+    "02_openscad_parameters.json": "e6c686723f21736af17a1c7b10cc58397aee3257107ff3bf0afad24543fcb140",
+    "03_freecad_assembly.obj": "6a5874888821e3449138565a587fca8a5d65abceda82eae18e8442a390f6f27c",
+    "03_freecad_assembly.step": "85ffe3bef78347b3867647818200684ebc0312cad86c55d1a4317808a9fccc42",
+    "03_freecad_clearance_report.json": "d236f36de3df8ff44c54ae76866d01a74282b1ee309fd9d48e743ae5e0d43f2c",
+    "04_blender_review.blend": "0ff0a3254ecae1077edd1e34083c2a7e3054452df3366fda63acfc753f8815cf",
+    "04_blender_review.mtl": "7bd6a1605bfa2a7f3e12ac8189115fbfc7a417974d2c080caac3f66e8455e564",
+    "04_blender_review.obj": "3e80234c8c889a7be2fc87d977e4a2a69c57be468e6b55343116b46b4ee1f1f9",
+    "04_blender_review.png": "56ad2f3e634c503e6c806026d391923ad26ccbedde6b275064c93868bb77c6d1",
+    "04_blender_scene_report.json": "c4a659906bb09a0b3581fd08e65fa8e61493a94d569d15a9ff29f2e9026316cd",
+    "toolchain_invocation_log.json": "bffe5f6995a37d1083b9185832327fe9f2224e7cd60963cbcd3263a15ecb9250"
+  },
+  "checks": {
+    "all_required_artifacts_present": true,
+    "blender_decision_pass": true,
+    "blender_features_present": true,
+    "blender_metrics_match_freecad": true,
+    "blender_native_outputs_nonempty": true,
+    "blender_native_outputs_recorded": true,
+    "blender_overlay_qc_pass": true,
+    "blender_overlays_materially_distinct": true,
+    "blender_real_roles_present": true,
+    "enclosure_bbox_pass": true,
+    "enclosure_mass_pass": true,
+    "freecad_boolean_checks_pass": true,
+    "freecad_decision_pass": true,
+    "freecad_required_metrics_present": true,
+    "j1_access_pass": true,
+    "j1_exclusion_pass": true,
+    "j2_access_pass": true,
+    "required_subset_of_produced_artifacts": true,
+    "shield_mass_pass": true,
+    "side_clearance_pass": true,
+    "tp1_access_pass": true,
+    "u1_containment_pass": true,
+    "unintended_interference_pass": true
+  },
+  "critical_requirement": "The U1 keepout envelope must be fully inside the RF shield protected volume, while the J1 keepout envelope must be fully outside it and J1 remains externally accessible.",
   "domain": "RF shielded daughtercard",
+  "extra_artifacts": [],
+  "generated_at_utc": "2026-08-07T21:29:10.751980+00:00",
+  "hash_policy": "All generated required artifacts except this self-referential package are SHA-256 hashed.",
   "key_metrics": {
+    "access_checks": {
+      "J1": {
+        "access_type": "side_window",
+        "bounds_mm": [
+          28.0,
+          -7.0,
+          3.6,
+          42.7,
+          7.0,
+          7.6
+        ],
+        "center_error_mm": 0.0,
+        "direction": "X_PLUS",
+        "finished_height_mm": 4.0,
+        "finished_width_mm": 14.0,
+        "guard_material_fractions": {
+          "y_minus": 1.0,
+          "y_plus": 1.0,
+          "z_minus": 1.0,
+          "z_plus": 1.0
+        },
+        "minimum_guard_material_present": true,
+        "residual_material_volume_mm3": 0.0,
+        "through": true
+      },
+      "J2": {
+        "access_type": "side_window",
+        "bounds_mm": [
+          -42.7,
+          -22.0,
+          3.6,
+          -26.0,
+          -2.0,
+          9.0
+        ],
+        "center_error_mm": 0.0,
+        "direction": "X_MINUS",
+        "finished_height_mm": 5.4,
+        "finished_width_mm": 20.0,
+        "guard_material_fractions": {
+          "y_minus": 1.0,
+          "y_plus": 1.0,
+          "z_minus": 1.0,
+          "z_plus": 1.0
+        },
+        "minimum_guard_material_present": true,
+        "residual_material_volume_mm3": 0.0,
+        "through": true
+      },
+      "TP1": {
+        "access_type": "top_bore",
+        "bore_volume_mm": [
+          12.0,
+          -18.0,
+          3.0,
+          4.6000000000000005,
+          12.7
+        ],
+        "center_error_mm": 0.0,
+        "direction": "Z_PLUS",
+        "finished_diameter_mm": 6.0,
+        "guard_material_fraction": 1.0,
+        "minimum_guard_material_present": true,
+        "residual_material_volume_mm3": 0.099626,
+        "through": true
+      }
+    },
     "board_bbox_mm": [
-      72,
-      48,
+      72.0,
+      48.0,
       1.2
     ],
     "enclosure_bbox_mm": [
-      84.4,
-      60.4,
-      14.2
+      84.400002,
+      60.400002,
+      12.2
     ],
-    "estimated_shell_mass_g": 38.635,
-    "side_clearance_mm": 4.0,
-    "top_clearance_mm": 1.8
+    "enclosure_mass_g": 29.269326,
+    "enclosure_volume_mm3": 26852.592965,
+    "j1_protected_volume_intersection_mm3": 0.0,
+    "j1_protected_volume_separation_mm": 13.0,
+    "minimum_side_clearance_mm": 4.0,
+    "shield_mass_g": 8.21424,
+    "shield_volume_mm3": 1046.400009,
+    "u1_keepout_contained": true,
+    "unintended_interference_volume_mm3": 0.0
   },
+  "produced_artifacts": [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
+    "01_kicad_export.json",
+    "01_kicad_mechanical_map.csv",
+    "01_kicad_parameters.scad",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.obj",
+    "03_freecad_assembly.step",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
+    "04_blender_review.mtl",
+    "04_blender_review.obj",
+    "04_blender_review.png",
+    "04_blender_scene_report.json",
+    "final_release_package.json",
+    "toolchain_invocation_log.json"
+  ],
   "release_decision": "pass",
   "required_artifacts": [
     "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
     "01_kicad_export.json",
     "01_kicad_mechanical_map.csv",
     "01_kicad_parameters.scad",
@@ -28,8 +173,10 @@
     "03_freecad_assembly.step",
     "03_freecad_assembly.obj",
     "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
     "04_blender_review.obj",
     "04_blender_review.mtl",
+    "04_blender_review.png",
     "04_blender_scene_report.json",
     "toolchain_invocation_log.json",
     "final_release_package.json"
@@ -42,8 +189,10 @@
   ],
   "stage_outputs": {
     "Blender": [
+      "04_blender_review.blend",
       "04_blender_review.obj",
       "04_blender_review.mtl",
+      "04_blender_review.png",
       "04_blender_scene_report.json"
     ],
     "FreeCAD": [
@@ -55,7 +204,8 @@
       "01_kicad_board.kicad_pcb",
       "01_kicad_export.json",
       "01_kicad_mechanical_map.csv",
-      "01_kicad_parameters.scad"
+      "01_kicad_parameters.scad",
+      "01_kicad_board.step"
     ],
     "OpenSCAD": [
       "02_openscad_enclosure.scad",
@@ -64,5 +214,11 @@
     ]
   },
   "task": "task-03",
-  "title": "RF daughtercard shield-can and inspection scene"
+  "title": "RF daughtercard shield-can and inspection scene",
+  "tool_versions": {
+    "Blender": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)",
+    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
+    "KiCad": "10.0.2",
+    "OpenSCAD": "OpenSCAD version 2021.01"
+  }
 }

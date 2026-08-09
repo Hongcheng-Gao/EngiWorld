@@ -1,23 +1,26 @@
-// KiCad-generated OpenSCAD parameter handoff.
-// Source: 01_kicad_mechanical_map.csv and 01_kicad_board.kicad_pcb.
-$fn = 64;
-board = [176.000, 38.000, 1.600];
-enclosure = [190.000, 52.000, 23.600];
-wall = 3.000;
-lid_clearance = 6.000;
-
-// [reference, kind, x_mm, y_mm, height_mm, keepout_radius_mm, role]
-mechanical_features = [
-  ["J1", "BUSBAR_POS", -54.000, 0.000, 8.000, 13.000, "connector_window"],
-  ["J2", "BUSBAR_NEG", 54.000, 0.000, 8.000, 13.000, "connector_window"],
-  ["U1", "CURRENT_SENSOR", 0.000, 0.000, 3.600, 12.000, "component_keepout"],
-  ["TP1", "HV_TEST", -12.000, 14.000, 0.200, 3.000, "access_bore"],
-  ["TP2", "HV_TEST", 12.000, 14.000, 0.200, 3.000, "access_bore"],
-  ["MH1", "MOUNTING_HOLE", -78.000, -14.000, 0.000, 1.750, "standoff_axis"],
-  ["MH2", "MOUNTING_HOLE", 78.000, -14.000, 0.000, 1.750, "standoff_axis"],
-  ["MH3", "MOUNTING_HOLE", -78.000, 14.000, 0.000, 1.750, "standoff_axis"],
-  ["MH4", "MOUNTING_HOLE", 78.000, 14.000, 0.000, 1.750, "standoff_axis"],
-];
-
-standoff_axes = [for (f = mechanical_features) if (f[6] == "standoff_axis") [f[2], f[3], f[5], f[0]]];
-interface_features = [for (f = mechanical_features) if (f[6] == "connector_window" || f[6] == "access_bore" || f[6] == "antenna_keepout") [f[2], f[3], f[5], f[0], f[6]]];
+// Generated from task-08 KiCad and frozen mechanical contract.
+// source_mechanical_map = 01_kicad_mechanical_map.csv
+// input_board_sha256 = b78f78bf02af634bd0e880c8879363c4ccf97dbc0f452de9e2e497bef401feb3
+board_bbox = [176.000000, 38.000000, 1.600000];
+package_bbox = [190.000000, 52.000000, 23.600000];
+cavity_bounds = [-92.000000, -23.000000, 92.000000, 23.000000];
+wall_mm = 3.000000;
+base_mm = 3.000000;
+tray_top_z = 20.500000;
+lid_inner_z = 20.600000;
+lid_thickness = 3.000000;
+board_bottom_z = 5.000000;
+board_top_z = 6.600000;
+standoff_outer_diameter = 8.000000;
+standoff_bore_diameter = 3.700000;
+standoff_height = 2.000000;
+standoff_bore_z = [2.500000, 5.500000];
+standoff_axes = [["MH1", -78.000000, -14.000000], ["MH2", 78.000000, -14.000000], ["MH3", -78.000000, 14.000000], ["MH4", 78.000000, 14.000000]];
+mechanical_features = [["U1", "CURRENT_SENSOR", 0.000000, 0.000000, 3.600000, 12.000000, 24.000000, 24.000000, 3.600000, "cylinder"], ["J1", "BUSBAR_POS", -54.000000, 0.000000, 8.000000, 13.000000, 26.000000, 26.000000, 8.000000, "cylinder"], ["J2", "BUSBAR_NEG", 54.000000, 0.000000, 8.000000, 13.000000, 26.000000, 26.000000, 8.000000, "cylinder"], ["TP1", "HV_TEST", -12.000000, 14.000000, 0.200000, 3.000000, 2.000000, 2.000000, 0.200000, "cylinder"], ["TP2", "HV_TEST", 12.000000, 14.000000, 0.200000, 3.000000, 2.000000, 2.000000, 0.200000, "cylinder"]];
+interface_features = [["J1", "Y_PLUS", -67.000000, 22.500000, 5.600000, -41.000000, 26.500000, 15.600000, 26.000000, 10.000000], ["J2", "Y_PLUS", 41.000000, 22.500000, 5.600000, 67.000000, 26.500000, 15.600000, 26.000000, 10.000000], ["TP1", "Z_PLUS", -12.000000, 14.000000, 6.000000, 20.100000, 24.100000, 6.800000, 24.100000], ["TP2", "Z_PLUS", 12.000000, 14.000000, 6.000000, 20.100000, 24.100000, 6.800000, 24.100000]];
+side_windows = [["J1", "Y_PLUS", -67.000000, 22.500000, 5.600000, -41.000000, 26.500000, 15.600000, 26.000000, 10.000000], ["J2", "Y_PLUS", 41.000000, 22.500000, 5.600000, 67.000000, 26.500000, 15.600000, 26.000000, 10.000000]];
+side_paths = [["J1", "Y_PLUS", -67.000000, 13.000000, 5.600000, -41.000000, 26.500000, 15.600000, 26.000000, 10.000000], ["J2", "Y_PLUS", 41.000000, 13.000000, 5.600000, 67.000000, 26.500000, 15.600000, 26.000000, 10.000000]];
+top_bores = [["TP1", "Z_PLUS", -12.000000, 14.000000, 6.000000, 20.100000, 24.100000, 6.800000, 24.100000], ["TP2", "Z_PLUS", 12.000000, 14.000000, 6.000000, 20.100000, 24.100000, 6.800000, 24.100000]];
+creepage_segment_start = [-41.000000, 24.500000, 10.600000];
+creepage_segment_end = [41.000000, 24.500000, 10.600000];
+creepage_probe_bounds = [-41.000000, 24.250000, 10.350000, 41.000000, 24.750000, 10.850000];

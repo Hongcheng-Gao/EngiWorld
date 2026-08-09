@@ -1,24 +1,62 @@
 {
-  "critical_requirement": "The OpenSCAD clamp must leave a keepout over L1 and the FreeCAD assembly must report positive clearance over the bulk capacitor.",
+  "artifact_sha256": {
+    "01_kicad_board.kicad_pcb": "e0d5f5c682095dd0ac7f4c1330c1c53db3fc584849341901279945bf8a2936fc",
+    "01_kicad_board.step": "a2c45d8fb7645582ce837454606927c08570343cf1bb8bf86d43895ad5412fa8",
+    "01_kicad_export.json": "cd6ce24c83e96bcfd49881104f391127f45b5821e7234458bb9d47f7d5c50186",
+    "01_kicad_mechanical_map.csv": "aa23616766c9679e420b656f42ec366d770c9152e6bfb53739d21be5004ff0bc",
+    "01_kicad_parameters.scad": "b84427c6b61772b54982136ac88eaf3a4f6c57406a3e2d25a5d569d58a93dc44",
+    "02_openscad_enclosure.scad": "0e71fd905c384c2476df3cf6288bb0e6be9b96e4dbe81002194b3c70b32aac3e",
+    "02_openscad_enclosure.stl": "67078fc8e754c23b3e6dab6875c2f4db93512f6bd7e40f01587045236f39d6e3",
+    "02_openscad_parameters.json": "6061d224b2d93f7c78e5532cbe146c15d6b005406b17db835c68beabdb8ef5d9",
+    "03_freecad_assembly.obj": "439080697e983d50cfd5ce2e7a9684ee8a8256284a6b6e85b5175526f9eba89b",
+    "03_freecad_assembly.step": "0a216bcb888c6a760d18e6c8bb4f1a90096d98c48d155c2a65a4597e884e100e",
+    "03_freecad_clearance_report.json": "f731db6d7a8cb20780c1f4c8f32f96f76e846a3f073454ab195ff097376634a1",
+    "04_blender_review.blend": "1ea61b2c37533a2a67135b2194dfe9ed81ac18eea0cb6825aacf0550231fe2fc",
+    "04_blender_review.mtl": "8eeed6112d690dc3702e9c415a5b569b6069dfa7d3f5642c22ffeee34c21d33c",
+    "04_blender_review.obj": "1401ee84b1ff8d178d82b762d86737ccb03516ea54c5d13c04801c456d8381e4",
+    "04_blender_review.png": "213fbf92f5db4543d42366f8e6a11c940abaf4a252f9badbcc39d601499b83bb",
+    "04_blender_scene_report.json": "7334b4a32c6eb64c992529a15169f21393373e021d9dfb305d7e1c7f35c774f3",
+    "toolchain_invocation_log.json": "332475c0302484a02ba36fb17e91c3f7c799d226c6b0183923dc3ab80063883b"
+  },
+  "checks": {
+    "blender_review_pass": true,
+    "c1_clamp_clearance_pass": true,
+    "freecad_geometry_pass": true,
+    "l1_keepout_pass": true,
+    "required_artifacts_present": true,
+    "u1_contact_pass": true
+  },
+  "critical_requirement": "The package must leave the full L1 interior keepout empty and provide at least minimum_c1_clamp_clearance_mm above the C1 keepout region.",
   "domain": "power converter thermal clamp",
+  "generated_at_utc": "2026-08-07T21:07:47.988705+00:00",
   "key_metrics": {
     "board_bbox_mm": [
-      104,
-      62,
+      104.0,
+      62.0,
       1.6
     ],
+    "c1_clamp_clearance_mm": 2.4,
     "enclosure_bbox_mm": [
-      117.2,
-      75.2,
+      117.199997,
+      75.199997,
       18.6
     ],
-    "estimated_shell_mass_g": 72.424,
-    "side_clearance_mm": 4.0,
-    "top_clearance_mm": 2.4
+    "enclosure_volume_mm3": 58562.599042,
+    "estimated_shell_mass_g": 59.148225,
+    "interference_volume_mm3": 0.0,
+    "l1_keepout_intersection_mm3": 0.0,
+    "side_clearances_mm": {
+      "X_MINUS": 4.0,
+      "X_PLUS": 4.0,
+      "Y_MINUS": 4.0,
+      "Y_PLUS": 4.0
+    },
+    "u1_contact_gap_mm": 0.0
   },
   "release_decision": "pass",
   "required_artifacts": [
     "01_kicad_board.kicad_pcb",
+    "01_kicad_board.step",
     "01_kicad_export.json",
     "01_kicad_mechanical_map.csv",
     "01_kicad_parameters.scad",
@@ -28,8 +66,10 @@
     "03_freecad_assembly.step",
     "03_freecad_assembly.obj",
     "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
     "04_blender_review.obj",
     "04_blender_review.mtl",
+    "04_blender_review.png",
     "04_blender_scene_report.json",
     "toolchain_invocation_log.json",
     "final_release_package.json"
@@ -40,29 +80,12 @@
     "FreeCAD",
     "Blender"
   ],
-  "stage_outputs": {
-    "Blender": [
-      "04_blender_review.obj",
-      "04_blender_review.mtl",
-      "04_blender_scene_report.json"
-    ],
-    "FreeCAD": [
-      "03_freecad_assembly.step",
-      "03_freecad_assembly.obj",
-      "03_freecad_clearance_report.json"
-    ],
-    "KiCad": [
-      "01_kicad_board.kicad_pcb",
-      "01_kicad_export.json",
-      "01_kicad_mechanical_map.csv",
-      "01_kicad_parameters.scad"
-    ],
-    "OpenSCAD": [
-      "02_openscad_enclosure.scad",
-      "02_openscad_enclosure.stl",
-      "02_openscad_parameters.json"
-    ]
-  },
   "task": "task-02",
-  "title": "Buck regulator heat-spreader clamp package"
+  "title": "Buck regulator heat-spreader clamp package",
+  "tool_versions": {
+    "Blender": "Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)",
+    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
+    "KiCad": "10.0.2",
+    "OpenSCAD": "OpenSCAD version 2021.01"
+  }
 }

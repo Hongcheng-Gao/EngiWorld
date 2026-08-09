@@ -1,127 +1,93 @@
 from __future__ import annotations
 
-import base64
 import csv
-import io
 import json
-import re
+import math
+import os
 import sys
-import zipfile
 from pathlib import Path
-from xml.etree import ElementTree as ET
-
-EXPECTED = {
-  "diffpair_lengths.csv": "UGFpcixOZWdhdGl2ZV9taWwsUG9zaXRpdmVfbWlsLERlbHRhX21pbA0KVVNCMl9ELDk1MCw5NTIsMg0K",
-  "etch_lengths.csv": "TmV0LExlbmd0aF9taWwNCkdORCwyMTAwDQpWQ0MsMTg1MA0KVVNCMl9EX04sOTUwDQpVU0IyX0RfUCw5NTINCg=="
-}
 
 
-def _desktop() -> Path:
-    return Path(__file__).resolve().parent
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
 
 
-def _decode(name: str) -> bytes:
-    return base64.b64decode(EXPECTED[name].encode("ascii"))
+def _csv_rows(path: Path, header: list[str]) -> list[dict[str, str]]:
+    with path.open(newline="", encoding="utf-8-sig") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames != header:
+            raise ValueError("CSV header mismatch")
+        return list(reader)
 
 
-def _text(data: bytes) -> str:
-    return data.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
-
-
-def _json_equal(path: Path, expected: bytes) -> bool:
+def _numbers_equal(actual: str, expected: float) -> bool:
     try:
-        return json.loads(path.read_text(encoding="utf-8")) == json.loads(expected.decode("utf-8"))
-    except Exception:
+        value = float(actual)
+    except (TypeError, ValueError):
         return False
-
-
-def _csv_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_text = path.read_text(encoding="utf-8-sig").replace("\r\n", "\n").replace("\r", "\n")
-        expected_text = expected.decode("utf-8").replace("\r\n", "\n").replace("\r", "\n")
-        actual_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(actual_text)) if any(cell.strip() for cell in row)]
-        expected_rows = [[cell.strip() for cell in row] for row in csv.reader(io.StringIO(expected_text)) if any(cell.strip() for cell in row)]
-        if not actual_rows or not expected_rows:
-            return actual_rows == expected_rows
-        if actual_rows[0] != expected_rows[0]:
-            return False
-        return sorted(actual_rows[1:]) == sorted(expected_rows[1:])
-    except Exception:
-        return False
-
-
-def _xml_equal(path: Path, expected: bytes) -> bool:
-    try:
-        actual_root = ET.parse(path).getroot()
-        expected_root = ET.fromstring(expected)
-    except Exception:
-        return False
-
-    def canon(elem):
-        return (
-            elem.tag,
-            tuple(sorted((k, str(v)) for k, v in elem.attrib.items())),
-            (elem.text or "").strip(),
-            tuple(canon(child) for child in list(elem)),
-        )
-
-    return canon(actual_root) == canon(expected_root)
-
-
-
-def _edif_equal(path: Path, expected: bytes) -> bool:
-    try:
-        def tokens(text: str):
-            return re.findall(r'"[^"]*"|[()]|[^\s()]+', text)
-        actual_text = path.read_text(encoding="utf-8-sig", errors="ignore")
-        expected_text = expected.decode("utf-8", errors="ignore")
-        return tokens(actual_text) == tokens(expected_text)
-    except Exception:
-        return False
-
-def _zip_equal(path: Path, expected: bytes) -> bool:
-    try:
-        with zipfile.ZipFile(path) as actual, zipfile.ZipFile(io.BytesIO(expected)) as exp:
-            if sorted(actual.namelist()) != sorted(exp.namelist()):
-                return False
-            for name in exp.namelist():
-                actual_data = actual.read(name)
-                expected_data = exp.read(name)
-                suffix = Path(name).suffix.lower()
-                if suffix in {".txt", ".log", ".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".drl", ".gm1", ".gml"}:
-                    if _text(actual_data) != _text(expected_data):
-                        return False
-                elif actual_data != expected_data:
-                    return False
-        return True
-    except Exception:
-        return False
-
-
-def _bytes_equal(path: Path, expected: bytes) -> bool:
-    try:
-        if path.suffix.lower() in {".json"}:
-            return _json_equal(path, expected)
-        if path.suffix.lower() in {".csv"}:
-            return _csv_equal(path, expected)
-        if path.suffix.lower() in {".ipc2581", ".xml"}:
-            return _xml_equal(path, expected)
-        if path.suffix.lower() in {".zip"}:
-            return _zip_equal(path, expected)
-        if path.suffix.lower() in {".edif"}:
-            return _edif_equal(path, expected)
-        return _text(path.read_bytes()) == _text(expected)
-    except Exception:
-        return False
+    return math.isfinite(value) and abs(value - expected) <= max(1e-6, abs(expected) * 1e-9)
 
 
 def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+    source_path = DESKTOP / "routed_board.pcb.json"
+    locked_path = DESKTOP / "locked_release.pcb.json"
+    etch_path = DESKTOP / "etch_lengths.csv"
+    pair_path = DESKTOP / "diffpair_lengths.csv"
+    if not source_path.is_file() or not locked_path.is_file() or not etch_path.is_file() or not pair_path.is_file():
+        return False
+    try:
+        source = json.loads(source_path.read_text(encoding="utf-8"))
+        locked = json.loads(locked_path.read_text(encoding="utf-8"))
+        etch_rows = _csv_rows(etch_path, ["Net", "Length_mil"])
+        pair_rows = _csv_rows(
+            pair_path,
+            ["Pair", "Negative_mil", "Positive_mil", "Delta_mil"],
+        )
+        expected_etch = {
+            item["name"]: float(item["length_mil"])
+            for item in source["etch_lengths"]
+        }
+        expected_pairs = {
+            item["name"]: (
+                float(item["length_n_mil"]),
+                float(item["length_p_mil"]),
+                abs(float(item["length_n_mil"]) - float(item["length_p_mil"])),
+            )
+            for item in source["diffpairs"]
+        }
+        locked_etch = {
+            item["name"]: float(item["length_mil"])
+            for item in locked["etch_lengths"]
+        }
+        locked_pairs = {
+            item["name"]: (
+                float(item["length_n_mil"]),
+                float(item["length_p_mil"]),
+                abs(float(item["length_n_mil"]) - float(item["length_p_mil"])),
+            )
+            for item in locked["diffpairs"]
+        }
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+
+    if expected_etch != locked_etch or expected_pairs != locked_pairs:
+        return False
+    if len(etch_rows) != len(expected_etch) or len(pair_rows) != len(expected_pairs):
+        return False
+    if len({row.get("Net") for row in etch_rows}) != len(etch_rows):
+        return False
+    if len({row.get("Pair") for row in pair_rows}) != len(pair_rows):
+        return False
+    for row in etch_rows:
+        name = row.get("Net")
+        if name not in expected_etch or not _numbers_equal(row.get("Length_mil"), expected_etch[name]):
             return False
-        if not _bytes_equal(path, _decode(rel)):
+    for row in pair_rows:
+        name = row.get("Pair")
+        if name not in expected_pairs:
+            return False
+        expected = expected_pairs[name]
+        actual = (row.get("Negative_mil"), row.get("Positive_mil"), row.get("Delta_mil"))
+        if not all(_numbers_equal(value, target) for value, target in zip(actual, expected)):
             return False
     return True
 

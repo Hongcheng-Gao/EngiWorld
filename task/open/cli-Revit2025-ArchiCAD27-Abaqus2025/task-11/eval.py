@@ -5,7 +5,7 @@ import re
 from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "C:/Users/user/Desktop"))
-SPEC = {'products': [], 'annotations': [{'class': 'IfcSpace', 'name': 'UNCLASSIFIED', 'tokens': ['PRINT COPY', 'OPERATIONS', 'ENTRY', 'SITE OFFICE']}]}
+SPEC = {'products': [], 'annotations': [{'class': 'IfcSpace', 'tokens': ['PRINT COPY']}]}
 
 DIRECT_IFC_TOOLS = ("ifcopenshell", "xbim", "bcfier", "ifcpatch", "ifcconvert", "ifccsv", "ifcclash")
 DIRECT_WRITE_TOKENS = ("result.ifc", "desktop\\result.ifc", "desktop/result.ifc")
@@ -13,6 +13,8 @@ ALLOWED_TOOL_TOKENS = (
     "ifccommandserverapp", "ifccommandserver", "graphisoft", "archicad", "/jemi",
     "model.loadfile", "model.savefile", "model.mergefile", "entity.create",
     "entity.get", "entity.delete", "api.executeaddoncommand",
+    "revit.exe", "autodesk.revit", "document.export", "ifcexportoptions",
+    "abaqus", "simulia",
 )
 
 
@@ -76,10 +78,21 @@ def history_contains_bypass(root):
     return False
 
 
-def header_looks_graphisoft_edm(path):
-    text = read_text_safe(path, 7000).lower()
-    compact = text.replace(" ", "")
-    return "express data manager" in text and "file_schema(('ifc4'))" in compact
+def native_export_provenance(path, model):
+    apps = " ".join(
+        " ".join(
+            str(getattr(app, attr, "") or "")
+            for attr in ("ApplicationIdentifier", "ApplicationFullName", "Version")
+        )
+        for app in model.by_type("IfcApplication")
+    )
+    text = f"{apps} {read_text_safe(path, 8000)}".lower()
+    if any(token in text for token in DIRECT_IFC_TOOLS) or "/dev/null" in text:
+        return False
+    revit_2025 = "revit" in text and ("2025" in text or re.search(r"\b25(?:\.|\b)", text))
+    archicad_27 = "archicad" in text and re.search(r"\b27(?:\.|\b)", text)
+    abaqus_2025 = ("abaqus" in text or "simulia" in text) and "2025" in text
+    return bool(revit_2025 or archicad_27 or abaqus_2025)
 
 
 def unique_global_ids(model):
@@ -194,13 +207,14 @@ def bbox_preserved(init_model, result_model, tol=0.75):
 
 
 def check_baseline(init_model, result_model):
-    for cls in ("IfcBuildingStorey", "IfcSpace"):
-        init_names = {text_norm(getattr(e, "Name", "")) for e in init_model.by_type(cls)}
-        result_names = {text_norm(getattr(e, "Name", "")) for e in result_model.by_type(cls)}
-        if not init_names.issubset(result_names):
-            return False
+    init_storeys = {text_norm(getattr(e, "Name", "")) for e in init_model.by_type("IfcBuildingStorey")}
+    result_storeys = {text_norm(getattr(e, "Name", "")) for e in result_model.by_type("IfcBuildingStorey")}
+    if not init_storeys.issubset(result_storeys):
+        return False
+    if len(result_model.by_type("IfcSpace")) != len(init_model.by_type("IfcSpace")):
+        return False
     for cls in ("IfcWall", "IfcSlab", "IfcRoof", "IfcDoor", "IfcWindow", "IfcStair", "IfcColumn"):
-        if len(result_model.by_type(cls)) < len(init_model.by_type(cls)):
+        if len(result_model.by_type(cls)) != len(init_model.by_type(cls)):
             return False
     return bbox_preserved(init_model, result_model)
 
@@ -230,7 +244,9 @@ def check_required_products(init_model, result_model):
 
 def check_annotations(result_model):
     for item in SPEC.get("annotations", []):
-        matches = objects_by_name(result_model, item["class"], item["name"])
+        matches = result_model.by_type(item["class"])
+        if item.get("name"):
+            matches = [obj for obj in matches if same_name(getattr(obj, "Name", ""), item["name"])]
         if not matches:
             return False
         if not any(has_tokens(obj, result_model, item.get("tokens", [])) for obj in matches):
@@ -243,6 +259,8 @@ def check_model(init_path, result_path):
 
     result_model = ifcopenshell.open(str(result_path))
     if not str(getattr(result_model, "schema", "")).upper().startswith("IFC4"):
+        return False
+    if not native_export_provenance(result_path, result_model):
         return False
     if not unique_global_ids(result_model):
         return False
