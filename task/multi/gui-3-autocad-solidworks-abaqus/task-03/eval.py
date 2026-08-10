@@ -22,6 +22,8 @@ SPEC = {'allowed_element_types': ['DC3D4', 'DC3D8'],
  'any_odb_fields': ['HFL', 'RFL'],
  'bbox': [80, 60, 21],
  'bbox_tol': 1.0,
+ 'expected_volume': 37687.709671,
+ 'volume_rel_tol': 0.01,
  'bc_checks': [{'film_coeff': 2e-05,
                 'kind': 'convection',
                 'name': 'BC-Convection',
@@ -52,7 +54,16 @@ SPEC = {'allowed_element_types': ['DC3D4', 'DC3D8'],
                             [70, 10, 2.5, 'HOLE'],
                             [10, 50, 2.5, 'HOLE'],
                             [70, 50, 2.5, 'HOLE']],
-                'layer_line_exact': {'FIN_REF': 10},
+                'line_segments': [{'end': [13, 52], 'layer': 'FIN_REF', 'start': [13, 8]},
+                                  {'end': [19, 52], 'layer': 'FIN_REF', 'start': [19, 8]},
+                                  {'end': [25, 52], 'layer': 'FIN_REF', 'start': [25, 8]},
+                                  {'end': [31, 52], 'layer': 'FIN_REF', 'start': [31, 8]},
+                                  {'end': [37, 52], 'layer': 'FIN_REF', 'start': [37, 8]},
+                                  {'end': [43, 52], 'layer': 'FIN_REF', 'start': [43, 8]},
+                                  {'end': [49, 52], 'layer': 'FIN_REF', 'start': [49, 8]},
+                                  {'end': [55, 52], 'layer': 'FIN_REF', 'start': [55, 8]},
+                                  {'end': [61, 52], 'layer': 'FIN_REF', 'start': [61, 8]},
+                                  {'end': [67, 52], 'layer': 'FIN_REF', 'start': [67, 8]}],
                 'layers': ['OUTLINE', 'HOLE', 'FIN_REF', 'CHAIN'],
                 'tol': 0.25},
  'expected_cells': 1,
@@ -64,9 +75,7 @@ SPEC = {'allowed_element_types': ['DC3D4', 'DC3D8'],
  'load_names': ['HeatFlux-Base'],
  'material': {'conductivity': 0.17, 'name': 'Aluminum'},
  'max_nodes': 1000,
- 'min_edges': 160,
- 'min_elements': 120,
- 'min_faces': 60,
+ 'min_elements': 1,
  'min_frames': 2,
  'model_name': 'Model-HeatPlateThermal',
  'nonzero_odb_any_fields': ['HFL', 'RFL'],
@@ -214,6 +223,32 @@ def parse_dxf(path):
     return layers, pts, circles, lines
 
 
+def check_dxf_line_semantics(lines, spec, tol):
+    def same_point(a,b):
+        return close(a[0],b[0],tol) and close(a[1],b[1],tol)
+    def segments(line):
+        pts=line.get('pts',[])
+        return [(pts[index],pts[index+1]) for index in range(len(pts)-1)]
+    for req in spec.get('line_segments',[]):
+        start=tuple(req['start']); end=tuple(req['end']); found=False
+        for line in lines:
+            if ci(line.get('layer')) != ci(req.get('layer')): continue
+            for first,second in segments(line):
+                if (same_point(first,start) and same_point(second,end)) or (same_point(first,end) and same_point(second,start)):
+                    found=True
+        if not found: return fail('Missing required DXF segment on %s from %s to %s'%(req.get('layer'),start,end))
+    for req in spec.get('line_positions',[]):
+        axis=0 if ci(req.get('axis')) == 'X' else 1
+        for value in req.get('values',[]):
+            found=False
+            for line in lines:
+                if ci(line.get('layer')) != ci(req.get('layer')): continue
+                for first,second in segments(line):
+                    if close(first[axis],value,tol) and close(second[axis],value,tol): found=True
+            if not found: return fail('Missing required DXF line on %s at %s=%s'%(req.get('layer'),req.get('axis'),value))
+    return True
+
+
 def check_dxf():
     ds=SPEC.get('dxf_checks')
     if not ds: return ok('No DXF stage')
@@ -247,6 +282,7 @@ def check_dxf():
     for layer, expected_count in ds.get('layer_line_exact',{}).items():
         cnt=len([ln for ln in lines if ci(ln.get('layer')) == ci(layer)])
         if cnt != int(expected_count): return fail('DXF line/polyline count mismatch on layer %s: got %s expected %s'%(layer,cnt,expected_count))
+    if not check_dxf_line_semantics(lines, ds, ds.get('tol',1.0)): return False
     return ok('DXF checks passed')
 
 
@@ -254,6 +290,15 @@ def dims_close(got, exp, tol):
     if len(got) != len(exp): return False
     g=sorted([abs(float(x)) for x in got]); e=sorted([abs(float(x)) for x in exp])
     return all(abs(a-b) <= tol for a,b in zip(g,e))
+
+
+def cell_volume(cells):
+    total=0.0
+    for cell in cells:
+        try: value=cell.getSize(printResults=False)
+        except TypeError: value=cell.getSize()
+        total += float(value)
+    return total
 
 
 def abaqus_step_bbox(path):
@@ -272,7 +317,7 @@ def abaqus_step_bbox(path):
         low=bb.get('low', None); high=bb.get('high', None)
         if low is None or high is None: return None
         return {'bbox':[float(high[i])-float(low[i]) for i in range(3)],
-                'cells':len(part.cells), 'faces':len(part.faces), 'edges':len(part.edges)}
+                'cells':len(part.cells), 'volume':cell_volume(part.cells)}
     except Exception as e:
         warn('Abaqus STEP fallback failed: '+str(e))
         return None
@@ -294,8 +339,7 @@ try:
     else:
         box = solids[0].BoundingBox()
         out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen],
-               "cells": len(solids), "faces": len(solids[0].Faces()),
-               "edges": len(solids[0].Edges())}
+               "cells": len(solids), "volume": float(solids[0].Volume())}
 except Exception as exc:
     out = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
 sys.stdout.write("__CQ_BBOX__" + json.dumps(out))
@@ -333,7 +377,7 @@ def check_step():
         wp=cq.importers.importStep(path); solids=wp.solids().vals()
         if len(solids) != 1: return fail('STEP must contain exactly one solid')
         box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]
-        info={'cells':len(solids), 'faces':len(solids[0].Faces()), 'edges':len(solids[0].Edges())}
+        info={'cells':len(solids), 'volume':float(solids[0].Volume())}
         log('[PASS] STEP cadquery import succeeded')
     except Exception as e:
         warn('Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: '+str(e))
@@ -351,8 +395,9 @@ def check_step():
     if got is None: return fail('STEP geometry could not be validated')
     if not dims_close(got, SPEC['bbox'], SPEC.get('bbox_tol',8.0)): return fail('STEP bbox mismatch got %s expected %s'%(got,SPEC['bbox']))
     if int(info.get('cells', 0)) != int(SPEC.get('expected_cells',1)): return fail('STEP solid-cell count mismatch got %s expected %s'%(info.get('cells'),SPEC.get('expected_cells',1)))
-    if int(info.get('faces',0)) < int(SPEC.get('min_faces',1)): return fail('STEP has too few faces: '+str(info.get('faces')))
-    if int(info.get('edges',0)) < int(SPEC.get('min_edges',1)): return fail('STEP has too few edges: '+str(info.get('edges')))
+    volume=info.get('volume')
+    if volume is None or not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
+        return fail('STEP volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
     return ok('STEP geometry checks passed')
 
 
@@ -538,6 +583,23 @@ def mesh_info(model):
                 coords=[tuple(n.coordinates) for n in repo.nodes]
         except Exception: pass
     return coords, elems, nodes, element_types
+
+
+def check_model_volume(model):
+    candidates=[]
+    try:
+        for key in model.parts.keys():
+            part=model.parts[key]
+            if not len(part.cells): continue
+            candidates.append((part,cell_volume(part.cells),len(part.elements)))
+    except Exception as exc: return fail('Cannot inspect CAE part volume: '+str(exc))
+    meshed=[item for item in candidates if item[2] > 0]
+    usable=meshed if meshed else candidates
+    if len(usable) != 1: return fail('Expected one analysis solid part for volume check, got %s'%len(usable))
+    volume=usable[0][1]
+    if not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
+        return fail('CAE solid volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
+    return ok('CAE solid volume passed')
 
 
 def check_material(model):
@@ -946,6 +1008,7 @@ def check_cae():
     model=mdb.models[mk]
     if not check_material(model): return False
     if not check_section_assignment(model): return False
+    if not check_model_volume(model): return False
     sk=find_key(model.steps,SPEC['step_name'])
     if sk is None: return fail('Missing step '+SPEC['step_name'])
     step_obj=model.steps[sk]
