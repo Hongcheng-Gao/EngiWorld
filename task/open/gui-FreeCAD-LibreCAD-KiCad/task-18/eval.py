@@ -4,6 +4,7 @@ from __future__ import annotations
 from pathlib import Path
 import math
 import os
+import re
 
 import ezdxf
 
@@ -325,27 +326,85 @@ def no_entities_on_layer(doc, layer):
 OUTPUT_FILE = "gui05_bracket_dimension_completed.dxf"
 
 
-def dimension_count(doc):
-    return sum(1 for entity in doc.modelspace() if entity.dxftype() == "DIMENSION" and layer_of(entity) == "DIM")
+def annotation_height(doc, entity):
+    if entity.dxftype() == "TEXT":
+        return float(getattr(entity.dxf, "height", 0.0))
+    if entity.dxftype() == "MTEXT":
+        return float(getattr(entity.dxf, "char_height", 0.0))
+    if entity.dxftype() == "DIMENSION":
+        try:
+            override = entity.get_acad_dstyle()
+            if "dimtxt" in override:
+                return float(override["dimtxt"])
+        except Exception:
+            pass
+        try:
+            return float(doc.dimstyles.get(entity.dxf.dimstyle).dxf.dimtxt)
+        except Exception:
+            return 0.0
+    return 0.0
+
+
+def annotation_value(entity):
+    if entity.dxftype() in {"TEXT", "MTEXT"}:
+        return norm_text(entity_text(entity))
+    if entity.dxftype() == "DIMENSION":
+        override = str(getattr(entity.dxf, "text", "")).strip()
+        if override and override != "<>":
+            return norm_text(override)
+        try:
+            return str(float(entity.get_measurement()))
+        except Exception:
+            return ""
+    return ""
+
+
+def dim_annotations(doc):
+    return [
+        (annotation_value(entity), annotation_height(doc, entity))
+        for entity in text_entities(doc, "DIM")
+    ]
+
+
+def value_matches(text, wanted):
+    numbers = re.findall(r"\d+(?:\.\d+)?", text)
+    return any(close(number, wanted, 0.05) for number in numbers)
 
 
 def has_linear_dimensions(doc):
-    explicit_text = (
-        has_text(doc, "DIM", "160", height=3.5) and
-        has_text(doc, "DIM", "90", height=3.5) and
-        text_count(doc, "DIM", "30") >= 2
+    annotations = dim_annotations(doc)
+    if any(not close(height, 3.5, 0.3) for text, height in annotations if text):
+        return False
+    return (
+        sum(1 for text, _ in annotations if value_matches(text, 160)) >= 1 and
+        sum(1 for text, _ in annotations if value_matches(text, 90)) >= 1 and
+        sum(1 for text, _ in annotations if value_matches(text, 30)) >= 2
     )
-    return explicit_text or dimension_count(doc) >= 4
 
 
 def has_hole_notes(doc):
-    separate_notes = text_count(doc, "DIM", "12") >= 2
-    combined_note = any("2X" in norm_text(entity_text(entity)) and "12" in norm_text(entity_text(entity)) for entity in text_entities(doc, "DIM"))
-    return separate_notes or combined_note
+    diameter_count = 0
+    for entity in text_entities(doc, "DIM"):
+        text = annotation_value(entity)
+        if not value_matches(text, 12):
+            continue
+        if "2X" in text and "DIA" in text:
+            return True
+        if entity.dxftype() in {"TEXT", "MTEXT"}:
+            if "DIA" in text:
+                diameter_count += 1
+            continue
+        try:
+            if int(entity.dxf.dimtype) & 15 == 3:
+                diameter_count += 1
+        except Exception:
+            continue
+    return diameter_count >= 2
 
 
 def check(doc):
     return (
+        all(entity.dxftype() != "DIMENSION" or layer_of(entity) == "DIM" for entity in doc.modelspace()) and
         has_polyline_or_edges(doc, "OUTLINE", [(0, 0), (160, 0), (160, 90), (0, 90)]) and
         has_circle(doc, "HOLE", (30, 45), 6) and
         has_circle(doc, "HOLE", (130, 45), 6) and

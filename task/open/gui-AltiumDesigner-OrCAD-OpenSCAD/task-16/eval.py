@@ -330,15 +330,145 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
-def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _mapping_value(mapping, *names):
+    wanted = {_key(name) for name in names}
+    return next((value for key, value in mapping.items() if _key(key) in wanted), None)
+
+
+def _panel_values_valid(mapping, spec) -> bool:
+    if not isinstance(mapping, dict):
+        return False
+    return all(
+        _scalar_equal(_mapping_value(mapping, key), value)
+        for key, value in spec.items()
+    )
+
+
+def _axis_spacing(values, expected_mil) -> bool:
+    unique = sorted({round(float(value), 7) for value in values})
+    if len(unique) < 2:
+        return False
+    steps = [unique[index + 1] - unique[index] for index in range(len(unique) - 1)]
+    expected_mm = float(expected_mil) * 0.0254
+    return all(
+        abs(step - target) <= max(1e-4, abs(target) * 1e-4)
+        for step in steps
+        for target in ([float(expected_mil)] if abs(step) > 100 else [expected_mm])
+    )
+
+
+def _instance_grid_valid(instances, spec) -> bool:
+    if not isinstance(instances, list) or len(instances) != 12 or not all(isinstance(item, dict) for item in instances):
+        return False
+    rows = [_mapping_value(item, "row", "row_index") for item in instances]
+    columns = [_mapping_value(item, "column", "col", "column_index", "col_index") for item in instances]
+    xs = [_mapping_value(item, "x", "origin_x", "offset_x") for item in instances]
+    ys = [_mapping_value(item, "y", "origin_y", "offset_y") for item in instances]
+    if all(value is not None for value in rows + columns):
+        normalized = {(int(float(row)), int(float(column))) for row, column in zip(rows, columns)}
+        if normalized not in (
+            {(row, column) for row in range(4) for column in range(3)},
+            {(row, column) for row in range(1, 5) for column in range(1, 4)},
+        ):
             return False
-        if not _bytes_equal(path, _decode(rel)):
+    if any(value is None for value in xs + ys):
+        return False
+    if len({round(float(value), 7) for value in xs}) != 3 or len({round(float(value), 7) for value in ys}) != 4:
+        return False
+    if not _axis_spacing(xs, spec["column_spacing_mil"]) or not _axis_spacing(ys, spec["row_spacing_mil"]):
+        return False
+    return True
+
+
+def _json_panel_evidence(value, spec) -> bool:
+    if isinstance(value, list):
+        return _instance_grid_valid(value, spec) or any(_json_panel_evidence(item, spec) for item in value)
+    if not isinstance(value, dict):
+        return False
+    for key, child in value.items():
+        normalized = _key(key)
+        if normalized in {"instances", "boardinstances", "panelinstances", "stepinstances", "placements"}:
+            if _instance_grid_valid(child, spec):
+                return True
+        if normalized in {"steprepeat", "array", "panelarray", "repeatdefinition"} and isinstance(child, dict):
+            source = _mapping_value(child, "source", "source_board", "board", "step_ref", "ref")
+            if source and _panel_values_valid(child, spec):
+                return True
+        if _json_panel_evidence(child, spec):
+            return True
+    return False
+
+
+def _panel_summary_valid(path: Path, spec) -> bool:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    return (
+        isinstance(data, dict)
+        and _panel_values_valid(data, spec)
+        and _scalar_equal(_mapping_value(data, "board_count", "instance_count"), 12)
+    )
+
+
+def _pcb_panel_valid(path: Path, source_path: Path, spec) -> bool:
+    actual = json.loads(path.read_text(encoding="utf-8-sig"))
+    source = json.loads(source_path.read_text(encoding="utf-8-sig"))
+    if not isinstance(actual, dict) or not isinstance(source, dict):
+        return False
+    panel = _mapping_value(actual, "panel", "panelization", "array")
+    if not _panel_values_valid(panel, spec) or not _json_panel_evidence(actual, spec):
+        return False
+    for key in ("layers", "nets", "vias", "padstacks", "diffpairs", "violations"):
+        if key in source and (key not in actual or not _json_value_equal(actual[key], source[key])):
             return False
     return True
+
+
+def _xml_attr(element, *names):
+    wanted = {_key(name) for name in names}
+    return next((value for key, value in element.attrib.items() if _key(key) in wanted), None)
+
+
+def _xml_panel_values_valid(element, spec) -> bool:
+    return all(_scalar_equal(_xml_attr(element, key), value) for key, value in spec.items())
+
+
+def _ipc_panel_valid(path: Path, spec) -> bool:
+    root = ET.parse(path).getroot()
+    elements = list(root.iter())
+    instance_tags = {"instance", "boardinstance", "panelinstance", "stepinstance", "stepref"}
+    instances = [element for element in elements if _key(_local_name(element.tag)) in instance_tags]
+    if len(instances) == 12:
+        mappings = [dict(element.attrib) for element in instances]
+        sources = [_mapping_value(item, "source", "source_board", "board", "step_ref", "ref", "name") for item in mappings]
+        return all(sources) and _instance_grid_valid(mappings, spec)
+    for element in elements:
+        tag = _key(_local_name(element.tag))
+        if tag not in {"steprepeat", "panelarray", "array", "repeatdefinition"}:
+            continue
+        source = _xml_attr(element, "source", "source_board", "board", "step_ref", "ref", "name")
+        if source and _xml_panel_values_valid(element, spec):
+            return True
+    return False
+
+
+def evaluate() -> bool:
+    desktop = _desktop()
+    required = [desktop / name for name in EXPECTED]
+    if not all(path.is_file() and path.stat().st_size > 0 for path in required):
+        return False
+    try:
+        spec = json.loads((desktop / "panel_spec.json").read_text(encoding="utf-8-sig"))
+        return (
+            isinstance(spec, dict)
+            and _panel_summary_valid(desktop / "panel_summary.json", spec)
+            and _pcb_panel_valid(desktop / "wifi_panel.pcb.json", desktop / "wifi_board.pcb.json", spec)
+            and _ipc_panel_valid(desktop / "wifi_panel.ipc2581", spec)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

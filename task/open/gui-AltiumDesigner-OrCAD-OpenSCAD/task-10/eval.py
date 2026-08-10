@@ -4,6 +4,7 @@ import base64
 import csv
 import io
 import json
+import math
 import re
 import sys
 import zipfile
@@ -330,15 +331,152 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
-def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _truthy(value) -> bool:
+    return _key(value) in {"1", "true", "yes", "y", "placed", "fitted"}
+
+
+def _component_map(items):
+    result = {}
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict):
+            return None
+        normalized = {_key(key): value for key, value in item.items()}
+        ref = next((normalized.get(key) for key in ("ref", "reference", "refdes", "designator") if normalized.get(key)), None)
+        if ref is None or str(ref).strip().upper() in result:
+            return None
+        result[str(ref).strip().upper()] = item
+    return result
+
+
+def _attr(element, *names):
+    normalized = {_key(key): value for key, value in element.attrib.items()}
+    return next((normalized.get(_key(name)) for name in names if _key(name) in normalized), None)
+
+
+def _placed_json_valid(desktop: Path):
+    source = json.loads((desktop / "fulladd.pcb.json").read_text(encoding="utf-8-sig"))
+    actual = json.loads((desktop / "fulladd_placed.pcb.json").read_text(encoding="utf-8-sig"))
+    source_components = _component_map(source.get("components"))
+    actual_components = _component_map(actual.get("components"))
+    if not source_components or not actual_components or set(actual_components) != set(source_components):
+        return None
+    placements = {}
+    for ref, item in actual_components.items():
+        normalized = {_key(key): value for key, value in item.items()}
+        x = _number(normalized.get("x"))
+        y = _number(normalized.get("y"))
+        rotation = _number(normalized.get("rotation", 0))
+        if (
+            x is None or y is None or rotation is None or
+            not all(math.isfinite(value) for value in (x, y, rotation)) or
+            not _truthy(normalized.get("placed"))
+        ):
+            return None
+        side = _key(normalized.get("side"))
+        if side not in {"top", "bottom"}:
+            return None
+        source_normalized = {_key(key): value for key, value in source_components[ref].items()}
+        if _key(normalized.get("footprint")) != _key(source_normalized.get("footprint")):
+            return None
+        placements[ref] = (x, y, side, rotation, _key(normalized.get("footprint")))
+    if len({(value[0], value[1], value[2]) for value in placements.values()}) != len(placements):
+        return None
+    for key, value in source.items():
+        if _key(key) != "components" and (key not in actual or not _json_value_equal(actual[key], value)):
+            return None
+    return placements
+
+
+def _placed_xml_valid(desktop: Path, placements) -> bool:
+    source = ET.parse(desktop / "fulladd.ipc2581").getroot()
+    actual = ET.parse(desktop / "fulladd_placed.ipc2581").getroot()
+    if _local_name(source.tag) != _local_name(actual.tag):
+        return False
+    source_sections = {_local_name(child.tag): child for child in source}
+    actual_sections = {_local_name(child.tag): child for child in actual}
+    for name, source_section in source_sections.items():
+        if name == "components":
+            continue
+        if name not in actual_sections or not _xml_element_equal(actual_sections[name], source_section):
             return False
-        if not _bytes_equal(path, _decode(rel)):
+    components = {}
+    for element in actual.iter():
+        if _local_name(element.tag) != "component":
+            continue
+        ref = str(_attr(element, "ref", "reference", "refdes") or "").strip().upper()
+        if not ref or ref in components:
+            return False
+        components[ref] = element
+    if set(components) != set(placements):
+        return False
+    for ref, element in components.items():
+        x = _number(_attr(element, "x"))
+        y = _number(_attr(element, "y"))
+        rotation = _number(_attr(element, "rotation"))
+        placed = placements[ref]
+        if x is None or y is None or rotation is None or not _truthy(_attr(element, "placed")):
+            return False
+        if not (_scalar_equal(x, placed[0]) and _scalar_equal(y, placed[1]) and _scalar_equal(rotation, placed[3])):
+            return False
+        if _key(_attr(element, "side")) != placed[2] or _key(_attr(element, "footprint")) != placed[4]:
             return False
     return True
+
+
+def _placement_csv_valid(desktop: Path, placements) -> bool:
+    with (desktop / "placement.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        aliases = {
+            "ref": ("reference", "ref", "refdes", "designator"),
+            "x": ("xmm", "x", "xcoordinate"),
+            "y": ("ymm", "y", "ycoordinate"),
+            "side": ("side", "layerside"),
+            "rotation": ("rotation", "rotationdeg", "angle"),
+        }
+        selected = {key: next((headers[name] for name in names if name in headers), None) for key, names in aliases.items()}
+        if any(value is None for value in selected.values()):
+            return False
+        rows = list(reader)
+    if len(rows) != len(placements):
+        return False
+    seen = set()
+    for row in rows:
+        ref = str(row[selected["ref"]]).strip().upper()
+        if ref not in placements or ref in seen:
+            return False
+        seen.add(ref)
+        x = _number(row[selected["x"]])
+        y = _number(row[selected["y"]])
+        rotation = _number(row[selected["rotation"]])
+        placed = placements[ref]
+        if x is None or y is None or rotation is None:
+            return False
+        if not (_scalar_equal(x, placed[0]) and _scalar_equal(y, placed[1]) and _scalar_equal(rotation, placed[3])):
+            return False
+        if _key(row[selected["side"]]) != placed[2]:
+            return False
+    return seen == set(placements)
+
+
+def evaluate() -> bool:
+    desktop = _desktop()
+    required = [desktop / name for name in EXPECTED]
+    if not all(path.is_file() and path.stat().st_size > 0 for path in required):
+        return False
+    try:
+        placements = _placed_json_valid(desktop)
+        return bool(
+            placements and
+            _placed_xml_valid(desktop, placements) and
+            _placement_csv_valid(desktop, placements)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

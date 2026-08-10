@@ -330,15 +330,36 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _mapping_report_valid(path: Path) -> bool:
+    expected = {"R42": "R1", "R33": "R2", "R39": "R3", "R34": "R4", "C1": "C1", "C3": "C3", "Q16": "Q1", "L1": "L1", "V24": "V1"}
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        old_header = next((headers[name] for name in ("oldref", "oldreference", "from", "source") if name in headers), None)
+        new_header = next((headers[name] for name in ("newref", "newreference", "to", "target") if name in headers), None)
+        if old_header is None or new_header is None:
+            return False
+        rows = list(reader)
+    actual = {str(row[old_header]).strip().upper(): str(row[new_header]).strip().upper() for row in rows}
+    return len(actual) == len(rows) and actual == expected
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    designs = ["oscillator_reannotated.edif", "oscillator_reannotated.schematic.json"]
+    report = desktop / "annotation_report.csv"
+    try:
+        return (
+            report.is_file() and report.stat().st_size > 0 and
+            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in designs) and
+            _mapping_report_valid(report)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

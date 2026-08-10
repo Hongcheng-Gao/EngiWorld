@@ -326,10 +326,37 @@ OUTPUT_FILE = "gui07_hatch_section_completed.dxf"
 
 
 def has_section_hatch_with_hole_islands(doc):
+    outer = [(0, 0), (160, 0), (160, 100), (0, 100)]
+    holes = [((50, 50), 12), ((110, 50), 12)]
     for entity in ents(doc, "HATCH", "HATCH"):
         pattern = str(getattr(entity.dxf, "pattern_name", "")).upper()
-        has_expected_pattern = pattern in {"ANSI31", ""} or "ANSI" in pattern
-        if has_expected_pattern and len(entity.paths) >= 3:
+        angle = float(getattr(entity.dxf, "pattern_angle", 0.0)) % 180.0
+        scale = float(getattr(entity.dxf, "pattern_scale", 0.0))
+        if not (pattern == "ANSI31" or "ANSI31" in pattern):
+            continue
+        if min(abs(angle - 45.0), abs(angle - 135.0)) > 1.0 or not close(scale, 1.0, 0.02):
+            continue
+        paths = list(getattr(entity, "paths", []) or [])
+        outer_ok = any(
+            cycle_match([(float(v[0]), float(v[1])) for v in (getattr(path, "vertices", []) or [])], outer, TOL)
+            for path in paths
+        )
+        if not outer_ok:
+            continue
+        circles = []
+        for path in paths:
+            edges = list(getattr(path, "edges", []) or [])
+            if len(edges) != 1:
+                continue
+            edge = edges[0]
+            center = getattr(edge, "center", None)
+            radius = getattr(edge, "radius", None)
+            start = float(getattr(edge, "start_angle", 0.0))
+            end = float(getattr(edge, "end_angle", 0.0))
+            if center is not None and radius is not None and abs(abs(end - start) - 360.0) <= 1.0:
+                circles.append((center, float(radius)))
+        if all(any(pt_close(center, wanted_center) and close(radius, wanted_radius) for center, radius in circles)
+               for wanted_center, wanted_radius in holes):
             return True
     return False
 
@@ -357,10 +384,15 @@ def segment_hits_circle(seg, center, radius):
 
 def has_equivalent_line_hatch(doc):
     hatch_lines = list(iter_segments(doc, "HATCH"))
-    if len(hatch_lines) < 3:
+    if len(hatch_lines) < 8:
         return False
     holes = [((50, 50), 12), ((110, 50), 12)]
+    inside_outer = all(
+        -TOL <= point[0] <= 160 + TOL and -TOL <= point[1] <= 100 + TOL
+        for segment in hatch_lines for point in segment
+    )
     return (
+        inside_outer and
         all(line_is_roughly_45(seg) for seg in hatch_lines) and
         all(not segment_hits_circle(seg, center, radius) for seg in hatch_lines for center, radius in holes)
     )

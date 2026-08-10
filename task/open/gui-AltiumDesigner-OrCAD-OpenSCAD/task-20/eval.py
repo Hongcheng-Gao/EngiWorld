@@ -330,15 +330,99 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _layers_by_index(items):
+    result = {}
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict):
+            return None
+        normalized = {_key(key): value for key, value in item.items()}
+        index = _number(normalized.get("index"))
+        if index is None or int(index) in result:
+            return None
+        result[int(index)] = item
+    return result
+
+
+def _expected_layers(desktop: Path):
+    source = json.loads((desktop / "wifi_board.pcb.json").read_text(encoding="utf-8-sig"))
+    spec = json.loads((desktop / "stackup_spec.json").read_text(encoding="utf-8-sig"))
+    layers = [dict(item) for item in source.get("layers", [])]
+    by_index = {int(item["index"]): item for item in layers}
+    by_index[1]["copper_mil"] = spec["LAYER1COPTHICK"]
+    by_index[2]["name"] = spec["LAYER2NAME"]
+    by_index[2]["dielectric_constant"] = spec["LAYER2DIELCONST"]
+    by_index[3]["name"] = spec["LAYER3NAME"]
+    by_index[3]["dielectric_constant"] = spec["LAYER3DIELCONST"]
+    by_index[3]["copper_mil"] = spec["LAYER3COPTHICK"]
+    return source, by_index
+
+
+def _layer_set_valid(items, expected) -> bool:
+    actual = _layers_by_index(items)
+    return bool(actual and set(actual) == set(expected) and all(_json_value_equal(actual[index], wanted) for index, wanted in expected.items()))
+
+
+def _pcb_valid(desktop: Path) -> bool:
+    source, expected = _expected_layers(desktop)
+    actual = json.loads((desktop / "wifi_stackup.pcb.json").read_text(encoding="utf-8-sig"))
+    if not _layer_set_valid(actual.get("layers"), expected):
+        return False
+    return all(
+        _key(key) == "layers" or key in actual and _json_value_equal(actual[key], value)
+        for key, value in source.items()
+    )
+
+
+def _stackup_report_valid(desktop: Path) -> bool:
+    _, expected = _expected_layers(desktop)
+    report = json.loads((desktop / "stackup.json").read_text(encoding="utf-8-sig"))
+    if isinstance(report, dict):
+        report = next((value for key, value in report.items() if _key(key) in {"layers", "stackup"} and isinstance(value, list)), None)
+    return _layer_set_valid(report, expected)
+
+
+def _xml_layer(element):
+    normalized = {_key(key): value for key, value in element.attrib.items()}
+    return {
+        "index": int(float(normalized["index"])),
+        "name": normalized.get("name", ""),
+        "type": normalized.get("type", ""),
+        "dielectric_constant": float(normalized.get("dielectricconstant", 0.0)),
+        "copper_mil": float(normalized.get("coppermil", 0.0)),
+    }
+
+
+def _ipc_valid(desktop: Path) -> bool:
+    source = ET.parse(desktop / "wifi_board.ipc2581").getroot()
+    actual = ET.parse(desktop / "wifi_stackup.ipc2581").getroot()
+    source_sections = {_local_name(child.tag): child for child in source}
+    actual_sections = {_local_name(child.tag): child for child in actual}
+    for name, source_section in source_sections.items():
+        if name == "stackup":
+            continue
+        if name not in actual_sections or not _xml_element_equal(actual_sections[name], source_section):
+            return False
+    _, expected = _expected_layers(desktop)
+    stackup = actual_sections.get("stackup")
+    if stackup is None:
+        return False
+    layers = [_xml_layer(element) for element in stackup if _local_name(element.tag) == "layer"]
+    return _layer_set_valid(layers, expected)
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    required = [desktop / name for name in EXPECTED]
+    if not all(path.is_file() and path.stat().st_size > 0 for path in required):
+        return False
+    try:
+        return _pcb_valid(desktop) and _stackup_report_valid(desktop) and _ipc_valid(desktop)
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

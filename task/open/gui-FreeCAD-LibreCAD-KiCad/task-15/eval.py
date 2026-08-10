@@ -337,6 +337,38 @@ def has_hatch_poly(doc, layer, points, tol=TOL):
     return False
 
 
+def hatch_path_is_circle(path, center, radius, tol=TOL):
+    edges = list(getattr(path, "edges", []) or [])
+    if len(edges) != 1:
+        return False
+    edge = edges[0]
+    edge_center = getattr(edge, "center", None)
+    edge_radius = getattr(edge, "radius", None)
+    start_angle = float(getattr(edge, "start_angle", 0.0))
+    end_angle = float(getattr(edge, "end_angle", 0.0))
+    return (
+        edge_center is not None and edge_radius is not None and
+        pt_close(edge_center, center, tol) and close(edge_radius, radius, tol) and
+        abs(abs(end_angle - start_angle) - 360.0) <= 1.0
+    )
+
+
+def has_gasket_hatch(doc):
+    outer = [(0, 30), (30, 0), (160, 0), (190, 30), (190, 110), (160, 140), (30, 140), (0, 110)]
+    cutouts = [
+        ((30, 30), 5), ((95, 20), 5), ((160, 30), 5), ((170, 70), 5),
+        ((160, 110), 5), ((95, 120), 5), ((30, 110), 5), ((20, 70), 5),
+        ((95, 70), 38), ((65, 70), 6), ((125, 70), 6),
+    ]
+    for hatch in ents(doc, "HATCH", "HATCH"):
+        paths = list(getattr(hatch, "paths", []) or [])
+        if not any(cycle_match(hatch_path_points(path), outer, TOL) for path in paths):
+            continue
+        if all(any(hatch_path_is_circle(path, center, radius) for path in paths) for center, radius in cutouts):
+            return True
+    return False
+
+
 def has_lwpolyline_slot(doc, layer, cx, cy, length, width, tol=TOL):
     radius = float(width) / 2.0
     left = float(cx) - float(length) / 2.0 + radius
@@ -426,7 +458,7 @@ def evaluate():
         return False
     try:
         doc = ezdxf.readfile(path)
-        return bool(check_spec(doc))
+        return bool(check_spec(doc) and has_gasket_hatch(doc))
     except Exception:
         return False
 

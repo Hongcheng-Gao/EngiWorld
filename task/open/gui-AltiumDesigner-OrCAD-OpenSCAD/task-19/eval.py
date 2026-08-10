@@ -328,15 +328,50 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
-def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _field(entry, *names):
+    if not isinstance(entry, dict):
+        return None
+    normalized = {_key(key): value for key, value in entry.items()}
+    return next((normalized.get(_key(name)) for name in names if _key(name) in normalized), None)
+
+
+def _manifest_valid(path: Path, spec_path: Path) -> bool:
+    actual = json.loads(path.read_text(encoding="utf-8-sig"))
+    spec = json.loads(spec_path.read_text(encoding="utf-8-sig"))
+    if isinstance(actual, dict):
+        wrapped = next((value for key, value in actual.items() if _key(key) in {"variants", "variantmanifest"} and isinstance(value, dict)), None)
+        if wrapped is not None:
+            actual = wrapped
+    if not isinstance(actual, dict):
+        return False
+    actual_by_name = {_key(name): entry for name, entry in actual.items()}
+    if set(actual_by_name) != {_key(name) for name in spec}:
+        return False
+    for name, expected_entry in spec.items():
+        entry = actual_by_name[_key(name)]
+        dnp = _field(entry, "dnp", "not_fitted", "do_not_populate", "excluded")
+        if not isinstance(dnp, list) or {_key(ref) for ref in dnp} != {_key(ref) for ref in expected_entry.get("dnp", [])}:
             return False
-        if not _bytes_equal(path, _decode(rel)):
+        alternate = _field(entry, "alternate", "alternate_parts", "component_alternates", "overrides")
+        if not isinstance(alternate, dict) or not _json_value_equal(alternate, expected_entry.get("alternate", {})):
             return False
     return True
+
+
+def evaluate() -> bool:
+    desktop = _desktop()
+    manifest = desktop / "variant_manifest.json"
+    try:
+        return bool(
+            manifest.is_file() and manifest.stat().st_size > 0 and
+            _manifest_valid(manifest, desktop / "variant_spec.json")
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

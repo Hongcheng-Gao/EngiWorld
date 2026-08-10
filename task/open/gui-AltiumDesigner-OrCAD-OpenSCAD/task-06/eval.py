@@ -330,15 +330,53 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _change_report_valid(path: Path) -> bool:
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    expected = {"R1": "10k", "R2": "4.7k", "R3": "1k"}
+    records = {}
+
+    def visit(value, parent=""):
+        if isinstance(value, dict):
+            normalized = {_key(key): item for key, item in value.items()}
+            ref = next((normalized.get(name) for name in ("reference", "ref", "refdes", "designator") if normalized.get(name)), None)
+            if ref is None and re.fullmatch(r"R\d+", parent, re.IGNORECASE):
+                ref = parent
+            if ref is not None:
+                value_field = next((normalized.get(name) for name in ("value", "newvalue", "componentvalue") if name in normalized), None)
+                tolerance = next((normalized.get(name) for name in ("tolerance", "tol") if name in normalized), None)
+                records[str(ref).strip().upper()] = (value_field, tolerance)
+            for key, item in value.items():
+                visit(item, str(key))
+        elif isinstance(value, list):
+            for item in value:
+                visit(item, parent)
+
+    visit(data)
+    if set(records) != set(expected):
+        return False
+    return all(
+        _key(records[ref][0]) == _key(wanted) and _key(records[ref][1]).replace("percent", "") in {"1", "1%"}
+        for ref, wanted in expected.items()
+    )
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    design_files = ["tutor2_value_tolerance.edif", "tutor2_value_tolerance.schematic.json"]
+    report = desktop / "change_report.json"
+    if not report.is_file() or report.stat().st_size <= 0:
+        return False
+    try:
+        return (
+            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in design_files) and
+            _change_report_valid(report)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

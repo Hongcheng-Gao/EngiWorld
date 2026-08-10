@@ -133,17 +133,12 @@ def _csv_equal(path: Path, expected: bytes) -> bool:
         if actual is None or target is None or actual[0] != target[0]:
             return False
         headers = sorted(target[0])
-        unmatched = list(actual[1])
-        if len(unmatched) != len(target[1]):
+        if len(actual[1]) != len(target[1]):
             return False
-        for expected_row in target[1]:
-            for index, actual_row in enumerate(unmatched):
-                if _csv_row_equal(actual_row, expected_row, headers):
-                    unmatched.pop(index)
-                    break
-            else:
+        for actual_row, expected_row in zip(actual[1], target[1]):
+            if not _csv_row_equal(actual_row, expected_row, headers):
                 return False
-        return not unmatched
+        return True
     except Exception:
         return False
 

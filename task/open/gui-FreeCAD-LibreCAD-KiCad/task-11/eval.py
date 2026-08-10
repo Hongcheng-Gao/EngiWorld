@@ -1,6 +1,6 @@
 from __future__ import annotations
 OUTPUT_FILE = 'guih07_steel_connection_completed.dxf'
-SPEC = {'polylines': [{'layer': 'STEEL', 'points': [(0, 0), (300, 0), (300, 220), (0, 220)]}, {'layer': 'OUTLINE', 'points': [(80, 35), (220, 35), (220, 185), (80, 185)]}], 'segments': [{'layer': 'CENTER', 'start': (150, 35), 'end': (150, 185)}, {'layer': 'CENTER', 'start': (0, 110), 'end': (300, 110)}, {'layer': 'WELD', 'start': (80, 35), 'end': (220, 35)}, {'layer': 'WELD', 'start': (80, 185), 'end': (220, 185)}, {'layer': 'WELD', 'start': (90, 43), 'end': (110, 35)}, {'layer': 'WELD', 'start': (190, 35), 'end': (210, 43)}, {'layer': 'WELD', 'start': (90, 177), 'end': (110, 185)}, {'layer': 'WELD', 'start': (190, 185), 'end': (210, 177)}], 'circles': [{'layer': 'HOLE', 'center': (50, 45), 'radius': 7}, {'layer': 'HOLE', 'center': (50, 90), 'radius': 7}, {'layer': 'HOLE', 'center': (50, 130), 'radius': 7}, {'layer': 'HOLE', 'center': (50, 175), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 45), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 90), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 130), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 175), 'radius': 7}], 'texts': [{'layer': 'TEXT', 'text': 'PL 300x220'}, {'layer': 'TEXT', 'text': '8X Ø14'}, {'layer': 'NOTE', 'text': 'FILLET WELD'}]}
+SPEC = {'polylines': [{'layer': 'STEEL', 'points': [(0, 0), (300, 0), (300, 220), (0, 220)]}, {'layer': 'OUTLINE', 'points': [(80, 35), (220, 35), (220, 185), (80, 185)]}], 'segments': [{'layer': 'CENTER', 'start': (150, 35), 'end': (150, 185)}, {'layer': 'CENTER', 'start': (0, 110), 'end': (300, 110)}, {'layer': 'WELD', 'start': (80, 35), 'end': (220, 35)}, {'layer': 'WELD', 'start': (80, 185), 'end': (220, 185)}], 'circles': [{'layer': 'HOLE', 'center': (50, 45), 'radius': 7}, {'layer': 'HOLE', 'center': (50, 90), 'radius': 7}, {'layer': 'HOLE', 'center': (50, 130), 'radius': 7}, {'layer': 'HOLE', 'center': (50, 175), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 45), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 90), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 130), 'radius': 7}, {'layer': 'HOLE', 'center': (250, 175), 'radius': 7}], 'texts': [{'layer': 'TEXT', 'text': 'PL 300x220'}, {'layer': 'TEXT', 'text': '8X Ø14'}, {'layer': 'NOTE', 'text': 'FILLET WELD'}]}
 
 
 from pathlib import Path
@@ -418,6 +418,19 @@ def check_spec(doc):
             return False
     return True
 
+def has_weld_symbol_ticks(doc):
+    counts = {35.0: 0, 185.0: 0}
+    for start, end in iter_segments(doc, "WELD"):
+        length = math.hypot(end[0] - start[0], end[1] - start[1])
+        if not 5.0 <= length <= 35.0:
+            continue
+        for weld_y in counts:
+            if min(abs(start[1] - weld_y), abs(end[1] - weld_y)) <= 10.0:
+                if min(start[0], end[0]) >= 75.0 and max(start[0], end[0]) <= 225.0:
+                    counts[weld_y] += 1
+    return all(count >= 2 for count in counts.values())
+
+
 def evaluate():
     if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
         return False
@@ -426,7 +439,7 @@ def evaluate():
         return False
     try:
         doc = ezdxf.readfile(path)
-        return bool(check_spec(doc))
+        return bool(check_spec(doc) and has_weld_symbol_ticks(doc))
     except Exception:
         return False
 

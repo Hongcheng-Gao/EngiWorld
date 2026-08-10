@@ -330,15 +330,41 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _component_report_valid(path: Path) -> bool:
+    expected = {
+        "R4": ("4.7k", ""),
+        "C6": ("33p", ""),
+        "V9": ("SINE_SRC", "SINE(0 1 1k)"),
+    }
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        ref_header = next((headers[name] for name in ("reference", "ref", "refdes", "designator") if name in headers), None)
+        value_header = next((headers[name] for name in ("value", "componentvalue", "partvalue") if name in headers), None)
+        comment_header = next((headers[name] for name in ("comment", "comments", "description") if name in headers), None)
+        if None in (ref_header, value_header, comment_header):
+            return False
+        rows = list(reader)
+    actual = {str(row[ref_header]).strip().upper(): (str(row[value_header]).strip(), str(row[comment_header]).strip()) for row in rows}
+    return all(ref in actual and _key(actual[ref][0]) == _key(value) and _key(actual[ref][1]) == _key(comment) for ref, (value, comment) in expected.items())
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    designs = ["frequency_stage_fixed.edif", "frequency_stage_fixed.schematic.json"]
+    report = desktop / "component_properties.csv"
+    try:
+        return (
+            report.is_file() and report.stat().st_size > 0 and
+            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in designs) and
+            _component_report_valid(report)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

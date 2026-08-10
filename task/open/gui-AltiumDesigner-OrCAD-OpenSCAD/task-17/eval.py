@@ -329,15 +329,99 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
-def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _variant_dict(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if _key(key) in {"variants", "variantmanifest"} and isinstance(value, dict):
+                return value
+        return data
+    return None
+
+
+def _field(entry, *names):
+    if not isinstance(entry, dict):
+        return None
+    normalized = {_key(key): value for key, value in entry.items()}
+    return next((normalized.get(_key(name)) for name in names if _key(name) in normalized), None)
+
+
+def _manifest_valid(path: Path, spec_path: Path) -> bool:
+    actual = _variant_dict(json.loads(path.read_text(encoding="utf-8-sig")))
+    spec = _variant_dict(json.loads(spec_path.read_text(encoding="utf-8-sig")))
+    if not isinstance(actual, dict) or not isinstance(spec, dict):
+        return False
+    actual_by_name = {_key(name): entry for name, entry in actual.items()}
+    if set(actual_by_name) != {_key(name) for name in spec}:
+        return False
+    for name, expected_entry in spec.items():
+        entry = actual_by_name[_key(name)]
+        dnp = _field(entry, "dnp", "not_fitted", "do_not_populate", "excluded")
+        if not isinstance(dnp, list) or {_key(ref) for ref in dnp} != {_key(ref) for ref in expected_entry.get("dnp", [])}:
             return False
-        if not _bytes_equal(path, _decode(rel)):
+        overrides = _field(entry, "overrides", "parameter_overrides", "parameters", "component_overrides")
+        if not isinstance(overrides, dict) or not _json_value_equal(overrides, expected_entry.get("overrides", {})):
             return False
     return True
+
+
+def _fitted(value):
+    normalized = _key(value)
+    if normalized in {"yes", "y", "true", "1", "fitted", "installed", "populate", "populated"}:
+        return True
+    if normalized in {"no", "n", "false", "0", "dnp", "notfitted", "notinstalled"}:
+        return False
+    return None
+
+
+def _bom_preview_valid(path: Path, source_path: Path, spec_path: Path) -> bool:
+    source = json.loads(source_path.read_text(encoding="utf-8-sig"))
+    values = {str(item["ref"]).upper(): str(item.get("value", "")) for item in source.get("components", [])}
+    spec = json.loads(spec_path.read_text(encoding="utf-8-sig"))
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        variant_header = next((headers[name] for name in ("variant", "variantname") if name in headers), None)
+        ref_header = next((headers[name] for name in ("reference", "ref", "refdes", "designator") if name in headers), None)
+        fitted_header = next((headers[name] for name in ("fitted", "installed", "populate", "state") if name in headers), None)
+        value_header = next((headers[name] for name in ("value", "componentvalue", "partvalue") if name in headers), None)
+        if None in (variant_header, ref_header, fitted_header, value_header):
+            return False
+        rows = list(reader)
+    expected_count = len(values) * len(spec)
+    if len(rows) != expected_count:
+        return False
+    seen = set()
+    spec_by_name = {_key(name): entry for name, entry in spec.items()}
+    for row in rows:
+        variant = _key(row[variant_header])
+        ref = str(row[ref_header]).strip().upper()
+        key = (variant, ref)
+        if variant not in spec_by_name or ref not in values or key in seen:
+            return False
+        seen.add(key)
+        expected_fitted = ref not in {str(item).upper() for item in spec_by_name[variant].get("dnp", [])}
+        if _fitted(row[fitted_header]) is not expected_fitted or _key(row[value_header]) != _key(values[ref]):
+            return False
+    return len(seen) == expected_count
+
+
+def evaluate() -> bool:
+    desktop = _desktop()
+    manifest = desktop / "variant_manifest.json"
+    preview = desktop / "variant_bom_preview.csv"
+    try:
+        return (
+            manifest.is_file() and manifest.stat().st_size > 0 and
+            preview.is_file() and preview.stat().st_size > 0 and
+            _manifest_valid(manifest, desktop / "variants.json") and
+            _bom_preview_valid(preview, desktop / "base_project.schematic.json", desktop / "variants.json")
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

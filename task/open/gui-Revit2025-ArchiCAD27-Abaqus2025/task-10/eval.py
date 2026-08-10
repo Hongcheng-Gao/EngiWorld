@@ -98,7 +98,13 @@ def norm(value):
 def entity_count(model, classes):
     if isinstance(classes, str):
         classes = [classes]
-    return sum(len(model.by_type(name)) for name in classes)
+    # by_type() includes subtypes, so count distinct entities rather than
+    # double-counting IfcWallStandardCase as both itself and IfcWall.
+    entities = {}
+    for name in classes:
+        for entity in model.by_type(name):
+            entities[entity.id()] = entity
+    return len(entities)
 
 
 def unique_global_ids(model):
@@ -127,6 +133,87 @@ def check_min_counts(model):
     return True
 
 
+
+def project_spatial_content_ids(model):
+    # IFC spatial structure is decomposed from IfcProject with
+    # IfcRelAggregates. Physical products are then spatially contained;
+    # decomposed/nested children inherit their parent's project association.
+    associated = {project.id() for project in model.by_type("IfcProject")}
+    changed = True
+    while changed:
+        changed = False
+        for rel in model.by_type("IfcRelAggregates"):
+            if rel.RelatingObject.id() not in associated:
+                continue
+            for related in rel.RelatedObjects or []:
+                if related.id() not in associated:
+                    associated.add(related.id())
+                    changed = True
+        for rel in model.by_type("IfcRelContainedInSpatialStructure"):
+            if rel.RelatingStructure.id() not in associated:
+                continue
+            for related in rel.RelatedElements or []:
+                if related.id() not in associated:
+                    associated.add(related.id())
+                    changed = True
+        for rel in model.by_type("IfcRelNests"):
+            if rel.RelatingObject.id() not in associated:
+                continue
+            for related in rel.RelatedObjects or []:
+                if related.id() not in associated:
+                    associated.add(related.id())
+                    changed = True
+    return associated
+
+
+def check_shaped_content(model):
+    class_map = {
+        "spaces": ["IfcSpace"],
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": ["IfcSlab"],
+        "roofs": ["IfcRoof"],
+        "doors": ["IfcDoor"],
+        "windows": ["IfcWindow"],
+        "stairs": ["IfcStair"],
+        "columns": ["IfcColumn"],
+        "beams": ["IfcBeam"],
+        "curtain_walls": ["IfcCurtainWall"],
+    }
+    import ifcopenshell.geom
+
+    settings = ifcopenshell.geom.settings()
+    try:
+        settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception:
+        pass
+    associated = project_spatial_content_ids(model)
+    for key, minimum in SPEC.get("min_counts", {}).items():
+        classes = class_map.get(key)
+        if not classes:
+            continue
+        products = {}
+        for name in classes:
+            for product in model.by_type(name):
+                products[product.id()] = product
+        shaped = 0
+        for product in products.values():
+            if product.id() not in associated:
+                continue
+            try:
+                shape = ifcopenshell.geom.create_shape(settings, product)
+                vertices = list(shape.geometry.verts)
+                if len(vertices) < 9:
+                    continue
+                spans = [max(vertices[index::3]) - min(vertices[index::3]) for index in range(3)]
+                if max(spans) <= 1.0e-6:
+                    continue
+                shaped += 1
+            except Exception:
+                continue
+        if shaped < minimum:
+            return False
+    return True
+
 def check_forbidden(model):
     return True
 
@@ -154,6 +241,7 @@ def evaluate(root):
         schema.startswith("IFC")
         and unique_global_ids(model)
         and check_min_counts(model)
+        and check_shaped_content(model)
         and check_forbidden(model)
         and check_space_names(model)
     )

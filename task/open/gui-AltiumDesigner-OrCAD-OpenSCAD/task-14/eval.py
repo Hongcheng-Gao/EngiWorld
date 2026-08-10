@@ -330,15 +330,41 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _tolerance(value) -> str:
+    normalized = str(value).strip().casefold().replace("percent", "%").replace("±", "").replace("+/-", "").replace(" ", "")
+    return {"0.01": "1%", "1%": "1%", "0.05": "5%", "5%": "5%"}.get(normalized, "")
+
+
+def _component_report_valid(path: Path) -> bool:
+    expected = {"R42": "1%", "R33": "5%", "R39": "5%", "R34": "5%"}
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        ref_header = next((headers[name] for name in ("reference", "ref", "refdes", "designator") if name in headers), None)
+        tolerance_header = next((headers[name] for name in ("tolerance", "tol") if name in headers), None)
+        if ref_header is None or tolerance_header is None:
+            return False
+        rows = list(reader)
+    actual = {str(row[ref_header]).strip().upper(): _tolerance(row[tolerance_header]) for row in rows}
+    return all(actual.get(ref) == value for ref, value in expected.items())
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    designs = ["oscillator_tolerance.edif", "oscillator_tolerance.schematic.json"]
+    report = desktop / "component_properties.csv"
+    try:
+        return (
+            report.is_file() and report.stat().st_size > 0 and
+            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in designs) and
+            _component_report_valid(report)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

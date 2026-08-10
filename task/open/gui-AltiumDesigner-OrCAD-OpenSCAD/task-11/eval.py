@@ -330,15 +330,49 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _project_structure_valid(path: Path) -> bool:
+    expected = {
+        "XS1": "SL_Config_2E.SchDoc", "XS2": "SL_LCD_SW_LED_2E.SchDoc",
+        "XS3": "SL_FPGA_Auto_2E.SchDoc", "XS4": "SL_Power.SchDoc",
+    }
+    data = json.loads(path.read_text(encoding="utf-8-sig"))
+    found = {}
+
+    def visit(value, parent=""):
+        if isinstance(value, dict):
+            normalized = {_key(key): item for key, item in value.items()}
+            ref = next((normalized.get(name) for name in ("reference", "ref", "refdes", "designator", "symbol") if normalized.get(name)), None)
+            target = next((normalized.get(name) for name in ("targetfile", "targetfilename", "filename", "file") if normalized.get(name)), None)
+            if ref is not None and target is not None:
+                found[str(ref).strip().upper()] = str(target).strip()
+            for key, item in value.items():
+                if re.fullmatch(r"XS\d+", str(key), re.IGNORECASE) and not isinstance(item, (dict, list)):
+                    found[str(key).upper()] = str(item).strip()
+                visit(item, str(key))
+        elif isinstance(value, list):
+            for item in value:
+                visit(item, parent)
+
+    visit(data)
+    return all(ref in found and found[ref].casefold() == name.casefold() for ref, name in expected.items())
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    designs = ["spiritlevel_fixed.edif", "spiritlevel_fixed.schematic.json"]
+    structure = desktop / "project_structure.json"
+    try:
+        return (
+            structure.is_file() and structure.stat().st_size > 0 and
+            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in designs) and
+            _project_structure_valid(structure)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

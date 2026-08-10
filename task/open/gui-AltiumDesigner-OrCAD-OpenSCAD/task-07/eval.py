@@ -330,15 +330,45 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _renumber_report_valid(path: Path) -> bool:
+    expected = {
+        "U1": "U101", "R1": "R201", "R2": "R202", "R3": "R203",
+        "R4": "R204", "C1": "C301", "C2": "C302", "Q1": "Q401",
+    }
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        old_header = next((headers[name] for name in ("oldref", "oldreference", "from", "source") if name in headers), None)
+        new_header = next((headers[name] for name in ("newref", "newreference", "to", "target") if name in headers), None)
+        if old_header is None or new_header is None:
+            return False
+        rows = list(reader)
+    actual = {}
+    for row in rows:
+        old = str(row[old_header]).strip().upper()
+        new = str(row[new_header]).strip().upper()
+        if not old or old in actual:
+            return False
+        actual[old] = new
+    return actual == expected
+
+
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
-            return False
-        if not _bytes_equal(path, _decode(rel)):
-            return False
-    return True
+    design_files = ["tutor2_renumbered.edif", "tutor2_renumbered.schematic.json"]
+    report = desktop / "renumber_report.csv"
+    try:
+        return (
+            report.is_file() and report.stat().st_size > 0 and
+            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in design_files) and
+            _renumber_report_valid(report)
+        )
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":

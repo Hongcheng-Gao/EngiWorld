@@ -99,6 +99,8 @@ def find_abaqus_pair(root):
 def find_ansys_artifacts(root):
     model_files = files_with_suffixes(root, ['.db', '.wbpj'])
     result_files = files_with_suffixes(root, ['.rst', '.rth'])
+    if TASK_SPEC.get('analysis_kind') == 'thermal':
+        result_files = sorted(result_files, key=lambda p: (p.suffix.lower() != '.rth', p.name.lower()))
     if not model_files or not result_files:
         return None
     for model in model_files:
@@ -491,6 +493,409 @@ def check_abaqus_metrics(frame):
             return False
     return True
 
+
+def _numbers(value):
+    out = []
+    if value is None:
+        return out
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            out.extend(_numbers(item))
+        return out
+    try:
+        out.append(float(value))
+    except Exception:
+        pass
+    return out
+
+def _repo_values(repo):
+    out = []
+    try:
+        for key in repo.keys():
+            out.append(repo[key])
+    except Exception:
+        pass
+    return out
+
+def _material_numbers(material, attr):
+    try:
+        obj = getattr(material, attr)
+        return _numbers(getattr(obj, 'table', None))
+    except Exception:
+        return []
+
+def _near(value, target, rel=0.02, absolute=1.0e-8):
+    try:
+        return abs(float(value) - float(target)) <= max(absolute, abs(float(target)) * rel)
+    except Exception:
+        return False
+
+def _all_region_nodes(value):
+    out = []
+    if value is None:
+        return out
+    try:
+        if hasattr(value, 'coordinates'):
+            return [value]
+    except Exception:
+        pass
+    if isinstance(value, (list, tuple)):
+        for item in value:
+            out.extend(_all_region_nodes(item))
+        return out
+    try:
+        for item in value:
+            out.extend(_all_region_nodes(item))
+    except Exception:
+        pass
+    return out
+
+def _load_region_nodes(model, load):
+    region = getattr(load, 'region', None)
+    try:
+        nodes = _all_region_nodes(region.nodes)
+        if nodes:
+            return nodes
+    except Exception:
+        pass
+    label = ci(region)
+    try:
+        for key in model.rootAssembly.sets.keys():
+            if ci(key) in label or label in ci(key):
+                nodes = _all_region_nodes(model.rootAssembly.sets[key].nodes)
+                if nodes:
+                    return nodes
+    except Exception:
+        pass
+    return []
+
+def _part_element_types(part):
+    out = set()
+    try:
+        for element in part.elements:
+            out.add(ci(getattr(element, 'type', '')))
+    except Exception:
+        pass
+    return out
+
+def _material_ok(model, domain):
+    materials = _repo_values(model.materials)
+    if not materials:
+        log('strict check: no material')
+        return False
+    material = materials[0]
+    elastic = _material_numbers(material, 'elastic')
+    if domain not in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
+        expected = {
+            'constrained_thermal_stress_b_gui': (70000.0, 0.33),
+        }.get(domain, (210000.0, 0.3))
+        if len(elastic) < 2 or not _near(elastic[0], expected[0], 0.01) or not _near(elastic[1], expected[1], 0.02):
+            log('strict check: elastic constants mismatch %s expected=%s' % (elastic, expected))
+            return False
+    if domain in ('cantilever_modal_a_gui', 'cantilever_modal_b_gui', 'fixed_fixed_beam_modal_gui'):
+        density = _material_numbers(material, 'density')
+        target = {'cantilever_modal_a_gui': 7.8e-9, 'cantilever_modal_b_gui': 7.95e-9}.get(domain, 7.85e-9)
+        if not density or not _near(density[0], target, 0.03, 1.0e-12):
+            log('strict check: density mismatch %s target=%s' % (density, target))
+            return False
+    if domain in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
+        conductivity = _material_numbers(material, 'conductivity')
+        target = {'transient_heat_block_gui': 0.045}.get(domain, 0.05)
+        if not conductivity or not _near(conductivity[0], target, 0.03):
+            log('strict check: conductivity mismatch %s target=%s' % (conductivity, target))
+            return False
+    return True
+
+def _step_objects(model):
+    return _repo_values(model.steps)
+
+def _step_attr_matches(steps, attr, target, rel=0.02):
+    for step in steps:
+        if _near(getattr(step, attr, None), target, rel):
+            return True
+    return False
+
+def _has_step_text(steps, token):
+    token = ci(token)
+    return any(token in step_text(step) for step in steps)
+
+def _task_load_at_single_node(model, component, magnitude, target):
+    for load in _repo_values(model.loads):
+        value = getattr(load, component, None)
+        if not _near(value, magnitude, 0.01):
+            continue
+        nodes = _load_region_nodes(model, load)
+        if len(nodes) != 1:
+            continue
+        try:
+            xyz = tuple(float(v) for v in nodes[0].coordinates)
+        except Exception:
+            continue
+        if len(xyz) == len(target) and all(_near(a, b, 0.0, 0.05) for a, b in zip(xyz, target)):
+            return True
+    return False
+
+def check_abaqus_task_specific(model, part):
+    domain = SPEC.get('domain', '')
+    if not _material_ok(model, domain):
+        return False
+    steps = _step_objects(model)
+    types = _part_element_types(part)
+    element_count = 0
+    node_count = 0
+    try:
+        element_count = len(part.elements)
+        node_count = len(part.nodes)
+    except Exception:
+        pass
+
+    solid_domains = set(('simply_supported_beam_udl_gui', 'cantilever_modal_a_gui',
+        'constrained_thermal_stress_a_gui', 'constrained_thermal_stress_b_gui',
+        'thermal_stress_bar_gui', 'cantilever_modal_b_gui', 'solid_cantilever_static_gui',
+        'coupled_thermal_structural_bar_gui'))
+    if domain in solid_domains and not any(t.startswith('C3D') for t in types):
+        log('strict check: expected 3D structural solid elements, got %s' % sorted(types))
+        return False
+    if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only') and not any(t.startswith('S') for t in types):
+        log('strict check: expected shell elements, got %s' % sorted(types))
+        return False
+    if domain in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui') and not any(t.startswith('DC3D') for t in types):
+        log('strict check: expected 3D heat-transfer elements, got %s' % sorted(types))
+        return False
+    if domain in ('axisymmetric_circular_plate_static_gui', 'axisymmetric_thick_cylinder_pressure_gui') and not any(t.startswith('CAX') for t in types):
+        log('strict check: expected axisymmetric elements, got %s' % sorted(types))
+        return False
+    if domain == 'plane_stress_plate_hole_gui' and not any(t.startswith('CPS') for t in types):
+        log('strict check: expected plane-stress elements, got %s' % sorted(types))
+        return False
+    if domain in ('fixed_fixed_beam_modal_gui', 'column_eigen_buckling_gui') and not any(t.startswith('B') for t in types):
+        log('strict check: expected beam elements, got %s' % sorted(types))
+        return False
+
+    mode_targets = {'cantilever_modal_a_gui': 4, 'cantilever_modal_b_gui': 5, 'fixed_fixed_beam_modal_gui': 3}
+    if domain in mode_targets:
+        if not any(float(getattr(step, 'numEigen', 0) or 0) >= mode_targets[domain] for step in steps):
+            log('strict check: insufficient requested modes')
+            return False
+    if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
+        if not any(float(getattr(step, 'numEigen', 0) or 0) >= 3 for step in steps):
+            log('strict check: three buckling eigenvalues not requested')
+            return False
+    if domain == 'transient_heat_block_gui':
+        if not (_step_attr_matches(steps, 'timePeriod', 300.0) and
+                _step_attr_matches(steps, 'initialInc', 2.0) and
+                _step_attr_matches(steps, 'maxInc', 15.0) and
+                _step_attr_matches(steps, 'deltmx', 10.0)):
+            log('strict check: transient step parameters do not match 300/2/15/DELTMX=10')
+            return False
+    if domain == 'transient_thermal_conduction_gui':
+        if not (_step_attr_matches(steps, 'timePeriod', 10.0) and _step_attr_matches(steps, 'initialInc', 0.1)):
+            log('strict check: transient step time/increment mismatch')
+            return False
+        if element_count < 2000:
+            log('strict check: 2 mm thermal mesh evidence missing elements=%s' % element_count)
+            return False
+    if domain == 'steady_state_thermal_block_gui':
+        responses = ' '.join(ci(getattr(step, 'response', '')) for step in steps)
+        if 'STEADY' not in responses:
+            log('strict check: heat-transfer step is not steady state')
+            return False
+    if domain == 'plane_stress_plate_hole_gui' and element_count < 700:
+        log('strict check: 5 mm/1 mm locally refined mesh evidence missing elements=%s' % element_count)
+        return False
+    if domain == 'fixed_fixed_beam_modal_gui' and not (18 <= element_count <= 24 and 19 <= node_count <= 30):
+        log('strict check: expected about 20 beam divisions')
+        return False
+    if domain == 'solid_cantilever_static_gui':
+        if not _task_load_at_single_node(model, 'cf2', -100.0, (5.0, 10.0, 100.0)):
+            log('strict check: -100 N load is not applied to the single specified node')
+            return False
+    if domain == 'column_eigen_buckling_gui':
+        if not _task_load_at_single_node(model, 'cf2', -1.0, (0.0, 1000.0, 0.0)):
+            log('strict check: -1 N reference load is not applied at the column top node')
+            return False
+    if domain == 'coupled_thermal_structural_bar_gui':
+        expansion = _material_numbers(_repo_values(model.materials)[0], 'expansion')
+        if not expansion or not _near(expansion[0], 1.5e-5, 0.02, 1.0e-8):
+            log('strict check: thermal expansion coefficient mismatch')
+            return False
+        zero = None
+        try:
+            zero = float(getattr(_repo_values(model.materials)[0].expansion, 'zero'))
+        except Exception:
+            pass
+        temps = []
+        for field in _repo_values(model.predefinedFields):
+            temps.extend(_numbers(getattr(field, 'magnitudes', None)))
+        if not (_near(zero, 20.0) or (any(_near(v, 20.0) for v in temps) and any(_near(v, 100.0) for v in temps))):
+            log('strict check: 20 C thermal reference/initial field is missing')
+            return False
+    if domain == 'hertz_contact_static_gui':
+        if len(_repo_values(model.parts)) < 2 or len(_repo_values(model.interactions)) < 1:
+            log('strict check: sphere/plate parts or contact interaction missing')
+            return False
+        if not any('ON' in ci(getattr(step, 'nlgeom', '')) for step in steps):
+            log('strict check: large deflection is not enabled')
+            return False
+    return True
+
+def _odb_nodes(odb):
+    xyz = []
+    try:
+        for key in odb.rootAssembly.instances.keys():
+            for node in odb.rootAssembly.instances[key].nodes:
+                c = tuple(float(v) for v in node.coordinates)
+                if len(c) == 2:
+                    c = (c[0], c[1], 0.0)
+                xyz.append(c[:3])
+    except Exception:
+        pass
+    return xyz
+
+def _odb_element_types(odb):
+    out = set()
+    try:
+        for key in odb.rootAssembly.instances.keys():
+            for element in odb.rootAssembly.instances[key].elements:
+                out.add(ci(getattr(element, 'type', '')))
+    except Exception:
+        pass
+    return out
+
+def _odb_frames(odb):
+    out = []
+    try:
+        for key in odb.steps.keys():
+            out.extend(list(odb.steps[key].frames))
+    except Exception:
+        pass
+    return out
+
+def _field_scalars(frame, name, invariant=False):
+    values = []
+    try:
+        field = frame.fieldOutputs[name]
+    except Exception:
+        return values
+    for item in field.values:
+        if invariant:
+            try:
+                values.append(abs(float(item.mises)))
+                continue
+            except Exception:
+                pass
+        data = getattr(item, 'data', None)
+        nums = _numbers(data)
+        if nums:
+            if len(nums) == 1:
+                values.append(nums[0])
+            else:
+                values.append(sum(v * v for v in nums) ** 0.5)
+    return values
+
+def _frame_field(frame, names, invariant=False):
+    for name in names:
+        values = _field_scalars(frame, name, invariant=invariant)
+        if values:
+            return values
+    return []
+
+def check_abaqus_odb_specific(odb):
+    domain = SPEC.get('domain', '')
+    frames = _odb_frames(odb)
+    if not frames:
+        return False
+    final = frames[-1]
+    types = _odb_element_types(odb)
+    xyz = _odb_nodes(odb)
+    times = [float(getattr(frame, 'frameValue', 0.0)) for frame in frames]
+    stress = _frame_field(final, ('S',), invariant=True)
+    disp = _frame_field(final, ('U',))
+    temp = _frame_field(final, ('NT11', 'NT'))
+
+    if domain in ('cantilever_modal_a_gui', 'cantilever_modal_b_gui', 'fixed_fixed_beam_modal_gui'):
+        target = {'cantilever_modal_a_gui': 4, 'cantilever_modal_b_gui': 5, 'fixed_fixed_beam_modal_gui': 3}[domain]
+        positive = [t for t in times if t > 0.0]
+        if len(positive) < target:
+            log('strict ODB check: insufficient solved modal frames')
+            return False
+    if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
+        if len([t for t in times if t != 0.0]) < 3:
+            log('strict ODB check: insufficient buckling frames')
+            return False
+    if domain == 'simply_supported_beam_udl_gui':
+        if not disp or not (0.07 <= max(abs(v) for v in disp) <= 0.25):
+            log('strict ODB check: beam deflection is inconsistent with 0.1 MPa pressure')
+            return False
+    if domain in ('constrained_thermal_stress_a_gui', 'thermal_stress_bar_gui'):
+        if not stress or max(stress) < 180.0:
+            log('strict ODB check: expected restrained thermal stress is absent')
+            return False
+    if domain == 'constrained_thermal_stress_b_gui':
+        if not stress or not (100.0 <= max(stress) <= 300.0):
+            log('strict ODB check: aluminum thermal stress is implausible')
+            return False
+    if domain == 'solid_cantilever_static_gui':
+        if not disp or not (0.10 <= max(abs(v) for v in disp) <= 0.35):
+            log('strict ODB check: cantilever response is inconsistent with 100 N')
+            return False
+    if domain == 'plane_stress_plate_hole_gui':
+        if not stress or not (20.0 <= max(stress) <= 60.0):
+            log('strict ODB check: plate-hole stress concentration is implausible')
+            return False
+        if xyz:
+            radius = min(((p[0] - 50.0) ** 2 + (p[1] - 100.0) ** 2) ** 0.5 for p in xyz)
+            if not (4.5 <= radius <= 5.5):
+                log('strict ODB check: 10 mm central hole is not represented')
+                return False
+    if domain in ('transient_heat_block_gui', 'transient_thermal_conduction_gui'):
+        target_time = 300.0 if domain == 'transient_heat_block_gui' else 10.0
+        low_target = 25.0 if domain == 'transient_heat_block_gui' else 20.0
+        high_target = 95.0 if domain == 'transient_heat_block_gui' else 100.0
+        if not times or not _near(max(times), target_time, 0.005):
+            log('strict ODB check: final thermal time mismatch')
+            return False
+        if not temp or min(temp) < low_target - 2.0 or max(temp) < high_target - 1.0 or max(temp) > high_target + 2.0:
+            log('strict ODB check: thermal field range mismatch')
+            return False
+    if domain == 'axisymmetric_circular_plate_static_gui' and not any(t.startswith('CAX') for t in types):
+        return False
+    if domain == 'axisymmetric_thick_cylinder_pressure_gui' and not any(t.startswith('CAX') for t in types):
+        return False
+    if domain == 'coupled_thermal_structural_bar_gui':
+        if not stress or not (235.0 <= max(stress) <= 275.0):
+            log('strict ODB check: stress does not reflect an 80 C restrained temperature rise')
+            return False
+    if domain == 'hertz_contact_static_gui':
+        field_names = set()
+        for frame in frames:
+            field_names.update(field_output_map(frame).keys())
+        if 'CPRESS' not in field_names:
+            log('strict ODB check: contact pressure field missing')
+            return False
+        if xyz:
+            bb = bbox(xyz)
+            if bb['y'][1] < 19.0 or bb['z'][0] > -49.0 or bb['z'][1] < 49.0:
+                log('strict ODB check: full sphere-on-centered-plate geometry missing')
+                return False
+            spherical = sum(1 for p in xyz if p[1] >= -0.1 and abs(((p[0]) ** 2 + (p[1] - 10.0) ** 2 + (p[2]) ** 2) ** 0.5 - 10.0) <= 0.5)
+            if spherical < 12:
+                log('strict ODB check: spherical surface evidence missing')
+                return False
+    if domain == 'column_eigen_buckling_gui' and not any(t.startswith('B') for t in types):
+        return False
+    if domain == 'steady_state_thermal_block_gui':
+        if not temp or min(temp) < 19.0 or max(temp) > 101.0 or min(temp) > 21.0 or max(temp) < 99.0:
+            log('strict ODB check: 20-100 C steady field missing')
+            return False
+        if xyz:
+            midpoint = [temp[i] for i, p in enumerate(xyz[:len(temp)]) if abs(p[0] - 50.0) <= 0.1]
+            if midpoint and not (57.0 <= sum(midpoint) / len(midpoint) <= 63.0):
+                log('strict ODB check: midpoint temperature is not approximately 60 C')
+                return False
+    return True
+
+
 def check_cae():
     openMdb(pathName=CAE_PATH)
     model = primary_model()
@@ -513,6 +918,7 @@ def check_cae():
         and check_abaqus_materials(model)
         and check_abaqus_analysis_step(model)
         and check_abaqus_boundary_loads(model)
+        and check_abaqus_task_specific(model, part)
     )
 
 def check_odb():
@@ -539,6 +945,8 @@ def check_odb():
                 return False
         except Exception:
             pass
+        if not check_abaqus_odb_specific(odb):
+            return False
         return True
     except Exception:
         log(traceback.format_exc())
@@ -763,9 +1171,223 @@ def check_ansys_metrics(mapdl):
     return checked > 0 or bool(TASK_SPEC.get('expected_result_fields'))
 
 
+
+def _binary_records(result, method_name, set_index):
+    try:
+        nnum, dof, values = getattr(result, method_name)(set_index)
+    except Exception:
+        return []
+    node_index = {int(node): index for index, node in enumerate(result.mesh.nnum)}
+    records = []
+    for node, code, value in zip(nnum, dof, values):
+        index = node_index.get(int(node))
+        xyz = None if index is None else tuple(float(v) for v in result.mesh.nodes[index][:3])
+        records.append((int(code), float(value), xyz))
+    return records
+
+def _close(value, target, rel=0.02, absolute=1.0e-7):
+    return abs(float(value) - float(target)) <= max(absolute, abs(float(target)) * rel)
+
+def _force_sum(records, dof, axis=None, target=None, tol=0.1):
+    total = 0.0
+    for code, value, xyz in records:
+        if code != dof:
+            continue
+        if axis is not None and (xyz is None or abs(xyz[axis] - target) > tol):
+            continue
+        total += value
+    return total
+
+def _binary_stress_max(result, set_index):
+    try:
+        import numpy as np
+        _, stress = result.nodal_stress(set_index)
+        stress = np.asarray(stress, dtype=float)
+        stress = stress[np.isfinite(stress).all(axis=1)]
+        if not stress.size:
+            return None
+        sx, sy, sz, sxy, syz, sxz = stress[:, :6].T
+        mises = np.sqrt(0.5 * ((sx - sy) ** 2 + (sy - sz) ** 2 + (sz - sx) ** 2) + 3.0 * (sxy ** 2 + syz ** 2 + sxz ** 2))
+        return float(mises.max())
+    except Exception:
+        return None
+
+def _binary_solution_max(result, set_index):
+    try:
+        import numpy as np
+        _, values = result.nodal_solution(set_index)
+        values = np.asarray(values, dtype=float)
+        if values.ndim == 1:
+            return float(np.nanmax(np.abs(values)))
+        return float(np.nanmax(np.linalg.norm(values, axis=1)))
+    except Exception:
+        return None
+
+def _binary_temperature(result, set_index):
+    try:
+        import numpy as np
+        _, values = result.nodal_temperature(set_index)
+        values = np.asarray(values, dtype=float)
+        return values, float(np.nanmin(values)), float(np.nanmax(values))
+    except Exception:
+        return None, None, None
+
+def check_ansys_result_binary(result_path):
+    try:
+        import numpy as np
+        from ansys.mapdl import reader
+        result = reader.read_binary(str(result_path))
+    except Exception as exc:
+        log('strict binary result reader failed: %s' % exc)
+        return False
+    domain = TASK_SPEC.get('domain', '')
+    nodes = np.asarray(result.mesh.nodes, dtype=float)
+    if nodes.size == 0 or int(result.nsets) < 1:
+        log('strict binary check: empty result')
+        return False
+    last = int(result.nsets) - 1
+    element_types = set(int(v) for v in result.mesh.etype)
+    element_count = int(result.mesh.enum.size)
+    node_count = int(result.mesh.nnum.size)
+    bbox_values = [(float(nodes[:, i].min()), float(nodes[:, i].max())) for i in range(3)]
+    forces = _binary_records(result, 'nodal_input_force', last)
+    bcs = _binary_records(result, 'nodal_boundary_conditions', last)
+    times = [float(v) for v in result.time_values]
+    stress_max = _binary_stress_max(result, last)
+    solution_max = _binary_solution_max(result, last)
+    temperatures, temp_min, temp_max = _binary_temperature(result, last)
+
+    required_type = {
+        'simply_supported_beam_udl_gui': 185, 'thin_plate_buckling_a_gui': 181,
+        'cantilever_modal_a_gui': 185, 'constrained_thermal_stress_a_gui': 185,
+        'constrained_thermal_stress_b_gui': 185, 'transient_heat_block_gui': 70,
+        'thermal_stress_bar_gui': 185, 'cantilever_modal_b_gui': 185,
+        'thin_plate_buckling_b_gui_only': 181, 'plate_hole_tension_gui_only': 181,
+        'solid_cantilever_static_gui': 185, 'axisymmetric_circular_plate_static_gui': 183,
+        'plane_stress_plate_hole_gui': 183, 'transient_thermal_conduction_gui': 70,
+        'fixed_fixed_beam_modal_gui': 188, 'axisymmetric_thick_cylinder_pressure_gui': 183,
+        'coupled_thermal_structural_bar_gui': 185, 'column_eigen_buckling_gui': 188,
+        'steady_state_thermal_block_gui': 70,
+    }.get(domain)
+    if required_type is not None and required_type not in element_types:
+        log('strict binary check: element type mismatch %s expected %s' % (sorted(element_types), required_type))
+        return False
+
+    if domain == 'simply_supported_beam_udl_gui':
+        if not _close(_force_sum(forces, 2), -200.0, 0.03):
+            log('strict binary check: top-load resultant is not -200 N')
+            return False
+        if any(xyz is None or abs(xyz[1] - 10.0) > 0.1 for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-12):
+            log('strict binary check: UDL is not confined to the top face')
+            return False
+        if solution_max is None or not (0.07 <= solution_max <= 0.25):
+            log('strict binary check: deflection is inconsistent with q=1 N/mm')
+            return False
+    elif domain == 'thin_plate_buckling_a_gui':
+        if not (_close(_force_sum(forces, 1, 0, 0.0), 115.2, 0.03) and _close(_force_sum(forces, 1, 0, 96.0), -115.2, 0.03)):
+            log('strict binary check: 1.2 N/mm tributary edge loads missing')
+            return False
+        if element_count < 200:
+            return False
+    elif domain == 'cantilever_modal_a_gui':
+        if int(result.nsets) < 4 or not times or min(times) <= 0.0:
+            log('strict binary check: four solved modes missing')
+            return False
+    elif domain in ('constrained_thermal_stress_a_gui', 'thermal_stress_bar_gui'):
+        if temp_min is None or not (_close(temp_min, 120.0, 0.01) and _close(temp_max, 120.0, 0.01)) or stress_max is None or stress_max < 180.0:
+            log('strict binary check: 120 C restrained thermal response missing')
+            return False
+    elif domain == 'constrained_thermal_stress_b_gui':
+        if temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01)) or stress_max is None or not (100.0 <= stress_max <= 300.0):
+            log('strict binary check: aluminum thermal response mismatch')
+            return False
+    elif domain == 'transient_heat_block_gui':
+        if int(result.nsets) < 3 or not _close(times[-1], 300.0, 0.005) or temp_min is None or temp_min < 23.0 or not _close(temp_max, 95.0, 0.02):
+            log('strict binary check: transient time/temperature history mismatch')
+            return False
+        if element_count < 180:
+            return False
+    elif domain == 'cantilever_modal_b_gui':
+        if int(result.nsets) < 5 or not times or min(times) <= 0.0:
+            return False
+    elif domain == 'thin_plate_buckling_b_gui_only':
+        if not (_close(_force_sum(forces, 1, 0, 0.0), 108.0, 0.03) and _close(_force_sum(forces, 1, 0, 120.0), -108.0, 0.03)):
+            log('strict binary check: 0.9 N/mm tributary edge loads missing')
+            return False
+    elif domain == 'plate_hole_tension_gui_only':
+        if not (_close(_force_sum(forces, 1, 0, 0.0), -960.0, 0.03) and _close(_force_sum(forces, 1, 0, 160.0), 960.0, 0.03)):
+            log('strict binary check: 12 N/mm tributary edge loads missing')
+            return False
+        radius = float(np.min(np.sqrt((nodes[:, 0] - 80.0) ** 2 + (nodes[:, 1] - 40.0) ** 2)))
+        if not (7.4 <= radius <= 8.6):
+            log('strict binary check: central 16 mm hole missing')
+            return False
+    elif domain == 'solid_cantilever_static_gui':
+        active = [(value, xyz) for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-9]
+        if len(active) != 1 or not _close(active[0][0], -100.0, 0.01) or active[0][1] is None or any(abs(a-b) > 0.1 for a,b in zip(active[0][1], (5.0, 10.0, 100.0))):
+            log('strict binary check: single -100 N load at (5,10,100) missing')
+            return False
+        if solution_max is None or not (0.10 <= solution_max <= 0.35):
+            return False
+    elif domain == 'axisymmetric_circular_plate_static_gui':
+        if stress_max is None or not (80.0 <= stress_max <= 300.0):
+            return False
+    elif domain == 'plane_stress_plate_hole_gui':
+        radius = float(np.min(np.sqrt((nodes[:, 0] - 50.0) ** 2 + (nodes[:, 1] - 100.0) ** 2)))
+        if element_count < 700 or not (4.5 <= radius <= 5.5) or stress_max is None or not (20.0 <= stress_max <= 60.0):
+            log('strict binary check: locally refined 10 mm hole/stress evidence missing')
+            return False
+    elif domain == 'transient_thermal_conduction_gui':
+        has_x4 = bool(np.any(np.isclose(nodes[:, 0], 4.0, atol=0.1)))
+        has_x6 = bool(np.any(np.isclose(nodes[:, 0], 6.0, atol=0.1)))
+        if element_count < 2000 or not has_x4 or not has_x6 or not _close(times[-1], 10.0, 0.005) or temp_min is None or temp_min < 19.0 or temp_max < 99.0:
+            log('strict binary check: 2 mm mesh/final transient field mismatch')
+            return False
+    elif domain == 'fixed_fixed_beam_modal_gui':
+        if not (18 <= element_count <= 22 and int(result.nsets) >= 3):
+            log('strict binary check: 20 beam elements/three modes missing')
+            return False
+        end_bcs = [(code, xyz) for code, value, xyz in bcs if xyz is not None and (abs(xyz[0]) < 0.1 or abs(xyz[0]-500.0) < 0.1)]
+        for x in (0.0, 500.0):
+            codes = set(code for code, xyz in end_bcs if abs(xyz[0]-x) < 0.1)
+            if not set((1,2,3,4,5,6)).issubset(codes):
+                log('strict binary check: all six beam DOFs are not fixed at both ends')
+                return False
+    elif domain == 'axisymmetric_thick_cylinder_pressure_gui':
+        forbidden = [(code, xyz) for code, value, xyz in bcs if code == 1 and xyz is not None and (abs(xyz[0]-25.0) < 0.1 or abs(xyz[0]-50.0) < 0.1)]
+        if forbidden or stress_max is None or not (10.0 <= stress_max <= 50.0):
+            log('strict binary check: cylinder radial freedom/stress mismatch')
+            return False
+    elif domain == 'coupled_thermal_structural_bar_gui':
+        if temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01)) or stress_max is None or not (235.0 <= stress_max <= 275.0):
+            log('strict binary check: 80 C restrained thermal stress mismatch')
+            return False
+    elif domain == 'hertz_contact_static_gui':
+        if not (any(t in element_types for t in (170,171,172,173,174,175,176,177)) and len(element_types) >= 2):
+            log('strict binary check: contact elements missing')
+            return False
+        if bbox_values[1][1] < 19.0 or bbox_values[2][0] > -49.0 or bbox_values[2][1] < 49.0 or not _close(_force_sum(forces, 2), -500.0, 0.03):
+            log('strict binary check: sphere/plate geometry or -500 N force missing')
+            return False
+    elif domain == 'column_eigen_buckling_gui':
+        active = [(value, xyz) for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-9]
+        if len(active) != 1 or not _close(active[0][0], -1.0, 0.01) or active[0][1] is None or abs(active[0][1][1]-1000.0) > 0.1 or not times or times[-1] <= 0.0:
+            return False
+    elif domain == 'steady_state_thermal_block_gui':
+        if int(result.nsets) != 1 or temp_min is None or not _close(temp_min, 20.0, 0.02) or not _close(temp_max, 100.0, 0.02):
+            return False
+        mid = temperatures[np.isclose(nodes[:, 0], 50.0, atol=0.1)] if temperatures is not None and len(temperatures) == len(nodes) else []
+        if len(mid) and not (57.0 <= float(np.mean(mid)) <= 63.0):
+            log('strict binary check: midpoint steady temperature is not about 60 C')
+            return False
+    return True
+
+
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
     try:
+        if not check_ansys_result_binary(result_path):
+            return False
         from ansys.mapdl.core import launch_mapdl
         mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
         if model_path.suffix.lower() == '.db':

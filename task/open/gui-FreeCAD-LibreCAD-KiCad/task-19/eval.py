@@ -345,6 +345,19 @@ def door_arc_is_valid(doc):
     return has_arc(doc, "DOOR", (750, 0), 900) or has_arc(doc, "DOOR", (1650, 0), 900)
 
 
+def window_lines_are_valid(doc):
+    ys = []
+    for start, end in iter_segments(doc, "WINDOW"):
+        if not close(start[1], end[1], TOL):
+            continue
+        if abs(start[1]) > 500.0:
+            continue
+        xs = sorted((start[0], end[0]))
+        if close(xs[0], 2700) and close(xs[1], 3900):
+            ys.append((start[1] + end[1]) / 2.0)
+    return len(ys) >= 2 and max(ys) - min(ys) > TOL
+
+
 def check(doc):
     return (
         has_segment(doc, "WALL", (0, 0), (750, 0)) and
@@ -354,8 +367,7 @@ def check(doc):
         has_no_segment_crossing(doc, "WALL", 0, 2700, 3900) and
         door_leaf_is_valid(doc) and
         door_arc_is_valid(doc) and
-        has_segment(doc, "WINDOW", (2700, 50), (3900, 50)) and
-        has_segment(doc, "WINDOW", (2700, -50), (3900, -50))
+        window_lines_are_valid(doc)
     )
 
 

@@ -331,15 +331,147 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
         return False
 
 
-def evaluate() -> bool:
-    desktop = _desktop()
-    for rel in EXPECTED:
-        path = desktop / rel
-        if not path.is_file():
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _component_map(items):
+    result = {}
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict) or "ref" not in item:
+            return None
+        ref = str(item["ref"]).strip().upper()
+        if not ref or ref in result:
+            return None
+        result[ref] = item
+    return result
+
+
+def _net_map(items):
+    result = {}
+    for item in items if isinstance(items, list) else []:
+        if not isinstance(item, dict) or "name" not in item or not isinstance(item.get("pins"), list):
+            return None
+        name = str(item["name"]).strip().upper()
+        if not name or name in result:
+            return None
+        result[name] = {str(pin).strip().upper() for pin in item["pins"]}
+    return result
+
+
+def _expected_nets(source, rename):
+    merged = {}
+    rename_upper = {str(old).upper(): str(new).upper() for old, new in rename.items()}
+    for item in source.get("nets", []):
+        name = str(item.get("name", "")).upper()
+        name = rename_upper.get(name, name)
+        merged.setdefault(name, set()).update(str(pin).upper() for pin in item.get("pins", []))
+    return merged
+
+
+def _pcb_valid(desktop: Path) -> bool:
+    source = json.loads((desktop / "wifi_board.pcb.json").read_text(encoding="utf-8-sig"))
+    spec = json.loads((desktop / "eco_spec.json").read_text(encoding="utf-8-sig"))
+    actual = json.loads((desktop / "wifi_usb_eco.pcb.json").read_text(encoding="utf-8-sig"))
+    source_components = _component_map(source.get("components"))
+    actual_components = _component_map(actual.get("components"))
+    if not source_components or not actual_components or set(source_components) != set(actual_components):
+        return False
+    wanted_footprints = {"R9": spec["R9_footprint"], "R10": spec["R10_footprint"]}
+    for ref, source_item in source_components.items():
+        actual_item = actual_components[ref]
+        expected_item = dict(source_item)
+        if ref in wanted_footprints:
+            expected_item["footprint"] = wanted_footprints[ref]
+        if not _json_value_equal(actual_item, expected_item):
             return False
-        if not _bytes_equal(path, _decode(rel)):
+    actual_nets = _net_map(actual.get("nets"))
+    expected_nets = _expected_nets(source, spec.get("rename_nets", {}))
+    if actual_nets != expected_nets:
+        return False
+    for key, value in source.items():
+        if _key(key) in {"components", "nets"}:
+            continue
+        if key not in actual or not _json_value_equal(actual[key], value):
             return False
     return True
+
+
+def _xml_attr(element, name):
+    return next((value for key, value in element.attrib.items() if _key(key) == _key(name)), None)
+
+
+def _ipc_valid(desktop: Path) -> bool:
+    source = ET.parse(desktop / "wifi_board.ipc2581").getroot()
+    actual = ET.parse(desktop / "wifi_usb_eco.ipc2581").getroot()
+    spec = json.loads((desktop / "eco_spec.json").read_text(encoding="utf-8-sig"))
+    source_sections = {_local_name(child.tag): child for child in source}
+    actual_sections = {_local_name(child.tag): child for child in actual}
+    for name, source_section in source_sections.items():
+        if name in {"components", "nets"}:
+            continue
+        if name not in actual_sections or not _xml_element_equal(actual_sections[name], source_section):
+            return False
+    components = {}
+    for element in actual.iter():
+        if _local_name(element.tag) == "component":
+            ref = str(_xml_attr(element, "ref") or "").upper()
+            if not ref or ref in components:
+                return False
+            components[ref] = element
+    if set(components) != {"U1", "R1", "C1", "J1", "R9", "R10", "R11"}:
+        return False
+    if str(_xml_attr(components["R9"], "footprint")) != str(spec["R9_footprint"]):
+        return False
+    if str(_xml_attr(components["R10"], "footprint")) != str(spec["R10_footprint"]):
+        return False
+    nets = {}
+    for element in actual.iter():
+        if _local_name(element.tag) != "net":
+            continue
+        name = str(_xml_attr(element, "name") or "").upper()
+        if not name or name in nets:
+            return False
+        nets[name] = {str(_xml_attr(pin, "name") or "").upper() for pin in element if _local_name(pin.tag) == "pinref"}
+    source_json = json.loads((desktop / "wifi_board.pcb.json").read_text(encoding="utf-8-sig"))
+    return nets == _expected_nets(source_json, spec.get("rename_nets", {}))
+
+
+def _report_valid(desktop: Path) -> bool:
+    spec = json.loads((desktop / "eco_spec.json").read_text(encoding="utf-8-sig"))
+    report = json.loads((desktop / "eco_report.json").read_text(encoding="utf-8-sig"))
+    if isinstance(report, dict) and isinstance(report.get("changes"), dict):
+        report = report["changes"]
+    return isinstance(report, dict) and all(
+        any(_key(actual_key) == _key(expected_key) and _json_value_equal(actual_value, expected_value)
+            for actual_key, actual_value in report.items())
+        for expected_key, expected_value in spec.items()
+    )
+
+
+def _constraints_valid(desktop: Path) -> bool:
+    actual = json.loads((desktop / "constraints.json").read_text(encoding="utf-8-sig"))
+    rule = actual.get("DiffPairsRouting") or actual.get("diff_pairs_routing")
+    if not isinstance(rule, dict):
+        return False
+    scope = str(rule.get("scope", ""))
+    return (
+        "USB2_D" in scope
+        and "PA12_USB_D" not in scope
+        and _scalar_equal(rule.get("gap_mil"), 8)
+        and _scalar_equal(rule.get("width_mil"), 6)
+    )
+
+
+def evaluate() -> bool:
+    desktop = _desktop()
+    required = [desktop / name for name in EXPECTED]
+    if not all(path.is_file() and path.stat().st_size > 0 for path in required):
+        return False
+    try:
+        return _pcb_valid(desktop) and _ipc_valid(desktop) and _report_valid(desktop) and _constraints_valid(desktop)
+    except Exception:
+        return False
 
 
 if __name__ == "__main__":
