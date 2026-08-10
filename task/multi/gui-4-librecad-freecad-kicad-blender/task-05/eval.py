@@ -36,8 +36,11 @@ SPEC = {'case_id': 'multi-gui-4-librecad-freecad-kicad-blender-task-05-ubuntu',
  'stl': {'file': 'stage2_l_cable_strain_bracket.stl',
          'bbox': [150.0, 90.0, 24.0],
          'bbox_tol': 4.0,
-         'min_triangles': 12},
- 'kicad': {'tokens': ['EW4G05', 'JST-J1', 'STRAIN-RELIEF', 'TVS-D1', 'GND-TEST', 'CLAMP-ZONE']},
+         'min_triangles': 20,
+         'max_bbox_fill_ratio': 0.995,
+         'require_watertight': True},
+ 'kicad': {'min_footprints': 3, 'min_pads': 3,
+           'tokens': ['EW4G05', 'JST-J1', 'STRAIN-RELIEF', 'TVS-D1', 'GND-TEST', 'CLAMP-ZONE']},
  'glb': {'file': 'stage4_l_cable_strain_bracket.glb',
          'tokens': [],
          'min_nodes': 2,
@@ -371,13 +374,15 @@ def check_stl():
     if not required_file(name, 200):
         return False
     try:
-        mesh = trimesh.load_mesh(str(ROOT / name), file_type='stl', force='mesh', process=False)
+        mesh = trimesh.load_mesh(str(ROOT / name), file_type='stl', force='mesh', process=True)
     except Exception as exc:
         return fail('trimesh could not parse STL: ' + str(exc))
     if mesh is None or getattr(mesh, 'vertices', None) is None or len(mesh.vertices) == 0:
         return fail('STL has no readable vertices')
     if len(getattr(mesh, 'faces', [])) < SPEC['stl'].get('min_triangles', 12):
         return fail('STL has too few triangles')
+    if SPEC['stl'].get('require_watertight') and not bool(getattr(mesh, 'is_watertight', False)):
+        return fail('STL is not a watertight FreeCAD body mesh')
     bounds = np.asarray(mesh.bounds, dtype=float)
     dims = (bounds[1] - bounds[0]).tolist()
     got = sorted(abs(x) for x in dims)
@@ -385,6 +390,12 @@ def check_stl():
     tol = SPEC['stl'].get('bbox_tol', 4.0)
     if any(abs(g - e) > tol for g, e in zip(got, exp)):
         return fail('STL bbox mismatch got %s expected %s' % (dims, SPEC['stl']['bbox']))
+    bbox_volume = float(np.prod(np.asarray(dims, dtype=float)))
+    if bbox_volume <= 0.0:
+        return fail('STL has a zero-volume bounding box')
+    fill_ratio = abs(float(getattr(mesh, 'volume', 0.0))) / bbox_volume
+    if fill_ratio >= float(SPEC['stl'].get('max_bbox_fill_ratio', 1.0)):
+        return fail('STL fills its entire bounding box and lacks the required holes/windows/slots: ratio %.6f' % fill_ratio)
     return ok('FreeCAD STL parsed by trimesh and dimensions passed')
 
 
@@ -415,6 +426,14 @@ def check_kicad_board_file():
         text = (ROOT / name).read_text(encoding='utf-8', errors='ignore')
     except Exception as exc:
         return fail('Could not read KiCad board file: ' + str(exc))
+    if not re.search(r'\(generator\s+["\']?pcbnew["\']?\s*\)', text, re.IGNORECASE):
+        return fail('KiCad board was not saved by the native pcbnew editor')
+    footprint_count = len(re.findall(r'(?m)^\s*\(footprint(?:\s|$)', text))
+    pad_count = len(re.findall(r'(?m)^\s*\(pad(?:\s|$)', text))
+    if footprint_count < int(SPEC.get('kicad', {}).get('min_footprints', 0)):
+        return fail('KiCad board has too few native footprints: got %s' % footprint_count)
+    if pad_count < int(SPEC.get('kicad', {}).get('min_pads', 0)):
+        return fail('KiCad board has too few native pads: got %s' % pad_count)
     blob = norm(text)
     for token in ['KICAD_TO_BLENDER', 'EDGE_FROM_STAGE2_HANDOFF', SPEC['handoff']['file'], SPEC['token']] + SPEC.get('kicad', {}).get('tokens', []):
         if norm(token) not in blob:
@@ -423,7 +442,7 @@ def check_kicad_board_file():
         return fail('KiCad board file missing Edge.Cuts outline evidence')
     if norm('F.SilkS') not in blob:
         return fail('KiCad board file missing F.SilkS silkscreen evidence')
-    return ok('KiCad board file carries Edge.Cuts and all required board/silkscreen tokens')
+    return ok('Native KiCad board carries footprints, pads, Edge.Cuts, and required silkscreen tokens')
 
 
 def parse_svg_number(value):
@@ -496,11 +515,24 @@ def check_glb():
     blob = '\n'.join(strings).upper()
     if 'BLENDER' not in blob:
         return fail('GLB metadata should indicate Blender GUI export/generation')
+    def node_has_mesh(index, seen=None):
+        if seen is None: seen = set()
+        if index in seen or index < 0 or index >= len(nodes): return False
+        seen.add(index)
+        node = nodes[index]
+        if getattr(node, 'mesh', None) is not None: return True
+        for child in (getattr(node, 'children', None) or []):
+            if node_has_mesh(int(child), seen): return True
+        return False
     evidence = SPEC['glb'].get('accepted_import_evidence', {})
     for label, token in evidence.items():
         if str(token).upper() not in blob:
             return fail('GLB missing Blender import evidence %s: %s' % (label, token))
-    return ok('Blender GLB contains GUI import evidence for the stage2 STL and stage3 SVG')
+        matching = [index for index, node in enumerate(nodes)
+                    if str(token).upper() in str(getattr(node, 'name', '') or '').upper()]
+        if not matching or not any(node_has_mesh(index) for index in matching):
+            return fail('GLB import evidence is not visible mesh geometry for %s: %s' % (label, token))
+    return ok('Blender GLB contains visible mesh geometry from both stage2 STL and stage3 SVG')
 
 
 def main():

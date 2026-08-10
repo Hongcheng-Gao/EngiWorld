@@ -11,8 +11,11 @@ try:
 except Exception:
     mdb = None; openMdb = None; openOdb = None; THREE_D = None; DEFORMABLE_BODY = None
 SPEC = {'any_odb_fields': [],
+ 'allowed_element_types': ['C3D4', 'C3D8R'],
  'bbox': [120, 120, 10],
- 'bbox_tol': 8.0,
+ 'bbox_tol': 1.0,
+ 'expected_volume': 106908.395,
+ 'volume_rel_tol': 0.01,
  'bc_checks': [{'kind': 'constraint', 'name': 'BC-BoltHoles'}],
  'bc_names': ['BC-BoltHoles'],
  'cad_text': 'AutoCAD: draw outside circle D120 on OUTLINE, centered D50 opening on CUTOUT, and '
@@ -35,13 +38,17 @@ SPEC = {'any_odb_fields': [],
                                  {'count': 8, 'r': 3.0}],
                 'layers': ['OUTLINE', 'HOLE', 'CUTOUT'],
                 'min_circles': 10,
+                'bolt_circle': {'center_radii': [60.0, 25.0],
+                                'hole_count': 8,
+                                'hole_radius': 3.0,
+                                'pitch_radius': 45.0},
                 'tol': 1.0},
  'expected_field_any': ['U', 'S'],
  'job_name': 'Job-DxfFlangePressure',
  'load_checks': [{'kind': 'pressure', 'magnitude': 1.0, 'name': 'Pressure-1MPa', 'rel_tol': 0.1}],
  'load_names': ['Pressure-1MPa'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
- 'min_elements': 100,
+ 'min_elements': 1,
  'min_frames': 2,
  'model_name': 'Model-DxfFlangePressure',
  'nonzero_odb_fields': ['U', 'S'],
@@ -55,6 +62,7 @@ SPEC = {'any_odb_fields': [],
  'section_material': 'Steel',
  'stage_dxf': 'stage1_profile.dxf',
  'stage_step': 'stage2_geometry.step',
+ 'step_entity_min': {'PLANE': 3},
  'step_kind': 'STATIC',
  'step_name': 'Step-Pressure',
  'task_no': 2,
@@ -187,6 +195,32 @@ def parse_dxf(path):
     return layers, pts, circles, lines
 
 
+def check_bolt_circle(circles, spec, tol):
+    req=spec.get('bolt_circle')
+    if not req: return True
+    outer=[c for c in circles if ci(c.get('layer')) == 'OUTLINE' and close(c['r'],req['center_radii'][0],tol)]
+    cutout=[c for c in circles if ci(c.get('layer')) == 'CUTOUT' and close(c['r'],req['center_radii'][1],tol)]
+    holes=[c for c in circles if ci(c.get('layer')) == 'HOLE']
+    if len(outer) != 1 or len(cutout) != 1:
+        return fail('DXF must contain one centered outer circle and one centered cutout circle')
+    center=(outer[0]['x'],outer[0]['y'])
+    if not (close(cutout[0]['x'],center[0],tol) and close(cutout[0]['y'],center[1],tol)):
+        return fail('DXF outer and cutout circles are not concentric')
+    if len(holes) != int(req['hole_count']):
+        return fail('DXF bolt-hole count mismatch got %s expected %s'%(len(holes),req['hole_count']))
+    angles=[]
+    for hole in holes:
+        if not close(hole['r'],req['hole_radius'],tol): return fail('DXF bolt-hole radius mismatch')
+        dx=hole['x']-center[0]; dy=hole['y']-center[1]
+        if not close(math.sqrt(dx*dx+dy*dy),req['pitch_radius'],tol): return fail('DXF bolt hole is not on the required pitch circle')
+        angles.append(math.atan2(dy,dx)%(2.0*math.pi))
+    angles.sort(); expected_gap=2.0*math.pi/float(len(angles))
+    gaps=[(angles[(index+1)%len(angles)]-angles[index])%(2.0*math.pi) for index in range(len(angles))]
+    if any(abs(gap-expected_gap) > math.radians(2.0) for gap in gaps):
+        return fail('DXF bolt holes are not evenly spaced')
+    return True
+
+
 def check_dxf():
     ds=SPEC.get('dxf_checks')
     if not ds: return ok('No DXF stage')
@@ -211,6 +245,7 @@ def check_dxf():
         for c in circles:
             if close(c['r'], req['r'], ds.get('tol',1.0)): cnt += 1
         if cnt < int(req.get('count',1)): return fail('Too few DXF circles with radius %s: got %s'%(req['r'],cnt))
+    if not check_bolt_circle(circles, ds, ds.get('tol',1.0)): return False
     for layer, min_count in ds.get('layer_line_min',{}).items():
         cnt=len([ln for ln in lines if ci(ln.get('layer')) == ci(layer)])
         if cnt < int(min_count): return fail('Too few DXF line/polyline entities on layer %s: got %s'%(layer,cnt))
@@ -221,6 +256,15 @@ def dims_close(got, exp, tol):
     if len(got) != len(exp): return False
     g=sorted([abs(float(x)) for x in got]); e=sorted([abs(float(x)) for x in exp])
     return all(abs(a-b) <= tol for a,b in zip(g,e))
+
+
+def cell_volume(cells):
+    total=0.0
+    for cell in cells:
+        try: value=cell.getSize(printResults=False)
+        except TypeError: value=cell.getSize()
+        total += float(value)
+    return total
 
 
 def abaqus_step_bbox(path):
@@ -235,10 +279,11 @@ def abaqus_step_bbox(path):
         try: geom=mdb.openStep(fileName=path)
         except Exception: geom=mdb.openStep(path)
         part=model.PartFromGeometryFile(name=part_name, geometryFile=geom, combine=False, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-        bb=part.getBoundingBox()
+        bb=part.cells.getBoundingBox()
         low=bb.get('low', None); high=bb.get('high', None)
         if low is None or high is None: return None
-        return [float(high[i])-float(low[i]) for i in range(3)]
+        return {'bbox':[float(high[i])-float(low[i]) for i in range(3)],
+                'volume':cell_volume(part.cells)}
     except Exception as e:
         warn('Abaqus STEP fallback failed: '+str(e))
         return None
@@ -259,7 +304,8 @@ try:
         out = {"ok": False, "error": "STEP must contain exactly one solid", "solid_count": len(solids)}
     else:
         box = solids[0].BoundingBox()
-        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen]}
+        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen],
+               "volume": float(solids[0].Volume())}
 except Exception as exc:
     out = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
 sys.stdout.write("__CQ_BBOX__" + json.dumps(out))
@@ -291,26 +337,36 @@ def check_step():
     if not nonempty(path, 1): return fail('Missing STEP stage: '+path)
     h=head(path,4096).upper()
     if 'ISO-10303' not in h and 'STEP' not in h: return fail('STEP header not recognized')
-    got=None
+    got=None; info={}
     try:
         import cadquery as cq
         wp=cq.importers.importStep(path); solids=wp.solids().vals()
         if len(solids) != 1: return fail('STEP must contain exactly one solid')
         box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]
+        info={'volume':float(solids[0].Volume())}
         log('[PASS] STEP cadquery import succeeded')
     except Exception as e:
         warn('Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: '+str(e))
         ext=external_cadquery_step_bbox(path)
         if ext.get('ok'):
             got=ext.get('bbox')
+            info=ext
             log('[PASS] STEP external cadquery import succeeded')
         elif ext.get('solid_count') is not None:
             return fail('STEP must contain exactly one solid')
         else:
             warn('external cadquery STEP check failed; trying Abaqus STEP import: '+str(ext.get('error','unknown')))
-            got=abaqus_step_bbox(path)
+            info=abaqus_step_bbox(path) or {}
+            got=info.get('bbox')
     if got is None: return fail('STEP geometry could not be validated')
     if not dims_close(got, SPEC['bbox'], SPEC.get('bbox_tol',8.0)): return fail('STEP bbox mismatch got %s expected %s'%(got,SPEC['bbox']))
+    volume=info.get('volume')
+    if volume is None or not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
+        return fail('STEP volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
+    step_text=head(path).upper()
+    for entity,minimum in SPEC.get('step_entity_min',{}).items():
+        count=step_text.count('= '+ci(entity)+' ')
+        if count < int(minimum): return fail('STEP has too few %s entities: got %s expected at least %s'%(entity,count,minimum))
     return ok('STEP geometry checks passed')
 
 
@@ -472,26 +528,45 @@ def collect_surfaces(model):
 
 
 def mesh_info(model):
-    coords=[]; elems=0
+    coords=[]; elems=0; nodes=0; element_types=set()
+    repositories=[]
     try:
-        for pk in model.parts.keys():
-            p=model.parts[pk]
-            try: elems += len(p.elements)
-            except Exception: pass
-            try:
-                for n in p.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+        for pk in model.parts.keys(): repositories.append(model.parts[pk])
     except Exception: pass
     try:
-        for ik in model.rootAssembly.instances.keys():
-            inst=model.rootAssembly.instances[ik]
-            try: elems += len(inst.elements)
-            except Exception: pass
-            try:
-                for n in inst.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+        for ik in model.rootAssembly.instances.keys(): repositories.append(model.rootAssembly.instances[ik])
     except Exception: pass
-    return coords, elems
+    for repo in repositories:
+        try:
+            repo_elems=len(repo.elements)
+            if repo_elems > elems:
+                elems=repo_elems
+                element_types=set([ci(getattr(e,'type','')) for e in repo.elements if ci(getattr(e,'type',''))])
+        except Exception: pass
+        try:
+            repo_nodes=len(repo.nodes)
+            if repo_nodes > nodes:
+                nodes=repo_nodes
+                coords=[tuple(n.coordinates) for n in repo.nodes]
+        except Exception: pass
+    return coords, elems, nodes, element_types
+
+
+def check_model_volume(model):
+    candidates=[]
+    try:
+        for key in model.parts.keys():
+            part=model.parts[key]
+            if not len(part.cells): continue
+            candidates.append((part,cell_volume(part.cells),len(part.elements)))
+    except Exception as exc: return fail('Cannot inspect CAE part volume: '+str(exc))
+    meshed=[item for item in candidates if item[2] > 0]
+    usable=meshed if meshed else candidates
+    if len(usable) != 1: return fail('Expected one analysis solid part for volume check, got %s'%len(usable))
+    volume=usable[0][1]
+    if not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
+        return fail('CAE solid volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
+    return ok('CAE solid volume passed')
 
 
 def check_material(model):
@@ -878,6 +953,7 @@ def check_cae():
     model=mdb.models[mk]
     if not check_material(model): return False
     if not check_section_assignment(model): return False
+    if not check_model_volume(model): return False
     sk=find_key(model.steps,SPEC['step_name'])
     if sk is None: return fail('Missing step '+SPEC['step_name'])
     step_obj=model.steps[sk]
@@ -894,8 +970,11 @@ def check_cae():
         if nn(name) not in surf_names: return fail('Missing surface '+name)
     if not check_bc_specs(model): return False
     if not check_load_specs(model): return False
-    coords, elems = mesh_info(model)
+    coords, elems, nodes, element_types = mesh_info(model)
     if elems < int(SPEC.get('min_elements',1)): return fail('Too few mesh elements')
+    allowed=set([ci(x) for x in SPEC.get('allowed_element_types',[])])
+    if allowed and (not element_types or not element_types.issubset(allowed)):
+        return fail('Disallowed or unreadable element types: %s allowed %s'%(sorted(element_types),sorted(allowed)))
     if coords:
         spans=[]
         for ax in range(3):

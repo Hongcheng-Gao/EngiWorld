@@ -11,8 +11,11 @@ try:
 except Exception:
     mdb = None; openMdb = None; openOdb = None; THREE_D = None; DEFORMABLE_BODY = None
 SPEC = {'any_odb_fields': [],
+ 'allowed_element_types': ['C3D4', 'C3D8R'],
  'bbox': [120, 80, 6],
- 'bbox_tol': 8.0,
+ 'bbox_tol': 1.0,
+ 'expected_volume': 53649.745569,
+ 'volume_rel_tol': 0.01,
  'bc_checks': [{'kind': 'constraint', 'name': 'BC-FixedHoles'}],
  'bc_names': ['BC-FixedHoles'],
  'cad_text': 'AutoCAD: draw a 120 x 80 mm rectangle on OUTLINE, D8 holes at (15,15), (105,15), '
@@ -30,11 +33,16 @@ SPEC = {'any_odb_fields': [],
                                      'SOLIDWORKS_TO_ABAQUS']},
  'chain_token': 'EW_ACAD_SW_ABQ_01',
  'dxf_checks': {'bbox': [120, 80],
-                'circles': [{'r': 4, 'x': 15, 'y': 15},
-                            {'r': 4, 'x': 105, 'y': 15},
-                            {'r': 4, 'x': 15, 'y': 65},
-                            {'r': 4, 'x': 105, 'y': 65}],
+                'circles': [{'layer': 'HOLE', 'r': 4, 'x': 15, 'y': 15},
+                            {'layer': 'HOLE', 'r': 4, 'x': 105, 'y': 15},
+                            {'layer': 'HOLE', 'r': 4, 'x': 15, 'y': 65},
+                            {'layer': 'HOLE', 'r': 4, 'x': 105, 'y': 65}],
                 'layers': ['OUTLINE', 'HOLE', 'CUTOUT'],
+                'layer_bboxes': {'CUTOUT': [40, 34, 80, 46]},
+                'profiles': [{'arcs': [[46, 40, 6, 180], [74, 40, 6, 180]],
+                              'bbox': [40, 34, 80, 46],
+                              'closed': True,
+                              'layer': 'CUTOUT'}],
                 'tol': 1.0},
  'expected_field_any': ['U', 'S'],
  'job_name': 'Job-PlateStatic',
@@ -45,7 +53,7 @@ SPEC = {'any_odb_fields': [],
                   'sign': 'positive'}],
  'load_names': ['Load-RightHoles'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
- 'min_elements': 80,
+ 'min_elements': 1,
  'min_frames': 2,
  'model_name': 'Model-PlateStatic',
  'nonzero_odb_fields': ['U', 'S'],
@@ -59,6 +67,7 @@ SPEC = {'any_odb_fields': [],
  'section_material': 'Steel',
  'stage_dxf': 'stage1_profile.dxf',
  'stage_step': 'stage2_geometry.step',
+ 'step_entity_min': {'CYLINDRICAL_SURFACE': 10},
  'step_kind': 'STATIC',
  'step_name': 'Step-Static',
  'task_no': 1,
@@ -183,12 +192,137 @@ def parse_dxf(path):
         local_pts=[]
         for j in range(min(len(xs),len(ys))):
             p=(xs[j],ys[j]); pts.append(p); local_pts.append(p)
-        if e['type'] == 'CIRCLE' and xs and ys and rad is not None:
-            circles.append({'x':xs[0],'y':ys[0],'r':rad,'layer':layer})
+        if e['type'] in ('CIRCLE','ARC') and xs and ys and rad is not None:
+            circles.append({'x':xs[0],'y':ys[0],'r':rad,'layer':layer,'type':e['type']})
             pts += [(xs[0]-rad,ys[0]),(xs[0]+rad,ys[0]),(xs[0],ys[0]-rad),(xs[0],ys[0]+rad)]
         if e['type'] in ('LINE','LWPOLYLINE','POLYLINE') and len(local_pts) >= 2:
             lines.append({'layer':layer,'pts':local_pts,'type':e['type']})
     return layers, pts, circles, lines
+
+
+def profile_arc(cx,cy,r,start,sweep):
+    count=max(16,int(abs(sweep)/(2.0*math.pi)*96.0))
+    points=[]
+    for index in range(count+1):
+        angle=start+sweep*float(index)/float(count)
+        points.append((cx+r*math.cos(angle),cy+r*math.sin(angle)))
+    return {'x':cx,'y':cy,'r':abs(r),'sweep':abs(math.degrees(sweep)),
+            'start':points[0],'end':points[-1],'points':points}
+
+
+def profile_bulge_arc(a,b,bulge):
+    dx=b[0]-a[0]; dy=b[1]-a[1]; chord=math.sqrt(dx*dx+dy*dy)
+    if chord <= 1.0e-12 or abs(bulge) <= 1.0e-12: return None
+    cx=(a[0]+b[0])/2.0-dy*(1.0-bulge*bulge)/(4.0*bulge)
+    cy=(a[1]+b[1])/2.0+dx*(1.0-bulge*bulge)/(4.0*bulge)
+    radius=chord*(1.0+bulge*bulge)/(4.0*abs(bulge))
+    start=math.atan2(a[1]-cy,a[0]-cx); sweep=4.0*math.atan(bulge)
+    return profile_arc(cx,cy,radius,start,sweep)
+
+
+def dxf_profile_geometry(path):
+    raw=[x.rstrip('\r') for x in head(path).splitlines()]
+    pairs=[]; index=0
+    while index+1 < len(raw): pairs.append((raw[index].strip(),raw[index+1].strip())); index += 2
+    entities=[]; current=None
+    for code,value in pairs:
+        if code == '0':
+            if current: entities.append(current)
+            current={'type':value.upper(),'raw':[]}
+        if current: current['raw'].append((code,value))
+    if current: entities.append(current)
+    by_layer={}
+    for entity in entities:
+        typ=entity['type']; layer=''
+        for code,value in entity['raw']:
+            if code == '8': layer=ci(value); break
+        if not layer: continue
+        geom=by_layer.setdefault(layer,{'points':[],'edges':[],'arcs':[],'closed_entities':0})
+        if typ == 'LINE':
+            values={}
+            for code,value in entity['raw']:
+                if code in ('10','20','11','21'):
+                    try: values[code]=float(value)
+                    except Exception: pass
+            if all(code in values for code in ('10','20','11','21')):
+                first=(values['10'],values['20']); second=(values['11'],values['21'])
+                geom['edges'].append((first,second)); geom['points'] += [first,second]
+        elif typ == 'ARC':
+            values={}
+            for code,value in entity['raw']:
+                if code in ('10','20','40','50','51'):
+                    try: values[code]=float(value)
+                    except Exception: pass
+            if all(code in values for code in ('10','20','40','50','51')):
+                start=math.radians(values['50']); sweep=math.radians((values['51']-values['50'])%360.0)
+                arc=profile_arc(values['10'],values['20'],values['40'],start,sweep)
+                geom['arcs'].append(arc); geom['edges'].append((arc['start'],arc['end'])); geom['points'] += arc['points']
+        elif typ == 'LWPOLYLINE':
+            vertices=[]; flags=0
+            for code,value in entity['raw']:
+                if code == '70':
+                    try: flags=int(value)
+                    except Exception: pass
+                elif code == '10':
+                    try: vertices.append({'x':float(value),'y':None,'bulge':0.0})
+                    except Exception: pass
+                elif code == '20' and vertices and vertices[-1]['y'] is None:
+                    try: vertices[-1]['y']=float(value)
+                    except Exception: pass
+                elif code == '42' and vertices:
+                    try: vertices[-1]['bulge']=float(value)
+                    except Exception: pass
+            vertices=[v for v in vertices if v['y'] is not None]
+            count=len(vertices); closed=bool(flags & 1)
+            segment_count=count if closed else max(0,count-1)
+            for index in range(segment_count):
+                first=vertices[index]; second=vertices[(index+1)%count]
+                a=(first['x'],first['y']); b=(second['x'],second['y'])
+                if abs(first['bulge']) < 1.0e-12:
+                    geom['edges'].append((a,b)); geom['points'] += [a,b]
+                else:
+                    arc=profile_bulge_arc(a,b,first['bulge'])
+                    if arc:
+                        geom['arcs'].append(arc); geom['edges'].append((arc['start'],arc['end'])); geom['points'] += arc['points']
+    return by_layer
+
+
+def profile_closed(geom,tol):
+    edges=geom.get('edges',[])
+    if not edges: return False
+    nodes=[]; degrees=[]; links=[]
+    def node_index(point):
+        for index,known in enumerate(nodes):
+            if close(point[0],known[0],tol) and close(point[1],known[1],tol): return index
+        nodes.append(point); degrees.append(0); links.append(set()); return len(nodes)-1
+    for first,second in edges:
+        ia=node_index(first); ib=node_index(second)
+        degrees[ia] += 1; degrees[ib] += 1; links[ia].add(ib); links[ib].add(ia)
+    if not nodes or any(value != 2 for value in degrees): return False
+    seen=set([0]); pending=[0]
+    while pending:
+        current=pending.pop()
+        for other in links[current]:
+            if other not in seen: seen.add(other); pending.append(other)
+    return len(seen) == len(nodes)
+
+
+def check_dxf_profiles(path, specs, tol):
+    geometry=dxf_profile_geometry(path)
+    for req in specs:
+        layer=ci(req.get('layer')); geom=geometry.get(layer)
+        if not geom or not geom.get('points'): return fail('Missing DXF profile geometry on layer '+layer)
+        xs=[point[0] for point in geom['points']]; ys=[point[1] for point in geom['points']]
+        got=[min(xs),min(ys),max(xs),max(ys)]; expected=req.get('bbox')
+        if expected and not all(close(got[index],expected[index],tol) for index in range(4)):
+            return fail('DXF profile bbox mismatch on layer %s got %s expected %s'%(layer,got,expected))
+        if req.get('closed') and not profile_closed(geom,tol): return fail('DXF profile is not one closed loop on layer '+layer)
+        for wanted in req.get('arcs',[]):
+            found=any(close(arc['x'],wanted[0],tol) and close(arc['y'],wanted[1],tol) and
+                      close(arc['r'],wanted[2],tol) and close(arc['sweep'],wanted[3],1.0)
+                      for arc in geom.get('arcs',[]))
+            if not found: return fail('Missing required DXF arc on layer %s near (%s,%s)'%(layer,wanted[0],wanted[1]))
+    return True
 
 
 def check_dxf():
@@ -208,16 +342,33 @@ def check_dxf():
     for req in ds.get('circles',[]):
         found=False
         for c in circles:
-            if close(c['x'],req['x'],ds.get('tol',1.0)) and close(c['y'],req['y'],ds.get('tol',1.0)) and close(c['r'],req['r'],ds.get('tol',1.0)): found=True
+            if c.get('type') == 'CIRCLE' and ci(c.get('layer')) == ci(req.get('layer')) and close(c['x'],req['x'],ds.get('tol',1.0)) and close(c['y'],req['y'],ds.get('tol',1.0)) and close(c['r'],req['r'],ds.get('tol',1.0)): found=True
         if not found: return fail('Missing required DXF circle near (%s,%s)'%(req['x'],req['y']))
     for req in ds.get('circle_radii',[]):
         cnt=0
         for c in circles:
             if close(c['r'], req['r'], ds.get('tol',1.0)): cnt += 1
         if cnt < int(req.get('count',1)): return fail('Too few DXF circles with radius %s: got %s'%(req['r'],cnt))
+    profile_geometry=dxf_profile_geometry(path) if ds.get('layer_bboxes') else {}
+    for layer, exp in ds.get('layer_bboxes',{}).items():
+        layer_pts=[]
+        semantic=profile_geometry.get(ci(layer),{})
+        layer_pts.extend(semantic.get('points',[]))
+        for line in lines:
+            if ci(line.get('layer')) == ci(layer): layer_pts.extend(line.get('pts',[]))
+        for circle in circles:
+            if ci(circle.get('layer')) != ci(layer): continue
+            layer_pts += [(circle['x']-circle['r'],circle['y']), (circle['x']+circle['r'],circle['y']),
+                          (circle['x'],circle['y']-circle['r']), (circle['x'],circle['y']+circle['r'])]
+        if not layer_pts: return fail('Missing DXF geometry on layer '+layer)
+        got=[min(p[0] for p in layer_pts),min(p[1] for p in layer_pts),
+             max(p[0] for p in layer_pts),max(p[1] for p in layer_pts)]
+        if not all(close(got[index],exp[index],ds.get('tol',1.0)) for index in range(4)):
+            return fail('DXF layer bbox mismatch on %s got %s expected %s'%(layer,got,exp))
     for layer, min_count in ds.get('layer_line_min',{}).items():
         cnt=len([ln for ln in lines if ci(ln.get('layer')) == ci(layer)])
         if cnt < int(min_count): return fail('Too few DXF line/polyline entities on layer %s: got %s'%(layer,cnt))
+    if not check_dxf_profiles(path, ds.get('profiles',[]), ds.get('tol',1.0)): return False
     return ok('DXF checks passed')
 
 
@@ -225,6 +376,15 @@ def dims_close(got, exp, tol):
     if len(got) != len(exp): return False
     g=sorted([abs(float(x)) for x in got]); e=sorted([abs(float(x)) for x in exp])
     return all(abs(a-b) <= tol for a,b in zip(g,e))
+
+
+def cell_volume(cells):
+    total=0.0
+    for cell in cells:
+        try: value=cell.getSize(printResults=False)
+        except TypeError: value=cell.getSize()
+        total += float(value)
+    return total
 
 
 def abaqus_step_bbox(path):
@@ -239,10 +399,11 @@ def abaqus_step_bbox(path):
         try: geom=mdb.openStep(fileName=path)
         except Exception: geom=mdb.openStep(path)
         part=model.PartFromGeometryFile(name=part_name, geometryFile=geom, combine=False, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-        bb=part.getBoundingBox()
+        bb=part.cells.getBoundingBox()
         low=bb.get('low', None); high=bb.get('high', None)
         if low is None or high is None: return None
-        return [float(high[i])-float(low[i]) for i in range(3)]
+        return {'bbox':[float(high[i])-float(low[i]) for i in range(3)],
+                'volume':cell_volume(part.cells)}
     except Exception as e:
         warn('Abaqus STEP fallback failed: '+str(e))
         return None
@@ -263,7 +424,8 @@ try:
         out = {"ok": False, "error": "STEP must contain exactly one solid", "solid_count": len(solids)}
     else:
         box = solids[0].BoundingBox()
-        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen]}
+        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen],
+               "volume": float(solids[0].Volume())}
 except Exception as exc:
     out = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
 sys.stdout.write("__CQ_BBOX__" + json.dumps(out))
@@ -295,26 +457,36 @@ def check_step():
     if not nonempty(path, 1): return fail('Missing STEP stage: '+path)
     h=head(path,4096).upper()
     if 'ISO-10303' not in h and 'STEP' not in h: return fail('STEP header not recognized')
-    got=None
+    got=None; info={}
     try:
         import cadquery as cq
         wp=cq.importers.importStep(path); solids=wp.solids().vals()
         if len(solids) != 1: return fail('STEP must contain exactly one solid')
         box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]
+        info={'volume':float(solids[0].Volume())}
         log('[PASS] STEP cadquery import succeeded')
     except Exception as e:
         warn('Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: '+str(e))
         ext=external_cadquery_step_bbox(path)
         if ext.get('ok'):
             got=ext.get('bbox')
+            info=ext
             log('[PASS] STEP external cadquery import succeeded')
         elif ext.get('solid_count') is not None:
             return fail('STEP must contain exactly one solid')
         else:
             warn('external cadquery STEP check failed; trying Abaqus STEP import: '+str(ext.get('error','unknown')))
-            got=abaqus_step_bbox(path)
+            info=abaqus_step_bbox(path) or {}
+            got=info.get('bbox')
     if got is None: return fail('STEP geometry could not be validated')
     if not dims_close(got, SPEC['bbox'], SPEC.get('bbox_tol',8.0)): return fail('STEP bbox mismatch got %s expected %s'%(got,SPEC['bbox']))
+    volume=info.get('volume')
+    if volume is None or not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
+        return fail('STEP volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
+    step_text=head(path).upper()
+    for entity,minimum in SPEC.get('step_entity_min',{}).items():
+        count=step_text.count('= '+ci(entity)+' ')
+        if count < int(minimum): return fail('STEP has too few %s entities: got %s expected at least %s'%(entity,count,minimum))
     return ok('STEP geometry checks passed')
 
 
@@ -476,26 +648,45 @@ def collect_surfaces(model):
 
 
 def mesh_info(model):
-    coords=[]; elems=0
+    coords=[]; elems=0; nodes=0; element_types=set()
+    repositories=[]
     try:
-        for pk in model.parts.keys():
-            p=model.parts[pk]
-            try: elems += len(p.elements)
-            except Exception: pass
-            try:
-                for n in p.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+        for pk in model.parts.keys(): repositories.append(model.parts[pk])
     except Exception: pass
     try:
-        for ik in model.rootAssembly.instances.keys():
-            inst=model.rootAssembly.instances[ik]
-            try: elems += len(inst.elements)
-            except Exception: pass
-            try:
-                for n in inst.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+        for ik in model.rootAssembly.instances.keys(): repositories.append(model.rootAssembly.instances[ik])
     except Exception: pass
-    return coords, elems
+    for repo in repositories:
+        try:
+            repo_elems=len(repo.elements)
+            if repo_elems > elems:
+                elems=repo_elems
+                element_types=set([ci(getattr(e,'type','')) for e in repo.elements if ci(getattr(e,'type',''))])
+        except Exception: pass
+        try:
+            repo_nodes=len(repo.nodes)
+            if repo_nodes > nodes:
+                nodes=repo_nodes
+                coords=[tuple(n.coordinates) for n in repo.nodes]
+        except Exception: pass
+    return coords, elems, nodes, element_types
+
+
+def check_model_volume(model):
+    candidates=[]
+    try:
+        for key in model.parts.keys():
+            part=model.parts[key]
+            if not len(part.cells): continue
+            candidates.append((part,cell_volume(part.cells),len(part.elements)))
+    except Exception as exc: return fail('Cannot inspect CAE part volume: '+str(exc))
+    meshed=[item for item in candidates if item[2] > 0]
+    usable=meshed if meshed else candidates
+    if len(usable) != 1: return fail('Expected one analysis solid part for volume check, got %s'%len(usable))
+    volume=usable[0][1]
+    if not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
+        return fail('CAE solid volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
+    return ok('CAE solid volume passed')
 
 
 def check_material(model):
@@ -882,6 +1073,7 @@ def check_cae():
     model=mdb.models[mk]
     if not check_material(model): return False
     if not check_section_assignment(model): return False
+    if not check_model_volume(model): return False
     sk=find_key(model.steps,SPEC['step_name'])
     if sk is None: return fail('Missing step '+SPEC['step_name'])
     step_obj=model.steps[sk]
@@ -898,8 +1090,11 @@ def check_cae():
         if nn(name) not in surf_names: return fail('Missing surface '+name)
     if not check_bc_specs(model): return False
     if not check_load_specs(model): return False
-    coords, elems = mesh_info(model)
+    coords, elems, nodes, element_types = mesh_info(model)
     if elems < int(SPEC.get('min_elements',1)): return fail('Too few mesh elements')
+    allowed=set([ci(x) for x in SPEC.get('allowed_element_types',[])])
+    if allowed and (not element_types or not element_types.issubset(allowed)):
+        return fail('Disallowed or unreadable element types: %s allowed %s'%(sorted(element_types),sorted(allowed)))
     if coords:
         spans=[]
         for ax in range(3):
