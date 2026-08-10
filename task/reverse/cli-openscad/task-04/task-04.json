@@ -1,0 +1,75 @@
+{
+  "id": "c-reverse-openscad-task-04-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Reverse-engineer the probe-card fixture from `top_projection.svg`, the CMM dimensions, and inspection report. Define and invoke `module probe_card_fixture`; reproduce the annulus and eight-hole bolt circle as through features, then save `/home/user/Desktop/answer.scad`. [Software] Run `openscad` from the command line.",
+  "source": "https://openscad.org/documentation.html; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/2D_to_3D_Extrusion",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/top_projection.svg",
+            "path": "/home/user/Desktop/top_projection.svg"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/dimensions.csv",
+            "path": "/home/user/Desktop/dimensions.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/inspection_report.txt",
+            "path": "/home/user/Desktop/inspection_report.txt"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -147,6 +147,8 @@ SPEC = {'target': 'autocad_result.dxf',
  'texts': [{'text': 'ACAD-H12', 'layer': 'ANNOTATION'}, {'text': 'DAMPER PANEL', 'layer': 'ANNOTATION'}]}
 TOL = 0.75
 ANGLE_TOL = 2.0
+REQUIRED_INSUNITS = 4
+REQUIRED_LAYERS = ('ANNOTATION', 'CENTER', 'CUTOUT', 'HOLE', 'LOUVER', 'OUTLINE', 'REFERENCE')
 
 
 def _close(a, b, tol=TOL):
@@ -165,75 +167,107 @@ def _layer_ok(actual, expected):
     return expected is None or str(actual).upper() == str(expected).upper()
 
 
-def _segments(doc):
-    out = []
+def _actual_primitives(doc):
+    relevant_layers = {name.upper() for name in REQUIRED_LAYERS}
+    actual = {"segments": [], "circles": [], "arcs": [], "texts": []}
     for entity in doc.modelspace():
-        layer = getattr(entity.dxf, "layer", "")
-        if entity.dxftype() == "LINE":
-            s, e = entity.dxf.start, entity.dxf.end
-            out.append(((float(s.x), float(s.y)), (float(e.x), float(e.y)), layer))
-        elif entity.dxftype() == "LWPOLYLINE":
-            pts = [(float(p[0]), float(p[1])) for p in entity.get_points("xy")]
-            for start, end in zip(pts, pts[1:]):
-                out.append((start, end, layer))
-            if entity.closed and len(pts) > 2:
-                out.append((pts[-1], pts[0], layer))
-    return out
-
-
-def _has_segment(segments, start, end, layer=None):
-    start = tuple(start)
-    end = tuple(end)
-    for a, b, actual_layer in segments:
-        if not _layer_ok(actual_layer, layer):
+        layer = str(getattr(entity.dxf, "layer", ""))
+        if layer.upper() not in relevant_layers:
             continue
-        if (_point_close(a, start) and _point_close(b, end)) or (_point_close(a, end) and _point_close(b, start)):
-            return True
-    return False
-
-
-def _has_circle(doc, center, radius, layer=None):
-    center = tuple(center)
-    for entity in doc.modelspace():
-        if entity.dxftype() != "CIRCLE":
-            continue
-        if not _layer_ok(getattr(entity.dxf, "layer", ""), layer):
-            continue
-        c = entity.dxf.center
-        if _point_close((c.x, c.y), center) and _close(entity.dxf.radius, radius):
-            return True
-    return False
-
-
-def _has_arc(doc, center, radius, start_angle, end_angle, layer=None):
-    center = tuple(center)
-    for entity in doc.modelspace():
-        if entity.dxftype() != "ARC":
-            continue
-        if not _layer_ok(getattr(entity.dxf, "layer", ""), layer):
-            continue
-        c = entity.dxf.center
-        if (_point_close((c.x, c.y), center)
-                and _close(entity.dxf.radius, radius)
-                and _angle_close(entity.dxf.start_angle, start_angle)
-                and _angle_close(entity.dxf.end_angle, end_angle)):
-            return True
-    return False
-
-
-def _has_text(doc, value, layer=None):
-    for entity in doc.modelspace():
-        if entity.dxftype() == "TEXT":
-            txt = str(entity.dxf.text)
-        elif entity.dxftype() == "MTEXT":
-            txt = str(entity.text)
+        entity_type = entity.dxftype()
+        if entity_type == "LINE":
+            start, end = entity.dxf.start, entity.dxf.end
+            actual["segments"].append(
+                ((float(start.x), float(start.y)), (float(end.x), float(end.y)), layer)
+            )
+        elif entity_type == "LWPOLYLINE":
+            points = list(entity.get_points("xyb"))
+            edge_count = len(points) if entity.closed else max(0, len(points) - 1)
+            for index in range(edge_count):
+                start = points[index]
+                end = points[(index + 1) % len(points)]
+                if abs(float(start[2] or 0.0)) > 1e-12:
+                    return None
+                actual["segments"].append(
+                    ((float(start[0]), float(start[1])), (float(end[0]), float(end[1])), layer)
+                )
+        elif entity_type == "CIRCLE":
+            center = entity.dxf.center
+            actual["circles"].append(
+                ((float(center.x), float(center.y)), float(entity.dxf.radius), layer)
+            )
+        elif entity_type == "ARC":
+            center = entity.dxf.center
+            actual["arcs"].append(
+                (
+                    (float(center.x), float(center.y)),
+                    float(entity.dxf.radius),
+                    float(entity.dxf.start_angle),
+                    float(entity.dxf.end_angle),
+                    layer,
+                )
+            )
+        elif entity_type == "TEXT":
+            actual["texts"].append((str(entity.dxf.text).strip(), layer))
+        elif entity_type == "MTEXT":
+            text = entity.plain_text() if hasattr(entity, "plain_text") else str(entity.text)
+            actual["texts"].append((str(text).strip(), layer))
         else:
-            continue
-        if not _layer_ok(getattr(entity.dxf, "layer", ""), layer):
-            continue
-        if txt.strip() == str(value):
-            return True
-    return False
+            return None
+    return actual
+
+
+def _perfect_match(expected, actual, predicate):
+    if len(expected) != len(actual):
+        return False
+    assigned = [-1] * len(actual)
+
+    def assign(expected_index, seen):
+        for actual_index, candidate in enumerate(actual):
+            if actual_index in seen or not predicate(expected[expected_index], candidate):
+                continue
+            seen.add(actual_index)
+            if assigned[actual_index] < 0 or assign(assigned[actual_index], seen):
+                assigned[actual_index] = expected_index
+                return True
+        return False
+
+    return all(assign(index, set()) for index in range(len(expected)))
+
+
+def _segment_matches(item, candidate):
+    start, end, layer = candidate
+    required_start, required_end = tuple(item["start"]), tuple(item["end"])
+    return _layer_ok(layer, item.get("layer")) and (
+        (_point_close(start, required_start) and _point_close(end, required_end))
+        or (_point_close(start, required_end) and _point_close(end, required_start))
+    )
+
+
+def _circle_matches(item, candidate):
+    center, radius, layer = candidate
+    return (
+        _layer_ok(layer, item.get("layer"))
+        and _point_close(center, tuple(item["center"]))
+        and _close(radius, item["radius"])
+    )
+
+
+def _arc_matches(item, candidate):
+    center, radius, start_angle, end_angle, layer = candidate
+    return (
+        _layer_ok(layer, item.get("layer"))
+        and _point_close(center, tuple(item["center"]))
+        and _close(radius, item["radius"])
+        and _angle_close(start_angle, item["start_angle"])
+        and _angle_close(end_angle, item["end_angle"])
+    )
+
+
+def _text_matches(item, candidate):
+    value, layer = candidate
+    return _layer_ok(layer, item.get("layer")) and value == str(item["text"])
+
 
 
 def evaluate() -> bool:
@@ -243,20 +277,20 @@ def evaluate() -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     doc = ezdxf.readfile(path)
-    segments = _segments(doc)
-    for item in SPEC["segments"]:
-        if not _has_segment(segments, item["start"], item["end"], item.get("layer")):
-            return False
-    for item in SPEC["circles"]:
-        if not _has_circle(doc, item["center"], item["radius"], item.get("layer")):
-            return False
-    for item in SPEC["arcs"]:
-        if not _has_arc(doc, item["center"], item["radius"], item["start_angle"], item["end_angle"], item.get("layer")):
-            return False
-    for item in SPEC["texts"]:
-        if not _has_text(doc, item["text"], item.get("layer")):
-            return False
-    return True
+    if int(doc.header.get("$INSUNITS", 0)) != REQUIRED_INSUNITS:
+        return False
+    document_layers = {str(layer.dxf.name).upper() for layer in doc.layers}
+    if not {name.upper() for name in REQUIRED_LAYERS}.issubset(document_layers):
+        return False
+    actual = _actual_primitives(doc)
+    if actual is None:
+        return False
+    return (
+        _perfect_match(SPEC["segments"], actual["segments"], _segment_matches)
+        and _perfect_match(SPEC["circles"], actual["circles"], _circle_matches)
+        and _perfect_match(SPEC["arcs"], actual["arcs"], _arc_matches)
+        and _perfect_match(SPEC["texts"], actual["texts"], _text_matches)
+    )
 
 
 if __name__ == "__main__":

@@ -254,7 +254,25 @@ def _edif_equal(path: Path, expected: bytes) -> bool:
 
 def _gerber_valid(data: bytes) -> bool:
     text = _text(data).upper()
-    return bool(re.search(r"%FS[^%]*\*%", text)) and "M02*" in text
+    try:
+        parameters = json.loads((_desktop() / "art_param.json").read_text(encoding="utf-8"))
+        requested_units = str(parameters["units"]).casefold()
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+    unit_command = "%MOIN*%" if requested_units == "inch" else "%MOMM*%" if requested_units == "mm" else ""
+    if not unit_command or text.count(unit_command) != 1:
+        return False
+    if len(re.findall(r"%FS[LT]AX[1-6][1-6]Y[1-6][1-6]\*%", text)) != 1:
+        return False
+    if text.count("M02*") != 1:
+        return False
+    operation = re.search(
+        r"(?:X[-+]?\d+(?:Y[-+]?\d+)?|Y[-+]?\d+(?:X[-+]?\d+)?)D0[13]\*",
+        text,
+    )
+    aperture_image = re.search(r"%ADD\d+[^%]*\*%", text) and operation
+    region_image = "G36*" in text and "G37*" in text and operation
+    return bool(aperture_image or region_image)
 
 
 def _log_equal(actual: bytes, expected: bytes) -> bool:
@@ -269,6 +287,47 @@ def _log_equal(actual: bytes, expected: bytes) -> bool:
     return True
 
 
+def _fixes_valid(path: Path) -> bool:
+    try:
+        actual = json.loads(path.read_text(encoding="utf-8-sig"))
+        board = json.loads((_desktop() / "demo.pcb.json").read_text(encoding="utf-8"))
+        known = json.loads((_desktop() / "violations.json").read_text(encoding="utf-8"))["known"]
+        violations = {item["id"]: item for item in board["violations"]}
+        if len(known) != len(set(known)) or set(violations) != set(known):
+            return False
+        expected = {}
+        for violation_id in known:
+            violation = violations[violation_id]
+            violation_type = str(violation["type"]).casefold()
+            severity = str(violation["severity"]).casefold()
+            if severity == "warning":
+                expected[violation_id] = f"accepted_{violation_type}_warning"
+            else:
+                expected[violation_id] = f"reviewed_{violation_type}"
+        return actual == expected
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+
+
+def _photoplot_log_valid(data: bytes) -> bool:
+    text = _text(data)
+    try:
+        films = json.loads((_desktop() / "art_param.json").read_text(encoding="utf-8"))["films"]
+        if not films or len(films) != len(set(films)) or not all(isinstance(item, str) for item in films):
+            return False
+    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        return False
+    lowered = text.casefold()
+    error_scan = re.sub(r"\bno\s+fatal(?:\s+\w+){0,3}\s+errors?\b", "", lowered)
+    error_scan = re.sub(r"\bno\s+errors?\b", "", error_scan)
+    return (
+        re.search(rf"\b{len(films)}\b", lowered) is not None
+        and ("gerber" in lowered or "film" in lowered)
+        and all(re.search(rf"(?<![a-z0-9]){re.escape(film.casefold())}(?![a-z0-9])", lowered) for film in films)
+        and re.search(r"\b(?:fatal|error|failed)\b", error_scan) is None
+    )
+
+
 def _drill_signature(data: bytes):
     text = _text(data).upper()
     units = "INCH" if "INCH" in text else "METRIC" if "METRIC" in text else None
@@ -281,6 +340,8 @@ def _content_equal(name: str, actual: bytes, expected: bytes) -> bool:
     suffix = Path(name).suffix.lower()
     if suffix in {".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".gm1", ".gml"}:
         return _gerber_valid(actual)
+    if name == "photoplot.log":
+        return _photoplot_log_valid(actual)
     if suffix == ".log":
         return _log_equal(actual, expected)
     if suffix == ".drl":
@@ -293,20 +354,27 @@ def _content_equal(name: str, actual: bytes, expected: bytes) -> bool:
     return _text(actual) == _text(expected)
 
 
-def _zip_equal(path: Path, expected: bytes) -> bool:
+def _zip_equal(path: Path, _expected: bytes) -> bool:
     try:
-        with zipfile.ZipFile(path) as actual_zip, zipfile.ZipFile(io.BytesIO(expected)) as expected_zip:
-            actual_names = {Path(name).name.lower(): name for name in actual_zip.namelist() if not name.endswith("/")}
-            expected_names = {Path(name).name.lower(): name for name in expected_zip.namelist() if not name.endswith("/")}
-            if set(actual_names) != set(expected_names):
+        parameters = json.loads((_desktop() / "art_param.json").read_text(encoding="utf-8"))
+        films = parameters["films"]
+        if not films or len(films) != len(set(films)) or not all(isinstance(item, str) for item in films):
+            return False
+        with zipfile.ZipFile(path) as actual_zip:
+            actual_entries = [item for item in actual_zip.infolist() if not item.is_dir()]
+            if any(Path(item.filename).name != item.filename for item in actual_entries):
+                return False
+            if sum(item.file_size for item in actual_entries) > 40 * 1024 * 1024:
+                return False
+            actual_names = {Path(item.filename).name.lower(): item.filename for item in actual_entries}
+            if len(actual_names) != len(actual_entries):
+                return False
+            expected_names = {f"{film}.gbr".casefold() for film in films}
+            if set(actual_names) != expected_names:
                 return False
             return all(
-                _content_equal(
-                    expected_names[key],
-                    actual_zip.read(actual_names[key]),
-                    expected_zip.read(expected_names[key]),
-                )
-                for key in expected_names
+                _gerber_valid(actual_zip.read(actual_names[name]))
+                for name in expected_names
             )
     except Exception:
         return False
@@ -314,6 +382,8 @@ def _zip_equal(path: Path, expected: bytes) -> bool:
 
 def _bytes_equal(path: Path, expected: bytes) -> bool:
     try:
+        if path.name == "fixes.json":
+            return _fixes_valid(path)
         suffix = path.suffix.lower()
         if suffix == ".json":
             return _json_equal(path, expected)

@@ -23,13 +23,159 @@ PROCESS_SPEC = {'artifact': {'job_name': 'Job-Plate', 'model_name': 'Model-Plate
  'process': {'bc_signatures': [{'dofs': {'u1': 0.0}, 'step': 'Initial'},
                                {'dofs': {'u1': 0.0, 'u2': 0.0}, 'step': 'Initial'}],
              'geometry': {'bbox_spans': {'x': 50.0, 'y': 1.0}, 'tol': 0.15},
-             'load_signatures': [{'component': 'cf2',
-                                  'sign': 'negative',
+             'load_signatures': [{'type_any': ['CONCENTRATEDFORCE'],
                                   'step': 'Step-Pressure',
-                                  'type_any': ['CONCENTRATEDFORCE']}],
+                                  'component': 'cf2',
+                                  'component_value': -2.5132741228718345,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -5.026548245743669,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -7.5398223686155035,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -10.053096491487338,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -12.566370614359172,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -15.079644737231007,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -17.59291886010284,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -20.106192982974676,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -22.61946710584651,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -25.132741228718345,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -27.64601535159018,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -30.159289474462014,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -32.67256359733385,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -35.18583772020568,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -37.69911184307752,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -40.21238596594935,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -42.725660088821186,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -45.23893421169302,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -47.752208334564855,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -50.26548245743669,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -52.778756580308524,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -55.29203070318036,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -57.80530482605219,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -60.31857894892403,
+                                  'sign': 'negative',
+                                  'tol': 0.03},
+                                 {'type_any': ['CONCENTRATEDFORCE'],
+                                  'step': 'Step-Pressure',
+                                  'component': 'cf2',
+                                  'component_value': -31.41592653589793,
+                                  'sign': 'negative',
+                                  'tol': 0.03}],
              'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
              'mesh': {'main_element_type': 'CAX4R', 'seed_sizes': [2.0], 'seed_tol': 0.25},
-             'min_counts': {'boundary_conditions': 2, 'loads': 1},
+             'min_counts': {'boundary_conditions': 2, 'loads': 25},
              'required_sets': ['AXIS', 'OUTER', 'TOP'],
              'section': {'material_names': ['Steel'], 'type': 'SOLID'},
              'step': {'kind': 'STATIC'}},
@@ -601,7 +747,19 @@ def bc_matches_req(bc_obj, req):
             if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
                 return False
 
+    if 'magnitude' in req:
+        obs = getattr(bc_obj, 'magnitude', None)
+        if obs is None:
+            return False
+        tol = float(req.get('tol', ABS_TOL))
+        if not close_enough(obs, req['magnitude'], tol=tol, rel=1.0e-3):
+            return False
+
     return True
+
+
+
+
 
 
 def check_bcs(model, bc_specs, min_count=None):
@@ -622,16 +780,24 @@ def check_bcs(model, bc_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate boundary conditions')
 
+    used = set()
     for req in bc_specs:
-        matched = False
-        for bc in bcs:
+        matched_index = None
+        for index, bc in enumerate(bcs):
+            if index in used:
+                continue
             if bc_matches_req(bc, req):
-                matched = True
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required BC signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
+
+
 
 
 def type_matches_any(obj, tokens):
@@ -665,20 +831,26 @@ def load_matches_req(load_obj, req):
     comp = req.get('component', None)
     if comp:
         val = getattr(load_obj, comp, None)
-        if val is None:
+        if val is None or not is_set_value(val):
             return False
-        if not is_set_value(val):
-            return False
-        sign = req.get('sign', None)
         vf = safe_float(val, None)
         if vf is None:
             return False
+        sign = req.get('sign', None)
         if sign == 'positive' and vf <= 0.0:
             return False
         if sign == 'negative' and vf >= 0.0:
             return False
+        if 'component_value' in req:
+            tol = float(req.get('tol', ABS_TOL))
+            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+                return False
 
     return True
+
+
+
+
 
 
 def check_loads(model, load_specs, min_count=None):
@@ -699,16 +871,24 @@ def check_loads(model, load_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate loads')
 
+    used = set()
     for req in load_specs:
-        matched = False
-        for ld in loads:
-            if load_matches_req(ld, req):
-                matched = True
+        matched_index = None
+        for index, load_obj in enumerate(loads):
+            if index in used:
+                continue
+            if load_matches_req(load_obj, req):
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required load signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
+
+
 
 
 def check_couplings(model, req):
@@ -993,6 +1173,14 @@ def check_cae_process(cae_path):
     if min_counts:
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
+
+    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+        return False, model
+    ok('BC check passed')
+
+    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+        return False, model
+    ok('Load check passed')
 
     if not check_keyword_bcs_loads(model, proc):
         return False, model

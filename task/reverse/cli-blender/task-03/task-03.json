@@ -1,0 +1,75 @@
+{
+  "id": "c-reverse-blender-task-03-ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "The uploaded render, geometry report, and coordinate hole table describe a machined mounting plate. Reconstruct a single closed mesh named `Plate` with overall dimensions 2.6 x 0.9 x 0.12 Blender units and five separate cylindrical through-bores at the listed centers and diameters. Apply the bores to the mesh so the topology records five handles, then save `/home/user/Desktop/answer.blend`. [Software] Run `blender` for scripted or headless Blender work.",
+  "source": "https://docs.blender.org/manual/en/4.2/modeling/; https://docs.blender.org/api/4.2/; https://docs.blender.org/manual/en/4.2/render/output/properties/format.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/reference_view.png",
+            "path": "/home/user/Desktop/reference_view.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/geometry_report.csv",
+            "path": "/home/user/Desktop/geometry_report.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/hole_table.csv",
+            "path": "/home/user/Desktop/hole_table.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -19,21 +19,33 @@ import math
 import traceback
 
 TASK_ID = 'task-03'
-PROCESS_SPEC = {'artifact': {'job_name': 'Job-FlangeHole', 'model_name': 'Model-HoleTension', 'step_name': 'Step-HoleTension'},
+PROCESS_SPEC = {'artifact': {'job_name': 'Job-FlangeHole',
+              'model_name': 'Model-HoleTension',
+              'step_name': 'Step-HoleTension'},
  'process': {'bc_signatures': [{'dofs': {'u1': 0.0, 'u2': 0.0, 'u3': 0.0}, 'step': 'Initial'},
                                {'dofs': {'u2': 0.0, 'u3': 0.0}, 'step': 'Initial'},
                                {'dofs': {'u3': 0.0}, 'step': 'Initial'}],
              'geometry': {'bbox_spans': {'x': 120.0, 'y': 240.0},
-                          'hole': {'center': [60.0, 120.0], 'min_nodes': 8, 'radius': 6.0, 'tol': 0.8},
+                          'hole': {'center': [60.0, 120.0],
+                                   'min_nodes': 14,
+                                   'radius': 6.0,
+                                   'tol': 0.8},
                           'tol': 0.25},
-             'load_signatures': [{'magnitude': 8.0,
+             'load_signatures': [{'type_any': ['SHELLEDGELOAD'],
                                   'step': 'Step-HoleTension',
-                                  'tol': 0.5,
-                                  'type_any': ['SHELLEDGELOAD']}],
+                                  'magnitude': 8.0,
+                                  'tol': 0.5},
+                                 {'type_any': ['SHELLEDGELOAD'],
+                                  'step': 'Step-HoleTension',
+                                  'magnitude': 8.0,
+                                  'tol': 0.5}],
              'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
              'mesh': {'main_element_type': 'S4R', 'seed_sizes': [10.0], 'seed_tol': 1.5},
              'min_counts': {'boundary_conditions': 3, 'loads': 2},
-             'section': {'material_names': ['Steel'], 'num_int_pts': 5, 'thickness': 1.0, 'type': 'SHELL'},
+             'section': {'material_names': ['Steel'],
+                         'num_int_pts': 5,
+                         'thickness': 1.0,
+                         'type': 'SHELL'},
              'step': {'kind': 'STATIC'}},
  'solver': {'min_frames': 2}}
 
@@ -603,7 +615,19 @@ def bc_matches_req(bc_obj, req):
             if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
                 return False
 
+    if 'magnitude' in req:
+        obs = getattr(bc_obj, 'magnitude', None)
+        if obs is None:
+            return False
+        tol = float(req.get('tol', ABS_TOL))
+        if not close_enough(obs, req['magnitude'], tol=tol, rel=1.0e-3):
+            return False
+
     return True
+
+
+
+
 
 
 def check_bcs(model, bc_specs, min_count=None):
@@ -624,16 +648,24 @@ def check_bcs(model, bc_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate boundary conditions')
 
+    used = set()
     for req in bc_specs:
-        matched = False
-        for bc in bcs:
+        matched_index = None
+        for index, bc in enumerate(bcs):
+            if index in used:
+                continue
             if bc_matches_req(bc, req):
-                matched = True
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required BC signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
+
+
 
 
 def type_matches_any(obj, tokens):
@@ -667,20 +699,26 @@ def load_matches_req(load_obj, req):
     comp = req.get('component', None)
     if comp:
         val = getattr(load_obj, comp, None)
-        if val is None:
+        if val is None or not is_set_value(val):
             return False
-        if not is_set_value(val):
-            return False
-        sign = req.get('sign', None)
         vf = safe_float(val, None)
         if vf is None:
             return False
+        sign = req.get('sign', None)
         if sign == 'positive' and vf <= 0.0:
             return False
         if sign == 'negative' and vf >= 0.0:
             return False
+        if 'component_value' in req:
+            tol = float(req.get('tol', ABS_TOL))
+            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+                return False
 
     return True
+
+
+
+
 
 
 def check_loads(model, load_specs, min_count=None):
@@ -701,16 +739,24 @@ def check_loads(model, load_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate loads')
 
+    used = set()
     for req in load_specs:
-        matched = False
-        for ld in loads:
-            if load_matches_req(ld, req):
-                matched = True
+        matched_index = None
+        for index, load_obj in enumerate(loads):
+            if index in used:
+                continue
+            if load_matches_req(load_obj, req):
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required load signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
+
+
 
 
 def check_couplings(model, req):
@@ -995,6 +1041,14 @@ def check_cae_process(cae_path):
     if min_counts:
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
+
+    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+        return False, model
+    ok('BC check passed')
+
+    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+        return False, model
+    ok('Load check passed')
 
     if not check_keyword_bcs_loads(model, proc):
         return False, model

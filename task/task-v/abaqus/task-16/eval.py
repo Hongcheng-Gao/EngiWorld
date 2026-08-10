@@ -19,10 +19,15 @@ import math
 import traceback
 
 TASK_ID = 'task-16'
-PROCESS_SPEC = {'artifact': {'job_name': 'Job-TransientHeat-A', 'model_name': 'Model-TransientHeat-A', 'step_name': 'Step-Heat-A'},
+PROCESS_SPEC = {'artifact': {'job_name': 'Job-TransientHeat-A',
+              'model_name': 'Model-TransientHeat-A',
+              'step_name': 'Step-Heat-A'},
  'process': {'geometry': {'bbox_spans': {'x': 60.0, 'y': 18.0, 'z': 12.0}, 'tol': 0.25},
-            'bc_signatures': [{'dofs': {}, 'step': 'Step-Heat-A'}],
-             'materials': [{'conductivity': 0.045, 'density': 7.85e-09, 'name': 'Steel', 'specific_heat': 450000000.0}],
+             'bc_signatures': [{'step': 'Step-Heat-A', 'dofs': {}, 'magnitude': 95.0, 'tol': 0.05}],
+             'materials': [{'conductivity': 0.045,
+                            'density': 7.85e-09,
+                            'name': 'Steel',
+                            'specific_heat': 450000000.0}],
              'mesh': {'main_element_type': 'DC3D8', 'seed_sizes': [4.0], 'seed_tol': 0.6},
              'min_counts': {'boundary_conditions': 1, 'loads': 0},
              'section': {'material_names': ['Steel'], 'type': 'SOLID'},
@@ -31,7 +36,8 @@ PROCESS_SPEC = {'artifact': {'job_name': 'Job-TransientHeat-A', 'model_name': 'M
                       'kind': 'HEAT_TRANSFER',
                       'max_inc': 15.0,
                       'response': 'TRANSIENT',
-                      'time_period': 300.0}},
+                      'time_period': 300.0},
+             'predefined_temperatures': [{'step': 'Initial', 'magnitude': 25.0}]},
  'solver': {'min_frames': 3}}
 
 ABS_TOL = 1.0e-6
@@ -600,7 +606,17 @@ def bc_matches_req(bc_obj, req):
             if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
                 return False
 
+    if 'magnitude' in req:
+        obs = getattr(bc_obj, 'magnitude', None)
+        if obs is None:
+            return False
+        tol = float(req.get('tol', ABS_TOL))
+        if not close_enough(obs, req['magnitude'], tol=tol, rel=1.0e-3):
+            return False
+
     return True
+
+
 
 
 def check_bcs(model, bc_specs, min_count=None):
@@ -621,16 +637,22 @@ def check_bcs(model, bc_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate boundary conditions')
 
+    used = set()
     for req in bc_specs:
-        matched = False
-        for bc in bcs:
+        matched_index = None
+        for index, bc in enumerate(bcs):
+            if index in used:
+                continue
             if bc_matches_req(bc, req):
-                matched = True
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required BC signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
 
 
 def type_matches_any(obj, tokens):
@@ -664,20 +686,24 @@ def load_matches_req(load_obj, req):
     comp = req.get('component', None)
     if comp:
         val = getattr(load_obj, comp, None)
-        if val is None:
+        if val is None or not is_set_value(val):
             return False
-        if not is_set_value(val):
-            return False
-        sign = req.get('sign', None)
         vf = safe_float(val, None)
         if vf is None:
             return False
+        sign = req.get('sign', None)
         if sign == 'positive' and vf <= 0.0:
             return False
         if sign == 'negative' and vf >= 0.0:
             return False
+        if 'component_value' in req:
+            tol = float(req.get('tol', ABS_TOL))
+            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+                return False
 
     return True
+
+
 
 
 def check_loads(model, load_specs, min_count=None):
@@ -698,16 +724,22 @@ def check_loads(model, load_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate loads')
 
+    used = set()
     for req in load_specs:
-        matched = False
-        for ld in loads:
-            if load_matches_req(ld, req):
-                matched = True
+        matched_index = None
+        for index, load_obj in enumerate(loads):
+            if index in used:
+                continue
+            if load_matches_req(load_obj, req):
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required load signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
 
 
 def check_couplings(model, req):
@@ -992,6 +1024,14 @@ def check_cae_process(cae_path):
     if min_counts:
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
+
+    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+        return False, model
+    ok('BC check passed')
+
+    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+        return False, model
+    ok('Load check passed')
 
     if not check_keyword_bcs_loads(model, proc):
         return False, model

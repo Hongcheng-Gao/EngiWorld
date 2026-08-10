@@ -126,10 +126,18 @@ def norm(value):
     return re.sub(r"\s+", " ", str(value or "").replace("_", " ").replace("-", " ").strip()).lower()
 
 
-def entity_count(model, classes):
+def entity_instances(model, classes):
     if isinstance(classes, str):
         classes = [classes]
-    return sum(len(model.by_type(name)) for name in classes)
+    unique = {}
+    for name in classes:
+        for entity in model.by_type(name):
+            unique[entity.id()] = entity
+    return list(unique.values())
+
+
+def entity_count(model, classes):
+    return len(entity_instances(model, classes))
 
 
 def unique_global_ids(model):
@@ -161,7 +169,33 @@ def check_forbidden(model):
 
 def check_space_names(model):
     names = [norm(getattr(space, "Name", "") or getattr(space, "LongName", "")) for space in model.by_type("IfcSpace")]
-    return all(any(norm(required) in name for name in names) for required in SPEC["space_names"])
+    required = [norm(name) for name in SPEC["space_names"]]
+    return len(names) == SPEC["min_counts"]["spaces"] and sorted(names) == sorted(required)
+
+
+def check_required_representations(model):
+    class_map = {
+        "spaces": "IfcSpace",
+        "walls": ["IfcWall", "IfcWallStandardCase"],
+        "slabs": "IfcSlab",
+        "roofs": "IfcRoof",
+        "doors": "IfcDoor",
+        "windows": "IfcWindow",
+        "stairs": "IfcStair",
+        "columns": "IfcColumn",
+        "beams": "IfcBeam",
+    }
+    for key, classes in class_map.items():
+        minimum = SPEC["min_counts"].get(key)
+        if minimum is None:
+            continue
+        represented = sum(
+            bool(getattr(entity, "Representation", None))
+            for entity in entity_instances(model, classes)
+        )
+        if represented < minimum:
+            return False
+    return True
 
 
 def shaped_product_bbox(model):
@@ -219,6 +253,7 @@ def evaluate(root):
         and check_min_counts(model)
         and check_forbidden(model)
         and check_space_names(model)
+        and check_required_representations(model)
         and check_overall_size(model)
     )
 

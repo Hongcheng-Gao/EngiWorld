@@ -204,7 +204,58 @@ def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
     return True
 
 
+def strict_process_check(mapdl, pred):
+    import math
+    import re
+    FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
+
+    def close(value, target, tolerance):
+        try:
+            value = float(value)
+        except Exception:
+            return False
+        return math.isfinite(value) and abs(value - target) <= tolerance
+
+    def constraints(text):
+        return {(int(node), dof.upper()) for node, dof in re.findall(
+            r"(?m)^\s*(\d+)\s+(UX|UY|UZ|ROTX|ROTY|ROTZ|TEMP)\s+" + FLOAT, text)}
+
+    def forces(text):
+        return {(int(node), dof.upper()): float(value) for node, dof, value in re.findall(
+            r"(?m)^\s*(\d+)\s+(FX|FY|FZ)\s+(" + FLOAT + r")", text)}
+
+    mapdl.finish()
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.prep7()
+    mapdl.allsel()
+    node_numbers = [int(value) for value in mapdl.mesh.nnum]
+    coordinates = [[float(item) for item in row] for row in mapdl.mesh.nodes]
+    if not coordinates or len(node_numbers) != len(coordinates):
+        return False
+    by_node = dict(zip(node_numbers, coordinates))
+    element_text = str(mapdl.run("ETLIST,ALL")).upper()
+    material_text = str(mapdl.run("MPLIST,ALL")).upper()
+    dlist = constraints(str(mapdl.run("DLIST,ALL,ALL")))
+
+    if "SOLID185" not in element_text or int(mapdl.get_value("ELEM", 0, "COUNT")) != 80:
+        return False
+    if not all(token in material_text for token in ("210000", "0.300", "1.500")):
+        return False
+    left = {node for node, xyz in by_node.items() if abs(xyz[0]) <= 1.0e-6}
+    right = {node for node, xyz in by_node.items() if abs(xyz[0]-100.0) <= 1.0e-6}
+    if any((node, "UX") not in dlist for node in left | right):
+        return False
+    temp_text = str(mapdl.run("BFLIST,ALL,TEMP")).upper()
+    if "100" not in temp_text:
+        return False
+    stress = abs(float(pred["max_seqv_mpa"]))
+    return 180.0 < stress < 350.0 and abs(float(pred["midpoint_uy_mm"])) < 0.05
+
+
 def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
+    if not strict_process_check(mapdl, pred):
+        return False
+
     mapdl.resume(DB_FILE.stem, "db")
     if not _check_bounds_from_instruction(mapdl, task_name):
         return False

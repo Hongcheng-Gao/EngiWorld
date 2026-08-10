@@ -183,7 +183,62 @@ def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
     return True
 
 
+def strict_process_check(mapdl, pred):
+    import math
+    import re
+    FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
+
+    def close(value, target, tolerance):
+        try:
+            value = float(value)
+        except Exception:
+            return False
+        return math.isfinite(value) and abs(value - target) <= tolerance
+
+    def constraints(text):
+        return {(int(node), dof.upper()) for node, dof in re.findall(
+            r"(?m)^\s*(\d+)\s+(UX|UY|UZ|ROTX|ROTY|ROTZ|TEMP)\s+" + FLOAT, text)}
+
+    def forces(text):
+        return {(int(node), dof.upper()): float(value) for node, dof, value in re.findall(
+            r"(?m)^\s*(\d+)\s+(FX|FY|FZ)\s+(" + FLOAT + r")", text)}
+
+    mapdl.finish()
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.prep7()
+    mapdl.allsel()
+    node_numbers = [int(value) for value in mapdl.mesh.nnum]
+    coordinates = [[float(item) for item in row] for row in mapdl.mesh.nodes]
+    if not coordinates or len(node_numbers) != len(coordinates):
+        return False
+    by_node = dict(zip(node_numbers, coordinates))
+    element_text = str(mapdl.run("ETLIST,ALL")).upper()
+    material_text = str(mapdl.run("MPLIST,ALL")).upper()
+    dlist = constraints(str(mapdl.run("DLIST,ALL,ALL")))
+
+    if "BEAM188" not in element_text or int(mapdl.get_value("ELEM", 0, "COUNT")) != 20:
+        return False
+    if not all(token in material_text for token in ("210000", "0.300", "7.850")):
+        return False
+    fixed = {node for node, xyz in by_node.items() if abs(xyz[0]) <= 1.0e-6}
+    loaded = {node for node, xyz in by_node.items() if abs(xyz[0]-500.0) <= 1.0e-6}
+    if len(fixed) != 1 or len(loaded) != 1:
+        return False
+    node0 = next(iter(fixed)); node1 = next(iter(loaded))
+    if any((node0, dof) not in dlist for dof in ("UX","UY","UZ","ROTX","ROTY","ROTZ")):
+        return False
+    flist = forces(str(mapdl.run("FLIST,ALL,ALL")))
+    if not close(flist.get((node1, "FY")), -10.0, 0.01):
+        return False
+    mapdl.finish(); mapdl.post1(); mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip(".")); mapdl.set(1, 1)
+    frequency = float(mapdl.get_value("ACTIVE", 0, "SET", "FREQ"))
+    return close(frequency, 5.0, 1.0e-4) and math.isfinite(float(pred["free_end_uy_mm"]))
+
+
 def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
+    if not strict_process_check(mapdl, pred):
+        return False
+
     mapdl.resume(DB_FILE.stem, "db")
     if not _check_bounds_from_instruction(mapdl, task_name):
         return False

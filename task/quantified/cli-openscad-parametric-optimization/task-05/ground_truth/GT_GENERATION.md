@@ -10,4 +10,4 @@ Workflow:
 - run the task evaluator with `python3 /home/user/Desktop/eval.py`
 - save the CLI-exported STL and evaluator metrics as this ground truth
 
-The reference is not a unique answer. The evaluator assigns a continuous score from the submitted STL geometry. The reference metrics in this directory and in `eval.py` are measured from the actual OpenSCAD CLI export.
+The reference is not a unique answer. The evaluator assigns a continuous score from the submitted STL geometry. Before scoring, it verifies one connected watertight positive-volume solid, the coordinate envelope, a continuous z=0 contact footprint, and 4-16 separated ventilating rail/slat runs at the z=10 mm probe with minimum thickness, clear gap, and openness. Both the primary metric and the secondary height factor reward lower profiles. The reference metrics in this directory and in `eval.py` are measured from the actual OpenSCAD CLI export.

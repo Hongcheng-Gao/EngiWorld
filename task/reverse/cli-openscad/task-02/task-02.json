@@ -1,0 +1,75 @@
+{
+  "id": "c-reverse-openscad-task-02-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Use the OpenSCAD top projection and inspection tables to reconstruct the QFN handling tray. Define and invoke `module qfn_tray`; model the 88 x 64 x 4 mm base, twelve recessed pockets in the specified 4 x 3 grid, and both through fiducials. Save the editable source as `/home/user/Desktop/answer.scad`. [Software] Run `openscad` from the command line.",
+  "source": "https://openscad.org/documentation.html; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/2D_to_3D_Extrusion",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/top_projection.svg",
+            "path": "/home/user/Desktop/top_projection.svg"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/dimensions.csv",
+            "path": "/home/user/Desktop/dimensions.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/inspection_report.txt",
+            "path": "/home/user/Desktop/inspection_report.txt"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

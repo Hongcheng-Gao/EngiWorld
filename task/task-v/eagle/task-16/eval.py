@@ -138,7 +138,7 @@ def norm_drill(value):
     return round(float(value), 3)
 
 
-def check():
+def _legacy_check():
     tree = parse_xml(DESKTOP / "answer.sch")
     if tree is None:
         return False
@@ -166,6 +166,36 @@ def check():
     required_u1 = {("U1", pin) for pin in ("V+", "GND", "TR", "THR", "DIS", "Q", "CV", "R")}
     return required_u1.issubset(pinrefs) and ("LED1", "A") in pinrefs
 
+
+# ENGIWORLD_REPAIRED_EAGLE
+
+def check():
+    if not _legacy_check():
+        return False
+    tree = parse_xml(DESKTOP / "answer.sch")
+    if tree is None:
+        return False
+    root = tree.getroot()
+    parts = parts_by_name(root)
+    if set(parts) != {"U1", "R1", "R2", "C1", "C2", "LED1"}:
+        return False
+    nets = {n.get("name"): {(p.get("part"), (p.get("pin") or "").upper())
+                            for p in n.findall(".//pinref")} for n in root.findall(".//net")}
+    if set(nets) != {"VCC", "GND", "TRIG_THRES", "DISCH", "OUT", "CTRL"}:
+        return False
+    required = {
+        "VCC": {("U1", "V+"), ("U1", "R")},
+        "GND": {("U1", "GND"), ("LED1", "C")},
+        "TRIG_THRES": {("U1", "TR"), ("U1", "THR")},
+        "DISCH": {("U1", "DIS")}, "OUT": {("U1", "Q"), ("LED1", "A")},
+        "CTRL": {("U1", "CV")},
+    }
+    if any(not pins.issubset(nets.get(name, set())) for name, pins in required.items()):
+        return False
+    pin_net = {(part, pin): name for name, pins in nets.items() for part, pin in pins}
+    def pn(ref): return {net for (part, _), net in pin_net.items() if part == ref}
+    return (pn("R1") == {"VCC", "DISCH"} and pn("R2") == {"DISCH", "TRIG_THRES"}
+            and pn("C1") == {"TRIG_THRES", "GND"} and pn("C2") == {"VCC", "GND"})
 
 if __name__ == "__main__":
     print("True" if check_no_gui_bypass() and check() else "False")
