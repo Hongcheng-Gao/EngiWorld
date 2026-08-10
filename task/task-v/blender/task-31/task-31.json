@@ -2,7 +2,7 @@
   "id": "v-blender-task-31-ubuntu",
   "snapshot": "Blender-4.2.3",
   "instruction": "Alembic Cache Export. `scene.blend` contains a single mesh object named `Blob`, an ICO sphere of radius 1 with approximately 642 vertices and 1280 faces. It has a `Basis` shape key for the rest pose and a `Pulse` shape key whose vertices are scaled to 1.5 times the basis. `Pulse` is animated from value 0.0 at frame 1 to 1.0 at frame 15 and back to 0.0 at frame 30; the scene range is already frames 1 through 30. Use Blender's Alembic export dialog to export the complete 30-frame deformation as `animated.abc` in the current working directory, overwriting any existing file. Set the export frame range to 1 through 30, export all visible objects rather than only selected objects, enable UVs and Normals, disable Vertex Colors and Face Sets, leave Flatten Hierarchy and Apply Subdivision Surface disabled, and enable Pack UV Islands. Requirements: 1. `animated.abc` is a readable Alembic archive in Ogawa or HDF5 format. 2. It contains the `Blob` as an animated PolyMesh with per-frame deformation samples covering frames 1 through 30. 3. The archive is at least 100 KB, consistent with the full 30-frame vertex cache rather than a single-frame export.",
-  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.alembic.io/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "source": "https://docs.blender.org/manual/en/4.2/; https://docs.blender.org/api/4.2/; https://developer.blender.org/docs/release_notes/4.2/",
   "config": [
     {
       "type": "upload_file",
@@ -57,7 +57,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "blender --background --python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

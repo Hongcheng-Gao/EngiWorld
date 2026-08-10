@@ -2,7 +2,7 @@
   "id": "v-blender-task-29-ubuntu",
   "snapshot": "Blender-4.2.3",
   "instruction": "FBX for Unity (Y-up, meters, animation enabled). `scene.blend` contains one animated 1x1x1 m mesh object named `Cube` at the origin. Its location is (0, 0, 0) at frame 1 and (0, 0, 2) at frame 30, so it rises 2 m along Z. The scene uses Metric units in meters with Unit Scale 1.0 and spans frames 1 through 30. Export the scene from Blender's FBX export dialog as `part.fbx` in the current working directory, overwriting any existing file. Use the following Unity-friendly export settings: Apply Scalings = FBX Units Scale; Forward = -Z Forward; Up = Y Up; Bake Animation enabled; NLA Strips disabled; All Actions disabled; Force Start/End Keying enabled. Export all objects rather than only selected objects, and include Mesh, Armature, and Empty object types. Use the default binary FBX format with the animation embedded. Requirements: 1. `part.fbx` is a readable, non-empty binary FBX file in FBX 2014 format or newer. 2. Its global up axis is Y. 3. Its unit scale is 100 centimetres per meter, preserving the scene's one-unit-per-meter scale for Unity. 4. It contains an animation stack and baked animation curves retaining the `Cube` motion from frames 1 through 30.",
-  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml; https://aps.autodesk.com/developer/overview/fbx-sdk",
+  "source": "https://docs.blender.org/manual/en/4.2/; https://docs.blender.org/api/4.2/; https://developer.blender.org/docs/release_notes/4.2/",
   "config": [
     {
       "type": "upload_file",
@@ -57,7 +57,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "blender --background --python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
