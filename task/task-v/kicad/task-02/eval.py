@@ -213,10 +213,10 @@ def _is_pass(result) -> bool:
     if isinstance(result, bool):
         return result
     if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
+        if isinstance(result.get("pass"), bool):
+            return result["pass"]
+        if isinstance(result.get("passed"), bool):
+            return result["passed"]
         score = result.get("score")
         if isinstance(score, (int, float)):
             return float(score) == 1.0

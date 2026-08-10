@@ -172,7 +172,7 @@ def evaluate(path: str):
 
 
 def eval_outputs(output_dir: str = ".") -> dict:
-    path = os.path.join(output_dir, "design.kicad_pcb")
+    path = os.path.join(output_dir, "answer.kicad_pcb")
     r = evaluate(path)
     return {
         "task_id": r["task_id"],
@@ -189,5 +189,5 @@ def eval_outputs(output_dir: str = ".") -> dict:
 
 
 if __name__ == "__main__":
-    path = sys.argv[1] if len(sys.argv) > 1 else "design.kicad_pcb"
+    path = sys.argv[1] if len(sys.argv) > 1 else str(Path("/home/user/Desktop") / "answer.kicad_pcb")
     print(evaluate(path)["passed"])

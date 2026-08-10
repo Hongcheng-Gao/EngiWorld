@@ -292,6 +292,82 @@ def check_counts(objects, data):
     return True
 
 
+
+def check_model_integrity(objects, data):
+    # Every interzone Surface boundary must point to one peer and that peer
+    # must point back.  Names may vary unless SPEC explicitly names the pair.
+    surfaces_by_handle = {surface["handle"]: surface for surface in data["surfaces"]}
+    for surface in data["surfaces"]:
+        if surface["obc"] != "Surface":
+            continue
+        peer = surfaces_by_handle.get(surface["obc_object"])
+        if not peer or peer["obc"] != "Surface" or peer["obc_object"] != surface["handle"]:
+            return False
+
+    surface_handles = set(surfaces_by_handle)
+    if any(subsurface["surface"] not in surface_handles for subsurface in data["subsurfaces"]):
+        return False
+
+    zones = {handle(obj) for obj in by_type(objects, "OS:ThermalZone")}
+    equipment_lists = by_type(objects, "OS:ZoneHVAC:EquipmentList")
+    equipment_targets = [obj["fields"][2] for obj in equipment_lists if len(obj["fields"]) > 2]
+    if any(target not in zones for target in equipment_targets):
+        return False
+    if len(equipment_lists) == len(zones) and set(equipment_targets) != zones:
+        return False
+
+    thermostats = {handle(obj) for obj in by_type(objects, "OS:ThermostatSetpoint:DualSetpoint")}
+    zone_thermostats = {obj["fields"][19] for obj in by_type(objects, "OS:ThermalZone") if len(obj["fields"]) > 19 and obj["fields"][19]}
+    if thermostats != zone_thermostats:
+        return False
+
+    schedule_handles = {handle(obj) for obj in by_type(objects, "OS:Schedule:Ruleset")}
+    for thermostat in by_type(objects, "OS:ThermostatSetpoint:DualSetpoint"):
+        fields = thermostat["fields"]
+        if len(fields) < 4 or fields[2] not in schedule_handles or fields[3] not in schedule_handles:
+            return False
+
+    spaces = {handle(obj) for obj in by_type(objects, "OS:Space")}
+    space_types = {handle(obj) for obj in by_type(objects, "OS:SpaceType")}
+    valid_targets = spaces | space_types
+    load_rules = SPEC.get("loads", {})
+    load_types = [
+        ("OS:People", "OS:People:Definition", "people_definitions"),
+        ("OS:Lights", "OS:Lights:Definition", "lights_definitions"),
+        ("OS:ElectricEquipment", "OS:ElectricEquipment:Definition", "electric_equipment_definitions"),
+    ]
+    for object_type, definition_type, definition_key in load_types:
+        definitions = {handle(obj) for obj in by_type(objects, definition_type)}
+        if definition_key in load_rules and len(definitions) != int(load_rules[definition_key]):
+            return False
+        load_objects = by_type(objects, object_type)
+        targets = []
+        for load in load_objects:
+            fields = load["fields"]
+            if len(fields) < 5 or fields[2] not in definitions or fields[3] not in valid_targets or fields[4] not in schedule_handles:
+                return False
+            targets.append(fields[3])
+        # When there is one instance per space and no SpaceType, the task's
+        # direct-space loads must cover every space, not duplicate one space.
+        if not space_types and load_objects and len(load_objects) == len(spaces) and set(targets) != spaces:
+            return False
+
+    if "space_type_name" in load_rules:
+        matching = [obj for obj in by_type(objects, "OS:SpaceType") if name(obj) == load_rules["space_type_name"]]
+        if len(matching) != 1:
+            return False
+        space_type_handle = handle(matching[0])
+        if any(len(space["fields"]) < 3 or space["fields"][2] != space_type_handle for space in by_type(objects, "OS:Space")):
+            return False
+        for object_type in ("OS:People", "OS:Lights"):
+            if any(len(obj["fields"]) < 4 or obj["fields"][3] != space_type_handle for obj in by_type(objects, object_type)):
+                return False
+        people_schedules = {obj["fields"][4] for obj in by_type(objects, "OS:People")}
+        lights_schedules = {obj["fields"][4] for obj in by_type(objects, "OS:Lights")}
+        if people_schedules & lights_schedules:
+            return False
+    return True
+
 def check_space_links(objects, data):
     stories = {handle(obj) for obj in by_type(objects, "OS:BuildingStory")}
     zones = {handle(obj) for obj in by_type(objects, "OS:ThermalZone")}
@@ -372,6 +448,7 @@ def evaluate():
     data = metrics(objects)
     return (
         check_counts(objects, data)
+        and check_model_integrity(objects, data)
         and check_space_links(objects, data)
         and check_geometry(data)
         and check_hvac(objects)

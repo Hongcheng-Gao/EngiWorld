@@ -1,6 +1,6 @@
 from __future__ import annotations
 OUTPUT_FILE = 'guih03_gearbox_gasket_completed.dxf'
-SPEC = {'polylines': [{'layer': 'OUTLINE', 'points': [(0, 30), (30, 0), (160, 0), (190, 30), (190, 110), (160, 140), (30, 140), (0, 110)]}], 'circles': [{'layer': 'HOLE', 'center': (30, 30), 'radius': 5}, {'layer': 'HOLE', 'center': (95, 20), 'radius': 5}, {'layer': 'HOLE', 'center': (160, 30), 'radius': 5}, {'layer': 'HOLE', 'center': (170, 70), 'radius': 5}, {'layer': 'HOLE', 'center': (160, 110), 'radius': 5}, {'layer': 'HOLE', 'center': (95, 120), 'radius': 5}, {'layer': 'HOLE', 'center': (30, 110), 'radius': 5}, {'layer': 'HOLE', 'center': (20, 70), 'radius': 5}, {'layer': 'CUT', 'center': (95, 70), 'radius': 38}, {'layer': 'CUT', 'center': (65, 70), 'radius': 6}, {'layer': 'CUT', 'center': (125, 70), 'radius': 6}], 'segments': [{'layer': 'CENTER', 'start': (95, 0), 'end': (95, 140)}, {'layer': 'CENTER', 'start': (0, 70), 'end': (190, 70)}], 'texts': [{'layer': 'TEXT', 'text': 'GEARBOX GASKET'}, {'layer': 'NOTE', 'text': 'HATCH BODY'}], 'min_counts': [{'type': 'HATCH', 'layer': 'HATCH', 'min': 1}]}
+SPEC = {'polylines': [{'layer': 'OUTLINE', 'points': [(0, 30), (30, 0), (160, 0), (190, 30), (190, 110), (160, 140), (30, 140), (0, 110)]}], 'circles': [{'layer': 'HOLE', 'center': (30, 30), 'radius': 5}, {'layer': 'HOLE', 'center': (95, 20), 'radius': 5}, {'layer': 'HOLE', 'center': (160, 30), 'radius': 5}, {'layer': 'HOLE', 'center': (170, 70), 'radius': 5}, {'layer': 'HOLE', 'center': (160, 110), 'radius': 5}, {'layer': 'HOLE', 'center': (95, 120), 'radius': 5}, {'layer': 'HOLE', 'center': (30, 110), 'radius': 5}, {'layer': 'HOLE', 'center': (20, 70), 'radius': 5}, {'layer': 'CUT', 'center': (95, 70), 'radius': 38}, {'layer': 'CUT', 'center': (65, 70), 'radius': 6}, {'layer': 'CUT', 'center': (125, 70), 'radius': 6}], 'segments': [{'layer': 'CENTER', 'start': (95, 0), 'end': (95, 140)}, {'layer': 'CENTER', 'start': (0, 70), 'end': (190, 70)}], 'texts': [{'layer': 'TEXT', 'text': 'GEARBOX GASKET - 8X DIA10'}, {'layer': 'NOTE', 'text': 'HATCH BODY, LEAVE ALL CUTOUTS OPEN'}], 'hatch_with_holes': [{'layer': 'HATCH', 'outer': [(0, 30), (30, 0), (160, 0), (190, 30), (190, 110), (160, 140), (30, 140), (0, 110)], 'circles': [{'center': (30, 30), 'radius': 5}, {'center': (95, 20), 'radius': 5}, {'center': (160, 30), 'radius': 5}, {'center': (170, 70), 'radius': 5}, {'center': (160, 110), 'radius': 5}, {'center': (95, 120), 'radius': 5}, {'center': (30, 110), 'radius': 5}, {'center': (20, 70), 'radius': 5}, {'center': (95, 70), 'radius': 38}, {'center': (65, 70), 'radius': 6}, {'center': (125, 70), 'radius': 6}]}]}
 
 
 from pathlib import Path
@@ -337,6 +337,52 @@ def has_hatch_poly(doc, layer, points, tol=TOL):
     return False
 
 
+def hatch_path_is_circle(path, center, radius, tol=TOL):
+    edges = list(getattr(path, "edges", []) or [])
+    if not edges:
+        return False
+    circular = []
+    for edge in edges:
+        edge_center = getattr(edge, "center", None)
+        edge_radius = getattr(edge, "radius", None)
+        if edge_center is None or edge_radius is None:
+            return False
+        if not pt_close(edge_center, center, tol) or not close(edge_radius, radius, tol):
+            return False
+        circular.append(edge)
+    # DXF writers may encode a circle as one 360-degree arc or several
+    # contiguous arcs.  Matching center/radius plus at least 359 degrees of
+    # angular coverage accepts both representations without requiring the GT's
+    # exact edge split.
+    coverage = 0.0
+    for edge in circular:
+        start = float(getattr(edge, "start_angle", 0.0))
+        end = float(getattr(edge, "end_angle", 0.0))
+        span = (end - start) % 360.0
+        if close(span, 0.0, 1e-6) and not close(start, end, 1e-6):
+            span = 360.0
+        if close(start, 0.0, 1e-6) and close(end, 360.0, 1e-6):
+            span = 360.0
+        coverage += span
+    return coverage >= 359.0
+
+
+def has_hatch_with_holes(doc, layer, outer, circles, tol=TOL):
+    for entity in ents(doc, "HATCH", layer):
+        paths = list(getattr(entity, "paths", []) or [])
+        if not any(
+            (pts := hatch_path_points(path)) and cycle_match(pts, outer, tol)
+            for path in paths
+        ):
+            continue
+        if all(
+            any(hatch_path_is_circle(path, item["center"], item["radius"], tol) for path in paths)
+            for item in circles
+        ):
+            return True
+    return False
+
+
 def has_lwpolyline_slot(doc, layer, cx, cy, length, width, tol=TOL):
     radius = float(width) / 2.0
     left = float(cx) - float(length) / 2.0 + radius
@@ -397,6 +443,9 @@ def check_spec(doc):
             return False
     for item in SPEC.get("hatches", []):
         if not has_hatch_poly(doc, item["layer"], item["points"]):
+            return False
+    for item in SPEC.get("hatch_with_holes", []):
+        if not has_hatch_with_holes(doc, item["layer"], item["outer"], item["circles"]):
             return False
     for item in SPEC.get("texts", []):
         if not has_text(doc, item["layer"], item["text"], item.get("insert"), item.get("height")):

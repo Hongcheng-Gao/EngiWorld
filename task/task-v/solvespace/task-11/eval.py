@@ -263,12 +263,14 @@ def _has_segment(segs, start, end, straight=True):
 
 def _has_bulge_arc(segs, start, end):
 
+    # From (75, 80) to (45, 80), a negative bulge produces the lower
+    # semicircle required for a notch into the 120 x 80 plate.  Reversing the
+    # segment reverses the correct bulge sign.  An outward upper semicircle is
+    # not an equivalent result.
     return any(
-
-        abs(bulge) > 0.2 and ((_point_close(a, start) and _point_close(b, end)) or (_point_close(a, end) and _point_close(b, start)))
-
+        (_point_close(a, start) and _point_close(b, end) and bulge < -0.2)
+        or (_point_close(a, end) and _point_close(b, start) and bulge > 0.2)
         for a, b, bulge in segs
-
     )
 
 
@@ -298,8 +300,13 @@ def _has_arc_entity(doc):
             pts.append((c.x + entity.dxf.radius * math.cos(radians), c.y + entity.dxf.radius * math.sin(radians)))
 
         if all(any(_point_close(p, q) for p in pts) for q in [(75, 80), (45, 80)]):
-
-            return True
+            start = float(entity.dxf.start_angle) % 360.0
+            end = float(entity.dxf.end_angle) % 360.0
+            span = (end - start) % 360.0
+            mid = math.radians((start + span / 2.0) % 360.0)
+            mid_y = c.y + entity.dxf.radius * math.sin(mid)
+            if mid_y < 80.0 - TOL:
+                return True
 
     return False
 
