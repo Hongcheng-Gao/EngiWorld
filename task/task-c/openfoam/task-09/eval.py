@@ -16,6 +16,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def field(path: Path, kind: str) -> list:
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
@@ -42,11 +65,18 @@ def check_case() -> bool:
         (
             "(1 0.5 0)" in mesh,
             "(200 20 1)" in mesh,
-            "value uniform 400;" in initial,
-            "value uniform 300;" in initial,
+            re.search(r"\binternalField\s+uniform\s+350(?:\.0+)?\s*;", initial) is not None,
+            has_entry(patch(initial, "hot"), "value", r"uniform\s+400(?:\.0+)?"),
+            has_entry(patch(initial, "cold"), "value", r"uniform\s+300(?:\.0+)?"),
+            has_entry(patch(initial, "adiabatic"), "type", r"zeroGradient"),
+            has_entry(patch(initial, "frontAndBack"), "type", r"empty"),
             "DT DT [0 2 -1 0 0 0 0] 0.01;" in physical,
             re.search(r"\bendTime\s+50\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.05\s*;", control) is not None,
+            re.search(r"\bwriteControl\s+runTime\s*;", control) is not None,
+            re.search(r"\bwriteInterval\s+50(?:\.0+)?\s*;", control) is not None,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
+            has_entry(named_block(schemes, "ddtSchemes"), "default", r"Euler"),
             "laplacian(DT,T) Gauss linear corrected;" in schemes,
         )
     )

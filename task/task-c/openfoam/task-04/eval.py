@@ -18,6 +18,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def field(path: Path, kind: str) -> list:
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
@@ -37,6 +60,7 @@ def field(path: Path, kind: str) -> list:
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     control = read(CASE / "system/controlDict")
@@ -47,8 +71,20 @@ def check_case() -> bool:
             "(0 0.0499524111 -0.00218096937)" in mesh,
             "(500 40 1)" in mesh,
             mesh.count("type wedge;") == 2,
-            "type empty;" in mesh,
-            "value uniform (1 0 0);" in velocity,
+            has_entry(named_block(mesh, "axis"), "type", r"empty"),
+            has_entry(named_block(mesh, "wall"), "type", r"wall"),
+            has_entry(patch(velocity, "axis"), "type", r"empty"),
+            has_entry(patch(velocity, "inlet"), "type", r"fixedValue"),
+            has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "wall"), "type", r"noSlip"),
+            all(has_entry(patch(velocity, name), "type", r"wedge") for name in ("wedgeLow", "wedgeHigh")),
+            has_entry(patch(pressure, "axis"), "type", r"empty"),
+            has_entry(patch(pressure, "inlet"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "outlet"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "outlet"), "value", r"uniform\s+0(?:\.0+)?"),
+            has_entry(patch(pressure, "wall"), "type", r"zeroGradient"),
+            all(has_entry(patch(pressure, name), "type", r"wedge") for name in ("wedgeLow", "wedgeHigh")),
             "viscosityModel constant;" in physical,
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?4\s*;", physical, re.I)
             is not None,

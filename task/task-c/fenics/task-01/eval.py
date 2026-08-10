@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import math
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -19,8 +23,6 @@ def is_result_artifact(path: Path) -> bool:
 
 
 def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return True
     return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
@@ -49,8 +51,43 @@ def check_task(root: Path) -> bool:
         if not is_nonempty_file(root / rel):
             return False
 
-    vals = parse_floats(read_text(root / "summary.txt"))
-    if len(vals) < 2:
+    script = root / "poisson.py"
+    source = read_text(script)
+    try:
+        ast.parse(source, filename=str(script))
+    except SyntaxError:
+        return False
+    normalized = re.sub(r"\s+", "", source)
+    required_code = (
+        "fromdolfinimport",
+        "inner(grad(u),grad(v))*dx",
+        "Constant(-6.0)",
+        "solve(a==L,u,bc)",
+        "assemble((u-u_D)**2*dx)",
+        "assemble(inner(grad(u-u_D),grad(u-u_D))*dx)",
+    )
+    if any(fragment not in normalized for fragment in required_code):
+        return False
+
+    summary = root / "summary.txt"
+    summary.unlink(missing_ok=True)
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(script)],
+            cwd=root,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            text=True,
+            timeout=120,
+            check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if completed.returncode != 0 or not is_nonempty_file(summary):
+        return False
+
+    vals = parse_floats(read_text(summary))
+    if len(vals) != 2 or not all(math.isfinite(value) for value in vals):
         return False
     err_l2, err_h1 = vals[0], vals[1]
 

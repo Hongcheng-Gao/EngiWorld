@@ -16,9 +16,9 @@ bc = DirichletBC(V, Constant(0.0), lambda x, on_b: on_b)
 u_sol = Function(V)
 solve(a == L, u_sol, bc)
 
-# 错误2: 未定义输出目录
+# 缺失要求2: 只写 VTK 文件，没有生成任务要求的 fixed_summary.txt
 vtkfile = File('result.pvd')
 vtkfile << u_sol
 
-# 错误3: 提取点值使用了错误语法
+# 错误3: 提取点值使用了错误的调用语法
 # val = u_sol(0.5, 0.5)

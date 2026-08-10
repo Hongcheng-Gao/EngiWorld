@@ -66,6 +66,9 @@ def check_basic(model)
     return false if space.buildingStory.empty? || space.buildingStory.get.nameString != s['story']
     return false if s['space_type'] && (space.spaceType.empty? || space.spaceType.get.nameString != s['space_type'])
     return false unless ok_close(space.floorArea, (s['x1']-s['x0'])*(s['y1']-s['y0']), 0.15)
+    sb = bounds_from_surfaces(space.surfaces)
+    expected_bounds = [s['x0'].to_f, s['y0'].to_f, (s['z0'] || 0).to_f, s['x1'].to_f, s['y1'].to_f, (s['z0'] || 0).to_f + s['h'].to_f]
+    return false unless sb.zip(expected_bounds).all? { |a,e| ok_close(a,e,0.06) }
     true
   end
 end
@@ -264,6 +267,11 @@ def check_daylighting(model)
     maps = model.getIlluminanceMaps.select { |im| !im.space.empty? && im.space.get.handle.to_s == space.get.handle.to_s }
     return false unless maps.size == 1
     im=maps[0]
+    return false if space.get.thermalZone.empty?
+    zone = space.get.thermalZone.get
+    return false if zone.primaryDaylightingControl.empty? || zone.primaryDaylightingControl.get.handle.to_s != c.handle.to_s
+    return false unless zone.fractionofZoneControlledbyPrimaryDaylightingControl > 0.0
+    return false if zone.illuminanceMap.empty? || zone.illuminanceMap.get.handle.to_s != im.handle.to_s
     return false unless ok_close(im.originXCoordinate, d['map_origin'][0], 0.06) && ok_close(im.originYCoordinate, d['map_origin'][1], 0.06) && ok_close(im.originZCoordinate, d['map_origin'][2], 0.06)
     return false unless ok_close(im.xLength, d['map_lengths'][0], 0.06) && ok_close(im.yLength, d['map_lengths'][1], 0.06)
     return false unless im.numberofXGridPoints == d['map_grid'][0] && im.numberofYGridPoints == d['map_grid'][1]
@@ -290,6 +298,15 @@ def check_constructions(model)
     return false if con.empty?
     layers = con.get.layers
     return false unless layers.size == cspec['layers'].size
+    return false unless layers.map(&:nameString) == cspec['layers'].map { |layer| layer['name'] }
+    targets = case kind
+      when 'wall' then model.getSurfaces.select { |s| s.surfaceType == 'Wall' && s.outsideBoundaryCondition == 'Outdoors' }
+      when 'roof' then model.getSurfaces.select { |s| s.surfaceType == 'RoofCeiling' && s.outsideBoundaryCondition == 'Outdoors' }
+      when 'floor' then model.getSurfaces.select { |s| s.surfaceType == 'Floor' && s.outsideBoundaryCondition == 'Ground' }
+      else []
+    end
+    return false if targets.empty?
+    return false unless targets.all? { |surface| !surface.construction.empty? && surface.construction.get.handle.to_s == con.get.handle.to_s }
     cspec['layers'].each do |mspec|
       mat = model.getStandardOpaqueMaterialByName(mspec['name'])
       return false if mat.empty?
@@ -303,10 +320,13 @@ def check_constructions(model)
   if c['window']
     con = model.getConstructionByName(c['window']['name'])
     return false if con.empty?
-    glazings = model.getSimpleGlazings.select { |g| g.nameString.include?(c['window']['name'].split.first) || true }
-    return false if glazings.empty?
-    g = glazings.find { |x| ok_close(x.uFactor, c['window']['u_factor'], 0.02) && ok_close(x.solarHeatGainCoefficient, c['window']['shgc'], 0.01) && ok_close(x.visibleTransmittance, c['window']['vt'], 0.01) }
-    return false if g.nil?
+    layers = con.get.layers
+    return false unless layers.size == 1
+    g_optional = layers[0].to_SimpleGlazing
+    return false if g_optional.empty?
+    g = g_optional.get
+    return false unless ok_close(g.uFactor, c['window']['u_factor'], 0.02) && ok_close(g.solarHeatGainCoefficient, c['window']['shgc'], 0.01) && ok_close(g.visibleTransmittance, c['window']['vt'], 0.01)
+    return false unless model.getSubSurfaces.all? { |sub| !sub.construction.empty? && sub.construction.get.handle.to_s == con.get.handle.to_s }
   end
   true
 end
@@ -363,6 +383,11 @@ def check_pv(model)
     return false unless ok_close(obj.systemLosses, g['losses'], 0.001)
     return false unless ok_close(obj.tiltAngle, g['tilt'], 0.1)
     return false unless ok_close(obj.azimuthAngle, g['azimuth'], 0.1)
+    if g['surface_space']
+      return false if obj.surface.empty?
+      expected_surface = model.getSurfaceByName("#{g['surface_space']} #{g.fetch('surface', 'roof').capitalize}")
+      return false if expected_surface.empty? || obj.surface.get.handle.to_s != expected_surface.get.handle.to_s
+    end
   end
   inv = model.getElectricLoadCenterInverterPVWattsByName(pv['inverter']['name'])
   return false if inv.empty?
@@ -375,6 +400,8 @@ def check_pv(model)
   return false unless dist.generatorOperationSchemeType == pv['operation']
   return false unless dist.electricalBussType == pv['bus']
   return false if dist.inverter.empty? || dist.inverter.get.handle.to_s != inv.handle.to_s
+  expected_generators = pv['generators'].map { |g| model.getGeneratorPVWattsByName(g['name']).get.handle.to_s }.sort
+  return false unless dist.generators.map { |g| g.handle.to_s }.sort == expected_generators
   true
 end
 

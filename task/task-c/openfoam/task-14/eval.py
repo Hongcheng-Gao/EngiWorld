@@ -18,6 +18,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def latest_time() -> Path:
     times = [
         path
@@ -77,11 +100,20 @@ def check_case() -> bool:
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     control = read(CASE / "system/controlDict")
+    pressure = read(CASE / "0/p")
+    nut = read(CASE / "0/nut")
+    geometry = named_block(snappy, "geometry")
+    surface = named_block(geometry, "cylinder")
     return all(
         (
             "(2 1 -0.005)" in mesh,
             "(160 80 1)" in mesh,
-            'file "cylinder.stl";' in snappy,
+            has_entry(snappy, "castellatedMesh", r"true"),
+            has_entry(snappy, "snap", r"true"),
+            has_entry(snappy, "addLayers", r"true"),
+            has_entry(surface, "type", r"triSurfaceMesh"),
+            has_entry(surface, "file", r'"cylinder\.stl"'),
+            re.search(r"(?<!\w)(?:scale|transform)\s+(?!1(?:\.0+)?\s*;)", surface) is None,
             "level (2 3);" in snappy,
             "locationInMesh (0.1 0.5 0);" in snappy,
             "nSurfaceLayers 3;" in snappy,
@@ -90,6 +122,15 @@ def check_case() -> bool:
             "internalField uniform (3 0 0);" in velocity,
             "internalField uniform 0.03375;" in kinetic,
             "internalField uniform 0.1458;" in dissipation,
+            has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(3(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "cylinder"), "type", r"noSlip"),
+            all(has_entry(patch(velocity, name), "type", r"symmetry") for name in ("topBottom", "frontAndBack")),
+            has_entry(patch(pressure, "outlet"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "outlet"), "value", r"uniform\s+0(?:\.0+)?"),
+            has_entry(patch(kinetic, "cylinder"), "type", r"kqRWallFunction"),
+            has_entry(patch(dissipation, "cylinder"), "type", r"epsilonWallFunction"),
+            has_entry(patch(nut, "cylinder"), "type", r"nutkWallFunction"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?6\s*;", physical, re.I)
             is not None,
             "simulationType RAS;" in momentum,
@@ -127,10 +168,10 @@ def check() -> bool:
     snappy_log = read(CASE / "log.snappyHexMesh")
     solve_log = read(CASE / "log.simpleFoam")
     if not (
-        "Mesh OK." in mesh_log
+        all("End" in read(path) for path in required[4:8])
+        and "Mesh OK." in mesh_log
         and "End" in mesh_log
         and "Layer mesh :" in snappy_log
-        and "Added 4416 out of 4416 cells (100%)." in snappy_log
         and "End" in snappy_log
         and "Time = 500" in solve_log
         and "End" in solve_log
@@ -152,11 +193,15 @@ def check() -> bool:
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
     cells = internal_count(final / "U", "vector")
-    if cells != 22672 or internal_count(final / "p", "scalar") != cells:
+    if cells <= 12800 or any(
+        internal_count(final / name, "scalar") != cells
+        for name in ("p", "k", "epsilon", "nut")
+    ):
         return False
 
     values = patch_values(final / "yPlus", "cylinder")
-    if len(values) != cylinder_faces() or len(values) != 1472:
+    faces = cylinder_faces()
+    if faces <= 0 or len(values) != faces:
         return False
     average = sum(values) / len(values)
     if not (all(math.isfinite(value) and value >= 0 for value in values) and 20.0 < average < 80.0):

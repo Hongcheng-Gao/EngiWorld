@@ -1,10 +1,9 @@
 from floris import FlorisModel
 import numpy as np
 
-fmodel = FlorisModel("init_file/two_turbine.yaml")
+fmodel = FlorisModel("two_turbine.yaml")
 fmodel.set(wind_directions=[270], wind_speeds=[8], turbulence_intensities=[0.06])
 fmodel.run()
 
-# TODO: 提取水平切面并保存数据
-# plane = fmodel.calculate_horizontal_plane(...)
-# 提取尾流中心线速度亏损
+# TODO: 在轮毂高度沿 y=0、从第二台风机下游 1D 开始采样中心线速度
+# 使用 sample_flow_at_points(...) 并计算达到 0.95 倍来流速度的恢复距离

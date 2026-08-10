@@ -1,84 +1,32 @@
 #!/usr/bin/env python3
-from __future__ import annotations
-
-import math
-import re
-from pathlib import Path
-
-REL_TOL = 1e-4
-ABS_TOL = 1e-3
-FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
-
-
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
+from eval_utils import (
+    desktop_root,
+    floats_close,
+    parse_floats,
+    print_result,
+    require_calls,
+    require_source_tokens,
+    run_submission,
+)
 
 
-def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return path.exists() and path.is_file()
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+EXPECTED = [436.442701, 778.043382, 78.269308]
 
 
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-def parse_floats(text: str) -> list[float]:
-    values: list[float] = []
-    for token in FLOAT_RE.findall(text):
-        try:
-            values.append(float(token))
-        except (TypeError, ValueError):
-            continue
-    return values
-
-
-def floats_close(actual: list[float], expected: list[float]) -> bool:
-    if len(actual) != len(expected):
+def check() -> bool:
+    root = desktop_root()
+    tree = run_submission(root, "yaw.py", ["summary.txt"])
+    require_calls(tree, {"FlorisModel": 1, "set": 2, "run": 2, "get_turbine_powers": 2})
+    require_source_tokens(root / "yaw.py", ["two_turbine.yaml", "yaw_angles", "20"])
+    values = parse_floats(root / "summary.txt", 3)
+    if not floats_close(values, EXPECTED):
         return False
-    for a, e in zip(actual, expected):
-        if not math.isclose(a, e, rel_tol=REL_TOL, abs_tol=ABS_TOL):
-            return False
-    return True
-
-
-def require_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
-
-
-EXPECTED_SUMMARY = [436.442701000000, 778.043382000000, 78.269308000000]
-
-
-def check_task(root: Path) -> bool:
-    required = ['yaw.py', 'summary.txt']
-    if not require_files(root, required):
-        return False
-
-    actual = parse_floats(read_text(root / "summary.txt"))
-    return floats_close(actual, EXPECTED_SUMMARY)
-
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
-
-
-def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
-    return 0
+    return abs(values[2] - (values[1] - values[0]) / values[0] * 100.0) <= 1e-3
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        result = check()
+    except Exception:
+        result = False
+    raise SystemExit(print_result(result))

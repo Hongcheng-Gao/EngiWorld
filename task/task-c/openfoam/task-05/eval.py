@@ -19,6 +19,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def vector_field(path: Path) -> list[tuple[float, float, float]]:
     match = re.search(
         r"internalField\s+nonuniform\s+List<vector>\s+\d+\s*\((.*?)\)\s*;",
@@ -61,6 +84,10 @@ def wall_yplus(path: Path) -> list[float]:
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
+    kinetic = read(CASE / "0/k")
+    omega = read(CASE / "0/omega")
+    nut = read(CASE / "0/nut")
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     control = read(CASE / "system/controlDict")
@@ -70,7 +97,20 @@ def check_case() -> bool:
             "(3 0 0)" in mesh,
             "(300 20 1)" in mesh,
             mesh.count("type wedge;") == 2,
-            "value uniform (15 0 0);" in velocity,
+            has_entry(patch(velocity, "axis"), "type", r"empty"),
+            has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(15(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "wall"), "type", r"noSlip"),
+            all(has_entry(patch(velocity, name), "type", r"wedge") for name in ("wedgeLow", "wedgeHigh")),
+            has_entry(patch(pressure, "outlet"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "outlet"), "value", r"uniform\s+0(?:\.0+)?"),
+            has_entry(patch(kinetic, "inlet"), "value", r"uniform\s+0\.84375"),
+            has_entry(patch(kinetic, "wall"), "type", r"kqRWallFunction"),
+            has_entry(patch(omega, "inlet"), "value", r"uniform\s+250(?:\.0+)?"),
+            has_entry(patch(omega, "wall"), "type", r"omegaWallFunction"),
+            has_entry(patch(nut, "wall"), "type", r"nutkWallFunction"),
+            all(has_entry(patch(field_text, "axis"), "type", r"empty") for field_text in (pressure, kinetic, omega, nut)),
+            all(has_entry(patch(field_text, name), "type", r"wedge") for field_text in (pressure, kinetic, omega, nut) for name in ("wedgeLow", "wedgeHigh")),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1\.5e-?5\s*;", physical, re.I)
             is not None,
             re.search(r"\brho\s+\[1 -3 0 0 0 0 0\]\s+1\.225\s*;", physical) is not None,

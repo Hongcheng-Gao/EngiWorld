@@ -1,29 +1,44 @@
-from floris import FlorisModel
-from floris.optimization.yaw_optimization.yaw_optimizer_sr import YawOptimizationSR
-import numpy as np, yaml
 from pathlib import Path
 
+from floris import FlorisModel
+from floris.optimization.yaw_optimization.yaw_optimizer_sr import YawOptimizationSR
+import numpy as np
 
-def cfg():
-    import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
-    c = yaml.safe_load(p.read_text(encoding="utf-8"))
-    c["logging"]["console"]["level"] = "ERROR"
-    c["farm"]["layout_x"] = [0.0, 630.0]
-    c["farm"]["layout_y"] = [0.0, 0.0]
-    c["farm"]["turbine_type"] = ["nrel_5MW", "nrel_5MW"]
-    return c
+
+ROOT = Path(__file__).resolve().parent
+CONFIG = ROOT / "two_turbine.yaml"
+if not CONFIG.exists():
+    CONFIG = ROOT.parent / "init_file" / "two_turbine.yaml"
+
+
+def main():
+    fmodel = FlorisModel(CONFIG)
+    fmodel.set(
+        wind_directions=[270.0],
+        wind_speeds=[8.0],
+        turbulence_intensities=[0.06],
+    )
+    fmodel.run()
+    baseline_total_kw = float(fmodel.get_turbine_powers().sum() / 1000.0)
+
+    optimizer = YawOptimizationSR(
+        fmodel,
+        minimum_yaw_angle=-30.0,
+        maximum_yaw_angle=30.0,
+        Ny_passes=[3, 4],
+    )
+    result = optimizer.optimize(print_progress=False)
+    yaw_angles = np.asarray(result.loc[0, "yaw_angles_opt"], dtype=float).reshape(1, -1)
+    fmodel.set(yaw_angles=yaw_angles)
+    fmodel.run()
+    optimized_total_kw = float(fmodel.get_turbine_powers().sum() / 1000.0)
+
+    values = [baseline_total_kw, optimized_total_kw, *yaw_angles.reshape(-1).tolist()]
+    (ROOT / "summary.txt").write_text(
+        ", ".join(f"{float(value):.6f}" for value in values) + "\n",
+        encoding="utf-8",
+    )
+
 
 if __name__ == "__main__":
-    f = FlorisModel(cfg())
-    f.set(wind_directions=[270], wind_speeds=[8], turbulence_intensities=[0.06])
-    f.run()
-    base = float((f.get_turbine_powers() / 1000.0).sum())
-    yo = YawOptimizationSR(f, minimum_yaw_angle=-30, maximum_yaw_angle=30, Ny_passes=[3,4])
-    res = yo.optimize(print_progress=False)
-    yaw_arr = np.array(res.loc[0, "yaw_angles_opt"], dtype=float).reshape(1, -1)
-    f.set(yaw_angles=yaw_arr)
-    f.run()
-    opt = float((f.get_turbine_powers() / 1000.0).sum())
-    vals = [base, opt, float(yaw_arr[0,0]), float(yaw_arr[0,1])]
-    Path("summary.txt").write_text(", ".join(f"{v:.6f}" for v in vals)+"\n", encoding="utf-8")
+    main()

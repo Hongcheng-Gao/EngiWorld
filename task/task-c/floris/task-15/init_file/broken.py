@@ -1,7 +1,7 @@
 from floris import FlorisModel
 import numpy as np
 
-fmodel = FlorisModel("init_file/two_turbine.yaml")
+fmodel = FlorisModel("two_turbine.yaml")
 
 # 错误1: wind_directions 应为 numpy array 或 list，但这里传了标量
 fmodel.set(wind_directions=270, wind_speeds=8, turbulence_intensities=0.06)

@@ -18,6 +18,84 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def paren_section(text: str, name: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\(", text)
+    if not match:
+        raise ValueError(f"missing section {name}")
+    start = text.find("(", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "("
+        depth -= text[index] == ")"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated section {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
+def zone_labels(text: str, name: str) -> set[int]:
+    block = named_block(text, name)
+    match = re.search(r"\bcellLabels\s+List<label>\s+(\d+)\s*\((.*?)\)\s*;", block, re.S)
+    if not match:
+        raise ValueError(f"missing labels for zone {name}")
+    labels = [int(value) for value in match.group(2).split()]
+    if len(labels) != int(match.group(1)) or len(labels) != len(set(labels)):
+        raise ValueError("invalid cell-zone labels")
+    return set(labels)
+
+
+def vector_field(path: Path) -> list[tuple[float, float, float]]:
+    match = re.search(r"internalField\s+nonuniform\s+List<vector>\s+(\d+)\s*\((.*?)\)\s*;", read(path), re.S)
+    if not match:
+        raise ValueError("missing vector field")
+    values = [tuple(float(value) for value in item.split()) for item in re.findall(r"\(([^()]+)\)", match.group(2))]
+    if len(values) != int(match.group(1)):
+        raise ValueError("vector field count mismatch")
+    return values
+
+
+def mesh_geometry_is_valid(mesh: str) -> bool:
+    vertices = [
+        tuple(float(value) for value in item.split())
+        for item in re.findall(r"\(([^()]+)\)", paren_section(mesh, "vertices"))
+    ]
+    if len(vertices) != 64:
+        return False
+    xs, ys, zs = zip(*vertices)
+    inner = [point for point in vertices if abs(math.hypot(point[0], point[1]) - 1.0) <= 1.0e-5]
+    return (
+        abs(min(xs) + 5.0) <= 1.0e-12
+        and abs(max(xs) - 5.0) <= 1.0e-12
+        and abs(min(ys) + 1.5) <= 1.0e-12
+        and abs(max(ys) - 2.5) <= 1.0e-12
+        and abs(min(zs) + 1.0) <= 1.0e-12
+        and abs(max(zs) - 1.0) <= 1.0e-12
+        and len(inner) == 16
+    )
+
+
 def internal_count(path: Path, kind: str) -> int:
     match = re.search(rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)", read(path))
     if not match:
@@ -47,10 +125,14 @@ def check_case() -> bool:
     topology = read(CASE / "system/topoSetDict")
     velocity = read(CASE / "0/U")
     physical = read(CASE / "constant/physicalProperties")
+    momentum = read(CASE / "constant/momentumTransport")
+    pressure = read(CASE / "0/p")
     control = read(CASE / "system/controlDict")
+    forces = named_block(named_block(control, "functions"), "bodyForces")
     return all(
         (
             mesh.count("hex (") == 20,
+            mesh_geometry_is_valid(mesh),
             mesh.count("(10 10 1)") == 16,
             mesh.count("(10 5 1)") == 4,
             "type motionSolver;" in motion,
@@ -61,12 +143,21 @@ def check_case() -> bool:
             "amplitude (0 0 5);" in motion,
             "omega 6.283185307179586;" in motion,
             "radius 1.41;" in topology,
-            "value uniform (0.5 0 0);" in velocity,
+            has_entry(patch(velocity, "left"), "value", r"uniform\s+\(0\.5\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "right"), "type", r"zeroGradient"),
+            all(has_entry(patch(velocity, name), "type", r"slip") for name in ("down", "up")),
+            has_entry(patch(velocity, "cylinder"), "type", r"movingWallVelocity"),
+            has_entry(patch(pressure, "right"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "right"), "value", r"uniform\s+0(?:\.0+)?"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+0\.01\s*;", physical) is not None,
+            "simulationType laminar;" in momentum,
             re.search(r"\bendTime\s+2\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.001\s*;", control) is not None,
-            "type forces;" in control,
-            "patches (cylinder);" in control,
+            re.search(r"\bwriteInterval\s+0\.25\s*;", control) is not None,
+            has_entry(forces, "type", r"forces"),
+            has_entry(forces, "patches", r"\(\s*cylinder\s*\)"),
+            has_entry(forces, "rhoInf", r"1(?:\.0+)?"),
+            has_entry(forces, "CofR", r"\(0(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
         )
     )
 
@@ -94,7 +185,9 @@ def check() -> bool:
     final_mesh_log = read(CASE / "log.checkMeshFinal")
     solve_log = read(CASE / "log.pimpleFoam")
     if not (
-        "Mesh OK." in initial_mesh_log
+        "End" in read(CASE / "log.blockMesh")
+        and "End" in read(CASE / "log.topoSet")
+        and "Mesh OK." in initial_mesh_log
         and "End" in initial_mesh_log
         and "Mesh OK." in final_mesh_log
         and "End" in final_mesh_log
@@ -122,14 +215,36 @@ def check() -> bool:
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
 
-    history = force_history()
-    if len(history) < 500 or abs(history[-1][0] - 2.0) > 1e-9:
+    centres_result = subprocess.run(
+        [
+            "bash",
+            "--noprofile",
+            "--norc",
+            "-c",
+            "trap - CHLD; . /opt/openfoam11/etc/bashrc && postProcess -case /home/user/Desktop/dynamic -latestTime -func writeCellCentres",
+        ],
+        stdout=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
+        text=True,
+        timeout=120,
+    )
+    if centres_result.returncode != 0 or "End" not in centres_result.stdout:
         return False
-    totals = [row[4] for row in history]
-    if not (
-        all(all(math.isfinite(value) for value in row) for row in history)
-        and abs(totals[-1]) < 100
-        and max(totals) - min(totals) > 0.01
+    centres = vector_field(CASE / "2/C")
+    actual_zone = zone_labels(read(CASE / "constant/polyMesh/cellZones"), "movingZone")
+    expected_zone = {
+        index
+        for index, point in enumerate(centres)
+        if math.hypot(point[0], point[1]) <= 1.41 + 1.0e-9 and -2.0 <= point[2] <= 2.0
+    }
+    if actual_zone != expected_zone or not actual_zone or len(actual_zone) >= 1800:
+        return False
+
+    history = force_history()
+    if not history or abs(history[-1][0] - 2.0) > 1e-9:
+        return False
+    if not all(all(math.isfinite(value) for value in row) for row in history) or any(
+        right[0] <= left[0] for left, right in zip(history, history[1:])
     ):
         return False
     keys = ("time_s", "pressure_fx_n", "viscous_fx_n", "porous_fx_n", "total_fx_n")

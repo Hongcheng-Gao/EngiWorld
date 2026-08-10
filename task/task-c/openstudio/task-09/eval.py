@@ -8,7 +8,7 @@ RUBY = r"""
 require 'openstudio'
 require 'json'
 
-SPEC = JSON.parse(%q|{"title": "Three-Zone Office Ruleset Schedules", "building": "CLI Ruleset Office", "stories": [{"name": "01_RULESET", "z": 0.0}], "spaces": [{"name": "T09-ADMIN", "zone": "T09-ADMIN Zone", "x0": 0, "y0": 0, "x1": 6, "y1": 9, "z0": 0, "h": 3.0, "story": "01_RULESET", "space_type": "TASK09 Admin Type", "heat": 20, "cool": 25, "ideal": true}, {"name": "T09-STUDIO", "zone": "T09-STUDIO Zone", "x0": 6, "y0": 0, "x1": 12, "y1": 9, "z0": 0, "h": 3.0, "story": "01_RULESET", "space_type": "TASK09 Studio Type", "heat": 21, "cool": 24, "ideal": true}, {"name": "T09-SUPPORT", "zone": "T09-SUPPORT Zone", "x0": 12, "y0": 0, "x1": 18, "y1": 9, "z0": 0, "h": 3.0, "story": "01_RULESET", "space_type": "TASK09 Support Type", "heat": 18, "cool": 28, "ideal": true}], "ruleset_schedules": {"TASK09 Occupancy Ruleset": {"default": [[7, 0.05], [8, 0.75], [12, 0.55], [13, 0.88], [18, 0.12], [24, 0.05]], "rules": [{"name": "TASK09 Occupancy Saturday", "days": ["Saturday"], "values": [[8, 0.05], [10, 0.42], [15, 0.2], [24, 0.05]]}, {"name": "TASK09 Occupancy Sunday", "days": ["Sunday"], "values": [[24, 0.02]]}]}, "TASK09 Lighting Ruleset": {"default": [[7, 0.1], [8, 0.82], [18, 0.18], [24, 0.06]], "rules": [{"name": "TASK09 Lighting Saturday", "days": ["Saturday"], "values": [[9, 0.05], [14, 0.32], [24, 0.05]]}, {"name": "TASK09 Lighting Sunday", "days": ["Sunday"], "values": [[24, 0.02]]}]}, "TASK09 Equipment Ruleset": {"default": [[7, 0.18], [8, 0.7], [18, 0.32], [24, 0.14]], "rules": [{"name": "TASK09 Equipment Saturday", "days": ["Saturday"], "values": [[9, 0.12], [15, 0.28], [24, 0.1]]}, {"name": "TASK09 Equipment Sunday", "days": ["Sunday"], "values": [[24, 0.08]]}]}, "TASK20 Occupancy Ruleset": {"default": [[6, 0.04], [8, 0.78], [12, 0.58], [13, 0.86], [19, 0.1], [24, 0.04]], "rules": [{"name": "TASK20 Occupancy Saturday", "days": ["Saturday"], "values": [[8, 0.04], [12, 0.35], [17, 0.18], [24, 0.04]]}, {"name": "TASK20 Occupancy Sunday", "days": ["Sunday"], "values": [[24, 0.02]]}]}}, "space_types": {"TASK09 Admin Type": {"people": 0.04, "people_schedule": "TASK09 Occupancy Ruleset", "lights": 8.0, "lights_schedule": "TASK09 Lighting Ruleset", "equipment": 9.0, "equipment_schedule": "TASK09 Equipment Ruleset"}, "TASK09 Studio Type": {"people": 0.055, "people_schedule": "TASK09 Occupancy Ruleset", "lights": 10.0, "lights_schedule": "TASK09 Lighting Ruleset", "equipment": 14.0, "equipment_schedule": "TASK09 Equipment Ruleset"}, "TASK09 Support Type": {"people": 0.015, "people_schedule": "TASK09 Occupancy Ruleset", "lights": 5.0, "lights_schedule": "TASK09 Lighting Ruleset", "equipment": 4.0, "equipment_schedule": "TASK09 Equipment Ruleset"}}, "windows": [{"space": "T09-ADMIN", "wall": "south", "start": 1, "end": 5, "sill": 0.9, "head": 2.4, "name": "T09-ADMIN South FixedWindow"}, {"space": "T09-STUDIO", "wall": "south", "start": 7, "end": 11, "sill": 0.9, "head": 2.4, "name": "T09-STUDIO South FixedWindow"}, {"space": "T09-SUPPORT", "wall": "south", "start": 13, "end": 17, "sill": 0.9, "head": 2.4, "name": "T09-SUPPORT South FixedWindow"}, {"space": "T09-ADMIN", "wall": "west", "start": 2, "end": 7, "sill": 1.0, "head": 2.2, "name": "T09-ADMIN West FixedWindow"}, {"space": "T09-SUPPORT", "wall": "east", "start": 2, "end": 7, "sill": 1.0, "head": 2.2, "name": "T09-SUPPORT East FixedWindow"}], "id": "09", "metrics": {"bbox": [18, 9, 3.0], "floor_area": 162, "exterior_wall_area": 162.0, "surface_count": 18, "space_count": 3, "zone_count": 3, "story_count": 1, "window_count": 5, "window_area": 30.0, "shading_count": 0, "shading_area": 0, "paired_surface_count": 4, "ground_floor_count": 3}, "difficulty": "medium", "scenario": "当前模型是一排单层小型办公工作室，由行政、开放工作室和后勤三段组成。运营团队希望模型体现工作日高峰、周六少量使用和周日低谷的真实运营节奏，而不是全天恒定负荷。请保留三段空间和南向采光秩序，补全不同空间类型、人员照明设备负荷以及规则化运行日程。", "constant_schedules": {}}|)
+SPEC = JSON.parse(%q|{"title":"Three-Zone Office Ruleset Schedules","building":"CLI Ruleset Office","stories":[{"name":"01_RULESET","z":0}],"spaces":[{"name":"T09-ADMIN","zone":"T09-ADMIN Zone","x0":0,"y0":0,"x1":6,"y1":9,"z0":0,"h":3,"story":"01_RULESET","space_type":"TASK09 Admin Type","heat":20,"cool":25,"ideal":true},{"name":"T09-STUDIO","zone":"T09-STUDIO Zone","x0":6,"y0":0,"x1":12,"y1":9,"z0":0,"h":3,"story":"01_RULESET","space_type":"TASK09 Studio Type","heat":21,"cool":24,"ideal":true},{"name":"T09-SUPPORT","zone":"T09-SUPPORT Zone","x0":12,"y0":0,"x1":18,"y1":9,"z0":0,"h":3,"story":"01_RULESET","space_type":"TASK09 Support Type","heat":18,"cool":28,"ideal":true}],"ruleset_schedules":{"TASK09 Occupancy Ruleset":{"default":[[7,0.05],[8,0.75],[12,0.55],[13,0.88],[18,0.12],[24,0.05]],"rules":[{"name":"TASK09 Occupancy Saturday","days":["Saturday"],"values":[[8,0.05],[10,0.42],[15,0.2],[24,0.05]]},{"name":"TASK09 Occupancy Sunday","days":["Sunday"],"values":[[24,0.02]]}]},"TASK09 Lighting Ruleset":{"default":[[7,0.1],[8,0.82],[18,0.18],[24,0.06]],"rules":[{"name":"TASK09 Lighting Saturday","days":["Saturday"],"values":[[9,0.05],[14,0.32],[24,0.05]]},{"name":"TASK09 Lighting Sunday","days":["Sunday"],"values":[[24,0.02]]}]},"TASK09 Equipment Ruleset":{"default":[[7,0.18],[8,0.7],[18,0.32],[24,0.14]],"rules":[{"name":"TASK09 Equipment Saturday","days":["Saturday"],"values":[[9,0.12],[15,0.28],[24,0.1]]},{"name":"TASK09 Equipment Sunday","days":["Sunday"],"values":[[24,0.08]]}]}},"space_types":{"TASK09 Admin Type":{"people":0.04,"people_schedule":"TASK09 Occupancy Ruleset","lights":8,"lights_schedule":"TASK09 Lighting Ruleset","equipment":9,"equipment_schedule":"TASK09 Equipment Ruleset"},"TASK09 Studio Type":{"people":0.055,"people_schedule":"TASK09 Occupancy Ruleset","lights":10,"lights_schedule":"TASK09 Lighting Ruleset","equipment":14,"equipment_schedule":"TASK09 Equipment Ruleset"},"TASK09 Support Type":{"people":0.015,"people_schedule":"TASK09 Occupancy Ruleset","lights":5,"lights_schedule":"TASK09 Lighting Ruleset","equipment":4,"equipment_schedule":"TASK09 Equipment Ruleset"}},"windows":[{"space":"T09-ADMIN","wall":"south","start":1,"end":5,"sill":0.9,"head":2.4,"name":"T09-ADMIN South FixedWindow"},{"space":"T09-STUDIO","wall":"south","start":7,"end":11,"sill":0.9,"head":2.4,"name":"T09-STUDIO South FixedWindow"},{"space":"T09-SUPPORT","wall":"south","start":13,"end":17,"sill":0.9,"head":2.4,"name":"T09-SUPPORT South FixedWindow"},{"space":"T09-ADMIN","wall":"west","start":2,"end":7,"sill":1,"head":2.2,"name":"T09-ADMIN West FixedWindow"},{"space":"T09-SUPPORT","wall":"east","start":2,"end":7,"sill":1,"head":2.2,"name":"T09-SUPPORT East FixedWindow"}],"id":"09","metrics":{"bbox":[18,9,3],"floor_area":162,"exterior_wall_area":162,"surface_count":18,"space_count":3,"zone_count":3,"story_count":1,"window_count":5,"window_area":30,"shading_count":0,"shading_area":0,"paired_surface_count":4,"ground_floor_count":3},"difficulty":"medium","scenario":"当前模型是一排单层小型办公工作室，由行政、开放工作室和后勤三段组成。运营团队希望模型体现工作日高峰、周六少量使用和周日低谷的真实运营节奏，而不是全天恒定负荷。请保留三段空间和南向采光秩序，补全不同空间类型、人员照明设备负荷以及规则化运行日程。","constant_schedules":{}}|)
 PATH = ARGV[0]
 TOL = 0.06
 
@@ -66,6 +66,9 @@ def check_basic(model)
     return false if space.buildingStory.empty? || space.buildingStory.get.nameString != s['story']
     return false if s['space_type'] && (space.spaceType.empty? || space.spaceType.get.nameString != s['space_type'])
     return false unless ok_close(space.floorArea, (s['x1']-s['x0'])*(s['y1']-s['y0']), 0.15)
+    sb = bounds_from_surfaces(space.surfaces)
+    expected_bounds = [s['x0'].to_f, s['y0'].to_f, (s['z0'] || 0).to_f, s['x1'].to_f, s['y1'].to_f, (s['z0'] || 0).to_f + s['h'].to_f]
+    return false unless sb.zip(expected_bounds).all? { |a,e| ok_close(a,e,0.06) }
     true
   end
 end
@@ -264,6 +267,11 @@ def check_daylighting(model)
     maps = model.getIlluminanceMaps.select { |im| !im.space.empty? && im.space.get.handle.to_s == space.get.handle.to_s }
     return false unless maps.size == 1
     im=maps[0]
+    return false if space.get.thermalZone.empty?
+    zone = space.get.thermalZone.get
+    return false if zone.primaryDaylightingControl.empty? || zone.primaryDaylightingControl.get.handle.to_s != c.handle.to_s
+    return false unless zone.fractionofZoneControlledbyPrimaryDaylightingControl > 0.0
+    return false if zone.illuminanceMap.empty? || zone.illuminanceMap.get.handle.to_s != im.handle.to_s
     return false unless ok_close(im.originXCoordinate, d['map_origin'][0], 0.06) && ok_close(im.originYCoordinate, d['map_origin'][1], 0.06) && ok_close(im.originZCoordinate, d['map_origin'][2], 0.06)
     return false unless ok_close(im.xLength, d['map_lengths'][0], 0.06) && ok_close(im.yLength, d['map_lengths'][1], 0.06)
     return false unless im.numberofXGridPoints == d['map_grid'][0] && im.numberofYGridPoints == d['map_grid'][1]
@@ -290,6 +298,15 @@ def check_constructions(model)
     return false if con.empty?
     layers = con.get.layers
     return false unless layers.size == cspec['layers'].size
+    return false unless layers.map(&:nameString) == cspec['layers'].map { |layer| layer['name'] }
+    targets = case kind
+      when 'wall' then model.getSurfaces.select { |s| s.surfaceType == 'Wall' && s.outsideBoundaryCondition == 'Outdoors' }
+      when 'roof' then model.getSurfaces.select { |s| s.surfaceType == 'RoofCeiling' && s.outsideBoundaryCondition == 'Outdoors' }
+      when 'floor' then model.getSurfaces.select { |s| s.surfaceType == 'Floor' && s.outsideBoundaryCondition == 'Ground' }
+      else []
+    end
+    return false if targets.empty?
+    return false unless targets.all? { |surface| !surface.construction.empty? && surface.construction.get.handle.to_s == con.get.handle.to_s }
     cspec['layers'].each do |mspec|
       mat = model.getStandardOpaqueMaterialByName(mspec['name'])
       return false if mat.empty?
@@ -303,10 +320,13 @@ def check_constructions(model)
   if c['window']
     con = model.getConstructionByName(c['window']['name'])
     return false if con.empty?
-    glazings = model.getSimpleGlazings.select { |g| g.nameString.include?(c['window']['name'].split.first) || true }
-    return false if glazings.empty?
-    g = glazings.find { |x| ok_close(x.uFactor, c['window']['u_factor'], 0.02) && ok_close(x.solarHeatGainCoefficient, c['window']['shgc'], 0.01) && ok_close(x.visibleTransmittance, c['window']['vt'], 0.01) }
-    return false if g.nil?
+    layers = con.get.layers
+    return false unless layers.size == 1
+    g_optional = layers[0].to_SimpleGlazing
+    return false if g_optional.empty?
+    g = g_optional.get
+    return false unless ok_close(g.uFactor, c['window']['u_factor'], 0.02) && ok_close(g.solarHeatGainCoefficient, c['window']['shgc'], 0.01) && ok_close(g.visibleTransmittance, c['window']['vt'], 0.01)
+    return false unless model.getSubSurfaces.all? { |sub| !sub.construction.empty? && sub.construction.get.handle.to_s == con.get.handle.to_s }
   end
   true
 end
@@ -363,6 +383,11 @@ def check_pv(model)
     return false unless ok_close(obj.systemLosses, g['losses'], 0.001)
     return false unless ok_close(obj.tiltAngle, g['tilt'], 0.1)
     return false unless ok_close(obj.azimuthAngle, g['azimuth'], 0.1)
+    if g['surface_space']
+      return false if obj.surface.empty?
+      expected_surface = model.getSurfaceByName("#{g['surface_space']} #{g.fetch('surface', 'roof').capitalize}")
+      return false if expected_surface.empty? || obj.surface.get.handle.to_s != expected_surface.get.handle.to_s
+    end
   end
   inv = model.getElectricLoadCenterInverterPVWattsByName(pv['inverter']['name'])
   return false if inv.empty?
@@ -375,6 +400,8 @@ def check_pv(model)
   return false unless dist.generatorOperationSchemeType == pv['operation']
   return false unless dist.electricalBussType == pv['bus']
   return false if dist.inverter.empty? || dist.inverter.get.handle.to_s != inv.handle.to_s
+  expected_generators = pv['generators'].map { |g| model.getGeneratorPVWattsByName(g['name']).get.handle.to_s }.sort
+  return false unless dist.generators.map { |g| g.handle.to_s }.sort == expected_generators
   true
 end
 

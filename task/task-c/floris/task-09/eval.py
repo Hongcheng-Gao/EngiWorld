@@ -1,91 +1,84 @@
 #!/usr/bin/env python3
-from __future__ import annotations
-
 import math
-import re
 from pathlib import Path
 
-REL_TOL = 1e-4
-ABS_TOL = 1e-3
-FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
+import floris
+from floris import FlorisModel, WindRose
+import numpy as np
+import yaml
+
+from eval_utils import (
+    desktop_root,
+    parse_floats,
+    print_result,
+    read_numeric_csv,
+    require_calls,
+    require_source_tokens,
+    run_submission,
+)
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
+def configuration():
+    path = Path(floris.__file__).resolve().with_name("default_inputs.yaml")
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    config["logging"]["console"]["level"] = "ERROR"
+    config["farm"]["layout_x"] = [0.0, 500.0, 0.0, 500.0]
+    config["farm"]["layout_y"] = [0.0, 0.0, 500.0, 500.0]
+    config["farm"]["turbine_type"] = ["nrel_5MW"] * 4
+    return config
+
+
+def compute_aep_gwh(x, y):
+    rose = WindRose(
+        np.array([270.0, 280.0, 290.0]),
+        np.array([8.0]),
+        0.06,
+        np.array([[0.5], [0.3], [0.2]]),
+    )
+    model = FlorisModel(configuration())
+    model.set(layout_x=x, layout_y=y, wind_data=rose)
+    model.run()
+    return float(model.get_farm_AEP() / 1e9)
+
+
+def check() -> bool:
+    root = desktop_root()
+    tree = run_submission(
+        root,
+        "layout_opt.py",
+        ["optimized_layout.csv", "summary.txt"],
+        timeout=420,
+    )
+    require_calls(tree, {"FlorisModel": 1, "WindRose": 1, "optimize": 1})
+    require_source_tokens(root / "layout_opt.py", ["LayoutOptimization", "378", "0.5", "0.3", "0.2"])
+    summary = parse_floats(root / "summary.txt", 3)
+    layout = read_numeric_csv(root / "optimized_layout.csv", 4, 2, header=["x", "y"])
+    x = np.array([row[0] for row in layout])
+    y = np.array([row[1] for row in layout])
+    if np.any(x < -100.000001) or np.any(x > 600.000001):
+        return False
+    if np.any(y < -100.000001) or np.any(y > 600.000001):
+        return False
+    spacing = min(
+        math.hypot(float(x[i] - x[j]), float(y[i] - y[j]))
+        for i in range(4)
+        for j in range(i + 1, 4)
+    )
+    if spacing < 377.999:
+        return False
+    initial = compute_aep_gwh([0.0, 500.0, 0.0, 500.0], [0.0, 0.0, 500.0, 500.0])
+    optimized = compute_aep_gwh(x, y)
     return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
+        optimized >= initial * 1.02
+        and math.isclose(summary[0], initial, rel_tol=5e-4, abs_tol=1e-3)
+        and math.isclose(summary[1], optimized, rel_tol=5e-4, abs_tol=1e-3)
+        and math.isclose(summary[2], spacing, rel_tol=1e-5, abs_tol=1e-3)
     )
 
 
-def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return path.exists() and path.is_file()
-    return path.exists() and path.is_file() and path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-def parse_floats(text: str) -> list[float]:
-    values: list[float] = []
-    for token in FLOAT_RE.findall(text):
-        try:
-            values.append(float(token))
-        except (TypeError, ValueError):
-            continue
-    return values
-
-
-def floats_close(actual: list[float], expected: list[float]) -> bool:
-    if len(actual) != len(expected):
-        return False
-    for a, e in zip(actual, expected):
-        if not math.isclose(a, e, rel_tol=REL_TOL, abs_tol=ABS_TOL):
-            return False
-    return True
-
-
-def require_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
-
-
-def check_task(root: Path) -> bool:
-    required = ['layout_opt.py', 'summary.txt']
-    if not require_files(root, required):
-        return False
-
-    actual = parse_floats(read_text(root / "summary.txt"))
-    if len(actual) != 3:
-        return False
-    initial_aep, optimized_aep, min_spacing = actual
-    if not all(math.isfinite(value) for value in actual):
-        return False
-    if initial_aep <= 0.0 or optimized_aep < initial_aep * 1.02:
-        return False
-    if min_spacing < 377.9:
-        return False
-    script = read_text(root / "layout_opt.py")
-    return "LayoutOptimization" in script and "378" in script
-
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
-
-
-def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
-    return 0
-
-
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        result = check()
+    except Exception:
+        result = False
+    raise SystemExit(print_result(result))

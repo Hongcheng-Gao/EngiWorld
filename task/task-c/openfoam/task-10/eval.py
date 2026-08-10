@@ -17,6 +17,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def field(path: Path, kind: str) -> list:
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
@@ -36,17 +59,28 @@ def field(path: Path, kind: str) -> list:
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     temperature = read(CASE / "0/T")
+    velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     gravity = read(CASE / "constant/g")
     control = read(CASE / "system/controlDict")
+    schemes = read(CASE / "system/fvSchemes")
+    solution = read(CASE / "system/fvSolution")
     boundary = read(CASE / "constant/polyMesh/boundary")
     return all(
         (
             "(0.1 0.1 0.01)" in mesh,
             "(41 41 1)" in mesh,
-            "hot { type fixedValue; value uniform 310; }" in temperature,
-            "cold { type fixedValue; value uniform 290; }" in temperature,
+            re.search(r"\binternalField\s+uniform\s+300(?:\.0+)?\s*;", temperature) is not None,
+            has_entry(patch(temperature, "hot"), "value", r"uniform\s+310(?:\.0+)?"),
+            has_entry(patch(temperature, "cold"), "value", r"uniform\s+290(?:\.0+)?"),
+            has_entry(patch(temperature, "topAndBottom"), "type", r"zeroGradient"),
+            has_entry(patch(temperature, "frontAndBack"), "type", r"empty"),
+            re.search(r"\binternalField\s+uniform\s+\(0(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)\s*;", velocity) is not None,
+            all(has_entry(patch(velocity, name), "type", r"noSlip") for name in ("hot", "cold", "topAndBottom")),
+            has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
+            re.search(r"\binternalField\s+uniform\s+100000(?:\.0+)?\s*;", pressure) is not None,
             re.search(r"\bmolWeight\s+28\.96\s*;", physical) is not None,
             re.search(r"\bCp\s+1004\.4\s*;", physical) is not None,
             re.search(r"\bmu\s+1\.846e-0?5\s*;", physical, re.I) is not None,
@@ -55,6 +89,13 @@ def check_case() -> bool:
             "value (0 -9.81 0);" in gravity,
             re.search(r"\bendTime\s+1000\s*;", control) is not None,
             re.search(r"\bwriteInterval\s+1000\s*;", control) is not None,
+            re.search(r"\bapplication\s+foamRun\s*;", control) is not None,
+            re.search(r"\bsolver\s+fluid\s*;", control) is not None,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
+            has_entry(named_block(schemes, "ddtSchemes"), "default", r"steadyState"),
+            has_entry(named_block(schemes, "divSchemes"), "div(phi,U)", r"bounded\s+Gauss\s+upwind"),
+            has_entry(named_block(schemes, "divSchemes"), "div(phi,h)", r"bounded\s+Gauss\s+upwind"),
+            has_entry(named_block(named_block(solution, "solvers"), "p_rgh"), "solver", r"GAMG"),
             re.search(r"\bfrontAndBack\b.*?type\s+empty;", boundary, re.S)
             is not None,
         )

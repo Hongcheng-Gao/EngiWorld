@@ -1,7 +1,7 @@
 {
   "id": "c-floris-task-07-ubuntu",
   "snapshot": "FLORIS4.6.4",
-  "instruction": "You are given a post-processing template `/home/user/Desktop/flow_plane_base.py`. Complete the following from the command line: 1. Write a complete script `/home/user/Desktop/flow_plane.py`: - Compute a hub-height horizontal plane - Extract velocity series along wake centerline (`y=0`) from `x=0` to `x=1000 m` - Find minimum velocity (largest wake deficit) - Save plane data to `/home/user/Desktop/flow_plane.csv` in this format: `x, y, u_eff` 2. Execute and save statistics to `/home/user/Desktop/summary.txt` in this format: `min_velocity_ms, wake_recovery_distance_m` (`wake_recovery_distance` is the minimum `x` where `u_eff` recovers to `0.95 * freestream`) 3. Do not use any GUI. [Software] Run your scripts with Python in an environment where `floris` is installed (e.g. `from floris import FlorisModel`).",
+  "instruction": "You are given a complete two-turbine configuration `/home/user/Desktop/two_turbine.yaml` and a post-processing template `/home/user/Desktop/flow_plane_base.py`. Complete the following from the command line: 1. Write `/home/user/Desktop/flow_plane.py`: run the supplied model at wind direction `270 deg`, wind speed `8 m/s`, and turbulence intensity `0.06`; sample effective velocity at hub height `z=90 m` on the wake centerline `y=0` for `x=756,766,...,4996 m` (starting one rotor diameter downstream of the second turbine); and save `/home/user/Desktop/flow_plane.csv` with header `x,y,u_eff`. 2. Find the minimum sampled velocity. Define wake recovery as the first sampled point where `u_eff >= 0.95 * 8 m/s`, and report its downstream distance from the second turbine center at `x=630 m`. Execute the script and write `/home/user/Desktop/summary.txt` as `min_velocity_ms, wake_recovery_distance_m`. 3. Do not use a GUI. [Software] Use Python with `floris==4.6.4` and `FlorisModel.sample_flow_at_points`.",
   "source": "https://github.com/NatLabRockies/floris",
   "config": [
     {
@@ -33,6 +33,10 @@
             {
               "local_path": "task-07/eval.py",
               "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
             }
           ]
         }

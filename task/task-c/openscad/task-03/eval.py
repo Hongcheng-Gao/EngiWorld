@@ -12,7 +12,9 @@ OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 SPEC = {'output': 'task-023_output.dxf',
  'checks': [{'kind': 'dxf_circle', 'center': [-22.0, 0.0], 'radius': 2.5},
             {'kind': 'dxf_circle', 'center': [22.0, 0.0], 'radius': 2.5},
-            {'kind': 'dxf_outline_min', 'min_width': 50.0, 'min_height': 25.0}]}
+            {'kind': 'dxf_rect', 'width': 60.0, 'height': 36.5, 'center': [0.0, 0.75], 'tol': 0.05}],
+ 'dxf_circle_count': 2,
+ 'dxf_polyline_count': 1}
 
 
 def _parse_stl(path: Path):
@@ -418,6 +420,10 @@ def _evaluate_mesh(path: Path) -> bool:
 
 def _evaluate_dxf(path: Path) -> bool:
     circles, polylines = _parse_dxf(path)
+    if len(circles) != int(SPEC.get("dxf_circle_count", len(circles))):
+        return False
+    if len(polylines) != int(SPEC.get("dxf_polyline_count", len(polylines))):
+        return False
     for check in SPEC.get("checks", []):
         if check["kind"] == "dxf_circle" and not _dxf_circle(circles, check):
             return False

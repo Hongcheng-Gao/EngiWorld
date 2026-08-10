@@ -1,8 +1,8 @@
 {
   "id": "c-fenics-task-09-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a very coarse-mesh template `/home/user/Desktop/plate_hole_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/plate_hole.py`: - Generate geometry with `mshr`: `domain = Rectangle(Point(0,0), Point(100,200)) - Circle(Point(50,100), 5)` `mesh = generate_mesh(domain, 30)` - Or generate `.msh` by command-line `gmsh` and import it - Apply Dirichlet displacement on left and right sides (equivalent tensile loading of `10 MPa`) - Solve linear elasticity 2. Extract and save to `/home/user/Desktop/summary.txt`: - Maximum Mises stress near hole boundary (`θ=90°` region) - Far-field average Mises stress Format: `hole_mises, far_mises` [Software] Run your scripts with Python in an environment where dolfinx is installed (e.g. `import dolfinx`).",
-  "source": "https://github.com/fenics/dolfinx",
+  "instruction": "You are given a legacy FEniCS/DOLFIN coarse-mesh template `/home/user/Desktop/plate_hole_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/plate_hole.py`: - Generate geometry with `mshr`: `domain = Rectangle(Point(0,0), Point(100,200)) - Circle(Point(50,100), 5)` and `mesh = generate_mesh(domain, 30)`, or generate a geometrically equivalent `.msh` with command-line Gmsh and import it - Use plane-stress linear elasticity with `E=210000 MPa` and `nu=0.3`; constrain rigid motion and prescribe X displacement on the left/right edges equivalent to a 10 MPa far-field X tension - Solve linear elasticity 2. Extract and save to `/home/user/Desktop/summary.txt`: - Maximum Mises stress near the hole boundary in the `theta=90 degrees` region measured from the +X axis - Far-field average Mises stress away from the hole and constrained edges Format: `hole_mises, far_mises` [Software] Use a legacy `dolfin`-compatible implementation when using `mshr`; a command-line Gmsh mesh may be imported by an equivalent supported route.",
+  "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
       "type": "upload_file",

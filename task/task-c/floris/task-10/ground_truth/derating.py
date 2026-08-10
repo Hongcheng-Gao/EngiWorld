@@ -1,25 +1,38 @@
-from floris import FlorisModel
-import numpy as np, yaml
 from pathlib import Path
 
+from floris import FlorisModel
+import numpy as np
 
-def cfg():
-    import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
-    c = yaml.safe_load(p.read_text(encoding="utf-8"))
-    c["logging"]["console"]["level"] = "ERROR"
-    c["farm"]["layout_x"] = [0.0, 630.0, 1260.0]
-    c["farm"]["layout_y"] = [0.0, 0.0, 0.0]
-    c["farm"]["turbine_type"] = ["nrel_5MW"] * 3
-    return c
+
+ROOT = Path(__file__).resolve().parent
+CONFIG = ROOT / "derating_base.yaml"
+if not CONFIG.exists():
+    CONFIG = ROOT.parent / "init_file" / "derating_base.yaml"
+
+
+def main():
+    fmodel = FlorisModel(CONFIG)
+    fmodel.set(
+        wind_directions=[270.0],
+        wind_speeds=[8.0],
+        turbulence_intensities=[0.06],
+    )
+    fmodel.run()
+    baseline_powers_w = np.asarray(fmodel.get_turbine_powers(), dtype=float)
+    baseline_total_kw = float(baseline_powers_w.sum() / 1000.0)
+    upstream_setpoint_w = 0.8 * float(baseline_powers_w[0, 0])
+
+    fmodel.set_operation_model("simple-derating")
+    fmodel.set(power_setpoints=np.array([[upstream_setpoint_w, None, None]], dtype=object))
+    fmodel.run()
+    derated_total_kw = float(fmodel.get_turbine_powers().sum() / 1000.0)
+    net_change_kw = derated_total_kw - baseline_total_kw
+
+    (ROOT / "summary.txt").write_text(
+        f"{baseline_total_kw:.6f}, {derated_total_kw:.6f}, {net_change_kw:.6f}\n",
+        encoding="utf-8",
+    )
+
 
 if __name__ == "__main__":
-    f = FlorisModel(cfg())
-    f.set(wind_directions=[270], wind_speeds=[8], turbulence_intensities=[0.06])
-    f.run()
-    base = float((f.get_turbine_powers() / 1000.0).sum())
-    f.set(yaw_angles=np.array([[20.0, 0.0, 0.0]], dtype=float))
-    f.run()
-    derated = float((f.get_turbine_powers() / 1000.0).sum())
-    change = derated - base
-    Path("summary.txt").write_text(f"{base:.6f}, {derated:.6f}, {change:.6f}\n", encoding="utf-8")
+    main()

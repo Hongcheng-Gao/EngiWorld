@@ -174,6 +174,7 @@ def check() -> bool:
         "FlapDOF1",
         "FlapDOF2",
         "EdgeDOF",
+        "PitchDOF",
         "TeetDOF",
         "DrTrDOF",
         "GenDOF",
@@ -199,6 +200,8 @@ def check() -> bool:
         or parameter(tower_aero, "TwrShadow") != "1"
         or parameter(no_tower_aero, "Wake_Mod") != "1"
         or parameter(tower_aero, "Wake_Mod") != "1"
+        or '"../5MW_Baseline/' in no_tower_aero
+        or '"../5MW_Baseline/' in tower_aero
         or '"RtAeroPwr"' not in no_tower_aero
         or '"RtAeroPwr"' not in tower_aero
         or normalize_shadow_parameter(no_tower_aero)

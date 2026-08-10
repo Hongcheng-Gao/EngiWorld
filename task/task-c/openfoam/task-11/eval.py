@@ -17,6 +17,38 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
+def ordered_tokens(text: str, tokens: tuple[str, ...]) -> bool:
+    position = -1
+    for token in tokens:
+        position = text.find(token, position + 1)
+        if position < 0:
+            return False
+    return True
+
+
 def vectors(path: Path) -> list[tuple[float, float, float]]:
     match = re.search(
         r"internalField\s+nonuniform\s+List<vector>\s+\d+\s*\((.*?)\)\s*;",
@@ -34,19 +66,31 @@ def vectors(path: Path) -> list[tuple[float, float, float]]:
 def case_inputs(case: Path, reynolds: int) -> bool:
     mesh = read(case / "system/blockMeshDict")
     velocity = read(case / "0/U")
+    pressure = read(case / "0/p")
     physical = read(case / "constant/physicalProperties")
     control = read(case / "system/controlDict")
+    schemes = read(case / "system/fvSchemes")
+    solution = read(case / "system/fvSolution")
     boundary = read(case / "constant/polyMesh/boundary")
     match = re.search(r"\bnu\s+\[[^]]+\]\s+([^;]+);", physical)
     return all(
         (
             "(1 1 0.01)" in mesh,
             "(50 50 1)" in mesh,
-            "value uniform (1 0 0);" in velocity,
+            has_entry(patch(velocity, "movingWall"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "fixedWalls"), "type", r"noSlip"),
+            has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
+            has_entry(patch(pressure, "movingWall"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "fixedWalls"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "frontAndBack"), "type", r"empty"),
             match is not None and abs(float(match.group(1)) - 1.0 / reynolds) < 1.0e-12,
             re.search(r"\bendTime\s+30\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.005\s*;", control) is not None,
             re.search(r"\bwriteInterval\s+6000\s*;", control) is not None,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
+            has_entry(named_block(schemes, "ddtSchemes"), "default", r"Euler"),
+            has_entry(named_block(schemes, "divSchemes"), "div(phi,U)", r"Gauss\s+linear"),
+            has_entry(named_block(solution, "PISO"), "nCorrectors", r"2"),
             re.search(r"\bfrontAndBack\b.*?type\s+empty;", boundary, re.S)
             is not None,
         )
@@ -78,6 +122,13 @@ def check() -> bool:
         ROOT / "sweep_results.csv",
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required_root):
+        return False
+    run_script = read(ROOT / "run_sweep.py")
+    if not (
+        re.search(r"for\s+\w+\s+in\s*\(\s*100\s*,\s*400\s*,\s*1000\s*\)", run_script)
+        and ordered_tokens(run_script, ('"blockMesh"', '"checkMesh"', '"icoFoam"', '"postProcess"'))
+        and all(token in run_script for token in ('"-latestTime"', '"-func"', '"writeCellCentres"'))
+    ):
         return False
 
     calculated = {}

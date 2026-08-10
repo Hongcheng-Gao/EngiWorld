@@ -16,6 +16,25 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
 def vectors(path: Path) -> list[tuple[float, float, float]]:
     match = re.search(
         r"internalField\s+nonuniform\s+List<vector>\s+\d+\s*\((.*?)\)\s*;",
@@ -59,24 +78,43 @@ def nearest(
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     control = read(CASE / "system/controlDict")
     schemes = read(CASE / "system/fvSchemes")
+    solution = read(CASE / "system/fvSolution")
+    u_boundary = named_block(velocity, "boundaryField")
+    p_boundary = named_block(pressure, "boundaryField")
+    moving_u = named_block(u_boundary, "movingWall")
+    walls_u = named_block(u_boundary, "fixedWalls")
+    empty_u = named_block(u_boundary, "frontAndBack")
+    moving_p = named_block(p_boundary, "movingWall")
+    walls_p = named_block(p_boundary, "fixedWalls")
+    empty_p = named_block(p_boundary, "frontAndBack")
+    piso = named_block(solution, "PISO")
     return all(
         (
             "(1 1 0)" in mesh,
             "(1 1 0.01)" in mesh,
             "(50 50 1)" in mesh,
             "type empty;" in mesh,
-            "movingWall" in velocity,
-            "value uniform (1 0 0);" in velocity,
-            "type noSlip;" in velocity,
+            has_entry(moving_u, "type", r"fixedValue"),
+            has_entry(moving_u, "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(walls_u, "type", r"noSlip"),
+            has_entry(empty_u, "type", r"empty"),
+            has_entry(moving_p, "type", r"zeroGradient"),
+            has_entry(walls_p, "type", r"zeroGradient"),
+            has_entry(empty_p, "type", r"empty"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1(?:\.0)?e-?3\s*;", physical, re.I)
             is not None,
             re.search(r"\bendTime\s+30(?:\.0)?\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.005\s*;", control) is not None,
             re.search(r"\bwriteInterval\s+1000\s*;", control) is not None,
-            "div(phi,U) Gauss linear;" in schemes,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
+            has_entry(named_block(schemes, "ddtSchemes"), "default", r"Euler"),
+            has_entry(named_block(schemes, "divSchemes"), "div(phi,U)", r"Gauss\s+linear"),
+            has_entry(piso, "pRefCell", r"0"),
+            has_entry(piso, "pRefValue", r"0(?:\.0+)?"),
         )
     )
 

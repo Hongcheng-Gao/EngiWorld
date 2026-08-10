@@ -1,25 +1,32 @@
-from floris import FlorisModel
-import yaml
 from pathlib import Path
 
+from floris import FlorisModel
+import numpy as np
 
-def cfg():
-    import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
-    c = yaml.safe_load(p.read_text(encoding="utf-8"))
-    c["logging"]["console"]["level"] = "ERROR"
-    c["farm"]["layout_x"] = [0.0, 630.0, 0.0, 630.0]
-    c["farm"]["layout_y"] = [0.0, 0.0, 500.0, 500.0]
-    c["farm"]["turbine_type"] = ["nrel_5MW", "nrel_5MW", "nrel_5MW", "nrel_5MW"]
-    return c
+
+ROOT = Path(__file__).resolve().parent
+CONFIG = ROOT / "heterogeneous.yaml"
+if not CONFIG.exists():
+    CONFIG = ROOT.parent / "init_file" / "heterogeneous.yaml"
+
+
+def main():
+    fmodel = FlorisModel(CONFIG)
+    fmodel.set(
+        wind_directions=[270.0],
+        wind_speeds=[8.0],
+        turbulence_intensities=[0.06],
+    )
+    fmodel.run()
+    powers_kw = np.asarray(fmodel.get_turbine_powers(), dtype=float).reshape(-1) / 1000.0
+    if not (powers_kw[1] > powers_kw[0] and powers_kw[3] > powers_kw[2]):
+        raise RuntimeError("heterogeneous turbine powers do not match the configured turbine types")
+    values = [*powers_kw.tolist(), float(powers_kw.sum())]
+    (ROOT / "summary.txt").write_text(
+        ", ".join(f"{float(value):.6f}" for value in values) + "\n",
+        encoding="utf-8",
+    )
+
 
 if __name__ == "__main__":
-    f = FlorisModel(cfg())
-    f.set(wind_directions=[270], wind_speeds=[8], turbulence_intensities=[0.06])
-    f.run()
-    p = (f.get_turbine_powers() / 1000.0).reshape(-1)
-    scale = 3.0
-    vals4 = [float(p[0]), float(p[1]*scale), float(p[2]), float(p[3]*scale)]
-    total = float(sum(vals4))
-    vals = vals4 + [total]
-    Path("summary.txt").write_text(", ".join(f"{v:.6f}" for v in vals)+"\n", encoding="utf-8")
+    main()

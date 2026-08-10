@@ -1,25 +1,32 @@
-from floris import FlorisModel
-import yaml
 from pathlib import Path
 
+from floris import FlorisModel
 
-def cfg():
-    import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
-    c = yaml.safe_load(p.read_text(encoding="utf-8"))
-    c["logging"]["console"]["level"] = "ERROR"
-    c["farm"]["layout_x"] = [0.0, 630.0]
-    c["farm"]["layout_y"] = [0.0, 0.0]
-    c["farm"]["turbine_type"] = ["nrel_5MW", "nrel_5MW"]
-    return c
+
+ROOT = Path(__file__).resolve().parent
+CONFIG = ROOT / "two_turbine.yaml"
+if not CONFIG.exists():
+    CONFIG = ROOT.parent / "init_file" / "two_turbine.yaml"
+
+
+def main():
+    fmodel = FlorisModel(CONFIG)
+    fmodel.set(
+        wind_directions=[270.0],
+        wind_speeds=[8.0],
+        turbulence_intensities=[0.06],
+    )
+    fmodel.run()
+    wake_kw = float(fmodel.get_turbine_powers().sum() / 1000.0)
+    fmodel.run_no_wake()
+    no_wake_kw = float(fmodel.get_turbine_powers().sum() / 1000.0)
+    wake_loss_percent = (no_wake_kw - wake_kw) / no_wake_kw * 100.0
+    values = [no_wake_kw, wake_kw, wake_loss_percent]
+    (ROOT / "summary.txt").write_text(
+        ", ".join(f"{value:.6f}" for value in values) + "\n",
+        encoding="utf-8",
+    )
+
 
 if __name__ == "__main__":
-    f = FlorisModel(cfg())
-    f.set(wind_directions=[270], wind_speeds=[8], turbulence_intensities=[0.06])
-    f.run()
-    p_wake = float((f.get_turbine_powers() / 1000.0).sum())
-    f.run_no_wake()
-    p_nowake = float((f.get_turbine_powers() / 1000.0).sum())
-    loss = (p_nowake - p_wake) / max(abs(p_nowake), 1e-9) * 100.0
-    vals = [p_nowake, p_wake, loss]
-    Path("summary.txt").write_text(", ".join(f"{v:.6f}" for v in vals)+"\n", encoding="utf-8")
+    main()

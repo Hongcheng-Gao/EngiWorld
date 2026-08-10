@@ -40,12 +40,16 @@ def valid_inputs(main_path: Path, ed_path: Path) -> bool:
         "CompInflow": "0",
         "CompAero": "0",
         "CompServo": "0",
+        "TMax": "0.1",
         "Gravity": "0",
+        "ModCoupling": "1",
         "Linearize": "true",
         "CalcSteady": "false",
         "NLinTimes": "1",
+        "LinTimes": "0.09",
         "LinInputs": "0",
         "LinOutputs": "0",
+        "LinOutMod": "false",
         "LinOutJac": "false",
     }
     ed_expected = {
@@ -65,8 +69,7 @@ def valid_inputs(main_path: Path, ed_path: Path) -> bool:
         return False
     if any(parameter(ed, key) != value for key, value in ed_expected.items()):
         return False
-    linear_time = float(parameter(main, "LinTimes"))
-    return 0.0 <= linear_time <= float(parameter(main, "TMax"))
+    return True
 
 
 def parse_linear_model(path: Path) -> tuple[np.ndarray, dict[str, int]]:

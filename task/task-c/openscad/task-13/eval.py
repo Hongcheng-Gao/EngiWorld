@@ -105,6 +105,50 @@ class Mesh:
         return [(self.maxs[i] + self.mins[i]) / 2 for i in range(3)]
 
 
+
+def _mesh_topology_ok(mesh: Mesh, expected_components: int) -> bool:
+    vertex_ids = {}
+    indexed_faces = []
+    face_keys = set()
+    for triangle in mesh.triangles:
+        face = []
+        for point in triangle:
+            key = tuple(round(float(value), 5) for value in point)
+            if key not in vertex_ids:
+                vertex_ids[key] = len(vertex_ids)
+            face.append(vertex_ids[key])
+        if len(set(face)) != 3:
+            return False
+        face_key = tuple(sorted(face))
+        if face_key in face_keys:
+            return False
+        face_keys.add(face_key)
+        indexed_faces.append(face)
+
+    parent = list(range(len(indexed_faces)))
+    def find(item):
+        while parent[item] != item:
+            parent[item] = parent[parent[item]]
+            item = parent[item]
+        return item
+    def union(first, second):
+        a, b = find(first), find(second)
+        if a != b:
+            parent[b] = a
+
+    edge_owners = {}
+    for face_index, (a, b, c) in enumerate(indexed_faces):
+        for edge in ((a, b), (b, c), (c, a)):
+            edge_owners.setdefault(tuple(sorted(edge)), []).append((face_index, edge))
+    if not edge_owners or any(len(owners) != 2 for owners in edge_owners.values()):
+        return False
+    for owners in edge_owners.values():
+        first, second = owners
+        if first[1][0] != second[1][1] or first[1][1] != second[1][0]:
+            return False
+        union(first[0], second[0])
+    return len({find(index) for index in range(len(indexed_faces))}) == expected_components
+
 def _close(actual, expected, tol):
     return abs(float(actual) - float(expected)) <= tol
 
@@ -397,6 +441,8 @@ def _run_mesh_check(mesh: Mesh, check):
 
 def _evaluate_mesh(path: Path) -> bool:
     mesh = Mesh(_mesh_triangles(path))
+    if not _mesh_topology_ok(mesh, int(SPEC.get("components", 1))):
+        return False
     if len(mesh.triangles) < int(SPEC.get("min_triangles", 1)):
         return False
     if len(mesh.vertices) < int(SPEC.get("min_vertices", 8)):

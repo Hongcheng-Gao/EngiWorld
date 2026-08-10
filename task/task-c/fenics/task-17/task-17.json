@@ -1,8 +1,8 @@
 {
   "id": "c-fenics-task-17-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a broken FEniCS script `/home/user/Desktop/broken.py`. Complete diagnose-fix-rerun purely from the command line, and repair it from `/home/user/Desktop/broken.py` to `/home/user/Desktop/fixed.py`. 1. Re-run and ensure `/home/user/Desktop/fixed_summary.txt` is generated, including: - Value at center point `(0.5, 0.5)` - Global maximum value Format: `center_value, max_value` 2. Write diagnosis report `/home/user/Desktop/diagnosis.txt` (explain each error cause and fix step by step; total length >= 100 characters). [Software] Run your scripts with Python in an environment where dolfinx is installed (e.g. `import dolfinx`).",
-  "source": "https://github.com/fenics/dolfinx",
+  "instruction": "You are given a broken legacy FEniCS/DOLFIN script `/home/user/Desktop/broken.py`. Diagnose, fix, and rerun it from the command line, writing the repaired script to `/home/user/Desktop/fixed.py`. 1. Correct the invalid scalar Poisson bilinear form, preserve the VTK output, use the valid DOLFIN point-evaluation syntax, and add the required numerical summary output. 2. Run `fixed.py` and ensure `/home/user/Desktop/fixed_summary.txt` contains the value at `(0.5,0.5)` and the global nodal maximum in the format `center_value, max_value`. 3. Write `/home/user/Desktop/diagnosis.txt` with at least 100 characters that identifies each actual failure or missing requirement and explains the corresponding fix step by step. [Software] Run with the legacy `dolfin` API used by `broken.py` (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx.",
+  "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
       "type": "upload_file",

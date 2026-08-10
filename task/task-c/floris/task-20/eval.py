@@ -1,114 +1,78 @@
 #!/usr/bin/env python3
-from __future__ import annotations
-
 import math
-import re
 from pathlib import Path
 
-REL_TOL = 5e-3
-ABS_TOL = 1e-2
-FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
+import floris
+from floris import FlorisModel
+import numpy as np
+import yaml
+
+from eval_utils import (
+    desktop_root,
+    parse_floats,
+    print_result,
+    read_numeric_csv,
+    require_calls,
+    require_source_tokens,
+    run_submission,
+)
 
 
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
+def reference_results():
+    path = Path(floris.__file__).resolve().with_name("default_inputs.yaml")
+    config = yaml.safe_load(path.read_text(encoding="utf-8"))
+    config["logging"]["console"]["level"] = "ERROR"
+    coordinates = [0.0, 882.0, 1764.0]
+    config["farm"]["layout_x"] = [x for y in coordinates for x in coordinates]
+    config["farm"]["layout_y"] = [y for y in coordinates for x in coordinates]
+    config["farm"]["turbine_type"] = ["nrel_5MW"] * 9
+    model = FlorisModel(config)
+    directions = np.arange(0.0, 360.0, 30.0)
+    model.set(
+        wind_directions=directions,
+        wind_speeds=np.full(12, 8.0),
+        turbulence_intensities=np.full(12, 0.06),
+    )
+    model.run()
+    matrix_kw = model.get_turbine_powers() / 1000.0
+    totals = matrix_kw.sum(axis=1)
+    model.set(wind_directions=[270.0], wind_speeds=[8.0], turbulence_intensities=[0.06])
+    model.run_no_wake()
+    no_wake_kw = float(model.get_turbine_powers().sum() / 1000.0)
+    summary = [
+        float(totals.max()),
+        float(totals.min()),
+        float((no_wake_kw - totals.min()) / no_wake_kw * 100.0),
+    ]
+    return matrix_kw, summary
+
+
+def check() -> bool:
+    root = desktop_root()
+    tree = run_submission(root, "wind_sector.py", ["power_matrix.csv", "summary.txt"])
+    require_calls(tree, {"FlorisModel": 1, "set": 2, "run": 1, "run_no_wake": 1, "get_turbine_powers": 2})
+    require_source_tokens(root / "wind_sector.py", ["30.0", "360.0", "126.0", "7.0", "nrel_5MW"])
+    actual_matrix = np.asarray(read_numeric_csv(root / "power_matrix.csv", 12, 9), dtype=float)
+    actual_summary = parse_floats(root / "summary.txt", 3)
+    expected_matrix, expected_summary = reference_results()
+    if not np.allclose(actual_matrix, expected_matrix, rtol=5e-3, atol=1e-2):
+        return False
+    if not all(
+        math.isclose(a, e, rel_tol=5e-3, abs_tol=1e-2)
+        for a, e in zip(actual_summary, expected_summary)
+    ):
+        return False
+    totals = actual_matrix.sum(axis=1)
     return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
+        math.isclose(actual_summary[0], float(totals.max()), rel_tol=1e-6, abs_tol=1e-3)
+        and math.isclose(actual_summary[1], float(totals.min()), rel_tol=1e-6, abs_tol=1e-3)
+        and 0.0 < actual_summary[2] < 100.0
     )
 
 
-def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return path.exists() and path.is_file()
-    return path.exists() and path.is_file() and path.stat().st_size > 0
-
-
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-def parse_floats(text: str) -> list[float]:
-    values: list[float] = []
-    for token in FLOAT_RE.findall(text):
-        try:
-            values.append(float(token))
-        except (TypeError, ValueError):
-            continue
-    return values
-
-
-def floats_close(actual: list[float], expected: list[float]) -> bool:
-    if len(actual) != len(expected):
-        return False
-    for a, e in zip(actual, expected):
-        if not math.isclose(a, e, rel_tol=REL_TOL, abs_tol=ABS_TOL):
-            return False
-    return True
-
-
-def require_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
-
-
-EXPECTED_SUMMARY = [15350.619804000000, 9593.316025000000, 39.227384000000]
-EXPECTED_MATRIX = [[762.819577, 762.975895, 762.959368, 680.849154, 680.915259, 680.933394, 1753.954459, 1753.954459, 1753.954459], [1536.69931, 1536.170075, 1753.954459, 1753.949695, 1753.949608, 1753.954459, 1753.954459, 1753.954459, 1753.954459], [1535.482209, 1753.949803, 1753.954459, 1536.167952, 1753.949608, 1753.954459, 1753.954459, 1753.954459, 1753.954459], [762.959368, 680.933394, 1753.954459, 762.975895, 680.915259, 1753.954459, 762.819577, 680.849154, 1753.954459], [1753.954459, 1753.954459, 1753.954459, 1536.170075, 1753.949608, 1753.954459, 1536.778279, 1753.949546, 1753.954459], [1753.954459, 1753.954459, 1753.954459, 1753.949659, 1753.949608, 1753.954459, 1535.565108, 1536.167952, 1753.954459], [1753.954459, 1753.954459, 1753.954459, 680.933394, 680.915259, 680.849154, 762.959368, 762.975895, 762.819577], [1753.954459, 1753.954459, 1753.954459, 1753.954459, 1753.949608, 1753.949546, 1753.954459, 1536.170075, 1536.778279], [1753.954459, 1753.954459, 1753.954459, 1753.954459, 1753.949608, 1536.167952, 1753.954459, 1753.949659, 1535.565108], [1753.954459, 680.849154, 762.819577, 1753.954459, 680.915259, 763.072441, 1753.954459, 680.933394, 762.879193], [1753.954459, 1753.949695, 1536.69931, 1753.954459, 1753.949608, 1536.170075, 1753.954459, 1753.954459, 1753.954459], [1753.954459, 1536.167952, 1535.565108, 1753.954459, 1753.949608, 1753.949659, 1753.954459, 1753.954459, 1753.954459]]
-EXPECTED_SHAPE = (12, 9)
-
-
-def check_task(root: Path) -> bool:
-    required = ["wind_sector.py", "power_matrix.csv", "summary.txt"]
-    if not require_files(root, required):
-        return False
-
-    summary = parse_floats(read_text(root / "summary.txt"))
-    if not floats_close(summary, EXPECTED_SUMMARY):
-        return False
-
-    lines = [ln.strip() for ln in read_text(root / "power_matrix.csv").splitlines() if ln.strip()]
-    if len(lines) != EXPECTED_SHAPE[0]:
-        return False
-
-    actual_rows = []
-    for line in lines:
-        parts = [p.strip() for p in line.split(',')]
-        if len(parts) != EXPECTED_SHAPE[1]:
-            return False
-        try:
-            actual_rows.append([float(x) for x in parts])
-        except ValueError:
-            return False
-
-    for arow, erow in zip(actual_rows, EXPECTED_MATRIX):
-        for a, e in zip(arow, erow):
-            if not math.isclose(a, e, rel_tol=REL_TOL, abs_tol=ABS_TOL):
-                return False
-    totals = [sum(row) for row in actual_rows]
-    if not math.isclose(summary[0], max(totals), rel_tol=1e-6, abs_tol=1e-3):
-        return False
-    if not math.isclose(summary[1], min(totals), rel_tol=1e-6, abs_tol=1e-3):
-        return False
-    if not 0.0 < summary[2] < 100.0:
-        return False
-    return True
-
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
-
-
-def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
-    return 0
-
-
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        result = check()
+    except Exception:
+        result = False
+    raise SystemExit(print_result(result))

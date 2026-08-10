@@ -1,84 +1,42 @@
 #!/usr/bin/env python3
-from __future__ import annotations
+import yaml
 
-import math
-import re
-from pathlib import Path
-
-REL_TOL = 1e-4
-ABS_TOL = 1e-3
-FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
-
-
-def is_result_artifact(path: Path) -> bool:
-    name = path.name.lower()
-    return (
-        any(k in name for k in ("summary", "result", "report", "diagnosis"))
-        or path.suffix.lower() in {".txt", ".csv", ".xy", ".result"}
-    )
+from eval_utils import (
+    desktop_root,
+    floats_close,
+    parse_floats,
+    print_result,
+    require_calls,
+    require_source_tokens,
+    run_submission,
+)
 
 
-def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return path.exists() and path.is_file()
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+EXPECTED = [9593.332396, 1065.874397, 1065.922349]
+LAYOUT_X = [0.0, 882.0, 1764.0, 0.0, 882.0, 1764.0, 0.0, 882.0, 1764.0]
+LAYOUT_Y = [0.0, 0.0, 0.0, 882.0, 882.0, 882.0, 1764.0, 1764.0, 1764.0]
 
 
-def read_text(path: Path) -> str:
-    return path.read_text(encoding="utf-8", errors="ignore")
-
-
-def parse_floats(text: str) -> list[float]:
-    values: list[float] = []
-    for token in FLOAT_RE.findall(text):
-        try:
-            values.append(float(token))
-        except (TypeError, ValueError):
-            continue
-    return values
-
-
-def floats_close(actual: list[float], expected: list[float]) -> bool:
-    if len(actual) != len(expected):
+def check() -> bool:
+    root = desktop_root()
+    config = yaml.safe_load((root / "farm.yaml").read_text(encoding="utf-8"))
+    farm = config["farm"]
+    if farm["layout_x"] != LAYOUT_X or farm["layout_y"] != LAYOUT_Y:
         return False
-    for a, e in zip(actual, expected):
-        if not math.isclose(a, e, rel_tol=REL_TOL, abs_tol=ABS_TOL):
-            return False
-    return True
-
-
-def require_files(root: Path, required: list[str]) -> bool:
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
-    return True
-
-
-EXPECTED_SUMMARY = [9593.332396000000, 1065.874397000000, 1065.922349000000]
-
-
-def check_task(root: Path) -> bool:
-    required = ['farm.yaml', 'full_farm.py', 'summary.txt']
-    if not require_files(root, required):
+    if farm["turbine_type"] != ["nrel_5MW"] * 9:
         return False
-
-    actual = parse_floats(read_text(root / "summary.txt"))
-    return floats_close(actual, EXPECTED_SUMMARY)
-
-def evaluate() -> int:
-    root = Path("/home/user/Desktop")
-    try:
-        ok = check_task(root)
-    except Exception:
-        ok = False
-    return 1 if ok else 0
-
-
-def main() -> int:
-    result = evaluate()
-    print("True" if result == 1 else "False")
-    return 0
+    if config["wake"]["model_strings"]["velocity_model"] != "gauss":
+        return False
+    tree = run_submission(root, "full_farm.py", ["summary.txt"])
+    require_calls(tree, {"FlorisModel": 1, "set": 1, "run": 1, "get_turbine_powers": 1})
+    require_source_tokens(root / "full_farm.py", ["farm.yaml", "270", "8", "0.06"])
+    values = parse_floats(root / "summary.txt", 3)
+    return floats_close(values, EXPECTED) and abs(values[0] - 9.0 * (values[1] + values[2]) / 2.0) < 1e4
 
 
 if __name__ == "__main__":
-    raise SystemExit(main())
+    try:
+        result = check()
+    except Exception:
+        result = False
+    raise SystemExit(print_result(result))

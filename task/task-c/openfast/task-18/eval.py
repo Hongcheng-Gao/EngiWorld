@@ -66,8 +66,21 @@ def values_for_label(text: str, label: str) -> list[float]:
     return matches[0]
 
 
+def non_gain_signature(text: str) -> str:
+    lines: list[str] = []
+    for line in text.splitlines():
+        values, marker, comment = line.partition("!")
+        if marker and any(re.search(rf"\b{label}\b", comment) for label in GAIN_LABELS):
+            lines.append(f"<pitch-gain-values>!{comment}")
+        else:
+            lines.append(line)
+    return "\n".join(lines)
+
+
 def controller_ok(path: Path, factor: float, baseline: str) -> bool:
     text = read(path)
+    if non_gain_signature(text) != non_gain_signature(baseline):
+        return False
     if parameter(text, "PC_GS_n") != str(GAIN_COUNT):
         return False
     if values_for_label(text, "PC_GS_angles") != values_for_label(
@@ -167,7 +180,6 @@ def check() -> bool:
         "DISCON.IN",
         "Cp_Ct_Cq.NREL5MW.txt",
         "libdiscon.so",
-        "build_cases.py",
         "postprocess.py",
         "elasto_rosco.dat",
         "aero_rosco.dat",

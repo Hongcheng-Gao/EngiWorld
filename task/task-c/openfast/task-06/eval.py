@@ -76,6 +76,17 @@ def has_row(text: str, expected: tuple[str, ...]) -> bool:
     return any(tuple(line.split()) == expected for line in text.splitlines())
 
 
+def line_type_rows(text: str) -> list[tuple[str, ...]]:
+    block = text.split("LINE TYPES", 1)[1].split("POINTS", 1)[0]
+    rows: list[tuple[str, ...]] = []
+    for line in block.splitlines():
+        stripped = line.strip()
+        if not stripped or stripped.startswith(("-", "Name", "(-)")):
+            continue
+        rows.append(tuple(stripped.split()))
+    return rows
+
+
 def check() -> bool:
     required = (
         "build_case.py", "postprocess.py", "moordyn.dat", "seastate_moordyn.dat",
@@ -94,11 +105,16 @@ def check() -> bool:
         ("1", "Fixed", "418.8", "725.383", "-200.0", "0", "0", "0", "0"),
         ("2", "Fixed", "-837.6", "0.0", "-200.0", "0", "0", "0", "0"),
         ("3", "Fixed", "418.8", "-725.383", "-200.0", "0", "0", "0", "0"),
+        ("4", "Vessel", "20.434", "35.393", "-14.0", "0", "0", "0", "0"),
+        ("5", "Vessel", "-40.868", "0.0", "-14.0", "0", "0", "0", "0"),
+        ("6", "Vessel", "20.434", "-35.393", "-14.0", "0", "0", "0", "0"),
         ("1", "main", "1", "4", "835.35", "20", "-"),
         ("2", "main", "2", "5", "835.35", "20", "-"),
         ("3", "main", "3", "6", "835.35", "20", "-"),
     )
     if any(not has_row(moordyn, row) for row in required_rows):
+        return False
+    if line_type_rows(moordyn) != [required_rows[0]]:
         return False
     if any(channel not in moordyn for channel in ("FairTen1", "FairTen2", "FairTen3")):
         return False
@@ -109,9 +125,12 @@ def check() -> bool:
         return False
     fst = read(ROOT / "moordyn_case.fst")
     expected_main = {
-        "TMax": "120.0", "CompSeaSt": "1", "CompHydro": "1", "CompServo": "0",
+        "TMax": "120.0", "CompInflow": "1", "CompAero": "2",
+        "CompSeaSt": "1", "CompHydro": "1", "CompServo": "0",
         "CompMooring": "3", "DT_Out": "0.1", "OutFileFmt": "1",
         "EDFile": "elasto_moordyn.dat", "AeroFile": "aero_moordyn.dat",
+        "InflowFile": "5MW_Baseline/NRELOffshrBsline5MW_InflowWind_Steady8mps.dat",
+        "ServoFile": "servo_moordyn.dat",
         "SeaStFile": "seastate_moordyn.dat", "HydroFile": "hydrodyn_moordyn.dat",
         "MooringFile": "moordyn.dat",
     }

@@ -19,6 +19,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def internal_field(path: Path, kind: str) -> list:
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
@@ -55,6 +78,7 @@ def patch_vectors(path: Path, patch: str) -> list[tuple[float, float, float]]:
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     control = read(CASE / "system/controlDict")
@@ -65,9 +89,19 @@ def check_case() -> bool:
             "(1 0.2 0)" in mesh,
             "(40 60 1)" in mesh,
             "(200 60 1)" in mesh,
-            "type symmetryPlane;" in mesh,
-            "type wall;" in mesh,
-            "value uniform (10 0 0);" in velocity,
+            mesh.count("simpleGrading (1 50 1)") == 2,
+            has_entry(named_block(mesh, "upstreamBottom"), "type", r"symmetryPlane"),
+            has_entry(named_block(mesh, "plate"), "type", r"wall"),
+            has_entry(named_block(mesh, "frontAndBack"), "type", r"empty"),
+            all(has_entry(patch(velocity, name), "value", r"uniform\s+\(10(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)") for name in ("inlet", "freeStream")),
+            has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "upstreamBottom"), "type", r"symmetryPlane"),
+            has_entry(patch(velocity, "plate"), "type", r"noSlip"),
+            has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
+            has_entry(patch(pressure, "outlet"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "outlet"), "value", r"uniform\s+0(?:\.0+)?"),
+            has_entry(patch(pressure, "upstreamBottom"), "type", r"symmetryPlane"),
+            has_entry(patch(pressure, "frontAndBack"), "type", r"empty"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1\.5e-?5\s*;", physical, re.I)
             is not None,
             "simulationType laminar;" in momentum,

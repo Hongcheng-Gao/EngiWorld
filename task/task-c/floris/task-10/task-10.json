@@ -1,7 +1,7 @@
 {
   "id": "c-floris-task-10-ubuntu",
   "snapshot": "FLORIS4.6.4",
-  "instruction": "You are given a three-turbine in-line template. Complete the following from the command line: 1. Write a complete script `/home/user/Desktop/derating.py`: - Baseline: all turbines full output; compute total power `P_base` - Derating: set `turbine_0` power setpoint to `80%` of rated power (or adjust thrust) - Compute derated total power `P_derated` - If using simple derating, configure it in turbine YAML or in script 2. Execute and save to `/home/user/Desktop/summary.txt` in this format: `P_base_kw, P_derated_kw, net_change_kw` 3. Do not use any GUI. [Software] Run your scripts with Python in an environment where `floris` is installed (e.g. `from floris import FlorisModel`).",
+  "instruction": "You are given `/home/user/Desktop/derating_base.yaml` and `/home/user/Desktop/derating_base.py` for three in-line `nrel_5MW` turbines at `x=[0,630,1260] m`. Work from the command line. Write `/home/user/Desktop/derating.py`: load the YAML; set wind direction `270 deg`, wind speed `8 m/s`, and turbulence intensity `0.06`; run a baseline with all turbines unconstrained and compute `P_base`; record turbine 0's baseline available power; call `set_operation_model(\"simple-derating\")`; set turbine 0's power setpoint to exactly 80% of that baseline available power while leaving turbines 1 and 2 unconstrained; rerun and compute `P_derated`; and compute `net_change_kw=P_derated_kw-P_base_kw`. Execute the script and write `/home/user/Desktop/summary.txt` as `P_base_kw, P_derated_kw, net_change_kw`. Do not use yaw control as a substitute for derating. Do not use a GUI. [Software] Use Python with `floris==4.6.4`.",
   "source": "https://github.com/NatLabRockies/floris",
   "config": [
     {
@@ -33,6 +33,10 @@
             {
               "local_path": "task-10/eval.py",
               "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
             }
           ]
         }

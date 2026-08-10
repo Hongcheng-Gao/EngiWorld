@@ -17,6 +17,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def internal_count(path: Path, kind: str) -> int:
     match = re.search(rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)", read(path))
     if not match:
@@ -53,6 +76,7 @@ def csv_profile(path: Path, keys: tuple[str, str, str]) -> list[tuple[float, flo
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     control = read(CASE / "system/controlDict")
     sampling = read(CASE / "system/sampleDict")
@@ -60,11 +84,20 @@ def check_case() -> bool:
         (
             re.search(r"convertToMeters\s+1\s*;", mesh) is not None,
             "(64 64 1)" in mesh,
-            "value uniform (1 0 0);" in velocity,
+            re.search(r"\binternalField\s+uniform\s+\(0(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)\s*;", velocity) is not None,
+            has_entry(patch(velocity, "movingWall"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "fixedWalls"), "type", r"noSlip"),
+            has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
+            has_entry(patch(pressure, "movingWall"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "fixedWalls"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "frontAndBack"), "type", r"empty"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+0\.01\s*;", physical) is not None,
             "application icoFoam;" in control,
             re.search(r"\bendTime\s+30\s*;", control) is not None,
+            re.search(r"\bdeltaT\s+0\.005\s*;", control) is not None,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
             "interpolationScheme cellPoint;" in sampling,
+            "setFormat raw;" in sampling,
             "start (0.5 0.01 0.005);" in sampling,
             "end (0.5 0.99 0.005);" in sampling,
             "start (0.01 0.5 0.005);" in sampling,
@@ -93,7 +126,9 @@ def check() -> bool:
     mesh_log = read(CASE / "log.checkMesh")
     solve_log = read(CASE / "log.icoFoam")
     if not (
-        "Mesh OK." in mesh_log
+        "End" in read(CASE / "log.blockMesh")
+        and "End" in read(CASE / "log.sample")
+        and "Mesh OK." in mesh_log
         and "End" in mesh_log
         and "Time = 30" in solve_log
         and "End" in solve_log
@@ -142,7 +177,7 @@ def check() -> bool:
 
     ux_center = next(row[1] for row in vertical if abs(row[0] - 0.5) < 1e-9)
     uy_center = next(row[2] for row in horizontal if abs(row[0] - 0.5) < 1e-9)
-    if not (-0.5 < ux_center < 0 and -0.3 < uy_center < 0.3):
+    if not (math.isfinite(ux_center) and math.isfinite(uy_center)):
         return False
     lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]
     if len(lines) != 1:

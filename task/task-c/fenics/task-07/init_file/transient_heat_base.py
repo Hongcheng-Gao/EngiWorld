@@ -18,4 +18,4 @@ alpha = 50.0  # 热扩散系数
 # TODO: 定义时间离散变分形式（向后欧拉）
 # (u - u_n)/dt * v * dx + alpha * inner(grad(u), grad(v)) * dx = 0
 
-# TODO: 编写时间循环，计算 10 步
+# TODO: 编写时间循环，计算 100 步（dt=0.1 s，总时间 10 s）

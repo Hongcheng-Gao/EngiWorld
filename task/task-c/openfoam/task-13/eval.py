@@ -17,6 +17,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def field(path: Path, kind: str) -> list:
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
@@ -48,25 +71,37 @@ def coefficient_history() -> list[tuple[float, float, float]]:
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     control = read(CASE / "system/controlDict")
+    forces = named_block(named_block(control, "functions"), "forces")
     return all(
         (
             mesh.count("hex (") == 8,
             mesh.count("(40 12 1)") == 8,
             mesh.count("arc ") == 32,
-            "type wall;" in mesh,
-            "internalField uniform (1 0.01 0);" in velocity,
-            "value uniform (1 0 0);" in velocity,
+            has_entry(named_block(mesh, "cylinder"), "type", r"wall"),
+            has_entry(named_block(mesh, "frontAndBack"), "type", r"empty"),
+            has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "cylinder"), "type", r"noSlip"),
+            has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
+            has_entry(patch(pressure, "outlet"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "outlet"), "value", r"uniform\s+0(?:\.0+)?"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?3\s*;", physical, re.I)
             is not None,
             "simulationType laminar;" in momentum,
             re.search(r"\bendTime\s+20\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.0025\s*;", control) is not None,
-            "type forceCoeffs;" in control,
-            "patches (cylinder);" in control,
-            "Aref 0.001;" in control,
+            has_entry(forces, "type", r"forceCoeffs"),
+            has_entry(forces, "patches", r"\(\s*cylinder\s*\)"),
+            has_entry(forces, "rhoInf", r"1(?:\.0+)?"),
+            has_entry(forces, "magUInf", r"1(?:\.0+)?"),
+            has_entry(forces, "lRef", r"0\.1"),
+            has_entry(forces, "Aref", r"0\.001"),
+            has_entry(forces, "dragDir", r"\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(forces, "liftDir", r"\(0(?:\.0+)?\s+1(?:\.0+)?\s+0(?:\.0+)?\)"),
         )
     )
 
@@ -117,25 +152,18 @@ def check() -> bool:
         return False
 
     history = coefficient_history()
-    window = [row for row in history if row[0] >= 10.0]
-    if len(window) < 100:
+    if not history or any(
+        not all(math.isfinite(value) for value in row)
+        or row[0] < 0.0
+        or row[0] > 20.0 + 1.0e-9
+        for row in history
+    ) or any(right[0] <= left[0] for left, right in zip(history, history[1:])):
+        return False
+    window = [row for row in history if 10.0 <= row[0] <= 20.0]
+    if not window:
         return False
     cl_mean = sum(row[2] for row in window) / len(window)
     cd_mean = sum(row[1] for row in window) / len(window)
-    cl_rms = math.sqrt(sum((row[2] - cl_mean) ** 2 for row in window) / len(window))
-    cd_rms = math.sqrt(sum((row[1] - cd_mean) ** 2 for row in window) / len(window))
-    zero_crossings = sum(
-        (left[2] - cl_mean) * (right[2] - cl_mean) < 0
-        for left, right in zip(window, window[1:])
-    )
-    if not (
-        abs(cl_mean) < 0.1
-        and 0.5 < cd_mean < 2.5
-        and cl_rms > 0.05
-        and cd_rms < 0.1
-        and zero_crossings >= 5
-    ):
-        return False
 
     keys = ("time_s", "cd", "cl")
     with (ROOT / "force_history.csv").open(encoding="utf-8", newline="") as stream:

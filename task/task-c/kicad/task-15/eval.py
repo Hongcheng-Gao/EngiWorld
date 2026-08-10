@@ -4,6 +4,7 @@ import csv
 import math
 import re
 import sys
+from collections import Counter
 from pathlib import Path
 
 
@@ -11,26 +12,18 @@ BASE = Path(__file__).resolve().parent
 PCB_PATH = BASE / "board.kicad_pcb"
 CSV_PATH = BASE / "pdn_analysis.csv"
 
-TARGET = [
-    (10_000, 0.53),
-    (100_000, 0.3),
-    (1_000_000, 0.15),
-    (10_000_000, 0.08),
-    (100_000_000, 0.05),
-]
-
-CAP_MODELS = {
-    "100nF": (100e-9, 0.05, 0.5e-9),
-    "10uF": (10e-6, 0.02, 1.0e-9),
-    "1uF": (1e-6, 0.03, 0.8e-9),
-    "47nF": (47e-9, 0.08, 0.4e-9),
-    "10nF": (10e-9, 0.12, 0.3e-9),
-}
-
-FP_RE = re.compile(r'\(footprint\s+"[^"]+"\s+\(layer\s+"[^"]+"\)\s+\(at\s+([-0-9.]+)\s+([-0-9.]+)\)')
+FP_RE = re.compile(r'\(footprint\s+"([^"]+)"\s+\(layer\s+"[^"]+"\)\s+\(at\s+([-0-9.]+)\s+([-0-9.]+)\)')
 REF_RE = re.compile(r'\(fp_text\s+reference\s+"([^"]+)"')
 VAL_RE = re.compile(r'\(fp_text\s+value\s+"([^"]+)"')
 PAD_RE = re.compile(r'\(pad\s+"[^"]+"\s+smd\s+rect\s+\(at\s+([-0-9.]+)\s+([-0-9.]+)\)\s+\(size\s+([-0-9.]+)\s+([-0-9.]+)\)\s+\(layers\s+"F.Cu"\s+"F.Mask"\)\s+\(net\s+\d+\s+"([^"]+)"\)\)')
+ORIGINAL_C1_IDENTITY = (
+    "100nF",
+    "C_0402",
+    Counter({
+        (-0.5, 0.0, 0.5, 0.5, "3V3"): 1,
+        (0.5, 0.0, 0.5, 0.5, "GND"): 1,
+    }),
+)
 
 
 def _cap_impedance(f_hz: float, caps: list[tuple[float, float, float]]) -> float:
@@ -42,7 +35,30 @@ def _cap_impedance(f_hz: float, caps: list[tuple[float, float, float]]) -> float
     return abs(1.0 / y)
 
 
-def _parse_board(text: str):
+def _input_path(name: str) -> Path:
+    direct = BASE / name
+    return direct if direct.exists() else BASE / "init_file" / name
+
+
+def _load_cap_models() -> dict[str, tuple[float, float, float]]:
+    with _input_path("cap_models.csv").open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    required = {"value", "capacitance_f", "esr_ohm", "esl_h"}
+    if not rows or not required.issubset(rows[0]):
+        raise ValueError("cap_models.csv must provide value, capacitance_f, esr_ohm, esl_h")
+    return {
+        row["value"]: (float(row["capacitance_f"]), float(row["esr_ohm"]), float(row["esl_h"]))
+        for row in rows
+    }
+
+
+def _load_targets() -> list[tuple[float, float]]:
+    with _input_path("target_z.csv").open(encoding="utf-8", newline="") as handle:
+        rows = list(csv.DictReader(handle))
+    return [(float(row["freq_hz"]), float(row["target_ohm"])) for row in rows]
+
+
+def _parse_board(text: str, cap_models):
     footprints = []
     for raw_block in text.split("(footprint ")[1:]:
         block = "(footprint " + raw_block
@@ -51,12 +67,15 @@ def _parse_board(text: str):
         val_m = VAL_RE.search(block)
         if not (fp_m and ref_m and val_m):
             return None
-        x, y = float(fp_m.group(1)), float(fp_m.group(2))
+        library = fp_m.group(1)
+        x, y = float(fp_m.group(2)), float(fp_m.group(3))
         pads = []
         for pad_m in PAD_RE.finditer(block):
             pads.append({
                 "x": x + float(pad_m.group(1)),
                 "y": y + float(pad_m.group(2)),
+                "rel_x": float(pad_m.group(1)),
+                "rel_y": float(pad_m.group(2)),
                 "w": float(pad_m.group(3)),
                 "h": float(pad_m.group(4)),
                 "net": pad_m.group(5),
@@ -64,6 +83,7 @@ def _parse_board(text: str):
         footprints.append({
             "ref": ref_m.group(1),
             "value": val_m.group(1),
+            "library": library,
             "x": x,
             "y": y,
             "pads": pads,
@@ -72,9 +92,9 @@ def _parse_board(text: str):
     cap_footprints = [fp for fp in footprints if fp["ref"].startswith("C")]
     caps = []
     for fp in cap_footprints:
-        if fp["value"] not in CAP_MODELS:
+        if fp["value"] not in cap_models:
             return None
-        caps.append(CAP_MODELS[fp["value"]])
+        caps.append(cap_models[fp["value"]])
     return footprints, cap_footprints, caps
 
 
@@ -99,7 +119,7 @@ def _footprints_overlap(a, b) -> bool:
     )
 
 
-def _check_csv(caps) -> bool:
+def _check_csv(caps, targets) -> bool:
     if not CSV_PATH.exists():
         return False
     try:
@@ -112,7 +132,7 @@ def _check_csv(caps) -> bool:
         return False
     if len(rows) != 5:
         return False
-    for f, target in TARGET:
+    for f, target in targets:
         matches = [z for rf, z in data if abs(rf - f) / f < 0.01]
         if len(matches) != 1:
             return False
@@ -129,8 +149,16 @@ def evaluate() -> bool:
     if not PCB_PATH.exists() or not CSV_PATH.exists():
         return False
 
+    try:
+        cap_models = _load_cap_models()
+        targets = _load_targets()
+    except Exception:
+        return False
+    if len(targets) != 5:
+        return False
+
     text = PCB_PATH.read_text(encoding="utf-8", errors="ignore")
-    parsed = _parse_board(text)
+    parsed = _parse_board(text, cap_models)
     if parsed is None:
         return False
     footprints, cap_footprints, caps = parsed
@@ -138,6 +166,18 @@ def evaluate() -> bool:
     if len(refs) != 6:
         return False
     if len(set(refs)) != 6:
+        return False
+
+    # The original C1 may be moved, but it must remain the same component and
+    # retain its value, footprint, and two pad definitions.
+    output_c1 = [fp for fp in cap_footprints if fp["ref"] == "C1"]
+    if len(output_c1) != 1:
+        return False
+    def identity(fp):
+        pads = Counter((pad["rel_x"], pad["rel_y"], pad["w"], pad["h"], pad["net"])
+                       for pad in fp["pads"])
+        return fp["value"], fp["library"], pads
+    if identity(output_c1[0]) != ORIGINAL_C1_IDENTITY:
         return False
 
     rail_pads = [
@@ -148,6 +188,8 @@ def evaluate() -> bool:
     if not rail_pads:
         return False
     for cap in cap_footprints:
+        if Counter(pad["net"] for pad in cap["pads"]) != Counter({"3V3": 1, "GND": 1}):
+            return False
         if not (0 <= cap["x"] <= 80 and 0 <= cap["y"] <= 60):
             return False
         if min(math.hypot(cap["x"] - pad["x"], cap["y"] - pad["y"]) for pad in rail_pads) > 5.0 + 1e-6:
@@ -156,9 +198,9 @@ def evaluate() -> bool:
             if other is not cap and _footprints_overlap(cap, other):
                 return False
 
-    if not _check_csv(caps):
+    if not _check_csv(caps, targets):
         return False
-    for f, target in TARGET:
+    for f, target in targets:
         if _cap_impedance(f, caps) > target + 1e-6:
             return False
     return True

@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import math
 import os
+import re
 import struct
 import zipfile
 import xml.etree.ElementTree as ET
@@ -429,7 +430,45 @@ def _evaluate_csg(path: Path) -> bool:
     text = path.read_text(encoding="utf-8", errors="ignore")
     if len(text) < int(SPEC.get("min_size", 1)):
         return False
-    return all(token in text for token in SPEC.get("tokens", []))
+    compact = re.sub(r"\s+", "", re.sub(r"//.*?$|/\*.*?\*/", "", text, flags=re.M | re.S)).lower()
+    if compact.count("union(") != 1 or compact.count("difference(") != 1:
+        return False
+    if compact.count("cube(") != 1 or compact.count("cylinder(") != 2:
+        return False
+    depth = 0
+    for char in compact:
+        if char == "{":
+            depth += 1
+        elif char == "}":
+            depth -= 1
+            if depth < 0:
+                return False
+    if depth != 0:
+        return False
+
+    cube = re.search(r"cube\(([^)]*)\)", compact)
+    if cube is None or re.search(r"size=\[40(?:\.0+)?,30(?:\.0+)?,10(?:\.0+)?\]", cube.group(1)) is None:
+        return False
+    if "center=true" not in cube.group(1):
+        return False
+
+    cylinders = re.findall(r"cylinder\(([^)]*)\)", compact)
+    def cylinder_matches(args, height, radius):
+        height_ok = re.search(rf"h={height}(?:\.0+)?(?:,|$)", args) is not None
+        radius_ok = (
+            re.search(rf"r={radius}(?:\.0+)?(?:,|$)", args) is not None
+            or (re.search(rf"r1={radius}(?:\.0+)?(?:,|$)", args) is not None
+                and re.search(rf"r2={radius}(?:\.0+)?(?:,|$)", args) is not None)
+        )
+        return height_ok and radius_ok and "center=true" in args
+    if sum(cylinder_matches(args, 20, 5) for args in cylinders) != 1:
+        return False
+    if sum(cylinder_matches(args, 8, 12) for args in cylinders) != 1:
+        return False
+
+    translated = re.search(r"translate\(\[0(?:\.0+)?,0(?:\.0+)?,10(?:\.0+)?\]\)", compact)
+    matrix = re.search(r"multmatrix\(\[.*?\[0(?:\.0+)?,0(?:\.0+)?,1(?:\.0+)?,10(?:\.0+)?\].*?\]\)", compact)
+    return translated is not None or matrix is not None
 
 
 def evaluate() -> bool:

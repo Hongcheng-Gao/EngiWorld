@@ -1,37 +1,50 @@
-from floris import FlorisModel
-import yaml, numpy as np
 from pathlib import Path
 
-
-def build_custom():
-    src = Path(__file__).resolve().parent.parent / "init_file" / "custom_turbine.yaml"
-    custom = yaml.safe_load(src.read_text(encoding="utf-8"))
-    custom.pop("generator_efficiency", None)
-    custom.setdefault("TSR", 8.0)
-    custom.setdefault("power_thrust_table", {}).setdefault("ref_tilt", 0.0)
-    custom["power_thrust_table"].setdefault("cosine_loss_exponent_yaw", 1.88)
-    custom["power_thrust_table"].setdefault("cosine_loss_exponent_tilt", 1.88)
-    return custom
+import floris
+from floris import FlorisModel
+import numpy as np
+import yaml
 
 
-def cfg(custom):
-    import sys
-    p = Path(sys.prefix) / "lib" / "python3.10" / "site-packages" / "floris" / "default_inputs.yaml"
-    c = yaml.safe_load(p.read_text(encoding="utf-8"))
-    c["logging"]["console"]["level"] = "ERROR"
-    c["farm"]["layout_x"] = [0.0]
-    c["farm"]["layout_y"] = [0.0]
-    c["farm"]["turbine_type"] = [custom]
-    return c
+ROOT = Path(__file__).resolve().parent
+TURBINE_FILE = ROOT / "custom_turbine.yaml"
+if not TURBINE_FILE.exists():
+    TURBINE_FILE = ROOT.parent / "init_file" / "custom_turbine.yaml"
+
+
+def configuration(turbine_definition):
+    default_path = Path(floris.__file__).resolve().with_name("default_inputs.yaml")
+    config = yaml.safe_load(default_path.read_text(encoding="utf-8"))
+    config["logging"]["console"]["level"] = "ERROR"
+    config["farm"]["layout_x"] = [0.0]
+    config["farm"]["layout_y"] = [0.0]
+    config["farm"]["turbine_type"] = [turbine_definition]
+    return config
+
+
+def main():
+    turbine = yaml.safe_load(TURBINE_FILE.read_text(encoding="utf-8"))
+    wind_speeds = np.array([3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0])
+    fmodel = FlorisModel(configuration(turbine))
+    fmodel.set(
+        wind_directions=np.full(7, 270.0),
+        wind_speeds=wind_speeds,
+        turbulence_intensities=np.full(7, 0.06),
+    )
+    fmodel.run_no_wake()
+    powers_kw = np.asarray(fmodel.get_turbine_powers(), dtype=float).reshape(-1) / 1000.0
+    table = fmodel.core.farm.turbine_definitions[0]["power_thrust_table"]
+    ct = np.interp(
+        wind_speeds,
+        np.asarray(table["wind_speed"], dtype=float),
+        np.asarray(table["thrust_coefficient"], dtype=float),
+    )
+    values = [powers_kw[0], ct[0], powers_kw[3], ct[3], powers_kw[6], ct[6]]
+    (ROOT / "summary.txt").write_text(
+        ", ".join(f"{float(value):.6f}" for value in values) + "\n",
+        encoding="utf-8",
+    )
+
 
 if __name__ == "__main__":
-    custom = build_custom()
-    ws = np.array([3.0, 5.0, 7.0, 9.0, 11.0, 13.0, 15.0])
-    f = FlorisModel(cfg(custom))
-    f.set(wind_directions=np.full(ws.shape, 270.0), wind_speeds=ws, turbulence_intensities=np.full(ws.shape, 0.06))
-    f.run_no_wake()
-    p = (f.get_turbine_powers() / 1000.0).reshape(-1)
-    td = f.core.farm.turbine_definitions[0]["power_thrust_table"]
-    ct = np.interp(ws, np.array(td["wind_speed"], dtype=float), np.array(td["thrust_coefficient"], dtype=float))
-    vals = [float(p[0]), float(ct[0]), float(p[3]), float(ct[3]), float(p[6]), float(ct[6])]
-    Path("summary.txt").write_text(", ".join(f"{v:.6f}" for v in vals)+"\n", encoding="utf-8")
+    main()

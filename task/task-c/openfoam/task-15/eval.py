@@ -17,6 +17,29 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
 def latest_time() -> Path:
     times = [
         path
@@ -76,6 +99,11 @@ def check_case() -> bool:
     gravity = read(CASE / "constant/g")
     water = read(CASE / "constant/physicalProperties.water")
     air = read(CASE / "constant/physicalProperties.air")
+    phases = read(CASE / "constant/phaseProperties")
+    momentum = read(CASE / "constant/momentumTransport")
+    velocity = read(CASE / "0/U")
+    alpha = read(CASE / "0/alpha.water.orig") if (CASE / "0/alpha.water.orig").is_file() else read(CASE / "0/alpha.water")
+    pressure = read(CASE / "0/p_rgh")
     return all(
         (
             re.search(r"convertToMeters\s+0\.146\s*;", mesh) is not None,
@@ -83,6 +111,7 @@ def check_case() -> bool:
             "application interFoam;" in control,
             re.search(r"\bendTime\s+0\.5\s*;", control) is not None,
             re.search(r"\bmaxCo\s+0\.5\s*;", control) is not None,
+            re.search(r"\bmaxAlphaCo\s+0\.5\s*;", control) is not None,
             "writeFormat ascii;" in control,
             "box (0 0 -1) (0.1461 0.292 1);" in initial,
             "value           (0 -9.81 0);" in gravity,
@@ -90,6 +119,16 @@ def check_case() -> bool:
             re.search(r"\brho\s+1000\s*;", water) is not None,
             re.search(r"\bnu\s+1\.48e-?05\s*;", air, re.I) is not None,
             re.search(r"\brho\s+1\s*;", air) is not None,
+            re.search(r"\bsigma\s+0\.07\s*;", phases) is not None,
+            "simulationType  laminar;" in momentum or "simulationType laminar;" in momentum,
+            all(has_entry(patch(velocity, name), "type", r"noSlip") for name in ("leftWall", "rightWall", "lowerWall")),
+            has_entry(patch(velocity, "atmosphere"), "type", r"pressureInletOutletVelocity"),
+            has_entry(patch(velocity, "defaultFaces"), "type", r"empty"),
+            all(has_entry(patch(alpha, name), "type", r"zeroGradient") for name in ("leftWall", "rightWall", "lowerWall")),
+            has_entry(patch(alpha, "atmosphere"), "type", r"inletOutlet"),
+            has_entry(patch(alpha, "defaultFaces"), "type", r"empty"),
+            has_entry(patch(pressure, "atmosphere"), "type", r"prghTotalPressure"),
+            has_entry(patch(pressure, "atmosphere"), "p0", r"uniform\s+0(?:\.0+)?"),
         )
     )
 
@@ -117,7 +156,9 @@ def check() -> bool:
     mesh_log = read(CASE / "log.checkMesh")
     solve_log = read(CASE / "log.interFoam")
     if not (
-        "Mesh OK." in mesh_log
+        "End" in read(CASE / "log.blockMesh")
+        and "End" in read(CASE / "log.setFields")
+        and "Mesh OK." in mesh_log
         and "End" in mesh_log
         and "Time = 0.5" in solve_log
         and "End" in solve_log

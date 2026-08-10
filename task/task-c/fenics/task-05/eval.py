@@ -2,8 +2,12 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import math
 import re
+import subprocess
+import sys
 from pathlib import Path
 
 
@@ -19,8 +23,6 @@ def is_result_artifact(path: Path) -> bool:
 
 
 def is_nonempty_file(path: Path) -> bool:
-    if not is_result_artifact(path):
-        return True
     return path.exists() and path.is_file() and path.stat().st_size > 0
 
 
@@ -49,8 +51,31 @@ def check_task(root: Path) -> bool:
         if not is_nonempty_file(root / rel):
             return False
 
-    freqs = parse_floats(read_text(root / "summary.txt"))
-    if len(freqs) < 3:
+    script = root / "modal.py"
+    source = read_text(script)
+    try:
+        ast.parse(source, filename=str(script))
+    except SyntaxError:
+        return False
+    normalized = re.sub(r"\s+", "", source)
+    required_code = ("fromdolfinimport", "SLEPc.EPS", "210000", "0.3", "7.85e-9", "assemble(", "sqrt(")
+    if any(fragment not in normalized for fragment in required_code):
+        return False
+
+    summary = root / "summary.txt"
+    summary.unlink(missing_ok=True)
+    try:
+        completed = subprocess.run(
+            [sys.executable, str(script)], cwd=root, stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE, text=True, timeout=180, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if completed.returncode != 0 or not is_nonempty_file(summary):
+        return False
+
+    freqs = parse_floats(read_text(summary))
+    if len(freqs) != 3 or not all(math.isfinite(value) for value in freqs):
         return False
 
     expected = [33.42, 209.5, 586.5]

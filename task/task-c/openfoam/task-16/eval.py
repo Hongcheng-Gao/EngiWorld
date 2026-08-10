@@ -18,6 +18,37 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
+def initial_states(path: Path, left: float, right: float) -> bool:
+    try:
+        values = field(path, "scalar")
+    except ValueError:
+        return False
+    return len(values) == 1000 and all(abs(value - left) <= 1.0e-6 for value in values[:500]) and all(abs(value - right) <= 1.0e-6 for value in values[500:])
+
+
 def latest_time() -> Path:
     times = [
         path
@@ -70,9 +101,15 @@ def check_case() -> bool:
     control = read(CASE / "system/controlDict")
     initial = read(CASE / "system/setFieldsDict")
     thermo = read(CASE / "constant/physicalProperties")
+    velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
+    temperature = read(CASE / "0/T")
     return all(
         (
+            all(vertex in mesh for vertex in ("(0 0 0)", "(1 0 0)", "(1 0.01 0)", "(0 0.01 0)", "(0 0 0.01)", "(1 0 0.01)", "(1 0.01 0.01)", "(0 0.01 0.01)")),
             "(1000 1 1)" in mesh,
+            has_entry(named_block(mesh, "leftRight"), "type", r"patch"),
+            has_entry(named_block(mesh, "empty"), "type", r"empty"),
             "application rhoCentralFoam;" in control,
             re.search(r"\bendTime\s+0\.0005\s*;", control) is not None,
             re.search(r"\bmaxCo\s+0\.2\s*;", control) is not None,
@@ -82,9 +119,19 @@ def check_case() -> bool:
             "volScalarFieldValue p 10000" in initial,
             "volScalarFieldValue T 348.308740203735" in initial,
             "volScalarFieldValue p 100000" in initial,
+            re.search(r"\binternalField\s+uniform\s+\(0(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)\s*;", velocity) is not None,
+            has_entry(patch(velocity, "leftRight"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "empty"), "type", r"empty"),
+            has_entry(patch(pressure, "leftRight"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "empty"), "type", r"empty"),
+            has_entry(patch(temperature, "leftRight"), "type", r"zeroGradient"),
+            has_entry(patch(temperature, "empty"), "type", r"empty"),
+            initial_states(CASE / "0/p", 100000.0, 10000.0),
+            initial_states(CASE / "0/T", 348.308740203735, 278.646992162988),
             "equationOfState perfectGas;" in thermo,
             re.search(r"\bmolWeight\s+28\.96\s*;", thermo) is not None,
             re.search(r"\bCp\s+1004\.5\s*;", thermo) is not None,
+            re.search(r"\bmu\s+0(?:\.0+)?\s*;", thermo) is not None,
         )
     )
 

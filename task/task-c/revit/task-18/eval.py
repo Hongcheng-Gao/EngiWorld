@@ -66,7 +66,45 @@ SPEC = {
     "Ground Floor",
     "Level 2",
     "Level 3"
-  ]
+  ],
+  "space_levels": {
+    "Admin G West": 0,
+    "Admin G Centre": 0,
+    "Admin G East": 0,
+    "Admin L2 West": 1,
+    "Admin L2 Centre": 1,
+    "Admin L2 East": 1,
+    "Admin L3 West": 2,
+    "Admin L3 Centre": 2,
+    "Admin L3 East": 2
+  },
+  "axis_orders": [
+    {
+      "axis": "x",
+      "tokens": [
+        "Admin G West",
+        "Admin G Centre",
+        "Admin G East"
+      ]
+    },
+    {
+      "axis": "x",
+      "tokens": [
+        "Admin L2 West",
+        "Admin L2 Centre",
+        "Admin L2 East"
+      ]
+    },
+    {
+      "axis": "x",
+      "tokens": [
+        "Admin L3 West",
+        "Admin L3 Centre",
+        "Admin L3 East"
+      ]
+    }
+  ],
+  "roof_slope_min_m": 0.2
 }
 DESKTOP = Path("C:/Users/user/Desktop")
 
@@ -187,6 +225,122 @@ def init_path_for(result_dir):
     return remote if remote.is_file() else None
 
 
+
+def product_bounds(product):
+    settings = ifcopenshell.geom.settings()
+    try:
+        settings.set(settings.USE_WORLD_COORDS, True)
+    except Exception:
+        pass
+    try:
+        shape = ifcopenshell.geom.create_shape(settings, product)
+        verts = np.array(shape.geometry.verts, dtype=float).reshape(-1, 3)
+    except Exception:
+        return None
+    if not verts.size:
+        return None
+    return tuple(float(value) for value in (*verts.min(axis=0), *verts.max(axis=0)))
+
+
+def bounds_close(first, second, tolerance=0.015):
+    return first is not None and second is not None and all(abs(a - b) <= tolerance for a, b in zip(first, second))
+
+
+def preserved_class_geometry(init_model, result_model, ifc_class):
+    init_bounds = [b for item in init_model.by_type(ifc_class) if (b := product_bounds(item)) is not None]
+    result_bounds = [b for item in result_model.by_type(ifc_class) if (b := product_bounds(item)) is not None]
+    used = set()
+    for expected in init_bounds:
+        match = next((index for index, actual in enumerate(result_bounds) if index not in used and bounds_close(actual, expected)), None)
+        if match is None:
+            return False
+        used.add(match)
+    return True
+
+
+def exact_space(model, token):
+    wanted = norm(token)
+    exact = [space for space in model.by_type("IfcSpace") if norm(getattr(space, "LongName", "")) == wanted]
+    if len(exact) == 1:
+        return exact[0]
+    matches = [space for space in model.by_type("IfcSpace") if wanted in space_label(space)]
+    return matches[0] if len(matches) == 1 else None
+
+
+def bounds_volume(bounds):
+    return max(0.0, bounds[3] - bounds[0]) * max(0.0, bounds[4] - bounds[1]) * max(0.0, bounds[5] - bounds[2])
+
+
+def overlap_volume(first, second):
+    spans = [max(0.0, min(first[i + 3], second[i + 3]) - max(first[i], second[i])) for i in range(3)]
+    return spans[0] * spans[1] * spans[2]
+
+
+def check_space_geometry(init_model, result_model):
+    init_spaces = init_model.by_type("IfcSpace")
+    result_spaces = result_model.by_type("IfcSpace")
+    init_records = [(space, product_bounds(space)) for space in init_spaces]
+    result_records = [(space, product_bounds(space)) for space in result_spaces]
+    if any(bounds is None for _, bounds in init_records + result_records):
+        return False
+
+    init_total = sum(bounds_volume(bounds) for _, bounds in init_records)
+    result_total = sum(bounds_volume(bounds) for _, bounds in result_records)
+    if init_total <= 0 or not (0.84 <= result_total / init_total <= 1.02):
+        return False
+    envelope = (
+        min(bounds[0] for _, bounds in init_records), min(bounds[1] for _, bounds in init_records), min(bounds[2] for _, bounds in init_records),
+        max(bounds[3] for _, bounds in init_records), max(bounds[4] for _, bounds in init_records), max(bounds[5] for _, bounds in init_records),
+    )
+    for _, bounds in result_records:
+        if any(bounds[i] < envelope[i] - 0.02 for i in range(3)) or any(bounds[i + 3] > envelope[i + 3] + 0.02 for i in range(3)):
+            return False
+    for index, (_, first) in enumerate(result_records):
+        for _, second in result_records[index + 1:]:
+            if overlap_volume(first, second) > 1.0e-5:
+                return False
+
+    z_levels = []
+    for _, bounds in result_records:
+        if not any(abs(bounds[2] - level) <= 0.05 for level in z_levels):
+            z_levels.append(bounds[2])
+    z_levels.sort()
+    for token, expected_index in SPEC.get("space_levels", {}).items():
+        space = exact_space(result_model, token)
+        if space is None:
+            return False
+        bounds = product_bounds(space)
+        actual_index = min(range(len(z_levels)), key=lambda index: abs(bounds[2] - z_levels[index]))
+        if actual_index != int(expected_index):
+            return False
+    for rule in SPEC.get("axis_orders", []):
+        axis = {"x": 0, "y": 1, "z": 2}[rule["axis"]]
+        centers = []
+        for token in rule["tokens"]:
+            space = exact_space(result_model, token)
+            if space is None:
+                return False
+            bounds = product_bounds(space)
+            centers.append((bounds[axis] + bounds[axis + 3]) / 2.0)
+        if any(second <= first + 0.05 for first, second in zip(centers, centers[1:])):
+            return False
+    return True
+
+
+def check_preserved_geometry(init_model, result_model):
+    return all(preserved_class_geometry(init_model, result_model, ifc_class) for ifc_class in ("IfcWall", "IfcSlab", "IfcColumn", "IfcBeam"))
+
+
+def check_sloped_roof(model):
+    minimum = SPEC.get("roof_slope_min_m")
+    if minimum is None:
+        return True
+    slabs = [slab for slab in model.by_type("IfcSlab") if str(getattr(slab, "PredefinedType", "")).upper() == "ROOF"]
+    bounds = [product_bounds(slab) for slab in slabs]
+    if len(bounds) < 2 or any(item is None for item in bounds):
+        return False
+    return all(item[5] - item[2] >= float(minimum) for item in bounds)
+
 def evaluate(result_dir):
     result_dir = Path(result_dir)
     result = result_dir / "result.ifc"
@@ -195,7 +349,10 @@ def evaluate(result_dir):
     init = init_path_for(result_dir)
     if init is not None and init.is_file() and sha256(init) == sha256(result):
         return False
+    if init is None or not init.is_file():
+        return False
     model = ifcopenshell.open(str(result))
+    init_model = ifcopenshell.open(str(init))
     return (
         str(getattr(model, "schema", "")).upper().startswith("IFC4")
         and app_is_revit(model)
@@ -203,6 +360,9 @@ def evaluate(result_dir):
         and check_counts(model)
         and check_names(model)
         and check_geometry(model)
+        and check_preserved_geometry(init_model, model)
+        and check_space_geometry(init_model, model)
+        and check_sloped_roof(model)
     )
 
 

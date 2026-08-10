@@ -93,7 +93,10 @@ def valid_inputs(rpm: int) -> bool:
     }
     if any(parameter(fst, key) != value for key, value in expected.items()):
         return False
-    return close(float(parameter(ed, "RotSpeed")), float(rpm))
+    return (
+        parameter(ed, "GenDOF").lower() == "false"
+        and close(float(parameter(ed, "RotSpeed")), float(rpm))
+    )
 
 
 def check() -> bool:

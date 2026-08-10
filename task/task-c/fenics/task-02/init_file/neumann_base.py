@@ -6,7 +6,7 @@ V = FunctionSpace(mesh, 'P', 1)
 # TODO: 定义子域标记
 # 左边界 Dirichlet: u=0
 # 右边界 Neumann: g=4
-# 其余边界 Dirichlet: u=0
+# 上下边界保持自然零通量条件
 
 u = TrialFunction(V)
 v = TestFunction(V)

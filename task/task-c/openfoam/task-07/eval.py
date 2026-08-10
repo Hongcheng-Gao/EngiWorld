@@ -17,6 +17,34 @@ def read(path: Path) -> str:
     return path.read_text(encoding="utf-8", errors="ignore")
 
 
+def named_block(text: str, name: str) -> str:
+    text = re.sub(r"/\*.*?\*/|//[^\n]*", "", text, flags=re.S)
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\{{", text)
+    if not match:
+        raise ValueError(f"missing block {name}")
+    start = text.find("{", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "{"
+        depth -= text[index] == "}"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated block {name}")
+
+
+def has_entry(block: str, key: str, value: str) -> bool:
+    return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def patch(text: str, name: str) -> str:
+    return named_block(named_block(text, "boundaryField"), name)
+
+
+def face_count(block: str) -> int:
+    match = re.search(r"\bfaces\s*\((.*?)\)\s*;", block, re.S)
+    return len(re.findall(r"\([^()]+\)", match.group(1))) if match else 0
+
+
 def field(path: Path, kind: str) -> list:
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
@@ -48,25 +76,54 @@ def coefficient_history() -> list[tuple[float, float, float]]:
 def check_case() -> bool:
     mesh = read(CASE / "system/blockMeshDict")
     velocity = read(CASE / "0/U")
+    pressure = read(CASE / "0/p")
     physical = read(CASE / "constant/physicalProperties")
     momentum = read(CASE / "constant/momentumTransport")
     control = read(CASE / "system/controlDict")
+    schemes = read(CASE / "system/fvSchemes")
+    solution = read(CASE / "system/fvSolution")
+    mesh_boundary = mesh
+    forces = named_block(named_block(control, "functions"), "forces")
+    pimple = named_block(solution, "PIMPLE")
     return all(
         (
             mesh.count("hex (") == 8,
             mesh.count("(40 12 1)") == 8,
+            mesh.count("simpleGrading (10 1 1)") == 8,
             mesh.count("arc ") == 32,
-            "type wall;" in mesh,
+            face_count(named_block(mesh_boundary, "inlet")) == 4,
+            face_count(named_block(mesh_boundary, "outlet")) == 4,
+            face_count(named_block(mesh_boundary, "cylinder")) == 8,
+            has_entry(named_block(mesh_boundary, "cylinder"), "type", r"wall"),
+            has_entry(named_block(mesh_boundary, "frontAndBack"), "type", r"empty"),
             "internalField uniform (1 0.01 0);" in velocity,
-            "value uniform (1 0 0);" in velocity,
+            has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
+            has_entry(patch(velocity, "cylinder"), "type", r"noSlip"),
+            has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
+            has_entry(patch(pressure, "inlet"), "type", r"zeroGradient"),
+            has_entry(patch(pressure, "outlet"), "type", r"fixedValue"),
+            has_entry(patch(pressure, "outlet"), "value", r"uniform\s+0(?:\.0+)?"),
+            has_entry(patch(pressure, "frontAndBack"), "type", r"empty"),
             re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?3\s*;", physical, re.I)
             is not None,
             "simulationType laminar;" in momentum,
             re.search(r"\bendTime\s+20\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.0025\s*;", control) is not None,
-            "type forceCoeffs;" in control,
-            "patches (cylinder);" in control,
-            "Aref 0.001;" in control,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
+            has_entry(named_block(schemes, "divSchemes"), "div(phi,U)", r"bounded\s+Gauss\s+linearUpwind\s+grad\(U\)"),
+            has_entry(pimple, "nOuterCorrectors", r"1"),
+            has_entry(pimple, "nCorrectors", r"2"),
+            has_entry(forces, "type", r"forceCoeffs"),
+            has_entry(forces, "writeControl", r"timeStep"),
+            has_entry(forces, "writeInterval", r"1"),
+            has_entry(forces, "patches", r"\(\s*cylinder\s*\)"),
+            has_entry(forces, "rhoInf", r"1(?:\.0+)?"),
+            has_entry(forces, "magUInf", r"1(?:\.0+)?"),
+            has_entry(forces, "lRef", r"0\.1"),
+            has_entry(forces, "Aref", r"0\.001"),
+            has_entry(forces, "dragDir", r"\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
+            has_entry(forces, "liftDir", r"\(0(?:\.0+)?\s+1(?:\.0+)?\s+0(?:\.0+)?\)"),
         )
     )
 

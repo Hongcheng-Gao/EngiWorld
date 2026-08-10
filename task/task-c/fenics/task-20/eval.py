@@ -2,8 +2,13 @@
 from __future__ import annotations
 
 import argparse
+import ast
+import hashlib
 import json
 import re
+import subprocess
+import sys
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -41,6 +46,23 @@ def write_result(path: Path, value: int) -> None:
     path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
+def sha256(path: Path) -> str:
+    return hashlib.sha256(path.read_bytes()).hexdigest()
+
+
+def valid_xdmf(path: Path, expected_h5: str) -> bool:
+    try:
+        root = ET.parse(path).getroot()
+    except (ET.ParseError, OSError):
+        return False
+    hdf_items = [
+        (node.text or "").strip()
+        for node in root.iter()
+        if node.tag.endswith("DataItem") and node.attrib.get("Format", "").upper() == "HDF"
+    ]
+    return bool(hdf_items) and all(item.startswith(expected_h5 + ":/") for item in hdf_items)
+
+
 def parse_report(path: Path) -> dict[str, object]:
     data: dict[str, object] = {}
     for raw_line in read_text(path).splitlines():
@@ -63,20 +85,69 @@ def parse_report(path: Path) -> dict[str, object]:
 
 def check_task(root: Path) -> bool:
     required = [
+        "job_a.py",
+        "job_b.py",
         "run_pipeline.py",
         "compare.py",
-        "job_a.xdmf",
-        "job_b.xdmf",
-        "job_a_metrics.json",
-        "job_b_metrics.json",
-        "comparison_report.txt",
     ]
     for rel in required:
         if not is_nonempty_file(root / rel):
             return False
 
+    expected_job_hashes = {
+        "job_a.py": "f09fb0fb7c90b5fe53135cc540c246f7398699455d98eecae12ef2120a5d205d",
+        "job_b.py": "5ec8262a3a1fcdbce13175651d6b4cf8b53e2b0694e4eef084ba6c2fcbe712af",
+    }
+    if any(sha256(root / name) != digest for name, digest in expected_job_hashes.items()):
+        return False
+
+    pipeline_source = read_text(root / "run_pipeline.py")
+    compare_source = read_text(root / "compare.py")
+    try:
+        ast.parse(pipeline_source, filename=str(root / "run_pipeline.py"))
+        ast.parse(compare_source, filename=str(root / "compare.py"))
+    except SyntaxError:
+        return False
+    if any(token not in pipeline_source for token in ("subprocess", "job_a", "job_b", "check=True")):
+        return False
+    if any(token not in compare_source for token in ("job_a_metrics.json", "job_b_metrics.json", "Ratio_Mises", "Ratio_Displacement")):
+        return False
+
+    generated = [
+        "job_a.xdmf", "job_a.h5", "job_a_metrics.json",
+        "job_b.xdmf", "job_b.h5", "job_b_metrics.json",
+        "comparison_report.txt",
+    ]
+    for rel in generated:
+        (root / rel).unlink(missing_ok=True)
+    try:
+        pipeline = subprocess.run(
+            [sys.executable, str(root / "run_pipeline.py")], cwd=root,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            timeout=300, check=False,
+        )
+        if pipeline.returncode != 0:
+            return False
+        comparison = subprocess.run(
+            [sys.executable, str(root / "compare.py")], cwd=root,
+            stdout=subprocess.PIPE, stderr=subprocess.PIPE, text=True,
+            timeout=60, check=False,
+        )
+    except (OSError, subprocess.SubprocessError):
+        return False
+    if comparison.returncode != 0 or any(not is_nonempty_file(root / rel) for rel in generated):
+        return False
+    if not valid_xdmf(root / "job_a.xdmf", "job_a.h5") or not valid_xdmf(root / "job_b.xdmf", "job_b.h5"):
+        return False
+
     data = parse_report(root / "comparison_report.txt")
     if "job_a" not in data or "job_b" not in data:
+        return False
+    report_lines = [line.strip() for line in read_text(root / "comparison_report.txt").splitlines() if line.strip()]
+    if len(report_lines) != 4:
+        return False
+    expected_prefixes = ("job_a,", "job_b,", "Ratio_Mises,", "Ratio_Displacement,")
+    if any(not line.startswith(prefix) for line, prefix in zip(report_lines, expected_prefixes)):
         return False
 
     mises_a, uy_a = data["job_a"]

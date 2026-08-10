@@ -108,6 +108,20 @@ def evaluate() -> bool:
     if any(abs(s["width"] - 0.10) > 0.01 for s in hdmi_segments):
         return False
 
+    # Either end may be the source. Require one corresponding endpoint pair to
+    # have the requested approximately 0.25 mm center-to-center spacing.
+    endpoints = [
+        [(s["x1"], s["y1"]), (s["x2"], s["y2"])]
+        for s in hdmi_segments
+    ]
+    endpoint_gaps = [
+        math.hypot(a[0] - b[0], a[1] - b[1])
+        for a in endpoints[0]
+        for b in endpoints[1]
+    ]
+    if not any(abs(gap - 0.25) <= 0.05 for gap in endpoint_gaps):
+        return False
+
     gnd_vias = [
         v for v in vias
         if v["net_name"] == "GND" and 35.0 <= v["x"] <= 70.0 and abs(v["y"] - 20.0) <= 3.0
