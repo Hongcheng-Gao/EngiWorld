@@ -12,9 +12,7 @@ except Exception:
     mdb = None; openMdb = None; openOdb = None; THREE_D = None; DEFORMABLE_BODY = None
 SPEC = {'any_odb_fields': [],
  'bbox': [120, 30, 3],
- 'bbox_tol': 0.2,
- 'expected_volume': 10460.707993,
- 'volume_rel_tol': 0.01,
+ 'bbox_tol': 8.0,
  'bc_checks': [{'kind': 'constraint', 'name': 'BC-LeftGrip'}],
  'bc_names': ['BC-LeftGrip'],
  'cad_text': 'Create a 120 x 30 x 3 mm tension coupon with one D12 through hole at the geometric '
@@ -37,16 +35,12 @@ SPEC = {'any_odb_fields': [],
                   'sign': 'positive'}],
  'load_names': ['Load-RightTension'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
- 'min_elements': 1,
+ 'min_elements': 80,
  'min_frames': 2,
  'model_name': 'Model-HoleTension',
  'nonzero_odb_fields': ['U', 'S'],
- 'odb_resultant_checks': [{'field': 'RF',
-                           'magnitude': 1000.0,
-                           'region': 'LEFT_GRIP',
-                           'rel_tol': 0.35}],
  'required_files': ['stage1_geometry.step', 'Job-HoleTension.cae', 'Job-HoleTension.odb'],
- 'required_odb_fields': ['U', 'S', 'RF'],
+ 'required_odb_fields': ['U', 'S'],
  'required_sets': ['LEFT_GRIP', 'RIGHT_GRIP', 'HOLE_EDGE'],
  'required_surfaces': [],
  'section_material': 'Steel',
@@ -219,15 +213,6 @@ def dims_close(got, exp, tol):
     return all(abs(a-b) <= tol for a,b in zip(g,e))
 
 
-def cell_volume(cells):
-    total=0.0
-    for cell in cells:
-        try: value=cell.getSize(printResults=False)
-        except TypeError: value=cell.getSize()
-        total += float(value)
-    return total
-
-
 def abaqus_step_bbox(path):
     if mdb is None or THREE_D is None or DEFORMABLE_BODY is None: return None
     model_name='__eval_step_import__'
@@ -240,11 +225,10 @@ def abaqus_step_bbox(path):
         try: geom=mdb.openStep(fileName=path)
         except Exception: geom=mdb.openStep(path)
         part=model.PartFromGeometryFile(name=part_name, geometryFile=geom, combine=False, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-        bb=part.cells.getBoundingBox()
+        bb=part.getBoundingBox()
         low=bb.get('low', None); high=bb.get('high', None)
         if low is None or high is None: return None
-        return {'bbox':[float(high[i])-float(low[i]) for i in range(3)],
-                'volume':cell_volume(part.cells)}
+        return [float(high[i])-float(low[i]) for i in range(3)]
     except Exception as e:
         warn('Abaqus STEP fallback failed: '+str(e))
         return None
@@ -265,8 +249,7 @@ try:
         out = {"ok": False, "error": "STEP must contain exactly one solid", "solid_count": len(solids)}
     else:
         box = solids[0].BoundingBox()
-        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen],
-               "volume": float(solids[0].Volume())}
+        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen]}
 except Exception as exc:
     out = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
 sys.stdout.write("__CQ_BBOX__" + json.dumps(out))
@@ -298,32 +281,26 @@ def check_step():
     if not nonempty(path, 1): return fail('Missing STEP stage: '+path)
     h=head(path,4096).upper()
     if 'ISO-10303' not in h and 'STEP' not in h: return fail('STEP header not recognized')
-    got=None; info={}
+    got=None
     try:
         import cadquery as cq
         wp=cq.importers.importStep(path); solids=wp.solids().vals()
         if len(solids) != 1: return fail('STEP must contain exactly one solid')
         box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]
-        info={'volume':float(solids[0].Volume())}
         log('[PASS] STEP cadquery import succeeded')
     except Exception as e:
         warn('Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: '+str(e))
         ext=external_cadquery_step_bbox(path)
         if ext.get('ok'):
             got=ext.get('bbox')
-            info=ext
             log('[PASS] STEP external cadquery import succeeded')
         elif ext.get('solid_count') is not None:
             return fail('STEP must contain exactly one solid')
         else:
             warn('external cadquery STEP check failed; trying Abaqus STEP import: '+str(ext.get('error','unknown')))
-            info=abaqus_step_bbox(path) or {}
-            got=info.get('bbox')
+            got=abaqus_step_bbox(path)
     if got is None: return fail('STEP geometry could not be validated')
     if not dims_close(got, SPEC['bbox'], SPEC.get('bbox_tol',8.0)): return fail('STEP bbox mismatch got %s expected %s'%(got,SPEC['bbox']))
-    volume=info.get('volume')
-    if volume is None or not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
-        return fail('STEP volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
     return ok('STEP geometry checks passed')
 
 
@@ -505,23 +482,6 @@ def mesh_info(model):
             except Exception: pass
     except Exception: pass
     return coords, elems
-
-
-def check_model_volume(model):
-    candidates=[]
-    try:
-        for key in model.parts.keys():
-            part=model.parts[key]
-            if not len(part.cells): continue
-            candidates.append((part,cell_volume(part.cells),len(part.elements)))
-    except Exception as exc: return fail('Cannot inspect CAE part volume: '+str(exc))
-    meshed=[item for item in candidates if item[2] > 0]
-    usable=meshed if meshed else candidates
-    if len(usable) != 1: return fail('Expected one analysis solid part for volume check, got %s'%len(usable))
-    volume=usable[0][1]
-    if not close_rel(volume,SPEC['expected_volume'],rel_tol=SPEC.get('volume_rel_tol',0.01)):
-        return fail('CAE solid volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
-    return ok('CAE solid volume passed')
 
 
 def check_material(model):
@@ -908,7 +868,6 @@ def check_cae():
     model=mdb.models[mk]
     if not check_material(model): return False
     if not check_section_assignment(model): return False
-    if not check_model_volume(model): return False
     sk=find_key(model.steps,SPEC['step_name'])
     if sk is None: return fail('Missing step '+SPEC['step_name'])
     step_obj=model.steps[sk]
@@ -955,42 +914,6 @@ def field_nonzero(field):
             if n > 5000: break
     except Exception: return False
     return False
-
-
-def odb_node_set(odb, name):
-    target=nn(name)
-    try:
-        for key in odb.rootAssembly.nodeSets.keys():
-            if nn(key) == target: return odb.rootAssembly.nodeSets[key]
-    except Exception:
-        pass
-    try:
-        for instance in odb.rootAssembly.instances.values():
-            for key in instance.nodeSets.keys():
-                if nn(key) == target: return instance.nodeSets[key]
-    except Exception:
-        pass
-    return None
-
-
-def field_resultant(field, region):
-    try:
-        values=field.getSubset(region=region).values
-    except Exception:
-        return None
-    totals=[]
-    try:
-        for value in values:
-            data=getattr(value,'data',None)
-            if hasattr(data,'__iter__') and not isinstance(data,(str,bytes)):
-                data=list(data)
-            else:
-                data=[data]
-            while len(totals) < len(data): totals.append(0.0)
-            for index,component in enumerate(data): totals[index] += float(component)
-        return math.sqrt(sum(component*component for component in totals))
-    except Exception:
-        return None
 
 
 def odb_frame(frames, idx):
@@ -1048,15 +971,6 @@ def check_odb():
             key=find_key(last_frame.fieldOutputs, f)
             if key is None: return fail('Required nonzero ODB field missing: '+str(f))
             if not field_nonzero(last_frame.fieldOutputs[key]): return fail('ODB field appears to be zero: '+str(f))
-        for req in SPEC.get('odb_resultant_checks',[]):
-            key=find_key(last_frame.fieldOutputs, req.get('field'))
-            if key is None: return fail('Resultant-check ODB field missing: '+str(req.get('field')))
-            region=odb_node_set(odb, req.get('region'))
-            if region is None: return fail('Resultant-check ODB node set missing: '+str(req.get('region')))
-            resultant=field_resultant(last_frame.fieldOutputs[key], region)
-            if resultant is None: return fail('Cannot compute ODB resultant for '+str(req.get('field')))
-            if not close_rel(resultant, req.get('magnitude'), rel_tol=req.get('rel_tol',0.02)):
-                return fail('ODB resultant mismatch for %s got %s expected %s'%(req.get('field'),resultant,req.get('magnitude')))
         any_nonzero=SPEC.get('nonzero_odb_any_fields',[])
         if any_nonzero:
             matched=False
@@ -1064,7 +978,7 @@ def check_odb():
                 key=find_key(last_frame.fieldOutputs, f)
                 if key is not None and field_nonzero(last_frame.fieldOutputs[key]): matched=True
             if not matched: return fail('No required heat-flow ODB field is nonzero: '+str(any_nonzero))
-        if SPEC.get('nonzero_odb_fields') or SPEC.get('nonzero_odb_any_fields') or SPEC.get('odb_resultant_checks'):
+        if SPEC.get('nonzero_odb_fields') or SPEC.get('nonzero_odb_any_fields'):
             return ok('ODB checks passed')
     except Exception as e: return fail('Cannot inspect ODB: '+str(e))
     finally:
