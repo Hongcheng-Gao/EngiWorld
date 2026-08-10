@@ -172,14 +172,11 @@ def topology_errors(verts, faces, triangles, normalized_xy):
     checked = set()
     for candidates in bins.values():
         for offset, first_index in enumerate(candidates):
-            first_ids = set(triangles[first_index][:3])
             for second_index in candidates[offset + 1:]:
                 pair = (min(first_index, second_index), max(first_index, second_index))
                 if pair in checked:
                     continue
                 checked.add(pair)
-                if first_ids & set(triangles[second_index][:3]):
-                    continue
                 if projected_triangles_overlap(projected[first_index], projected[second_index]):
                     errors.append("mesh has overlapping projected triangle interiors")
                     return errors
@@ -222,6 +219,8 @@ def sample_surface(verts, triangles, normalized_xy):
 def score(verts, faces):
     if not verts:
         return {"score": 0.0, "error": "no vertices"}
+    if any(not math.isfinite(value) for vertex in verts for value in vertex):
+        return {"score": 0.0, "error": "vertices contain NaN or infinity"}
     xs = [value[0] for value in verts]
     ys = [value[1] for value in verts]
     x_span = max(xs) - min(xs)

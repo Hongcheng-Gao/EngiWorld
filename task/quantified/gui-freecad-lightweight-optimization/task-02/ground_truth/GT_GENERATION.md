@@ -3,7 +3,7 @@
 Generated with a local Python artifact-generation workflow before repository packaging.
 
 Package APIs used:
-- `trimesh` and `numpy`: baseline/reference STL geometry and reference metrics
+- `trimesh`, `manifold3d`, and `numpy`: Boolean-union the reference primitives into one watertight solid, export STL geometry, and compute reference metrics
 - `ezdxf`: profile and required-zone DXF drawing
 - Python `json`: constraints, reference metrics, and score metadata
 

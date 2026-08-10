@@ -9,6 +9,9 @@ import numpy as np
 import trimesh
 
 CASE_SPEC = {'case_id': 'quant-gui-freecad-lightweight-task-05-ubuntu', 'token': 'EWQFCAD05', 'title': 'panel hinge leaf reinforcement', 'objective': 'Maximize hinge leaf load proxy per volume with three fixed hinge-side support zones.', 'metric_kind': 'hinge_strip_load_per_volume', 'metric_description': 'hinge strip reinforcement proxy / volume; long hinge-side continuity and all hinge support zones are weighted', 'envelope_mm': [112.0, 46.0, 26.0], 'min_bbox_mm': [106.0, 40.0, 14.0], 'min_volume_mm3': 11500.0, 'max_volume_mm3': 62000.0, 'baseline_height_mm': 14.0, 'base_thickness_mm': 3.2, 'zone_height_mm': 11.0, 'load_pad_height_mm': 15.0, 'nominal_load_n': 460.0, 'min_zone_points': 8, 'required_zones': [{'name': 'HINGE_TOP', 'role': 'support', 'x_range_mm': [0.0, 18.0], 'y_range_mm': [3.0, 13.0]}, {'name': 'HINGE_MID', 'role': 'support', 'x_range_mm': [0.0, 18.0], 'y_range_mm': [18.0, 28.0]}, {'name': 'HINGE_BOTTOM', 'role': 'support', 'x_range_mm': [0.0, 18.0], 'y_range_mm': [33.0, 43.0]}, {'name': 'PANEL_LOAD', 'role': 'load', 'x_range_mm': [92.0, 112.0], 'y_range_mm': [14.0, 32.0]}], 'ribs': [{'size': [104.0, 3.5, 21.0], 'center': [56.0, 8.0, 12.1]}, {'size': [104.0, 3.5, 21.0], 'center': [56.0, 23.0, 12.1]}, {'size': [104.0, 3.5, 21.0], 'center': [56.0, 38.0, 12.1]}], 'hard_constraints': ['Produce the required open geometry output file rather than only reporting metrics.', 'Stay inside the stated bounding envelope and above the minimum useful spans.', 'Stay within the stated material-volume range.', 'Do not read ground_truth, edit eval.py, or fabricate score/metric files.'], 'invalid_conditions': ['Missing, unparsable, empty, or implausibly small STL geometry.', 'Bounding-box or volume hard-constraint violation.', 'Self-reported metrics without valid geometry.', 'Native project files used as the only deliverable.'], 'baseline_metrics': {'bbox_mm': [112.0, 46.0, 14.0], 'volume_mm3': 72128.0, 'surface_area_mm2': 14728.0, 'surface_per_volume': 0.20419255, 'metric_kind': 'hinge_strip_load_per_volume', 'metric_value': 0.0019770408, 'zone_point_counts': {'HINGE_TOP': 0, 'HINGE_MID': 0, 'HINGE_BOTTOM': 0, 'PANEL_LOAD': 2}, 'zone_factor': 0.0, 'height_factor': 0.0, 'span_factor': 1.0, 'load_capacity_proxy_n': 142.6, 'load_capacity_per_volume': 0.0019770408}, 'reference_metrics': {'bbox_mm': [112.0, 46.0, 22.6], 'volume_mm3': 50758.4, 'surface_area_mm2': 31832.2, 'surface_per_volume': 0.62713167, 'metric_kind': 'hinge_strip_load_per_volume', 'metric_value': 0.008086806, 'zone_point_counts': {'HINGE_TOP': 26, 'HINGE_MID': 26, 'HINGE_BOTTOM': 26, 'PANEL_LOAD': 28}, 'zone_factor': 1.0, 'height_factor': 0.716667, 'span_factor': 1.0, 'load_capacity_proxy_n': 410.473333, 'load_capacity_per_volume': 0.008086806, 'score': 1.0}}
+CASE_SPEC["reference_metrics"] = {'bbox_mm': [112.0, 46.0, 22.6], 'height_factor': 0.716667, 'load_capacity_per_volume': 0.0092607883, 'load_capacity_proxy_n': 410.473333, 'metric_kind': 'hinge_strip_load_per_volume', 'metric_value': 0.0092607883, 'score': 1.0, 'span_factor': 1.0, 'surface_area_mm2': 24756.2002, 'surface_per_volume': 0.55853063, 'volume_mm3': 44323.8006, 'zone_factor': 1.0, 'zone_point_counts': {'HINGE_BOTTOM': 64, 'HINGE_MID': 64, 'HINGE_TOP': 64, 'PANEL_LOAD': 64}, 'zone_volume_coverage': {'HINGE_BOTTOM': 1.0, 'HINGE_MID': 1.0, 'HINGE_TOP': 1.0, 'PANEL_LOAD': 1.0}}
+CASE_SPEC["hard_constraints"] = ["Produce the required open geometry output file rather than only reporting metrics.", "Stay inside the stated bounding envelope and above the minimum useful spans.", "Stay within the stated material-volume range.", "Export one connected, watertight, consistently oriented solid.", "Keep at least 95% sampled material coverage in each required support/load prism.", "Do not read ground_truth, edit eval.py, or fabricate score/metric files."]
+CASE_SPEC["invalid_conditions"] = ["Missing, unparsable, empty, or implausibly small STL geometry.", "Bounding-box or volume hard-constraint violation.", "Disconnected, non-watertight, inconsistently oriented, or overlapping-shell geometry.", "Required-zone three-dimensional material coverage below 95%.", "Self-reported metrics without valid geometry.", "Native project files used as the only deliverable."]
 DESKTOP = Path(os.environ.get("ENGIWORLD_EVAL_DIR") or os.environ.get("OUTPUT_ROOT") or "/home/user/Desktop")
 
 
@@ -28,9 +31,15 @@ def as_mesh(obj):
 def load_stl(path: Path):
     if not path.is_file() or path.stat().st_size < 500:
         raise ValueError("optimized.stl missing or too small")
-    mesh = as_mesh(trimesh.load_mesh(str(path), file_type="stl", process=False))
+    mesh = as_mesh(trimesh.load_mesh(str(path), file_type="stl", process=True))
     if mesh.vertices is None or len(mesh.vertices) < 8 or len(mesh.faces) < 12:
         raise ValueError("optimized.stl has too little mesh geometry")
+    if not np.isfinite(np.asarray(mesh.vertices, dtype=float)).all():
+        raise ValueError("optimized.stl contains NaN or infinite coordinates")
+    if not mesh.is_watertight or not mesh.is_winding_consistent:
+        raise ValueError("optimized.stl must be a watertight consistently oriented solid")
+    if len(mesh.split(only_watertight=False)) != 1:
+        raise ValueError("optimized.stl must contain one connected solid")
     return mesh
 
 
@@ -47,21 +56,41 @@ def mesh_metrics(mesh):
     }
 
 
+def points_inside(mesh, points):
+    triangles = np.asarray(mesh.triangles, dtype=float)
+    edge_a = triangles[:, 1] - triangles[:, 0]
+    edge_b = triangles[:, 2] - triangles[:, 0]
+    votes = np.zeros(len(points), dtype=np.int8)
+    directions = np.asarray(((1.0, 0.3713907, 0.129837), (0.173205, 1.0, 0.417), (0.241, 0.137, 1.0)))
+    for direction in directions:
+        direction = direction / np.linalg.norm(direction)
+        h = np.cross(np.broadcast_to(direction, edge_b.shape), edge_b)
+        determinant = np.einsum("ij,ij->i", edge_a, h)
+        usable = np.abs(determinant) > 1e-10
+        inverse = np.zeros(len(triangles), dtype=float)
+        inverse[usable] = 1.0 / determinant[usable]
+        for point_index, point in enumerate(points):
+            offset = point - triangles[:, 0]
+            u = inverse * np.einsum("ij,ij->i", offset, h)
+            q = np.cross(offset, edge_a)
+            v = inverse * np.einsum("ij,j->i", q, direction)
+            distance = inverse * np.einsum("ij,ij->i", edge_b, q)
+            hits = usable & (u > 1e-9) & (v > 1e-9) & (u + v < 1.0 - 1e-9) & (distance > 1e-9)
+            votes[point_index] += int(int(hits.sum()) % 2 == 1)
+    return votes >= 2
+
+
 def zone_coverage(mesh, zone):
-    points = [np.asarray(mesh.vertices, dtype=float)]
-    try:
-        points.append(np.asarray(mesh.triangles_center, dtype=float))
-    except Exception:
-        pass
-    pts = np.vstack(points)
     x0, x1 = zone["x_range_mm"]
     y0, y1 = zone["y_range_mm"]
-    mask = (
-        (pts[:, 0] >= x0 - 0.75) & (pts[:, 0] <= x1 + 0.75) &
-        (pts[:, 1] >= y0 - 0.75) & (pts[:, 1] <= y1 + 0.75) &
-        (pts[:, 2] >= -0.5)
-    )
-    return int(mask.sum())
+    height = CASE_SPEC["zone_height_mm"] if zone["role"] == "support" else CASE_SPEC["load_pad_height_mm"]
+    grid = 4
+    xs = x0 + (np.arange(grid) + 0.5) * (x1 - x0) / grid
+    ys = y0 + (np.arange(grid) + 0.5) * (y1 - y0) / grid
+    zs = (np.arange(grid) + 0.5) * height / grid
+    points = np.asarray([(x, y, z) for x in xs for y in ys for z in zs], dtype=float)
+    inside = points_inside(mesh, points)
+    return {"inside": int(inside.sum()), "samples": len(points), "coverage": float(inside.mean())}
 
 
 def proxy_load(dims, zone_factor):
@@ -89,8 +118,10 @@ def metrics(mesh):
     base = mesh_metrics(mesh)
     dims = base["bbox_mm"]
     vol = base["volume_mm3"]
-    zone_counts = {zone["name"]: zone_coverage(mesh, zone) for zone in CASE_SPEC["required_zones"]}
-    zone_factor = min(1.0, min(zone_counts.values()) / max(CASE_SPEC["min_zone_points"], 1))
+    zone_results = {zone["name"]: zone_coverage(mesh, zone) for zone in CASE_SPEC["required_zones"]}
+    zone_counts = {name: result["inside"] for name, result in zone_results.items()}
+    zone_coverages = {name: result["coverage"] for name, result in zone_results.items()}
+    zone_factor = min(zone_coverages.values())
     load_capacity_proxy, height_factor, span_factor = proxy_load(dims, zone_factor)
     efficiency = load_capacity_proxy / max(vol, 1e-9)
     baseline = CASE_SPEC["baseline_metrics"]["load_capacity_per_volume"]
@@ -100,6 +131,7 @@ def metrics(mesh):
         "metric_kind": CASE_SPEC["metric_kind"],
         "metric_value": round(efficiency, 10),
         "zone_point_counts": zone_counts,
+        "zone_volume_coverage": {name: round(value, 6) for name, value in zone_coverages.items()},
         "zone_factor": round(zone_factor, 6),
         "height_factor": round(height_factor, 6),
         "span_factor": round(span_factor, 6),
@@ -121,9 +153,9 @@ def hard_errors(m):
     if not (CASE_SPEC["min_volume_mm3"] <= m["volume_mm3"] <= CASE_SPEC["max_volume_mm3"]):
         errors.append(f"volume:outside_range:{m['volume_mm3']}")
     for zone in CASE_SPEC["required_zones"]:
-        got = m["zone_point_counts"].get(zone["name"], 0)
-        if got < CASE_SPEC["min_zone_points"]:
-            errors.append(f"zone:{zone['name']}:insufficient_material_points:{got}")
+        got = m["zone_volume_coverage"].get(zone["name"], 0.0)
+        if got < 0.95:
+            errors.append(f"zone:{zone['name']}:material_coverage_below_0.95:{got}")
     return errors
 
 

@@ -10,9 +10,10 @@
       "Edit the model only through the Bonsai/Blender GUI.",
       "Preserve all IfcSpace, IfcWall, IfcSlab, and IfcDoor objects and their bounding boxes.",
       "Do not delete, move, or resize site obstruction walls whose names begin with SITE-OBSTRUCTION.",
-      "Only IfcWindow geometry and optional IfcShadingDevice geometry may be changed or added.",
+      "Only IfcWindow and matching IfcOpeningElement geometry/relationships, plus optional IfcShadingDevice geometry, may be changed or added.",
       "Keep every window on an allowed facade for its room and within sill/head limits.",
       "Keep each room window-to-wall ratio at or below its max_wwr.",
+      "Every IfcWindow and preserved IfcDoor must fill exactly one geometric IfcOpeningElement through IfcRelFillsElement, and each opening must void its actual host IfcWall through IfcRelVoidsElement.",
       "Do not use IfcBuildingElementProxy or visual-only mesh objects as replacements for BIM elements."
     ],
     "invalid_conditions": [
@@ -20,11 +21,13 @@
       "Changed room count, room names, fixed wall/slab/door geometry, building envelope, or site obstruction geometry.",
       "Windows placed on forbidden/private facades or outside room boundaries.",
       "Over-limit room WWR, excessive window count, malformed windows, or oversized shading devices.",
+      "Unhosted or floating windows/doors, missing opening geometry, or missing/incorrect fill and void relationships.",
       "A submission that only writes score/design_summary/preview files without a valid IFC."
     ],
     "allowed_object_classes": [
       "IfcWindow",
-      "IfcShadingDevice"
+      "IfcShadingDevice",
+      "IfcOpeningElement"
     ],
     "required_output": "/home/user/Desktop/optimized.ifc",
     "optional_outputs": [

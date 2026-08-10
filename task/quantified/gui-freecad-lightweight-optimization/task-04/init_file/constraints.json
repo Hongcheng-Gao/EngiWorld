@@ -31,11 +31,15 @@
     "Produce the required open geometry output file rather than only reporting metrics.",
     "Stay inside the stated bounding envelope and above the minimum useful spans.",
     "Stay within the stated material-volume range.",
+    "Export one connected, watertight, consistently oriented solid.",
+    "Keep at least 95% sampled material coverage in each required support/load prism.",
     "Do not read ground_truth, edit eval.py, or fabricate score/metric files."
   ],
   "invalid_conditions": [
     "Missing, unparsable, empty, or implausibly small STL geometry.",
     "Bounding-box or volume hard-constraint violation.",
+    "Disconnected, non-watertight, inconsistently oriented, or overlapping-shell geometry.",
+    "Required-zone three-dimensional material coverage below 95%.",
     "Self-reported metrics without valid geometry.",
     "Native project files used as the only deliverable."
   ],
@@ -47,6 +51,9 @@
     18.0
   ],
   "min_volume_mm3": 12500.0,
+  "zone_height_mm": 13.0,
+  "load_pad_height_mm": 18.0,
+  "min_zone_volume_coverage": 0.95,
   "objective": "Maximize clamp bridge support per volume while preserving two saddle supports and a center cable load zone.",
   "required_zones": [
     {

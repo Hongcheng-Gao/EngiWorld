@@ -6,8 +6,8 @@ import os
 from collections import defaultdict, deque
 from pathlib import Path
 
-TASK = {'instruction_tail': 'Optimize a turbine-inspection ridge height field. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Sculpt the repeated inspection ridges as geometry in the OBJ surface. No image texture, alpha, UV mask, or polypaint is evaluated. The exported OBJ must remain one edge-connected open height-field surface with one regular boundary loop and at least 98% coverage of that fixed grid. It must have no unused vertices, degenerate faces, non-manifold edges, additional boundary loops, overlapping XY triangle interiors, or multiple surface heights at a sample. A topology or coverage failure receives a score of 0, so changing vertex density cannot improve the sampling weight.', 'kind': 'turbine', 'metric': 'procedural ridge fixed-grid height-field RMSE with span, mean-height, and face-count penalties', 'target': {'amp': 0.28, 'freq': 6.0, 'ridge': 0.14, 'smooth': 0.16}, 'title': 'Optimize turbine inspection texture mask'}
-BASELINE = {'score': 91.2016}
+TASK = {'instruction_tail': 'Optimize a turbine-inspection ridge height field. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Sculpt the repeated inspection ridges as geometry in the OBJ surface. No image texture, alpha, UV mask, or polypaint is evaluated. The exported OBJ must remain one edge-connected open height-field surface with one regular boundary loop and at least 98% coverage of that fixed grid. It must have no unused vertices, degenerate faces, non-manifold edges, additional boundary loops, overlapping XY triangle interiors, or multiple surface heights at a sample. A topology or coverage failure receives a score of 0, so changing vertex density cannot improve the sampling weight.', 'kind': 'texture', 'metric': 'procedural ridge fixed-grid height-field RMSE with span, mean-height, and face-count penalties', 'target': {'amp': 0.28, 'freq': 6.0, 'ridge': 0.14, 'smooth': 0.16}, 'title': 'Optimize turbine inspection ridge height field'}
+BASELINE = {'score': 89.3964}
 GRID_SIZE = 40
 EPS = 1e-9
 
@@ -172,14 +172,11 @@ def topology_errors(verts, faces, triangles, normalized_xy):
     checked = set()
     for candidates in bins.values():
         for offset, first_index in enumerate(candidates):
-            first_ids = set(triangles[first_index][:3])
             for second_index in candidates[offset + 1:]:
                 pair = (min(first_index, second_index), max(first_index, second_index))
                 if pair in checked:
                     continue
                 checked.add(pair)
-                if first_ids & set(triangles[second_index][:3]):
-                    continue
                 if projected_triangles_overlap(projected[first_index], projected[second_index]):
                     errors.append("mesh has overlapping projected triangle interiors")
                     return errors
@@ -222,6 +219,8 @@ def sample_surface(verts, triangles, normalized_xy):
 def score(verts, faces):
     if not verts:
         return {"score": 0.0, "error": "no vertices"}
+    if any(not math.isfinite(value) for vertex in verts for value in vertex):
+        return {"score": 0.0, "error": "vertices contain NaN or infinity"}
     xs = [value[0] for value in verts]
     ys = [value[1] for value in verts]
     x_span = max(xs) - min(xs)

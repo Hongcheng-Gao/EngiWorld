@@ -270,14 +270,177 @@ def require_3d_width_path(
     raise InvalidArtifact("minimum three-dimensional path width")
 
 
-def require_plane_thickness(text: str, expected: float) -> None:
-    match = re.search(
-        r"REAL CONSTANT SET\s+\d+\s+ITEMS.*?\n\s*(" + FLOAT + r")",
-        text,
-        flags=re.S,
-    )
-    if not match or not close(float(match.group(1)), expected, 1.0e-6):
+def plane_thickness_by_real_set(text: str) -> dict[int, float]:
+    return {
+        int(set_number): float(value)
+        for set_number, value in re.findall(
+            r"REAL CONSTANT SET\s+(\d+)\s+ITEMS\s+1(?:\s+TO\s+\d+)?\s*\n\s*(" + FLOAT + r")",
+            text,
+            flags=re.S,
+        )
+    }
+
+
+def require_plane_thickness(text: str, expected: float, grid=None) -> None:
+    thicknesses = plane_thickness_by_real_set(text)
+    if not thicknesses:
         raise InvalidArtifact("plane thickness")
+    used_sets = set(thicknesses)
+    if grid is not None:
+        values = grid.cell_data.get("ansys_real_constant")
+        if values is None or len(values) == 0:
+            raise InvalidArtifact("plane real-constant assignment")
+        used_sets = {int(value) for value in values}
+    if any(
+        set_number not in thicknesses
+        or not close(thicknesses[set_number], expected, 1.0e-6)
+        for set_number in used_sets
+    ):
+        raise InvalidArtifact("plane thickness")
+
+
+def face_axis_weights(values: list[float]) -> dict[float, float]:
+    ordered = sorted(set(values))
+    if len(ordered) < 2:
+        return {}
+    weights = {}
+    for index, value in enumerate(ordered):
+        left = value if index == 0 else (ordered[index - 1] + value) / 2.0
+        right = value if index == len(ordered) - 1 else (value + ordered[index + 1]) / 2.0
+        weights[value] = right - left
+    return weights
+
+
+def tensor_face_tributary_weights(
+    coordinate_by_node: dict[int, list[float]],
+    nodes: set[int],
+    axes: tuple[int, int],
+) -> dict[int, float]:
+    coordinate_keys = {
+        node: tuple(round(coordinate_by_node[node][axis], 8) for axis in axes)
+        for node in nodes
+    }
+    if len(set(coordinate_keys.values())) != len(nodes):
+        return {}
+    axis_values = [sorted({key[index] for key in coordinate_keys.values()}) for index in range(2)]
+    if len(nodes) != len(axis_values[0]) * len(axis_values[1]):
+        return {}
+    if set(coordinate_keys.values()) != {
+        (first, second) for first in axis_values[0] for second in axis_values[1]
+    }:
+        return {}
+    first_weights = face_axis_weights(axis_values[0])
+    second_weights = face_axis_weights(axis_values[1])
+    return {
+        node: first_weights[key[0]] * second_weights[key[1]]
+        for node, key in coordinate_keys.items()
+    }
+
+
+def triangular_face_tributary_weights(
+    coordinate_by_node: dict[int, list[float]],
+    nodes: set[int],
+    axes: tuple[int, int],
+) -> dict[int, float]:
+    import numpy as np
+    from scipy.spatial import Delaunay
+
+    ordered_nodes = sorted(nodes)
+    points = np.asarray(
+        [[coordinate_by_node[node][axis] for axis in axes] for node in ordered_nodes],
+        dtype=float,
+    )
+    if len(points) < 3 or not np.isfinite(points).all():
+        return {}
+    try:
+        triangles = Delaunay(points).simplices
+    except Exception:
+        return {}
+    weights = {node: 0.0 for node in ordered_nodes}
+    for triangle in triangles:
+        first, second, third = points[triangle]
+        first_edge = second - first
+        second_edge = third - first
+        area = abs(float(first_edge[0] * second_edge[1] - first_edge[1] * second_edge[0])) / 2.0
+        for point_index in triangle:
+            weights[ordered_nodes[int(point_index)]] += area / 3.0
+    span_area = float(np.ptp(points[:, 0]) * np.ptp(points[:, 1]))
+    if span_area <= 0 or not close(sum(weights.values()), span_area, span_area * 1.0e-4):
+        return {}
+    return weights
+
+
+def distribution_matches(
+    magnitudes: dict[int, float],
+    weights: dict[int, float],
+    relative_tolerance: float = 0.2,
+    absolute_fraction_tolerance: float = 0.0025,
+) -> bool:
+    if magnitudes.keys() != weights.keys():
+        return False
+    magnitude_total = sum(magnitudes.values())
+    weight_total = sum(weights.values())
+    if magnitude_total <= 0 or weight_total <= 0:
+        return False
+    for node, magnitude in magnitudes.items():
+        actual = magnitude / magnitude_total
+        target = weights[node] / weight_total
+        if abs(actual - target) > max(absolute_fraction_tolerance, relative_tolerance * target):
+            return False
+    return True
+
+
+def require_uniform_face_force(
+    forces: dict[tuple[int, str], float],
+    coordinate_by_node: dict[int, list[float]],
+    nodes: set[int],
+    label: str,
+    total: float,
+    axes: tuple[int, int],
+) -> None:
+    if any(not math.isfinite(value) for value in forces.values()):
+        raise InvalidArtifact("finite force values")
+    nonzero = {
+        (node, force_label): value
+        for (node, force_label), value in forces.items()
+        if math.isfinite(value) and abs(value) > 1.0e-12
+    }
+    if any(node not in nodes or force_label != label for node, force_label in nonzero):
+        raise InvalidArtifact("loaded-face-only force")
+    values = {node: forces.get((node, label)) for node in nodes}
+    if any(value is None or not math.isfinite(value) or value * total <= 0 for value in values.values()):
+        raise InvalidArtifact("complete loaded-face force")
+    if not close(sum(values.values()), total, max(abs(total) * 0.005, 1.0e-6)):
+        raise InvalidArtifact("distributed end load total")
+    magnitudes = {node: abs(value) for node, value in values.items()}
+    candidates = [
+        {node: 1.0 for node in nodes},
+        tensor_face_tributary_weights(coordinate_by_node, nodes, axes),
+        triangular_face_tributary_weights(coordinate_by_node, nodes, axes),
+    ]
+    if not any(weights and distribution_matches(magnitudes, weights) for weights in candidates):
+        raise InvalidArtifact("uniform loaded-face distribution")
+
+
+def require_plate_result(displacement: float, stress: float) -> None:
+    if (
+        not 0.0001 < displacement <= 0.8
+        or not math.isfinite(stress)
+        or not 0.0 <= stress <= 160.0
+    ):
+        raise InvalidArtifact("plate result")
+
+
+def result_input_forces(result, result_set: int = 0) -> dict[tuple[int, str], float]:
+    labels = {1: "FX", 2: "FY", 3: "FZ", 4: "MX", 5: "MY", 6: "MZ"}
+    node_numbers, dof_numbers, values = result.nodal_input_force(result_set)
+    forces = {}
+    for node, dof, value in zip(node_numbers, dof_numbers, values):
+        label = labels.get(int(dof))
+        if label is not None:
+            key = (int(node), label)
+            forces[key] = forces.get(key, 0.0) + float(value)
+    return forces
 
 
 def section_data(text: str) -> dict[str, float | str | list[float]]:
@@ -445,7 +608,7 @@ def validate_plate(mapdl, common: dict, constraints: set, forces: dict, config: 
     if int(mapdl.get_value("ELEM", 0, "COUNT")) < 400 or "PLANE183" not in common["elements"] or not any(label in common["elements"] for label in ("PLANE STRESS", "PLANE STRS")):
         raise InvalidArtifact("plate elements")
     require_material(common["materials"], {"EX": 210000.0, "PRXY": 0.3, "DENS": 7.85e-9})
-    require_plane_thickness(common["real_constants"], 1.0)
+    require_plane_thickness(common["real_constants"], 1.0, grid)
     if not connected(grid) or maximum_mesh_edge(grid) > 5.25:
         raise InvalidArtifact("plate mesh")
     require_2d_width_path(grid, ((0.0, 100.0), (0.0, 200.0)), 10.0)
@@ -461,11 +624,11 @@ def validate_plate(mapdl, common: dict, constraints: set, forces: dict, config: 
         raise InvalidArtifact("rigid-body constraints")
     volume = geometric_measure(grid, 2)
     result_pair(mapdl, common["root"], ".rst", set(numbers))
+    require_plane_thickness(common["real_constants"], 1.0, mapdl.result.grid)
     verify_result_metadata(mapdl, common["materials"])
     displacement = max(abs(float(value)) for value in mapdl.post_processing.nodal_displacement("NORM"))
     stress = max(abs(float(value)) for value in mapdl.post_processing.nodal_eqv_stress())
-    if not 0.0001 < displacement <= 0.8 or not 15.0 < stress <= 160.0:
-        raise InvalidArtifact("plate result")
+    require_plate_result(displacement, stress)
     return {"mass": volume * 7.85e-9, "displacement": displacement, "stress": stress}
 
 
@@ -540,6 +703,7 @@ def validate_thermal(mapdl, common: dict, constraints: set, forces: dict, config
     if not any(name in common["elements"] for name in ("PLANE55", "PLANE77")) or not connected(grid):
         raise InvalidArtifact("thermal elements")
     require_material(common["materials"], {"KXX": 0.05})
+    require_plane_thickness(common["real_constants"], 1.0, grid)
     area = geometric_measure(grid, 2)
     if area > 1500.0 or maximum_mesh_edge(grid) > 2.1:
         raise InvalidArtifact("thermal material or mesh")
@@ -554,6 +718,7 @@ def validate_thermal(mapdl, common: dict, constraints: set, forces: dict, config
     if not close(source_heat, 1.0, 0.005):
         raise InvalidArtifact("source heat")
     result_pair(mapdl, common["root"], ".rth", set(numbers))
+    require_plane_thickness(common["real_constants"], 1.0, mapdl.result.grid)
     verify_result_metadata(mapdl, common["materials"])
     source_temperature = sum(float(mapdl.get_value("NODE", node, "TEMP")) for node in source) / len(source)
     sink_temperature = sum(float(mapdl.get_value("NODE", node, "TEMP")) for node in sink) / len(sink)
@@ -584,12 +749,17 @@ def validate_cantilever(mapdl, common: dict, constraints: set, forces: dict, con
             raise InvalidArtifact("cantilever interface")
     if any(any((node, dof) not in constraints for dof in ("UX", "UY", "UZ")) for node in fixed):
         raise InvalidArtifact("cantilever support")
-    total_force = sum(value for (node, label), value in forces.items() if node in loaded and label == "FY")
-    loaded_force_nodes = {node for (node, label), value in forces.items() if node in loaded and label == "FY" and value < 0}
-    if not close(total_force, -500.0, 2.5) or len(loaded_force_nodes) < max(4, len(loaded) // 2):
-        raise InvalidArtifact("distributed end load")
+    require_uniform_face_force(forces, by_node, loaded, "FY", -500.0, (1, 2))
     volume = geometric_measure(grid, 3)
     result_pair(mapdl, common["root"], ".rst", set(numbers))
+    result_forces = result_input_forces(mapdl.result)
+    require_uniform_face_force(result_forces, by_node, loaded, "FY", -500.0, (1, 2))
+    if any(
+        key not in result_forces or not close(result_forces[key], value, max(abs(value) * 1.0e-5, 1.0e-8))
+        for key, value in forces.items()
+        if abs(value) > 1.0e-12
+    ):
+        raise InvalidArtifact("database/result force mismatch")
     verify_result_metadata(mapdl, common["materials"])
     average_uy = sum(float(mapdl.get_value("NODE", node, "U", "Y")) for node in loaded) / len(loaded)
     stress = max(abs(float(value)) for value in mapdl.post_processing.nodal_eqv_stress())
@@ -637,7 +807,9 @@ def inspect(paths: list[Path], config: dict, port_seed: int) -> dict:
                 "elements": checked(mapdl, "ETLIST,ALL").upper(),
                 "materials": checked(mapdl, "MPLIST,ALL").upper(),
                 "sections": checked(mapdl, "SLIST,ALL,,,FULL").upper() if config["kind"].startswith("beam_") else "",
-                "real_constants": checked(mapdl, "RLIST,ALL").upper() if config["kind"] == "plate_mass" else "",
+                "real_constants": checked(mapdl, "RLIST,ALL").upper()
+                if config["kind"] in {"plate_mass", "thermal_path"}
+                else "",
             }
             constraints = parse_constraints(checked(mapdl, "DLIST,ALL,ALL"))
             force_output = checked(mapdl, "FLIST,ALL,ALL")

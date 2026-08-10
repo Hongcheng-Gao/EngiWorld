@@ -80,11 +80,14 @@ CASE_SPEC = {'case_id': 'quant-gui-bonsai-task-05-ubuntu',
                                       'boxes.',
                                       'Do not delete, move, or resize site obstruction walls whose names begin with '
                                       'SITE-OBSTRUCTION.',
-                                      'Only IfcWindow geometry and optional IfcShadingDevice geometry may be changed '
-                                      'or added.',
+                                      'Only IfcWindow and matching IfcOpeningElement geometry/relationships, plus '
+                                      'optional IfcShadingDevice geometry, may be changed or added.',
                                       'Keep every window on an allowed facade for its room and within sill/head '
                                       'limits.',
                                       'Keep each room window-to-wall ratio at or below its max_wwr.',
+                                      'Every IfcWindow and preserved IfcDoor must fill exactly one geometric '
+                                      'IfcOpeningElement through IfcRelFillsElement, and each opening must void its '
+                                      'actual host IfcWall through IfcRelVoidsElement.',
                                       'Do not use IfcBuildingElementProxy or visual-only mesh objects as replacements '
                                       'for BIM elements.'],
                  'invalid_conditions': ['Missing or unparsable optimized.ifc.',
@@ -93,9 +96,11 @@ CASE_SPEC = {'case_id': 'quant-gui-bonsai-task-05-ubuntu',
                                         'Windows placed on forbidden/private facades or outside room boundaries.',
                                         'Over-limit room WWR, excessive window count, malformed windows, or oversized '
                                         'shading devices.',
+                                        'Unhosted or floating windows/doors, missing opening geometry, or '
+                                        'missing/incorrect fill and void relationships.',
                                         'A submission that only writes score/design_summary/preview files without a '
                                         'valid IFC.'],
-                 'allowed_object_classes': ['IfcWindow', 'IfcShadingDevice'],
+                 'allowed_object_classes': ['IfcWindow', 'IfcShadingDevice', 'IfcOpeningElement'],
                  'required_output': '/home/user/Desktop/optimized.ifc',
                  'optional_outputs': ['/home/user/Desktop/design_summary.json', '/home/user/Desktop/preview.png'],
                  'geometry_tolerance_m': 0.45,
@@ -169,6 +174,12 @@ try:
     SETTINGS.set(SETTINGS.USE_WORLD_COORDS, True)
 except Exception:
     pass
+FIXED_SETTINGS = ifcopenshell.geom.settings()
+try:
+    FIXED_SETTINGS.set(FIXED_SETTINGS.USE_WORLD_COORDS, True)
+    FIXED_SETTINGS.set("disable-opening-subtractions", True)
+except Exception:
+    pass
 
 
 def shape_bbox(entity):
@@ -183,6 +194,41 @@ def shape_bbox(entity):
         return None
     xs, ys, zs = verts[0::3], verts[1::3], verts[2::3]
     return (min(xs), min(ys), min(zs), max(xs), max(ys), max(zs))
+
+
+def geometry_signature(entity):
+    try:
+        shape = ifcopenshell.geom.create_shape(FIXED_SETTINGS, entity)
+        vertices = list(shape.geometry.verts)
+        faces = list(shape.geometry.faces)
+    except Exception:
+        return None
+    points = [tuple(round(float(vertices[index + axis]), 6) for axis in range(3)) for index in range(0, len(vertices), 3)]
+    triangles = []
+    for index in range(0, len(faces), 3):
+        triangle = tuple(sorted((points[faces[index]], points[faces[index + 1]], points[faces[index + 2]])))
+        triangles.append(triangle)
+    return tuple(sorted(triangles))
+
+
+def parent_signature(entity):
+    parents = []
+    for relation in getattr(entity, "ContainedInStructure", ()):
+        parent = relation.RelatingStructure
+        parents.append((parent.is_a(), getattr(parent, "GlobalId", ""), norm(getattr(parent, "Name", ""))))
+    for relation in getattr(entity, "Decomposes", ()):
+        parent = relation.RelatingObject
+        parents.append((parent.is_a(), getattr(parent, "GlobalId", ""), norm(getattr(parent, "Name", ""))))
+    return tuple(sorted(parents))
+
+
+def fixed_records(model):
+    records = {}
+    for ifc_class in ("IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace", "IfcWall", "IfcSlab", "IfcDoor"):
+        for entity in model.by_type(ifc_class):
+            guid = getattr(entity, "GlobalId", "")
+            records[guid] = (entity.is_a(), norm(getattr(entity, "Name", "")), parent_signature(entity), geometry_signature(entity))
+    return records
 
 
 def load_model(path):
@@ -228,6 +274,9 @@ def entity_counts(model):
         "IfcSlab": len(model.by_type("IfcSlab")),
         "IfcDoor": len(model.by_type("IfcDoor")),
         "IfcWindow": len(model.by_type("IfcWindow")),
+        "IfcOpeningElement": len(model.by_type("IfcOpeningElement")),
+        "IfcRelFillsElement": len(model.by_type("IfcRelFillsElement")),
+        "IfcRelVoidsElement": len(model.by_type("IfcRelVoidsElement")),
         "IfcShadingDevice": len(model.by_type("IfcShadingDevice")),
         "IfcBuildingElementProxy": len(model.by_type("IfcBuildingElementProxy")),
     }
@@ -541,6 +590,68 @@ def validate_fixed_bboxes(model):
     return failures
 
 
+def validate_fixed_identity_and_geometry(model, baseline):
+    failures = []
+    actual = fixed_records(model)
+    expected = fixed_records(baseline)
+    if set(actual) != set(expected):
+        failures.append("fixed_object_guid_set_changed")
+    for guid in sorted(set(actual) & set(expected)):
+        if actual[guid] != expected[guid]:
+            failures.append(f"fixed_object_identity_container_or_geometry_changed:{guid}")
+    return failures
+
+
+def validate_feature_semantics(model):
+    failures = []
+    features = list(model.by_type("IfcWindow")) + list(model.by_type("IfcDoor"))
+    openings = list(model.by_type("IfcOpeningElement"))
+    if len(openings) != len(features):
+        failures.append("opening_count_does_not_match_windows_and_doors")
+    if len(model.by_type("IfcRelFillsElement")) != len(features):
+        failures.append("fill_relation_count_does_not_match_windows_and_doors")
+    if len(model.by_type("IfcRelVoidsElement")) != len(features):
+        failures.append("void_relation_count_does_not_match_windows_and_doors")
+    wall_facades = {norm(item["name"]): item.get("facade") for item in CASE_SPEC.get("walls", [])}
+    for feature in features:
+        label = getattr(feature, "GlobalId", "")
+        fills = list(getattr(feature, "FillsVoids", ()))
+        if len(fills) != 1:
+            failures.append(f"feature_does_not_fill_exactly_one_opening:{label}")
+            continue
+        opening = fills[0].RelatingOpeningElement
+        voids = list(getattr(opening, "VoidsElements", ()))
+        if len(voids) != 1:
+            failures.append(f"opening_does_not_void_exactly_one_host:{label}")
+            continue
+        host = voids[0].RelatingBuildingElement
+        if not host.is_a("IfcWall"):
+            failures.append(f"opening_host_is_not_wall:{label}")
+            continue
+        feature_box, opening_box, host_box = shape_bbox(feature), shape_bbox(opening), shape_bbox(host)
+        if feature_box is None or opening_box is None or host_box is None:
+            failures.append(f"feature_opening_or_host_missing_geometry:{label}")
+            continue
+        host_spans = spans(host_box)
+        thin_axis = 0 if host_spans[0] <= host_spans[1] else 1
+        long_axis = 1 - thin_axis
+        if opening_box[thin_axis] > host_box[thin_axis] + 0.03 or opening_box[thin_axis + 3] < host_box[thin_axis + 3] - 0.03:
+            failures.append(f"opening_does_not_cross_host_wall:{label}")
+        for axis in (long_axis, 2):
+            if opening_box[axis] > feature_box[axis] + 0.03 or opening_box[axis + 3] < feature_box[axis + 3] - 0.03:
+                failures.append(f"opening_does_not_cover_filling:{label}")
+                break
+            if (opening_box[axis + 3] - opening_box[axis]) > (feature_box[axis + 3] - feature_box[axis]) + 0.25:
+                failures.append(f"opening_is_oversized_for_filling:{label}")
+                break
+        if feature.is_a("IfcWindow"):
+            match = match_window(feature_box)
+            host_facade = wall_facades.get(norm(getattr(host, "Name", "")))
+            if match is None or host_facade != match[1]:
+                failures.append(f"window_host_wall_does_not_match_facade:{label}")
+    return failures
+
+
 def validate_windows_and_shades(model):
     failures = []
     windows = []
@@ -612,7 +723,9 @@ def evaluate():
         model = load_model(result_path())
         baseline = load_model(baseline_path())
         failures, counts, base_counts = validate_structure(model, baseline)
+        failures.extend(validate_fixed_identity_and_geometry(model, baseline))
         failures.extend(validate_fixed_bboxes(model))
+        failures.extend(validate_feature_semantics(model))
         window_failures, windows, shade_boxes, room_counts = validate_windows_and_shades(model)
         failures.extend(window_failures)
         daylight_metrics, score_terms = evaluate_daylight(windows, shade_boxes)
