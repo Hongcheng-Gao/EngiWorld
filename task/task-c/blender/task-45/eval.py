@@ -6,7 +6,7 @@ import sys
 from pathlib import Path
 
 
-BLEND_PATH = "/home/user/Desktop/answer.blend"
+BLEND_PATH = "/home/user/Desktop/output/repaired.blend"
 BLENDER_PATH = os.environ.get("BLENDER_PATH", "blender")
 
 

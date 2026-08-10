@@ -55,7 +55,12 @@ def evaluate(submission_dir: str) -> bool:
     except Exception:
         return False
 
-    orig = ET.parse(Path(__file__).resolve().parent / "init_file" / "coin.brd").getroot()
+    eval_dir = Path(__file__).resolve().parent
+    starter_path = next(
+        (path for path in (eval_dir / "coin.brd", eval_dir / "init_file" / "coin.brd") if path.exists()),
+        eval_dir / "coin.brd",
+    )
+    orig = ET.parse(starter_path).getroot()
     orig_elems = list(orig.findall(".//element"))
     board = root.find(".//board")
     if board is None:
@@ -127,10 +132,11 @@ def evaluate(submission_dir: str) -> bool:
 
 
 def main(argv: list[str]) -> int:
-    if len(argv) != 2:
+    if len(argv) > 2:
         print("usage: python eval.py SUBMISSION_DIR", file=sys.stderr)
         return 2
-    ok = evaluate(argv[1])
+    submission_dir = argv[1] if len(argv) == 2 else Path(__file__).resolve().parent
+    ok = evaluate(submission_dir)
     print("True" if ok else "False")
     return 0 if ok else 1
 

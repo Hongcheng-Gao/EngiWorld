@@ -5,7 +5,11 @@ import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
-STARTER_BRD = Path(__file__).resolve().parent / "init_file" / "dense.brd"
+EVAL_DIR = Path(__file__).resolve().parent
+STARTER_BRD = next(
+    (path for path in (EVAL_DIR / "dense.brd", EVAL_DIR / "init_file" / "dense.brd") if path.exists()),
+    EVAL_DIR / "dense.brd",
+)
 TARGET_COUNT = 5
 
 
@@ -98,7 +102,8 @@ def evaluate(submission_dir: str) -> bool:
 if __name__ == "__main__":
     import sys
 
-    if len(sys.argv) != 2:
+    if len(sys.argv) > 2:
         print("usage: python eval.py SUBMISSION_DIR", file=sys.stderr)
         sys.exit(2)
-    print("True" if evaluate(sys.argv[1]) else "False")
+    submission_dir = sys.argv[1] if len(sys.argv) == 2 else Path(__file__).resolve().parent
+    print("True" if evaluate(submission_dir) else "False")

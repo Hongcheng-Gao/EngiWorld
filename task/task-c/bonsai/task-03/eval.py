@@ -56,7 +56,9 @@ def geometry_exists(e):
     settings=ifcopenshell.geom.settings()
     try: settings.set(settings.USE_WORLD_COORDS, True)
     except Exception: pass
-    try: return bool(ifcopenshell.geom.create_shape(settings,e).geometry.verts)
+    try:
+        shape = ifcopenshell.geom.create_shape(settings, e)
+        return bool(shape.geometry.verts)
     except Exception: return False
 def evaluate():
     path=DESKTOP/'result.ifc'
