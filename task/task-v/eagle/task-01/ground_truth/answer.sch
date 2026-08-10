@@ -130,7 +130,6 @@
 <pinref part="IC1" gate="G$1" pin="R"/>
 <pinref part="C2" gate="G$1" pin="1"/>
 <pinref part="R1" gate="G$1" pin="2"/>
-<pinref part="R3" gate="G$1" pin="2"/>
 <wire x1="50.8" y1="78.74" x2="50.8" y2="66.04" width="0.1524" layer="91"/>
 </segment>
 </net>
@@ -150,6 +149,13 @@
 <pinref part="IC1" gate="G$1" pin="Q"/>
 <pinref part="R3" gate="G$1" pin="1"/>
 <wire x1="66.04" y1="55.88" x2="86.36" y2="55.88" width="0.1524" layer="91"/>
+</segment>
+</net>
+<net name="LED_A" class="0">
+<segment>
+<pinref part="R3" gate="G$1" pin="2"/>
+<pinref part="LED1" gate="G$1" pin="A"/>
+<wire x1="86.36" y1="58.42" x2="86.36" y2="53.34" width="0.1524" layer="91"/>
 </segment>
 </net>
 <net name="THRES" class="0">

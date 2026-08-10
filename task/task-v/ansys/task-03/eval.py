@@ -176,7 +176,61 @@ def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
     return True
 
 
+def strict_process_check(mapdl, pred):
+    import math
+    import re
+    FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
+
+    def close(value, target, tolerance):
+        try:
+            value = float(value)
+        except Exception:
+            return False
+        return math.isfinite(value) and abs(value - target) <= tolerance
+
+    def constraints(text):
+        return {(int(node), dof.upper()) for node, dof in re.findall(
+            r"(?m)^\s*(\d+)\s+(UX|UY|UZ|ROTX|ROTY|ROTZ|TEMP)\s+" + FLOAT, text)}
+
+    def forces(text):
+        return {(int(node), dof.upper()): float(value) for node, dof, value in re.findall(
+            r"(?m)^\s*(\d+)\s+(FX|FY|FZ)\s+(" + FLOAT + r")", text)}
+
+    mapdl.finish()
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.prep7()
+    mapdl.allsel()
+    node_numbers = [int(value) for value in mapdl.mesh.nnum]
+    coordinates = [[float(item) for item in row] for row in mapdl.mesh.nodes]
+    if not coordinates or len(node_numbers) != len(coordinates):
+        return False
+    by_node = dict(zip(node_numbers, coordinates))
+    element_text = str(mapdl.run("ETLIST,ALL")).upper()
+    material_text = str(mapdl.run("MPLIST,ALL")).upper()
+    dlist = constraints(str(mapdl.run("DLIST,ALL,ALL")))
+
+    if "PLANE183" not in element_text or not all(token in material_text for token in ("210000", "0.300")):
+        return False
+    hole_nodes = [node for node, xyz in by_node.items() if abs(math.hypot(xyz[0]-50.0, xyz[1]-100.0)-5.0) <= 0.35]
+    if len(hole_nodes) < 20:
+        return False
+    constrained_nodes = {node for node, _ in dlist}
+    if not (2 <= len(constrained_nodes) <= 4):
+        return False
+    if not any((node, "UX") in dlist and (node, "UY") in dlist for node in constrained_nodes):
+        return False
+    if not any((node, "UY") in dlist for node in constrained_nodes):
+        return False
+    load_text = (str(mapdl.run("SFELIST,ALL,ALL")) + "\n" + str(mapdl.run("FLIST,ALL,ALL"))).upper()
+    if "10" not in load_text or not any(token in load_text for token in ("PRES", "FX")):
+        return False
+    return 15.0 < abs(float(pred["hole_edge_max_sx_mpa"])) < 1000.0
+
+
 def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
+    if not strict_process_check(mapdl, pred):
+        return False
+
     mapdl.resume(DB_FILE.stem, "db")
     if not _check_bounds_from_instruction(mapdl, task_name):
         return False

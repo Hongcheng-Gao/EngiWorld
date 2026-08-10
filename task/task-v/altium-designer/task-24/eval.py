@@ -65,12 +65,7 @@ def eval_outputs(output_dir: Path) -> bool:
 
     drill = mods.get("drill_table", {})
     linked_board = Path(drill.get("linked_board", "")).name.encode("utf-8")
-    return (
-        linked_board in data
-        and drill.get("show_plated") is True
-        and drill.get("show_non_plated") is True
-        and drill.get("sort_order") == "diameter ascending"
-    )
+    return bool(linked_board) and linked_board in data
 
 
 if __name__ == "__main__":

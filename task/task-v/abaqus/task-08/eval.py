@@ -20,14 +20,28 @@ import traceback
 
 TASK_ID = 'task-08'
 PROCESS_SPEC = {'artifact': {'job_name': 'Job-Contact', 'model_name': 'Model-Contact', 'step_name': 'Step-1'},
- 'process': {'contact': {'frictionless': True, 'hard': True, 'min_interactions': 1, 'min_properties': 1},
-             'geometry': {'bbox_spans': {'x': 100.0, 'y': 100.0, 'z': 35.0}, 'tol': 0.6},
-             'load_signatures': [{'magnitude': 10.0, 'step': 'Step-1', 'tol': 1.0, 'type_any': ['PRESSURE']}],
+ 'process': {'contact': {'frictionless': True,
+                         'hard': True,
+                         'min_interactions': 1,
+                         'min_properties': 1},
+             'load_signatures': [{'magnitude': 10.0,
+                                  'step': 'Step-1',
+                                  'tol': 1.0,
+                                  'type_any': ['PRESSURE']}],
              'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
-             'mesh': {'main_element_type': 'C3D8R', 'seed_sizes': [3.0, 5.0], 'seed_tol': 1.5},
              'min_counts': {'boundary_conditions': 1, 'loads': 1},
              'section': {'material_names': ['Steel'], 'type': 'SOLID'},
-             'step': {'kind': 'STATIC', 'nlgeom': True}},
+             'step': {'kind': 'STATIC', 'nlgeom': True},
+             'part_requirements': [{'geometry': {'bbox_spans': {'x': 20.0, 'y': 20.0, 'z': 30.0},
+                                                 'tol': 0.6},
+                                    'mesh': {'main_element_type': 'C3D8R',
+                                             'seed_size': 3.0,
+                                             'seed_tol': 0.8}},
+                                   {'geometry': {'bbox_spans': {'x': 100.0, 'y': 100.0, 'z': 5.0},
+                                                 'tol': 0.6},
+                                    'mesh': {'main_element_type': 'C3D8R',
+                                             'seed_size': 5.0,
+                                             'seed_tol': 0.8}}]},
  'solver': {'min_frames': 2}}
 
 ABS_TOL = 1.0e-6
@@ -700,7 +714,17 @@ def bc_matches_req(bc_obj, req):
             if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
                 return False
 
+    if 'magnitude' in req:
+        obs = getattr(bc_obj, 'magnitude', None)
+        if obs is None:
+            return False
+        tol = float(req.get('tol', ABS_TOL))
+        if not close_enough(obs, req['magnitude'], tol=tol, rel=1.0e-3):
+            return False
+
     return True
+
+
 
 
 def check_bcs(model, bc_specs, min_count=None):
@@ -721,16 +745,22 @@ def check_bcs(model, bc_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate boundary conditions')
 
+    used = set()
     for req in bc_specs:
-        matched = False
-        for bc in bcs:
+        matched_index = None
+        for index, bc in enumerate(bcs):
+            if index in used:
+                continue
             if bc_matches_req(bc, req):
-                matched = True
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required BC signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
 
 
 def type_matches_any(obj, tokens):
@@ -764,20 +794,24 @@ def load_matches_req(load_obj, req):
     comp = req.get('component', None)
     if comp:
         val = getattr(load_obj, comp, None)
-        if val is None:
+        if val is None or not is_set_value(val):
             return False
-        if not is_set_value(val):
-            return False
-        sign = req.get('sign', None)
         vf = safe_float(val, None)
         if vf is None:
             return False
+        sign = req.get('sign', None)
         if sign == 'positive' and vf <= 0.0:
             return False
         if sign == 'negative' and vf >= 0.0:
             return False
+        if 'component_value' in req:
+            tol = float(req.get('tol', ABS_TOL))
+            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+                return False
 
     return True
+
+
 
 
 def check_loads(model, load_specs, min_count=None):
@@ -798,16 +832,22 @@ def check_loads(model, load_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate loads')
 
+    used = set()
     for req in load_specs:
-        matched = False
-        for ld in loads:
-            if load_matches_req(ld, req):
-                matched = True
+        matched_index = None
+        for index, load_obj in enumerate(loads):
+            if index in used:
+                continue
+            if load_matches_req(load_obj, req):
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required load signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
 
 
 def check_couplings(model, req):
@@ -974,6 +1014,53 @@ def check_step(model, step_spec):
     return True
 
 
+def check_part_requirements(model, requirements):
+    try:
+        parts = [model.parts[key] for key in model.parts.keys()]
+    except Exception:
+        return fail('Cannot inspect model parts')
+
+    used = set()
+    for req in requirements:
+        matched = None
+        geom = req.get('geometry', {})
+        mesh = req.get('mesh', {})
+        expected_spans = geom.get('bbox_spans', {})
+        geom_tol = float(geom.get('tol', GEOM_TOL))
+        expected_type = ci(mesh.get('main_element_type', ''))
+        expected_seed = mesh.get('seed_size', None)
+        seed_tol = float(mesh.get('seed_tol', SEED_TOL_DEFAULT))
+
+        for index, part_obj in enumerate(parts):
+            if index in used:
+                continue
+            bbox = bbox_from_xyz(collect_node_xyz(part_obj.nodes))
+            if bbox is None:
+                continue
+            spans = {'x': bbox[3] - bbox[0], 'y': bbox[4] - bbox[1], 'z': bbox[5] - bbox[2]}
+            if any(axis not in spans or not close_enough(spans[axis], value, tol=geom_tol, rel=1.0e-3)
+                   for axis, value in expected_spans.items()):
+                continue
+            counts = get_element_type_counts(part_obj.elements)
+            if expected_type and counts.get(expected_type, 0) <= 0:
+                continue
+            if expected_seed is not None:
+                try:
+                    observed_seed = safe_float(part_obj.getPartSeeds(SIZE), None)
+                except Exception:
+                    observed_seed = None
+                if observed_seed is None or not close_enough(observed_seed, expected_seed, tol=seed_tol, rel=1.0e-3):
+                    continue
+            matched = index
+            break
+
+        if matched is None:
+            return fail('Required part geometry/mesh not found: ' + str(req))
+        used.add(matched)
+
+    return True
+
+
 def check_cae_process(cae_path):
     try:
         openMdb(pathName=cae_path)
@@ -1002,24 +1089,9 @@ def check_cae_process(cae_path):
         return False, model
     ok('Section check passed')
 
-    xyz = collect_geometry_xyz(model, part_obj)
-    bbox = bbox_from_xyz(xyz)
-    if not check_bbox(bbox, proc.get('geometry', {})):
+    if not check_part_requirements(model, proc.get('part_requirements', [])):
         return False, model
-    if not check_hole(xyz, proc.get('geometry', {}).get('hole', None)):
-        return False, model
-    ok('Geometry check passed')
-
-    mesh_spec = dict(proc.get('mesh', {}))
-    if not check_mesh_all_parts(model, mesh_spec):
-        # For imported legacy GT, exact per-part seed attributes may drift.
-        # Keep process strictness by requiring element family on both checks.
-        pass
-    mesh_spec_primary = dict(mesh_spec)
-    mesh_spec_primary['seed_sizes'] = []
-    if not check_mesh(part_obj, mesh_spec_primary):
-        return False, model
-    ok('Mesh check passed')
+    ok('Part geometry/mesh checks passed')
 
     if not check_required_sets(model, part_obj, proc.get('required_sets', [])):
         return False, model
@@ -1036,13 +1108,9 @@ def check_cae_process(cae_path):
         return False, model
     ok('BC check passed')
 
-    load_ok = check_loads(model, proc.get('load_signatures', []), min_count=min_load)
-    if load_ok:
-        ok('Load check passed')
-    else:
-        if not check_keyword_bcs_loads_b(model, proc):
-            return False, model
-        ok('Keyword load fallback passed')
+    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+        return False, model
+    ok('Load check passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

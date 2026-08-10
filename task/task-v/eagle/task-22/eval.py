@@ -138,7 +138,7 @@ def norm_drill(value):
     return round(float(value), 3)
 
 
-def check():
+def _legacy_check():
     answer = parse_xml(DESKTOP / "answer.sch")
     starter = parse_xml(DESKTOP / "assign.sch")
     if answer is None or starter is None:
@@ -152,6 +152,25 @@ def check():
         return False
     return len(root.findall(".//net")) == len(start_root.findall(".//net")) and len(root.findall(".//wire")) == len(start_root.findall(".//wire"))
 
+
+# ENGIWORLD_REPAIRED_EAGLE
+
+def _canon_xml(elem, scrub=None):
+    attrs = dict(elem.attrib)
+    if scrub:
+        scrub(elem, attrs)
+    children = sorted((_canon_xml(c, scrub) for c in elem), key=repr)
+    return (elem.tag, tuple(sorted(attrs.items())), (elem.text or "").strip(), tuple(children))
+
+def check():
+    if not _legacy_check():
+        return False
+    answer = parse_xml(DESKTOP / "answer.sch"); starter = parse_xml(DESKTOP / "assign.sch")
+    if answer is None or starter is None: return False
+    target = {"VCC", "GND", "CLK", "DATA", "RESET"}
+    def scrub(elem, attrs):
+        if elem.tag == "net" and attrs.get("name") in target: attrs.pop("class", None)
+    return _canon_xml(answer.getroot(), scrub) == _canon_xml(starter.getroot(), scrub)
 
 if __name__ == "__main__":
     print("True" if check_no_gui_bypass() and check() else "False")

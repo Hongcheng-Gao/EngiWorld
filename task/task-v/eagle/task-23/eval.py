@@ -138,7 +138,7 @@ def norm_drill(value):
     return round(float(value), 3)
 
 
-def check():
+def _legacy_check():
     answer = parse_xml(DESKTOP / "answer.brd")
     starter = parse_xml(DESKTOP / "vias.brd")
     if answer is None or starter is None:
@@ -170,6 +170,29 @@ def check():
             len(root.findall(".//signal")) == len(start_root.findall(".//signal")) and
             len(root.findall(".//wire")) == len(start_root.findall(".//wire")))
 
+
+# ENGIWORLD_REPAIRED_EAGLE
+
+def _canon_xml(elem, scrub=None):
+    attrs = dict(elem.attrib)
+    if scrub:
+        scrub(elem, attrs)
+    children = sorted((_canon_xml(c, scrub) for c in elem), key=repr)
+    text = "\n".join(line.rstrip() for line in (elem.text or "").splitlines()).strip()
+    return (elem.tag, tuple(sorted(attrs.items())), text, tuple(children))
+
+def check():
+    if not _legacy_check():
+        return False
+    answer = parse_xml(DESKTOP / "answer.brd"); starter = parse_xml(DESKTOP / "vias.brd")
+    if answer is None or starter is None: return False
+    targets = {(5.0,5.0),(10.0,5.0),(15.0,5.0),(5.0,30.0),(10.0,30.0)}
+    def scrub(elem, attrs):
+        if elem.tag == "via":
+            try: point=(round(float(attrs.get("x")),3),round(float(attrs.get("y")),3))
+            except Exception: return
+            if point in targets: attrs.pop("drill", None)
+    return _canon_xml(answer.getroot(), scrub) == _canon_xml(starter.getroot(), scrub)
 
 if __name__ == "__main__":
     print("True" if check_no_gui_bypass() and check() else "False")

@@ -19,11 +19,19 @@ import math
 import traceback
 
 TASK_ID = 'task-05'
-PROCESS_SPEC = {'artifact': {'job_name': 'Job-BlockTension', 'model_name': 'Model-BlockTension', 'step_name': 'Step-Load'},
- 'process': {'bc_signatures': [{'dofs': {'u1': 'SET', 'u2': 'SET', 'u3': 'SET'}, 'step': 'Initial'}],
+PROCESS_SPEC = {'artifact': {'job_name': 'Job-BlockTension',
+              'model_name': 'Model-BlockTension',
+              'step_name': 'Step-Load'},
+ 'process': {'bc_signatures': [{'dofs': {'u1': 'SET', 'u2': 'SET', 'u3': 'SET'},
+                                'step': 'Initial'}],
              'geometry': {'bbox_spans': {'x': 120.0, 'y': 12.0, 'z': 8.0}, 'tol': 0.25},
              'kinematic_coupling': {'min_count': 1},
-             'load_signatures': [{'component': 'cf1', 'component_value': 800.0, 'sign': 'positive', 'step': 'Step-Load', 'tol': 1.0, 'type_any': ['CONCENTRATEDFORCE']}],
+             'load_signatures': [{'component': 'cf1',
+                                  'component_value': 800.0,
+                                  'sign': 'positive',
+                                  'step': 'Step-Load',
+                                  'tol': 1.0,
+                                  'type_any': ['CONCENTRATEDFORCE']}],
              'materials': [{'E': 70000.0, 'name': 'Aluminum', 'nu': 0.33}],
              'mesh': {'main_element_type': 'C3D8R', 'seed_sizes': [4.0], 'seed_tol': 0.5},
              'min_counts': {'boundary_conditions': 1, 'loads': 1},
@@ -575,10 +583,6 @@ def check_required_sets(model, part_obj, set_names):
 
 
 def bc_matches_req(bc_obj, req):
-    tokens = req.get('type_any', [])
-    if tokens and not any(ci(token) in class_name(bc_obj) for token in tokens):
-        return False
-
     step_req = req.get('step', None)
     if step_req is not None:
         cstep = getattr(bc_obj, 'createStepName', None)
@@ -601,7 +605,19 @@ def bc_matches_req(bc_obj, req):
             if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
                 return False
 
+    if 'magnitude' in req:
+        obs = getattr(bc_obj, 'magnitude', None)
+        if obs is None:
+            return False
+        tol = float(req.get('tol', ABS_TOL))
+        if not close_enough(obs, req['magnitude'], tol=tol, rel=1.0e-3):
+            return False
+
     return True
+
+
+
+
 
 
 def check_bcs(model, bc_specs, min_count=None):
@@ -622,23 +638,24 @@ def check_bcs(model, bc_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate boundary conditions')
 
+    used = set()
     for req in bc_specs:
-        matched = False
-        for bc in bcs:
+        matched_index = None
+        for index, bc in enumerate(bcs):
+            if index in used:
+                continue
             if bc_matches_req(bc, req):
-                matched = True
+                matched_index = index
                 break
-        if not matched:
-            try:
-                model.keywordBlock.synchVersions(storeNodesAndElements=False)
-                keyword_text = '\n'.join(str(x) for x in model.keywordBlock.sieBlocks).upper()
-                matched = '*BOUNDARY' in keyword_text and 'ENCASTRE' in keyword_text
-            except Exception:
-                matched = False
-        if not matched:
+        if matched_index is None:
             return fail('Required BC signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
+
+
 
 
 def type_matches_any(obj, tokens):
@@ -672,14 +689,12 @@ def load_matches_req(load_obj, req):
     comp = req.get('component', None)
     if comp:
         val = getattr(load_obj, comp, None)
-        if val is None:
+        if val is None or not is_set_value(val):
             return False
-        if not is_set_value(val):
-            return False
-        sign = req.get('sign', None)
         vf = safe_float(val, None)
         if vf is None:
             return False
+        sign = req.get('sign', None)
         if sign == 'positive' and vf <= 0.0:
             return False
         if sign == 'negative' and vf >= 0.0:
@@ -690,6 +705,10 @@ def load_matches_req(load_obj, req):
                 return False
 
     return True
+
+
+
+
 
 
 def check_loads(model, load_specs, min_count=None):
@@ -710,16 +729,24 @@ def check_loads(model, load_specs, min_count=None):
     except Exception:
         return fail('Cannot iterate loads')
 
+    used = set()
     for req in load_specs:
-        matched = False
-        for ld in loads:
-            if load_matches_req(ld, req):
-                matched = True
+        matched_index = None
+        for index, load_obj in enumerate(loads):
+            if index in used:
+                continue
+            if load_matches_req(load_obj, req):
+                matched_index = index
                 break
-        if not matched:
+        if matched_index is None:
             return fail('Required load signature not found: ' + str(req))
+        used.add(matched_index)
 
     return True
+
+
+
+
 
 
 def check_couplings(model, req):
@@ -941,13 +968,9 @@ def check_cae_process(cae_path):
         return False, model
     ok('BC check passed')
 
-    load_ok = check_loads(model, proc.get('load_signatures', []), min_count=min_load)
-    if load_ok:
-        ok('Load check passed')
-    else:
-        if not check_keyword_bcs_loads_b(model, proc):
-            return False, model
-        ok('Keyword B-load fallback passed')
+    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+        return False, model
+    ok('Load check passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

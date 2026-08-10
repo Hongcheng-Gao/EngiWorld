@@ -192,7 +192,62 @@ def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
     return True
 
 
+def strict_process_check(mapdl, pred):
+    import math
+    import re
+    FLOAT = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?"
+
+    def close(value, target, tolerance):
+        try:
+            value = float(value)
+        except Exception:
+            return False
+        return math.isfinite(value) and abs(value - target) <= tolerance
+
+    def constraints(text):
+        return {(int(node), dof.upper()) for node, dof in re.findall(
+            r"(?m)^\s*(\d+)\s+(UX|UY|UZ|ROTX|ROTY|ROTZ|TEMP)\s+" + FLOAT, text)}
+
+    def forces(text):
+        return {(int(node), dof.upper()): float(value) for node, dof, value in re.findall(
+            r"(?m)^\s*(\d+)\s+(FX|FY|FZ)\s+(" + FLOAT + r")", text)}
+
+    mapdl.finish()
+    mapdl.resume(DB_FILE.stem, "db")
+    mapdl.prep7()
+    mapdl.allsel()
+    node_numbers = [int(value) for value in mapdl.mesh.nnum]
+    coordinates = [[float(item) for item in row] for row in mapdl.mesh.nodes]
+    if not coordinates or len(node_numbers) != len(coordinates):
+        return False
+    by_node = dict(zip(node_numbers, coordinates))
+    element_text = str(mapdl.run("ETLIST,ALL")).upper()
+    material_text = str(mapdl.run("MPLIST,ALL")).upper()
+    dlist = constraints(str(mapdl.run("DLIST,ALL,ALL")))
+
+    keyopts = str(mapdl.run("KEYOPT,1,LIST")).upper()
+    if "PLANE183" not in element_text or "AXISYMMETRIC" not in (element_text + keyopts):
+        return False
+    if not all(token in material_text for token in ("210000", "0.300")):
+        return False
+    y0 = {node for node, xyz in by_node.items() if abs(xyz[1]) <= 1.0e-6}
+    y10 = {node for node, xyz in by_node.items() if abs(xyz[1]-10.0) <= 1.0e-6}
+    inner_outer = {node for node, xyz in by_node.items() if abs(xyz[0]-25.0) <= 1.0e-6 or abs(xyz[0]-50.0) <= 1.0e-6}
+    if any((node, "UY") not in dlist for node in y0 | y10):
+        return False
+    if any((node, "UX") in dlist for node in inner_outer):
+        return False
+    load_text = str(mapdl.run("SFELIST,ALL,ALL")).upper()
+    if "PRES" not in load_text or "10" not in load_text:
+        return False
+    return (float(pred["inner_radial_ux_mm"]) > 0.0
+            and 1.0 < abs(float(pred["inner_hoop_sz_mpa"])) < 1000.0)
+
+
 def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
+    if not strict_process_check(mapdl, pred):
+        return False
+
     mapdl.resume(DB_FILE.stem, "db")
     if not _check_bounds_from_instruction(mapdl, task_name):
         return False
