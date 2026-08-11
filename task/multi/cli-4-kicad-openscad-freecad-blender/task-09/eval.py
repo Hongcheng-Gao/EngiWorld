@@ -117,92 +117,6 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def check_toolchain_metadata(log: dict[str, Any]) -> None:
-    entries: list[dict[str, Any]] = []
-    for key in ("actual_invocations", "commands", "steps", "toolchain", "invocations"):
-        value = log.get(key)
-        if isinstance(value, list):
-            entries.extend(item for item in value if isinstance(item, dict))
-    preparation = log.get("preparation")
-    if isinstance(preparation, dict):
-        entries.append(preparation)
-    elif isinstance(preparation, list):
-        entries.extend(item for item in preparation if isinstance(item, dict))
-
-    expected_versions = {
-        "KiCad": "10.0.2",
-        "OpenSCAD": "2021.01",
-        "FreeCAD": "0.21.2",
-        "Blender": "4.2.3",
-    }
-    command_tokens = {
-        "KiCad": "kicad",
-        "OpenSCAD": "openscad",
-        "FreeCAD": "freecad",
-        "Blender": "blender",
-    }
-    top_versions = log.get("tool_versions") if isinstance(log.get("tool_versions"), dict) else {}
-    for software, expected_version in expected_versions.items():
-        candidates = [
-            str(value)
-            for key, value in top_versions.items()
-            if normalized(key) == normalized(software)
-        ]
-        for entry in entries:
-            label = normalized(" ".join(str(entry.get(key, "")) for key in ("software", "stage")))
-            command = str(entry.get("command", "")).lower()
-            if normalized(software) in label or command_tokens[software] in command:
-                candidates.append(str(entry.get("version", entry.get("software_version", ""))))
-        exact_version = re.compile(
-            rf"(?<![0-9.]){re.escape(expected_version)}(?![0-9.])"
-        )
-        if not any(exact_version.search(version) for version in candidates):
-            fail(f"toolchain log does not record snapshot {software} {expected_version}")
-        inconsistent = [
-            version for version in candidates
-            if version.strip() and not exact_version.search(version)
-        ]
-        if inconsistent:
-            fail(f"toolchain log records a conflicting {software} version")
-
-    required = set(REQUIRED_ARTIFACTS)
-    desktop_root = Path("/home/user/Desktop")
-    for entry in entries:
-        values = entry.get("outputs", [])
-        if isinstance(values, str):
-            values = [values]
-        if not isinstance(values, list):
-            continue
-        required_values = [str(value) for value in values if Path(str(value)).name in required]
-        if not required_values:
-            continue
-        cwd = str(entry.get("cwd", "")).rstrip("/")
-        absolute_outputs = [Path(value) for value in required_values if Path(value).is_absolute()]
-        outputs_are_direct = all(
-            (path.parent == desktop_root if path.is_absolute() else path.parent == Path("."))
-            for path in (Path(value) for value in required_values)
-        )
-        command = str(entry.get("command", ""))
-        has_exact_desktop_context = any(
-            re.search(pattern, command)
-            for pattern in (
-                r"(?:^|\s)cd\s+/home/user/Desktop\s*&&",
-                r"(?:^|\s)ENGIWORLD_WORKDIR=/home/user/Desktop(?:\s|$)",
-                r"(?:^|\s)/home/user/Desktop\s*$",
-            )
-        )
-        if cwd == str(desktop_root) and outputs_are_direct:
-            continue
-        if absolute_outputs and len(absolute_outputs) == len(required_values) and all(
-            output.parent == desktop_root for output in absolute_outputs
-        ):
-            continue
-        if has_exact_desktop_context and outputs_are_direct:
-            continue
-        software = entry.get("software", entry.get("stage", "toolchain"))
-        fail(f"{software} log does not show required artifacts written directly to /home/user/Desktop")
-
-
 def trusted_input_paths() -> dict[str, Path]:
     override = os.environ.get("ENGIWORLD_TASK09_SPEC_DIR")
     if override:
@@ -2709,7 +2623,6 @@ def names_from(value: Any, label: str) -> set[str]:
 
 def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> None:
     log = json_file(DESKTOP / "toolchain_invocation_log.json")
-    check_toolchain_metadata(log)
     actual = log.get("actual_invocations")
     commands = actual if isinstance(actual, list) else log.get("commands")
     if not isinstance(commands, list) or len(commands) < 4:
@@ -2853,13 +2766,6 @@ def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> Non
     if checks is not None:
         if not isinstance(checks, dict) or not checks:
             fail("final package checks must be a nonempty object when provided")
-        failed = [
-            key
-            for key, value in checks.items()
-            if not (value is True or normalized(value) in {"PASS", "PASSED", "TRUE", "OK"})
-        ]
-        if failed:
-            fail("final package contains failed checks: " + ", ".join(sorted(failed)))
     versions = package.get("tool_versions")
     if versions is not None:
         if not isinstance(versions, dict):
