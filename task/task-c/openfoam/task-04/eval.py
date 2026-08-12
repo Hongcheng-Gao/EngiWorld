@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -37,24 +38,110 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "foam fatal" not in text.lower() and text.rstrip().endswith("End")
+
+
+def paren_section(text: str, name: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\(", text)
+    if not match:
+        raise ValueError(f"missing section {name}")
+    start = text.find("(", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "("
+        depth -= text[index] == ")"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated section {name}")
+
+
+def wedge_geometry_is_valid(mesh: str) -> bool:
+    number = r"[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?"
+    vertices = [
+        tuple(float(value) for value in match)
+        for match in re.findall(
+            rf"\(\s*({number})\s+({number})\s+({number})\s*\)",
+            paren_section(mesh, "vertices"),
+        )
+    ]
+    if len(vertices) != 6:
+        return False
+    axis = [vertex for vertex in vertices if math.hypot(vertex[1], vertex[2]) <= 1.0e-10]
+    wall = [vertex for vertex in vertices if math.hypot(vertex[1], vertex[2]) > 1.0e-10]
+    if len(axis) != 2 or len(wall) != 4:
+        return False
+    expected_x = [0.0, 5.0]
+    if any(not close(vertex[0], target, 1.0e-10) for vertex, target in zip(sorted(axis), expected_x)):
+        return False
+    half_angle = math.radians(2.5)
+    for x in expected_x:
+        section = [vertex for vertex in wall if close(vertex[0], x, 1.0e-10)]
+        if len(section) != 2:
+            return False
+        angles = sorted(math.atan2(vertex[2], vertex[1]) for vertex in section)
+        if any(not close(math.hypot(vertex[1], vertex[2]), RADIUS, 1.0e-9) for vertex in section):
+            return False
+        if not all(
+            close(actual, expected, 1.0e-9)
+            for actual, expected in zip(angles, (-half_angle, half_angle))
+        ):
+            return False
+    return True
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
 
 def field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing {kind} field")
     if kind == "vector":
-        return [
+        values = [
             tuple(float(value) for value in item.split())
-            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
-    return [float(value) for value in match.group(1).split()]
+        valid_values = all(
+            len(value) == 3 and all(math.isfinite(item) for item in value)
+            for value in values
+        )
+    elif kind == "scalar":
+        values = [float(value) for value in match.group(2).split()]
+        valid_values = all(math.isfinite(value) for value in values)
+    else:
+        raise ValueError(f"unsupported field kind {kind}")
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not valid_values
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
 
 
 def check_case() -> bool:
@@ -67,12 +154,14 @@ def check_case() -> bool:
     schemes = read(CASE / "system/fvSchemes")
     return all(
         (
-            "(5 0 0)" in mesh,
-            "(0 0.0499524111 -0.00218096937)" in mesh,
-            "(500 40 1)" in mesh,
-            mesh.count("type wedge;") == 2,
+            wedge_geometry_is_valid(mesh),
+            re.search(r"\(\s*500\s+40\s+1\s*\)", mesh) is not None,
             has_entry(named_block(mesh, "axis"), "type", r"empty"),
             has_entry(named_block(mesh, "wall"), "type", r"wall"),
+            all(
+                has_entry(named_block(mesh, name), "type", r"wedge")
+                for name in ("wedgeLow", "wedgeHigh")
+            ),
             has_entry(patch(velocity, "axis"), "type", r"empty"),
             has_entry(patch(velocity, "inlet"), "type", r"fixedValue"),
             has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
@@ -111,9 +200,23 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    block_log = read(CASE / "log.blockMesh")
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("pipe_laminar", "blockMeshDict", "controlDict", "fvSchemes", "fvSolution", "0/U", "0/p"),
+    ):
+        return False
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("pipe_laminar", "2000", "outlet_profile.csv", "summary.txt", "poiseuille_ux_mps"),
+    ):
+        return False
     solve_log = read(CASE / "log.simpleFoam")
-    if "End" not in block_log or "End" not in solve_log or "Time = 2000" not in solve_log:
+    if (
+        not log_finished(CASE / "log.blockMesh")
+        or not log_finished(CASE / "log.simpleFoam")
+        or not log_finished(CASE / "log.cellCentres")
+        or "Time = 2000" not in solve_log
+    ):
         return False
     mesh_check = subprocess.run(
         ["bash", "-lc", ". /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/pipe_laminar"],
@@ -122,7 +225,14 @@ def check() -> bool:
         text=True,
         timeout=120,
     )
-    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
+    if (
+        mesh_check.returncode != 0
+        or "Mesh OK." not in mesh_check.stdout
+        or "Failed " in mesh_check.stdout
+        or "foam fatal" in mesh_check.stdout.lower()
+        or not mesh_check.stdout.rstrip().endswith("End")
+        or not check_case()
+    ):
         return False
 
     centres = field(CASE / "2000/C", "vector")
@@ -160,7 +270,7 @@ def check() -> bool:
         return False
     for row, expected in zip(rows, calculated):
         actual = tuple(float(row[key]) for key in ("radius_m", "ux_mps", "poiseuille_ux_mps"))
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, expected)):
+        if any(not close(a, b, 5.0e-7) for a, b in zip(actual, expected)):
             return False
 
     values = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

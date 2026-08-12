@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -36,6 +37,24 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "foam fatal" not in text.lower() and text.rstrip().endswith("End")
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
@@ -45,32 +64,69 @@ def face_count(block: str) -> int:
     return len(re.findall(r"\([^()]+\)", match.group(1))) if match else 0
 
 
-def field(path: Path, kind: str) -> list:
+def internal_field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing {kind} field")
     if kind == "vector":
-        return [
+        values = [
             tuple(float(value) for value in item.split())
-            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
-    return [float(value) for value in match.group(1).split()]
+        valid_values = all(
+            len(value) == 3 and all(math.isfinite(item) for item in value)
+            for value in values
+        )
+    elif kind == "scalar":
+        values = [float(value) for value in match.group(2).split()]
+        valid_values = all(math.isfinite(value) for value in values)
+    else:
+        raise ValueError(f"unsupported field kind {kind}")
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not valid_values
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
 
 
 def coefficient_history() -> list[tuple[float, float, float]]:
     values = []
+    header = None
     for line in read(COEFFICIENTS).splitlines():
         stripped = line.strip()
+        if stripped.startswith("# Time"):
+            header = " ".join(stripped.split())
+            continue
         if not stripped or stripped.startswith("#"):
             continue
         row = [float(value) for value in stripped.split()]
         if len(row) >= 4:
             values.append((row[0], row[2], row[3]))
+    if header != "# Time Cm Cd Cl Cl(f) Cl(r)":
+        raise ValueError("unexpected OpenFOAM 11 forceCoeffs header")
     return values
+
+
+def history_is_complete(history: list[tuple[float, float, float]]) -> bool:
+    if len(history) != 8001:
+        return False
+    return all(
+        close(time, index * 0.0025, 5.0e-10)
+        and math.isfinite(cd)
+        and math.isfinite(cl)
+        for index, (time, cd, cl) in enumerate(history)
+    )
 
 
 def check_case() -> bool:
@@ -142,8 +198,18 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("cylinder", "blockMeshDict", "controlDict", "forceCoeffs", "0/U", "0/p"),
+    ):
+        return False
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("forceCoeffs.dat", "lift_history.csv", "summary.txt", "zero_crossings", "cl_rms"),
+    ):
+        return False
     solve_log = read(CASE / "log.pimpleFoam")
-    if "End" not in read(CASE / "log.blockMesh") or "End" not in solve_log or "Time = 20" not in solve_log:
+    if not log_finished(CASE / "log.blockMesh") or not log_finished(CASE / "log.pimpleFoam") or "Time = 20" not in solve_log:
         return False
     mesh_check = subprocess.run(
         ["bash", "-lc", ". /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/cylinder"],
@@ -154,15 +220,15 @@ def check() -> bool:
     )
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
-    velocity = field(CASE / "20/U", "vector")
-    pressure = field(CASE / "20/p", "scalar")
+    velocity = internal_field(CASE / "20/U", "vector")
+    pressure = internal_field(CASE / "20/p", "scalar")
     if not (len(velocity) == len(pressure) == 3840):
         return False
 
     history = coefficient_history()
-    window = [row for row in history if row[0] >= 10.0]
-    if len(window) < 100:
+    if not history_is_complete(history):
         return False
+    window = [row for row in history if 10.0 <= row[0] <= 20.0]
     cl_mean = sum(row[2] for row in window) / len(window)
     cl_rms = math.sqrt(sum((row[2] - cl_mean) ** 2 for row in window) / len(window))
     zero_crossings = sum(
@@ -180,7 +246,7 @@ def check() -> bool:
         return False
     for row, expected in zip(rows, history):
         actual = tuple(float(row[key]) for key in keys)
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, expected)):
+        if any(not close(a, b, 5.0e-7) for a, b in zip(actual, expected)):
             return False
 
     values = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

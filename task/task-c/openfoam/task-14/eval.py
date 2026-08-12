@@ -37,6 +37,10 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
@@ -52,15 +56,128 @@ def latest_time() -> Path:
     return max(times, key=lambda path: float(path.name))
 
 
-def internal_count(path: Path, kind: str) -> int:
-    match = re.search(rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)", read(path))
+def field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
+    match = re.search(
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
+        re.S,
+    )
     if not match:
         raise ValueError(f"missing nonuniform {kind} field")
-    return int(match.group(1))
+    if kind == "vector":
+        values = [
+            tuple(float(value) for value in item.split())
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
+        ]
+        valid = all(
+            len(value) == 3 and all(math.isfinite(component) for component in value)
+            for value in values
+        )
+    else:
+        values = [float(value) for value in match.group(2).split()]
+        valid = all(math.isfinite(value) for value in values)
+    if (
+        len(values) != int(match.group(1))
+        or not valid
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
+
+
+def paren_section(text: str, name: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\(", text)
+    if not match:
+        raise ValueError(f"missing section {name}")
+    start = text.find("(", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "("
+        depth -= text[index] == ")"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated section {name}")
+
+
+def numeric_entry(text: str, key: str) -> float:
+    match = re.search(rf"(?<!\w){re.escape(key)}\s+([^;]+);", text)
+    if not match:
+        raise ValueError(f"missing entry {key}")
+    return float(match.group(1))
+
+
+def dimensioned_value(text: str, key: str) -> float:
+    match = re.search(rf"(?m)^\s*{re.escape(key)}\s+\[[^]]+\]\s+([^;]+);", text)
+    if not match:
+        raise ValueError(f"missing dimensioned entry {key}")
+    return float(match.group(1))
+
+
+def tuple_entry(text: str, key: str, uniform: bool = False) -> tuple[float, ...]:
+    prefix = r"uniform\s+" if uniform else ""
+    match = re.search(rf"(?m)^\s*{re.escape(key)}\s+{prefix}\(([^()]+)\)\s*;", text)
+    if not match:
+        raise ValueError(f"missing tuple entry {key}")
+    return tuple(float(value) for value in match.group(1).split())
+
+
+def vector_entry(text: str, key: str, uniform: bool = False) -> tuple[float, float, float]:
+    values = tuple_entry(text, key, uniform)
+    if len(values) != 3:
+        raise ValueError(f"invalid vector entry {key}")
+    return values
+
+
+def uniform_scalar(text: str) -> float:
+    match = re.search(r"\binternalField\s+uniform\s+([^;]+);", text)
+    if not match:
+        raise ValueError("missing uniform scalar field")
+    return float(match.group(1))
+
+
+def uniform_vector(text: str) -> tuple[float, float, float]:
+    match = re.search(r"\binternalField\s+uniform\s+\(([^()]+)\)\s*;", text)
+    if not match:
+        raise ValueError("missing uniform vector field")
+    values = tuple(float(value) for value in match.group(1).split())
+    if len(values) != 3:
+        raise ValueError("invalid uniform vector field")
+    return values
+
+
+def mesh_geometry_is_valid(mesh: str) -> bool:
+    scale_match = re.search(r"\bconvertToMeters\s+([^;]+);", mesh)
+    vertices = [
+        tuple(float(value) for value in item.split())
+        for item in re.findall(r"\(([^()]+)\)", paren_section(mesh, "vertices"))
+    ]
+    if scale_match is None or len(vertices) != 8 or any(len(point) != 3 for point in vertices):
+        return False
+    scale = float(scale_match.group(1))
+    xs, ys, zs = zip(*(tuple(scale * value for value in point) for point in vertices))
+    return (
+        abs(min(xs)) <= 1e-12
+        and abs(max(xs) - 2.0) <= 1e-12
+        and abs(min(ys)) <= 1e-12
+        and abs(max(ys) - 1.0) <= 1e-12
+        and abs(min(zs) + 0.005) <= 1e-12
+        and abs(max(zs) - 0.005) <= 1e-12
+        and re.search(r"hex\s*\([^)]*\)\s*\(\s*160\s+80\s+1\s*\)", mesh) is not None
+    )
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "FOAM FATAL" not in text and text.rstrip().endswith("End")
 
 
 def patch_values(path: Path, patch: str) -> list[float]:
     text = read(path)
+    header = named_block(text, "FoamFile")
     block = re.search(rf"\b{re.escape(patch)}\s*\{{(.*?)\n\s*\}}", text, re.S)
     if not block:
         raise ValueError(f"missing {patch} boundary field")
@@ -72,7 +189,12 @@ def patch_values(path: Path, patch: str) -> list[float]:
     if not values:
         raise ValueError(f"missing nonuniform values on {patch}")
     result = [float(value) for value in values.group(2).split()]
-    if len(result) != int(values.group(1)):
+    if (
+        len(result) != int(values.group(1))
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", r"volScalarField")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
         raise ValueError("boundary face-count mismatch")
     return result
 
@@ -106,22 +228,22 @@ def check_case() -> bool:
     surface = named_block(geometry, "cylinder")
     return all(
         (
-            "(2 1 -0.005)" in mesh,
-            "(160 80 1)" in mesh,
+            mesh_geometry_is_valid(mesh),
             has_entry(snappy, "castellatedMesh", r"true"),
             has_entry(snappy, "snap", r"true"),
             has_entry(snappy, "addLayers", r"true"),
             has_entry(surface, "type", r"triSurfaceMesh"),
             has_entry(surface, "file", r'"cylinder\.stl"'),
-            re.search(r"(?<!\w)(?:scale|transform)\s+(?!1(?:\.0+)?\s*;)", surface) is None,
-            "level (2 3);" in snappy,
-            "locationInMesh (0.1 0.5 0);" in snappy,
-            "nSurfaceLayers 3;" in snappy,
-            "expansionRatio 1.2;" in snappy,
-            "finalLayerThickness 0.4;" in snappy,
-            "internalField uniform (3 0 0);" in velocity,
-            "internalField uniform 0.03375;" in kinetic,
-            "internalField uniform 0.1458;" in dissipation,
+            "transform" not in surface,
+            not re.search(r"(?m)^\s*scale\s+", surface) or abs(numeric_entry(surface, "scale") - 1.0) <= 1e-12,
+            tuple_entry(snappy, "level") == (2.0, 3.0),
+            vector_entry(snappy, "locationInMesh") == (0.1, 0.5, 0.0),
+            abs(numeric_entry(snappy, "nSurfaceLayers") - 3.0) <= 1e-12,
+            abs(numeric_entry(snappy, "expansionRatio") - 1.2) <= 1e-12,
+            abs(numeric_entry(snappy, "finalLayerThickness") - 0.4) <= 1e-12,
+            uniform_vector(velocity) == (3.0, 0.0, 0.0),
+            abs(uniform_scalar(kinetic) - 0.03375) <= 1e-12,
+            abs(uniform_scalar(dissipation) - 0.1458) <= 1e-12,
             has_entry(patch(velocity, "inlet"), "value", r"uniform\s+\(3(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
             has_entry(patch(velocity, "outlet"), "type", r"zeroGradient"),
             has_entry(patch(velocity, "cylinder"), "type", r"noSlip"),
@@ -131,11 +253,10 @@ def check_case() -> bool:
             has_entry(patch(kinetic, "cylinder"), "type", r"kqRWallFunction"),
             has_entry(patch(dissipation, "cylinder"), "type", r"epsilonWallFunction"),
             has_entry(patch(nut, "cylinder"), "type", r"nutkWallFunction"),
-            re.search(r"\bnu\s+\[0 2 -1 0 0 0 0\]\s+1e-?6\s*;", physical, re.I)
-            is not None,
+            abs(dimensioned_value(physical, "nu") - 1e-6) <= 1e-15,
             "simulationType RAS;" in momentum,
             "model realizableKE;" in momentum,
-            re.search(r"\bendTime\s+500\s*;", control) is not None,
+            abs(numeric_entry(control, "endTime") - 500.0) <= 1e-12,
             "type yPlus;" in control,
         )
     )
@@ -162,19 +283,16 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    if final.name != "500":
+    if abs(float(final.name) - 500.0) > 1e-12:
         return False
     mesh_log = read(CASE / "log.checkMesh")
     snappy_log = read(CASE / "log.snappyHexMesh")
     solve_log = read(CASE / "log.simpleFoam")
     if not (
-        all("End" in read(path) for path in required[4:8])
+        all(log_finished(path) for path in required[4:9])
         and "Mesh OK." in mesh_log
-        and "End" in mesh_log
         and "Layer mesh :" in snappy_log
-        and "End" in snappy_log
         and "Time = 500" in solve_log
-        and "End" in solve_log
     ):
         return False
     mesh_check = subprocess.run(
@@ -192,9 +310,9 @@ def check() -> bool:
     )
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
-    cells = internal_count(final / "U", "vector")
+    cells = len(field(final / "U", "vector"))
     if cells <= 12800 or any(
-        internal_count(final / name, "scalar") != cells
+        len(field(final / name, "scalar")) != cells
         for name in ("p", "k", "epsilon", "nut")
     ):
         return False
@@ -212,7 +330,7 @@ def check() -> bool:
     if len(rows) != len(values) or set(rows[0]) != {"face_index", "yplus"}:
         return False
     for index, (row, expected) in enumerate(zip(rows, values)):
-        if int(row["face_index"]) != index or abs(float(row["yplus"]) - expected) > 5.0e-7:
+        if int(row["face_index"]) != index or not close(float(row["yplus"]), expected, 5.0e-7):
             return False
 
     lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

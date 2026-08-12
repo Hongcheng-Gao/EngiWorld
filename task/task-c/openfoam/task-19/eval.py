@@ -52,9 +52,17 @@ def zone_labels(text: str, name: str) -> list[int]:
 
 
 def field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
+    if not (
+        has_entry(header, "format", r"ascii")
+        and has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        and has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"field is not ASCII: {path}")
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
-        read(path),
+        text,
         re.S,
     )
     if not match:
@@ -64,11 +72,21 @@ def field(path: Path, kind: str) -> list:
             tuple(float(value) for value in item.split())
             for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
+        valid = all(
+            len(value) == 3 and all(math.isfinite(component) for component in value)
+            for value in values
+        )
     else:
         values = [float(value) for value in match.group(2).split()]
-    if len(values) != int(match.group(1)):
+        valid = all(math.isfinite(value) for value in values)
+    if len(values) != int(match.group(1)) or not valid:
         raise ValueError("field count mismatch")
     return values
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "FOAM FATAL" not in text and text.rstrip().endswith("End")
 
 
 def axial_profile() -> list[tuple[float, float]]:
@@ -150,14 +168,14 @@ def check() -> bool:
     solve_log = read(CASE / "log.porousSimpleFoam")
     zones = read(CASE / "constant/polyMesh/cellZones")
     if not (
-        "End" in read(CASE / "log.blockMesh")
-        and "End" in read(CASE / "log.topoSet")
-        and "End" in read(CASE / "log.writeCellCentres")
+        log_finished(CASE / "log.blockMesh")
+        and log_finished(CASE / "log.topoSet")
+        and log_finished(CASE / "log.writeCellCentres")
         and "Mesh OK." in mesh_log
-        and "End" in mesh_log
+        and log_finished(CASE / "log.checkMesh")
         and "Time = 500" in solve_log
-        and "End" in solve_log
-        and zone_labels(zones, "porosity") == list(range(1000))
+        and log_finished(CASE / "log.porousSimpleFoam")
+        and set(zone_labels(zones, "porosity")) == set(range(1000))
     ):
         return False
     mesh_check = subprocess.run(
@@ -178,7 +196,11 @@ def check() -> bool:
 
     profile = axial_profile()
     delta_p = RHO * (profile[0][1] - profile[-1][1])
-    if not math.isfinite(delta_p):
+    rises = sum(
+        right[1] > left[1] + 1e-6
+        for left, right in zip(profile, profile[1:])
+    )
+    if not (12000.0 < delta_p < 18000.0 and rises <= 5):
         return False
     with (ROOT / "axial_pressure.csv").open(encoding="utf-8", newline="") as stream:
         rows = list(csv.DictReader(stream))
@@ -188,7 +210,9 @@ def check() -> bool:
     for row, (x, value) in zip(rows, profile):
         actual = tuple(float(row[key]) for key in keys)
         expected = (x, value, RHO * value)
-        if any(abs(left - right) > 5e-7 for left, right in zip(actual, expected)):
+        if not all(math.isfinite(item) for item in actual) or any(
+            abs(left - right) > 5e-7 for left, right in zip(actual, expected)
+        ):
             return False
 
     lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

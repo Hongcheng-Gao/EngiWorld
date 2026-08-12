@@ -40,11 +40,42 @@ def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
 
-def internal_count(path: Path, kind: str) -> int:
-    match = re.search(rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)", read(path))
+def field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
+    if not (
+        has_entry(header, "format", r"ascii")
+        and has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        and has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"field is not ASCII: {path}")
+    match = re.search(
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
+        re.S,
+    )
     if not match:
         raise ValueError(f"missing nonuniform {kind} field")
-    return int(match.group(1))
+    if kind == "vector":
+        values = [
+            tuple(float(value) for value in item.split())
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
+        ]
+        valid = all(
+            len(value) == 3 and all(math.isfinite(component) for component in value)
+            for value in values
+        )
+    else:
+        values = [float(value) for value in match.group(2).split()]
+        valid = all(math.isfinite(value) for value in values)
+    if len(values) != int(match.group(1)) or not valid:
+        raise ValueError(f"invalid {kind} field")
+    return values
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "FOAM FATAL" not in text and text.rstrip().endswith("End")
 
 
 def profile(path: Path) -> list[tuple[float, float, float]]:
@@ -54,7 +85,7 @@ def profile(path: Path) -> list[tuple[float, float, float]]:
         if not stripped or stripped.startswith("#"):
             continue
         values = [float(value) for value in stripped.split()]
-        if len(values) < 4:
+        if len(values) != 4 or not all(math.isfinite(value) for value in values):
             raise ValueError("invalid sampled profile")
         rows.append((values[0], values[1], values[2]))
     if len(rows) != 99:
@@ -70,7 +101,10 @@ def csv_profile(path: Path, keys: tuple[str, str, str]) -> list[tuple[float, flo
         rows = list(csv.DictReader(stream))
     if len(rows) != 99 or set(rows[0]) != set(keys):
         raise ValueError("invalid CSV profile")
-    return [tuple(float(row[key]) for key in keys) for row in rows]
+    values = [tuple(float(row[key]) for key in keys) for row in rows]
+    if any(not all(math.isfinite(value) for value in row) for row in values):
+        raise ValueError("non-finite CSV profile")
+    return values
 
 
 def check_case() -> bool:
@@ -126,14 +160,12 @@ def check() -> bool:
     mesh_log = read(CASE / "log.checkMesh")
     solve_log = read(CASE / "log.icoFoam")
     if not (
-        "End" in read(CASE / "log.blockMesh")
-        and "End" in read(CASE / "log.sample")
+        log_finished(CASE / "log.blockMesh")
+        and log_finished(CASE / "log.sample")
         and "Mesh OK." in mesh_log
-        and "End" in mesh_log
+        and log_finished(CASE / "log.checkMesh")
         and "Time = 30" in solve_log
-        and "End" in solve_log
-        and internal_count(CASE / "30/U", "vector") == 4096
-        and internal_count(CASE / "30/p", "scalar") == 4096
+        and log_finished(CASE / "log.icoFoam")
     ):
         return False
     mesh_check = subprocess.run(
@@ -164,7 +196,20 @@ def check() -> bool:
         text=True,
         timeout=120,
     )
-    if sampler.returncode != 0 or "End" not in sampler.stdout:
+    if (
+        sampler.returncode != 0
+        or "FOAM FATAL" in sampler.stdout
+        or not sampler.stdout.rstrip().endswith("End")
+    ):
+        return False
+
+    velocity = field(CASE / "30/U", "vector")
+    pressure = field(CASE / "30/p", "scalar")
+    if not (
+        len(velocity) == len(pressure) == 4096
+        and max(math.sqrt(sum(component**2 for component in value)) for value in velocity) > 0.5
+        and max(pressure) - min(pressure) > 0.1
+    ):
         return False
 
     vertical = profile(SAMPLES / "vertical.xy")
@@ -177,7 +222,11 @@ def check() -> bool:
 
     ux_center = next(row[1] for row in vertical if abs(row[0] - 0.5) < 1e-9)
     uy_center = next(row[2] for row in horizontal if abs(row[0] - 0.5) < 1e-9)
-    if not (math.isfinite(ux_center) and math.isfinite(uy_center)):
+    profile_speed = max(
+        math.hypot(row[1], row[2])
+        for row in vertical + horizontal
+    )
+    if not (-0.5 < ux_center < -0.02 and 0.005 < uy_center < 0.3 and profile_speed > 0.1):
         return False
     lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]
     if len(lines) != 1:

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -44,6 +45,30 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def vector_entry(block: str, key: str) -> tuple[float, float, float]:
+    match = re.search(rf"(?<!\w){re.escape(key)}\s+\(([^()]+)\)\s*;", block)
+    if not match:
+        raise ValueError(f"missing vector entry {key}")
+    values = tuple(float(value) for value in match.group(1).split())
+    if len(values) != 3 or not all(math.isfinite(value) for value in values):
+        raise ValueError(f"invalid vector entry {key}")
+    return values
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "foam fatal" not in text.lower() and text.rstrip().endswith("End")
+
+
 def summary(path: Path) -> tuple[float, float, float]:
     rows = [line.strip() for line in read(path).splitlines() if line.strip()]
     if len(rows) != 1:
@@ -65,20 +90,27 @@ def latest_time() -> float:
     return max(times)
 
 
+def final_time_is_valid() -> bool:
+    return close(latest_time(), 30.0, 1.0e-9)
+
+
 def resample() -> Path:
     command = (
         ". /opt/openfoam11/etc/bashrc && "
-        "postProcess -case /home/user/Desktop/channel -latestTime -func sampleDict "
-        "> /tmp/engiworld-openfoam-01-sample.log 2>&1"
+        "postProcess -case /home/user/Desktop/channel -latestTime -func sampleDict"
     )
     result = subprocess.run(
         ["bash", "-lc", command],
         stdout=subprocess.PIPE,
-        stderr=subprocess.PIPE,
+        stderr=subprocess.STDOUT,
         text=True,
         timeout=120,
     )
-    if result.returncode != 0:
+    if (
+        result.returncode != 0
+        or "foam fatal" in result.stdout.lower()
+        or not result.stdout.rstrip().endswith("End")
+    ):
         raise RuntimeError("postProcess sampling failed")
     candidates = list((CASE / "postProcessing/sampleDict").glob("*/outletLine.xy"))
     if not candidates:
@@ -95,7 +127,13 @@ def mesh_is_valid() -> bool:
         text=True,
         timeout=120,
     )
-    return result.returncode == 0 and "Mesh OK." in result.stdout
+    return (
+        result.returncode == 0
+        and "Mesh OK." in result.stdout
+        and "Failed " not in result.stdout
+        and "foam fatal" not in result.stdout.lower()
+        and result.stdout.rstrip().endswith("End")
+    )
 
 
 def profile_rows(path: Path) -> list[tuple[float, float, float, float]]:
@@ -161,6 +199,9 @@ def check_case_definition() -> bool:
         6.0 * MEAN_SPEED * ((i + 0.5) * HEIGHT / 80.0) * (HEIGHT - (i + 0.5) * HEIGHT / 80.0) / HEIGHT**2
         for i in range(80)
     ]
+    outlet_sample = named_block(sampling, "outletLine")
+    sample_start = vector_entry(outlet_sample, "start")
+    sample_end = vector_entry(outlet_sample, "end")
 
     return all(
         (
@@ -184,9 +225,17 @@ def check_case_definition() -> bool:
             re.search(r"\bendTime\s+30(?:\.0)?\s*;", control) is not None,
             re.search(r"\bdeltaT\s+0\.02\s*;", control) is not None,
             re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
-            "nPoints     80;" in sampling,
-            "start       (0.99 0.00062500 0.00500000);" in sampling,
-            "end         (0.99 0.09937500 0.00500000);" in sampling,
+            has_entry(outlet_sample, "type", r"lineUniform"),
+            has_entry(outlet_sample, "axis", r"y"),
+            has_entry(outlet_sample, "nPoints", r"80"),
+            all(
+                close(actual, expected, 1.0e-12)
+                for actual, expected in zip(sample_start, (0.99, 0.000625, 0.005))
+            ),
+            all(
+                close(actual, expected, 1.0e-12)
+                for actual, expected in zip(sample_end, (0.99, 0.099375, 0.005))
+            ),
         )
     )
 
@@ -212,9 +261,19 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    if latest_time() < 30.0 or "End" not in read(CASE / "log.icoFoam"):
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("channel", "blockMeshDict", "controlDict", "fvSchemes", "fvSolution", "sampleDict", "0/U", "0/p"),
+    ):
         return False
-    if "End" not in read(CASE / "log.blockMesh") or not mesh_is_valid() or not check_case_definition():
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("postProcess", "sampleDict", "log.sample", "outlet_profile.csv", "summary.txt"),
+    ):
+        return False
+    if not final_time_is_valid() or not log_finished(CASE / "log.icoFoam"):
+        return False
+    if not log_finished(CASE / "log.blockMesh") or not log_finished(CASE / "log.sample") or not mesh_is_valid() or not check_case_definition():
         return False
 
     calculated_rows = profile_rows(resample())

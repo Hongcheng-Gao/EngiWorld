@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -48,6 +49,24 @@ def paren_section(text: str, name: str) -> str:
 
 def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
+
+
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "foam fatal" not in text.lower() and text.rstrip().endswith("End")
 
 
 def patch(text: str, name: str) -> str:
@@ -110,46 +129,88 @@ def airfoil_geometry_is_valid(mesh: str) -> bool:
             return False
 
     for index, (x, y, _) in enumerate(inner0):
-        previous = inner0[(index - 1) % count]
-        following = inner0[(index + 1) % count]
-        dx = following[0] - previous[0]
-        dy = following[1] - previous[1]
-        length = math.hypot(dx, dy)
-        expected_outer = (x + 5.0 * dy / length, y - 5.0 * dx / length)
-        for outer, z in ((outer0[index], 0.0), (outer1[index], 0.01)):
-            if abs(outer[0] - expected_outer[0]) > 2.0e-9 or abs(outer[1] - expected_outer[1]) > 2.0e-9 or abs(outer[2] - z) > 1.0e-12:
-                return False
-            if abs(math.hypot(outer[0] - x, outer[1] - y) - 5.0) > 2.0e-9:
-                return False
+        lower_outer = outer0[index]
+        upper_outer = outer1[index]
+        if (
+            not all(math.isfinite(value) for value in lower_outer + upper_outer)
+            or abs(lower_outer[0] - upper_outer[0]) > 1.0e-10
+            or abs(lower_outer[1] - upper_outer[1]) > 1.0e-10
+            or abs(lower_outer[2]) > 1.0e-12
+            or abs(upper_outer[2] - 0.01) > 1.0e-12
+        ):
+            return False
+        offset_x = lower_outer[0] - x
+        offset_y = lower_outer[1] - y
+        if abs(math.hypot(offset_x, offset_y) - 5.0) > 5.0e-6:
+            return False
+        if offset_x * (x - 0.5) + offset_y * y <= 0.0:
+            return False
     return True
 
 
-def field(path: Path, kind: str) -> list:
+def internal_field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing {kind} field")
     if kind == "vector":
-        return [
+        values = [
             tuple(float(value) for value in item.split())
-            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
-    return [float(value) for value in match.group(1).split()]
+        valid_values = all(
+            len(value) == 3 and all(math.isfinite(item) for item in value)
+            for value in values
+        )
+    elif kind == "scalar":
+        values = [float(value) for value in match.group(2).split()]
+        valid_values = all(math.isfinite(value) for value in values)
+    else:
+        raise ValueError(f"unsupported field kind {kind}")
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not valid_values
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
 
 
 def coefficient_history() -> list[tuple[float, float, float]]:
     history = []
+    header = None
     for line in read(COEFFICIENTS).splitlines():
         stripped = line.strip()
+        if stripped.startswith("# Time"):
+            header = " ".join(stripped.split())
+            continue
         if not stripped or stripped.startswith("#"):
             continue
         values = [float(value) for value in stripped.split()]
         if len(values) >= 4:
             history.append((values[0], values[2], values[3]))
+    if header != "# Time Cm Cd Cl Cl(f) Cl(r)":
+        raise ValueError("unexpected OpenFOAM 11 forceCoeffs header")
     return history
+
+
+def history_is_complete(history: list[tuple[float, float, float]]) -> bool:
+    if len(history) != 1001:
+        return False
+    return all(
+        close(iteration, float(index), 1.0e-9)
+        and math.isfinite(cd)
+        and math.isfinite(cl)
+        for index, (iteration, cd, cl) in enumerate(history)
+    )
 
 
 def check_case() -> bool:
@@ -240,13 +301,23 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("airfoil", "naca_thickness", "blockMeshDict", "forceCoeffs", "0/U", "0/p"),
+    ):
+        return False
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("forceCoeffs.dat", "force_coefficients.csv", "summary.txt", "avg_cd", "avg_cl"),
+    ):
+        return False
     solve_log = read(CASE / "log.simpleFoam")
     if any(
-        "End" not in read(path)
+        not log_finished(path)
         for path in (CASE / "log.blockMesh", CASE / "log.checkMesh", CASE / "log.potentialFoam")
     ):
         return False
-    if "End" not in solve_log or "Time = 1000" not in solve_log:
+    if not log_finished(CASE / "log.simpleFoam") or "Time = 1000" not in solve_log:
         return False
     mesh_check = subprocess.run(
         [
@@ -261,19 +332,26 @@ def check() -> bool:
         text=True,
         timeout=120,
     )
-    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
+    if (
+        mesh_check.returncode != 0
+        or "Mesh OK." not in mesh_check.stdout
+        or "Failed " in mesh_check.stdout
+        or "foam fatal" in mesh_check.stdout.lower()
+        or not mesh_check.stdout.rstrip().endswith("End")
+        or not check_case()
+    ):
         return False
-    velocity = field(CASE / "1000/U", "vector")
-    pressure = field(CASE / "1000/p", "scalar")
-    turbulent_k = field(CASE / "1000/k", "scalar")
-    omega = field(CASE / "1000/omega", "scalar")
+    velocity = internal_field(CASE / "1000/U", "vector")
+    pressure = internal_field(CASE / "1000/p", "scalar")
+    turbulent_k = internal_field(CASE / "1000/k", "scalar")
+    omega = internal_field(CASE / "1000/omega", "scalar")
     if not (len(velocity) == len(pressure) == len(turbulent_k) == len(omega) == 12880):
         return False
 
     history = coefficient_history()
-    window = [row for row in history if row[0] >= 800]
-    if len(window) < 200:
+    if not history_is_complete(history):
         return False
+    window = [row for row in history if 800.0 <= row[0] <= 1000.0]
     avg_cd = sum(row[1] for row in window) / len(window)
     avg_cl = sum(row[2] for row in window) / len(window)
     std_cd = math.sqrt(sum((row[1] - avg_cd) ** 2 for row in window) / len(window))
@@ -288,7 +366,7 @@ def check() -> bool:
         return False
     for row, expected in zip(rows, history):
         actual = tuple(float(row[key]) for key in keys)
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, expected)):
+        if any(not close(a, b, 5.0e-7) for a, b in zip(actual, expected)):
             return False
 
     values = [item.strip() for item in read(ROOT / "summary.txt").strip().split(",")]

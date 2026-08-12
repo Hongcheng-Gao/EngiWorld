@@ -18,7 +18,7 @@ for line in COEFFICIENTS.read_text(encoding="utf-8", errors="ignore").splitlines
     values = [float(value) for value in stripped.split()]
     if len(values) >= 4:
         history.append((values[0], values[2], values[3]))
-window = [row for row in history if row[0] >= 800]
+window = [row for row in history if 800 <= row[0] <= 1000]
 if len(window) < 200:
     raise RuntimeError("insufficient converged force-coefficient samples")
 avg_cd = sum(row[1] for row in window) / len(window)

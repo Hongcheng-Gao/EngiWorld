@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -35,19 +36,45 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "foam fatal" not in text.lower() and text.rstrip().endswith("End")
+
+
 def vectors(path: Path) -> list[tuple[float, float, float]]:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        r"internalField\s+nonuniform\s+List<vector>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        r"internalField\s+nonuniform\s+List<vector>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing vector field in {path}")
     values = [
         tuple(float(value) for value in item.split())
-        for item in re.findall(r"\(([^()]+)\)", match.group(1))
+        for item in re.findall(r"\(([^()]+)\)", match.group(2))
     ]
-    if not values or not all(len(value) == 3 for value in values):
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not all(len(value) == 3 and all(math.isfinite(item) for item in value) for value in values)
+        or not has_entry(header, "class", r"volVectorField")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
         raise ValueError("invalid vector field")
     return values
 
@@ -73,6 +100,16 @@ def nearest(
         key=lambda i: sum((centres[i][j] - point[j]) ** 2 for j in range(3)),
     )[:4]
     return tuple(sum(velocity[i][j] for i in indices) / 4.0 for j in range(3))
+
+
+def velocity_signs_are_valid(
+    calculated: dict[str, tuple[float, float, float]],
+) -> bool:
+    return (
+        calculated["center"][0] < 0.0
+        and calculated["left_mid"][1] > 0.0
+        and calculated["right_mid"][1] < 0.0
+    )
 
 
 def check_case() -> bool:
@@ -138,7 +175,17 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    if "End" not in read(CASE / "log.blockMesh") or "End" not in read(CASE / "log.icoFoam"):
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("cavity", "blockMeshDict", "controlDict", "fvSchemes", "fvSolution", "0/U", "0/p"),
+    ):
+        return False
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("cavity", "center_velocity.csv", "summary.txt", "nearest", "30"),
+    ):
+        return False
+    if any(not log_finished(CASE / name) for name in ("log.blockMesh", "log.icoFoam", "log.cellCentres")):
         return False
     mesh_check = subprocess.run(
         ["bash", "-lc", ". /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/cavity"],
@@ -147,7 +194,14 @@ def check() -> bool:
         text=True,
         timeout=120,
     )
-    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
+    if (
+        mesh_check.returncode != 0
+        or "Mesh OK." not in mesh_check.stdout
+        or "Failed " in mesh_check.stdout
+        or "foam fatal" in mesh_check.stdout.lower()
+        or not mesh_check.stdout.rstrip().endswith("End")
+        or not check_case()
+    ):
         return False
 
     latest = latest_time()
@@ -161,11 +215,7 @@ def check() -> bool:
         "right_mid": (0.75, 0.5, 0.005),
     }
     calculated = {name: nearest(centres, velocity, point) for name, point in points.items()}
-    if not (
-        -0.10 < calculated["center"][0] < -0.02
-        and calculated["left_mid"][1] > 0.01
-        and calculated["right_mid"][1] < -0.01
-    ):
+    if not velocity_signs_are_valid(calculated):
         return False
 
     with (ROOT / "center_velocity.csv").open(encoding="utf-8", newline="") as stream:
@@ -174,7 +224,10 @@ def check() -> bool:
         return False
     for row in rows:
         actual = tuple(float(row[key]) for key in ("ux_mps", "uy_mps", "uz_mps"))
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, calculated[row["location"]])):
+        if any(
+            not close(a, b, 5.0e-7)
+            for a, b in zip(actual, calculated[row["location"]])
+        ):
             return False
 
     summary_lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

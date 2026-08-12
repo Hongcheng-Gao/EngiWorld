@@ -55,6 +55,9 @@ with (ROOT / "plate_shear.csv").open("w", encoding="utf-8", newline="") as strea
     for row in rows:
         writer.writerow(f"{value:.10g}" for value in row)
 
-sample = min(rows, key=lambda row: abs(row[0] - STATION))
+sample = min(
+    (row for row in rows if row[0] >= STATION),
+    key=lambda row: (abs(row[0] - STATION), row[0]),
+)
 (ROOT / "summary.txt").write_text(f"{sample[2]:.9f}, {sample[4]:.9f}\n", encoding="utf-8")
 print(f"x={sample[0]:.9f} cf={sample[2]:.9f} error_percent={sample[4]:.9f}")

@@ -37,10 +37,23 @@ rms_error = math.sqrt(sum((value - theory) ** 2 for value, theory in zip(tempera
 if rms_error > 1.0:
     raise RuntimeError(f"linear-profile RMS error is {rms_error}")
 
-target_a = min(range(len(centres)), key=lambda i: (centres[i][0] - 0.25) ** 2 + (centres[i][1] - 0.25) ** 2)
-target_b = min(range(len(centres)), key=lambda i: (centres[i][0] - 0.75) ** 2 + (centres[i][1] - 0.25) ** 2)
+def nearest_cell(x: float, y: float) -> int:
+    return min(
+        range(len(centres)),
+        key=lambda index: (
+            (centres[index][0] - x) ** 2 + (centres[index][1] - y) ** 2,
+            centres[index][0],
+            centres[index][1],
+            centres[index][2],
+        ),
+    )
+
+
+target_a = nearest_cell(0.25, 0.25)
+target_b = nearest_cell(0.75, 0.25)
+centerline_y = min({centre[1] for centre in centres}, key=lambda value: (abs(value - 0.25), value))
 centerline = sorted(
-    (i for i, centre in enumerate(centres) if abs(centre[1] - centres[target_a][1]) < 1e-9),
+    (i for i, centre in enumerate(centres) if abs(centre[1] - centerline_y) < 1e-9),
     key=lambda i: centres[i][0],
 )
 with (ROOT / "temperature_profile.csv").open("w", encoding="utf-8", newline="") as stream:

@@ -36,6 +36,10 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
@@ -52,9 +56,17 @@ def latest_time() -> Path:
 
 
 def field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
+    if not (
+        has_entry(header, "format", r"ascii")
+        and has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        and has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"field is not ASCII: {path}")
     match = re.search(
         rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
-        read(path),
+        text,
         re.S,
     )
     if not match:
@@ -64,11 +76,93 @@ def field(path: Path, kind: str) -> list:
             tuple(float(value) for value in item.split())
             for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
+        valid = all(
+            len(value) == 3 and all(math.isfinite(component) for component in value)
+            for value in values
+        )
     else:
         values = [float(value) for value in match.group(2).split()]
-    if len(values) != int(match.group(1)):
+        valid = all(math.isfinite(value) for value in values)
+    if len(values) != int(match.group(1)) or not valid:
         raise ValueError("field count mismatch")
     return values
+
+
+def paren_section(text: str, name: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\(", text)
+    if not match:
+        raise ValueError(f"missing section {name}")
+    start = text.find("(", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "("
+        depth -= text[index] == ")"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated section {name}")
+
+
+def numeric_entry(text: str, key: str) -> float:
+    match = re.search(rf"(?<!\w){re.escape(key)}\s+([^;]+);", text)
+    if not match:
+        raise ValueError(f"missing entry {key}")
+    return float(match.group(1))
+
+
+def vector_entry(text: str, key: str) -> tuple[float, float, float]:
+    match = re.search(rf"(?<!\w){re.escape(key)}\s+\(([^()]+)\)\s*;", text)
+    if not match:
+        raise ValueError(f"missing vector entry {key}")
+    values = tuple(float(value) for value in match.group(1).split())
+    if len(values) != 3:
+        raise ValueError(f"invalid vector entry {key}")
+    return values
+
+
+def box_entry(text: str) -> tuple[tuple[float, ...], tuple[float, ...]]:
+    match = re.search(r"\bbox\s+\(([^()]+)\)\s+\(([^()]+)\)\s*;", text)
+    if not match:
+        raise ValueError("missing box entry")
+    return tuple(float(value) for value in match.group(1).split()), tuple(
+        float(value) for value in match.group(2).split()
+    )
+
+
+def mesh_geometry_is_valid(mesh: str) -> bool:
+    scale_match = re.search(r"\bconvertToMeters\s+([^;]+);", mesh)
+    vertices = [
+        tuple(float(value) for value in item.split())
+        for item in re.findall(r"\(([^()]+)\)", paren_section(mesh, "vertices"))
+    ]
+    cell_shapes = [
+        tuple(int(value) for value in item.split())
+        for item in re.findall(r"hex\s*\([^)]*\)\s*\(([^()]*)\)", paren_section(mesh, "blocks"))
+    ]
+    if (
+        scale_match is None
+        or len(vertices) != 24
+        or any(len(point) != 3 for point in vertices)
+        or len(cell_shapes) != 5
+        or any(len(shape) != 3 for shape in cell_shapes)
+    ):
+        return False
+    scale = float(scale_match.group(1))
+    xs, ys, zs = zip(*(tuple(scale * value for value in point) for point in vertices))
+    cells = sum(nx * ny * nz for nx, ny, nz in cell_shapes)
+    return (
+        abs(min(xs)) <= 1e-12
+        and abs(max(xs) - 0.584) <= 1e-12
+        and abs(min(ys)) <= 1e-12
+        and abs(max(ys) - 0.584) <= 1e-12
+        and abs(min(zs)) <= 1e-12
+        and abs(max(zs) - 0.0146) <= 1e-12
+        and cells == 2268
+    )
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "FOAM FATAL" not in text and text.rstrip().endswith("End")
 
 
 def interface_profile(final: Path) -> tuple[float, list[tuple[float, float]]]:
@@ -106,20 +200,19 @@ def check_case() -> bool:
     pressure = read(CASE / "0/p_rgh")
     return all(
         (
-            re.search(r"convertToMeters\s+0\.146\s*;", mesh) is not None,
-            mesh.count("hex (") == 5,
+            mesh_geometry_is_valid(mesh),
             "application interFoam;" in control,
-            re.search(r"\bendTime\s+0\.5\s*;", control) is not None,
-            re.search(r"\bmaxCo\s+0\.5\s*;", control) is not None,
-            re.search(r"\bmaxAlphaCo\s+0\.5\s*;", control) is not None,
-            "writeFormat ascii;" in control,
-            "box (0 0 -1) (0.1461 0.292 1);" in initial,
-            "value           (0 -9.81 0);" in gravity,
-            re.search(r"\bnu\s+1e-?06\s*;", water, re.I) is not None,
-            re.search(r"\brho\s+1000\s*;", water) is not None,
-            re.search(r"\bnu\s+1\.48e-?05\s*;", air, re.I) is not None,
-            re.search(r"\brho\s+1\s*;", air) is not None,
-            re.search(r"\bsigma\s+0\.07\s*;", phases) is not None,
+            abs(numeric_entry(control, "endTime") - 0.5) <= 1e-12,
+            abs(numeric_entry(control, "maxCo") - 0.5) <= 1e-12,
+            abs(numeric_entry(control, "maxAlphaCo") - 0.5) <= 1e-12,
+            re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
+            box_entry(initial) == ((0.0, 0.0, -1.0), (0.1461, 0.292, 1.0)),
+            vector_entry(gravity, "value") == (0.0, -9.81, 0.0),
+            abs(numeric_entry(water, "nu") - 1e-6) <= 1e-15,
+            abs(numeric_entry(water, "rho") - 1000.0) <= 1e-12,
+            abs(numeric_entry(air, "nu") - 1.48e-5) <= 1e-15,
+            abs(numeric_entry(air, "rho") - 1.0) <= 1e-12,
+            abs(numeric_entry(phases, "sigma") - 0.07) <= 1e-12,
             "simulationType  laminar;" in momentum or "simulationType laminar;" in momentum,
             all(has_entry(patch(velocity, name), "type", r"noSlip") for name in ("leftWall", "rightWall", "lowerWall")),
             has_entry(patch(velocity, "atmosphere"), "type", r"pressureInletOutletVelocity"),
@@ -144,6 +237,7 @@ def check() -> bool:
         CASE / "log.checkMesh",
         CASE / "log.setFields",
         CASE / "log.interFoam",
+        CASE / "log.writeCellCentres",
         final / "alpha.water",
         final / "U",
         final / "p_rgh",
@@ -151,17 +245,18 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    if final.name != "0.5":
+    if abs(float(final.name) - 0.5) > 1e-12:
         return False
     mesh_log = read(CASE / "log.checkMesh")
     solve_log = read(CASE / "log.interFoam")
     if not (
-        "End" in read(CASE / "log.blockMesh")
-        and "End" in read(CASE / "log.setFields")
+        log_finished(CASE / "log.blockMesh")
+        and log_finished(CASE / "log.setFields")
+        and log_finished(CASE / "log.writeCellCentres")
         and "Mesh OK." in mesh_log
-        and "End" in mesh_log
+        and log_finished(CASE / "log.checkMesh")
         and "Time = 0.5" in solve_log
-        and "End" in solve_log
+        and log_finished(CASE / "log.interFoam")
     ):
         return False
     mesh_check = subprocess.run(
@@ -180,6 +275,10 @@ def check() -> bool:
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
 
+    velocity = field(final / "U", "vector")
+    pressure = field(final / "p_rgh", "scalar")
+    if not (len(velocity) == len(pressure) == 2268):
+        return False
     height, profile = interface_profile(final)
     if not (0.0 < height < 0.584):
         return False
@@ -189,7 +288,7 @@ def check() -> bool:
         return False
     for row, expected in zip(rows, profile):
         actual = (float(row["y_m"]), float(row["alpha_water"]))
-        if any(abs(left - right) > 5e-7 for left, right in zip(actual, expected)):
+        if any(not close(left, right, 5e-7) for left, right in zip(actual, expected)):
             return False
 
     lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

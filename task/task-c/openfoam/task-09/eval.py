@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -35,24 +36,85 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def completed_log(path: Path, required_fragment: str | None = None) -> bool:
+    text = read(path)
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return (
+        bool(lines)
+        and lines[-1] == "End"
+        and "FOAM FATAL" not in text
+        and (required_fragment is None or required_fragment in text)
+    )
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
 
-def field(path: Path, kind: str) -> list:
+def face_count(block: str) -> int:
+    match = re.search(r"\bfaces\s*\((.*?)\)\s*;", block, re.S)
+    return len(re.findall(r"\([^()]+\)", match.group(1))) if match else 0
+
+
+def internal_field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing {kind} field")
     if kind == "vector":
-        return [
+        values = [
             tuple(float(value) for value in item.split())
-            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
-    return [float(value) for value in match.group(1).split()]
+        valid_values = all(
+            len(value) == 3 and all(math.isfinite(item) for item in value)
+            for value in values
+        )
+    elif kind == "scalar":
+        values = [float(value) for value in match.group(2).split()]
+        valid_values = all(math.isfinite(value) for value in values)
+    else:
+        raise ValueError(f"unsupported field kind {kind}")
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not valid_values
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
+
+
+def nearest_cell(centres: list[tuple[float, float, float]], x: float, y: float) -> int:
+    return min(
+        range(len(centres)),
+        key=lambda index: (
+            (centres[index][0] - x) ** 2 + (centres[index][1] - y) ** 2,
+            centres[index][0],
+            centres[index][1],
+            centres[index][2],
+        ),
+    )
 
 
 def check_case() -> bool:
@@ -65,6 +127,14 @@ def check_case() -> bool:
         (
             "(1 0.5 0)" in mesh,
             "(200 20 1)" in mesh,
+            has_entry(named_block(mesh, "hot"), "type", r"wall"),
+            face_count(named_block(mesh, "hot")) == 1,
+            has_entry(named_block(mesh, "cold"), "type", r"wall"),
+            face_count(named_block(mesh, "cold")) == 1,
+            has_entry(named_block(mesh, "adiabatic"), "type", r"wall"),
+            face_count(named_block(mesh, "adiabatic")) == 2,
+            has_entry(named_block(mesh, "frontAndBack"), "type", r"empty"),
+            face_count(named_block(mesh, "frontAndBack")) == 2,
             re.search(r"\binternalField\s+uniform\s+350(?:\.0+)?\s*;", initial) is not None,
             has_entry(patch(initial, "hot"), "value", r"uniform\s+400(?:\.0+)?"),
             has_entry(patch(initial, "cold"), "value", r"uniform\s+300(?:\.0+)?"),
@@ -96,10 +166,23 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    solve_log = read(CASE / "log.laplacianFoam")
-    if any("End" not in read(path) for path in (CASE / "log.blockMesh", CASE / "log.cellCentres")):
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("heat", "blockMeshDict", "physicalProperties", "laplacianFoam", "0/T"),
+    ):
         return False
-    if "End" not in solve_log or "Time = 50" not in solve_log:
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("heat", "50/C", "50/T", "temperature_profile.csv", "summary.txt"),
+    ):
+        return False
+    if not all(
+        (
+            completed_log(CASE / "log.blockMesh"),
+            completed_log(CASE / "log.laplacianFoam", "Time = 50"),
+            completed_log(CASE / "log.cellCentres"),
+        )
+    ):
         return False
     mesh_check = subprocess.run(
         ["bash", "-lc", ". /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/heat"],
@@ -111,21 +194,22 @@ def check() -> bool:
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
 
-    centres = field(CASE / "50/C", "vector")
-    temperature = field(CASE / "50/T", "scalar")
+    centres = internal_field(CASE / "50/C", "vector")
+    temperature = internal_field(CASE / "50/T", "scalar")
     if len(centres) != 4000 or len(temperature) != 4000:
         return False
     theoretical = [400.0 - 100.0 * centre[0] for centre in centres]
     rms_error = math.sqrt(sum((value - theory) ** 2 for value, theory in zip(temperature, theoretical)) / len(temperature))
     if rms_error > 1.0:
         return False
-    target_a = min(range(len(centres)), key=lambda i: (centres[i][0] - 0.25) ** 2 + (centres[i][1] - 0.25) ** 2)
-    target_b = min(range(len(centres)), key=lambda i: (centres[i][0] - 0.75) ** 2 + (centres[i][1] - 0.25) ** 2)
+    target_a = nearest_cell(centres, 0.25, 0.25)
+    target_b = nearest_cell(centres, 0.75, 0.25)
     if max(abs(centres[target_a][0] - 0.25), abs(centres[target_b][0] - 0.75)) > 0.006:
         return False
 
+    centerline_y = min({centre[1] for centre in centres}, key=lambda value: (abs(value - 0.25), value))
     centerline = sorted(
-        (i for i, centre in enumerate(centres) if abs(centre[1] - centres[target_a][1]) < 1e-9),
+        (i for i, centre in enumerate(centres) if abs(centre[1] - centerline_y) < 1e-9),
         key=lambda i: centres[i][0],
     )
     keys = ("x_m", "temperature_K", "linear_theory_K")
@@ -136,7 +220,7 @@ def check() -> bool:
     expected_rows = [(centres[i][0], temperature[i], theoretical[i]) for i in centerline]
     for row, expected in zip(rows, expected_rows):
         actual = tuple(float(row[key]) for key in keys)
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, expected)):
+        if any(not close(a, b, 5.0e-7) for a, b in zip(actual, expected)):
             return False
 
     values = [item.strip() for item in read(ROOT / "summary.txt").strip().split(",")]

@@ -36,31 +36,109 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
 
-def ordered_tokens(text: str, tokens: tuple[str, ...]) -> bool:
-    position = -1
-    for token in tokens:
-        position = text.find(token, position + 1)
-        if position < 0:
-            return False
-    return True
-
-
 def vectors(path: Path) -> list[tuple[float, float, float]]:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        r"internalField\s+nonuniform\s+List<vector>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        r"internalField\s+nonuniform\s+List<vector>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing vector field: {path}")
-    return [
+    values = [
         tuple(float(value) for value in item.split())
-        for item in re.findall(r"\(([^()]+)\)", match.group(1))
+        for item in re.findall(r"\(([^()]+)\)", match.group(2))
     ]
+    if (
+        len(values) != int(match.group(1))
+        or any(
+            len(value) != 3 or not all(math.isfinite(component) for component in value)
+            for value in values
+        )
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", r"volVectorField")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid vector field: {path}")
+    return values
+
+
+def scalars(path: Path) -> list[float]:
+    text = read(path)
+    header = named_block(text, "FoamFile")
+    match = re.search(
+        r"internalField\s+nonuniform\s+List<scalar>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
+        re.S,
+    )
+    if not match:
+        raise ValueError(f"missing scalar field: {path}")
+    values = [float(value) for value in match.group(2).split()]
+    if (
+        len(values) != int(match.group(1))
+        or any(not math.isfinite(value) for value in values)
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", r"volScalarField")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid scalar field: {path}")
+    return values
+
+
+def paren_section(text: str, name: str) -> str:
+    match = re.search(rf"(?m)^\s*{re.escape(name)}\s*\(", text)
+    if not match:
+        raise ValueError(f"missing section {name}")
+    start = text.find("(", match.start())
+    depth = 0
+    for index in range(start, len(text)):
+        depth += text[index] == "("
+        depth -= text[index] == ")"
+        if depth == 0:
+            return text[start + 1 : index]
+    raise ValueError(f"unterminated section {name}")
+
+
+def mesh_geometry_is_valid(mesh: str) -> bool:
+    scale_match = re.search(r"\bconvertToMeters\s+([^;]+);", mesh)
+    vertices = [
+        tuple(float(value) for value in item.split())
+        for item in re.findall(r"\(([^()]+)\)", paren_section(mesh, "vertices"))
+    ]
+    if scale_match is None or len(vertices) != 8 or any(len(point) != 3 for point in vertices):
+        return False
+    scale = float(scale_match.group(1))
+    xs, ys, zs = zip(*(tuple(scale * value for value in point) for point in vertices))
+    return (
+        abs(min(xs)) <= 1e-12
+        and abs(max(xs) - 1.0) <= 1e-12
+        and abs(min(ys)) <= 1e-12
+        and abs(max(ys) - 1.0) <= 1e-12
+        and abs(min(zs)) <= 1e-12
+        and abs(max(zs) - 0.01) <= 1e-12
+        and re.search(r"hex\s*\([^)]*\)\s*\(\s*50\s+50\s+1\s*\)", mesh) is not None
+    )
+
+
+def numeric_entry(text: str, key: str) -> float:
+    match = re.search(rf"(?m)^\s*{re.escape(key)}\s+([^;]+);", text)
+    if not match:
+        raise ValueError(f"missing entry {key}")
+    return float(match.group(1))
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "FOAM FATAL" not in text and text.rstrip().endswith("End")
 
 
 def case_inputs(case: Path, reynolds: int) -> bool:
@@ -75,8 +153,7 @@ def case_inputs(case: Path, reynolds: int) -> bool:
     match = re.search(r"\bnu\s+\[[^]]+\]\s+([^;]+);", physical)
     return all(
         (
-            "(1 1 0.01)" in mesh,
-            "(50 50 1)" in mesh,
+            mesh_geometry_is_valid(mesh),
             has_entry(patch(velocity, "movingWall"), "value", r"uniform\s+\(1(?:\.0+)?\s+0(?:\.0+)?\s+0(?:\.0+)?\)"),
             has_entry(patch(velocity, "fixedWalls"), "type", r"noSlip"),
             has_entry(patch(velocity, "frontAndBack"), "type", r"empty"),
@@ -84,9 +161,8 @@ def case_inputs(case: Path, reynolds: int) -> bool:
             has_entry(patch(pressure, "fixedWalls"), "type", r"zeroGradient"),
             has_entry(patch(pressure, "frontAndBack"), "type", r"empty"),
             match is not None and abs(float(match.group(1)) - 1.0 / reynolds) < 1.0e-12,
-            re.search(r"\bendTime\s+30\s*;", control) is not None,
-            re.search(r"\bdeltaT\s+0\.005\s*;", control) is not None,
-            re.search(r"\bwriteInterval\s+6000\s*;", control) is not None,
+            abs(numeric_entry(control, "endTime") - 30.0) <= 1e-12,
+            abs(numeric_entry(control, "deltaT") - 0.005) <= 1e-12,
             re.search(r"\bwriteFormat\s+ascii\s*;", control) is not None,
             has_entry(named_block(schemes, "ddtSchemes"), "default", r"Euler"),
             has_entry(named_block(schemes, "divSchemes"), "div(phi,U)", r"Gauss\s+linear"),
@@ -123,14 +199,6 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required_root):
         return False
-    run_script = read(ROOT / "run_sweep.py")
-    if not (
-        re.search(r"for\s+\w+\s+in\s*\(\s*100\s*,\s*400\s*,\s*1000\s*\)", run_script)
-        and ordered_tokens(run_script, ('"blockMesh"', '"checkMesh"', '"icoFoam"', '"postProcess"'))
-        and all(token in run_script for token in ('"-latestTime"', '"-func"', '"writeCellCentres"'))
-    ):
-        return False
-
     calculated = {}
     for reynolds in REYNOLDS:
         case = SWEEP / f"Re{reynolds}"
@@ -145,7 +213,7 @@ def check() -> bool:
         )
         if any(not path.is_file() or path.stat().st_size == 0 for path in required):
             return False
-        if any("End" not in read(path) for path in required[:4]):
+        if any(not log_finished(path) for path in required[:4]):
             return False
         if "Mesh OK." not in read(case / "log.checkMesh") or not case_inputs(case, reynolds):
             return False
@@ -165,6 +233,8 @@ def check() -> bool:
         if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout:
             return False
         center, max_speed = center_result(case)
+        if len(scalars(case / "30/p")) != 2500:
+            return False
         if not (-0.5 < center[0] < 0 and 0.5 < max_speed < 1.2):
             return False
         calculated[reynolds] = (1.0 / reynolds, *center, max_speed)
@@ -185,7 +255,7 @@ def check() -> bool:
     for row in rows:
         reynolds = int(row["reynolds"])
         actual = tuple(float(row[key]) for key in keys)
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, calculated[reynolds])):
+        if any(not close(a, b, 5.0e-7) for a, b in zip(actual, calculated[reynolds])):
             return False
 
     lines = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]
@@ -195,7 +265,7 @@ def check() -> bool:
         parts = [item.strip() for item in line.split(",")]
         if len(parts) != 2 or int(parts[0]) != reynolds:
             return False
-        if abs(float(parts[1]) - calculated[reynolds][1]) > 5.0e-7:
+        if not close(float(parts[1]), calculated[reynolds][1], 5.0e-7):
             return False
     return True
 

@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -36,24 +37,66 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def log_finished(path: Path) -> bool:
+    text = read(path)
+    return "foam fatal" not in text.lower() and text.rstrip().endswith("End")
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
 
 def field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing {kind} field")
     if kind == "vector":
-        return [
+        values = [
             tuple(float(value) for value in item.split())
-            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
-    return [float(value) for value in match.group(1).split()]
+        valid_values = all(
+            len(value) == 3 and all(math.isfinite(item) for item in value)
+            for value in values
+        )
+    elif kind == "scalar":
+        values = [float(value) for value in match.group(2).split()]
+        valid_values = all(math.isfinite(value) for value in values)
+    else:
+        raise ValueError(f"unsupported field kind {kind}")
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not valid_values
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
+
+
+def separated(velocity: list[tuple[float, float, float]], indices: list[int]) -> bool:
+    return min(velocity[index][0] for index in indices) < 0.0
 
 
 def check_case() -> bool:
@@ -119,7 +162,28 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    if "End" not in read(CASE / "log.blockMesh") or "End" not in read(CASE / "log.simpleFoam"):
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        (
+            "bfs",
+            "blockMeshDict",
+            "controlDict",
+            "fvSchemes",
+            "fvSolution",
+            "0/U",
+            "0/p",
+            "0/k",
+            "0/omega",
+            "0/nut",
+        ),
+    ):
+        return False
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("bfs", "2000", "downstream_wall_pressure.csv", "summary.txt", "min_cp"),
+    ):
+        return False
+    if any(not log_finished(CASE / name) for name in ("log.blockMesh", "log.simpleFoam", "log.cellCentres")):
         return False
     mesh_check = subprocess.run(
         ["bash", "-lc", ". /opt/openfoam11/etc/bashrc && checkMesh -case /home/user/Desktop/bfs"],
@@ -128,7 +192,14 @@ def check() -> bool:
         text=True,
         timeout=120,
     )
-    if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
+    if (
+        mesh_check.returncode != 0
+        or "Mesh OK." not in mesh_check.stdout
+        or "Failed " in mesh_check.stdout
+        or "foam fatal" in mesh_check.stdout.lower()
+        or not mesh_check.stdout.rstrip().endswith("End")
+        or not check_case()
+    ):
         return False
 
     centres = field(CASE / "2000/C", "vector")
@@ -140,14 +211,14 @@ def check() -> bool:
         (i for i, c in enumerate(centres) if 0.0 < c[0] < 1.0 and c[1] < 0.003),
         key=lambda i: centres[i][0],
     )
-    if len(indices) != 200 or min(velocity[i][0] for i in indices) >= -0.01:
+    if len(indices) != 200 or not separated(velocity, indices):
         return False
     calculated = [
         (centres[i][0], pressure[i], pressure[i] / (0.5 * U_REF**2), velocity[i][0])
         for i in indices
     ]
     min_cp = min(row[2] for row in calculated)
-    if not (-1.0 < min_cp < -1.0e-5):
+    if max(row[1] for row in calculated) - min(row[1] for row in calculated) <= 1.0e-8:
         return False
 
     with (ROOT / "downstream_wall_pressure.csv").open(encoding="utf-8", newline="") as stream:
@@ -161,7 +232,7 @@ def check() -> bool:
         return False
     for row, expected in zip(rows, calculated):
         actual = tuple(float(row[key]) for key in row)
-        if any(abs(a - b) > 5.0e-7 for a, b in zip(actual, expected)):
+        if any(not close(a, b, 5.0e-7) for a, b in zip(actual, expected)):
             return False
 
     values = [line.strip() for line in read(ROOT / "summary.txt").splitlines() if line.strip()]

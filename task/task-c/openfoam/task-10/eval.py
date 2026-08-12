@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 from __future__ import annotations
 
+import ast
 import csv
 import math
 import re
@@ -36,24 +37,73 @@ def has_entry(block: str, key: str, value: str) -> bool:
     return re.search(rf"(?<!\w){re.escape(key)}\s+{value}\s*;", block) is not None
 
 
+def close(actual: float, expected: float, tolerance: float) -> bool:
+    return math.isfinite(actual) and abs(actual - expected) <= tolerance
+
+
+def python_script_is_valid(path: Path, required_fragments: tuple[str, ...]) -> bool:
+    text = read(path)
+    try:
+        tree = ast.parse(text)
+    except SyntaxError:
+        return False
+    return bool(tree.body) and all(fragment in text for fragment in required_fragments)
+
+
+def completed_log(path: Path, required_fragment: str | None = None) -> bool:
+    text = read(path)
+    lines = [line.strip() for line in text.splitlines() if line.strip()]
+    return (
+        bool(lines)
+        and lines[-1] == "End"
+        and "FOAM FATAL" not in text
+        and (required_fragment is None or required_fragment in text)
+    )
+
+
 def patch(text: str, name: str) -> str:
     return named_block(named_block(text, "boundaryField"), name)
 
 
-def field(path: Path, kind: str) -> list:
+def face_count(block: str) -> int:
+    match = re.search(r"\bfaces\s*\((.*?)\)\s*;", block, re.S)
+    return len(re.findall(r"\([^()]+\)", match.group(1))) if match else 0
+
+
+def internal_field(path: Path, kind: str) -> list:
+    text = read(path)
+    header = named_block(text, "FoamFile")
     match = re.search(
-        rf"internalField\s+nonuniform\s+List<{kind}>\s+\d+\s*\((.*?)\)\s*;",
-        read(path),
+        rf"internalField\s+nonuniform\s+List<{kind}>\s+(\d+)\s*\((.*?)\)\s*;",
+        text,
         re.S,
     )
     if not match:
         raise ValueError(f"missing {kind} field")
     if kind == "vector":
-        return [
+        values = [
             tuple(float(value) for value in item.split())
-            for item in re.findall(r"\(([^()]+)\)", match.group(1))
+            for item in re.findall(r"\(([^()]+)\)", match.group(2))
         ]
-    return [float(value) for value in match.group(1).split()]
+        valid_values = all(
+            len(value) == 3 and all(math.isfinite(item) for item in value)
+            for value in values
+        )
+    elif kind == "scalar":
+        values = [float(value) for value in match.group(2).split()]
+        valid_values = all(math.isfinite(value) for value in values)
+    else:
+        raise ValueError(f"unsupported field kind {kind}")
+    if (
+        len(values) != int(match.group(1))
+        or not values
+        or not valid_values
+        or not has_entry(header, "format", r"ascii")
+        or not has_entry(header, "class", rf"vol{kind.capitalize()}Field")
+        or not has_entry(header, "object", re.escape(path.name))
+    ):
+        raise ValueError(f"invalid {kind} field")
+    return values
 
 
 def check_case() -> bool:
@@ -72,6 +122,14 @@ def check_case() -> bool:
         (
             "(0.1 0.1 0.01)" in mesh,
             "(41 41 1)" in mesh,
+            has_entry(named_block(mesh, "hot"), "type", r"wall"),
+            face_count(named_block(mesh, "hot")) == 1,
+            has_entry(named_block(mesh, "cold"), "type", r"wall"),
+            face_count(named_block(mesh, "cold")) == 1,
+            has_entry(named_block(mesh, "topAndBottom"), "type", r"wall"),
+            face_count(named_block(mesh, "topAndBottom")) == 2,
+            has_entry(named_block(mesh, "frontAndBack"), "type", r"empty"),
+            face_count(named_block(mesh, "frontAndBack")) == 2,
             re.search(r"\binternalField\s+uniform\s+300(?:\.0+)?\s*;", temperature) is not None,
             has_entry(patch(temperature, "hot"), "value", r"uniform\s+310(?:\.0+)?"),
             has_entry(patch(temperature, "cold"), "value", r"uniform\s+290(?:\.0+)?"),
@@ -120,10 +178,24 @@ def check() -> bool:
     )
     if any(not path.is_file() or path.stat().st_size == 0 for path in required):
         return False
-    if any("End" not in read(path) for path in required[4:8]):
+    if not python_script_is_valid(
+        ROOT / "build_case.py",
+        ("buoyant", "blockMeshDict", "physicalProperties", "foamRun", "p_rgh", "0/T", "0/U"),
+    ):
         return False
-    solve_log = read(CASE / "log.foamRun")
-    if "Time = 1000" not in solve_log:
+    if not python_script_is_valid(
+        ROOT / "postprocess.py",
+        ("buoyant", "1000", "center_sample.csv", "summary.txt", "max_speed"),
+    ):
+        return False
+    if not all(
+        (
+            completed_log(CASE / "log.blockMesh"),
+            completed_log(CASE / "log.checkMesh"),
+            completed_log(CASE / "log.foamRun", "Time = 1000"),
+            completed_log(CASE / "log.cellCentres"),
+        )
+    ):
         return False
     mesh_check = subprocess.run(
         [
@@ -141,10 +213,19 @@ def check() -> bool:
     if mesh_check.returncode != 0 or "Mesh OK." not in mesh_check.stdout or not check_case():
         return False
 
-    centres = field(TIME / "C", "vector")
-    temperatures = field(TIME / "T", "scalar")
-    velocity = field(TIME / "U", "vector")
-    if not (len(centres) == len(temperatures) == len(velocity) == 1681):
+    centres = internal_field(TIME / "C", "vector")
+    temperatures = internal_field(TIME / "T", "scalar")
+    velocity = internal_field(TIME / "U", "vector")
+    pressure = internal_field(TIME / "p", "scalar")
+    pressure_rgh = internal_field(TIME / "p_rgh", "scalar")
+    if not (
+        len(centres)
+        == len(temperatures)
+        == len(velocity)
+        == len(pressure)
+        == len(pressure_rgh)
+        == 1681
+    ):
         return False
     target = (0.05, 0.05, 0.005)
     index = min(
@@ -177,11 +258,11 @@ def check() -> bool:
         return False
     row = rows[0]
     sample = tuple(float(row[key]) for key in ("x", "y", "z"))
-    if any(abs(a - b) > 1.0e-10 for a, b in zip(sample, point)):
+    if any(not close(a, b, 1.0e-10) for a, b in zip(sample, point)):
         return False
-    if abs(float(row["temperature_k"]) - center_temp) > 5.0e-7:
+    if not close(float(row["temperature_k"]), center_temp, 5.0e-7):
         return False
-    if abs(float(row["max_speed_m_s"]) - max_speed) > 5.0e-7:
+    if not close(float(row["max_speed_m_s"]), max_speed, 5.0e-7):
         return False
 
     reported = float(read(ROOT / "summary.txt").strip())
