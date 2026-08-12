@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import re
 import shutil
 import tempfile
 import zlib
@@ -208,6 +209,77 @@ def _resolve_arg(spec: str):
     return spec
 
 
+def _matches_native_eagle_770_report(path: Path) -> bool:
+    try:
+        text = path.read_text(encoding="utf-8", errors="strict")
+    except Exception:
+        return False
+
+    required_patterns = (
+        r"\beagle\s+7\.7\.0\b",
+        r"\berc\s+errors\b",
+        r"\breview\.sch\b",
+        r"(?:\berrors\s*(?:\(\s*2\s*\)|[:=-]?\s*2\b)|\b2\s+errors\b)",
+        r"(?:\bwarnings\s*(?:\(\s*4\s*\)|[:=-]?\s*4\b)|\b4\s+warnings\b)",
+        r"\bno\s+supply\b.*\bpower\s+pin\b.*\bu1\b.*\bgnd\b",
+        r"\bno\s+supply\b.*\bpower\s+pin\b.*\bu1\b.*\bvcc\b",
+        r"\bonly\s+one\s+pin\b.*\bc1_top\b",
+        r"\bunconnected\s+pin\b.*\bc1\b.*\b2\b",
+        r"\bunconnected\s+pin\b.*\br1\b.*\b1\b",
+        r"\bunconnected\s+pin\b.*\br2\b.*\b2\b",
+    )
+    if any(re.search(pattern, text, re.IGNORECASE) is None for pattern in required_patterns):
+        return False
+
+    issue_line_patterns = (
+        r"no\s+supply\s+for\s+power\s+pin\s+u1(?:\s*/\s*g\$1)?(?:\s*/\s*|\s+)gnd",
+        r"no\s+supply\s+for\s+power\s+pin\s+u1(?:\s*/\s*g\$1)?(?:\s*/\s*|\s+)vcc",
+        r"only\s+one\s+pin\s+on\s+net\s+c1_top",
+        r"unconnected\s+pin\s+c1(?:\s*/\s*|\s+|\s*:\s*)2",
+        r"unconnected\s+pin\s+r1(?:\s*/\s*|\s+|\s*:\s*)1",
+        r"unconnected\s+pin\s+r2(?:\s*/\s*|\s+|\s*:\s*)2",
+    )
+    context_line_patterns = (
+        r"eagle\s+7\.7\.0(?:\s+electrical\s+rule\s+check)?",
+        r"erc\s+errors",
+        r"schematic\s*[:=-]\s*review\.sch",
+        r"consistency\s+not\s+checked(?:\s*\(\s*no\s+board\s+loaded\s*\))?",
+        r"errors\s*(?:\(\s*2\s*\)|[:=-]\s*2)|2\s+errors",
+        r"warnings\s*(?:\(\s*4\s*\)|[:=-]\s*4)|4\s+warnings",
+        r"approved\s*(?:\(\s*0\s*\)|[:=-]\s*0)",
+        r"(?:messages|summary)\s*:?",
+    )
+
+    matched_issues: set[int] = set()
+    for raw_line in text.splitlines():
+        line = re.sub(r"^\s*(?:[-*]+|\d+[.)])\s*", "", raw_line).strip()
+        line = line.rstrip(".").strip()
+        if not line:
+            continue
+
+        issue_index = next(
+            (
+                index
+                for index, pattern in enumerate(issue_line_patterns)
+                if re.fullmatch(pattern, line, re.IGNORECASE)
+            ),
+            None,
+        )
+        if issue_index is not None:
+            if issue_index in matched_issues:
+                return False
+            matched_issues.add(issue_index)
+            continue
+
+        if not any(
+            re.fullmatch(pattern, line, re.IGNORECASE)
+            for pattern in context_line_patterns
+        ):
+            return False
+
+    return len(matched_issues) == len(issue_line_patterns)
+
+
 
 
 def _run() -> bool:
@@ -226,7 +298,9 @@ def _run() -> bool:
         func = getattr(module, CALL_FUNC)
         args = [_resolve_arg(arg) for arg in CALL_ARGS]
         result = func(*args)
-        return _is_pass(result)
+        if not _is_pass(result):
+            return False
+        return _matches_native_eagle_770_report(DESKTOP / "answer.erc")
     except Exception:
         return False
     finally:
