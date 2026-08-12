@@ -267,6 +267,24 @@ def _normalize(node, net_by_ordinal):
     return normalized
 
 
+def _collect_net_names(node, net_by_ordinal):
+    names = set()
+    if not isinstance(node, list):
+        return names
+    if node and node[0] == "net":
+        if len(node) >= 3:
+            name = node[2]
+        elif len(node) == 2:
+            name = net_by_ordinal.get(node[1], node[1])
+        else:
+            name = ""
+        if name:
+            names.add(name)
+    for item in node[1:]:
+        names.update(_collect_net_names(item, net_by_ordinal))
+    return names
+
+
 def _board_semantics(path):
     root = _parse_sexpr(path)
     if not root or root[0] != "kicad_pcb":
@@ -277,7 +295,8 @@ def _board_semantics(path):
         if len(net) != 3 or net[1] in net_by_ordinal:
             raise ValueError("invalid net table")
         net_by_ordinal[net[1]] = net[2]
-    if not any(name for name in net_by_ordinal.values()):
+    net_names = _collect_net_names(root, net_by_ordinal)
+    if not net_names:
         raise ValueError("board has no named nets")
 
     positions = {}
@@ -329,7 +348,7 @@ def _board_semantics(path):
     return {
         "positions": positions,
         "via_count": len(_children(root, "via")),
-        "net_names": frozenset(net_by_ordinal.values()),
+        "net_names": frozenset(net_names),
         "pads": pad_fingerprints,
         "edges": edge_fingerprint,
     }

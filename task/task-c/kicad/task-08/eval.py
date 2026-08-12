@@ -1,138 +1,684 @@
 from __future__ import annotations
 
-import base64
-import importlib.util
+import csv
+import json
 import os
 import shutil
-import zlib
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 
-DESKTOP = Path('/home/user/Desktop')
-KICAD_CLI_PATH = "/usr/bin/kicad-cli"
+DESKTOP = Path("/home/user/Desktop")
+KICAD_CLI = Path("/usr/bin/kicad-cli")
+OUTPUT_NAMES = (
+    "board.kicad_pro",
+    "design.kicad_sch",
+    "design.kicad_pcb",
+    "project.kicad_sym",
+)
+REQUIRED_REFERENCES = {"R1", "C1", "D1", "Q1", "U1"}
+REQUIRED_LAYERS = {"F.Cu", "B.Cu", "F.SilkS", "B.SilkS", "Edge.Cuts"}
+EXPECTED_COMPONENTS = {
+    "R1": ("Device:R", "10k", {"1", "2"}),
+    "C1": ("Device:C", "100nF", {"1", "2"}),
+    "D1": ("Device:LED", "LED", {"1", "2"}),
+    "Q1": ("Transistor_BJT:Q_NPN_BCE", "BC547", {"1", "2", "3"}),
+    "U1": ("Regulator_Linear:LM7805_TO220", "LM7805", {"1", "2", "3"}),
+}
+EXPECTED_NET_NODES = {
+    "+5V": {("U1", "3")},
+    "GND": {("C1", "2"), ("Q1", "3"), ("R1", "2"), ("U1", "2")},
+    "SIG_A": {("D1", "2"), ("Q1", "1")},
+    "SIG_B": {("D1", "1"), ("Q1", "2")},
+    "VCC": {("C1", "1"), ("R1", "1"), ("U1", "1")},
+}
+EXPECTED_FOOTPRINTS = {
+    "R1": {
+        "library": "Resistors_SMD:R_0603",
+        "at": (20.0, 20.0),
+        "pads": {
+            "1": ("smd", "rect", (-0.8, 0.0), (0.9, 1.2), None, {"F.Cu", "F.Mask", "F.Paste"}),
+            "2": ("smd", "rect", (0.8, 0.0), (0.9, 1.2), None, {"F.Cu", "F.Mask", "F.Paste"}),
+        },
+    },
+    "C1": {
+        "library": "Capacitors_SMD:C_0402",
+        "at": (30.0, 20.0),
+        "pads": {
+            "1": ("smd", "rect", (-0.5, 0.0), (0.6, 0.7), None, {"F.Cu", "F.Mask", "F.Paste"}),
+            "2": ("smd", "rect", (0.5, 0.0), (0.6, 0.7), None, {"F.Cu", "F.Mask", "F.Paste"}),
+        },
+    },
+    "D1": {
+        "library": "LEDs:LED_0603",
+        "at": (40.0, 20.0),
+        "pads": {
+            "1": ("smd", "rect", (-0.8, 0.0), (0.9, 1.2), None, {"F.Cu", "F.Mask", "F.Paste"}),
+            "2": ("smd", "rect", (0.8, 0.0), (0.9, 1.2), None, {"F.Cu", "F.Mask", "F.Paste"}),
+        },
+    },
+    "Q1": {
+        "library": "TO_SOT_Packages_THT:TO-92_Inline",
+        "at": (50.0, 20.0),
+        "pads": {
+            "1": ("thru_hole", "circle", (-1.27, 0.0), (1.6, 1.6), (0.8,), {"*.Cu", "*.Mask"}),
+            "2": ("thru_hole", "circle", (0.0, 0.0), (1.6, 1.6), (0.8,), {"*.Cu", "*.Mask"}),
+            "3": ("thru_hole", "circle", (1.27, 0.0), (1.6, 1.6), (0.8,), {"*.Cu", "*.Mask"}),
+        },
+    },
+    "U1": {
+        "library": "TO_SOT_Packages_THT:TO-220_Vertical",
+        "at": (60.0, 20.0),
+        "pads": {
+            "1": ("thru_hole", "rect", (-2.54, 0.0), (2.4, 2.4), (1.3,), {"*.Cu", "*.Mask"}),
+            "2": ("thru_hole", "oval", (0.0, 0.0), (2.4, 2.4), (1.3,), {"*.Cu", "*.Mask"}),
+            "3": ("thru_hole", "circle", (2.54, 0.0), (2.4, 2.4), (1.3,), {"*.Cu", "*.Mask"}),
+        },
+    },
+}
+EXPECTED_LIBRARY_SYMBOLS = {
+    "R": (
+        "R",
+        "R",
+        "R",
+        {"1": ("passive", {"", "~"}), "2": ("passive", {"", "~"})},
+    ),
+    "C": (
+        "C",
+        "C",
+        "C",
+        {"1": ("passive", {"", "~"}), "2": ("passive", {"", "~"})},
+    ),
+    "LED": (
+        "LED",
+        "D",
+        "LED",
+        {"1": ("passive", {"K"}), "2": ("passive", {"A"})},
+    ),
+    "Q_NPN_BCE": (
+        "Q",
+        "Q",
+        "Q_NPN_BCE",
+        {
+            "1": ("input", {"B"}),
+            "2": ("passive", {"C"}),
+            "3": ("passive", {"E"}),
+        },
+    ),
+    "BC547": (
+        "Q",
+        "Q",
+        "BC547",
+        {
+            "1": ("input", {"B"}),
+            "2": ("passive", {"C"}),
+            "3": ("passive", {"E"}),
+        },
+    ),
+    "LM7805_TO220": (
+        "U",
+        "U",
+        "LM7805_TO220",
+        {
+            "1": ("input", {"VI"}),
+            "2": ("power_in", {"GND"}),
+            "3": ("output", {"VO"}),
+        },
+    ),
+    "LM7805": (
+        "U",
+        "U",
+        "LM7805",
+        {
+            "1": ("input", {"IN"}),
+            "2": ("power_in", {"GND"}),
+            "3": ("output", {"OUT"}),
+        },
+    ),
+}
+EXPECTED_TARGET_PINS = {
+    "Device:R": {
+        "1": ("passive", {"", "~"}),
+        "2": ("passive", {"", "~"}),
+    },
+    "Device:C": {
+        "1": ("passive", {"", "~"}),
+        "2": ("passive", {"", "~"}),
+    },
+    "Device:LED": {
+        "1": ("passive", {"K"}),
+        "2": ("passive", {"A"}),
+    },
+    "Transistor_BJT:Q_NPN_BCE": {
+        "1": ("input", {"B"}),
+        "2": ("passive", {"C"}),
+        "3": ("passive", {"E"}),
+    },
+    "Regulator_Linear:LM7805_TO220": {
+        "1": ("power_in", {"VI"}),
+        "2": ("power_in", {"GND"}),
+        "3": ("power_out", {"VO"}),
+    },
+}
+SYMBOL_GRAPHICS = {"arc", "bezier", "circle", "polyline", "rectangle", "text", "text_box"}
+EXPECTED_VERSIONS = {
+    "kicad_sch": "20260306",
+    "kicad_pcb": "20260206",
+    "kicad_symbol_lib": "20251024",
+}
 
-BUNDLE = {'common/__init__.py': 'eNoDAAAAAAE=', 'common/native_kicad.py': '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', 'common/sexp.py': 'eNqtV0tv4zYQvhvwf5hqD5JaR9nt0akXKIpsD213F92iQBEHMi1RazYSpZJUEqPtf+8MSUcP27GzaA6OxHl9881wSAVB8IuQomIl6Av+2CiutaglNExprqCoFfwkfmA5FKLkGqLkTmQsT3W2gUvwL022hsvpxL/lqu1EVZ13L3pbxcl0Mp38qFhVMQVCA4OfhW5At2vNzXw6AfzTiAP/zRfATF3BPxBGoV38GsI4dDpWYnW0UUJ+Ri10v65LfJBtteaKAn2yMoyiOOR1uy75xV9tbXgOD8JsYLUMVsBkjg/LFXCdsYbrBD5ZR85qjT/TianvuETJe+vZSRQ3rZLoimkoypqZSyFNQumYfYWPW7Op5XRSWunDptYcGVXaAC95xaUhLsy2QZ7KcousuGSQrSAIppNCYbZpWrTokacpiKqplUHosjbMYL201yEXSIaXfy+3xMJ0kvPCVTQy/NHMibMYLt4CwfGkY5yPpIFOh53g+L3y6YDZcDB1c1Hye15aB4mFSD4aWEBqvSgbKPbLib4TTfqgI7/gXTWJxZRSMBINkKZIxDloScpZBXXRg9VPQJ/EV7cGBTe3R9A+bLD1cVnAd1ByGaFC7GF464Q1DZd5NEwo7nSOMYC2XdqFkLnNWtY5n8GGs9zl3uX8h+BlDpii2lo2jnYSFslvhxX5Wc0wYtYqLZCdbUeIKFBbSG2YzLiPS377+aEOCew+GSnfvL6dueqQ0K/AYuGwdy7ob2uhk063TtMlQ3bRsbSigza2sZ/IsfqOnbjPHTIwJm4GKGJtiS2EOwFL/L6WvMfmr11HOwZzgSwZD8nyi8kqQzvKzQvL5YA+3ICnKfTV9mjc+nO5D8viM7ZOLdHO7OnpOOc+rtUa9N0Tkh1/96xs+Uv5e4cprCJSh/vYtph1fn+FrYhd6Y07uiS6GBcq7pikxqUIgG5pn8kYN9y3J2j0a/Lmza3LJiuZ1rtd7o0pwzTFY86kaaR5Wcygmyy9ACRKNKIk6WhZ4PJrCrBzuNvRJO07cePC27iJ4fzGo+pk6NFJbpz27VCOnGSJ0Lph2ARj4x6ubxbwZijkJdlSU4RX4RzgFTYP8prVlR0QkbInG049zQoe7zs+noLtuiFo+ArDLGV4AOAJkJofsFnjNL/r89wbqWOqHZDhZPXM+bBvF88UQDGBbfo7tf61UrWKglZiHBwBeGhff3gX9Fw+V6wnsqPw8Aa0FqlLhLbxCKszDs4wdmdx3/yAEl2N3HH61Pu90GMOcbdwvCqMauqy2dsCwyoOz82ucX5T7biyxyr1gmodq5jhqhKSUc0oweCI92FucfiS/TQ+sfvrvePf2o9uAHtF8CU8vwzBqTKs2+JgGf6nEWRBLJcvJkw+mhPePfgdfX+HOETsKJlBaOyjoceAHgN6IhT299/kM8dT5NHMKEwcf9lsDL60CcIw+bMWMkLw8XlDrcsyOxfsiV53fRQcajE7APZmJd1kdgUR5/SKv9SNm7I7kmC5n8qB88FekZC0KN4j/GDi9mOr1zoEfL7XQK9wzGzpU48rkfWM1Xa+18NhEhIC5xhvFyEfvV937/OjVbcfeZFVig9Oavz+2xPzx4w3plfGw0PeQcGk6HvTX92nk/8AqENGEw==', 'eval_inner.py': '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', 'schema.py': 'eNqNVG1u00AQ/R8pdxjMH0eAW/HTUlAjFCQkBFXafyWyFnuWmm52rd0NIgqWOAQX6RU4Cidh9sOx06ShjiXH4zdv3ozfOEmS8Wj+nYkFmrWwYMpbXDH4++s32FsEY5msmK5Ao11rCXbTIHClgQkBSGlrZjFrNpSn68aabDxKHCPXagUVs6wUzBg0UK8apW0fegm8RlFFJNHW8msHmsnNeOR+Fzv4eOQv8PYWy7sgNR+PgA7JVpiTTh1uG1euyuGLUiJE8EeDpXUx4oUpfFQSwxNW2jUTh3GrBGomS+LlQjELP/3DPYxUNpSlqGs4RCvkUBQULYrUoOCTKNIdNEq7Ng5+Obu6SqDm4CBZUAwoDELybvb+Q9LnNExbl3LDk5ttIGiXsPV5rvE2WfbgjrBrGGrjZHrRAx073ow1Dcoq5UmXMd3uEbTJ5JA9DO3p3AEfmcPNM32UeTf2p5NTyvTP/XY//Si5f18nudLtDthOhhTR+gnQ+cJfsm+qlqnPnzzm1H6nYlnLzF1RVwOvGotNwWsx9G/pDG5yELWxNwO3L8kFfmNS8hijQMFpmEpvpg4Z1aLWSgdX7lkW4DlNwbphXF3PL4EzKlqRz4HsXXXmvWi0alDbTe/l4M1gZXj1Bmpp84PBmPUqLTsbu29DSbgw9dDN5EQFqywT/ykgUKZPpDOl0tjT+fXNj6yIGxTQGZ1DGmA6hfMHDon1z7Pzw6YHq3s2oBl+CWgwK6Y3vRx6MYMKopYYl/uavBHXOtqkzeN9qNGebfsabXRJfD0AqW877pj/n2evObl4+UjrD/r0SvpNAJgvFp8WnQKfsbdUx17yKUrqOy0nR1bqs4y75OEE+AcnCfRs'}
-CALL_FUNC = 'eval_outputs'
-CALL_ARGS = ['__DESKTOP_DIR__']
-INIT_MAP = [('legacy.cache.lib', '/home/user/Desktop/legacy.cache.lib'), ('legacy.kicad_pcb', '/home/user/Desktop/legacy.kicad_pcb'), ('legacy.pro', '/home/user/Desktop/legacy.pro'), ('legacy.sch', '/home/user/Desktop/legacy.sch'), ('lib_map.csv', '/home/user/Desktop/lib_map.csv')]
+
+class SexpError(ValueError):
+    pass
 
 
-def _decode(payload: str) -> bytes:
-    return zlib.decompress(base64.b64decode(payload.encode("ascii")))
+def _parse_sexp(text: str):
+    roots = []
+    stack = []
+    index = 0
+    length = len(text)
+
+    def append(value):
+        if stack:
+            stack[-1].append(value)
+        else:
+            roots.append(value)
+
+    while index < length:
+        char = text[index]
+        if char.isspace():
+            index += 1
+            continue
+        if char == ";":
+            newline = text.find("\n", index)
+            index = length if newline < 0 else newline + 1
+            continue
+        if char == "(":
+            node = []
+            append(node)
+            stack.append(node)
+            index += 1
+            continue
+        if char == ")":
+            if not stack:
+                raise SexpError("unexpected closing parenthesis")
+            stack.pop()
+            index += 1
+            continue
+        if char == '"':
+            index += 1
+            value = []
+            while index < length:
+                char = text[index]
+                if char == '"':
+                    index += 1
+                    break
+                if char == "\\":
+                    index += 1
+                    if index >= length:
+                        raise SexpError("unterminated escape")
+                    escaped = text[index]
+                    value.append({"n": "\n", "r": "\r", "t": "\t"}.get(escaped, escaped))
+                    index += 1
+                    continue
+                value.append(char)
+                index += 1
+            else:
+                raise SexpError("unterminated string")
+            append("".join(value))
+            continue
+
+        start = index
+        while index < length and not text[index].isspace() and text[index] not in "();":
+            index += 1
+        if start == index:
+            raise SexpError("invalid token")
+        append(text[start:index])
+
+    if stack:
+        raise SexpError("unterminated list")
+    if len(roots) != 1 or not isinstance(roots[0], list):
+        raise SexpError("expected one root list")
+    return roots[0]
 
 
-def _materialize_bundle(root: Path) -> None:
-    for rel, payload in BUNDLE.items():
-        path = root / rel
-        path.parent.mkdir(parents=True, exist_ok=True)
-        path.write_bytes(_decode(payload))
-    for dirname in ("init_file", "ground_truth", "_internal"):
-        (root / dirname).mkdir(parents=True, exist_ok=True)
-    for rel, desktop_path in INIT_MAP:
-        src = Path(desktop_path)
-        dst = root / "init_file" / rel
-        if src.exists():
-            dst.parent.mkdir(parents=True, exist_ok=True)
-            shutil.copy2(src, dst)
+def _head(node):
+    return node[0] if isinstance(node, list) and node else None
 
 
-def _bundle_python_paths(root: Path) -> list[str]:
-    paths: list[str] = []
-    seen: set[str] = set()
-
-    def add(path: Path) -> None:
-        text = str(path)
-        if text not in seen:
-            seen.add(text)
-            paths.append(text)
-
-    add(root)
-    for rel in BUNDLE:
-        rel_path = Path(rel)
-        if rel_path.suffix == ".py" and rel_path.parent != Path("."):
-            add(root / rel_path.parent)
-    return paths
+def _direct(node, name: str):
+    return [
+        child
+        for child in node[1:]
+        if isinstance(child, list) and child and child[0] == name
+    ]
 
 
-def _load_module(root: Path):
-    spec = importlib.util.spec_from_file_location("eval_inner", root / "eval_inner.py")
-    if spec is None or spec.loader is None:
-        raise RuntimeError("unable to load eval_inner.py")
-    module = importlib.util.module_from_spec(spec)
-    import sys
+def _single_value(node, name: str):
+    matches = _direct(node, name)
+    if len(matches) != 1 or len(matches[0]) < 2 or isinstance(matches[0][1], list):
+        raise SexpError(f"expected one scalar {name}")
+    return matches[0][1]
 
-    sys.modules["eval_inner"] = module
-    added_paths = _bundle_python_paths(root)
-    for path in reversed(added_paths):
-        sys.path.insert(0, path)
+
+def _single_node(node, name: str):
+    matches = _direct(node, name)
+    if len(matches) != 1:
+        raise SexpError(f"expected one {name} node")
+    return matches[0]
+
+
+def _float_values(node, name: str, count: int):
+    match = _single_node(node, name)
+    values = match[1 : count + 1]
+    if len(values) != count or any(isinstance(value, list) for value in values):
+        raise SexpError(f"invalid numeric {name}")
     try:
-        spec.loader.exec_module(module)
-    finally:
-        for path in added_paths:
-            try:
-                sys.path.remove(path)
-            except ValueError:
-                pass
-    return module
+        return tuple(float(value) for value in values)
+    except ValueError as exc:
+        raise SexpError(f"invalid numeric {name}") from exc
 
 
-def _is_pass(result) -> bool:
-    if isinstance(result, bool):
-        return result
-    if isinstance(result, dict):
-        if "pass" in result:
-            return bool(result["pass"])
-        if "passed" in result:
-            return bool(result["passed"])
-        score = result.get("score")
-        if isinstance(score, (int, float)):
-            return float(score) == 1.0
-    for attr in ("all_passed", "passed"):
-        if hasattr(result, attr):
-            value = getattr(result, attr)
-            if isinstance(value, bool):
-                return value
-    if hasattr(result, "score"):
-        try:
-            return float(getattr(result, "score")) == 1.0
-        except Exception:
-            pass
-    return False
+def _close_tuple(observed, expected, tolerance=1e-6):
+    return len(observed) == len(expected) and all(
+        abs(left - right) <= tolerance for left, right in zip(observed, expected)
+    )
 
 
-def _resolve_arg(spec: str):
-    if spec == "__DESKTOP_DIR__":
-        return str(DESKTOP)
-    return spec
+def _property(node, name: str):
+    matches = [
+        child
+        for child in _direct(node, "property")
+        if len(child) >= 3 and child[1] == name and not isinstance(child[2], list)
+    ]
+    if len(matches) != 1:
+        raise SexpError(f"expected one {name} property")
+    return matches[0][2]
 
 
-def _call_inner(root: Path):
-    module = _load_module(root)
-    func = getattr(module, CALL_FUNC)
-    args = [_resolve_arg(arg) for arg in CALL_ARGS]
-    return func(*args)
+def _walk(node):
+    if not isinstance(node, list):
+        return
+    yield node
+    for child in node:
+        if isinstance(child, list):
+            yield from _walk(child)
 
 
-def _apply_runtime_env() -> None:
-    os.environ["KICAD_CLI"] = KICAD_CLI_PATH
+def _read_sexp(path: Path):
+    return _parse_sexp(path.read_text(encoding="utf-8"))
 
 
-def _run() -> bool:
-    import uuid
+def _check_root(root, expected_head: str):
+    if _head(root) != expected_head:
+        raise SexpError(f"expected {expected_head} root")
+    if _single_value(root, "version") != EXPECTED_VERSIONS[expected_head]:
+        raise SexpError(f"wrong {expected_head} version")
+    if _single_value(root, "generator_version") != "10.0":
+        raise SexpError(f"wrong {expected_head} generator version")
 
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        _apply_runtime_env()
-        return _is_pass(_call_inner(root))
-    except Exception:
+
+def _load_target_ids(path: Path):
+    with path.open(newline="", encoding="utf-8") as handle:
+        reader = csv.DictReader(handle)
+        if reader.fieldnames != ["v5_lib_id", "v9_lib_id"]:
+            raise ValueError("invalid lib_map.csv header")
+        rows = list(reader)
+    targets = {row["v9_lib_id"].strip() for row in rows}
+    if len(rows) != 5 or len(targets) != 5 or "" in targets:
+        raise ValueError("lib_map.csv must contain five unique mappings")
+    return targets
+
+
+def _check_project(path: Path):
+    project = json.loads(path.read_text(encoding="utf-8"))
+    if not isinstance(project, dict):
+        raise ValueError("project root is not an object")
+    meta = project.get("meta")
+    if not isinstance(meta, dict):
+        raise ValueError("missing project meta")
+    if meta.get("filename") != "board.kicad_pro" or meta.get("version") != 3:
+        raise ValueError("wrong KiCad project metadata")
+    for key in ("net_settings", "schematic", "pcbnew"):
+        if not isinstance(project.get(key), dict):
+            raise ValueError(f"missing project object {key}")
+    net_settings = project["net_settings"]
+    if net_settings.get("meta") != {"version": 5}:
+        raise ValueError("wrong net-settings metadata")
+    classes = net_settings.get("classes")
+    if not isinstance(classes, list) or not any(
+        isinstance(item, dict) and item.get("name") == "Default" for item in classes
+    ):
+        raise ValueError("missing Default net class")
+    if project["schematic"].get("meta") != {"version": 1}:
+        raise ValueError("wrong schematic project metadata")
+    if not isinstance(project["pcbnew"].get("last_paths"), dict):
+        raise ValueError("missing PCB project paths")
+
+
+def _check_schematic(path: Path, target_ids):
+    root = _read_sexp(path)
+    _check_root(root, "kicad_sch")
+    if _single_value(root, "generator") != "eeschema":
+        raise SexpError("wrong schematic generator")
+
+    label_names = {
+        label[1]
+        for label in _direct(root, "label")
+        if len(label) >= 2 and not isinstance(label[1], list)
+    }
+    if label_names != set(EXPECTED_NET_NODES):
+        raise SexpError("schematic labels do not match the five source nets")
+
+    embedded_section = _single_node(root, "lib_symbols")
+    embedded = _direct(embedded_section, "symbol")
+    embedded_by_id = {
+        symbol[1]: symbol
+        for symbol in embedded
+        if len(symbol) >= 2 and not isinstance(symbol[1], list)
+    }
+    if set(embedded_by_id) != target_ids or len(embedded_by_id) != len(embedded):
+        raise SexpError("embedded symbols do not match the migration targets")
+    for lib_id, symbol in embedded_by_id.items():
+        if not any(_head(node) in SYMBOL_GRAPHICS for node in _walk(symbol)):
+            raise SexpError(f"embedded symbol has no graphics: {lib_id}")
+        expected_pins = EXPECTED_TARGET_PINS[lib_id]
+        pins = {}
+        for pin in (node for node in _walk(symbol) if _head(node) == "pin"):
+            number = _single_value(pin, "number")
+            if number in pins:
+                raise SexpError(f"duplicate embedded pin {lib_id}:{number}")
+            pins[number] = (pin[1], _single_value(pin, "name"))
+        if set(pins) != set(expected_pins):
+            raise SexpError(f"wrong embedded pin numbering: {lib_id}")
+        for number, (pin_type, pin_name) in pins.items():
+            expected_type, allowed_names = expected_pins[number]
+            if pin_type != expected_type or pin_name not in allowed_names:
+                raise SexpError(f"wrong embedded pin semantics: {lib_id}:{number}")
+
+    placed = _direct(root, "symbol")
+    if len(placed) != len(EXPECTED_COMPONENTS):
+        raise SexpError("migration must preserve exactly five placed symbols")
+    observed = {}
+    for symbol in placed:
+        reference = _property(symbol, "Reference")
+        lib_id = _single_value(symbol, "lib_id")
+        value = _property(symbol, "Value")
+        if lib_id not in target_ids:
+            raise SexpError(f"unmapped placed symbol {lib_id}")
+        if reference in observed:
+            raise SexpError(f"duplicate placed reference {reference}")
+        observed[reference] = (lib_id, value)
+    expected = {
+        reference: (lib_id, value)
+        for reference, (lib_id, value, _) in EXPECTED_COMPONENTS.items()
+    }
+    if observed != expected:
+        raise SexpError("placed reference, library id, or value was not preserved")
+
+
+def _check_pcb(path: Path):
+    root = _read_sexp(path)
+    _check_root(root, "kicad_pcb")
+    if _single_value(root, "generator") != "pcbnew":
+        raise SexpError("wrong PCB generator")
+
+    general = _single_node(root, "general")
+    if _single_value(general, "thickness") != "1.6":
+        raise SexpError("PCB thickness was not preserved")
+    title_block = _single_node(root, "title_block")
+    expected_title = {
+        "title": "Legacy Power Board",
+        "date": "2015-04-28",
+        "rev": "A",
+        "company": "ACME Corp",
+    }
+    for field, value in expected_title.items():
+        if _single_value(title_block, field) != value:
+            raise SexpError(f"PCB title-block field was not preserved: {field}")
+
+    layers_nodes = _direct(root, "layers")
+    if len(layers_nodes) != 1:
+        raise SexpError("missing layers section")
+    layer_names = {
+        child[1]
+        for child in layers_nodes[0][1:]
+        if isinstance(child, list)
+        and len(child) >= 2
+        and not isinstance(child[1], list)
+    }
+    if not REQUIRED_LAYERS.issubset(layer_names):
+        raise SexpError("missing canonical KiCad layers")
+
+    footprints = _direct(root, "footprint")
+    if len(footprints) != len(EXPECTED_COMPONENTS):
+        raise SexpError("migration must preserve exactly five footprints")
+    observed = {}
+    for footprint in footprints:
+        if len(footprint) < 2 or isinstance(footprint[1], list):
+            raise SexpError("footprint lacks a library identifier")
+        reference = _property(footprint, "Reference")
+        value = _property(footprint, "Value")
+        if len(_direct(footprint, "layer")) != 1 or not _direct(footprint, "pad"):
+            raise SexpError("footprint lacks native layer or pad structure")
+        if reference in observed:
+            raise SexpError(f"duplicate footprint reference {reference}")
+        if reference not in EXPECTED_FOOTPRINTS:
+            raise SexpError(f"unexpected footprint reference {reference}")
+        expected = EXPECTED_FOOTPRINTS[reference]
+        if footprint[1] != expected["library"]:
+            raise SexpError(f"footprint library ID was not preserved: {reference}")
+        if not _close_tuple(_float_values(footprint, "at", 2), expected["at"]):
+            raise SexpError(f"footprint position was not preserved: {reference}")
+        expected_value = EXPECTED_COMPONENTS[reference][1]
+        if value != expected_value:
+            raise SexpError(f"footprint value was not preserved: {reference}")
+
+        pads = {}
+        for pad in _direct(footprint, "pad"):
+            if len(pad) < 4 or any(isinstance(value, list) for value in pad[1:4]):
+                raise SexpError(f"invalid pad structure: {reference}")
+            number, pad_type, shape = pad[1:4]
+            if number in pads:
+                raise SexpError(f"duplicate pad number: {reference}.{number}")
+            at = _float_values(pad, "at", 2)
+            size = _float_values(pad, "size", 2)
+            drill_nodes = _direct(pad, "drill")
+            if len(drill_nodes) > 1:
+                raise SexpError(f"duplicate drill node: {reference}.{number}")
+            drill = None
+            if drill_nodes:
+                raw_drill = drill_nodes[0][1:]
+                if not raw_drill or any(isinstance(item, list) for item in raw_drill):
+                    raise SexpError(f"invalid drill: {reference}.{number}")
+                if raw_drill[0] == "oval":
+                    raw_drill = raw_drill[1:]
+                try:
+                    drill = tuple(float(item) for item in raw_drill)
+                except ValueError as exc:
+                    raise SexpError(f"invalid drill: {reference}.{number}") from exc
+            layers = _single_node(pad, "layers")
+            layer_set = {
+                item for item in layers[1:] if not isinstance(item, list)
+            }
+            pads[number] = (pad_type, shape, at, size, drill, layer_set)
+
+        if set(pads) != set(expected["pads"]):
+            raise SexpError(f"pad numbering was not preserved: {reference}")
+        for number, details in pads.items():
+            expected_details = expected["pads"][number]
+            if details[:2] != expected_details[:2]:
+                raise SexpError(f"pad type or shape was not preserved: {reference}.{number}")
+            if not _close_tuple(details[2], expected_details[2]):
+                raise SexpError(f"pad position was not preserved: {reference}.{number}")
+            if not _close_tuple(details[3], expected_details[3]):
+                raise SexpError(f"pad size was not preserved: {reference}.{number}")
+            if details[4] is None or expected_details[4] is None:
+                if details[4] != expected_details[4]:
+                    raise SexpError(f"pad drill was not preserved: {reference}.{number}")
+            elif not _close_tuple(details[4], expected_details[4]):
+                raise SexpError(f"pad drill was not preserved: {reference}.{number}")
+            if details[5] != expected_details[5]:
+                raise SexpError(f"pad layers were not preserved: {reference}.{number}")
+        observed[reference] = True
+    if set(observed) != set(EXPECTED_FOOTPRINTS):
+        raise SexpError("PCB footprint set was not preserved")
+    if _direct(root, "module"):
+        raise SexpError("legacy module structure remains")
+
+
+def _check_symbol_library(path: Path, target_ids):
+    root = _read_sexp(path)
+    _check_root(root, "kicad_symbol_lib")
+    if _single_value(root, "generator") != "kicad_symbol_editor":
+        raise SexpError("wrong symbol-library generator")
+    symbols = _direct(root, "symbol")
+    if len(symbols) != 5:
+        raise SexpError("local library must contain exactly five top-level symbols")
+    names = [
+        symbol[1]
+        for symbol in symbols
+        if len(symbol) >= 2 and not isinstance(symbol[1], list)
+    ]
+    if len(names) != len(symbols) or len(set(names)) != len(names):
+        raise SexpError("invalid or duplicate top-level symbol name")
+    canonical_names = {
+        EXPECTED_LIBRARY_SYMBOLS[name][0]
+        for name in names
+        if name in EXPECTED_LIBRARY_SYMBOLS
+    }
+    if canonical_names != {"R", "C", "LED", "Q", "U"}:
+        raise SexpError("local library does not freeze the five source symbols")
+    for symbol in symbols:
+        name = symbol[1]
+        _, expected_reference, expected_value, expected_pins = EXPECTED_LIBRARY_SYMBOLS[name]
+        if (
+            _property(symbol, "Reference") != expected_reference
+            or _property(symbol, "Value") != expected_value
+        ):
+            raise SexpError(f"wrong properties in local symbol {name}")
+        if not any(_head(node) in SYMBOL_GRAPHICS for node in _walk(symbol)):
+            raise SexpError(f"local symbol has no graphics: {name}")
+        pins = {}
+        for pin in (node for node in _walk(symbol) if _head(node) == "pin"):
+            if len(pin) < 2 or isinstance(pin[1], list):
+                raise SexpError(f"invalid pin in local symbol {name}")
+            number = _single_value(pin, "number")
+            if number in pins:
+                raise SexpError(f"duplicate pin {number} in local symbol {name}")
+            pins[number] = (pin[1], _single_value(pin, "name"))
+        if set(pins) != set(expected_pins):
+            raise SexpError(f"wrong pin numbering in {name}")
+        for number, (pin_type, pin_name) in pins.items():
+            expected_type, allowed_names = expected_pins[number]
+            if pin_type != expected_type or pin_name not in allowed_names:
+                raise SexpError(f"wrong pin name or electrical type in {name}")
+
+
+def _run_cli(args, timeout=30):
+    completed = subprocess.run(
+        [str(KICAD_CLI), *map(str, args)],
+        capture_output=True,
+        text=True,
+        timeout=timeout,
+        check=False,
+    )
+    if completed.returncode != 0:
+        detail = completed.stderr.strip() or completed.stdout.strip()
+        raise RuntimeError(f"kicad-cli failed: {detail}")
+    return completed.stdout
+
+
+def _check_exported_nets(netlist_path: Path):
+    root = _read_sexp(netlist_path)
+    if _head(root) != "export":
+        raise SexpError("invalid exported netlist")
+    sections = _direct(root, "nets")
+    if len(sections) != 1:
+        raise SexpError("missing exported nets section")
+
+    named_nodes = {}
+    for net in _direct(sections[0], "net"):
+        name = _single_value(net, "name")
+        canonical_name = name[1:] if name.startswith("/") else name
+        if canonical_name in named_nodes:
+            raise SexpError(f"duplicate exported net: {canonical_name}")
+        nodes = set()
+        for node in _direct(net, "node"):
+            member = (_single_value(node, "ref"), _single_value(node, "pin"))
+            if member in nodes:
+                raise SexpError(f"duplicate node on exported net: {canonical_name}")
+            nodes.add(member)
+        named_nodes[canonical_name] = nodes
+    if named_nodes != EXPECTED_NET_NODES:
+        raise SexpError("exported electrical topology does not match the source")
+
+
+def _check_with_kicad_cli(paths):
+    if not KICAD_CLI.is_file():
+        raise RuntimeError("kicad-cli is unavailable")
+    if _run_cli(["version"]).strip() != "10.0.2":
+        raise RuntimeError("wrong KiCad version")
+
+    with tempfile.TemporaryDirectory(prefix="engiworld-kicad-task-08-") as temp:
+        temp_dir = Path(temp)
+        schematic = temp_dir / "design.kicad_sch"
+        pcb = temp_dir / "design.kicad_pcb"
+        symbols = temp_dir / "project.kicad_sym"
+        netlist = temp_dir / "design.net"
+        shutil.copy2(paths["design.kicad_sch"], schematic)
+        shutil.copy2(paths["design.kicad_pcb"], pcb)
+        shutil.copy2(paths["project.kicad_sym"], symbols)
+        shutil.copy2(paths["board.kicad_pro"], temp_dir / "design.kicad_pro")
+
+        _run_cli(["sch", "upgrade", "--force", schematic])
+        _run_cli(["pcb", "upgrade", "--force", pcb])
+        _run_cli(["sym", "upgrade", "--force", symbols])
+        _run_cli(
+            [
+                "sch",
+                "export",
+                "netlist",
+                "--format",
+                "kicadsexpr",
+                "--output",
+                netlist,
+                schematic,
+            ]
+        )
+        _check_exported_nets(netlist)
+
+
+def evaluate():
+    paths = {name: DESKTOP / name for name in OUTPUT_NAMES}
+    if any(not path.is_file() for path in paths.values()):
         return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+    for path in paths.values():
+        if path.stat().st_size > 64 * 1024 * 1024:
+            return False
+        if b"EESchema" in path.read_bytes():
+            return False
+
+    target_ids = _load_target_ids(DESKTOP / "lib_map.csv")
+    _check_project(paths["board.kicad_pro"])
+    _check_schematic(paths["design.kicad_sch"], target_ids)
+    _check_pcb(paths["design.kicad_pcb"])
+    _check_symbol_library(paths["project.kicad_sym"], target_ids)
+    _check_with_kicad_cli(paths)
+    return True
+
+
+def main():
+    try:
+        result = evaluate()
+    except Exception as exc:
+        if os.environ.get("ENGIWORLD_EVAL_DEBUG") == "1":
+            print(f"{type(exc).__name__}: {exc}", file=sys.stderr)
+        result = False
+    print("True" if result else "False")
 
 
 if __name__ == "__main__":
-    print("True" if _run() else "False")
+    main()
