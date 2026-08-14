@@ -1,8 +1,8 @@
 {
   "id": "c-solidcam-task-02-windows",
   "snapshot": "SolidCAM-2025",
-  "instruction": "Use command-line automation for the installed SolidCAM environment; do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. Load C:\\Users\\User\\Desktop\\slot_plate.step and read C:\\Users\\User\\Desktop\\tools.csv. Create a Pocket or iMachining 2D toolpath for the centered 40 x 8 slot, using the supplied tool data, and machine the slot through to Z=0.000 mm. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-02.nc.",
-  "source": "SolidCAM iMachining 2D：https://solidcam.com/imachining/imachining-2d/ (SolidCAM)",
+  "instruction": "Use command-line automation only to operate the installed SOLIDWORKS CAM 2025 environment through the CAMWorks API; do not use GUI clicks, GUI automation, generic G-code generators, prebuilt helper wrappers, or manual .nc editing/copying. Load C:\\Users\\User\\Desktop\\slot_plate.step and read C:\\Users\\User\\Desktop\\tools.csv. In the 120 x 80 x 10 mm part, machine the centered 40 x 8 mm through obround slot as a native 2.5-axis pocket process. Use T1, a 6 mm flat end mill, at S8500 rpm and F500 mm/min for material-cutting XY moves; a lower controlled plunge feed is allowed. The part setup is G54 with its origin at model coordinates [0, 0, 10] mm and tool axis -Z, so the top is posted Z=0 and the through-slot bottom is posted Z=-10 mm. Generate a complete area-clearing path with safe approach and retract, then post-process it with the installed SOLIDWORKS CAM postprocessor. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-02.nc.",
+  "source": "Installed SOLIDWORKS CAM 2025 / CAMWorks API; official SOLIDWORKS CAM product and training documentation: https://www.solidworks.com/product/solidworks-cam ; https://www.solidworks.com/support/training/solidworks-cam-standard",
   "config": [
     {
       "type": "upload_file",

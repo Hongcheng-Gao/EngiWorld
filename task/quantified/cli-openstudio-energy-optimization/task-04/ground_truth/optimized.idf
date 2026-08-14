@@ -1,707 +1,889 @@
-!- ENGIWORLD_OPTIMIZATION_METADATA_BEGIN
-!- {
-!-   "case_id": "quant-cli-openstudio-task-04-ubuntu",
-!-   "constraints_sha256": "e545c54f4f21f2ee5b5ac35fc46487efa7855f845227d9df90b8e60b688bda00",
-!-   "design_variables": {
-!-     "cooling_setpoint_c": 25.0,
-!-     "daylight_control_fraction": 0.48,
-!-     "economizer_fraction": 0.2,
-!-     "equipment_w_per_m2": 4.9,
-!-     "exterior_wall_area_m2": 150.0,
-!-     "floor_area_m2": 96.0,
-!-     "heating_setpoint_c": 20.0,
-!-     "hvac_availability_fraction": 0.72,
-!-     "infiltration_ach": 0.42,
-!-     "lighting_w_per_m2": 5.9,
-!-     "occupied_hours_fraction": 0.42,
-!-     "orientation_deg": 0.0,
-!-     "people_density_m2": 0.105,
-!-     "precool_hours": 1.5,
-!-     "roof_r_value_m2k_w": 6.8,
-!-     "shade_ratio": 0.68,
-!-     "space_count": 2,
-!-     "thermal_mass_level": 0.72,
-!-     "thermal_zone_count": 2,
-!-     "ventilation_lps_per_person": 8.0,
-!-     "wall_r_value_m2k_w": 4.2,
-!-     "window_area_m2": 33.0,
-!-     "window_shgc": 0.29,
-!-     "window_u_value_w_m2k": 1.75,
-!-     "wwr": 0.22
-!-   },
-!-   "model_quantities": {
-!-     "exterior_wall_area_m2": 150.0,
-!-     "floor_area_m2": 96.0,
-!-     "space_count": 2,
-!-     "thermal_zone_count": 2,
-!-     "window_area_m2": 33.0,
-!-     "wwr": 0.22
-!-   },
-!-   "role": "reference_optimized_design",
-!-   "source_baseline_sha256": "92cdd79901c863d79803f33961736eef6e31add639eaa382720e5bfd6fd1fb86",
-!-   "space_names": [
-!-     "CLASSROOM-A",
-!-     "CLASSROOM-B"
-!-   ],
-!-   "thermal_zone_names": [
-!-     "CLASSROOM-A-ZN",
-!-     "CLASSROOM-B-ZN"
-!-   ],
-!-   "weather_sha256": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1"
-!- }
-!- ENGIWORLD_OPTIMIZATION_METADATA_END
+! ENGIWORLD_OPTIMIZATION_METADATA_BEGIN
+! {
+!   "case_id": "quant-cli-openstudio-task-04-ubuntu",
+!   "design_variables": {
+!     "cooling_setpoint_c": 25.0,
+!     "daylight_control_fraction": 0.6,
+!     "economizer_fraction": 0.2,
+!     "equipment_w_per_m2": 4.3,
+!     "exterior_wall_area_m2": 150.0,
+!     "floor_area_m2": 96.0,
+!     "heating_setpoint_c": 19.5,
+!     "hvac_availability_fraction": 0.72,
+!     "infiltration_ach": 0.36,
+!     "lighting_w_per_m2": 5.4,
+!     "occupied_hours_fraction": 0.42,
+!     "orientation_deg": 0.0,
+!     "people_density_m2": 0.08,
+!     "precool_hours": 1.75,
+!     "roof_r_value_m2k_w": 7.0,
+!     "shade_ratio": 0.78,
+!     "space_count": 2,
+!     "thermal_mass_level": 0.82,
+!     "thermal_zone_count": 2,
+!     "ventilation_lps_per_person": 8.0,
+!     "wall_r_value_m2k_w": 4.7,
+!     "window_area_m2": 28.5,
+!     "window_shgc": 0.27,
+!     "window_u_value_w_m2k": 1.45,
+!     "wwr": 0.19
+!   },
+!   "model_quantities": {
+!     "exterior_wall_area_m2": 150.0,
+!     "floor_area_m2": 96.0,
+!     "space_count": 2,
+!     "thermal_zone_count": 2,
+!     "window_area_m2": 28.5,
+!     "wwr": 0.19
+!   },
+!   "role": "reference_optimized_design",
+!   "space_names": [
+!     "CLASSROOM-A",
+!     "CLASSROOM-B"
+!   ],
+!   "thermal_zone_names": [
+!     "CLASSROOM-A-ZN",
+!     "CLASSROOM-B-ZN"
+!   ],
+!   "source_baseline_sha256": "02f44592a56ccb62876dde0839840fca61c4d005a4d24386b9eb4e3a3fcf8127",
+!   "constraints_sha256": "65a637e15c15fd1b87d77889073571426ea8920255e47fdf1cbf110c090a9be8",
+!   "weather_sha256": "186ac03010a542b09ed5df077b0dfa860f080a3684fc00a817a5738c3cfeaa8c"
+! }
+! ENGIWORLD_OPTIMIZATION_METADATA_END
 
 
-Version,25.2;
+Version,
+  25.2;                                   !- Version Identifier
 
 Building,
-  quant-cli-openstudio-task-04-ubuntu,
-  0.0,
-  Suburbs,
-  0.04,
-  0.40,
-  FullExterior,
-  25,
-  6;
+  quant-cli-openstudio-task-04-ubuntu,    !- Name
+  0.0,                                    !- North Axis {deg}
+  Suburbs,                                !- Terrain
+  0.04,                                   !- Loads Convergence Tolerance Value {W}
+  0.40,                                   !- Temperature Convergence Tolerance Value {deltaC}
+  FullExterior,                           !- Solar Distribution
+  25,                                     !- Maximum Number of Warmup Days
+  6;                                      !- Minimum Number of Warmup Days
 
-Site:Location,Synthetic Test USA,39.0,-104.0,-7.0,1600.0;
+Site:Location,
+  Synthetic Test USA,                     !- Name
+  39.0,                                   !- Latitude {deg}
+  -104.0,                                 !- Longitude {deg}
+  -7.0,                                   !- Time Zone {hr}
+  1600.0;                                 !- Elevation {m}
 
-Timestep,4;
+Timestep,
+  4;                                      !- Number of Timesteps per Hour
 
-SimulationControl,No,No,No,Yes,Yes;
+SimulationControl,
+  No,                                     !- Do Zone Sizing Calculation
+  No,                                     !- Do System Sizing Calculation
+  No,                                     !- Do Plant Sizing Calculation
+  Yes,                                    !- Run Simulation for Sizing Periods
+  Yes,                                    !- Run Simulation for Weather File Run Periods
+  ,                                       !- Do HVAC Sizing Simulation for Sizing Periods
+  ;                                       !- Maximum Number of HVAC Sizing Simulation Passes
 
-RunPeriod,Annual,1,1,,12,31,,Sunday,Yes,Yes,No,Yes,Yes,No;
+RunPeriod,
+  Annual,                                 !- Name
+  1,                                      !- Begin Month
+  1,                                      !- Begin Day of Month
+  ,                                       !- Begin Year
+  12,                                     !- End Month
+  31,                                     !- End Day of Month
+  ,                                       !- End Year
+  Sunday,                                 !- Day of Week for Start Day
+  Yes,                                    !- Use Weather File Holidays and Special Days
+  Yes,                                    !- Use Weather File Daylight Saving Period
+  No,                                     !- Apply Weekend Holiday Rule
+  Yes,                                    !- Use Weather File Rain Indicators
+  Yes,                                    !- Use Weather File Snow Indicators
+  No;                                     !- Treat Weather as Actual
 
-GlobalGeometryRules,UpperLeftCorner,CounterClockWise,World;
+GlobalGeometryRules,
+  UpperLeftCorner,                        !- Starting Vertex Position
+  CounterClockWise,                       !- Vertex Entry Direction
+  World;                                  !- Coordinate System
 
-Output:SQLite,SimpleAndTabular;
+Output:SQLite,
+  SimpleAndTabular;                       !- Option Type
 
-Output:Table:SummaryReports,AllSummary;
+Output:Table:SummaryReports,
+  AllSummary;                             !- Report Name 1
 
-Output:Meter,Electricity:Facility,RunPeriod;
+Output:Meter,
+  Electricity:Facility,                   !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,DistrictHeating:Facility,RunPeriod;
+Output:Meter,
+  DistrictHeating:Facility,               !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,DistrictCooling:Facility,RunPeriod;
+Output:Meter,
+  DistrictCooling:Facility,               !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,InteriorLights:Electricity,RunPeriod;
+Output:Meter,
+  InteriorLights:Electricity,             !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,InteriorEquipment:Electricity,RunPeriod;
+Output:Meter,
+  InteriorEquipment:Electricity,          !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,Fans:Electricity,RunPeriod;
+Output:Meter,
+  Fans:Electricity,                       !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Variable,*,Zone Ideal Loads Supply Air Total Heating Energy,RunPeriod;
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Ideal Loads Supply Air Total Heating Energy, !- Variable Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Variable,*,Zone Ideal Loads Supply Air Total Cooling Energy,RunPeriod;
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Ideal Loads Supply Air Total Cooling Energy, !- Variable Name
+  RunPeriod;                              !- Reporting Frequency
 
-ScheduleTypeLimits,Fraction,0,1,Continuous;
+ScheduleTypeLimits,
+  Fraction,                               !- Name
+  0,                                      !- Lower Limit Value {BasedOnField A3}
+  1,                                      !- Upper Limit Value {BasedOnField A3}
+  Continuous;                             !- Numeric Type
 
-ScheduleTypeLimits,Temperature,-60,200,Continuous;
+ScheduleTypeLimits,
+  Temperature,                            !- Name
+  -60,                                    !- Lower Limit Value {BasedOnField A3}
+  200,                                    !- Upper Limit Value {BasedOnField A3}
+  Continuous;                             !- Numeric Type
 
-Schedule:Compact,ALWAYS-ON,Fraction,Through: 12/31,For: AllDays,Until: 24:00,1;
+Schedule:Compact,
+  ALWAYS-ON,                              !- Name
+  Fraction,                               !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 24:00,                           !- Field 3
+  1;                                      !- Field 4
 
-Schedule:Compact,HEATING-SP,Temperature,Through: 12/31,For: AllDays,Until: 24:00,20.0;
+HVACTemplate:Thermostat,
+  ENGIWORLD-THERMOSTAT,                   !- Name
+  HEATING-SP,                             !- Heating Setpoint Schedule Name
+  ,                                       !- Constant Heating Setpoint {C}
+  COOLING-SP,                             !- Cooling Setpoint Schedule Name
+  ;                                       !- Constant Cooling Setpoint {C}
 
-Schedule:Compact,COOLING-SP,Temperature,Through: 12/31,For: AllDays,Until: 24:00,25.0;
+Material,
+  WALL-MAT,                               !- Name
+  Rough,                                  !- Roughness
+  0.2115,                                 !- Thickness {m}
+  0.045,                                  !- Conductivity {W/m-K}
+  1100,                                   !- Density {kg/m3}
+  920,                                    !- Specific Heat {J/kg-K}
+  0.9,                                    !- Thermal Absorptance
+  0.7,                                    !- Solar Absorptance
+  0.7;                                    !- Visible Absorptance
 
-HVACTemplate:Thermostat,ENGIWORLD-THERMOSTAT,HEATING-SP,,COOLING-SP,;
+Material,
+  ROOF-MAT,                               !- Name
+  Rough,                                  !- Roughness
+  0.266,                                  !- Thickness {m}
+  0.038,                                  !- Conductivity {W/m-K}
+  900,                                    !- Density {kg/m3}
+  900,                                    !- Specific Heat {J/kg-K}
+  0.9,                                    !- Thermal Absorptance
+  0.7,                                    !- Solar Absorptance
+  0.7;                                    !- Visible Absorptance
 
-Material,WALL-MAT,Rough,0.16,0.045,1100,920,0.9,0.7,0.7;
+Material,
+  FLOOR-MAT,                              !- Name
+  Rough,                                  !- Roughness
+  0.18,                                   !- Thickness {m}
+  1.2,                                    !- Conductivity {W/m-K}
+  2640,                                   !- Density {kg/m3}
+  900,                                    !- Specific Heat {J/kg-K}
+  0.9,                                    !- Thermal Absorptance
+  0.7,                                    !- Solar Absorptance
+  0.7;                                    !- Visible Absorptance
 
-Material,ROOF-MAT,Rough,0.22,0.038,900,900,0.9,0.7,0.7;
+WindowMaterial:SimpleGlazingSystem,
+  LOW-E-GLASS,                            !- Name
+  1.45,                                   !- U-Factor {W/m2-K}
+  0.27,                                   !- Solar Heat Gain Coefficient
+  0.62;                                   !- Visible Transmittance
 
-Material,FLOOR-MAT,Rough,0.18,1.2,1600,800,0.9,0.7,0.7;
+Construction,
+  WALL-CONSTRUCTION,                      !- Name
+  WALL-MAT;                               !- Layer 1
 
-WindowMaterial:SimpleGlazingSystem,LOW-E-GLASS,1.75,0.29,0.62;
+Construction,
+  ROOF-CONSTRUCTION,                      !- Name
+  ROOF-MAT;                               !- Layer 1
 
-Construction,WALL-CONSTRUCTION,WALL-MAT;
+Construction,
+  FLOOR-CONSTRUCTION,                     !- Name
+  FLOOR-MAT;                              !- Layer 1
 
-Construction,ROOF-CONSTRUCTION,ROOF-MAT;
-
-Construction,FLOOR-CONSTRUCTION,FLOOR-MAT;
-
-Construction,WINDOW-CONSTRUCTION,LOW-E-GLASS;
-
-Zone,
-  CLASSROOM-A-ZN,
-  0,
-  0,
-  0,
-  0,
-  1,
-  1,
-  3.2,
-  autocalculate,
-  autocalculate;
-
-HVACTemplate:Zone:IdealLoadsAirSystem,
-  CLASSROOM-A-ZN,
-  ENGIWORLD-THERMOSTAT,
-  ALWAYS-ON,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ;
-
-BuildingSurface:Detailed,
-  CLASSROOM-A-FLOOR,
-  Floor,
-  FLOOR-CONSTRUCTION,
-  CLASSROOM-A-ZN,
-  ,
-  Ground,
-  ,
-  NoSun,
-  NoWind,
-  autocalculate,
-  4,
-  0.0,
-  0,
-  0,
-  6.197,
-  0,
-  0,
-  6.197,
-  7.746,
-  0,
-  0.0,
-  7.746,
-  0;
-
-BuildingSurface:Detailed,
-  CLASSROOM-A-ROOF,
-  Roof,
-  ROOF-CONSTRUCTION,
-  CLASSROOM-A-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  0.0,
-  7.746,
-  3.2,
-  6.197,
-  7.746,
-  3.2,
-  6.197,
-  0,
-  3.2,
-  0.0,
-  0,
-  3.2;
-
-BuildingSurface:Detailed,
-  CLASSROOM-A-SOUTH-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-A-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  0.0,
-  0,
-  3.2,
-  6.197,
-  0,
-  3.2,
-  6.197,
-  0,
-  0,
-  0.0,
-  0,
-  0;
-
-BuildingSurface:Detailed,
-  CLASSROOM-A-NORTH-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-A-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  6.197,
-  7.746,
-  3.2,
-  0.0,
-  7.746,
-  3.2,
-  0.0,
-  7.746,
-  0,
-  6.197,
-  7.746,
-  0;
-
-BuildingSurface:Detailed,
-  CLASSROOM-A-WEST-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-A-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  0.0,
-  7.746,
-  3.2,
-  0.0,
-  0,
-  3.2,
-  0.0,
-  0,
-  0,
-  0.0,
-  7.746,
-  0;
-
-BuildingSurface:Detailed,
-  CLASSROOM-A-EAST-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-A-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  6.197,
-  0,
-  3.2,
-  6.197,
-  7.746,
-  3.2,
-  6.197,
-  7.746,
-  0,
-  6.197,
-  0,
-  0;
-
-FenestrationSurface:Detailed,
-  CLASSROOM-A-SOUTH-WINDOW,
-  Window,
-  WINDOW-CONSTRUCTION,
-  CLASSROOM-A-SOUTH-WALL,
-  ,
-  autocalculate,
-  ,
-  1.0,
-  4,
-  0.558,
-  0,
-  2.35,
-  5.64,
-  0,
-  2.35,
-  5.64,
-  0,
-  0.9,
-  0.558,
-  0,
-  0.9;
-
-Shading:Building:Detailed,
-  CLASSROOM-A-OVERHANG,
-  ,
-  4,
-  0.558,
-  -0.986,
-  2.47,
-  5.64,
-  -0.986,
-  2.47,
-  5.64,
-  0,
-  2.47,
-  0.558,
-  0,
-  2.47;
-
-People,
-  CLASSROOM-A-PEOPLE,
-  CLASSROOM-A-ZN,
-  ALWAYS-ON,
-  People/Area,
-  ,
-  0.105,
-  ,
-  0.3,
-  autocalculate,
-  ALWAYS-ON;
-
-Lights,
-  CLASSROOM-A-LIGHTS,
-  CLASSROOM-A-ZN,
-  ALWAYS-ON,
-  Watts/Area,
-  ,
-  5.9,
-  ,
-  0,
-  0.42,
-  0.18,
-  0.0,
-  General;
-
-ElectricEquipment,
-  CLASSROOM-A-EQUIPMENT,
-  CLASSROOM-A-ZN,
-  ALWAYS-ON,
-  Watts/Area,
-  ,
-  4.9,
-  ,
-  0,
-  0.3,
-  0.2,
-  General;
-
-ZoneInfiltration:DesignFlowRate,
-  CLASSROOM-A-INFILTRATION,
-  CLASSROOM-A-ZN,
-  ALWAYS-ON,
-  AirChanges/Hour,
-  ,
-  ,
-  ,
-  0.42,
-  0.0,
-  0.0,
-  0.0,
-  0.0;
-
-DesignSpecification:OutdoorAir,
-  CLASSROOM-A-OA,
-  Sum,
-  0.008,
-  0.0003,
-  0,
-  0,
-  ALWAYS-ON;
+Construction,
+  WINDOW-CONSTRUCTION,                    !- Name
+  LOW-E-GLASS;                            !- Layer 1
 
 Zone,
-  CLASSROOM-B-ZN,
-  0,
-  0,
-  0,
-  0,
-  1,
-  1,
-  3.2,
-  autocalculate,
-  autocalculate;
+  CLASSROOM-A-ZN,                         !- Name
+  0,                                      !- Direction of Relative North {deg}
+  0,                                      !- X Origin {m}
+  0,                                      !- Y Origin {m}
+  0,                                      !- Z Origin {m}
+  1,                                      !- Type
+  1,                                      !- Multiplier
+  3.2,                                    !- Ceiling Height {m}
+  autocalculate,                          !- Volume {m3}
+  autocalculate;                          !- Floor Area {m2}
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
-  CLASSROOM-B-ZN,
-  ENGIWORLD-THERMOSTAT,
-  ALWAYS-ON,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ;
+  CLASSROOM-A-ZN,                         !- Zone Name
+  ENGIWORLD-THERMOSTAT,                   !- Template Thermostat Name
+  HVAC-AVAILABILITY,                      !- System Availability Schedule Name
+  ,                                       !- Maximum Heating Supply Air Temperature {C}
+  ,                                       !- Minimum Cooling Supply Air Temperature {C}
+  ,                                       !- Maximum Heating Supply Air Humidity Ratio {kgWater/kgDryAir}
+  ,                                       !- Minimum Cooling Supply Air Humidity Ratio {kgWater/kgDryAir}
+  ,                                       !- Heating Limit
+  ,                                       !- Maximum Heating Air Flow Rate {m3/s}
+  ,                                       !- Maximum Sensible Heating Capacity {W}
+  ,                                       !- Cooling Limit
+  ,                                       !- Maximum Cooling Air Flow Rate {m3/s}
+  ,                                       !- Maximum Total Cooling Capacity {W}
+  ,                                       !- Heating Availability Schedule Name
+  ,                                       !- Cooling Availability Schedule Name
+  ,                                       !- Dehumidification Control Type
+  ,                                       !- Cooling Sensible Heat Ratio {dimensionless}
+  ,                                       !- Dehumidification Setpoint {percent}
+  ,                                       !- Humidification Control Type
+  ,                                       !- Humidification Setpoint {percent}
+  ,                                       !- Outdoor Air Method
+  ,                                       !- Outdoor Air Flow Rate per Person {m3/s}
+  ,                                       !- Outdoor Air Flow Rate per Zone Floor Area {m3/s-m2}
+  ,                                       !- Outdoor Air Flow Rate per Zone {m3/s}
+  ,                                       !- Design Specification Outdoor Air Object Name
+  ;                                       !- Demand Controlled Ventilation Type
 
 BuildingSurface:Detailed,
-  CLASSROOM-B-FLOOR,
-  Floor,
-  FLOOR-CONSTRUCTION,
-  CLASSROOM-B-ZN,
-  ,
-  Ground,
-  ,
-  NoSun,
-  NoWind,
-  autocalculate,
-  4,
-  6.197,
-  0,
-  0,
-  12.394,
-  0,
-  0,
-  12.394,
-  7.746,
-  0,
-  6.197,
-  7.746,
-  0;
+  CLASSROOM-A-FLOOR,                      !- Name
+  Floor,                                  !- Surface Type
+  FLOOR-CONSTRUCTION,                     !- Construction Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  CLASSROOM-A,                            !- Space Name
+  Ground,                                 !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  NoSun,                                  !- Sun Exposure
+  NoWind,                                 !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0.0, 0, 0,                              !- X,Y,Z Vertex 1 {m}
+  6.197, 0, 0,                            !- X,Y,Z Vertex 2 {m}
+  6.197, 7.746, 0,                        !- X,Y,Z Vertex 3 {m}
+  0.0, 7.746, 0;                          !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  CLASSROOM-B-ROOF,
-  Roof,
-  ROOF-CONSTRUCTION,
-  CLASSROOM-B-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  6.197,
-  7.746,
-  3.2,
-  12.394,
-  7.746,
-  3.2,
-  12.394,
-  0,
-  3.2,
-  6.197,
-  0,
-  3.2;
+  CLASSROOM-A-ROOF,                       !- Name
+  Roof,                                   !- Surface Type
+  ROOF-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  CLASSROOM-A,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0.0, 7.746, 3.2,                        !- X,Y,Z Vertex 1 {m}
+  6.197, 7.746, 3.2,                      !- X,Y,Z Vertex 2 {m}
+  6.197, 0, 3.2,                          !- X,Y,Z Vertex 3 {m}
+  0.0, 0, 3.2;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  CLASSROOM-B-SOUTH-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-B-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  6.197,
-  0,
-  3.2,
-  12.394,
-  0,
-  3.2,
-  12.394,
-  0,
-  0,
-  6.197,
-  0,
-  0;
+  CLASSROOM-A-SOUTH-WALL,                 !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  CLASSROOM-A,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0.0, 0, 3.2,                            !- X,Y,Z Vertex 1 {m}
+  6.197, 0, 3.2,                          !- X,Y,Z Vertex 2 {m}
+  6.197, 0, 0,                            !- X,Y,Z Vertex 3 {m}
+  0.0, 0, 0;                              !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  CLASSROOM-B-NORTH-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-B-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  12.394,
-  7.746,
-  3.2,
-  6.197,
-  7.746,
-  3.2,
-  6.197,
-  7.746,
-  0,
-  12.394,
-  7.746,
-  0;
+  CLASSROOM-A-NORTH-WALL,                 !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  CLASSROOM-A,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  6.197, 7.746, 3.2,                      !- X,Y,Z Vertex 1 {m}
+  0.0, 7.746, 3.2,                        !- X,Y,Z Vertex 2 {m}
+  0.0, 7.746, 0,                          !- X,Y,Z Vertex 3 {m}
+  6.197, 7.746, 0;                        !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  CLASSROOM-B-WEST-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-B-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  6.197,
-  7.746,
-  3.2,
-  6.197,
-  0,
-  3.2,
-  6.197,
-  0,
-  0,
-  6.197,
-  7.746,
-  0;
+  CLASSROOM-A-WEST-WALL,                  !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  CLASSROOM-A,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0.0, 7.746, 3.2,                        !- X,Y,Z Vertex 1 {m}
+  0.0, 0, 3.2,                            !- X,Y,Z Vertex 2 {m}
+  0.0, 0, 0,                              !- X,Y,Z Vertex 3 {m}
+  0.0, 7.746, 0;                          !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  CLASSROOM-B-EAST-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  CLASSROOM-B-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  12.394,
-  0,
-  3.2,
-  12.394,
-  7.746,
-  3.2,
-  12.394,
-  7.746,
-  0,
-  12.394,
-  0,
-  0;
+  CLASSROOM-A-EAST-WALL,                  !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  CLASSROOM-A,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  6.197, 0, 3.2,                          !- X,Y,Z Vertex 1 {m}
+  6.197, 7.746, 3.2,                      !- X,Y,Z Vertex 2 {m}
+  6.197, 7.746, 0,                        !- X,Y,Z Vertex 3 {m}
+  6.197, 0, 0;                            !- X,Y,Z Vertex 4 {m}
 
 FenestrationSurface:Detailed,
-  CLASSROOM-B-SOUTH-WINDOW,
-  Window,
-  WINDOW-CONSTRUCTION,
-  CLASSROOM-B-SOUTH-WALL,
-  ,
-  autocalculate,
-  ,
-  1.0,
-  4,
-  6.755,
-  0,
-  2.35,
-  11.837,
-  0,
-  2.35,
-  11.837,
-  0,
-  0.9,
-  6.755,
-  0,
-  0.9;
+  CLASSROOM-A-SOUTH-WINDOW,               !- Name
+  Window,                                 !- Surface Type
+  WINDOW-CONSTRUCTION,                    !- Construction Name
+  CLASSROOM-A-SOUTH-WALL,                 !- Building Surface Name
+  ,                                       !- Outside Boundary Condition Object
+  autocalculate,                          !- View Factor to Ground
+  ,                                       !- Frame and Divider Name
+  1.0,                                    !- Multiplier
+  4,                                      !- Number of Vertices
+  0.4, 0, 2.26008893829905,               !- X,Y,Z Vertex 1 {m}
+  5.797, 0, 2.26008893829905,             !- X,Y,Z Vertex 2 {m}
+  5.797, 0, 0.939911061700945,            !- X,Y,Z Vertex 3 {m}
+  0.4, 0, 0.939911061700945;              !- X,Y,Z Vertex 4 {m}
 
 Shading:Building:Detailed,
-  CLASSROOM-B-OVERHANG,
-  ,
-  4,
-  6.755,
-  -0.986,
-  2.47,
-  11.837,
-  -0.986,
-  2.47,
-  11.837,
-  0,
-  2.47,
-  6.755,
-  0,
-  2.47;
+  CLASSROOM-A-OVERHANG,                   !- Name
+  ,                                       !- Transmittance Schedule Name
+  4,                                      !- Number of Vertices
+  0.4, -1.02973874374653, 2.38008893829906, !- X,Y,Z Vertex 1 {m}
+  5.797, -1.02973874374653, 2.38008893829906, !- X,Y,Z Vertex 2 {m}
+  5.797, 0, 2.38008893829906,             !- X,Y,Z Vertex 3 {m}
+  0.4, 0, 2.38008893829906;               !- X,Y,Z Vertex 4 {m}
 
 People,
-  CLASSROOM-B-PEOPLE,
-  CLASSROOM-B-ZN,
-  ALWAYS-ON,
-  People/Area,
-  ,
-  0.105,
-  ,
-  0.3,
-  autocalculate,
-  ALWAYS-ON;
+  CLASSROOM-A-PEOPLE,                     !- Name
+  CLASSROOM-A,                            !- Zone or ZoneList or Space or SpaceList Name
+  OCCUPANCY-SCHEDULE,                     !- Number of People Schedule Name
+  People/Area,                            !- Number of People Calculation Method
+  ,                                       !- Number of People
+  0.08,                                   !- People per Floor Area {person/m2}
+  ,                                       !- Floor Area per Person {m2/person}
+  0.3,                                    !- Fraction Radiant
+  autocalculate,                          !- Sensible Heat Fraction
+  ACTIVITY-SCHEDULE;                      !- Activity Level Schedule Name
 
 Lights,
-  CLASSROOM-B-LIGHTS,
-  CLASSROOM-B-ZN,
-  ALWAYS-ON,
-  Watts/Area,
-  ,
-  5.9,
-  ,
-  0,
-  0.42,
-  0.18,
-  0.0,
-  General;
+  CLASSROOM-A-LIGHTS,                     !- Name
+  CLASSROOM-A,                            !- Zone or ZoneList or Space or SpaceList Name
+  OCCUPANCY-SCHEDULE,                     !- Schedule Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Lighting Level {W}
+  5.4,                                    !- Watts per Floor Area {W/m2}
+  ,                                       !- Watts per Person {W/person}
+  0,                                      !- Return Air Fraction
+  0.42,                                   !- Fraction Radiant
+  0.18,                                   !- Fraction Visible
+  1,                                      !- Fraction Replaceable
+  General;                                !- End-Use Subcategory
 
 ElectricEquipment,
-  CLASSROOM-B-EQUIPMENT,
-  CLASSROOM-B-ZN,
-  ALWAYS-ON,
-  Watts/Area,
-  ,
-  4.9,
-  ,
-  0,
-  0.3,
-  0.2,
-  General;
+  CLASSROOM-A-EQUIPMENT,                  !- Name
+  CLASSROOM-A,                            !- Zone or ZoneList or Space or SpaceList Name
+  OCCUPANCY-SCHEDULE,                     !- Schedule Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Design Level {W}
+  4.3,                                    !- Watts per Floor Area {W/m2}
+  ,                                       !- Watts per Person {W/person}
+  0,                                      !- Fraction Latent
+  0.3,                                    !- Fraction Radiant
+  0.2,                                    !- Fraction Lost
+  General;                                !- End-Use Subcategory
 
 ZoneInfiltration:DesignFlowRate,
-  CLASSROOM-B-INFILTRATION,
-  CLASSROOM-B-ZN,
-  ALWAYS-ON,
-  AirChanges/Hour,
-  ,
-  ,
-  ,
-  0.42,
-  0.0,
-  0.0,
-  0.0,
-  0.0;
+  CLASSROOM-A-INFILTRATION,               !- Name
+  CLASSROOM-A,                            !- Zone or ZoneList or Space or SpaceList Name
+  ALWAYS-ON,                              !- Schedule Name
+  AirChanges/Hour,                        !- Design Flow Rate Calculation Method
+  ,                                       !- Design Flow Rate {m3/s}
+  ,                                       !- Flow Rate per Floor Area {m3/s-m2}
+  ,                                       !- Flow Rate per Exterior Surface Area {m3/s-m2}
+  0.36,                                   !- Air Changes per Hour {1/hr}
+  1,                                      !- Constant Term Coefficient
+  0,                                      !- Temperature Term Coefficient
+  0,                                      !- Velocity Term Coefficient
+  0;                                      !- Velocity Squared Term Coefficient
 
 DesignSpecification:OutdoorAir,
-  CLASSROOM-B-OA,
-  Sum,
-  0.008,
-  0.0003,
-  0,
-  0,
-  ALWAYS-ON;
+  CLASSROOM-A-OA,                         !- Name
+  Sum,                                    !- Outdoor Air Method
+  0.008,                                  !- Outdoor Air Flow per Person {m3/s-person}
+  0.0003,                                 !- Outdoor Air Flow per Zone Floor Area {m3/s-m2}
+  0,                                      !- Outdoor Air Flow per Zone {m3/s}
+  0,                                      !- Outdoor Air Flow Air Changes per Hour {1/hr}
+  ALWAYS-ON;                              !- Outdoor Air Schedule Name
+
+Zone,
+  CLASSROOM-B-ZN,                         !- Name
+  0,                                      !- Direction of Relative North {deg}
+  0,                                      !- X Origin {m}
+  0,                                      !- Y Origin {m}
+  0,                                      !- Z Origin {m}
+  1,                                      !- Type
+  1,                                      !- Multiplier
+  3.2,                                    !- Ceiling Height {m}
+  autocalculate,                          !- Volume {m3}
+  autocalculate;                          !- Floor Area {m2}
+
+HVACTemplate:Zone:IdealLoadsAirSystem,
+  CLASSROOM-B-ZN,                         !- Zone Name
+  ENGIWORLD-THERMOSTAT,                   !- Template Thermostat Name
+  HVAC-AVAILABILITY,                      !- System Availability Schedule Name
+  ,                                       !- Maximum Heating Supply Air Temperature {C}
+  ,                                       !- Minimum Cooling Supply Air Temperature {C}
+  ,                                       !- Maximum Heating Supply Air Humidity Ratio {kgWater/kgDryAir}
+  ,                                       !- Minimum Cooling Supply Air Humidity Ratio {kgWater/kgDryAir}
+  ,                                       !- Heating Limit
+  ,                                       !- Maximum Heating Air Flow Rate {m3/s}
+  ,                                       !- Maximum Sensible Heating Capacity {W}
+  ,                                       !- Cooling Limit
+  ,                                       !- Maximum Cooling Air Flow Rate {m3/s}
+  ,                                       !- Maximum Total Cooling Capacity {W}
+  ,                                       !- Heating Availability Schedule Name
+  ,                                       !- Cooling Availability Schedule Name
+  ,                                       !- Dehumidification Control Type
+  ,                                       !- Cooling Sensible Heat Ratio {dimensionless}
+  ,                                       !- Dehumidification Setpoint {percent}
+  ,                                       !- Humidification Control Type
+  ,                                       !- Humidification Setpoint {percent}
+  ,                                       !- Outdoor Air Method
+  ,                                       !- Outdoor Air Flow Rate per Person {m3/s}
+  ,                                       !- Outdoor Air Flow Rate per Zone Floor Area {m3/s-m2}
+  ,                                       !- Outdoor Air Flow Rate per Zone {m3/s}
+  ,                                       !- Design Specification Outdoor Air Object Name
+  ;                                       !- Demand Controlled Ventilation Type
+
+BuildingSurface:Detailed,
+  CLASSROOM-B-FLOOR,                      !- Name
+  Floor,                                  !- Surface Type
+  FLOOR-CONSTRUCTION,                     !- Construction Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  CLASSROOM-B,                            !- Space Name
+  Ground,                                 !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  NoSun,                                  !- Sun Exposure
+  NoWind,                                 !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  6.197, 0, 0,                            !- X,Y,Z Vertex 1 {m}
+  12.394, 0, 0,                           !- X,Y,Z Vertex 2 {m}
+  12.394, 7.746, 0,                       !- X,Y,Z Vertex 3 {m}
+  6.197, 7.746, 0;                        !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  CLASSROOM-B-ROOF,                       !- Name
+  Roof,                                   !- Surface Type
+  ROOF-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  CLASSROOM-B,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  6.197, 7.746, 3.2,                      !- X,Y,Z Vertex 1 {m}
+  12.394, 7.746, 3.2,                     !- X,Y,Z Vertex 2 {m}
+  12.394, 0, 3.2,                         !- X,Y,Z Vertex 3 {m}
+  6.197, 0, 3.2;                          !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  CLASSROOM-B-SOUTH-WALL,                 !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  CLASSROOM-B,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  6.197, 0, 3.2,                          !- X,Y,Z Vertex 1 {m}
+  12.394, 0, 3.2,                         !- X,Y,Z Vertex 2 {m}
+  12.394, 0, 0,                           !- X,Y,Z Vertex 3 {m}
+  6.197, 0, 0;                            !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  CLASSROOM-B-NORTH-WALL,                 !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  CLASSROOM-B,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  12.394, 7.746, 3.2,                     !- X,Y,Z Vertex 1 {m}
+  6.197, 7.746, 3.2,                      !- X,Y,Z Vertex 2 {m}
+  6.197, 7.746, 0,                        !- X,Y,Z Vertex 3 {m}
+  12.394, 7.746, 0;                       !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  CLASSROOM-B-WEST-WALL,                  !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  CLASSROOM-B,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  6.197, 7.746, 3.2,                      !- X,Y,Z Vertex 1 {m}
+  6.197, 0, 3.2,                          !- X,Y,Z Vertex 2 {m}
+  6.197, 0, 0,                            !- X,Y,Z Vertex 3 {m}
+  6.197, 7.746, 0;                        !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  CLASSROOM-B-EAST-WALL,                  !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  CLASSROOM-B,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  12.394, 0, 3.2,                         !- X,Y,Z Vertex 1 {m}
+  12.394, 7.746, 3.2,                     !- X,Y,Z Vertex 2 {m}
+  12.394, 7.746, 0,                       !- X,Y,Z Vertex 3 {m}
+  12.394, 0, 0;                           !- X,Y,Z Vertex 4 {m}
+
+FenestrationSurface:Detailed,
+  CLASSROOM-B-SOUTH-WINDOW,               !- Name
+  Window,                                 !- Surface Type
+  WINDOW-CONSTRUCTION,                    !- Construction Name
+  CLASSROOM-B-SOUTH-WALL,                 !- Building Surface Name
+  ,                                       !- Outside Boundary Condition Object
+  autocalculate,                          !- View Factor to Ground
+  ,                                       !- Frame and Divider Name
+  1.0,                                    !- Multiplier
+  4,                                      !- Number of Vertices
+  6.597, 0, 2.26008893829905,             !- X,Y,Z Vertex 1 {m}
+  11.994, 0, 2.26008893829905,            !- X,Y,Z Vertex 2 {m}
+  11.994, 0, 0.939911061700945,           !- X,Y,Z Vertex 3 {m}
+  6.597, 0, 0.939911061700945;            !- X,Y,Z Vertex 4 {m}
+
+Shading:Building:Detailed,
+  CLASSROOM-B-OVERHANG,                   !- Name
+  ,                                       !- Transmittance Schedule Name
+  4,                                      !- Number of Vertices
+  6.597, -1.02973874374653, 2.38008893829906, !- X,Y,Z Vertex 1 {m}
+  11.994, -1.02973874374653, 2.38008893829906, !- X,Y,Z Vertex 2 {m}
+  11.994, 0, 2.38008893829906,            !- X,Y,Z Vertex 3 {m}
+  6.597, 0, 2.38008893829906;             !- X,Y,Z Vertex 4 {m}
+
+People,
+  CLASSROOM-B-PEOPLE,                     !- Name
+  CLASSROOM-B,                            !- Zone or ZoneList or Space or SpaceList Name
+  OCCUPANCY-SCHEDULE,                     !- Number of People Schedule Name
+  People/Area,                            !- Number of People Calculation Method
+  ,                                       !- Number of People
+  0.08,                                   !- People per Floor Area {person/m2}
+  ,                                       !- Floor Area per Person {m2/person}
+  0.3,                                    !- Fraction Radiant
+  autocalculate,                          !- Sensible Heat Fraction
+  ACTIVITY-SCHEDULE;                      !- Activity Level Schedule Name
+
+Lights,
+  CLASSROOM-B-LIGHTS,                     !- Name
+  CLASSROOM-B,                            !- Zone or ZoneList or Space or SpaceList Name
+  OCCUPANCY-SCHEDULE,                     !- Schedule Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Lighting Level {W}
+  5.4,                                    !- Watts per Floor Area {W/m2}
+  ,                                       !- Watts per Person {W/person}
+  0,                                      !- Return Air Fraction
+  0.42,                                   !- Fraction Radiant
+  0.18,                                   !- Fraction Visible
+  1,                                      !- Fraction Replaceable
+  General;                                !- End-Use Subcategory
+
+ElectricEquipment,
+  CLASSROOM-B-EQUIPMENT,                  !- Name
+  CLASSROOM-B,                            !- Zone or ZoneList or Space or SpaceList Name
+  OCCUPANCY-SCHEDULE,                     !- Schedule Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Design Level {W}
+  4.3,                                    !- Watts per Floor Area {W/m2}
+  ,                                       !- Watts per Person {W/person}
+  0,                                      !- Fraction Latent
+  0.3,                                    !- Fraction Radiant
+  0.2,                                    !- Fraction Lost
+  General;                                !- End-Use Subcategory
+
+ZoneInfiltration:DesignFlowRate,
+  CLASSROOM-B-INFILTRATION,               !- Name
+  CLASSROOM-B,                            !- Zone or ZoneList or Space or SpaceList Name
+  ALWAYS-ON,                              !- Schedule Name
+  AirChanges/Hour,                        !- Design Flow Rate Calculation Method
+  ,                                       !- Design Flow Rate {m3/s}
+  ,                                       !- Flow Rate per Floor Area {m3/s-m2}
+  ,                                       !- Flow Rate per Exterior Surface Area {m3/s-m2}
+  0.36,                                   !- Air Changes per Hour {1/hr}
+  1,                                      !- Constant Term Coefficient
+  0,                                      !- Temperature Term Coefficient
+  0,                                      !- Velocity Term Coefficient
+  0;                                      !- Velocity Squared Term Coefficient
+
+DesignSpecification:OutdoorAir,
+  CLASSROOM-B-OA,                         !- Name
+  Sum,                                    !- Outdoor Air Method
+  0.008,                                  !- Outdoor Air Flow per Person {m3/s-person}
+  0.0003,                                 !- Outdoor Air Flow per Zone Floor Area {m3/s-m2}
+  0,                                      !- Outdoor Air Flow per Zone {m3/s}
+  0,                                      !- Outdoor Air Flow Air Changes per Hour {1/hr}
+  ALWAYS-ON;                              !- Outdoor Air Schedule Name
+
+ScheduleTypeLimits,
+  Any Number,                             !- Name
+  ,                                       !- Lower Limit Value {BasedOnField A3}
+  ,                                       !- Upper Limit Value {BasedOnField A3}
+  ;                                       !- Numeric Type
+
+FenestrationSurface:Detailed,
+  CLASSROOM-A-NORTH-WINDOW,               !- Name
+  Window,                                 !- Surface Type
+  WINDOW-CONSTRUCTION,                    !- Construction Name
+  CLASSROOM-A-NORTH-WALL,                 !- Building Surface Name
+  ,                                       !- Outside Boundary Condition Object
+  autocalculate,                          !- View Factor to Ground
+  ,                                       !- Frame and Divider Name
+  1.0,                                    !- Multiplier
+  4,                                      !- Number of Vertices
+  5.797, 7.746, 2.26008893829905,         !- X,Y,Z Vertex 1 {m}
+  0.4, 7.746, 2.26008893829905,           !- X,Y,Z Vertex 2 {m}
+  0.4, 7.746, 0.939911061700945,          !- X,Y,Z Vertex 3 {m}
+  5.797, 7.746, 0.939911061700945;        !- X,Y,Z Vertex 4 {m}
+
+FenestrationSurface:Detailed,
+  CLASSROOM-B-NORTH-WINDOW,               !- Name
+  Window,                                 !- Surface Type
+  WINDOW-CONSTRUCTION,                    !- Construction Name
+  CLASSROOM-B-NORTH-WALL,                 !- Building Surface Name
+  ,                                       !- Outside Boundary Condition Object
+  autocalculate,                          !- View Factor to Ground
+  ,                                       !- Frame and Divider Name
+  1.0,                                    !- Multiplier
+  4,                                      !- Number of Vertices
+  11.994, 7.746, 2.26008893829905,        !- X,Y,Z Vertex 1 {m}
+  6.597, 7.746, 2.26008893829905,         !- X,Y,Z Vertex 2 {m}
+  6.597, 7.746, 0.939911061700945,        !- X,Y,Z Vertex 3 {m}
+  11.994, 7.746, 0.939911061700945;       !- X,Y,Z Vertex 4 {m}
+
+SizingPeriod:DesignDay,
+  ENGIWORLD SUMMER COOLING DESIGN DAY,    !- Name
+  7,                                      !- Month
+  21,                                     !- Day of Month
+  SummerDesignDay,                        !- Day Type
+  35.0,                                   !- Maximum Dry-Bulb Temperature {C}
+  12.0,                                   !- Daily Dry-Bulb Temperature Range {deltaC}
+  DefaultMultipliers,                     !- Dry-Bulb Temperature Range Modifier Type
+  ,                                       !- Dry-Bulb Temperature Range Modifier Day Schedule Name
+  Wetbulb,                                !- Humidity Condition Type
+  19.0,                                   !- Wetbulb or DewPoint at Maximum Dry-Bulb {C}
+  ,                                       !- Humidity Condition Day Schedule Name
+  ,                                       !- Humidity Ratio at Maximum Dry-Bulb {kgWater/kgDryAir}
+  ,                                       !- Enthalpy at Maximum Dry-Bulb {J/kg}
+  ,                                       !- Daily Wet-Bulb Temperature Range {deltaC}
+  84000,                                  !- Barometric Pressure {Pa}
+  3.0,                                    !- Wind Speed {m/s}
+  180,                                    !- Wind Direction {deg}
+  No,                                     !- Rain Indicator
+  No,                                     !- Snow Indicator
+  No,                                     !- Daylight Saving Time Indicator
+  ASHRAEClearSky,                         !- Solar Model Indicator
+  ,                                       !- Beam Solar Day Schedule Name
+  ,                                       !- Diffuse Solar Day Schedule Name
+  1.0;                                    !- ASHRAE Clear Sky Optical Depth for Beam Irradiance (taub) {dimensionless}
+
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Heating Setpoint Not Met Time,     !- Variable Name
+  RunPeriod;                              !- Reporting Frequency
+
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Cooling Setpoint Not Met Time,     !- Variable Name
+  RunPeriod;                              !- Reporting Frequency
+
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Ideal Loads Zone Total Heating Rate, !- Variable Name
+  Hourly;                                 !- Reporting Frequency
+
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Ideal Loads Zone Total Cooling Rate, !- Variable Name
+  Hourly;                                 !- Reporting Frequency
+
+Schedule:Compact,
+  OCCUPANCY-SCHEDULE,                     !- Name
+  Fraction,                               !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 06:58,                           !- Field 3
+  0.0,                                    !- Field 4
+  Until: 17:02,                           !- Field 5
+  1.0,                                    !- Field 6
+  Until: 24:00,                           !- Field 7
+  0.0;                                    !- Field 8
+
+Schedule:Compact,
+  HVAC-AVAILABILITY,                      !- Name
+  Fraction,                               !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 03:22,                           !- Field 3
+  0.0,                                    !- Field 4
+  Until: 20:38,                           !- Field 5
+  1.0,                                    !- Field 6
+  Until: 24:00,                           !- Field 7
+  0.0;                                    !- Field 8
+
+Schedule:Compact,
+  HEATING-SP,                             !- Name
+  Temperature,                            !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 06:58,                           !- Field 3
+  16.0,                                   !- Field 4
+  Until: 17:02,                           !- Field 5
+  19.5,                                   !- Field 6
+  Until: 24:00,                           !- Field 7
+  16.0;                                   !- Field 8
+
+Schedule:Compact,
+  COOLING-SP,                             !- Name
+  Temperature,                            !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 05:13,                           !- Field 3
+  30.0,                                   !- Field 4
+  Until: 06:58,                           !- Field 5
+  23.5,                                   !- Field 6
+  Until: 17:02,                           !- Field 7
+  25.0,                                   !- Field 8
+  Until: 24:00,                           !- Field 9
+  30.0;                                   !- Field 10
+
+Schedule:Compact,
+  ACTIVITY-SCHEDULE,                      !- Name
+  Any Number,                             !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 24:00,                           !- Field 3
+  120.0;                                  !- Field 4
+
+Space,
+  CLASSROOM-A,                            !- Name
+  CLASSROOM-A-ZN,                         !- Zone Name
+  ,                                       !- Ceiling Height {m}
+  ,                                       !- Volume {m3}
+  ;                                       !- Floor Area {m2}
+
+Space,
+  CLASSROOM-B,                            !- Name
+  CLASSROOM-B-ZN,                         !- Zone Name
+  ,                                       !- Ceiling Height {m}
+  ,                                       !- Volume {m3}
+  ;                                       !- Floor Area {m2}
+
+Daylighting:ReferencePoint,
+  CLASSROOM-A-DAYLIGHT-REF,               !- Name
+  CLASSROOM-A,                            !- Zone or Space Name
+  3.1,                                    !- X-Coordinate of Reference Point {m}
+  3.87,                                   !- Y-Coordinate of Reference Point {m}
+  0.8;                                    !- Z-Coordinate of Reference Point {m}
+
+Daylighting:Controls,
+  CLASSROOM-A-DAYLIGHT-CONTROLS,          !- Name
+  CLASSROOM-A,                            !- Zone or Space Name
+  SplitFlux,                              !- Daylighting Method
+  OCCUPANCY-SCHEDULE,                     !- Availability Schedule Name
+  Continuous,                             !- Lighting Control Type
+  0.3,                                    !- Minimum Input Power Fraction for Continuous or ContinuousOff Dimming Control
+  0.2,                                    !- Minimum Light Output Fraction for Continuous or ContinuousOff Dimming Control
+  1,                                      !- Number of Stepped Control Steps
+  1.0,                                    !- Probability Lighting will be Reset When Needed in Manual Stepped Control
+  CLASSROOM-A-DAYLIGHT-REF,               !- Glare Calculation Daylighting Reference Point Name
+  180,                                    !- Glare Calculation Azimuth Angle of View Direction Clockwise from Zone y-Axis {deg}
+  22,                                     !- Maximum Allowable Discomfort Glare Index
+  ,                                       !- DElight Gridding Resolution {m2}
+  CLASSROOM-A-DAYLIGHT-REF,               !- Daylighting Reference Point Name 1
+  0.6,                                    !- Fraction of Lights Controlled by Reference Point 1
+  500;                                    !- Illuminance Setpoint at Reference Point 1 {lux}
+
+Daylighting:ReferencePoint,
+  CLASSROOM-B-DAYLIGHT-REF,               !- Name
+  CLASSROOM-B,                            !- Zone or Space Name
+  9.3,                                    !- X-Coordinate of Reference Point {m}
+  3.87,                                   !- Y-Coordinate of Reference Point {m}
+  0.8;                                    !- Z-Coordinate of Reference Point {m}
+
+Daylighting:Controls,
+  CLASSROOM-B-DAYLIGHT-CONTROLS,          !- Name
+  CLASSROOM-B,                            !- Zone or Space Name
+  SplitFlux,                              !- Daylighting Method
+  OCCUPANCY-SCHEDULE,                     !- Availability Schedule Name
+  Continuous,                             !- Lighting Control Type
+  0.3,                                    !- Minimum Input Power Fraction for Continuous or ContinuousOff Dimming Control
+  0.2,                                    !- Minimum Light Output Fraction for Continuous or ContinuousOff Dimming Control
+  1,                                      !- Number of Stepped Control Steps
+  1.0,                                    !- Probability Lighting will be Reset When Needed in Manual Stepped Control
+  CLASSROOM-B-DAYLIGHT-REF,               !- Glare Calculation Daylighting Reference Point Name
+  180,                                    !- Glare Calculation Azimuth Angle of View Direction Clockwise from Zone y-Axis {deg}
+  22,                                     !- Maximum Allowable Discomfort Glare Index
+  ,                                       !- DElight Gridding Resolution {m2}
+  CLASSROOM-B-DAYLIGHT-REF,               !- Daylighting Reference Point Name 1
+  0.6,                                    !- Fraction of Lights Controlled by Reference Point 1
+  500;                                    !- Illuminance Setpoint at Reference Point 1 {lux}
+

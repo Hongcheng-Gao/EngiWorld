@@ -120,7 +120,7 @@ def run_openstudio_for_evaluation(paths: dict[str, Path]) -> tuple[dict[str, Pat
     cli = find_openstudio_cli()
     if not cli:
         return None, ["openstudio_cli:not_found"]
-    workflow_root = DESKTOP / "_eval_openstudio_workflow"
+    workflow_root = Path(tempfile.mkdtemp(prefix="engiworld-openstudio-eval-"))
     shutil.rmtree(workflow_root, ignore_errors=True)
     workflow_root.mkdir(parents=True, exist_ok=True)
     shutil.copy2(paths["optimized"], workflow_root / "optimized.idf")
@@ -143,23 +143,31 @@ def run_openstudio_for_evaluation(paths: dict[str, Path]) -> tuple[dict[str, Pat
     }
     workflow_path = workflow_root / "workflow.osw"
     workflow_path.write_text(json.dumps(workflow, indent=2) + "\n", encoding="utf-8")
-    proc = subprocess.run(
-        [cli, "run", "-w", str(workflow_path), "--show-stdout"],
-        text=True,
-        capture_output=True,
-        timeout=240,
-    )
+    try:
+        proc = subprocess.run(
+            [cli, "run", "-w", str(workflow_path), "--show-stdout"],
+            text=True,
+            capture_output=True,
+            timeout=240,
+        )
+    except Exception:
+        shutil.rmtree(workflow_root, ignore_errors=True)
+        raise
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip().replace("\n", " ")[:500]
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, [f"openstudio_workflow_rerun:failed:{detail}"]
     run_dir = workflow_root / "run"
-    rerun = {"sql": run_dir / "eplusout.sql", "err": run_dir / "eplusout.err"}
+    rerun = {"sql": run_dir / "eplusout.sql", "err": run_dir / "eplusout.err", "root": workflow_root}
     if not rerun["sql"].is_file():
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, ["openstudio_workflow_rerun:missing_eplusout_sql"]
     if not rerun["err"].is_file():
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, ["openstudio_workflow_rerun:missing_eplusout_err"]
     err_text = rerun["err"].read_text(encoding="utf-8", errors="replace")
-    if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text:
+    if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text or "0 Severe Errors" not in err_text:
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, ["openstudio_workflow_rerun:simulation_not_successful"]
     return rerun, []
 
@@ -180,8 +188,13 @@ def extract_metadata(idf_path: Path) -> tuple[dict, list[str], str]:
             in_block = False
             break
         if in_block:
+            # OpenStudio's native IdfFile#save normalizes header comments to
+            # `! text`, while hand-authored IDF commonly uses `!- text`.
+            # Both are valid EnergyPlus comments and must remain acceptable.
             if line.startswith("!-"):
                 line = line[2:].strip()
+            elif line.startswith("!"):
+                line = line[1:].strip()
             payload_lines.append(line)
     if not payload_lines:
         return {}, ["optimized_idf:missing_metadata_block"], text
@@ -429,6 +442,105 @@ def read_sql_metrics(path: Path, area_m2: float = 0.0, proxy: dict | None = None
     return metrics, errors
 
 
+def validate_native_sql_bindings(path: Path, variables: dict, quantities: dict) -> list[str]:
+    """Cross-check the evaluator-owned EnergyPlus SQLite interpretation.
+
+    This is independent of submitted metadata and proves that the constrained
+    variables reached native EnergyPlus material, surface, infiltration, load,
+    and daylight-linked tables through the pinned OpenStudio workflow.
+    """
+    failures: list[str] = []
+    try:
+        conn = sqlite3.connect(str(path))
+    except Exception as exc:
+        return [f"native_bindings_sql_open_failed:{exc}"]
+
+    def close(actual: float, expected: float, label: str, rel: float = 0.01, abs_tol: float = 1e-5) -> None:
+        if abs(float(actual) - float(expected)) > max(abs_tol, rel * max(abs(float(actual)), abs(float(expected)), 1.0)):
+            failures.append(f"native_binding_mismatch:{label}")
+
+    try:
+        simulations = conn.execute(
+            "select EnergyPlusVersion,Completed,CompletedSuccessfully from Simulations order by SimulationIndex desc limit 1"
+        ).fetchone()
+        if not simulations:
+            failures.append("missing_simulations_row")
+        elif "25.2.0" not in str(simulations[0]):
+            failures.append("wrong_energyplus_version")
+        severe_count = conn.execute("select count(*) from Errors where ErrorType = 1").fetchone()[0]
+        if int(severe_count) != 0:
+            failures.append("native_sql_contains_severe_errors")
+        if conn.execute("select count(*) from ReportData").fetchone()[0] <= 0:
+            failures.append("native_sql_has_no_report_data")
+
+        material_rows = {
+            str(name).casefold(): float(resistance)
+            for name, resistance in conn.execute("select Name,Resistance from Materials")
+            if resistance is not None
+        }
+        for name, variable in (("wall-mat", "wall_r_value_m2k_w"), ("roof-mat", "roof_r_value_m2k_w")):
+            if name not in material_rows:
+                failures.append(f"missing_native_material:{name}")
+            else:
+                close(material_rows[name], float(variables[variable]), variable)
+
+        construction_rows = {
+            str(name).casefold(): float(uvalue)
+            for name, uvalue in conn.execute("select Name,Uvalue from Constructions")
+            if uvalue is not None
+        }
+        if "window-construction" not in construction_rows:
+            failures.append("missing_native_window_construction")
+        else:
+            close(construction_rows["window-construction"], float(variables["window_u_value_w_m2k"]), "window_u_value_w_m2k", rel=0.015)
+
+        window_area = conn.execute(
+            "select coalesce(sum(Area),0) from Surfaces where ClassName = 'Window'"
+        ).fetchone()[0]
+        close(float(window_area), float(quantities["window_area_m2"]), "window_area_m2")
+        close(float(window_area) / float(quantities["exterior_wall_area_m2"]), float(variables["wwr"]), "wwr")
+
+        infiltration = conn.execute(
+            "select DesignLevel from NominalInfiltration where upper(ObjectName) = 'VISITOR-OFFICE-INFILTRATION'"
+        ).fetchone()
+        expected_flow = float(variables["infiltration_ach"]) * float(quantities["floor_area_m2"]) * 3.2 / 3600.0
+        if not infiltration:
+            failures.append("missing_native_infiltration")
+        else:
+            close(float(infiltration[0]), expected_flow, "infiltration_ach", rel=0.015)
+
+        lighting = conn.execute(
+            "select DesignLevel,FractionReplaceable from NominalLighting where upper(ObjectName) = 'VISITOR-OFFICE-LIGHTS'"
+        ).fetchone()
+        if not lighting:
+            failures.append("missing_native_lighting")
+        else:
+            close(float(lighting[0]) / float(quantities["floor_area_m2"]), float(variables["lighting_w_per_m2"]), "lighting_w_per_m2")
+            if float(variables["daylight_control_fraction"]) > 0 and float(lighting[1]) <= 0:
+                failures.append("native_daylighting_has_no_replaceable_lighting")
+
+        equipment = conn.execute(
+            "select DesignLevel from NominalElectricEquipment where upper(ObjectName) = 'VISITOR-OFFICE-EQUIPMENT'"
+        ).fetchone()
+        if not equipment:
+            failures.append("missing_native_equipment")
+        else:
+            close(float(equipment[0]) / float(quantities["floor_area_m2"]), float(variables["equipment_w_per_m2"]), "equipment_w_per_m2")
+
+        people = conn.execute(
+            "select NumberOfPeople from NominalPeople where upper(ObjectName) = 'VISITOR-OFFICE-PEOPLE'"
+        ).fetchone()
+        if not people:
+            failures.append("missing_native_people")
+        else:
+            close(float(people[0]) / float(quantities["floor_area_m2"]), float(variables["people_density_m2"]), "people_density_m2")
+    except Exception as exc:
+        failures.append(f"native_binding_query_failed:{exc}")
+    finally:
+        conn.close()
+    return failures
+
+
 def read_energy_report(path: Path) -> tuple[dict, list[str]]:
     if not path.is_file():
         return {}, ["energy_report.csv:missing"]
@@ -440,6 +552,180 @@ def read_energy_report(path: Path) -> tuple[dict, list[str]]:
     if len(rows) != 1:
         return {}, ["energy_report.csv:expected_exactly_one_data_row"]
     return rows[0], []
+
+
+def parse_idf_objects(text: str) -> list[tuple[str, list[str]]]:
+    """Parse enough IDF syntax for independent object/field validation.
+
+    The task IDFs use ordinary comma/semicolon-delimited objects. Comments are
+    removed before tokenization, quoted strings are preserved, and malformed
+    trailing objects fail closed by returning an explicit marker object.
+    """
+    cleaned_lines: list[str] = []
+    for raw in text.splitlines():
+        in_quote = False
+        chars: list[str] = []
+        for char in raw:
+            if char == '"':
+                in_quote = not in_quote
+                chars.append(char)
+            elif char == "!" and not in_quote:
+                break
+            else:
+                chars.append(char)
+        cleaned_lines.append("".join(chars))
+    content = "\n".join(cleaned_lines)
+    objects: list[tuple[str, list[str]]] = []
+    token: list[str] = []
+    fields: list[str] = []
+    in_quote = False
+    for char in content:
+        if char == '"':
+            in_quote = not in_quote
+            token.append(char)
+        elif char in {",", ";"} and not in_quote:
+            fields.append("".join(token).strip().strip('"'))
+            token = []
+            if char == ";":
+                if fields and fields[0]:
+                    objects.append((fields[0].lower(), fields[1:]))
+                fields = []
+        else:
+            token.append(char)
+    if fields or "".join(token).strip():
+        objects.append(("__parse_error__", []))
+    return objects
+
+
+def polygon_area(vertices: list[tuple[float, float, float]]) -> float:
+    cross = [0.0, 0.0, 0.0]
+    for index, a in enumerate(vertices):
+        b = vertices[(index + 1) % len(vertices)]
+        cross[0] += a[1] * b[2] - a[2] * b[1]
+        cross[1] += a[2] * b[0] - a[0] * b[2]
+        cross[2] += a[0] * b[1] - a[1] * b[0]
+    return 0.5 * math.sqrt(sum(value * value for value in cross))
+
+
+def validate_native_idf_bindings(idf_text: str, variables: dict, quantities: dict) -> list[str]:
+    failures: list[str] = []
+    objects = parse_idf_objects(idf_text)
+    if any(kind == "__parse_error__" for kind, _fields in objects):
+        return ["optimized_idf:object_parse_failed"]
+
+    def by_type(kind: str) -> list[list[str]]:
+        return [fields for object_type, fields in objects if object_type == kind.lower()]
+
+    def named(kind: str, name: str) -> list[str] | None:
+        for fields in by_type(kind):
+            if fields and fields[0].strip().casefold() == name.casefold():
+                return fields
+        failures.append(f"optimized_idf:missing_named_object:{kind}:{name}")
+        return None
+
+    def number(fields: list[str], index: int, label: str) -> float | None:
+        try:
+            return float(fields[index])
+        except Exception:
+            failures.append(f"optimized_idf:non_numeric_field:{label}")
+            return None
+
+    def close(actual: float | None, expected: float, label: str, rel: float = 0.002, abs_tol: float = 1e-5) -> None:
+        if actual is None:
+            return
+        if abs(actual - expected) > max(abs_tol, rel * max(abs(actual), abs(expected), 1.0)):
+            failures.append(f"optimized_idf:metadata_not_bound_to_object:{label}")
+
+    wall = named("Material", "WALL-MAT")
+    roof = named("Material", "ROOF-MAT")
+    if wall:
+        thickness = number(wall, 2, "WALL-MAT.thickness")
+        conductivity = number(wall, 3, "WALL-MAT.conductivity")
+        close((thickness / conductivity) if thickness is not None and conductivity else None, float(variables["wall_r_value_m2k_w"]), "wall_r_value_m2k_w")
+    if roof:
+        thickness = number(roof, 2, "ROOF-MAT.thickness")
+        conductivity = number(roof, 3, "ROOF-MAT.conductivity")
+        close((thickness / conductivity) if thickness is not None and conductivity else None, float(variables["roof_r_value_m2k_w"]), "roof_r_value_m2k_w")
+
+    glazing = named("WindowMaterial:SimpleGlazingSystem", "LOW-E-GLASS")
+    if glazing:
+        close(number(glazing, 1, "LOW-E-GLASS.u_factor"), float(variables["window_u_value_w_m2k"]), "window_u_value_w_m2k")
+        close(number(glazing, 2, "LOW-E-GLASS.shgc"), float(variables["window_shgc"]), "window_shgc")
+
+    for schedule_name, variable_name in (("HEATING-SP", "heating_setpoint_c"), ("COOLING-SP", "cooling_setpoint_c")):
+        schedule = named("Schedule:Compact", schedule_name)
+        if schedule:
+            numeric_values: list[float] = []
+            for value in schedule[2:]:
+                try:
+                    numeric_values.append(float(value))
+                except Exception:
+                    pass
+            if not numeric_values:
+                failures.append(f"optimized_idf:missing_schedule_value:{schedule_name}")
+            elif any(abs(value - float(variables[variable_name])) > 1e-6 for value in numeric_values):
+                failures.append(f"optimized_idf:metadata_not_bound_to_object:{variable_name}")
+
+    people = named("People", "VISITOR-OFFICE-PEOPLE")
+    lights = named("Lights", "VISITOR-OFFICE-LIGHTS")
+    equipment = named("ElectricEquipment", "VISITOR-OFFICE-EQUIPMENT")
+    if people:
+        close(number(people, 5, "People.people_per_area"), float(variables["people_density_m2"]), "people_density_m2")
+    if lights:
+        close(number(lights, 5, "Lights.watts_per_area"), float(variables["lighting_w_per_m2"]), "lighting_w_per_m2")
+        replaceable = number(lights, 10, "Lights.fraction_replaceable")
+        if float(variables["daylight_control_fraction"]) > 0 and (replaceable is None or replaceable <= 0):
+            failures.append("optimized_idf:daylighting_has_no_replaceable_lighting")
+    if equipment:
+        close(number(equipment, 5, "ElectricEquipment.watts_per_area"), float(variables["equipment_w_per_m2"]), "equipment_w_per_m2")
+
+    infiltration = named("ZoneInfiltration:DesignFlowRate", "VISITOR-OFFICE-INFILTRATION")
+    if infiltration:
+        if len(infiltration) <= 11 or infiltration[3].casefold() != "airchanges/hour":
+            failures.append("optimized_idf:infiltration_method_not_airchanges_per_hour")
+        else:
+            close(number(infiltration, 7, "Infiltration.ach"), float(variables["infiltration_ach"]), "infiltration_ach")
+            coefficients = [number(infiltration, index, f"Infiltration.coefficient_{index}") for index in range(8, 12)]
+            if all(value is not None for value in coefficients) and sum(abs(float(value)) for value in coefficients) <= 1e-12:
+                failures.append("optimized_idf:infiltration_all_coefficients_zero")
+
+    windows = by_type("FenestrationSurface:Detailed")
+    window_area = 0.0
+    for fields in windows:
+        try:
+            count = int(float(fields[8]))
+            coords = [float(value) for value in fields[9:9 + 3 * count]]
+            vertices = [tuple(coords[index:index + 3]) for index in range(0, len(coords), 3)]
+            if len(vertices) != count:
+                raise ValueError("vertex count")
+            window_area += polygon_area(vertices)
+        except Exception:
+            failures.append("optimized_idf:window_geometry_parse_failed")
+            break
+    close(window_area, float(quantities["window_area_m2"]), "window_area_m2", rel=0.003)
+    close(window_area / float(quantities["exterior_wall_area_m2"]), float(variables["wwr"]), "wwr", rel=0.003)
+
+    daylight = by_type("Daylighting:Controls")
+    declared_daylight = float(variables["daylight_control_fraction"])
+    if declared_daylight > 0:
+        if not daylight:
+            failures.append("optimized_idf:missing_daylighting_controls")
+        else:
+            fractions: list[float] = []
+            for fields in daylight:
+                for index in range(14, len(fields), 3):
+                    try:
+                        fractions.append(float(fields[index]))
+                    except Exception:
+                        pass
+            if not fractions:
+                failures.append("optimized_idf:missing_daylighting_control_fraction")
+            else:
+                close(sum(fractions), declared_daylight, "daylight_control_fraction", rel=0.003)
+    elif daylight:
+        failures.append("optimized_idf:unexpected_daylighting_controls")
+
+    return failures
 
 
 def validate_idf_and_constraints(constraints: dict, metadata: dict, idf_text: str, paths: dict[str, Path]) -> tuple[list[str], dict]:
@@ -488,6 +774,7 @@ def validate_idf_and_constraints(constraints: dict, metadata: dict, idf_text: st
     for preserved in ("floor_area_m2", "space_count", "thermal_zone_count", "exterior_wall_area_m2", "window_area_m2"):
         if preserved not in variables:
             failures.append(f"optimized_idf:missing_quantity_variable:{preserved}")
+    failures.extend(validate_native_idf_bindings(idf_text, variables, quantities))
     return failures, variables
 
 
@@ -670,9 +957,16 @@ def main() -> None:
         rerun_metrics, rerun_sql_errors = read_sql_metrics(rerun_paths["sql"], area_m2=area_m2, proxy=proxy)
         failures.extend([f"openstudio_workflow_rerun:{error}" for error in rerun_sql_errors])
         if not rerun_sql_errors:
+            failures.extend(
+                f"openstudio_workflow_rerun:{error}"
+                for error in validate_native_sql_bindings(
+                    rerun_paths["sql"], variables, metadata.get("model_quantities") or {}
+                )
+            )
             failures.extend(compare_submitted_sql_to_rerun(submitted_sql_metrics, rerun_metrics))
             analysis_sql_metrics = rerun_metrics
             scoring_sql_source = "evaluator_openstudio_workflow_rerun"
+        shutil.rmtree(rerun_paths["root"], ignore_errors=True)
     report, report_errors = read_energy_report(paths["report"])
     failures.extend(report_errors)
     try:

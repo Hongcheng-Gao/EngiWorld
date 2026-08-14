@@ -12,7 +12,7 @@ except Exception:
     mdb = None; openMdb = None; openOdb = None; THREE_D = None; DEFORMABLE_BODY = None
 SPEC = {'any_odb_fields': [],
  'bbox': [120, 30, 3],
- 'bbox_tol': 8.0,
+ 'bbox_tol': 0.2,
  'bc_checks': [{'kind': 'constraint', 'name': 'BC-LeftGrip'}],
  'bc_names': ['BC-LeftGrip'],
  'cad_text': 'Create a 120 x 30 x 3 mm tension coupon with one D12 through hole at the geometric '
@@ -35,7 +35,10 @@ SPEC = {'any_odb_fields': [],
                   'sign': 'positive'}],
  'load_names': ['Load-RightTension'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
- 'min_elements': 80,
+ 'allowed_element_types': ['C3D4', 'C3D8R'],
+ 'expected_volume': 10460.7079934123,
+ 'max_nodes': 1000,
+ 'min_elements': 1,
  'min_frames': 2,
  'model_name': 'Model-HoleTension',
  'nonzero_odb_fields': ['U', 'S'],
@@ -221,14 +224,17 @@ def abaqus_step_bbox(path):
         if model_name in mdb.models.keys(): del mdb.models[model_name]
     except Exception: pass
     try:
+        import part as part_module
         model=mdb.Model(name=model_name)
-        try: geom=mdb.openStep(fileName=path)
-        except Exception: geom=mdb.openStep(path)
+        try: geom=mdb.openStep(fileName=path, scale=1.0)
+        except TypeError: geom=mdb.openStep(path)
         part=model.PartFromGeometryFile(name=part_name, geometryFile=geom, combine=False, dimensionality=THREE_D, type=DEFORMABLE_BODY)
-        bb=part.getBoundingBox()
+        bb=part.cells.getBoundingBox()
         low=bb.get('low', None); high=bb.get('high', None)
         if low is None or high is None: return None
-        return [float(high[i])-float(low[i]) for i in range(3)]
+        return {'bbox':[float(high[i])-float(low[i]) for i in range(3)],
+                'volume':float(part.getVolume(cells=part.cells)),
+                'cell_count':len(part.cells)}
     except Exception as e:
         warn('Abaqus STEP fallback failed: '+str(e))
         return None
@@ -249,7 +255,7 @@ try:
         out = {"ok": False, "error": "STEP must contain exactly one solid", "solid_count": len(solids)}
     else:
         box = solids[0].BoundingBox()
-        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen]}
+        out = {"ok": True, "bbox": [box.xlen, box.ylen, box.zlen], "volume": solids[0].Volume()}
 except Exception as exc:
     out = {"ok": False, "error": repr(exc), "traceback": traceback.format_exc()}
 sys.stdout.write("__CQ_BBOX__" + json.dumps(out))
@@ -281,26 +287,33 @@ def check_step():
     if not nonempty(path, 1): return fail('Missing STEP stage: '+path)
     h=head(path,4096).upper()
     if 'ISO-10303' not in h and 'STEP' not in h: return fail('STEP header not recognized')
-    got=None
+    got=None; volume=None
     try:
         import cadquery as cq
         wp=cq.importers.importStep(path); solids=wp.solids().vals()
         if len(solids) != 1: return fail('STEP must contain exactly one solid')
-        box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]
+        box=solids[0].BoundingBox(); got=[box.xlen,box.ylen,box.zlen]; volume=float(solids[0].Volume())
         log('[PASS] STEP cadquery import succeeded')
     except Exception as e:
         warn('Abaqus Python cadquery STEP check unavailable; trying external Python CadQuery: '+str(e))
         ext=external_cadquery_step_bbox(path)
         if ext.get('ok'):
             got=ext.get('bbox')
+            volume=ext.get('volume')
             log('[PASS] STEP external cadquery import succeeded')
         elif ext.get('solid_count') is not None:
             return fail('STEP must contain exactly one solid')
         else:
             warn('external cadquery STEP check failed; trying Abaqus STEP import: '+str(ext.get('error','unknown')))
-            got=abaqus_step_bbox(path)
+            native=abaqus_step_bbox(path)
+            if native is not None:
+                if native.get('cell_count') != 1: return fail('STEP must contain exactly one solid cell')
+                got=native.get('bbox'); volume=native.get('volume')
     if got is None: return fail('STEP geometry could not be validated')
     if not dims_close(got, SPEC['bbox'], SPEC.get('bbox_tol',8.0)): return fail('STEP bbox mismatch got %s expected %s'%(got,SPEC['bbox']))
+    if volume is None: return fail('STEP volume could not be validated')
+    if not close_rel(volume, SPEC['expected_volume'], abs_tol=2.0, rel_tol=0.01):
+        return fail('STEP volume mismatch got %s expected %s'%(volume,SPEC['expected_volume']))
     return ok('STEP geometry checks passed')
 
 
@@ -321,6 +334,20 @@ def check_chain_markers(blob, markers, context):
         if not chain_contains(blob, marker):
             return fail('Missing chain evidence in %s: %s' % (context, marker))
     return True
+
+
+def step_entity_blob(path):
+    text=head(path)
+    upper=text.upper()
+    start=upper.find('DATA;')
+    end=upper.find('ENDSEC;', start+5) if start >= 0 else -1
+    if start < 0 or end < 0: return ''
+    data=text[start+5:end]
+    entities=[]
+    for statement in data.split(';'):
+        if statement.lstrip().startswith('#') and '=' in statement:
+            entities.append(statement)
+    return '\n'.join(entities)
 
 
 def cae_chain_blob(model):
@@ -380,7 +407,10 @@ def check_chain_evidence():
         if not step_name: return fail('STEP chain evidence requested but no stage_step in SPEC')
         step_path=dp(step_name)
         if not nonempty(step_path, 1): return fail('Missing STEP stage for chain evidence: '+step_path)
-        if not check_chain_markers(head(step_path), step_markers, 'STEP'):
+        # Comments and free-form header text are not native handoff metadata.
+        # Require the markers in actual STEP DATA entity strings (for example,
+        # a SolidWorks feature/body/product name or exported property).
+        if not check_chain_markers(step_entity_blob(step_path), step_markers, 'STEP DATA entities'):
             return False
     cae_markers=evidence.get('cae_markers') or []
     if cae_markers:
@@ -462,26 +492,50 @@ def collect_surfaces(model):
 
 
 def mesh_info(model):
-    coords=[]; elems=0
+    coords=[]; elems=0; types=set(); nodes=0
+    # Count each physical mesh once. Prefer the part repository; dependent
+    # assembly instances mirror the same nodes/elements and must not be added.
     try:
         for pk in model.parts.keys():
             p=model.parts[pk]
-            try: elems += len(p.elements)
-            except Exception: pass
-            try:
-                for n in p.nodes: coords.append(tuple(n.coordinates))
-            except Exception: pass
+            if len(p.elements) <= 0: continue
+            elems += len(p.elements); nodes += len(p.nodes)
+            for element in p.elements: types.add(ci(getattr(element,'type','')))
+            for node in p.nodes: coords.append(tuple(node.coordinates))
     except Exception: pass
+    if elems <= 0:
+        try:
+            for ik in model.rootAssembly.instances.keys():
+                inst=model.rootAssembly.instances[ik]
+                elems += len(inst.elements); nodes += len(inst.nodes)
+                for element in inst.elements: types.add(ci(getattr(element,'type','')))
+                for node in inst.nodes: coords.append(tuple(node.coordinates))
+        except Exception: pass
+    return coords, elems, nodes, types
+
+
+def check_cae_geometry(model):
+    parts=[]
     try:
-        for ik in model.rootAssembly.instances.keys():
-            inst=model.rootAssembly.instances[ik]
-            try: elems += len(inst.elements)
-            except Exception: pass
+        for key in model.parts.keys():
+            part=model.parts[key]
             try:
-                for n in inst.nodes: coords.append(tuple(n.coordinates))
+                if len(part.cells) > 0: parts.append(part)
             except Exception: pass
-    except Exception: pass
-    return coords, elems
+    except Exception as e:
+        return fail('Cannot inspect CAE solid parts: '+str(e))
+    if len(parts) != 1: return fail('CAE must contain exactly one solid part')
+    part=parts[0]
+    try:
+        if len(part.cells) != 1: return fail('CAE part must contain exactly one solid cell')
+        bbox=part.cells.getBoundingBox(); low=bbox['low']; high=bbox['high']
+        spans=[float(high[i])-float(low[i]) for i in range(3)]
+        volume=float(part.getVolume(cells=part.cells))
+    except Exception as e:
+        return fail('Cannot inspect CAE geometry: '+str(e))
+    if not dims_close(spans, SPEC['bbox'], SPEC['bbox_tol']): return fail('CAE geometry bbox mismatch got %s'%spans)
+    if not close_rel(volume, SPEC['expected_volume'], abs_tol=2.0, rel_tol=0.01): return fail('CAE geometry volume mismatch got %s'%volume)
+    return ok('CAE solid geometry checks passed')
 
 
 def check_material(model):
@@ -866,6 +920,7 @@ def check_cae():
     mk=find_key(mdb.models,SPEC['model_name'])
     if mk is None: return fail('Missing model '+SPEC['model_name'])
     model=mdb.models[mk]
+    if not check_cae_geometry(model): return False
     if not check_material(model): return False
     if not check_section_assignment(model): return False
     sk=find_key(model.steps,SPEC['step_name'])
@@ -884,8 +939,11 @@ def check_cae():
         if nn(name) not in surf_names: return fail('Missing surface '+name)
     if not check_bc_specs(model): return False
     if not check_load_specs(model): return False
-    coords, elems = mesh_info(model)
+    coords, elems, nodes, element_types = mesh_info(model)
     if elems < int(SPEC.get('min_elements',1)): return fail('Too few mesh elements')
+    if nodes > int(SPEC.get('max_nodes',1000)): return fail('Too many mesh nodes')
+    allowed=set([ci(value) for value in SPEC.get('allowed_element_types',[])])
+    if not element_types or not element_types <= allowed: return fail('Disallowed or unreadable element types: '+str(sorted(element_types)))
     if coords:
         spans=[]
         for ax in range(3):
@@ -914,6 +972,31 @@ def field_nonzero(field):
             if n > 5000: break
     except Exception: return False
     return False
+
+
+def vector_sum(field):
+    total=[0.0,0.0,0.0]
+    for value in field.values:
+        try: data=value.data
+        except Exception: continue
+        for index in range(min(3,len(data))):
+            total[index] += float(data[index])
+    return total
+
+
+def odb_region(odb, name):
+    target=ci(name)
+    try:
+        key=find_key(odb.rootAssembly.nodeSets, target)
+        if key is not None: return odb.rootAssembly.nodeSets[key]
+    except Exception: pass
+    try:
+        for inst_key in odb.rootAssembly.instances.keys():
+            instance=odb.rootAssembly.instances[inst_key]
+            key=find_key(instance.nodeSets, target)
+            if key is not None: return instance.nodeSets[key]
+    except Exception: pass
+    return None
 
 
 def odb_frame(frames, idx):
@@ -971,6 +1054,14 @@ def check_odb():
             key=find_key(last_frame.fieldOutputs, f)
             if key is None: return fail('Required nonzero ODB field missing: '+str(f))
             if not field_nonzero(last_frame.fieldOutputs[key]): return fail('ODB field appears to be zero: '+str(f))
+        rf_key=find_key(last_frame.fieldOutputs, 'RF')
+        left=odb_region(odb, 'LEFT_GRIP')
+        if rf_key is None or left is None: return fail('ODB lacks RF or LEFT_GRIP reaction region')
+        reaction=vector_sum(last_frame.fieldOutputs[rf_key].getSubset(region=left))
+        axial=abs(reaction[0]); transverse=(reaction[1]*reaction[1]+reaction[2]*reaction[2])**0.5
+        if not close_rel(axial, 1000.0, abs_tol=50.0, rel_tol=0.10): return fail('ODB axial reaction is not equivalent to about 1 kN: '+str(reaction))
+        if transverse > max(10.0, axial*0.05): return fail('ODB transverse reaction is too large: '+str(reaction))
+        log('[PASS] ODB LEFT_GRIP reaction balances about 1 kN')
         any_nonzero=SPEC.get('nonzero_odb_any_fields',[])
         if any_nonzero:
             matched=False

@@ -55,7 +55,7 @@ OPENSTUDIO_IDF_MEASURE_XML = """<?xml version="1.0"?>
 <description>Loads the evaluator-owned optimized IDF.</description><modeler_description>Replaces the translated workspace.</modeler_description>
 <arguments><argument><name>idf_path</name><display_name>Optimized IDF path</display_name><description>Absolute IDF path.</description>
 <type>String</type><required>true</required><model_dependent>false</model_dependent></argument></arguments>
-<outputs/><provenances/><tags/><attributes>
+<outputs/><provenances/><tags><tag>EnergyPlus</tag></tags><attributes>
 <attribute><name>Measure Type</name><value>EnergyPlusMeasure</value><datatype>string</datatype></attribute>
 <attribute><name>Measure Language</name><value>Ruby</value><datatype>string</datatype></attribute>
 </attributes><files><file><filename>measure.rb</filename><filetype>rb</filetype><usage_type>script</usage_type><checksum>00000000</checksum></file></files></measure>
@@ -115,13 +115,10 @@ def find_openstudio_cli() -> str | None:
 
 
 def run_openstudio_for_evaluation(paths: dict[str, Path]) -> tuple[dict[str, Path] | None, list[str]]:
-    if os.environ.get("ENGIWORLD_SKIP_OPENSTUDIO_RERUN") == "1":
-        return None, []
     cli = find_openstudio_cli()
     if not cli:
         return None, ["openstudio_cli:not_found"]
-    workflow_root = DESKTOP / "_eval_openstudio_workflow"
-    shutil.rmtree(workflow_root, ignore_errors=True)
+    workflow_root = Path(tempfile.mkdtemp(prefix="engiworld-openstudio-eval-"))
     workflow_root.mkdir(parents=True, exist_ok=True)
     shutil.copy2(paths["optimized"], workflow_root / "optimized.idf")
     shutil.copy2(paths["weather"], workflow_root / "weather.epw")
@@ -143,23 +140,31 @@ def run_openstudio_for_evaluation(paths: dict[str, Path]) -> tuple[dict[str, Pat
     }
     workflow_path = workflow_root / "workflow.osw"
     workflow_path.write_text(json.dumps(workflow, indent=2) + "\n", encoding="utf-8")
-    proc = subprocess.run(
-        [cli, "run", "-w", str(workflow_path), "--show-stdout"],
-        text=True,
-        capture_output=True,
-        timeout=240,
-    )
+    try:
+        proc = subprocess.run(
+            [cli, "run", "-w", str(workflow_path), "--show-stdout"],
+            text=True,
+            capture_output=True,
+            timeout=240,
+        )
+    except Exception:
+        shutil.rmtree(workflow_root, ignore_errors=True)
+        raise
     if proc.returncode != 0:
         detail = (proc.stderr or proc.stdout or "").strip().replace("\n", " ")[:500]
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, [f"openstudio_workflow_rerun:failed:{detail}"]
     run_dir = workflow_root / "run"
-    rerun = {"sql": run_dir / "eplusout.sql", "err": run_dir / "eplusout.err"}
+    rerun = {"sql": run_dir / "eplusout.sql", "err": run_dir / "eplusout.err", "root": workflow_root}
     if not rerun["sql"].is_file():
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, ["openstudio_workflow_rerun:missing_eplusout_sql"]
     if not rerun["err"].is_file():
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, ["openstudio_workflow_rerun:missing_eplusout_err"]
     err_text = rerun["err"].read_text(encoding="utf-8", errors="replace")
-    if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text:
+    if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text or "0 Severe Errors" not in err_text:
+        shutil.rmtree(workflow_root, ignore_errors=True)
         return None, ["openstudio_workflow_rerun:simulation_not_successful"]
     return rerun, []
 
@@ -182,6 +187,8 @@ def extract_metadata(idf_path: Path) -> tuple[dict, list[str], str]:
         if in_block:
             if line.startswith("!-"):
                 line = line[2:].strip()
+            elif line.startswith("!"):
+                line = line[1:].strip()
             payload_lines.append(line)
     if not payload_lines:
         return {}, ["optimized_idf:missing_metadata_block"], text
@@ -325,6 +332,14 @@ def read_sql_metrics(path: Path, area_m2: float = 0.0, proxy: dict | None = None
         native_schema = table_exists(conn, "ReportDataDictionary") and table_exists(conn, "ReportData") and table_exists(conn, "Time")
         if not native_schema:
             errors.append("eplusout.sql:missing_standard_energyplus_report_tables")
+        if not table_exists(conn, "Simulations"):
+            errors.append("eplusout.sql:missing_simulations_table")
+        if not table_exists(conn, "Errors"):
+            errors.append("eplusout.sql:missing_errors_table")
+        elif int(conn.execute("select count(*) from Errors where ErrorType = 1").fetchone()[0]) != 0:
+            errors.append("eplusout.sql:contains_severe_errors")
+        if not table_exists(conn, "EnvironmentPeriods"):
+            errors.append("eplusout.sql:missing_environment_periods")
         if table_exists(conn, "TabularDataWithStrings"):
             rows = conn.execute("select RowName,ColumnName,Units,Value from TabularDataWithStrings").fetchall()
             aliases = {
@@ -344,7 +359,17 @@ def read_sql_metrics(path: Path, area_m2: float = 0.0, proxy: dict | None = None
                 "daylight proxy": "daylight_proxy",
                 "iaq proxy": "iaq_proxy",
             }
+            occupied_unmet = 0.0
             for row_name, column_name, _units, value in rows:
+                normalized_row = str(row_name or "").strip().casefold()
+                if normalized_row in {
+                    "time setpoint not met during occupied heating",
+                    "time setpoint not met during occupied cooling",
+                }:
+                    try:
+                        occupied_unmet += float(value)
+                    except Exception:
+                        errors.append("eplusout.sql:non_numeric_occupied_unmet_hours")
                 key = (str(column_name or row_name).strip().lower())
                 metric = aliases.get(key)
                 if metric:
@@ -352,6 +377,7 @@ def read_sql_metrics(path: Path, area_m2: float = 0.0, proxy: dict | None = None
                         metrics[metric] = tabular_value(metric, float(value), str(_units or ""))
                     except Exception:
                         errors.append(f"eplusout.sql:non_numeric_tabular_value:{metric}")
+            metrics["unmet_hours"] = round(occupied_unmet, 3)
         if native_schema:
             dict_rows = standard_rows(conn, "ReportDataDictionary")
             data_columns = table_columns(conn, "ReportData")
@@ -373,8 +399,15 @@ def read_sql_metrics(path: Path, area_m2: float = 0.0, proxy: dict | None = None
                     units = str(row.get("Units", ""))
                     if idx not in sums_by_idx or not raw_name:
                         continue
+                    frequency = str(row.get("ReportingFrequency", "")).strip().casefold()
+                    # Use each annual/RunPeriod series once. Summing a Zone
+                    # Timestep, Daily, and Run Period meter triple-counts the
+                    # same facility energy. Multiple zone output variables do
+                    # share a name at Run Period frequency and must be summed.
+                    if frequency not in {"run period", "annual"}:
+                        continue
                     key = raw_name.strip().lower().replace(" ", "")
-                    meter_values[key] = to_kwh(sums_by_idx[idx], units)
+                    meter_values[key] = meter_values.get(key, 0.0) + to_kwh(sums_by_idx[idx], units)
 
                 def meter(*needles: str) -> float | None:
                     normalized_needles = [needle.lower().replace(" ", "") for needle in needles]
@@ -416,6 +449,24 @@ def read_sql_metrics(path: Path, area_m2: float = 0.0, proxy: dict | None = None
                 if "carbon_kgco2e" not in metrics and all(k in metrics for k in ("heating_kwh", "cooling_kwh", "lighting_kwh", "equipment_kwh", "fan_kwh")):
                     carbon = (float(metrics["cooling_kwh"]) + float(metrics["lighting_kwh"]) + float(metrics["equipment_kwh"]) + float(metrics["fan_kwh"])) * 0.385 + float(metrics["heating_kwh"]) * 0.185
                     metrics["carbon_kgco2e"] = round(carbon, 3)
+                for metric, variable_name in (
+                    ("peak_heating_kw", "Zone Ideal Loads Zone Total Heating Rate"),
+                    ("peak_cooling_kw", "Zone Ideal Loads Zone Total Cooling Rate"),
+                ):
+                    matching = {
+                        str(row.get("ReportDataDictionaryIndex", ""))
+                        for row in dict_rows
+                        if str(row.get("Name", "")).strip().casefold() == variable_name.casefold()
+                        and str(row.get("ReportingFrequency", "")).strip().casefold() == "hourly"
+                    }
+                    if matching:
+                        placeholders = ",".join("?" for _ in matching)
+                        peak_row = conn.execute(
+                            f"select max(total_value) from (select TimeIndex,sum({data_value_col}) as total_value from ReportData where {data_idx_col} in ({placeholders}) group by TimeIndex)",
+                            tuple(matching),
+                        ).fetchone()
+                        if peak_row and peak_row[0] is not None:
+                            metrics[metric] = round(float(peak_row[0]) / 1000.0, 6)
     except Exception as exc:
         errors.append(f"eplusout.sql:query_failed:{exc}")
     finally:
@@ -440,6 +491,214 @@ def read_energy_report(path: Path) -> tuple[dict, list[str]]:
     if len(rows) != 1:
         return {}, ["energy_report.csv:expected_exactly_one_data_row"]
     return rows[0], []
+
+
+def parse_idf_objects(text: str) -> list[tuple[str, list[str]]]:
+    cleaned: list[str] = []
+    for raw in text.splitlines():
+        in_quote = False
+        chars: list[str] = []
+        for char in raw:
+            if char == '"':
+                in_quote = not in_quote
+                chars.append(char)
+            elif char == "!" and not in_quote:
+                break
+            else:
+                chars.append(char)
+        cleaned.append("".join(chars))
+    objects: list[tuple[str, list[str]]] = []
+    fields: list[str] = []
+    token: list[str] = []
+    in_quote = False
+    for char in "\n".join(cleaned):
+        if char == '"':
+            in_quote = not in_quote
+            token.append(char)
+        elif char in {",", ";"} and not in_quote:
+            fields.append("".join(token).strip().strip('"'))
+            token = []
+            if char == ";":
+                if fields and fields[0]:
+                    objects.append((fields[0].lower(), fields[1:]))
+                fields = []
+        else:
+            token.append(char)
+    if fields or "".join(token).strip():
+        objects.append(("__parse_error__", []))
+    return objects
+
+
+def polygon_area(vertices: list[tuple[float, float, float]]) -> float:
+    cross = [0.0, 0.0, 0.0]
+    for i, a in enumerate(vertices):
+        b = vertices[(i + 1) % len(vertices)]
+        cross[0] += a[1] * b[2] - a[2] * b[1]
+        cross[1] += a[2] * b[0] - a[0] * b[2]
+        cross[2] += a[0] * b[1] - a[1] * b[0]
+    return 0.5 * math.sqrt(sum(value * value for value in cross))
+
+
+def validate_native_idf_bindings(text: str, variables: dict, quantities: dict) -> list[str]:
+    failures: list[str] = []
+    objects = parse_idf_objects(text)
+    if any(kind == "__parse_error__" for kind, _ in objects):
+        return ["optimized_idf:object_parse_failed"]
+    def by_type(kind: str) -> list[list[str]]:
+        return [fields for object_type, fields in objects if object_type == kind.lower()]
+    def named(kind: str, name: str) -> list[str] | None:
+        for fields in by_type(kind):
+            if fields and fields[0].casefold() == name.casefold():
+                return fields
+        failures.append(f"optimized_idf:missing_named_object:{kind}:{name}")
+        return None
+    def number(fields: list[str], index: int, label: str) -> float | None:
+        try: return float(fields[index])
+        except Exception:
+            failures.append(f"optimized_idf:non_numeric_field:{label}")
+            return None
+    def close(actual: float | None, expected: float, label: str, rel: float = 0.003) -> None:
+        if actual is not None and abs(actual - expected) > max(1e-5, rel * max(abs(actual), abs(expected), 1.0)):
+            failures.append(f"optimized_idf:metadata_not_bound_to_object:{label}")
+
+    for material, variable in (("WALL-MAT", "wall_r_value_m2k_w"), ("ROOF-MAT", "roof_r_value_m2k_w")):
+        obj = named("Material", material)
+        if obj:
+            thickness, conductivity = number(obj, 2, material+".thickness"), number(obj, 3, material+".conductivity")
+            close(thickness / conductivity if thickness is not None and conductivity else None, float(variables[variable]), variable)
+    glazing = named("WindowMaterial:SimpleGlazingSystem", "LOW-E-GLASS")
+    if glazing:
+        close(number(glazing, 1, "glazing.u"), float(variables["window_u_value_w_m2k"]), "window_u_value_w_m2k")
+        close(number(glazing, 2, "glazing.shgc"), float(variables["window_shgc"]), "window_shgc")
+    floor_material = named("Material", "FLOOR-MAT")
+    if floor_material:
+        close(number(floor_material, 4, "FLOOR-MAT.density"), 1000.0 + 2000.0 * float(variables["thermal_mass_level"]), "thermal_mass_level:density")
+        close(number(floor_material, 5, "FLOOR-MAT.specific_heat"), 900.0, "thermal_mass_level:specific_heat")
+
+    prefixes = ("CLASSROOM-A", "CLASSROOM-B")
+    expected_zones = {prefix: prefix + "-ZN" for prefix in prefixes}
+    spaces = {fields[0].casefold(): fields for fields in by_type("Space") if len(fields) >= 2}
+    if len(spaces) != 2:
+        failures.append("optimized_idf:expected_two_spaces")
+    for prefix in prefixes:
+        space = spaces.get(prefix.casefold())
+        if not space or space[1].casefold() != expected_zones[prefix].casefold():
+            failures.append("optimized_idf:space_zone_binding:" + prefix)
+
+    schedules = {fields[0].casefold(): fields for fields in by_type("Schedule:Compact") if fields}
+    def schedule_segments(name: str) -> list[tuple[float, float]]:
+        fields = schedules.get(name.casefold())
+        if not fields:
+            failures.append("optimized_idf:missing_schedule:" + name)
+            return []
+        segments: list[tuple[float, float]] = []
+        for index, value in enumerate(fields):
+            if not value.casefold().startswith("until:") or index + 1 >= len(fields):
+                continue
+            try:
+                time_value = value.split(":", 1)[1].strip()
+                hour, minute = [int(part) for part in time_value.split(":")]
+                segments.append((hour + minute / 60.0, float(fields[index + 1])))
+            except Exception:
+                failures.append("optimized_idf:schedule_parse_failed:" + name)
+        if not segments or abs(segments[-1][0] - 24.0) > 1e-6:
+            failures.append("optimized_idf:schedule_not_full_day:" + name)
+        return segments
+    def weighted_fraction(segments: list[tuple[float, float]]) -> float:
+        previous = 0.0
+        total = 0.0
+        for end, value in segments:
+            total += max(0.0, end - previous) * value
+            previous = end
+        return total / 24.0
+    occupied_segments = schedule_segments("OCCUPANCY-SCHEDULE")
+    hvac_segments = schedule_segments("HVAC-AVAILABILITY")
+    close(weighted_fraction(occupied_segments), float(variables["occupied_hours_fraction"]), "occupied_hours_fraction", rel=0.001)
+    close(weighted_fraction(hvac_segments), float(variables["hvac_availability_fraction"]), "hvac_availability_fraction", rel=0.001)
+    occupied_times = [end for end, _value in occupied_segments]
+    heating_segments = schedule_segments("HEATING-SP")
+    if [end for end, _value in heating_segments] != occupied_times:
+        failures.append("optimized_idf:setpoint_schedule_not_occupied:HEATING-SP")
+    heating_values = [value for _end, value in heating_segments]
+    if len(heating_values) != 3 or abs(heating_values[1] - float(variables["heating_setpoint_c"])) > 1e-6 or abs(heating_values[0] - 16.0) > 1e-6 or abs(heating_values[2] - 16.0) > 1e-6:
+        failures.append("optimized_idf:occupied_setpoint_not_bound:HEATING-SP")
+    cooling_segments = schedule_segments("COOLING-SP")
+    if len(cooling_segments) != 4 or len(occupied_segments) != 3:
+        failures.append("optimized_idf:precooling_schedule_shape")
+    else:
+        occupied_start, occupied_end = occupied_segments[0][0], occupied_segments[1][0]
+        precool_end = cooling_segments[1][0]
+        precool_start = cooling_segments[0][0]
+        expected_precool_start = max(0.0, occupied_start - float(variables["precool_hours"]))
+        if abs(precool_start - expected_precool_start) > 1.0 / 120.0 or abs(precool_end - occupied_start) > 1.0 / 120.0 or abs(cooling_segments[2][0] - occupied_end) > 1.0 / 120.0:
+            failures.append("optimized_idf:precool_hours_not_bound")
+        values = [value for _end, value in cooling_segments]
+        expected_precool_setpoint = max(float(variables["cooling_setpoint_c"]) - 1.5, 22.0)
+        if abs(values[0] - 30.0) > 1e-6 or abs(values[1] - expected_precool_setpoint) > 1e-6 or abs(values[2] - float(variables["cooling_setpoint_c"])) > 1e-6 or abs(values[3] - 30.0) > 1e-6:
+            failures.append("optimized_idf:precool_setpoint_not_bound")
+
+    ideal_templates = by_type("HVACTemplate:Zone:IdealLoadsAirSystem")
+    for prefix in prefixes:
+        matching = [fields for fields in ideal_templates if fields and fields[0].casefold() == expected_zones[prefix].casefold()]
+        if len(matching) != 1 or len(matching[0]) < 3 or matching[0][2].casefold() != "hvac-availability":
+            failures.append("optimized_idf:hvac_availability_not_bound:" + prefix)
+
+    for prefix in prefixes:
+        people = named("People", prefix+"-PEOPLE")
+        lights = named("Lights", prefix+"-LIGHTS")
+        equipment = named("ElectricEquipment", prefix+"-EQUIPMENT")
+        infiltration = named("ZoneInfiltration:DesignFlowRate", prefix+"-INFILTRATION")
+        expected_load_schedule = "OCCUPANCY-SCHEDULE"
+        if people:
+            if people[1].casefold() != prefix.casefold() or people[2].casefold() != expected_load_schedule.casefold(): failures.append("optimized_idf:people_space_schedule:"+prefix)
+            close(number(people, 5, prefix+".people"), float(variables["people_density_m2"]), "people_density_m2:"+prefix)
+        if lights:
+            if lights[1].casefold() != prefix.casefold() or lights[2].casefold() != expected_load_schedule.casefold(): failures.append("optimized_idf:lights_space_schedule:"+prefix)
+            close(number(lights, 5, prefix+".lpd"), float(variables["lighting_w_per_m2"]), "lighting_w_per_m2:"+prefix)
+            replaceable = number(lights, 10, prefix+".replaceable")
+            if float(variables["daylight_control_fraction"]) > 0 and (replaceable is None or replaceable <= 0): failures.append("optimized_idf:daylighting_has_no_replaceable_lighting:"+prefix)
+        if equipment:
+            if equipment[1].casefold() != prefix.casefold() or equipment[2].casefold() != expected_load_schedule.casefold(): failures.append("optimized_idf:equipment_space_schedule:"+prefix)
+            close(number(equipment, 5, prefix+".epd"), float(variables["equipment_w_per_m2"]), "equipment_w_per_m2:"+prefix)
+        if infiltration:
+            if len(infiltration) <= 11 or infiltration[1].casefold() != prefix.casefold() or infiltration[3].casefold() != "airchanges/hour": failures.append("optimized_idf:infiltration_method:"+prefix)
+            else:
+                close(number(infiltration, 7, prefix+".ach"), float(variables["infiltration_ach"]), "infiltration_ach:"+prefix)
+                coeffs = [number(infiltration, i, prefix+f".coef{i}") for i in range(8,12)]
+                if all(v is not None for v in coeffs) and sum(abs(float(v)) for v in coeffs) <= 1e-12: failures.append("optimized_idf:infiltration_all_coefficients_zero:"+prefix)
+
+    floor_area = 0.0
+    surfaces = by_type("BuildingSurface:Detailed")
+    for fields in surfaces:
+        if len(fields) > 11 and fields[1].casefold() == "floor":
+            try:
+                count = int(float(fields[10])); coords=[float(value) for value in fields[11:11+3*count]]
+                floor_area += polygon_area([tuple(coords[index:index+3]) for index in range(0,len(coords),3)])
+            except Exception: failures.append("optimized_idf:floor_geometry_parse_failed")
+    close(floor_area, float(quantities["floor_area_m2"]), "floor_area_m2")
+    for prefix in prefixes:
+        zone_surfaces = [fields for fields in surfaces if fields and fields[0].casefold().startswith(prefix.casefold()+"-")]
+        if len(zone_surfaces) != 6 or any(len(fields) < 5 or fields[3].casefold() != expected_zones[prefix].casefold() or fields[4].casefold() != prefix.casefold() for fields in zone_surfaces):
+            failures.append("optimized_idf:core_surface_binding:"+prefix)
+
+    window_area = 0.0
+    for fields in by_type("FenestrationSurface:Detailed"):
+        try:
+            count = int(float(fields[8])); coords=[float(v) for v in fields[9:9+3*count]]
+            window_area += polygon_area([tuple(coords[i:i+3]) for i in range(0,len(coords),3)])
+        except Exception: failures.append("optimized_idf:window_geometry_parse_failed")
+    close(window_area, float(quantities["window_area_m2"]), "window_area_m2")
+    close(window_area / float(quantities["exterior_wall_area_m2"]), float(variables["wwr"]), "wwr")
+
+    controls = by_type("Daylighting:Controls")
+    if float(variables["daylight_control_fraction"]) > 0:
+        if len(controls) != 2: failures.append("optimized_idf:expected_two_daylighting_controls")
+        for fields in controls:
+            if len(fields) <= 14: failures.append("optimized_idf:daylighting_control_incomplete")
+            else:
+                if fields[1].casefold() not in {prefix.casefold() for prefix in prefixes} or fields[3].casefold() != "occupancy-schedule": failures.append("optimized_idf:daylighting_space_schedule")
+                close(number(fields,14,"daylight.fraction"), float(variables["daylight_control_fraction"]), "daylight_control_fraction:"+(fields[1] if len(fields)>1 else "unknown"))
+    return failures
 
 
 def validate_idf_and_constraints(constraints: dict, metadata: dict, idf_text: str, paths: dict[str, Path]) -> tuple[list[str], dict]:
@@ -488,6 +747,35 @@ def validate_idf_and_constraints(constraints: dict, metadata: dict, idf_text: st
     for preserved in ("floor_area_m2", "space_count", "thermal_zone_count", "exterior_wall_area_m2", "window_area_m2"):
         if preserved not in variables:
             failures.append(f"optimized_idf:missing_quantity_variable:{preserved}")
+    failures.extend(validate_native_idf_bindings(idf_text, variables, quantities))
+    try:
+        baseline_text = paths["baseline"].read_text(encoding="utf-8", errors="replace")
+        current_design_days = [fields for kind, fields in parse_idf_objects(idf_text) if kind == "sizingperiod:designday"]
+        baseline_design_days = [fields for kind, fields in parse_idf_objects(baseline_text) if kind == "sizingperiod:designday"]
+        if current_design_days != baseline_design_days or len(current_design_days) != 1:
+            failures.append("optimized_idf:cooling_design_day_changed_or_missing")
+        current_surfaces = {fields[0].casefold(): fields for kind, fields in parse_idf_objects(idf_text) if kind == "buildingsurface:detailed" and fields}
+        baseline_surfaces = {fields[0].casefold(): fields for kind, fields in parse_idf_objects(baseline_text) if kind == "buildingsurface:detailed" and fields}
+        expected_names = {f"{prefix}-{suffix}".casefold() for prefix in ("CLASSROOM-A", "CLASSROOM-B") for suffix in ("FLOOR", "ROOF", "SOUTH-WALL", "NORTH-WALL", "WEST-WALL", "EAST-WALL")}
+        if set(current_surfaces) != expected_names or set(baseline_surfaces) != expected_names:
+            failures.append("optimized_idf:core_surface_set_changed")
+        else:
+            for name in sorted(expected_names):
+                current = current_surfaces[name]
+                baseline = baseline_surfaces[name]
+                if current[1:11] != baseline[1:11] or len(current[11:]) != len(baseline[11:]):
+                    failures.append("optimized_idf:core_surface_fields_changed:" + name)
+                    continue
+                for index, (actual, expected) in enumerate(zip(current[11:], baseline[11:])):
+                    try:
+                        if abs(float(actual) - float(expected)) > 1e-6:
+                            failures.append("optimized_idf:core_geometry_changed:" + name)
+                            break
+                    except Exception:
+                        failures.append("optimized_idf:core_geometry_non_numeric:" + name + ":" + str(index))
+                        break
+    except Exception as exc:
+        failures.append("optimized_idf:baseline_geometry_compare_failed:" + str(exc))
     return failures, variables
 
 
@@ -551,7 +839,9 @@ def validate_reports(constraints: dict, variables: dict, proxy: dict, sql_metric
         else:
             failures.append(f"energy_report.csv:missing_column:{metric}")
         summary_value = (summary.get("metrics") or {}).get(metric)
-        if summary_value is not None and not metric_close(float(summary_value), float(sql_metrics[metric]), rel=0.025, abs_tol=0.05):
+        if summary_value is None:
+            failures.append(f"design_summary.json:missing_metric:{metric}")
+        elif not metric_close(float(summary_value), float(sql_metrics[metric]), rel=0.025, abs_tol=0.05):
             failures.append(f"design_summary.json:mismatch_with_sql:{metric}")
     if report.get("case_id") != constraints["case_id"]:
         failures.append("energy_report.csv:case_id_mismatch")
@@ -591,6 +881,9 @@ def compare_submitted_sql_to_rerun(submitted: dict, rerun: dict) -> list[str]:
         "lighting_kwh",
         "equipment_kwh",
         "fan_kwh",
+        "unmet_hours",
+        "peak_cooling_kw",
+        "peak_heating_kw",
     ]:
         if metric in submitted and metric in rerun and not metric_close(float(submitted[metric]), float(rerun[metric]), rel=0.04, abs_tol=0.10):
             failures.append(f"eplusout.sql:submitted_mismatch_with_evaluator_rerun:{metric}")
@@ -656,7 +949,7 @@ def main() -> None:
         failures.append("eplusout.err:missing")
     else:
         err_text = paths["err"].read_text(encoding="utf-8", errors="replace")
-        if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text:
+        if "Fatal" in err_text or "EnergyPlus Completed Successfully" not in err_text or "0 Severe Errors" not in err_text:
             failures.append("eplusout.err:simulation_not_successful")
 
     area_m2 = float(variables.get("floor_area_m2", constraints["baseline"]["floor_area_m2"])) if variables else float(constraints["baseline"]["floor_area_m2"])
@@ -673,6 +966,7 @@ def main() -> None:
             failures.extend(compare_submitted_sql_to_rerun(submitted_sql_metrics, rerun_metrics))
             analysis_sql_metrics = rerun_metrics
             scoring_sql_source = "evaluator_openstudio_workflow_rerun"
+        shutil.rmtree(rerun_paths["root"], ignore_errors=True)
     report, report_errors = read_energy_report(paths["report"])
     failures.extend(report_errors)
     try:

@@ -1,8 +1,8 @@
 {
   "id": "c-solidcam-task-08-windows",
   "snapshot": "SolidCAM-2025",
-  "instruction": "Use command-line automation for the installed SolidCAM environment; do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. Load C:\\Users\\User\\Desktop\\rest_shape.step and read C:\\Users\\User\\Desktop\\tools.csv. Use the larger supplied end mill to clear the main pocket, then use the smaller supplied end mill for Rest machining on all small-radius corners and narrow remaining regions. The target floor is Z=6.000 mm. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-08.nc.",
-  "source": "SolidCAM iMachining 2D：https://solidcam.com/imachining/imachining-2d/ (SolidCAM)",
+  "instruction": "Use command-line/API automation with the installed SOLIDWORKS CAM 2025 environment (powered by CAMWorks); do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. Load C:\\Users\\User\\Desktop\\rest_shape.step and read C:\\Users\\User\\Desktop\\tools.csv. Import the STEP into a fresh native CAM document. The workpiece is a 120 x 80 x 18 mm plate whose cross-shaped pocket has a STEP-model floor at Z=6.000 mm. Set G54 at the center of the top face [0, 0, 18] mm with the tool axis in -Z, so the posted pocket floor is Z=-12.000 mm. Create exactly two ordered pocket operations: first use T1, the supplied 12 mm flat end mill, at S7000 rpm and F500 mm/min for main-clearing XY cuts; then use T2, the supplied 4 mm flat end mill, at S10000 rpm and F300 mm/min with CAMWorks Previous Tool Rest machining to remove the residual material in all narrow arms and small-radius corners. Controlled positive plunge feeds may be lower than the supplied XY cutting feeds. Generate both toolpaths, run the native simulation with zero reported gouges and zero undercuts, and use the installed native .ctl postprocessor. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-08.nc.",
+  "source": "https://camworks.com/camworks-is-powering-solidworks-cam/",
   "config": [
     {
       "type": "upload_file",

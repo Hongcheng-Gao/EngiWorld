@@ -76,6 +76,14 @@ def history_contains_bypass(root):
     return False
 
 
+def native_export_provenance(path, model):
+    apps = " ".join(" ".join(str(getattr(app, attr, "") or "") for attr in ("ApplicationIdentifier", "ApplicationFullName", "Version")) for app in model.by_type("IfcApplication"))
+    text = f"{apps} {read_text_safe(path, 8000)}".lower()
+    if any(token in text for token in DIRECT_IFC_TOOLS) or "/dev/null" in text:
+        return False
+    return bool(("revit" in text and ("2025" in text or re.search(r"\b25(?:\.|\b)", text))) or ("archicad" in text and re.search(r"\b27(?:\.|\b)", text)) or (("abaqus" in text or "simulia" in text) and "2025" in text))
+
+
 def header_looks_graphisoft_edm(path):
     text = read_text_safe(path, 7000).lower()
     compact = text.replace(" ", "")
@@ -243,6 +251,8 @@ def check_model(init_path, result_path):
 
     result_model = ifcopenshell.open(str(result_path))
     if not str(getattr(result_model, "schema", "")).upper().startswith("IFC4"):
+        return False
+    if not native_export_provenance(result_path, result_model):
         return False
     if not unique_global_ids(result_model):
         return False

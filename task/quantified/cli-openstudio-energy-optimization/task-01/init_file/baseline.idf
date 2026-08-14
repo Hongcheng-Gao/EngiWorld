@@ -1,410 +1,493 @@
-!- ENGIWORLD_OPTIMIZATION_METADATA_BEGIN
-!- {
-!-   "case_id": "quant-cli-openstudio-task-01-ubuntu",
-!-   "design_variables": {
-!-     "cooling_setpoint_c": 24.0,
-!-     "daylight_control_fraction": 0.1,
-!-     "economizer_fraction": 0.2,
-!-     "equipment_w_per_m2": 10.5,
-!-     "exterior_wall_area_m2": 96.0,
-!-     "floor_area_m2": 60.0,
-!-     "heating_setpoint_c": 20.0,
-!-     "hvac_availability_fraction": 0.72,
-!-     "infiltration_ach": 0.62,
-!-     "lighting_w_per_m2": 10.0,
-!-     "occupied_hours_fraction": 0.42,
-!-     "orientation_deg": 0.0,
-!-     "people_density_m2": 0.05,
-!-     "precool_hours": 0.0,
-!-     "roof_r_value_m2k_w": 3.5,
-!-     "shade_ratio": 0.1,
-!-     "space_count": 1,
-!-     "thermal_mass_level": 0.35,
-!-     "thermal_zone_count": 1,
-!-     "ventilation_lps_per_person": 8.0,
-!-     "wall_r_value_m2k_w": 2.2,
-!-     "window_area_m2": 29.76,
-!-     "window_shgc": 0.52,
-!-     "window_u_value_w_m2k": 3.1,
-!-     "wwr": 0.31
-!-   },
-!-   "model_quantities": {
-!-     "exterior_wall_area_m2": 96.0,
-!-     "floor_area_m2": 60.0,
-!-     "space_count": 1,
-!-     "thermal_zone_count": 1,
-!-     "window_area_m2": 29.76,
-!-     "wwr": 0.31
-!-   },
-!-   "role": "baseline_seed",
-!-   "space_names": [
-!-     "VISITOR-OFFICE"
-!-   ],
-!-   "thermal_zone_names": [
-!-     "VISITOR-OFFICE-ZN"
-!-   ]
-!- }
-!- ENGIWORLD_OPTIMIZATION_METADATA_END
+! ENGIWORLD_OPTIMIZATION_METADATA_BEGIN
+! {
+!   "case_id": "quant-cli-openstudio-task-01-ubuntu",
+!   "design_variables": {
+!     "cooling_setpoint_c": 24.0,
+!     "daylight_control_fraction": 0.1,
+!     "economizer_fraction": 0.2,
+!     "equipment_w_per_m2": 10.5,
+!     "exterior_wall_area_m2": 96.0,
+!     "floor_area_m2": 60.0,
+!     "heating_setpoint_c": 20.0,
+!     "hvac_availability_fraction": 0.72,
+!     "infiltration_ach": 0.62,
+!     "lighting_w_per_m2": 10.0,
+!     "occupied_hours_fraction": 0.42,
+!     "orientation_deg": 0.0,
+!     "people_density_m2": 0.05,
+!     "precool_hours": 0.0,
+!     "roof_r_value_m2k_w": 3.5,
+!     "shade_ratio": 0.1,
+!     "space_count": 1,
+!     "thermal_mass_level": 0.35,
+!     "thermal_zone_count": 1,
+!     "ventilation_lps_per_person": 8.0,
+!     "wall_r_value_m2k_w": 2.2,
+!     "window_area_m2": 29.76,
+!     "window_shgc": 0.52,
+!     "window_u_value_w_m2k": 3.1,
+!     "wwr": 0.31
+!   },
+!   "model_quantities": {
+!     "exterior_wall_area_m2": 96.0,
+!     "floor_area_m2": 60.0,
+!     "space_count": 1,
+!     "thermal_zone_count": 1,
+!     "window_area_m2": 29.76,
+!     "wwr": 0.31
+!   },
+!   "role": "baseline_seed",
+!   "space_names": [
+!     "VISITOR-OFFICE"
+!   ],
+!   "thermal_zone_names": [
+!     "VISITOR-OFFICE-ZN"
+!   ]
+! }
+! ENGIWORLD_OPTIMIZATION_METADATA_END
 
 
-Version,25.2;
+Version,
+  25.2;                                   !- Version Identifier
 
 Building,
-  quant-cli-openstudio-task-01-ubuntu,
-  0.0,
-  Suburbs,
-  0.04,
-  0.40,
-  FullExterior,
-  25,
-  6;
+  quant-cli-openstudio-task-01-ubuntu,    !- Name
+  0.0,                                    !- North Axis {deg}
+  Suburbs,                                !- Terrain
+  0.04,                                   !- Loads Convergence Tolerance Value {W}
+  0.40,                                   !- Temperature Convergence Tolerance Value {deltaC}
+  FullExterior,                           !- Solar Distribution
+  25,                                     !- Maximum Number of Warmup Days
+  6;                                      !- Minimum Number of Warmup Days
 
-Site:Location,Synthetic Test USA,39.0,-104.0,-7.0,1600.0;
+Site:Location,
+  Synthetic Test USA,                     !- Name
+  39.0,                                   !- Latitude {deg}
+  -104.0,                                 !- Longitude {deg}
+  -7.0,                                   !- Time Zone {hr}
+  1600.0;                                 !- Elevation {m}
 
-Timestep,4;
+Timestep,
+  4;                                      !- Number of Timesteps per Hour
 
-SimulationControl,No,No,No,Yes,Yes;
+SimulationControl,
+  No,                                     !- Do Zone Sizing Calculation
+  No,                                     !- Do System Sizing Calculation
+  No,                                     !- Do Plant Sizing Calculation
+  Yes,                                    !- Run Simulation for Sizing Periods
+  Yes,                                    !- Run Simulation for Weather File Run Periods
+  ,                                       !- Do HVAC Sizing Simulation for Sizing Periods
+  ;                                       !- Maximum Number of HVAC Sizing Simulation Passes
 
-RunPeriod,Annual,1,1,,12,31,,Sunday,Yes,Yes,No,Yes,Yes,No;
+RunPeriod,
+  Annual,                                 !- Name
+  1,                                      !- Begin Month
+  1,                                      !- Begin Day of Month
+  ,                                       !- Begin Year
+  12,                                     !- End Month
+  31,                                     !- End Day of Month
+  ,                                       !- End Year
+  Sunday,                                 !- Day of Week for Start Day
+  Yes,                                    !- Use Weather File Holidays and Special Days
+  Yes,                                    !- Use Weather File Daylight Saving Period
+  No,                                     !- Apply Weekend Holiday Rule
+  Yes,                                    !- Use Weather File Rain Indicators
+  Yes,                                    !- Use Weather File Snow Indicators
+  No;                                     !- Treat Weather as Actual
 
-GlobalGeometryRules,UpperLeftCorner,CounterClockWise,World;
+GlobalGeometryRules,
+  UpperLeftCorner,                        !- Starting Vertex Position
+  CounterClockWise,                       !- Vertex Entry Direction
+  World;                                  !- Coordinate System
 
-Output:SQLite,SimpleAndTabular;
+Output:SQLite,
+  SimpleAndTabular;                       !- Option Type
 
-Output:Table:SummaryReports,AllSummary;
+Output:Table:SummaryReports,
+  AllSummary;                             !- Report Name 1
 
-Output:Meter,Electricity:Facility,RunPeriod;
+Output:Meter,
+  Electricity:Facility,                   !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,DistrictHeating:Facility,RunPeriod;
+Output:Meter,
+  DistrictHeating:Facility,               !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,DistrictCooling:Facility,RunPeriod;
+Output:Meter,
+  DistrictCooling:Facility,               !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,InteriorLights:Electricity,RunPeriod;
+Output:Meter,
+  InteriorLights:Electricity,             !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,InteriorEquipment:Electricity,RunPeriod;
+Output:Meter,
+  InteriorEquipment:Electricity,          !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Meter,Fans:Electricity,RunPeriod;
+Output:Meter,
+  Fans:Electricity,                       !- Key Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Variable,*,Zone Ideal Loads Supply Air Total Heating Energy,RunPeriod;
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Ideal Loads Supply Air Total Heating Energy, !- Variable Name
+  RunPeriod;                              !- Reporting Frequency
 
-Output:Variable,*,Zone Ideal Loads Supply Air Total Cooling Energy,RunPeriod;
+Output:Variable,
+  *,                                      !- Key Value
+  Zone Ideal Loads Supply Air Total Cooling Energy, !- Variable Name
+  RunPeriod;                              !- Reporting Frequency
 
-ScheduleTypeLimits,Fraction,0,1,Continuous;
+ScheduleTypeLimits,
+  Fraction,                               !- Name
+  0,                                      !- Lower Limit Value {BasedOnField A3}
+  1,                                      !- Upper Limit Value {BasedOnField A3}
+  Continuous;                             !- Numeric Type
 
-ScheduleTypeLimits,Temperature,-60,200,Continuous;
+ScheduleTypeLimits,
+  Temperature,                            !- Name
+  -60,                                    !- Lower Limit Value {BasedOnField A3}
+  200,                                    !- Upper Limit Value {BasedOnField A3}
+  Continuous;                             !- Numeric Type
 
-Schedule:Compact,ALWAYS-ON,Fraction,Through: 12/31,For: AllDays,Until: 24:00,1;
+Schedule:Compact,
+  ALWAYS-ON,                              !- Name
+  Fraction,                               !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 24:00,                           !- Field 3
+  1;                                      !- Field 4
 
-Schedule:Compact,HEATING-SP,Temperature,Through: 12/31,For: AllDays,Until: 24:00,20.0;
+Schedule:Compact,
+  HEATING-SP,                             !- Name
+  Temperature,                            !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 24:00,                           !- Field 3
+  20.0;                                   !- Field 4
 
-Schedule:Compact,COOLING-SP,Temperature,Through: 12/31,For: AllDays,Until: 24:00,24.0;
+Schedule:Compact,
+  COOLING-SP,                             !- Name
+  Temperature,                            !- Schedule Type Limits Name
+  Through: 12/31,                         !- Field 1
+  For: AllDays,                           !- Field 2
+  Until: 24:00,                           !- Field 3
+  24.0;                                   !- Field 4
 
-HVACTemplate:Thermostat,ENGIWORLD-THERMOSTAT,HEATING-SP,,COOLING-SP,;
+HVACTemplate:Thermostat,
+  ENGIWORLD-THERMOSTAT,                   !- Name
+  HEATING-SP,                             !- Heating Setpoint Schedule Name
+  ,                                       !- Constant Heating Setpoint {C}
+  COOLING-SP,                             !- Cooling Setpoint Schedule Name
+  ;                                       !- Constant Cooling Setpoint {C}
 
-Material,WALL-MAT,Rough,0.16,0.045,1100,920,0.9,0.7,0.7;
+Material,
+  WALL-MAT,                               !- Name
+  Rough,                                  !- Roughness
+  0.099,                                  !- Thickness {m}
+  0.045,                                  !- Conductivity {W/m-K}
+  1100,                                   !- Density {kg/m3}
+  920,                                    !- Specific Heat {J/kg-K}
+  0.9,                                    !- Thermal Absorptance
+  0.7,                                    !- Solar Absorptance
+  0.7;                                    !- Visible Absorptance
 
-Material,ROOF-MAT,Rough,0.22,0.038,900,900,0.9,0.7,0.7;
+Material,
+  ROOF-MAT,                               !- Name
+  Rough,                                  !- Roughness
+  0.133,                                  !- Thickness {m}
+  0.038,                                  !- Conductivity {W/m-K}
+  900,                                    !- Density {kg/m3}
+  900,                                    !- Specific Heat {J/kg-K}
+  0.9,                                    !- Thermal Absorptance
+  0.7,                                    !- Solar Absorptance
+  0.7;                                    !- Visible Absorptance
 
-Material,FLOOR-MAT,Rough,0.18,1.2,1600,800,0.9,0.7,0.7;
+Material,
+  FLOOR-MAT,                              !- Name
+  Rough,                                  !- Roughness
+  0.18,                                   !- Thickness {m}
+  1.2,                                    !- Conductivity {W/m-K}
+  1600,                                   !- Density {kg/m3}
+  800,                                    !- Specific Heat {J/kg-K}
+  0.9,                                    !- Thermal Absorptance
+  0.7,                                    !- Solar Absorptance
+  0.7;                                    !- Visible Absorptance
 
-WindowMaterial:SimpleGlazingSystem,LOW-E-GLASS,3.1,0.52,0.62;
+WindowMaterial:SimpleGlazingSystem,
+  LOW-E-GLASS,                            !- Name
+  3.1,                                    !- U-Factor {W/m2-K}
+  0.52,                                   !- Solar Heat Gain Coefficient
+  0.62;                                   !- Visible Transmittance
 
-Construction,WALL-CONSTRUCTION,WALL-MAT;
+Construction,
+  WALL-CONSTRUCTION,                      !- Name
+  WALL-MAT;                               !- Layer 1
 
-Construction,ROOF-CONSTRUCTION,ROOF-MAT;
+Construction,
+  ROOF-CONSTRUCTION,                      !- Name
+  ROOF-MAT;                               !- Layer 1
 
-Construction,FLOOR-CONSTRUCTION,FLOOR-MAT;
+Construction,
+  FLOOR-CONSTRUCTION,                     !- Name
+  FLOOR-MAT;                              !- Layer 1
 
-Construction,WINDOW-CONSTRUCTION,LOW-E-GLASS;
+Construction,
+  WINDOW-CONSTRUCTION,                    !- Name
+  LOW-E-GLASS;                            !- Layer 1
 
 Zone,
-  VISITOR-OFFICE-ZN,
-  0,
-  0,
-  0,
-  0,
-  1,
-  1,
-  3.2,
-  autocalculate,
-  autocalculate;
+  VISITOR-OFFICE-ZN,                      !- Name
+  0,                                      !- Direction of Relative North {deg}
+  0,                                      !- X Origin {m}
+  0,                                      !- Y Origin {m}
+  0,                                      !- Z Origin {m}
+  1,                                      !- Type
+  1,                                      !- Multiplier
+  3.2,                                    !- Ceiling Height {m}
+  autocalculate,                          !- Volume {m3}
+  autocalculate;                          !- Floor Area {m2}
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
-  VISITOR-OFFICE-ZN,
-  ENGIWORLD-THERMOSTAT,
-  ALWAYS-ON,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ,
-  ;
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ENGIWORLD-THERMOSTAT,                   !- Template Thermostat Name
+  ALWAYS-ON,                              !- System Availability Schedule Name
+  ,                                       !- Maximum Heating Supply Air Temperature {C}
+  ,                                       !- Minimum Cooling Supply Air Temperature {C}
+  ,                                       !- Maximum Heating Supply Air Humidity Ratio {kgWater/kgDryAir}
+  ,                                       !- Minimum Cooling Supply Air Humidity Ratio {kgWater/kgDryAir}
+  ,                                       !- Heating Limit
+  ,                                       !- Maximum Heating Air Flow Rate {m3/s}
+  ,                                       !- Maximum Sensible Heating Capacity {W}
+  ,                                       !- Cooling Limit
+  ,                                       !- Maximum Cooling Air Flow Rate {m3/s}
+  ,                                       !- Maximum Total Cooling Capacity {W}
+  ,                                       !- Heating Availability Schedule Name
+  ,                                       !- Cooling Availability Schedule Name
+  ,                                       !- Dehumidification Control Type
+  ,                                       !- Cooling Sensible Heat Ratio {dimensionless}
+  ,                                       !- Dehumidification Setpoint {percent}
+  ,                                       !- Humidification Control Type
+  ,                                       !- Humidification Setpoint {percent}
+  ,                                       !- Outdoor Air Method
+  ,                                       !- Outdoor Air Flow Rate per Person {m3/s}
+  ,                                       !- Outdoor Air Flow Rate per Zone Floor Area {m3/s-m2}
+  ,                                       !- Outdoor Air Flow Rate per Zone {m3/s}
+  ,                                       !- Design Specification Outdoor Air Object Name
+  ;                                       !- Demand Controlled Ventilation Type
 
 BuildingSurface:Detailed,
-  VISITOR-OFFICE-FLOOR,
-  Floor,
-  FLOOR-CONSTRUCTION,
-  VISITOR-OFFICE-ZN,
-  ,
-  Ground,
-  ,
-  NoSun,
-  NoWind,
-  autocalculate,
-  4,
-  0.0,
-  0,
-  0,
-  9.798,
-  0,
-  0,
-  9.798,
-  6.124,
-  0,
-  0.0,
-  6.124,
-  0;
+  VISITOR-OFFICE-FLOOR,                   !- Name
+  Floor,                                  !- Surface Type
+  FLOOR-CONSTRUCTION,                     !- Construction Name
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ,                                       !- Space Name
+  Ground,                                 !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  NoSun,                                  !- Sun Exposure
+  NoWind,                                 !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0, 6, 0,                                !- X,Y,Z Vertex 1 {m}
+  10, 6, 0,                               !- X,Y,Z Vertex 2 {m}
+  10, 0, 0,                               !- X,Y,Z Vertex 3 {m}
+  0, 0, 0;                                !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  VISITOR-OFFICE-ROOF,
-  Roof,
-  ROOF-CONSTRUCTION,
-  VISITOR-OFFICE-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  0.0,
-  6.124,
-  3.2,
-  9.798,
-  6.124,
-  3.2,
-  9.798,
-  0,
-  3.2,
-  0.0,
-  0,
-  3.2;
+  VISITOR-OFFICE-ROOF,                    !- Name
+  Roof,                                   !- Surface Type
+  ROOF-CONSTRUCTION,                      !- Construction Name
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ,                                       !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0, 0, 3,                                !- X,Y,Z Vertex 1 {m}
+  10, 0, 3,                               !- X,Y,Z Vertex 2 {m}
+  10, 6, 3,                               !- X,Y,Z Vertex 3 {m}
+  0, 6, 3;                                !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  VISITOR-OFFICE-SOUTH-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  VISITOR-OFFICE-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  0.0,
-  0,
-  3.2,
-  9.798,
-  0,
-  3.2,
-  9.798,
-  0,
-  0,
-  0.0,
-  0,
-  0;
+  VISITOR-OFFICE-SOUTH-WALL,              !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ,                                       !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0, 0, 3,                                !- X,Y,Z Vertex 1 {m}
+  10, 0, 3,                               !- X,Y,Z Vertex 2 {m}
+  10, 0, 0,                               !- X,Y,Z Vertex 3 {m}
+  0, 0, 0;                                !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  VISITOR-OFFICE-NORTH-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  VISITOR-OFFICE-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  9.798,
-  6.124,
-  3.2,
-  0.0,
-  6.124,
-  3.2,
-  0.0,
-  6.124,
-  0,
-  9.798,
-  6.124,
-  0;
+  VISITOR-OFFICE-NORTH-WALL,              !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ,                                       !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  10, 6, 3,                               !- X,Y,Z Vertex 1 {m}
+  0, 6, 3,                                !- X,Y,Z Vertex 2 {m}
+  0, 6, 0,                                !- X,Y,Z Vertex 3 {m}
+  10, 6, 0;                               !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  VISITOR-OFFICE-WEST-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  VISITOR-OFFICE-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  0.0,
-  6.124,
-  3.2,
-  0.0,
-  0,
-  3.2,
-  0.0,
-  0,
-  0,
-  0.0,
-  6.124,
-  0;
+  VISITOR-OFFICE-WEST-WALL,               !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ,                                       !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  0, 6, 3,                                !- X,Y,Z Vertex 1 {m}
+  0, 0, 3,                                !- X,Y,Z Vertex 2 {m}
+  0, 0, 0,                                !- X,Y,Z Vertex 3 {m}
+  0, 6, 0;                                !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  VISITOR-OFFICE-EAST-WALL,
-  Wall,
-  WALL-CONSTRUCTION,
-  VISITOR-OFFICE-ZN,
-  ,
-  Outdoors,
-  ,
-  SunExposed,
-  WindExposed,
-  autocalculate,
-  4,
-  9.798,
-  0,
-  3.2,
-  9.798,
-  6.124,
-  3.2,
-  9.798,
-  6.124,
-  0,
-  9.798,
-  0,
-  0;
+  VISITOR-OFFICE-EAST-WALL,               !- Name
+  Wall,                                   !- Surface Type
+  WALL-CONSTRUCTION,                      !- Construction Name
+  VISITOR-OFFICE-ZN,                      !- Zone Name
+  ,                                       !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  autocalculate,                          !- View Factor to Ground
+  4,                                      !- Number of Vertices
+  10, 0, 3,                               !- X,Y,Z Vertex 1 {m}
+  10, 6, 3,                               !- X,Y,Z Vertex 2 {m}
+  10, 6, 0,                               !- X,Y,Z Vertex 3 {m}
+  10, 0, 0;                               !- X,Y,Z Vertex 4 {m}
 
 FenestrationSurface:Detailed,
-  VISITOR-OFFICE-SOUTH-WINDOW,
-  Window,
-  WINDOW-CONSTRUCTION,
-  VISITOR-OFFICE-SOUTH-WALL,
-  ,
-  autocalculate,
-  ,
-  1.0,
-  4,
-  0.882,
-  0,
-  2.35,
-  8.916,
-  0,
-  2.35,
-  8.916,
-  0,
-  0.9,
-  0.882,
-  0,
-  0.9;
+  VISITOR-OFFICE-SOUTH-WINDOW,            !- Name
+  Window,                                 !- Surface Type
+  WINDOW-CONSTRUCTION,                    !- Construction Name
+  VISITOR-OFFICE-SOUTH-WALL,              !- Building Surface Name
+  ,                                       !- Outside Boundary Condition Object
+  autocalculate,                          !- View Factor to Ground
+  ,                                       !- Frame and Divider Name
+  1.0,                                    !- Multiplier
+  4,                                      !- Number of Vertices
+  0.2, 0, 3.05,                           !- X,Y,Z Vertex 1 {m}
+  9.8, 0, 3.05,                           !- X,Y,Z Vertex 2 {m}
+  9.8, 0, -0.05,                          !- X,Y,Z Vertex 3 {m}
+  0.2, 0, -0.05;                          !- X,Y,Z Vertex 4 {m}
 
 Shading:Building:Detailed,
-  VISITOR-OFFICE-OVERHANG,
-  ,
-  4,
-  0.882,
-  -0.145,
-  2.47,
-  8.916,
-  -0.145,
-  2.47,
-  8.916,
-  0,
-  2.47,
-  0.882,
-  0,
-  2.47;
+  VISITOR-OFFICE-OVERHANG,                !- Name
+  ,                                       !- Transmittance Schedule Name
+  4,                                      !- Number of Vertices
+  0.2, -0.145, 3,                         !- X,Y,Z Vertex 1 {m}
+  9.8, -0.145, 3,                         !- X,Y,Z Vertex 2 {m}
+  9.8, 0, 3,                              !- X,Y,Z Vertex 3 {m}
+  0.2, 0, 3;                              !- X,Y,Z Vertex 4 {m}
 
 People,
-  VISITOR-OFFICE-PEOPLE,
-  VISITOR-OFFICE-ZN,
-  ALWAYS-ON,
-  People/Area,
-  ,
-  0.05,
-  ,
-  0.3,
-  autocalculate,
-  ALWAYS-ON;
+  VISITOR-OFFICE-PEOPLE,                  !- Name
+  VISITOR-OFFICE-ZN,                      !- Zone or ZoneList or Space or SpaceList Name
+  ALWAYS-ON,                              !- Number of People Schedule Name
+  People/Area,                            !- Number of People Calculation Method
+  ,                                       !- Number of People
+  0.05,                                   !- People per Floor Area {person/m2}
+  ,                                       !- Floor Area per Person {m2/person}
+  0.3,                                    !- Fraction Radiant
+  autocalculate,                          !- Sensible Heat Fraction
+  ALWAYS-ON;                              !- Activity Level Schedule Name
 
 Lights,
-  VISITOR-OFFICE-LIGHTS,
-  VISITOR-OFFICE-ZN,
-  ALWAYS-ON,
-  Watts/Area,
-  ,
-  10.0,
-  ,
-  0,
-  0.42,
-  0.18,
-  0.0,
-  General;
+  VISITOR-OFFICE-LIGHTS,                  !- Name
+  VISITOR-OFFICE-ZN,                      !- Zone or ZoneList or Space or SpaceList Name
+  ALWAYS-ON,                              !- Schedule Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Lighting Level {W}
+  10,                                     !- Watts per Floor Area {W/m2}
+  ,                                       !- Watts per Person {W/person}
+  0,                                      !- Return Air Fraction
+  0.42,                                   !- Fraction Radiant
+  0.18,                                   !- Fraction Visible
+  1,                                      !- Fraction Replaceable
+  General;                                !- End-Use Subcategory
 
 ElectricEquipment,
-  VISITOR-OFFICE-EQUIPMENT,
-  VISITOR-OFFICE-ZN,
-  ALWAYS-ON,
-  Watts/Area,
-  ,
-  10.5,
-  ,
-  0,
-  0.3,
-  0.2,
-  General;
+  VISITOR-OFFICE-EQUIPMENT,               !- Name
+  VISITOR-OFFICE-ZN,                      !- Zone or ZoneList or Space or SpaceList Name
+  ALWAYS-ON,                              !- Schedule Name
+  Watts/Area,                             !- Design Level Calculation Method
+  ,                                       !- Design Level {W}
+  10.5,                                   !- Watts per Floor Area {W/m2}
+  ,                                       !- Watts per Person {W/person}
+  0,                                      !- Fraction Latent
+  0.3,                                    !- Fraction Radiant
+  0.2,                                    !- Fraction Lost
+  General;                                !- End-Use Subcategory
 
 ZoneInfiltration:DesignFlowRate,
-  VISITOR-OFFICE-INFILTRATION,
-  VISITOR-OFFICE-ZN,
-  ALWAYS-ON,
-  AirChanges/Hour,
-  ,
-  ,
-  ,
-  0.62,
-  0.0,
-  0.0,
-  0.0,
-  0.0;
+  VISITOR-OFFICE-INFILTRATION,            !- Name
+  VISITOR-OFFICE-ZN,                      !- Zone or ZoneList or Space or SpaceList Name
+  ALWAYS-ON,                              !- Schedule Name
+  AirChanges/Hour,                        !- Design Flow Rate Calculation Method
+  ,                                       !- Design Flow Rate {m3/s}
+  ,                                       !- Flow Rate per Floor Area {m3/s-m2}
+  ,                                       !- Flow Rate per Exterior Surface Area {m3/s-m2}
+  0.62,                                   !- Air Changes per Hour {1/hr}
+  1,                                      !- Constant Term Coefficient
+  0,                                      !- Temperature Term Coefficient
+  0,                                      !- Velocity Term Coefficient
+  0;                                      !- Velocity Squared Term Coefficient
 
 DesignSpecification:OutdoorAir,
-  VISITOR-OFFICE-OA,
-  Sum,
-  0.008,
-  0.0003,
-  0,
-  0,
-  ALWAYS-ON;
+  VISITOR-OFFICE-OA,                      !- Name
+  Sum,                                    !- Outdoor Air Method
+  0.008,                                  !- Outdoor Air Flow per Person {m3/s-person}
+  0.0003,                                 !- Outdoor Air Flow per Zone Floor Area {m3/s-m2}
+  0,                                      !- Outdoor Air Flow per Zone {m3/s}
+  0,                                      !- Outdoor Air Flow Air Changes per Hour {1/hr}
+  ALWAYS-ON;                              !- Outdoor Air Schedule Name
+
+Daylighting:ReferencePoint,
+  VISITOR-OFFICE-DAYLIGHT-REF,            !- Name
+  VISITOR-OFFICE-ZN,                      !- Zone or Space Name
+  5.0,                                    !- X-Coordinate of Reference Point {m}
+  3.0,                                    !- Y-Coordinate of Reference Point {m}
+  0.8;                                    !- Z-Coordinate of Reference Point {m}
+
+Daylighting:Controls,
+  VISITOR-OFFICE-DAYLIGHT-CONTROLS,       !- Name
+  VISITOR-OFFICE-ZN,                      !- Zone or Space Name
+  SplitFlux,                              !- Daylighting Method
+  ALWAYS-ON,                              !- Availability Schedule Name
+  Continuous,                             !- Lighting Control Type
+  0.3,                                    !- Minimum Input Power Fraction for Continuous or ContinuousOff Dimming Control
+  0.2,                                    !- Minimum Light Output Fraction for Continuous or ContinuousOff Dimming Control
+  1,                                      !- Number of Stepped Control Steps
+  1.0,                                    !- Probability Lighting will be Reset When Needed in Manual Stepped Control
+  VISITOR-OFFICE-DAYLIGHT-REF,            !- Glare Calculation Daylighting Reference Point Name
+  180.0,                                  !- Glare Calculation Azimuth Angle of View Direction Clockwise from Zone y-Axis {deg}
+  22.0,                                   !- Maximum Allowable Discomfort Glare Index
+  ,                                       !- DElight Gridding Resolution {m2}
+  VISITOR-OFFICE-DAYLIGHT-REF,            !- Daylighting Reference Point Name 1
+  0.1,                                    !- Fraction of Lights Controlled by Reference Point 1
+  500.0;                                  !- Illuminance Setpoint at Reference Point 1 {lux}
+

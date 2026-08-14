@@ -3,340 +3,453 @@ from __future__ import annotations
 import math
 import os
 import re
+from dataclasses import dataclass, field
 from pathlib import Path
 
-RULE = {'files': {'task-11.nc': {'terms': [['POCKET']], 'min_tools': 1, 'min_motion': 20, 'min_cut_groups': 2, 'regions': [{'rect': [-50, -30, -1, 30], 'min': 5}, {'rect': [1, -30, 50, 30], 'min': 5}], 'avoid_rects': [[-67.5, -60, 67.5, -50], [-67.5, 50, 67.5, 60]], 'avoid_clearance': 3.0, 'avoid_below': 20.0}}}
-DEFAULT_TARGET = 'C:\\Users\\User\\Desktop'
+
+DEFAULT_TARGET = r"C:\Users\User\Desktop"
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
-TOL = 0.75
+OUTPUT_NAME = "task-11.nc"
 
-FORBIDDEN_EXTENSIONS = {".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd", ".ps1", ".vbs", ".js", ".mjs", ".ts", ".rb", ".lua", ".tcl", ".ahk", ".scr"}
-
-
-def check_no_gui_bypass(root: Path) -> bool:
-    try:
-        if not root.exists():
-            return True
-        for path in root.rglob("*"):
-            if path.is_file() and path.name != "eval.py" and path.suffix.lower() in FORBIDDEN_EXTENSIONS:
-                return False
-    except Exception:
-        return False
-    return True
+DEPTH_MM = 8.0
+DEPTH_TOL_MM = 0.5
+GEOMETRY_TOL_MM = 1.0
+WORD_RE = re.compile(r"([A-Z])\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+))", re.IGNORECASE)
+COMMENT_RE = re.compile(r"\([^()]*\)")
 
 
-def close(a, b, tol=TOL):
-    return abs(float(a) - float(b)) <= tol
+@dataclass
+class Record:
+    line: int
+    motion: int
+    start: dict[str, float | None]
+    end: dict[str, float | None]
+    explicit: dict[str, float]
+    tool: int | None
+    wcs: str | None
+    spindle_on: bool
+    feed: float | None
 
 
-def strip_code(line: str) -> str:
-    line = re.sub(r"\([^)]*\)", " ", line)
-    return line.split(";", 1)[0].upper()
+@dataclass
+class Program:
+    code_lines: list[str] = field(default_factory=list)
+    records: list[Record] = field(default_factory=list)
+    tools: list[int] = field(default_factory=list)
+    units_seen: set[int] = field(default_factory=set)
+    distance_modes_seen: set[int] = field(default_factory=set)
+    axes_seen: set[str] = field(default_factory=set)
+    m_codes_seen: set[int] = field(default_factory=set)
+    m30_lines: list[int] = field(default_factory=list)
+    has_tool_length_comp: bool = False
 
 
-def parse_nc(src: str):
-    records = []
-    state = {"x": None, "y": None, "z": None, "tool": None, "wcs": None, "motion": None}
-    tools = []
-    axes_seen = set()
-    for index, raw in enumerate(src.splitlines()):
-        code = strip_code(raw)
-        if not code.strip():
+@dataclass(frozen=True)
+class Pocket:
+    bounds: tuple[float, float, float, float]
+    center: tuple[float, float]
+    long_span: float
+    short_span: float
+    floor: float
+
+
+def close(left: float, right: float, tolerance: float = GEOMETRY_TOL_MM) -> bool:
+    return abs(float(left) - float(right)) <= tolerance
+
+
+def code_only(raw: str) -> str:
+    return COMMENT_RE.sub(" ", raw.upper()).split(";", 1)[0]
+
+
+def parse_program(source: str) -> Program:
+    program = Program()
+    position: dict[str, float | None] = {"x": None, "y": None, "z": None}
+    unit_scale: float | None = None
+    absolute = True
+    wcs: str | None = None
+    pending_tool: int | None = None
+    current_tool: int | None = None
+    modal_motion: int | None = None
+    spindle_on = False
+    modal_feed: float | None = None
+
+    for line_number, raw in enumerate(source.splitlines()):
+        code = code_only(raw)
+        program.code_lines.append(code)
+        words = [(letter.upper(), float(value)) for letter, value in WORD_RE.findall(code)]
+        if not words:
             continue
-        tool_match = re.search(r"\bT0*(\d+)\b", code)
-        if tool_match:
-            state["tool"] = int(tool_match.group(1))
-            tools.append(state["tool"])
-        for wcs in re.findall(r"\bG(5[4-9])\b", code):
-            state["wcs"] = "G" + wcs
-        g_codes = [int(value) for value in re.findall(r"\bG0*(\d+)\b", code)]
+        g_codes = [int(round(value)) for letter, value in words if letter == "G"]
+        m_codes = [int(round(value)) for letter, value in words if letter == "M"]
+        program.m_codes_seen.update(m_codes)
+        if 20 in g_codes:
+            unit_scale = 25.4
+            program.units_seen.add(20)
+        if 21 in g_codes:
+            unit_scale = 1.0
+            program.units_seen.add(21)
+        if 90 in g_codes:
+            absolute = True
+            program.distance_modes_seen.add(90)
+        if 91 in g_codes:
+            absolute = False
+            program.distance_modes_seen.add(91)
+        for value in g_codes:
+            if 54 <= value <= 59:
+                wcs = f"G{value}"
+        if 43 in g_codes:
+            program.has_tool_length_comp = True
+        for letter, value in words:
+            if letter == "T":
+                pending_tool = int(round(value))
+            if letter in {"X", "Y", "Z", "A", "B", "C", "U", "V", "W"}:
+                program.axes_seen.add(letter)
+        if 6 in m_codes:
+            if pending_tool is None or pending_tool <= 0:
+                raise ValueError("M6 without a valid tool")
+            current_tool = pending_tool
+            if current_tool not in program.tools:
+                program.tools.append(current_tool)
+            spindle_on = False
+        if 3 in m_codes or 4 in m_codes:
+            spindle_on = True
+        if 5 in m_codes:
+            spindle_on = False
+        if 30 in m_codes:
+            program.m30_lines.append(line_number)
         if 80 in g_codes:
-            state["motion"] = None
-        explicit_motion = next((g for g in g_codes if g in {0, 1, 2, 3, 81, 82, 83, 84}), None)
+            modal_motion = None
+        explicit_motion = next((value for value in g_codes if value in {0, 1, 2, 3}), None)
         if explicit_motion is not None:
-            state["motion"] = explicit_motion
-        explicit = {}
-        for axis in "XYZABCIJKRF":
-            match = re.search(rf"\b{axis}([+-]?\d+(?:\.\d+)?)", code)
-            if match:
-                explicit[axis.lower()] = float(match.group(1))
-                axes_seen.add(axis)
-        if state["motion"] is None or not any(axis in explicit for axis in ("x", "y", "z", "a", "b", "c")):
+            modal_motion = explicit_motion
+
+        converted: dict[str, float] = {}
+        if unit_scale is not None:
+            converted = {
+                letter.lower(): value * unit_scale
+                for letter, value in words
+                if letter in {"X", "Y", "Z", "I", "J", "K", "R"}
+            }
+            feeds = [value * unit_scale for letter, value in words if letter == "F"]
+            if feeds:
+                modal_feed = feeds[-1]
+        machine_return = 28 in g_codes or 30 in g_codes
+        start = dict(position)
+        if not machine_return and unit_scale is not None:
+            for axis in ("x", "y", "z"):
+                if axis not in converted:
+                    continue
+                if absolute:
+                    position[axis] = converted[axis]
+                elif position[axis] is not None:
+                    position[axis] += converted[axis]
+                else:
+                    raise ValueError("incremental motion before an absolute work position")
+        if machine_return or current_tool is None or modal_motion is None:
             continue
-        start = {axis: state[axis] for axis in ("x", "y", "z")}
-        for axis in ("x", "y", "z"):
-            if axis in explicit:
-                state[axis] = explicit[axis]
-        records.append({"index": index, "raw": raw.upper(), "code": state["motion"], "start": start, "end": {axis: state[axis] for axis in ("x", "y", "z")}, "explicit": explicit, "tool": state["tool"], "wcs": state["wcs"]})
-    return records, tools, axes_seen
+        if not any(axis in converted for axis in ("x", "y", "z")) and not (
+            modal_motion in {2, 3} and any(axis in converted for axis in ("i", "j", "r"))
+        ):
+            continue
+        program.records.append(
+            Record(
+                line_number,
+                modal_motion,
+                start,
+                dict(position),
+                converted,
+                current_tool,
+                wcs,
+                spindle_on,
+                modal_feed,
+            )
+        )
+    return program
 
 
-def xy_changed(record):
-    s, e = record["start"], record["end"]
-    return s["x"] is not None and s["y"] is not None and e["x"] is not None and e["y"] is not None and (not close(s["x"], e["x"], 1e-6) or not close(s["y"], e["y"], 1e-6))
+def xy(record: Record, which: str) -> tuple[float, float] | None:
+    state = record.start if which == "start" else record.end
+    if state["x"] is None or state["y"] is None:
+        return None
+    return float(state["x"]), float(state["y"])
 
 
-def cut_records(records):
-    return [record for record in records if record["code"] in {1, 2, 3} and xy_changed(record)]
+def xy_changed(record: Record) -> bool:
+    start, end = xy(record, "start"), xy(record, "end")
+    return start is not None and end is not None and math.dist(start, end) > 1.0e-6
 
 
-def tool_order(tools):
-    out = []
-    for tool in tools:
-        if tool not in out:
-            out.append(tool)
+def is_cut(record: Record) -> bool:
+    return record.motion in {1, 2, 3} and (
+        xy_changed(record) or (record.motion in {2, 3} and any(axis in record.explicit for axis in ("i", "j", "r")))
+    )
+
+
+def points(records: list[Record]) -> list[tuple[float, float]]:
+    out: list[tuple[float, float]] = []
+    for record in records:
+        for which in ("start", "end"):
+            point = xy(record, which)
+            if point is not None:
+                out.append(point)
     return out
 
 
-def tool_for_ordinal(tools, ordinal):
-    order = tool_order(tools)
-    return order[int(ordinal) - 1] if 0 < int(ordinal) <= len(order) else None
+def bounds(records: list[Record]) -> tuple[float, float, float, float] | None:
+    pts = points(records)
+    if not pts:
+        return None
+    xs, ys = [p[0] for p in pts], [p[1] for p in pts]
+    return min(xs), max(xs), min(ys), max(ys)
 
 
-def record_z(record):
-    return record["end"]["z"]
-
-
-def at_z(record, z, tol=TOL):
-    return record_z(record) is not None and close(record_z(record), z, tol)
-
-
-def cut_groups(records, z=None):
-    groups, current = [], []
-    last_index = None
-    last_tool = last_wcs = None
-    for record in records:
-        qualifies = record["code"] in {1, 2, 3} and xy_changed(record) and (z is None or at_z(record, z))
-        split = last_index is not None and (record["index"] > last_index + 2 or record["tool"] != last_tool or record["wcs"] != last_wcs)
-        if not qualifies or split:
+def floor_groups(program: Program, floor: float) -> list[list[Record]]:
+    groups: list[list[Record]] = []
+    current: list[Record] = []
+    for record in program.records:
+        qualifies = is_cut(record) and record.end["z"] is not None and close(record.end["z"], floor, DEPTH_TOL_MM)
+        if not qualifies:
             if current:
                 groups.append(current)
                 current = []
-        if qualifies:
-            current.append(record)
-            last_tool, last_wcs = record["tool"], record["wcs"]
-        last_index = record["index"]
+            continue
+        current.append(record)
     if current:
         groups.append(current)
     return groups
 
 
-def group_closed(group):
-    if len(group) < 3:
-        return False
-    start = group[0]["start"]
-    end = group[-1]["end"]
-    if None in (start["x"], start["y"], end["x"], end["y"]):
-        return False
-    return close(start["x"], end["x"], 1.0) and close(start["y"], end["y"], 1.0)
+def pocket_from_group(group: list[Record], floor: float) -> Pocket | None:
+    if len(group) < 4:
+        return None
+    box = bounds(group)
+    if box is None:
+        return None
+    width, height = box[1] - box[0], box[3] - box[2]
+    long_span, short_span = max(width, height), min(width, height)
+    # For a 30 x 22 mm pocket, subtracting the same cutter diameter and
+    # ordinary wall allowance from both axes preserves the 8 mm span delta.
+    implied_long = 30.0 - long_span
+    implied_short = 22.0 - short_span
+    if not (2.0 <= implied_long <= 18.0 and close(implied_long, implied_short, 1.4)):
+        return None
+    first, last = xy(group[0], "start"), xy(group[-1], "end")
+    closed = first is not None and last is not None and math.dist(first, last) <= 1.0
+    horizontal = sum(
+        xy_changed(record)
+        and xy(record, "start") is not None
+        and xy(record, "end") is not None
+        and close(xy(record, "start")[1], xy(record, "end")[1], 0.15)
+        and abs(xy(record, "end")[0] - xy(record, "start")[0]) >= 0.55 * width
+        for record in group
+    )
+    vertical = sum(
+        xy_changed(record)
+        and xy(record, "start") is not None
+        and xy(record, "end") is not None
+        and close(xy(record, "start")[0], xy(record, "end")[0], 0.15)
+        and abs(xy(record, "end")[1] - xy(record, "start")[1]) >= 0.55 * height
+        for record in group
+    )
+    if not closed or horizontal < 2 or vertical < 2:
+        return None
+    return Pocket(box, ((box[0] + box[1]) / 2.0, (box[2] + box[3]) / 2.0), long_span, short_span, floor)
 
 
-def hole_visits(records, tools, rule):
-    tool = tool_for_ordinal(tools, rule.get("tool", 1)) if rule.get("tool") else None
-    cycle_codes = set(rule.get("cycle", []))
-    visits = []
-    for record in records:
-        if tool is not None and record["tool"] != tool:
+def unique_pockets(items: list[Pocket]) -> list[Pocket]:
+    result: list[Pocket] = []
+    for item in items:
+        if any(math.dist(item.center, other.center) <= 1.0 for other in result):
             continue
-        e, s = record["end"], record["start"]
-        if e["x"] is None or e["y"] is None or e["z"] is None or e["z"] > float(rule.get("z_max", 1e9)) + TOL:
-            continue
-        if cycle_codes:
-            if record["code"] in cycle_codes:
-                visits.append((e["x"], e["y"]))
-        elif record["code"] in {81, 82, 83, 84}:
-            visits.append((e["x"], e["y"]))
-        elif record["code"] == 1 and s["x"] is not None and s["y"] is not None and s["z"] is not None and close(s["x"], e["x"]) and close(s["y"], e["y"]) and s["z"] - e["z"] > 0.2:
-            visits.append((e["x"], e["y"]))
-    return visits
+        result.append(item)
+    return result
 
 
-def has_all_points(actual, expected):
-    return all(any(close(x, ex) and close(y, ey) for x, y in actual) for ex, ey in expected)
+def pocket_frame(pockets: list[Pocket]) -> tuple[tuple[float, float], tuple[float, float], tuple[float, float]] | None:
+    if len(pockets) != 2:
+        return None
+    p1, p2 = sorted(pockets, key=lambda item: item.center)
+    delta = (p2.center[0] - p1.center[0], p2.center[1] - p1.center[1])
+    distance = math.hypot(*delta)
+    if not close(distance, 50.0, 1.1):
+        return None
+    axis = (delta[0] / distance, delta[1] / distance)
+    normal = (-axis[1], axis[0])
+    origin = ((p1.center[0] + p2.center[0]) / 2.0, (p1.center[1] + p2.center[1]) / 2.0)
+    for pocket in pockets:
+        if not close(pocket.long_span, pockets[0].long_span, 0.8) or not close(pocket.short_span, pockets[0].short_span, 0.8):
+            return None
+        width, height = pocket.bounds[1] - pocket.bounds[0], pocket.bounds[3] - pocket.bounds[2]
+        if abs(axis[0]) >= abs(axis[1]):
+            if width < height:
+                return None
+        elif height < width:
+            return None
+    return origin, axis, normal
 
 
-def arc_centers(records):
-    centers = []
-    for record in records:
-        if record["code"] not in {2, 3}:
-            continue
-        s = record["start"]
-        ex = record["explicit"]
-        if s["x"] is not None and s["y"] is not None and "i" in ex and "j" in ex:
-            centers.append((s["x"] + ex["i"], s["y"] + ex["j"]))
-    return centers
+def local(point: tuple[float, float], frame) -> tuple[float, float]:
+    origin, axis, normal = frame
+    delta = (point[0] - origin[0], point[1] - origin[1])
+    return delta[0] * axis[0] + delta[1] * axis[1], delta[0] * normal[0] + delta[1] * normal[1]
 
 
-def circular_centers(records):
-    centers = arc_centers(records)
-    for group in cut_groups(records):
-        if not group_closed(group):
-            continue
-        pts = [(r["end"]["x"], r["end"]["y"]) for r in group]
-        if len(pts) < 6:
-            continue
-        xs, ys = [p[0] for p in pts], [p[1] for p in pts]
-        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-        radii = [math.hypot(x - cx, y - cy) for x, y in pts]
-        if max(radii) - min(radii) <= 1.5:
-            centers.append((cx, cy))
-    return centers
-
-
-def rect_contains(point, rect, margin=0.0):
+def point_rect_distance(point: tuple[float, float], rect: tuple[float, float, float, float]) -> float:
     x, y = point
     x1, y1, x2, y2 = rect
-    return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
+    return math.hypot(max(x1 - x, 0.0, x - x2), max(y1 - y, 0.0, y - y2))
 
 
-def validate_file(path: Path, rule: dict) -> bool:
-    if not path.exists() or path.stat().st_size <= 0:
-        return False
-    src = path.read_text(encoding="utf-8", errors="ignore").upper()
-    code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
-        return False
-    records, tools, axes_seen = parse_nc(src)
-    cuts = cut_records(records)
-    if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
-        return False
-    if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
-        return False
-    for group in rule.get("terms", []):
-        if not any(str(term).upper() in src for term in group):
-            return False
-    if any(axis.upper() in axes_seen for axis in rule.get("forbid_axes", [])):
-        return False
-    for expected_z in rule.get("z_values", []):
-        if not any(at_z(record, expected_z) for record in records):
-            return False
-    z_values = sorted({round(record_z(record), 3) for record in cuts if record_z(record) is not None})
-    if len(z_values) < int(rule.get("min_z_levels", 0)):
-        return False
-    if "face_grid" in rule:
-        item = rule["face_grid"]
-        candidates = [record for record in cuts if "z" not in item or at_z(record, item["z"])]
-        horizontal, vertical = set(), set()
-        span = float(item.get("span", 20.0))
-        for record in candidates:
-            s, e = record["start"], record["end"]
-            if abs(e["x"] - s["x"]) >= span and close(e["y"], s["y"], 0.2):
-                horizontal.add(round((e["y"] + s["y"]) / 2, 1))
-            if abs(e["y"] - s["y"]) >= span and close(e["x"], s["x"], 0.2):
-                vertical.add(round((e["x"] + s["x"]) / 2, 1))
-        if max(len(horizontal), len(vertical)) < int(item["min_tracks"]):
-            return False
-    if "closed" in rule:
-        item = rule["closed"]
-        groups = cut_groups(records, item.get("z"))
-        if sum(group_closed(group) for group in groups) < int(item["min"]):
-            return False
-    if len(cut_groups(records)) < int(rule.get("min_cut_groups", 0)):
-        return False
-    for item in rule.get("hole_sets", []):
-        if not has_all_points(hole_visits(records, tools, item), item["points"]):
-            return False
-    if "any_holes" in rule:
-        item = rule["any_holes"]
-        visits = hole_visits(records, tools, {"tool": item.get("tool"), "z_max": item.get("z_max", 1e9)})
-        unique = []
-        for point in visits:
-            if not any(close(point[0], p[0]) and close(point[1], p[1]) for p in unique):
-                unique.append(point)
-        if len(unique) < int(item["min"]):
-            return False
-    all_visits = hole_visits(records, tools, {"z_max": 1e9})
-    if any(any(close(x, fx) and close(y, fy) for x, y in all_visits) for fx, fy in rule.get("forbidden_holes", [])):
-        return False
-    if "circle_centers" in rule:
-        item = rule["circle_centers"]
-        centers = circular_centers(records)
-        if not has_all_points(centers, item["points"]) or len(centers) < int(item["min"]):
-            return False
-    if sum(1 for record in records if record["code"] in {2, 3}) < int(rule.get("min_arcs", 0)):
-        return False
-    if "region" in rule:
-        item = rule["region"]
-        if sum(rect_contains((r["end"]["x"], r["end"]["y"]), item["rect"]) for r in cuts) < int(item["min"]):
-            return False
-    for item in rule.get("regions", []):
-        if sum(rect_contains((r["end"]["x"], r["end"]["y"]), item["rect"]) for r in cuts) < int(item["min"]):
-            return False
-    for ordinal, minimum in rule.get("tool_min_cut", {}).items():
-        tool = tool_for_ordinal(tools, int(ordinal))
-        if tool is None or sum(record["tool"] == tool for record in cuts) < int(minimum):
-            return False
-    for ordinal, minimum in rule.get("tool_z_levels", {}).items():
-        tool = tool_for_ordinal(tools, int(ordinal))
-        levels = {round(record_z(record), 3) for record in cuts if record["tool"] == tool and record_z(record) is not None}
-        if len(levels) < int(minimum):
-            return False
-    if "z_levels" in rule:
-        item = rule["z_levels"]
-        levels = sorted({round(record_z(r), 3) for r in cuts if record_z(r) is not None and record_z(r) >= float(item["floor"]) - TOL})
-        if len(levels) < int(item["min"]) or not any(close(level, item["floor"]) for level in levels):
-            return False
-        if any(b - a > float(item["max_step"]) + TOL for a, b in zip(levels, levels[1:])):
-            return False
-    for wcs, minimum in rule.get("wcs_motion", {}).items():
-        if sum(record["wcs"] == wcs for record in cuts) < int(minimum):
-            return False
-    if rule.get("avoid_rects"):
-        margin = float(rule.get("avoid_clearance", 0.0))
-        below = float(rule.get("avoid_below", 1e9))
-        for record in cuts:
-            e = record["end"]
-            if e["z"] is not None and e["z"] < below and any(rect_contains((e["x"], e["y"]), rect, margin) for rect in rule["avoid_rects"]):
+def sampled_xy(record: Record) -> list[tuple[float, float]]:
+    start, end = xy(record, "start"), xy(record, "end")
+    if start is None or end is None:
+        return []
+    if record.motion not in {2, 3} or "i" not in record.explicit or "j" not in record.explicit:
+        return [
+            (start[0] + (end[0] - start[0]) * index / 40.0, start[1] + (end[1] - start[1]) * index / 40.0)
+            for index in range(41)
+        ]
+    center = (start[0] + record.explicit["i"], start[1] + record.explicit["j"])
+    radius = math.dist(start, center)
+    if radius <= 1.0e-6:
+        return [start, end]
+    a0 = math.atan2(start[1] - center[1], start[0] - center[0])
+    a1 = math.atan2(end[1] - center[1], end[0] - center[0])
+    if math.dist(start, end) <= 0.05:
+        sweep = -2.0 * math.pi if record.motion == 2 else 2.0 * math.pi
+    elif record.motion == 2:
+        sweep = -((a0 - a1) % (2.0 * math.pi))
+    else:
+        sweep = (a1 - a0) % (2.0 * math.pi)
+    return [(center[0] + radius * math.cos(a0 + sweep * i / 72.0), center[1] + radius * math.sin(a0 + sweep * i / 72.0)) for i in range(73)]
+
+
+def fixture_clear(program: Program, frame, floor: float) -> bool:
+    jaws = ((-70.0, -54.0, 70.0, -46.0), (-70.0, 46.0, 70.0, 54.0))
+    low_limit = floor + 15.0  # fixture top plus 3 mm, relative to the 8 mm pocket floor
+    for record in program.records:
+        z_values = [value for value in (record.start["z"], record.end["z"]) if value is not None]
+        if not z_values or min(z_values) > low_limit:
+            continue
+        for point in sampled_xy(record):
+            local_point = local(point, frame)
+            if any(point_rect_distance(local_point, rect) < 3.0 - 1.0e-6 for rect in jaws):
                 return False
-    if "engrave" in rule:
-        item = rule["engrave"]
-        xs = [r["end"]["x"] for r in cuts]
-        ys = [r["end"]["y"] for r in cuts]
-        if not xs or max(xs) - min(xs) < float(item["min_x_span"]) or max(ys) - min(ys) < float(item["min_y_span"]):
-            return False
-        if "max_y_center_abs" in item and abs((min(ys) + max(ys)) / 2) > float(item["max_y_center_abs"]):
-            return False
-    if "tags" in rule:
-        item = rule["tags"]
-        tag_z = float(item["bottom"]) + float(item["height"])
-        tag_moves = sum(record["code"] == 1 and xy_changed(record) and at_z(record, tag_z, 0.35) for record in records)
-        if tag_moves < int(item["min"]):
-            return False
-    for slot in rule.get("slots", []):
-        found = False
-        for record in cuts:
-            s, e = record["start"], record["end"]
-            if record_z(record) is not None and record_z(record) <= float(slot["z_max"]) + TOL and close(s["y"], slot["y"]) and close(e["y"], slot["y"]) and min(s["x"], e["x"]) <= float(slot["xmin"]) + TOL and max(s["x"], e["x"]) >= float(slot["xmax"]) - TOL:
-                found = True
-        if not found:
-            return False
-    if rule.get("turning") and ("X" not in axes_seen or "Z" not in axes_seen):
-        return False
-    if "center_drill" in rule:
-        item = rule["center_drill"]
-        if not any(r["end"]["x"] is not None and r["end"]["z"] is not None and close(r["end"]["x"], item["x"]) and r["end"]["z"] <= float(item["z_max"]) + TOL for r in records):
-            return False
-    if rule.get("outer_last"):
-        groups = [g for g in cut_groups(records) if group_closed(g)]
-        if len(groups) < 2:
-            return False
-        def area(group):
-            xs = [r["end"]["x"] for r in group]; ys = [r["end"]["y"] for r in group]
-            return (max(xs) - min(xs)) * (max(ys) - min(ys))
-        if area(groups[-1]) + 1e-6 < max(area(group) for group in groups[:-1]):
+    return True
+
+
+def safe_cross_pocket_rapids(program: Program, frame) -> bool:
+    def pocket_side(point: tuple[float, float]) -> int:
+        u, v = local(point, frame)
+        if -41.0 <= u <= -9.0 and -12.0 <= v <= 12.0:
+            return -1
+        if 9.0 <= u <= 41.0 and -12.0 <= v <= 12.0:
+            return 1
+        return 0
+
+    for record in program.records:
+        if record.motion != 0 or not xy_changed(record):
+            continue
+        start, end = xy(record, "start"), xy(record, "end")
+        if start is None or end is None:
+            continue
+        if pocket_side(start) == pocket_side(end) != 0:
+            continue
+        z_values = [value for value in (record.start["z"], record.end["z"]) if value is not None]
+        if z_values and min(z_values) < 3.0 - 1.0e-6:
             return False
     return True
 
 
-def evaluate() -> bool:
-    if not check_no_gui_bypass(TARGET):
+def depth_levels(program: Program, pocket: Pocket) -> int:
+    width = pocket.bounds[1] - pocket.bounds[0]
+    height = pocket.bounds[3] - pocket.bounds[2]
+    levels = set()
+    for record in program.records:
+        if not is_cut(record) or record.end["z"] is None:
+            continue
+        point = xy(record, "end")
+        if point is None:
+            continue
+        if abs(point[0] - pocket.center[0]) <= width / 2.0 + 1.0 and abs(point[1] - pocket.center[1]) <= height / 2.0 + 1.0:
+            levels.add(round(float(record.end["z"]), 2))
+    return len(levels)
+
+
+def read_nc(path: Path) -> str | None:
+    try:
+        if not path.is_file() or not 500 <= path.stat().st_size <= 2_000_000:
+            return None
+        data = path.read_bytes()
+        if b"\x00" in data:
+            return None
+        source = data.decode("latin-1")
+        printable = sum(ch in "\t\r\n" or 32 <= ord(ch) <= 126 for ch in source)
+        return source if printable / max(1, len(source)) >= 0.98 else None
+    except Exception:
+        return None
+
+
+def validate_nc(path: Path) -> bool:
+    source = read_nc(path)
+    if source is None:
         return False
-    return all(validate_file(TARGET / name, file_rule) for name, file_rule in RULE["files"].items())
+    try:
+        program = parse_program(source)
+    except Exception:
+        return False
+    if len(program.units_seen) != 1 or 90 not in program.distance_modes_seen:
+        return False
+    if not 1 <= len(program.tools) <= 3 or not ({0, 1} <= {record.motion for record in program.records}):
+        return False
+    if program.axes_seen & {"A", "B", "C", "U", "V", "W"}:
+        return False
+    if not {6, 30} <= program.m_codes_seen or not ({3, 4} & program.m_codes_seen) or not program.has_tool_length_comp:
+        return False
+    if len(program.m30_lines) != 1:
+        return False
+    if any(WORD_RE.search(line) for line in program.code_lines[program.m30_lines[0] + 1 :]):
+        return False
+    cuts = [record for record in program.records if is_cut(record)]
+    if len(cuts) < 24 or any(
+        not record.spindle_on or record.wcs is None or record.feed is None or record.feed <= 0
+        for record in cuts
+    ):
+        return False
+    z_values = [float(record.end["z"]) for record in cuts if record.end["z"] is not None]
+    if not z_values:
+        return False
+    floor = min(z_values)
+    if not close(floor, -DEPTH_MM, DEPTH_TOL_MM):
+        return False
+    pockets = unique_pockets(
+        [item for group in floor_groups(program, floor) if (item := pocket_from_group(group, floor)) is not None]
+    )
+    frame = pocket_frame(pockets)
+    if frame is None:
+        return False
+    if any(depth_levels(program, pocket) < 2 for pocket in pockets):
+        return False
+    # Every cutting point must stay inside one of the two nominal pocket boxes.
+    for record in cuts:
+        for point in sampled_xy(record):
+            u, v = local(point, frame)
+            if not ((-40.5 <= u <= -9.5 or 9.5 <= u <= 40.5) and -11.5 <= v <= 11.5):
+                return False
+    if not fixture_clear(program, frame, floor):
+        return False
+    if not safe_cross_pocket_rapids(program, frame):
+        return False
+    return True
+
+
+def evaluate() -> bool:
+    return validate_nc(TARGET / OUTPUT_NAME)
 
 
 if __name__ == "__main__":
     try:
-        ok = evaluate()
+        result = evaluate()
     except Exception:
-        ok = False
-    print("True" if ok else "False")
+        result = False
+    print("True" if result else "False")
