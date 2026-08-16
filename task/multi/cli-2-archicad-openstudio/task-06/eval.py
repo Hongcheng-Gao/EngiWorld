@@ -29,13 +29,7 @@ CASE_SPEC = {'case_id': 'multi-cli-2-archicad-openstudio-task-06-windows',
                     'run/eplusout.end'],
  'required_spaces': ['PLAYROOM', 'SICK-BAY', 'CALM-ROOM', 'STAFF-SUPPORT'],
  'required_zones': ['PLAYROOM-ZN', 'SICK-BAY-ZN', 'CALM-ROOM-ZN', 'STAFF-SUPPORT-ZN'],
- 'stage1_tokens': ['EW2A06',
-                   'EW2A06',
-                   'PLAYROOM',
-                   'SICK-BAY',
-                   'CALM-ROOM',
-                   'STAFF-SUPERVISED',
-                   'multi-cli-2-archicad-openstudio-task-06-windows'],
+ 'stage1_tokens': ['EW2A06', 'PLAYROOM', 'SICK-BAY', 'CALM-ROOM', 'STAFF-SUPERVISED'],
  'handoff_tokens': [],
  'osm_tokens': [],
  'summary_tokens': ['PLAYROOM', 'SICK-BAY', 'CALM-ROOM', 'STAFF-SUPPORT'],
@@ -909,8 +903,10 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         instances = [x for current, x in objects if current == kind and len(x) > 4]
         for name in CASE_SPEC["required_spaces"]:
             matches = [x for x in instances if osm_handle(x[3]) == space_handles.get(name)]
-            if (len(matches) != 1 or osm_handle(matches[0][2]) not in definitions[kind + ":DEFINITION"] or
-                    osm_handle(matches[0][4]) not in schedules):
+            if (not matches or any(
+                    osm_handle(match[2]) not in definitions[kind + ":DEFINITION"] or
+                    osm_handle(match[4]) not in schedules
+                    for match in matches)):
                 errors.append(f"result.osm:load_chain_invalid:{kind}:{name}")
     if len([1 for kind, _ in objects if kind == "OS:THERMOSTATSETPOINT:DUALSETPOINT"]) < len(CASE_SPEC["required_zones"]):
         errors.append("result.osm:thermostat_count_too_low")

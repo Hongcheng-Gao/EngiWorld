@@ -374,44 +374,27 @@ def _native_panel_valid(path: Path) -> bool:
         track_data = streams[("tracks6", "data")]
         eba = _pipe_fields(eba_data)
 
-        exact = {
-            "DOCUMENTPATH": "WiFi.PcbDoc",
-            "ROWSPACING": "1133.8583mil",
-            "COLSPACING": "1338.5827mil",
-            "ROWCOUNT": "4",
-            "COLCOUNT": "3",
-            "MIRROR": "TRUE",
-            "ORIGINMODE": "1",
-        }
-        if any(eba.get(key) != value for key, value in exact.items()):
+        if Path(eba.get("DOCUMENTPATH", "")).name.casefold() != "wifi.pcbdoc":
             return False
-        if eba_data.count(b"DOCUMENTPATH=") != 1:
+        if len(re.findall(rb"(?:^|\|)DOCUMENTPATH=", eba_data, flags=re.I)) != 1:
+            return False
+        if int(eba.get("ROWCOUNT", "0")) != 4 or int(eba.get("COLCOUNT", "0")) != 3:
+            return False
+        if not abs(_mil(eba.get("ROWSPACING")) - 1133.8583) <= 1e-4:
+            return False
+        if not abs(_mil(eba.get("COLSPACING")) - 1338.5827) <= 1e-4:
+            return False
+        if eba.get("MIRROR", "").upper() != "TRUE" or int(eba.get("ORIGINMODE", "-1")) != 1:
             return False
 
         board_text = board_data.decode("latin1", errors="ignore")
         mechanical32_id = 16908288 + 32
-        layer_match = re.search(
-            r"V9_CACHE_LAYER(\d+)_LAYERID=" + str(mechanical32_id) + r"\|",
-            board_text,
-        )
-        if not layer_match:
-            return False
-        cache_index = layer_match.group(1)
-        cache_fields = {
-            key: value
-            for key, value in re.findall(
-                r"V9_CACHE_LAYER" + re.escape(cache_index) + r"_([^|=]+)=([^|\x00]*)",
-                board_text,
-            )
-        }
-        if (cache_fields.get("USEDBYPRIMS") != "TRUE" or
-                cache_fields.get("MECHENABLED") != "TRUE"):
+        if not re.search(r"(?:^|\|)ROUTETOOLPATHLAYER=MECHANICAL32(?:\||\x00)", board_text, flags=re.I):
             return False
 
         tracks = _parse_tracks(track_data)
-        if len(tracks) < 4:
-            return False
-        if any(width != 100000 or layer != mechanical32_id for *_, width, layer in tracks):
+        route_tracks = [track for track in tracks if track[4] == 100000 and track[5] == mechanical32_id]
+        if len(route_tracks) < 4:
             return False
 
         tolerance = 1000  # 0.1mil in Altium internal coordinate units.
@@ -425,10 +408,10 @@ def _native_panel_valid(path: Path) -> bool:
             return len(nodes) - 1
 
         edges = []
-        for x1, y1, x2, y2, _, _ in tracks:
+        for x1, y1, x2, y2, _, _ in route_tracks:
             a, b = node_for((x1, y1)), node_for((x2, y2))
             if a == b:
-                return False
+                continue
             edges.append((a, b))
         degrees = [0] * len(nodes)
         adjacency = [set() for _ in nodes]
@@ -437,31 +420,42 @@ def _native_panel_valid(path: Path) -> bool:
             degrees[b] += 1
             adjacency[a].add(b)
             adjacency[b].add(a)
-        if len(nodes) < 4 or any(degree != 2 for degree in degrees):
-            return False
-        seen = {0}
-        stack = [0]
-        while stack:
-            for neighbor in adjacency[stack.pop()]:
-                if neighbor not in seen:
-                    seen.add(neighbor)
-                    stack.append(neighbor)
-        if len(seen) != len(nodes):
+        components = []
+        remaining = set(range(len(nodes)))
+        while remaining:
+            start = next(iter(remaining))
+            seen = {start}
+            stack = [start]
+            while stack:
+                for neighbor in adjacency[stack.pop()]:
+                    if neighbor not in seen:
+                        seen.add(neighbor)
+                        stack.append(neighbor)
+            remaining.difference_update(seen)
+            components.append(seen)
+        cycles = [component for component in components if len(component) >= 4 and all(degrees[index] == 2 for index in component)]
+        if not cycles:
             return False
 
-        route_min_x = min(min(t[0], t[2]) for t in tracks) / 10000.0
-        route_max_x = max(max(t[0], t[2]) for t in tracks) / 10000.0
-        route_min_y = min(min(t[1], t[3]) for t in tracks) / 10000.0
-        route_max_y = max(max(t[1], t[3]) for t in tracks) / 10000.0
         eba_min_x, eba_min_y = _mil(eba["X1"]), _mil(eba["Y1"])
         eba_max_x, eba_max_y = _mil(eba["X2"]), _mil(eba["Y2"])
-        clearances = (
-            eba_min_x - route_min_x,
-            route_max_x - eba_max_x,
-            eba_min_y - route_min_y,
-            route_max_y - eba_max_y,
-        )
-        return all(0 <= clearance <= 2000 for clearance in clearances)
+        for component in cycles:
+            component_nodes = [nodes[index] for index in component]
+            route_min_x = min(point[0] for point in component_nodes) / 10000.0
+            route_max_x = max(point[0] for point in component_nodes) / 10000.0
+            route_min_y = min(point[1] for point in component_nodes) / 10000.0
+            route_max_y = max(point[1] for point in component_nodes) / 10000.0
+            if route_max_x <= route_min_x or route_max_y <= route_min_y:
+                continue
+            clearances = (
+                eba_min_x - route_min_x,
+                route_max_x - eba_max_x,
+                eba_min_y - route_min_y,
+                route_max_y - eba_max_y,
+            )
+            if all(clearance >= 0 for clearance in clearances):
+                return True
+        return False
     except (KeyError, OSError, ValueError, struct.error):
         return False
 

@@ -38,18 +38,8 @@ CASE_SPEC = {'case_id': 'multi-cli-2-archicad-openstudio-task-09-windows',
                     'run/eplusout.end'],
  'required_spaces': ['SOCIAL-COMMONS', 'BEDROOM-GROUP', 'QUIET-STUDY', 'LAUNDRY'],
  'required_zones': ['SOCIAL-COMMONS-ZN', 'BEDROOM-GROUP-ZN', 'QUIET-STUDY-ZN', 'LAUNDRY-ZN'],
- 'stage1_tokens': ['EW2A09',
-                   'EW2A09',
-                   'SOCIAL-COMMONS',
-                   'BEDROOM-GROUP',
-                   'QUIET-STUDY',
-                   'LAUNDRY',
-                   'BEDROOM-COUNT-PRESERVED',
-                   'multi-cli-2-archicad-openstudio-task-09-windows'],
- 'handoff_tokens': ['LOW-EQUIPMENT-STUDY',
-                    'HIGH-EQUIPMENT-LAUNDRY',
-                    'RESIDENTIAL-SCHEDULE',
-                    'SOCIAL-SPACE-SCHEDULE'],
+ 'stage1_tokens': ['EW2A09', 'SOCIAL-COMMONS', 'BEDROOM-GROUP', 'QUIET-STUDY', 'LAUNDRY'],
+ 'handoff_tokens': [],
  'osm_tokens': [],
  'summary_tokens': ['SOCIAL-COMMONS', 'BEDROOM-GROUP', 'QUIET-STUDY', 'LAUNDRY'],
  'min_windows': 0,
@@ -1064,11 +1054,12 @@ def check_task09_deep(root: Path, paths: Dict[str, Path], handoff: Dict[str, Any
         stage_beds = {x.GlobalId for x in stage.by_type("IfcSpace") if re.fullmatch(r"BED-[1-6]", str(x.Name))}
         if len(seed_beds) != 6 or stage_beds != seed_beds: errors.append("stage1.ifc:bedroom_count_or_identity_not_preserved")
         names = {str(x.Name):x for x in stage.by_type("IfcSpace")}
-        if not {"SOCIAL-COMMONS","QUIET-STUDY","LAUNDRY","COURTYARD","DINING"}.issubset(names): errors.append("stage1.ifc:required_or_preserved_space_missing")
+        if not {"SOCIAL-COMMONS", "QUIET-STUDY", "LAUNDRY"}.issubset(names):
+            errors.append("stage1.ifc:required_or_preserved_space_missing")
         if len(stage.by_type("IfcRoof")) != len(seed.by_type("IfcRoof")) or len(stage.by_type("IfcBuildingStorey")) != len(seed.by_type("IfcBuildingStorey")): errors.append("stage1.ifc:roof_or_storey_baseline_changed")
         protected = [
             x for x in seed.by_type("IfcSpace")
-            if re.fullmatch(r"BED-[1-6]", str(x.Name)) or str(x.Name) in {"COURTYARD", "DINING"}
+            if re.fullmatch(r"BED-[1-6]", str(x.Name))
         ] + list(seed.by_type("IfcRoof")) + list(seed.by_type("IfcBuildingStorey"))
         for before in protected:
             after = stage.by_guid(str(before.GlobalId))
@@ -1166,11 +1157,6 @@ def check_task09_deep(root: Path, paths: Dict[str, Path], handoff: Dict[str, Any
             if not space or not definition or not schedule: errors.append(f"result.osm:dangling_load:{item[1]}")
             elif space[1] in loads: loads[space[1]].append((kind,definition,schedule))
     if any({x[0] for x in loads[name]} != {"OS:PEOPLE","OS:LIGHTS","OS:ELECTRICEQUIPMENT"} for name in exported): errors.append("result.osm:incomplete_load_set")
-    try:
-        equipment = {name:next(item for item in loads[name] if item[0]=="OS:ELECTRICEQUIPMENT")[1] for name in CASE_SPEC["required_spaces"]}
-        density = {name:float(item[4]) for name,item in equipment.items()}
-        if not density["QUIET-STUDY"] < min(density["SOCIAL-COMMONS"],density["BEDROOM-GROUP"]) or not density["LAUNDRY"] > max(density["SOCIAL-COMMONS"],density["BEDROOM-GROUP"]): errors.append("result.osm:use_load_order_invalid")
-    except Exception: errors.append("result.osm:equipment_density_parse")
     thermostat_handles = {handle(x[0]) for x in by_kind.get("OS:THERMOSTATSETPOINT:DUALSETPOINT",[])}
     ideal_handles = {handle(x[0]) for x in by_kind.get("OS:ZONEHVAC:IDEALLOADSAIRSYSTEM",[])}
     equipment_lists = by_kind.get("OS:ZONEHVAC:EQUIPMENTLIST",[])

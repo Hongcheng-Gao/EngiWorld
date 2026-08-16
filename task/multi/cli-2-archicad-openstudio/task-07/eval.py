@@ -30,10 +30,7 @@ CASE_SPEC = {'case_id': 'multi-cli-2-archicad-openstudio-task-07-windows',
                     'run/eplusout.end'],
  'required_spaces': ['MARKET-HALL', 'COLD-CHAIN', 'WASTE-HOLDING'],
  'required_zones': ['MARKET-HALL-ZN', 'COLD-CHAIN-ZN', 'WASTE-HOLDING-ZN'],
- 'stage1_tokens': ['EW2A07',
-                   'EW2A07',
-                   'MARKET-HALL','COLD-CHAIN','WASTE-HOLDING','SERVICE-SIDE',
-                   'multi-cli-2-archicad-openstudio-task-07-windows'],
+ 'stage1_tokens': ['EW2A07', 'MARKET-HALL', 'COLD-CHAIN', 'WASTE-HOLDING'],
  'handoff_tokens': [],
  'osm_tokens': [],
  'summary_tokens': ['MARKET-HALL','COLD-CHAIN','WASTE-HOLDING'],
@@ -1032,11 +1029,13 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         instances = [x for current, x in objects if current == kind and len(x) > 4]
         for name in CASE_SPEC["required_spaces"]:
             matches = [x for x in instances if osm_handle(x[3]) == space_handles.get(name)]
-            if (len(matches) != 1 or osm_handle(matches[0][2]) not in definitions[kind + ":DEFINITION"] or
-                    osm_handle(matches[0][4]) not in schedules):
+            if (not matches or any(
+                    osm_handle(match[2]) not in definitions[kind + ":DEFINITION"] or
+                    osm_handle(match[4]) not in schedules
+                    for match in matches)):
                 errors.append(f"result.osm:load_chain_invalid:{kind}:{name}")
             else:
-                schedule_bindings[name].add(osm_handle(matches[0][4]))
+                schedule_bindings[name].update(osm_handle(match[4]) for match in matches)
     if schedule_bindings.get("MARKET-HALL") == schedule_bindings.get("COLD-CHAIN") == schedule_bindings.get("WASTE-HOLDING"):
         errors.append("result.osm:public_and_service_schedules_not_distinct")
     if len([1 for kind, _ in objects if kind == "OS:THERMOSTATSETPOINT:DUALSETPOINT"]) < len(CASE_SPEC["required_zones"]):

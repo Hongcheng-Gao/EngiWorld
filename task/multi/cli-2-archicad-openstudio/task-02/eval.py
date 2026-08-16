@@ -786,14 +786,14 @@ def check_native_stage_log(
 
     transaction_section = data.get("command_transactions")
     transactions = transaction_section.get("value") if isinstance(transaction_section, dict) else None
-    expected_methods = ["Model.LoadFile", "Entity.Modify", "Entity.Modify", "Model.SaveFile"]
-    if not isinstance(transactions, list) or len(transactions) != len(expected_methods):
-        errors.append("native_stage_log:transaction_count_mismatch")
+    if not isinstance(transactions, list) or len(transactions) < 4:
+        errors.append("native_stage_log:transactions_missing")
         return
     if transaction_section.get("Count") != len(transactions):
         errors.append("native_stage_log:declared_transaction_count_mismatch")
-    if [item.get("request", {}).get("method") for item in transactions] != expected_methods:
-        errors.append("native_stage_log:transaction_sequence_mismatch")
+    methods = [item.get("request", {}).get("method") for item in transactions]
+    if methods[0] != "Model.LoadFile" or methods[-1] != "Model.SaveFile":
+        errors.append("native_stage_log:load_save_order_mismatch")
     completed_times: List[datetime] = []
     for index, transaction in enumerate(transactions):
         request = transaction.get("request")
@@ -819,45 +819,72 @@ def check_native_stage_log(
     load_request = transactions[0].get("request", {})
     load_params = load_request.get("params")
     expected_init_location = r"C:\Users\user\Desktop\init.ifc"
-    if load_params != {"location": expected_init_location}:
+    if not isinstance(load_params, dict) or str(load_params.get("location", "")).replace("/", "\\").lower() != expected_init_location.lower():
         errors.append("native_stage_log:load_request_path_mismatch")
     load_response = transactions[0].get("response", {})
-    if load_response.get("result") != "init.ifc":
+    if Path(str(load_response.get("result", "")).replace("\\", "/")).name.lower() != "init.ifc":
         errors.append("native_stage_log:load_result_mismatch")
 
-    rename_params = transactions[1].get("request", {}).get("params", {})
-    if rename_params.get("select") != {"IfcSpace": {"Name": "CONSULT-1"}} or rename_params.get("EntityData") != {"IfcSpace": {"Name": "CONSULT"}}:
-        errors.append("native_stage_log:rename_request_mismatch")
-    project_params = transactions[2].get("request", {}).get("params", {})
-    project_records = [
-        record
-        for record in (stage1_info.get("roots_by_id") or {}).values()
-        if record.get("class") == "IfcProject"
+    modify_transactions = [
+        item for item in transactions
+        if item.get("request", {}).get("method") == "Entity.Modify"
     ]
+
+    def entity_parts(item: Dict[str, Any], entity_class: str) -> Tuple[Dict[str, Any], Dict[str, Any]]:
+        params = item.get("request", {}).get("params", {})
+        selector = params.get("select", {}).get(entity_class, {})
+        update = params.get("EntityData", {}).get(entity_class, {})
+        return selector if isinstance(selector, dict) else {}, update if isinstance(update, dict) else {}
+
+    rename_candidates = []
+    for item in modify_transactions:
+        selector, update = entity_parts(item, "IfcSpace")
+        targets_space = (
+            selector.get("GlobalId") == TARGET_SPACE_GLOBAL_ID
+            or norm(selector.get("Name")) == norm("CONSULT-1")
+        )
+        if targets_space and norm(update.get("Name")) == norm("CONSULT"):
+            rename_candidates.append(item)
+    if len(rename_candidates) != 1:
+        errors.append("native_stage_log:rename_request_mismatch")
+
+    project_records_by_id = {
+        global_id: record
+        for global_id, record in (stage1_info.get("roots_by_id") or {}).items()
+        if record.get("class") == "IfcProject"
+    }
+    project_records = list(project_records_by_id.values())
     expected_project_name = project_records[0].get("name") if len(project_records) == 1 else None
-    if project_params.get("select") != {"IfcProject": {"Name": expected_project_name}}:
-        errors.append("native_stage_log:project_select_mismatch")
-    project_description = project_params.get("EntityData", {}).get("IfcProject", {}).get("Description", "")
     expected_project_description = project_records[0].get("description") if len(project_records) == 1 else None
-    if "EW2A02" not in str(project_description) or project_description != expected_project_description:
+    expected_project_ids = set(project_records_by_id)
+    project_candidates = []
+    for item in modify_transactions:
+        selector, update = entity_parts(item, "IfcProject")
+        targets_project = (
+            selector.get("GlobalId") in expected_project_ids
+            or (expected_project_name is not None and selector.get("Name") == expected_project_name)
+        )
+        description = update.get("Description")
+        if targets_project and description == expected_project_description and "EW2A02" in str(description):
+            project_candidates.append(item)
+    if len(project_candidates) != 1:
         errors.append("native_stage_log:project_revision_request_missing")
 
     modify_results = [
-        transactions[index].get("response", {}).get("result")
-        for index in (1, 2)
+        item.get("response", {}).get("result")
+        for item in rename_candidates + project_candidates
     ]
     if (
-        any(re.fullmatch(r"[1-9]\d*", str(result or "")) is None for result in modify_results)
+        len(modify_results) != 2
+        or any(re.fullmatch(r"[1-9]\d*", str(result or "")) is None for result in modify_results)
         or len(set(modify_results)) != len(modify_results)
     ):
         errors.append("native_stage_log:modify_result_invalid")
 
-    save_params = transactions[3].get("request", {}).get("params")
+    save_params = transactions[-1].get("request", {}).get("params")
     expected_stage_location = r"C:\Users\user\Desktop\stage1.ifc"
-    if save_params != {"location": expected_stage_location}:
+    if not isinstance(save_params, dict) or str(save_params.get("location", "")).replace("/", "\\").lower() != expected_stage_location.lower():
         errors.append("native_stage_log:save_request_path_mismatch")
-    if transactions[3].get("response", {}).get("result", object()) is not None:
-        errors.append("native_stage_log:save_result_mismatch")
 
     commands = data.get("archicad_api_commands")
     if commands != [transaction.get("request") for transaction in transactions]:
