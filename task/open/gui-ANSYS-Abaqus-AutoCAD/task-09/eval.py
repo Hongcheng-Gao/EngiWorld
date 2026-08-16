@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
@@ -111,9 +114,15 @@ def find_ansys_artifacts(root):
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
-    checker = root / '__open_choice_abaqus_checker.py'
-    result = root / '__open_choice_abaqus_result.txt'
-    checker_source = r'''
+    scratch = Path(tempfile.mkdtemp(prefix='__open_choice_abaqus_', dir=str(root)))
+    try:
+        scratch_cae = scratch / cae_path.name
+        scratch_odb = scratch / odb_path.name
+        shutil.copy2(str(cae_path), str(scratch_cae))
+        shutil.copy2(str(odb_path), str(scratch_odb))
+        checker = scratch / '__open_choice_abaqus_checker.py'
+        result = scratch / '__open_choice_abaqus_result.txt'
+        checker_source = r'''
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import os
@@ -498,10 +507,13 @@ def _numbers(value):
     out = []
     if value is None:
         return out
-    if isinstance(value, (list, tuple)):
-        for item in value:
-            out.extend(_numbers(item))
-        return out
+    if not isinstance(value, TEXT_TYPES):
+        try:
+            for item in value:
+                out.extend(_numbers(item))
+            return out
+        except TypeError:
+            pass
     try:
         out.append(float(value))
     except Exception:
@@ -529,6 +541,235 @@ def _near(value, target, rel=0.02, absolute=1.0e-8):
         return abs(float(value) - float(target)) <= max(absolute, abs(float(target)) * rel)
     except Exception:
         return False
+
+def _export_semantic_input(model):
+    model_name = model_name_for_job(model)
+    if not model_name:
+        log('strict check: cannot determine model name for semantic inp check')
+        return None
+    job_name = '__open_choice_eval_semantics'
+    try:
+        if job_name in mdb.jobs.keys():
+            del mdb.jobs[job_name]
+        mdb.Job(name=job_name, model=model_name)
+        return write_job_input(job_name, os.path.dirname(RESULT_PATH) or os.getcwd())
+    except Exception as exc:
+        log('strict check: semantic inp export failed: %s' % exc)
+        return None
+    finally:
+        try:
+            if job_name in mdb.jobs.keys():
+                del mdb.jobs[job_name]
+        except Exception:
+            pass
+
+def _inp_header(line):
+    values = {}
+    for token in line.split(',')[1:]:
+        token = token.strip()
+        if '=' in token:
+            key, value = token.split('=', 1)
+            values[ci(key)] = value.strip().strip('"')
+        elif token:
+            values[ci(token)] = True
+    return values
+
+def _parse_semantic_input(path):
+    data = {'nsets': {}, 'cloads': [], 'boundaries': [], 'shell_thicknesses': []}
+    mode = None
+    nset_name = None
+    nset_generate = False
+    try:
+        stream = open(path, 'r')
+        try:
+            for raw in stream:
+                line = raw.strip()
+                if not line or line.startswith('**'):
+                    continue
+                if line.startswith('*'):
+                    mode = ci(line.split(',', 1)[0])
+                    nset_name = None
+                    nset_generate = False
+                    if mode == '*NSET':
+                        header = _inp_header(line)
+                        nset_name = ci(header.get('NSET', ''))
+                        nset_generate = bool(header.get('GENERATE'))
+                        data['nsets'].setdefault(nset_name, [])
+                    continue
+                fields = [value.strip() for value in line.split(',')]
+                if mode == '*NSET' and nset_name:
+                    tokens = [value for value in fields if value]
+                    if nset_generate:
+                        for index in range(0, len(tokens), 3):
+                            try:
+                                start = int(tokens[index])
+                                stop = int(tokens[index + 1])
+                                step = int(tokens[index + 2])
+                                data['nsets'][nset_name].extend(range(start, stop + 1, step))
+                            except Exception:
+                                pass
+                    else:
+                        for token in tokens:
+                            try:
+                                data['nsets'][nset_name].append(int(token))
+                            except Exception:
+                                data['nsets'][nset_name].append(ci(token))
+                elif mode == '*CLOAD' and len(fields) >= 3:
+                    try:
+                        data['cloads'].append((ci(fields[0]), int(fields[1]), float(fields[2])))
+                    except Exception:
+                        pass
+                elif mode == '*BOUNDARY' and len(fields) >= 2:
+                    try:
+                        first = int(fields[1])
+                        last = int(fields[2]) if len(fields) > 2 and fields[2] else first
+                        value = float(fields[3]) if len(fields) > 3 and fields[3] else 0.0
+                        data['boundaries'].append((ci(fields[0]), first, last, value))
+                    except Exception:
+                        pass
+                elif mode == '*SHELL SECTION' and fields:
+                    try:
+                        data['shell_thicknesses'].append(float(fields[0]))
+                    except Exception:
+                        pass
+        finally:
+            stream.close()
+    except Exception as exc:
+        log('strict check: cannot parse semantic inp: %s' % exc)
+        return None
+    return data
+
+def _resolve_inp_target(data, target, trail=None):
+    target = ci(target)
+    try:
+        return set((int(target.split('.')[-1]),))
+    except Exception:
+        pass
+    trail = set() if trail is None else set(trail)
+    if target in trail:
+        return set()
+    trail.add(target)
+    labels = set()
+    for value in data['nsets'].get(target, []):
+        if isinstance(value, int):
+            labels.add(value)
+        else:
+            labels.update(_resolve_inp_target(data, value, trail))
+    return labels
+
+def _inp_force_by_node(data, dof):
+    forces = {}
+    for target, item_dof, value in data['cloads']:
+        if item_dof != dof or abs(value) <= 1.0e-12:
+            continue
+        for label in _resolve_inp_target(data, target):
+            forces[label] = forces.get(label, 0.0) + value
+    return forces
+
+def _inp_constrained_nodes(data, dof):
+    labels = set()
+    for target, first, last, value in data['boundaries']:
+        if first <= dof <= last and abs(value) <= 1.0e-12:
+            labels.update(_resolve_inp_target(data, target))
+    return labels
+
+def _part_coordinates(part):
+    coordinates = {}
+    try:
+        for node in part.nodes:
+            coordinates[int(node.label)] = tuple(float(value) for value in node.coordinates)
+    except Exception:
+        pass
+    return coordinates
+
+def _nodes_at(coordinates, x=None, y=None, tolerance=0.08):
+    labels = set()
+    for label, xyz in coordinates.items():
+        if x is not None and (len(xyz) < 1 or abs(xyz[0] - x) > tolerance):
+            continue
+        if y is not None and (len(xyz) < 2 or abs(xyz[1] - y) > tolerance):
+            continue
+        labels.add(label)
+    return labels
+
+def _check_tributary_edge(data, coordinates, x, q, height):
+    labels = list(_nodes_at(coordinates, x=x))
+    labels.sort(key=lambda label: coordinates[label][1])
+    forces = _inp_force_by_node(data, 1)
+    loaded = set(label for label in forces if label in coordinates and abs(coordinates[label][0] - x) <= 0.08)
+    if len(labels) < 3 or set(labels) != loaded:
+        return False
+    if abs(coordinates[labels[0]][1]) > 0.08 or abs(coordinates[labels[-1]][1] - height) > 0.08:
+        return False
+    for index, label in enumerate(labels):
+        y = coordinates[label][1]
+        if index == 0:
+            tributary = 0.5 * (coordinates[labels[1]][1] - y)
+        elif index == len(labels) - 1:
+            tributary = 0.5 * (y - coordinates[labels[-2]][1])
+        else:
+            tributary = 0.5 * (coordinates[labels[index + 1]][1] - coordinates[labels[index - 1]][1])
+        if not _near(forces.get(label, 0.0), q * tributary, 0.03, 0.08):
+            return False
+    total = 0.0
+    for label in labels:
+        total += forces[label]
+    return _near(total, q * height, 0.03, 0.08)
+
+def _edge_spacing_matches(coordinates, x, target, rel=0.20):
+    labels = list(_nodes_at(coordinates, x=x))
+    labels.sort(key=lambda label: coordinates[label][1])
+    if len(labels) < 3:
+        return False
+    low = target * (1.0 - rel)
+    high = target * (1.0 + rel)
+    for index in range(1, len(labels)):
+        gap = coordinates[labels[index]][1] - coordinates[labels[index - 1]][1]
+        if gap < low or gap > high:
+            return False
+    return True
+
+def _check_buckling_b_input(model, part):
+    path = _export_semantic_input(model)
+    data = None if path is None else _parse_semantic_input(path)
+    coordinates = _part_coordinates(part)
+    if data is None or not coordinates:
+        return False
+    try:
+        if len(part.faces) < 4:
+            log('strict check: centerline face partitions are missing')
+            return False
+    except Exception:
+        log('strict check: cannot inspect centerline face partitions')
+        return False
+    if not any(_near(value, 0.8, 0.01, 1.0e-6) for value in data['shell_thicknesses']):
+        log('strict check: 0.8 mm shell thickness missing')
+        return False
+    if any(dof != 1 and abs(value) > 1.0e-12 for _, dof, value in data['cloads']):
+        log('strict check: unexpected non-X concentrated load')
+        return False
+    if not (_check_tributary_edge(data, coordinates, 0.0, 0.9, 120.0) and
+            _check_tributary_edge(data, coordinates, 120.0, -0.9, 120.0)):
+        log('strict check: 0.9 N/mm tributary edge loads are incomplete or have wrong direction/resultant')
+        return False
+    if not (_edge_spacing_matches(coordinates, 0.0, 8.0) and
+            _edge_spacing_matches(coordinates, 120.0, 8.0)):
+        log('strict check: edge mesh spacing is inconsistent with 8 mm global seed')
+        return False
+    boundary = (_nodes_at(coordinates, x=0.0) | _nodes_at(coordinates, x=120.0) |
+                _nodes_at(coordinates, y=0.0) | _nodes_at(coordinates, y=120.0))
+    if not boundary.issubset(_inp_constrained_nodes(data, 3)):
+        log('strict check: U3 is not constrained on all four edges')
+        return False
+    center = _nodes_at(coordinates, x=60.0, y=60.0)
+    if not center or not center.issubset(_inp_constrained_nodes(data, 1)) or not center.issubset(_inp_constrained_nodes(data, 2)):
+        log('strict check: center U1/U2 rigid-body constraint missing')
+        return False
+    bottom_mid = _nodes_at(coordinates, x=60.0, y=0.0)
+    if not bottom_mid or not bottom_mid.issubset(_inp_constrained_nodes(data, 1)):
+        log('strict check: bottom midpoint U1 rigid-body constraint missing')
+        return False
+    return True
 
 def _all_region_nodes(value):
     out = []
@@ -681,6 +922,8 @@ def check_abaqus_task_specific(model, part):
         if not any(float(getattr(step, 'numEigen', 0) or 0) >= 3 for step in steps):
             log('strict check: three buckling eigenvalues not requested')
             return False
+    if domain == 'thin_plate_buckling_b_gui_only' and not _check_buckling_b_input(model, part):
+        return False
     if domain == 'transient_heat_block_gui':
         if not (_step_attr_matches(steps, 'timePeriod', 300.0) and
                 _step_attr_matches(steps, 'initialInc', 2.0) and
@@ -790,7 +1033,10 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                squared = 0.0
+                for number in nums:
+                    squared += number * number
+                values.append(squared ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -977,33 +1223,64 @@ def main():
 if __name__ == '__main__':
     main()
 '''
-    checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
-    checker_source = checker_source.replace('__CAE_PATH__', repr(str(cae_path)))
-    checker_source = checker_source.replace('__ODB_PATH__', repr(str(odb_path)))
-    checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
-    checker.write_text(checker_source, encoding='utf-8')
-    try:
-        completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(root), text=True, capture_output=True, timeout=900, shell=False)
-        log('abaqus checker returncode=%s' % completed.returncode)
-        if completed.stdout:
-            log('abaqus stdout tail=' + completed.stdout[-1000:])
-        if completed.stderr:
-            log('abaqus stderr tail=' + completed.stderr[-1000:])
-    except Exception as exc:
-        log('abaqus checker failed to run: %s' % exc)
-        return False
-    try:
-        return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
-    except Exception:
-        return False
+        checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
+        checker_source = checker_source.replace('__CAE_PATH__', repr(str(scratch_cae)))
+        checker_source = checker_source.replace('__ODB_PATH__', repr(str(scratch_odb)))
+        checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
+        checker.write_text(checker_source, encoding='utf-8')
+        try:
+            completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(scratch), text=True, capture_output=True, timeout=900, shell=False)
+            log('abaqus checker returncode=%s' % completed.returncode)
+            if completed.stdout:
+                log('abaqus stdout tail=' + completed.stdout[-1000:])
+            if completed.stderr:
+                log('abaqus stderr tail=' + completed.stderr[-1000:])
+        except Exception as exc:
+            log('abaqus checker failed to run: %s' % exc)
+            return False
+        try:
+            detail = scratch / '__open_choice_abaqus_detail.txt'
+            if detail.exists():
+                log('abaqus detail tail=' + detail.read_text(encoding='utf-8', errors='ignore')[-4000:])
+            return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
+        except Exception:
+            return False
+    finally:
+        remove_scratch(scratch)
 
 
 def close_mapdl(mapdl):
-    if mapdl is not None:
+    if mapdl is None:
+        return
+    try:
+        mapdl.exit(force=True)
+    except TypeError:
         try:
             mapdl.exit()
-        except Exception:
-            pass
+        except Exception as exc:
+            log('MAPDL exit failed: %s' % exc)
+    except Exception as exc:
+        log('MAPDL force exit failed: %s' % exc)
+
+
+def remove_scratch(scratch):
+    if scratch is None:
+        return
+    last_error = None
+    for attempt in range(10):
+        try:
+            shutil.rmtree(str(scratch))
+        except FileNotFoundError:
+            return
+        except Exception as exc:
+            last_error = exc
+        else:
+            if not scratch.exists():
+                return
+            last_error = RuntimeError('directory still exists')
+        if attempt < 9:
+            time.sleep(0.5)
+    log('scratch cleanup failed after 10 attempts for %s: %s' % (scratch, last_error))
 
 
 def _try_get(mapdl, *args):
@@ -1198,6 +1475,37 @@ def _force_sum(records, dof, axis=None, target=None, tol=0.1):
         total += value
     return total
 
+def _coordinate_key(xyz):
+    return tuple(round(float(value), 5) for value in xyz[:3])
+
+def _mesh_points_at(nodes, axis=None, target=None, tol=0.1):
+    points = set()
+    for row in nodes:
+        xyz = tuple(float(value) for value in row[:3])
+        if axis is None or abs(xyz[axis] - target) <= tol:
+            points.add(_coordinate_key(xyz))
+    return points
+
+def _bc_points(records, dof):
+    return set(_coordinate_key(xyz) for code, value, xyz in records if code == dof and xyz is not None and abs(value) <= 1.0e-12)
+
+def _point_has_dofs(records, target, dofs, tol=0.1):
+    found = set()
+    for code, value, xyz in records:
+        if xyz is None or abs(value) > 1.0e-12:
+            continue
+        if all(abs(xyz[index] - target[index]) <= tol for index in range(len(target))):
+            found.add(code)
+    return set(dofs).issubset(found)
+
+def _binary_edge_spacing(nodes, x, target, rel=0.20):
+    values = sorted(set(round(float(row[1]), 6) for row in nodes if abs(float(row[0]) - x) <= 0.1))
+    if len(values) < 3:
+        return False
+    low = target * (1.0 - rel)
+    high = target * (1.0 + rel)
+    return all(low <= values[index] - values[index - 1] <= high for index in range(1, len(values)))
+
 def _binary_stress_max(result, set_index):
     try:
         import numpy as np
@@ -1314,6 +1622,17 @@ def check_ansys_result_binary(result_path):
         if not (_close(_force_sum(forces, 1, 0, 0.0), 108.0, 0.03) and _close(_force_sum(forces, 1, 0, 120.0), -108.0, 0.03)):
             log('strict binary check: 0.9 N/mm tributary edge loads missing')
             return False
+        edge_points = (_mesh_points_at(nodes, 0, 0.0) | _mesh_points_at(nodes, 0, 120.0) |
+                       _mesh_points_at(nodes, 1, 0.0) | _mesh_points_at(nodes, 1, 120.0))
+        if not edge_points.issubset(_bc_points(bcs, 3)):
+            log('strict binary check: UZ is not constrained on all four edges')
+            return False
+        if not _point_has_dofs(bcs, (60.0, 60.0, 0.0), (1, 2)) or not _point_has_dofs(bcs, (60.0, 0.0, 0.0), (1,)):
+            log('strict binary check: center/bottom-midpoint in-plane rigid-body constraints missing')
+            return False
+        if not (_binary_edge_spacing(nodes, 0.0, 8.0) and _binary_edge_spacing(nodes, 120.0, 8.0)):
+            log('strict binary check: edge mesh spacing is inconsistent with 8 mm seed')
+            return False
     elif domain == 'plate_hole_tension_gui_only':
         if not (_close(_force_sum(forces, 1, 0, 0.0), -960.0, 0.03) and _close(_force_sum(forces, 1, 0, 160.0), 960.0, 0.03)):
             log('strict binary check: 12 N/mm tributary edge loads missing')
@@ -1385,13 +1704,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
-        if not check_ansys_result_binary(result_path):
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
+        if not check_ansys_result_binary(scratch_result):
             return False
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1401,10 +1726,10 @@ def check_ansys_with_mapdl(root, model_path, result_path):
             return False
         if not check_ansys_boundary_loads(mapdl):
             return False
-        if not check_ansys_analysis_step(mapdl, result_path):
+        if not check_ansys_analysis_step(mapdl, scratch_result):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1744,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        remove_scratch(scratch)
 
 
 def evaluate():

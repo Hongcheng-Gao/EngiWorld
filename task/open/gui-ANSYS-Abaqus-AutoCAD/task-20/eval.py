@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-20-windows', 'open_choice_id': 'cae-open-choice-040', 'source_task': 'task/task-v/ansys/task-20', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'steady_state_thermal_block_gui', 'analysis_kind': 'thermal', 'metrics': ['mid_temperature', 'heat_flow_optional'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a steady one-dimensional thermal conduction block; report mid-length temperature and heat-flow consistency.', 'selection_reason': 'Steady thermal analysis is a common non-structural FEA capability in both tools.', 'artifact_hint': {'ground_truth_files': ['wb_conduction.db', 'wb_conduction.rst', 'wb_conduction.rth', 'wb_conduction.wbpj'], 'abaqus_stems': [], 'ansys_db_files': ['wb_conduction.db', 'wb_conduction.wbpj'], 'ansys_result_files': ['wb_conduction.rst', 'wb_conduction.rth']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}}
+TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-20-windows', 'open_choice_id': 'cae-open-choice-040', 'source_task': 'task/task-v/ansys/task-20', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'steady_state_thermal_block_gui', 'analysis_kind': 'thermal', 'metrics': ['mid_temperature', 'heat_flow_optional'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a steady one-dimensional thermal conduction block; report mid-length temperature and heat-flow consistency.', 'selection_reason': 'Steady thermal analysis is a common non-structural FEA capability in both tools.', 'artifact_hint': {'ground_truth_files': ['wb_conduction.db', 'wb_conduction.rth'], 'abaqus_stems': [], 'ansys_db_files': ['wb_conduction.db'], 'ansys_result_files': ['wb_conduction.rth']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -107,12 +110,17 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
-    checker = root / '__open_choice_abaqus_checker.py'
-    result = root / '__open_choice_abaqus_result.txt'
+    scratch = Path(tempfile.mkdtemp(prefix='__open_choice_abaqus_', dir=str(root)))
+    scratch_cae = scratch / cae_path.name
+    scratch_odb = scratch / odb_path.name
+    shutil.copy2(str(cae_path), str(scratch_cae))
+    shutil.copy2(str(odb_path), str(scratch_odb))
+    checker = scratch / '__open_choice_abaqus_checker.py'
+    result = scratch / '__open_choice_abaqus_result.txt'
     checker_source = r'''
 # -*- coding: utf-8 -*-
 from __future__ import annotations
@@ -530,6 +538,12 @@ def _near(value, target, rel=0.02, absolute=1.0e-8):
     except Exception:
         return False
 
+def _sum_values(values):
+    total = 0.0
+    for value in values:
+        total += float(value)
+    return total
+
 def _all_region_nodes(value):
     out = []
     if value is None:
@@ -790,7 +804,7 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                values.append(_sum_values(v * v for v in nums) ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -878,7 +892,7 @@ def check_abaqus_odb_specific(odb):
             if bb['y'][1] < 19.0 or bb['z'][0] > -49.0 or bb['z'][1] < 49.0:
                 log('strict ODB check: full sphere-on-centered-plate geometry missing')
                 return False
-            spherical = sum(1 for p in xyz if p[1] >= -0.1 and abs(((p[0]) ** 2 + (p[1] - 10.0) ** 2 + (p[2]) ** 2) ** 0.5 - 10.0) <= 0.5)
+            spherical = _sum_values(1 for p in xyz if p[1] >= -0.1 and abs(((p[0]) ** 2 + (p[1] - 10.0) ** 2 + (p[2]) ** 2) ** 0.5 - 10.0) <= 0.5)
             if spherical < 12:
                 log('strict ODB check: spherical surface evidence missing')
                 return False
@@ -890,7 +904,7 @@ def check_abaqus_odb_specific(odb):
             return False
         if xyz:
             midpoint = [temp[i] for i, p in enumerate(xyz[:len(temp)]) if abs(p[0] - 50.0) <= 0.1]
-            if midpoint and not (57.0 <= sum(midpoint) / len(midpoint) <= 63.0):
+            if not midpoint or not (57.0 <= _sum_values(midpoint) / len(midpoint) <= 63.0):
                 log('strict ODB check: midpoint temperature is not approximately 60 C')
                 return False
     return True
@@ -978,30 +992,32 @@ if __name__ == '__main__':
     main()
 '''
     checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
-    checker_source = checker_source.replace('__CAE_PATH__', repr(str(cae_path)))
-    checker_source = checker_source.replace('__ODB_PATH__', repr(str(odb_path)))
+    checker_source = checker_source.replace('__CAE_PATH__', repr(str(scratch_cae)))
+    checker_source = checker_source.replace('__ODB_PATH__', repr(str(scratch_odb)))
     checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
-    checker.write_text(checker_source, encoding='utf-8')
     try:
-        completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(root), text=True, capture_output=True, timeout=900, shell=False)
+        checker.write_text(checker_source, encoding='utf-8')
+        completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(scratch), text=True, capture_output=True, timeout=900, shell=False)
         log('abaqus checker returncode=%s' % completed.returncode)
         if completed.stdout:
             log('abaqus stdout tail=' + completed.stdout[-1000:])
         if completed.stderr:
             log('abaqus stderr tail=' + completed.stderr[-1000:])
+        try:
+            return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
+        except Exception:
+            return False
     except Exception as exc:
         log('abaqus checker failed to run: %s' % exc)
         return False
-    try:
-        return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
-    except Exception:
-        return False
+    finally:
+        shutil.rmtree(str(scratch), ignore_errors=True)
 
 
 def close_mapdl(mapdl):
     if mapdl is not None:
         try:
-            mapdl.exit()
+            mapdl.exit(force=True)
         except Exception:
             pass
 
@@ -1070,6 +1086,22 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'steady_state_thermal_block_gui':
+        conductivity = None
+        lines = text.splitlines()
+        for index, line in enumerate(lines):
+            if 'KXX' not in line.upper():
+                continue
+            for candidate in lines[index + 1:index + 4]:
+                values = re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', candidate)
+                if values:
+                    conductivity = float(values[-1])
+                    break
+            if conductivity is not None:
+                break
+        if conductivity is None or not _close(conductivity, 0.05, 0.02):
+            log('thermal conductivity is not 0.05 W/(mm K)')
+            return False
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1108,6 +1140,16 @@ def check_ansys_analysis_step(mapdl, result_path):
     if kind == 'thermal' and suffix != '.rth':
         log('thermal task expected thermal result artifact')
         return False
+    if TASK_SPEC.get('domain') == 'steady_state_thermal_block_gui':
+        try:
+            mapdl.slashsolu()
+            status = str(mapdl.run('STATUS,SOLU')).upper()
+        except Exception as exc:
+            log('cannot inspect thermal solution type: %s' % exc)
+            return False
+        if 'STATIC (STEADY-STATE)' not in status:
+            log('ANSYS thermal analysis is not steady-state')
+            return False
     return True
 
 
@@ -1226,11 +1268,33 @@ def _binary_solution_max(result, set_index):
 def _binary_temperature(result, set_index):
     try:
         import numpy as np
-        _, values = result.nodal_temperature(set_index)
+        nnum, values = result.nodal_temperature(set_index)
         values = np.asarray(values, dtype=float)
-        return values, float(np.nanmin(values)), float(np.nanmax(values))
+        node_index = {int(node): index for index, node in enumerate(result.mesh.nnum)}
+        ordered = np.full(len(result.mesh.nnum), np.nan, dtype=float)
+        for node, value in zip(nnum, values):
+            index = node_index.get(int(node))
+            if index is not None:
+                ordered[index] = float(value)
+        finite = ordered[np.isfinite(ordered)]
+        if not finite.size:
+            return None, None, None
+        return ordered, float(np.min(finite)), float(np.max(finite))
     except Exception:
         return None, None, None
+
+def _binary_heat_reactions(result, set_index):
+    try:
+        values, nnum, _ = result.nodal_reaction_forces(set_index)
+    except Exception:
+        return []
+    node_index = {int(node): index for index, node in enumerate(result.mesh.nnum)}
+    records = []
+    for value, node in zip(values, nnum):
+        index = node_index.get(int(node))
+        xyz = None if index is None else tuple(float(v) for v in result.mesh.nodes[index][:3])
+        records.append((float(value), xyz))
+    return records
 
 def check_ansys_result_binary(result_path):
     try:
@@ -1269,7 +1333,8 @@ def check_ansys_result_binary(result_path):
         'coupled_thermal_structural_bar_gui': 185, 'column_eigen_buckling_gui': 188,
         'steady_state_thermal_block_gui': 70,
     }.get(domain)
-    if required_type is not None and required_type not in element_types:
+    accepted_types = {70, 87, 90, 278, 279} if domain == 'steady_state_thermal_block_gui' else ({required_type} if required_type is not None else set())
+    if accepted_types and not accepted_types.intersection(element_types):
         log('strict binary check: element type mismatch %s expected %s' % (sorted(element_types), required_type))
         return False
 
@@ -1374,24 +1439,47 @@ def check_ansys_result_binary(result_path):
         if len(active) != 1 or not _close(active[0][0], -1.0, 0.01) or active[0][1] is None or abs(active[0][1][1]-1000.0) > 0.1 or not times or times[-1] <= 0.0:
             return False
     elif domain == 'steady_state_thermal_block_gui':
-        if int(result.nsets) != 1 or temp_min is None or not _close(temp_min, 20.0, 0.02) or not _close(temp_max, 100.0, 0.02):
+        if temp_min is None or not _close(temp_min, 20.0, 0.02) or not _close(temp_max, 100.0, 0.02):
             return False
         mid = temperatures[np.isclose(nodes[:, 0], 50.0, atol=0.1)] if temperatures is not None and len(temperatures) == len(nodes) else []
-        if len(mid) and not (57.0 <= float(np.mean(mid)) <= 63.0):
+        mid = np.asarray(mid, dtype=float)
+        mid = mid[np.isfinite(mid)]
+        if not len(mid) or not (57.0 <= float(np.mean(mid)) <= 63.0):
             log('strict binary check: midpoint steady temperature is not about 60 C')
+            return False
+        thermal_bcs = [(value, xyz) for code, value, xyz in bcs if code == 20 and xyz is not None]
+        left_nodes = {tuple(np.round(row[:3], 6)) for row in nodes[np.isclose(nodes[:, 0], 0.0, atol=0.1)]}
+        right_nodes = {tuple(np.round(row[:3], 6)) for row in nodes[np.isclose(nodes[:, 0], 100.0, atol=0.1)]}
+        left_bcs = {tuple(np.round(xyz, 6)) for value, xyz in thermal_bcs if abs(xyz[0]) <= 0.1 and _close(value, 100.0, 0.01)}
+        right_bcs = {tuple(np.round(xyz, 6)) for value, xyz in thermal_bcs if abs(xyz[0] - 100.0) <= 0.1 and _close(value, 20.0, 0.01)}
+        invalid_bcs = [(value, xyz) for value, xyz in thermal_bcs if not ((abs(xyz[0]) <= 0.1 and _close(value, 100.0, 0.01)) or (abs(xyz[0] - 100.0) <= 0.1 and _close(value, 20.0, 0.01)))]
+        if invalid_bcs or left_bcs != left_nodes or right_bcs != right_nodes:
+            log('strict binary check: complete 100 C/20 C end-face constraints are missing')
+            return False
+        reactions = _binary_heat_reactions(result, last)
+        left_heat = sum(value for value, xyz in reactions if xyz is not None and abs(xyz[0]) <= 0.1)
+        right_heat = sum(value for value, xyz in reactions if xyz is not None and abs(xyz[0] - 100.0) <= 0.1)
+        if not (_close(left_heat, 4.0, 0.03) and _close(right_heat, -4.0, 0.03)):
+            log('strict binary check: steady heat flow is not +4/-4 W at the end faces')
             return False
     return True
 
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1404,7 +1492,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1507,8 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        if scratch is not None:
+            shutil.rmtree(str(scratch), ignore_errors=True)
 
 
 def evaluate():

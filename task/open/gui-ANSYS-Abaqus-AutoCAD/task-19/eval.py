@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-19-windows', 'open_choice_id': 'cae-open-choice-039', 'source_task': 'task/task-v/ansys/task-19', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'column_eigen_buckling_gui', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a linear eigenvalue buckling analysis of a pin-ended column under axial compression; report the first load factor.', 'selection_reason': 'Column buckling gives a distinct structural stability domain while staying cross-solver.', 'artifact_hint': {'ground_truth_files': ['wb_buckling.db', 'wb_buckling.rst', 'wb_buckling.wbpj'], 'abaqus_stems': [], 'ansys_db_files': ['wb_buckling.db', 'wb_buckling.wbpj'], 'ansys_result_files': ['wb_buckling.rst']}, 'span_hint': {'y': 1000.0}, 'bounds_hint': {'y': [0.0, 1000.0]}}
+TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-19-windows', 'open_choice_id': 'cae-open-choice-039', 'source_task': 'task/task-v/ansys/task-19', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'column_eigen_buckling_gui', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a linear eigenvalue buckling analysis of a pin-ended column under axial compression; constrain only the bottom axial spin in addition to the pin translations and report the first load factor.', 'selection_reason': 'Column buckling gives a distinct structural stability domain while staying cross-solver.', 'artifact_hint': {'ground_truth_files': ['wb_buckling.db', 'wb_buckling.rst'], 'abaqus_stems': [], 'ansys_db_files': ['wb_buckling.db'], 'ansys_result_files': ['wb_buckling.rst']}, 'span_hint': {'y': 1000.0}, 'bounds_hint': {'y': [0.0, 1000.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -107,12 +109,17 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
-    checker = root / '__open_choice_abaqus_checker.py'
-    result = root / '__open_choice_abaqus_result.txt'
+    scratch = Path(tempfile.mkdtemp(prefix='__open_choice_abaqus_', dir=str(root)))
+    scratch_cae = scratch / cae_path.name
+    scratch_odb = scratch / odb_path.name
+    shutil.copy2(str(cae_path), str(scratch_cae))
+    shutil.copy2(str(odb_path), str(scratch_odb))
+    checker = scratch / '__open_choice_abaqus_checker.py'
+    result = scratch / '__open_choice_abaqus_result.txt'
     checker_source = r'''
 # -*- coding: utf-8 -*-
 from __future__ import annotations
@@ -978,30 +985,32 @@ if __name__ == '__main__':
     main()
 '''
     checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
-    checker_source = checker_source.replace('__CAE_PATH__', repr(str(cae_path)))
-    checker_source = checker_source.replace('__ODB_PATH__', repr(str(odb_path)))
+    checker_source = checker_source.replace('__CAE_PATH__', repr(str(scratch_cae)))
+    checker_source = checker_source.replace('__ODB_PATH__', repr(str(scratch_odb)))
     checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
-    checker.write_text(checker_source, encoding='utf-8')
     try:
-        completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(root), text=True, capture_output=True, timeout=900, shell=False)
+        checker.write_text(checker_source, encoding='utf-8')
+        completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(scratch), text=True, capture_output=True, timeout=900, shell=False)
         log('abaqus checker returncode=%s' % completed.returncode)
         if completed.stdout:
             log('abaqus stdout tail=' + completed.stdout[-1000:])
         if completed.stderr:
             log('abaqus stderr tail=' + completed.stderr[-1000:])
+        try:
+            return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
+        except Exception:
+            return False
     except Exception as exc:
         log('abaqus checker failed to run: %s' % exc)
         return False
-    try:
-        return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
-    except Exception:
-        return False
+    finally:
+        shutil.rmtree(str(scratch), ignore_errors=True)
 
 
 def close_mapdl(mapdl):
     if mapdl is not None:
         try:
-            mapdl.exit()
+            mapdl.exit(force=True)
         except Exception:
             pass
 
@@ -1217,9 +1226,7 @@ def _binary_solution_max(result, set_index):
         import numpy as np
         _, values = result.nodal_solution(set_index)
         values = np.asarray(values, dtype=float)
-        if values.ndim == 1:
-            return float(np.nanmax(np.abs(values)))
-        return float(np.nanmax(np.linalg.norm(values, axis=1)))
+        return float(np.nanmax(np.abs(values)))
     except Exception:
         return None
 
@@ -1371,7 +1378,20 @@ def check_ansys_result_binary(result_path):
             return False
     elif domain == 'column_eigen_buckling_gui':
         active = [(value, xyz) for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-9]
-        if len(active) != 1 or not _close(active[0][0], -1.0, 0.01) or active[0][1] is None or abs(active[0][1][1]-1000.0) > 0.1 or not times or times[-1] <= 0.0:
+        if len(active) != 1 or not _close(active[0][0], -1.0, 0.01) or active[0][1] is None or abs(active[0][1][1]-1000.0) > 0.1:
+            log('strict binary check: single top FY=-1 N reference load missing')
+            return False
+        first_factor = times[0] if times else None
+        if int(result.nsets) != 1 or first_factor is None or not (1500.0 <= first_factor <= 1950.0):
+            log('strict binary check: first pin-ended-column buckling factor is not plausible')
+            return False
+        bottom_codes = {code for code, value, xyz in bcs if xyz is not None and abs(xyz[1]) <= 0.1 and abs(value) <= 1.0e-10}
+        top_codes = {code for code, value, xyz in bcs if xyz is not None and abs(xyz[1] - 1000.0) <= 0.1 and abs(value) <= 1.0e-10}
+        if not set((1, 2, 3, 5)).issubset(bottom_codes) or any(code in bottom_codes for code in (4, 6)):
+            log('strict binary check: bottom translations/ROTY or free bending rotations are incorrect')
+            return False
+        if not set((1, 3)).issubset(top_codes) or any(code in top_codes for code in (2, 4, 5, 6)):
+            log('strict binary check: top pin translations or free rotations are incorrect')
             return False
     elif domain == 'steady_state_thermal_block_gui':
         if int(result.nsets) != 1 or temp_min is None or not _close(temp_min, 20.0, 0.02) or not _close(temp_max, 100.0, 0.02):
@@ -1385,13 +1405,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1404,7 +1430,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1445,8 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        if scratch is not None:
+            shutil.rmtree(str(scratch), ignore_errors=True)
 
 
 def evaluate():

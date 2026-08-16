@@ -3,12 +3,16 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-06-windows', 'open_choice_id': 'cae-open-choice-016', 'source_task': 'task/task-v/abaqus/task-16', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'transient_heat_block_gui', 'analysis_kind': 'thermal', 'metrics': ['final_probe_temperature', 'time_value'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a transient heat-transfer block; report final or probe temperatures at the requested time.', 'selection_reason': 'Transient thermal analysis is supported in both tools and has solver-result evidence.', 'artifact_hint': {'ground_truth_files': ['Job-TransientHeat-A.cae', 'Job-TransientHeat-A.odb'], 'abaqus_stems': ['Job-TransientHeat-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 60.0, 'y': 18.0, 'z': 12.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-06-windows', 'open_choice_id': 'cae-open-choice-016', 'source_task': 'task/task-v/abaqus/task-16', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'transient_heat_block_gui', 'analysis_kind': 'thermal', 'metrics': ['final_probe_temperature', 'time_value'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a transient heat-transfer block; report final or probe temperatures at the requested time.', 'selection_reason': 'Transient thermal analysis is supported in both tools and has solver-result evidence.', 'artifact_hint': {'ground_truth_files': ['Job-TransientHeat-A.cae', 'Job-TransientHeat-A.odb', 'gt_task_06_ansys.db', 'gt_task_06_ansys.rth'], 'abaqus_stems': ['Job-TransientHeat-A'], 'ansys_db_files': ['gt_task_06_ansys.db'], 'ansys_result_files': ['gt_task_06_ansys.rth']}, 'span_hint': {'x': 60.0, 'y': 18.0, 'z': 12.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -111,8 +115,6 @@ def find_ansys_artifacts(root):
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
-    checker = root / '__open_choice_abaqus_checker.py'
-    result = root / '__open_choice_abaqus_result.txt'
     checker_source = r'''
 # -*- coding: utf-8 -*-
 from __future__ import annotations
@@ -498,10 +500,13 @@ def _numbers(value):
     out = []
     if value is None:
         return out
-    if isinstance(value, (list, tuple)):
-        for item in value:
-            out.extend(_numbers(item))
-        return out
+    if not isinstance(value, TEXT_TYPES):
+        try:
+            for item in value:
+                out.extend(_numbers(item))
+            return out
+        except TypeError:
+            pass
     try:
         out.append(float(value))
     except Exception:
@@ -598,11 +603,29 @@ def _material_ok(model, domain):
         if not density or not _near(density[0], target, 0.03, 1.0e-12):
             log('strict check: density mismatch %s target=%s' % (density, target))
             return False
-    if domain in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
+    if domain in ('transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
         conductivity = _material_numbers(material, 'conductivity')
-        target = {'transient_heat_block_gui': 0.045}.get(domain, 0.05)
+        target = 0.05
         if not conductivity or not _near(conductivity[0], target, 0.03):
             log('strict check: conductivity mismatch %s target=%s' % (conductivity, target))
+            return False
+    if domain == 'transient_heat_block_gui':
+        steel_key = find_key(model.materials, 'Steel')
+        if steel_key is None:
+            log('strict check: material Steel is missing')
+            return False
+        steel = model.materials[steel_key]
+        density = _material_numbers(steel, 'density')
+        specific_heat = _material_numbers(steel, 'specificHeat')
+        conductivity = _material_numbers(steel, 'conductivity')
+        if not density or not _near(density[0], 7.85e-9, 0.02, 1.0e-12):
+            log('strict check: Steel density mismatch %s' % density)
+            return False
+        if not specific_heat or not _near(specific_heat[0], 4.5e8, 0.02):
+            log('strict check: Steel specific heat mismatch %s' % specific_heat)
+            return False
+        if not conductivity or not _near(conductivity[0], 45.0, 0.02):
+            log('strict check: Steel conductivity must be 45 mJ/(s mm K), got %s' % conductivity)
             return False
     return True
 
@@ -687,6 +710,51 @@ def check_abaqus_task_specific(model, part):
                 _step_attr_matches(steps, 'maxInc', 15.0) and
                 _step_attr_matches(steps, 'deltmx', 10.0)):
             log('strict check: transient step parameters do not match 300/2/15/DELTMX=10')
+            return False
+        if types != set(('DC3D8',)):
+            log('strict check: task-06 requires DC3D8 elements, got %s' % sorted(types))
+            return False
+        if element_count < 180 or node_count < 300:
+            log('strict check: 4 mm block mesh is too coarse elements=%s nodes=%s' % (element_count, node_count))
+            return False
+        try:
+            seed_size = float(part.getPartSeeds(attribute=SIZE))
+        except Exception:
+            seed_size = None
+        if seed_size is None or not _near(seed_size, 4.0, 0.10, 0.25):
+            log('strict check: global seed size is not approximately 4 mm: %s' % seed_size)
+            return False
+        has_steel_section = False
+        for section in _repo_values(model.sections):
+            if ci(getattr(section, 'material', '')) == 'STEEL':
+                has_steel_section = True
+                break
+        if not has_steel_section:
+            log('strict check: no homogeneous solid section uses Steel')
+            return False
+        steel_assignments = 0
+        try:
+            for assignment in part.sectionAssignments:
+                section_name = getattr(assignment, 'sectionName', '')
+                section_key = find_key(model.sections, section_name)
+                if section_key is not None and ci(getattr(model.sections[section_key], 'material', '')) == 'STEEL':
+                    steel_assignments += 1
+        except Exception:
+            steel_assignments = 0
+        if len(part.cells) != 1 or steel_assignments < 1:
+            log('strict check: Steel section is not assigned to the whole block')
+            return False
+        instances = _repo_values(model.rootAssembly.instances)
+        if len(instances) != 1:
+            log('strict check: expected one block instance, got %s' % len(instances))
+            return False
+        dependent = getattr(instances[0], 'dependent', None)
+        if dependent != ON and ci(dependent) not in ('ON', '1', 'TRUE'):
+            log('strict check: block instance is not dependent')
+            return False
+        job_key = find_key(mdb.jobs, 'Job-TransientHeat-A')
+        if job_key is None:
+            log('strict check: Job-TransientHeat-A is missing from the CAE database')
             return False
     if domain == 'transient_thermal_conduction_gui':
         if not (_step_attr_matches(steps, 'timePeriod', 10.0) and _step_attr_matches(steps, 'initialInc', 0.1)):
@@ -790,7 +858,10 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                squared = 0.0
+                for number in nums:
+                    squared += number * number
+                values.append(squared ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -799,6 +870,74 @@ def _frame_field(frame, names, invariant=False):
         if values:
             return values
     return []
+
+def _odb_temperature_records(odb, frame):
+    coordinates = {}
+    try:
+        for instance_name in odb.rootAssembly.instances.keys():
+            instance = odb.rootAssembly.instances[instance_name]
+            for node in instance.nodes:
+                coordinates[(ci(instance_name), int(node.label))] = tuple(float(v) for v in node.coordinates[:3])
+    except Exception as exc:
+        log('strict ODB check: cannot map node coordinates: %s' % exc)
+        return []
+    field = None
+    for name in ('NT11', 'NT'):
+        try:
+            field = frame.fieldOutputs[name]
+            break
+        except Exception:
+            pass
+    if field is None:
+        return []
+    records = []
+    for item in field.values:
+        try:
+            instance_name = ci(item.instance.name)
+            label = int(item.nodeLabel)
+            xyz = coordinates.get((instance_name, label))
+            values = _numbers(getattr(item, 'data', None))
+            if xyz is not None and values:
+                records.append((xyz, values[0]))
+        except Exception:
+            pass
+    return records
+
+def _average(values):
+    return sum(values) / float(len(values)) if values else None
+
+def _thermal_profile_ok(records, heated_target, band_range, far_range):
+    if len(records) < 300:
+        log('strict thermal profile check: insufficient coordinate-temperature records')
+        return False
+    heated = [value for xyz, value in records if abs(xyz[0]) <= 0.1]
+    band = [value for xyz, value in records if 3.5 <= xyz[0] <= 6.5]
+    far = [value for xyz, value in records if abs(xyz[0] - 60.0) <= 0.1]
+    heated_avg = _average(heated)
+    band_avg = _average(band)
+    far_avg = _average(far)
+    if heated_avg is None or not (heated_target[0] <= heated_avg <= heated_target[1]):
+        log('strict thermal profile check: X=0 average mismatch %s' % heated_avg)
+        return False
+    if band_avg is None or not (band_range[0] <= band_avg <= band_range[1]):
+        log('strict thermal profile check: X approximately 5 mm average mismatch %s' % band_avg)
+        return False
+    if far_avg is None or not (far_range[0] <= far_avg <= far_range[1]):
+        log('strict thermal profile check: X=60 average mismatch %s' % far_avg)
+        return False
+    groups = {}
+    for xyz, value in records:
+        key = round(float(xyz[0]), 6)
+        groups.setdefault(key, []).append(value)
+    profile = [(x, _average(groups[x])) for x in sorted(groups.keys())]
+    if len(profile) < 8 or profile[0][1] - profile[-1][1] < 3.0:
+        log('strict thermal profile check: solved field is uniform or has insufficient X resolution')
+        return False
+    for left, right in zip(profile, profile[1:]):
+        if right[1] > left[1] + 0.75:
+            log('strict thermal profile check: temperature does not decay from X=0')
+            return False
+    return True
 
 def check_abaqus_odb_specific(odb):
     domain = SPEC.get('domain', '')
@@ -848,10 +987,25 @@ def check_abaqus_odb_specific(odb):
             if not (4.5 <= radius <= 5.5):
                 log('strict ODB check: 10 mm central hole is not represented')
                 return False
-    if domain in ('transient_heat_block_gui', 'transient_thermal_conduction_gui'):
-        target_time = 300.0 if domain == 'transient_heat_block_gui' else 10.0
-        low_target = 25.0 if domain == 'transient_heat_block_gui' else 20.0
-        high_target = 95.0 if domain == 'transient_heat_block_gui' else 100.0
+    if domain == 'transient_heat_block_gui':
+        if types != set(('DC3D8',)):
+            log('strict ODB check: task-06 requires DC3D8 result elements')
+            return False
+        if not times or not _near(max(times), 300.0, 0.005):
+            log('strict ODB check: final thermal time mismatch')
+            return False
+        initial_records = _odb_temperature_records(odb, frames[0])
+        initial_values = [value for xyz, value in initial_records]
+        if not initial_values or min(initial_values) < 24.5 or max(initial_values) > 25.5:
+            log('strict ODB check: initial uniform 25 C field is missing')
+            return False
+        final_records = _odb_temperature_records(odb, final)
+        if not _thermal_profile_ok(final_records, (93.0, 97.0), (88.0, 96.0), (75.0, 94.0)):
+            return False
+    if domain == 'transient_thermal_conduction_gui':
+        target_time = 10.0
+        low_target = 20.0
+        high_target = 100.0
         if not times or not _near(max(times), target_time, 0.005):
             log('strict ODB check: final thermal time mismatch')
             return False
@@ -977,33 +1131,75 @@ def main():
 if __name__ == '__main__':
     main()
 '''
-    checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
-    checker_source = checker_source.replace('__CAE_PATH__', repr(str(cae_path)))
-    checker_source = checker_source.replace('__ODB_PATH__', repr(str(odb_path)))
-    checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
-    checker.write_text(checker_source, encoding='utf-8')
+    scratch = Path(tempfile.mkdtemp(prefix='__open_choice_abaqus_', dir=str(root)))
     try:
-        completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(root), text=True, capture_output=True, timeout=900, shell=False)
-        log('abaqus checker returncode=%s' % completed.returncode)
-        if completed.stdout:
-            log('abaqus stdout tail=' + completed.stdout[-1000:])
-        if completed.stderr:
-            log('abaqus stderr tail=' + completed.stderr[-1000:])
-    except Exception as exc:
-        log('abaqus checker failed to run: %s' % exc)
-        return False
-    try:
-        return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
-    except Exception:
-        return False
+        scratch_cae = scratch / cae_path.name
+        scratch_odb = scratch / odb_path.name
+        checker = scratch / '__open_choice_abaqus_checker.py'
+        result = scratch / '__open_choice_abaqus_result.txt'
+        shutil.copy2(str(cae_path), str(scratch_cae))
+        shutil.copy2(str(odb_path), str(scratch_odb))
+        checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
+        checker_source = checker_source.replace('__CAE_PATH__', repr(str(scratch_cae)))
+        checker_source = checker_source.replace('__ODB_PATH__', repr(str(scratch_odb)))
+        checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
+        checker.write_text(checker_source, encoding='utf-8')
+        try:
+            completed = subprocess.run([ABAQUS_COMMAND, 'cae', 'noGUI=' + str(checker)], cwd=str(scratch), text=True, capture_output=True, timeout=900, shell=False)
+            log('abaqus checker returncode=%s' % completed.returncode)
+            if completed.stdout:
+                log('abaqus stdout tail=' + completed.stdout[-1000:])
+            if completed.stderr:
+                log('abaqus stderr tail=' + completed.stderr[-1000:])
+        except Exception as exc:
+            log('abaqus checker failed to run: %s' % exc)
+            return False
+        try:
+            passed = result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
+            detail_path = scratch / '__open_choice_abaqus_detail.txt'
+            if detail_path.exists():
+                detail_text = detail_path.read_text(encoding='utf-8', errors='ignore').strip()
+                if detail_text:
+                    log('abaqus checker detail=' + detail_text[-4000:])
+            return passed
+        except Exception:
+            return False
+    finally:
+        remove_scratch(scratch)
 
 
 def close_mapdl(mapdl):
-    if mapdl is not None:
+    if mapdl is None:
+        return
+    try:
+        mapdl.exit(force=True)
+    except TypeError:
         try:
             mapdl.exit()
-        except Exception:
-            pass
+        except Exception as exc:
+            log('MAPDL exit failed: %s' % exc)
+    except Exception as exc:
+        log('MAPDL force exit failed: %s' % exc)
+
+
+def remove_scratch(scratch):
+    if scratch is None:
+        return
+    last_error = None
+    for attempt in range(10):
+        try:
+            shutil.rmtree(str(scratch))
+        except FileNotFoundError:
+            return
+        except Exception as exc:
+            last_error = exc
+        else:
+            if not scratch.exists():
+                return
+            last_error = RuntimeError('directory still exists')
+        if attempt < 9:
+            time.sleep(0.5)
+    log('scratch cleanup failed after 10 attempts for %s: %s' % (scratch, last_error))
 
 
 def _try_get(mapdl, *args):
@@ -1020,6 +1216,24 @@ def _safe_run(mapdl, command):
     except Exception as exc:
         log('command failed %s: %s' % (command, exc))
         return ''
+
+
+def _mplist_value(text, label):
+    lines = str(text).splitlines()
+    wanted = str(label).upper()
+    number_pattern = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?'
+    for index, line in enumerate(lines):
+        tokens = line.upper().split()
+        if not tokens or tokens[0] != 'TEMP' or wanted not in tokens[1:]:
+            continue
+        for following in lines[index + 1:index + 4]:
+            numbers = re.findall(number_pattern, following)
+            if numbers:
+                try:
+                    return float(numbers[-1])
+                except Exception:
+                    pass
+    return None
 
 
 def check_geometry_values(bb):
@@ -1070,6 +1284,20 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'transient_heat_block_gui':
+        density = _mplist_value(text, 'DENS')
+        conductivity = _mplist_value(text, 'KXX')
+        specific_heat = _mplist_value(text, 'C')
+        if density is None or not _close(density, 7.85e-9, 0.02, 1.0e-12):
+            log('strict material check: ANSYS density mismatch %s' % density)
+            return False
+        if conductivity is None or not _close(conductivity, 45.0, 0.02):
+            log('strict material check: ANSYS KXX must be 45 mJ/(s mm K), got %s' % conductivity)
+            return False
+        if specific_heat is None or not _close(specific_heat, 4.5e8, 0.02):
+            log('strict material check: ANSYS specific heat mismatch %s' % specific_heat)
+            return False
+        return True
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1226,11 +1454,72 @@ def _binary_solution_max(result, set_index):
 def _binary_temperature(result, set_index):
     try:
         import numpy as np
-        _, values = result.nodal_temperature(set_index)
+        nnum, values = result.nodal_temperature(set_index)
         values = np.asarray(values, dtype=float)
-        return values, float(np.nanmin(values)), float(np.nanmax(values))
+        aligned = np.full(int(result.mesh.nnum.size), np.nan, dtype=float)
+        node_index = {int(node): index for index, node in enumerate(result.mesh.nnum)}
+        for node, value in zip(nnum, values):
+            index = node_index.get(int(node))
+            if index is not None:
+                aligned[index] = float(value)
+        finite = aligned[np.isfinite(aligned)]
+        if not finite.size:
+            return None, None, None
+        return aligned, float(np.min(finite)), float(np.max(finite))
     except Exception:
         return None, None, None
+
+def _ansys_thermal_profile_ok(nodes, temperatures):
+    import numpy as np
+    if temperatures is None or len(temperatures) != len(nodes):
+        log('strict binary check: temperature/node arrays do not align')
+        return False
+    finite = np.isfinite(temperatures)
+    if int(np.count_nonzero(finite)) < 300:
+        log('strict binary check: insufficient nodal temperatures')
+        return False
+    def average(mask):
+        selected = temperatures[finite & mask]
+        return None if not selected.size else float(np.mean(selected))
+    heated = average(np.isclose(nodes[:, 0], 0.0, atol=0.1))
+    band = average((nodes[:, 0] >= 3.5) & (nodes[:, 0] <= 6.5))
+    far = average(np.isclose(nodes[:, 0], 60.0, atol=0.1))
+    if heated is None or not (93.0 <= heated <= 97.0):
+        log('strict binary check: X=0 average mismatch %s' % heated)
+        return False
+    if band is None or not (88.0 <= band <= 96.0):
+        log('strict binary check: X approximately 5 mm average mismatch %s' % band)
+        return False
+    if far is None or not (75.0 <= far <= 94.0):
+        log('strict binary check: X=60 average mismatch %s' % far)
+        return False
+    profile = []
+    for x_value in sorted(set(round(float(v), 6) for v in nodes[finite, 0])):
+        value = average(np.isclose(nodes[:, 0], x_value, atol=1.0e-5))
+        if value is not None:
+            profile.append((x_value, value))
+    if len(profile) < 8 or profile[0][1] - profile[-1][1] < 3.0:
+        log('strict binary check: solved field is uniform or has insufficient X resolution')
+        return False
+    for left, right in zip(profile, profile[1:]):
+        if right[1] > left[1] + 0.75:
+            log('strict binary check: temperature does not decay from X=0')
+            return False
+    return True
+
+def _ansys_temperature_bcs_ok(records):
+    temp_bcs = [(value, xyz) for code, value, xyz in records if code == 20 and abs(value) > 1.0e-9]
+    return bool(temp_bcs) and not any(
+        not _close(value, 95.0, 0.01) or xyz is None or abs(xyz[0]) > 0.1
+        for value, xyz in temp_bcs
+    )
+
+def _ansys_time_controls_ok(times):
+    positive = [float(value) for value in times if float(value) > 0.0]
+    if not positive:
+        return False
+    increments = [positive[0]] + [right - left for left, right in zip(positive, positive[1:])]
+    return increments[0] <= 2.1 and min(increments) > 0.0 and max(increments) <= 15.1
 
 def check_ansys_result_binary(result_path):
     try:
@@ -1260,7 +1549,7 @@ def check_ansys_result_binary(result_path):
     required_type = {
         'simply_supported_beam_udl_gui': 185, 'thin_plate_buckling_a_gui': 181,
         'cantilever_modal_a_gui': 185, 'constrained_thermal_stress_a_gui': 185,
-        'constrained_thermal_stress_b_gui': 185, 'transient_heat_block_gui': 70,
+        'constrained_thermal_stress_b_gui': 185,
         'thermal_stress_bar_gui': 185, 'cantilever_modal_b_gui': 185,
         'thin_plate_buckling_b_gui_only': 181, 'plate_hole_tension_gui_only': 181,
         'solid_cantilever_static_gui': 185, 'axisymmetric_circular_plate_static_gui': 183,
@@ -1269,6 +1558,9 @@ def check_ansys_result_binary(result_path):
         'coupled_thermal_structural_bar_gui': 185, 'column_eigen_buckling_gui': 188,
         'steady_state_thermal_block_gui': 70,
     }.get(domain)
+    if domain == 'transient_heat_block_gui' and not element_types.intersection(set((70, 278))):
+        log('strict binary check: task-06 requires SOLID70 or SOLID278, got %s' % sorted(element_types))
+        return False
     if required_type is not None and required_type not in element_types:
         log('strict binary check: element type mismatch %s expected %s' % (sorted(element_types), required_type))
         return False
@@ -1302,10 +1594,28 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: aluminum thermal response mismatch')
             return False
     elif domain == 'transient_heat_block_gui':
-        if int(result.nsets) < 3 or not _close(times[-1], 300.0, 0.005) or temp_min is None or temp_min < 23.0 or not _close(temp_max, 95.0, 0.02):
+        positive_times = [value for value in times if value > 0.0]
+        if int(result.nsets) < 3 or not positive_times or not _close(positive_times[-1], 300.0, 0.005):
             log('strict binary check: transient time/temperature history mismatch')
             return False
-        if element_count < 180:
+        if not _ansys_time_controls_ok(positive_times):
+            log('strict binary check: initial/max time increments do not reflect 2 s / 15 s controls')
+            return False
+        if not _ansys_temperature_bcs_ok(bcs):
+            log('strict binary check: 95 C temperature BC is not confined to X=0')
+            return False
+        initial_temperatures, _, _ = _binary_temperature(result, 0)
+        if initial_temperatures is None:
+            log('strict binary check: first transient result set is unreadable')
+            return False
+        initial_far = initial_temperatures[np.isfinite(initial_temperatures) & np.isclose(nodes[:, 0], 60.0, atol=0.1)]
+        if not initial_far.size or not (24.0 <= float(np.mean(initial_far)) <= 26.0):
+            log('strict binary check: initial uniform 25 C field is not evidenced at the far face')
+            return False
+        if not _ansys_thermal_profile_ok(nodes, temperatures):
+            return False
+        if element_count < 180 or node_count < 300:
+            log('strict binary check: 4 mm mesh is too coarse')
             return False
     elif domain == 'cantilever_modal_b_gui':
         if int(result.nsets) < 5 or not times or min(times) <= 0.0:
@@ -1385,13 +1695,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1404,7 +1720,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1735,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        remove_scratch(scratch)
 
 
 def evaluate():

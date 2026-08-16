@@ -3,8 +3,13 @@ from __future__ import annotations
 
 import json
 import os
+import re
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
+import traceback
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
@@ -498,10 +503,13 @@ def _numbers(value):
     out = []
     if value is None:
         return out
-    if isinstance(value, (list, tuple)):
-        for item in value:
-            out.extend(_numbers(item))
-        return out
+    if not isinstance(value, TEXT_TYPES):
+        try:
+            for item in value:
+                out.extend(_numbers(item))
+            return out
+        except TypeError:
+            pass
     try:
         out.append(float(value))
     except Exception:
@@ -790,7 +798,10 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                squared = 0.0
+                for number in nums:
+                    squared += number * number
+                values.append(squared ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -999,11 +1010,37 @@ if __name__ == '__main__':
 
 
 def close_mapdl(mapdl):
-    if mapdl is not None:
+    if mapdl is None:
+        return
+    try:
+        mapdl.exit(force=True)
+    except TypeError:
         try:
             mapdl.exit()
-        except Exception:
-            pass
+        except Exception as exc:
+            log('MAPDL exit failed: %s' % exc)
+    except Exception as exc:
+        log('MAPDL force exit failed: %s' % exc)
+
+
+def remove_scratch(scratch):
+    if scratch is None:
+        return
+    last_error = None
+    for attempt in range(10):
+        try:
+            shutil.rmtree(str(scratch))
+        except FileNotFoundError:
+            return
+        except Exception as exc:
+            last_error = exc
+        else:
+            if not scratch.exists():
+                return
+            last_error = RuntimeError('directory still exists')
+        if attempt < 9:
+            time.sleep(0.5)
+    log('scratch cleanup failed after 10 attempts for %s: %s' % (scratch, last_error))
 
 
 def _try_get(mapdl, *args):
@@ -1099,6 +1136,65 @@ def check_ansys_boundary_loads(mapdl):
     if not load_text.strip() or ('NO ' in load_text.upper() and not any(ch.isdigit() for ch in load_text)):
         log('no load/predefined evidence found')
         return False
+    return True
+
+
+def check_ansys_plane_stress_model(mapdl):
+    if TASK_SPEC.get('domain') != 'plane_stress_plate_hole_gui':
+        return True
+    etlist = _safe_run(mapdl, 'ETLIST,ALL')
+    if 'PLANE183' not in etlist.upper() or not re.search(r'KEYOPT\(\s*1-\s*6\)\s*=\s*0\s+0\s+3(?:\s|$)', etlist, re.I):
+        log('strict model check: PLANE183 plane-stress-with-thickness option is missing')
+        return False
+    rlist = _safe_run(mapdl, 'RLIST,ALL')
+    match = re.search(r'ITEMS\s+1\s+TO\s+6.*?\n\s*([+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?)', rlist, re.I | re.S)
+    if match is None or not _close(float(match.group(1)), 1.0, 0.01):
+        log('strict model check: 1 mm PLANE183 thickness real constant is missing')
+        return False
+    mplist = _safe_run(mapdl, 'MPLIST,ALL')
+    if not re.search(r'210000(?:\.0*)?', mplist) or not re.search(r'0\.3(?:0*)', mplist):
+        log('strict model check: E=210000 MPa and nu=0.3 are not both present')
+        return False
+    sfelist = _safe_run(mapdl, 'SFELIST,ALL')
+    pressure_nodes = set()
+    pressure_values = []
+    number_pattern = r'[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?'
+    for line in sfelist.splitlines():
+        values = re.findall(number_pattern, line)
+        if len(values) < 3:
+            continue
+        try:
+            node = int(float(values[-3]))
+            pressure = float(values[-2])
+        except Exception:
+            continue
+        if abs(pressure) > 1.0e-12:
+            pressure_nodes.add(node)
+            pressure_values.append(pressure)
+    if not pressure_nodes or any(not _close(abs(value), 10.0, 0.01) for value in pressure_values):
+        log('strict model check: complete 10 MPa edge pressure evidence is missing')
+        return False
+    try:
+        node_map = {}
+        for label, xyz in zip(mapdl.mesh.nnum, mapdl.mesh.nodes):
+            node_map[int(label)] = tuple(float(value) for value in xyz[:3])
+        loaded = [node_map[label] for label in pressure_nodes if label in node_map]
+    except Exception as exc:
+        log('strict model check: cannot map pressure nodes: %s' % exc)
+        return False
+    if len(loaded) != len(pressure_nodes):
+        log('strict model check: some pressure nodes are not in the model mesh')
+        return False
+    left = [xyz for xyz in loaded if abs(xyz[0]) <= 0.08]
+    right = [xyz for xyz in loaded if abs(xyz[0] - 100.0) <= 0.08]
+    if len(left) + len(right) != len(loaded) or not left or not right:
+        log('strict model check: pressure is not confined to both vertical outer edges')
+        return False
+    for edge in (left, right):
+        ys = [xyz[1] for xyz in edge]
+        if min(ys) > 0.08 or max(ys) < 199.92:
+            log('strict model check: 10 MPa pressure does not cover a complete vertical edge')
+            return False
     return True
 
 
@@ -1212,6 +1308,24 @@ def _binary_stress_max(result, set_index):
     except Exception:
         return None
 
+def _binary_stress_peak(result, set_index):
+    try:
+        import numpy as np
+        nnum, stress = result.nodal_stress(set_index)
+        stress = np.asarray(stress, dtype=float)
+        sx, sy, sz, sxy, syz, sxz = stress[:, :6].T
+        mises = np.sqrt(0.5 * ((sx - sy) ** 2 + (sy - sz) ** 2 + (sz - sx) ** 2) + 3.0 * (sxy ** 2 + syz ** 2 + sxz ** 2))
+        valid = np.where(np.isfinite(mises))[0]
+        if not valid.size:
+            return None, None
+        index = int(valid[np.argmax(mises[valid])])
+        node_index = {int(node): offset for offset, node in enumerate(result.mesh.nnum)}
+        mesh_index = node_index.get(int(nnum[index]))
+        xyz = None if mesh_index is None else tuple(float(value) for value in result.mesh.nodes[mesh_index][:3])
+        return float(mises[index]), xyz
+    except Exception:
+        return None, None
+
 def _binary_solution_max(result, set_index):
     try:
         import numpy as np
@@ -1239,6 +1353,7 @@ def check_ansys_result_binary(result_path):
         result = reader.read_binary(str(result_path))
     except Exception as exc:
         log('strict binary result reader failed: %s' % exc)
+        log(traceback.format_exc())
         return False
     domain = TASK_SPEC.get('domain', '')
     nodes = np.asarray(result.mesh.nodes, dtype=float)
@@ -1254,6 +1369,7 @@ def check_ansys_result_binary(result_path):
     bcs = _binary_records(result, 'nodal_boundary_conditions', last)
     times = [float(v) for v in result.time_values]
     stress_max = _binary_stress_max(result, last)
+    stress_peak, stress_peak_xyz = _binary_stress_peak(result, last)
     solution_max = _binary_solution_max(result, last)
     temperatures, temp_min, temp_max = _binary_temperature(result, last)
 
@@ -1334,8 +1450,23 @@ def check_ansys_result_binary(result_path):
             return False
     elif domain == 'plane_stress_plate_hole_gui':
         radius = float(np.min(np.sqrt((nodes[:, 0] - 50.0) ** 2 + (nodes[:, 1] - 100.0) ** 2)))
-        if element_count < 700 or not (4.5 <= radius <= 5.5) or stress_max is None or not (20.0 <= stress_max <= 60.0):
+        hole_nodes = int(np.sum(np.abs(np.sqrt((nodes[:, 0] - 50.0) ** 2 + (nodes[:, 1] - 100.0) ** 2) - 5.0) <= 0.2))
+        if element_count < 700 or hole_nodes < 20 or not (4.5 <= radius <= 5.5) or stress_max is None or not (20.0 <= stress_max <= 60.0):
             log('strict binary check: locally refined 10 mm hole/stress evidence missing')
+            return False
+        if stress_peak is None or stress_peak_xyz is None or ((stress_peak_xyz[0] - 50.0) ** 2 + (stress_peak_xyz[1] - 100.0) ** 2) ** 0.5 > 15.0:
+            log('strict binary check: maximum Mises stress is not located near the hole')
+            return False
+        active_bcs = [(code, xyz) for code, value, xyz in bcs if xyz is not None and abs(value) <= 1.0e-12]
+        groups = {}
+        for code, xyz in active_bcs:
+            key = tuple(round(value, 5) for value in xyz)
+            groups.setdefault(key, set()).add(code)
+        dof_sets = list(groups.values())
+        anchor = [xyz for xyz, codes in groups.items() if codes == set((1, 2))]
+        guide = [xyz for xyz, codes in groups.items() if codes == set((2,))]
+        if len(active_bcs) != 3 or len(groups) != 2 or len(anchor) != 1 or len(guide) != 1 or abs(anchor[0][0] - guide[0][0]) < 25.0:
+            log('strict binary check: minimum two-node rigid-body constraints are missing or over-constrained')
             return False
     elif domain == 'transient_thermal_conduction_gui':
         has_x4 = bool(np.any(np.isclose(nodes[:, 0], 4.0, atol=0.1)))
@@ -1385,13 +1516,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1401,10 +1538,12 @@ def check_ansys_with_mapdl(root, model_path, result_path):
             return False
         if not check_ansys_boundary_loads(mapdl):
             return False
+        if not check_ansys_plane_stress_model(mapdl):
+            return False
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1558,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        remove_scratch(scratch)
 
 
 def evaluate():

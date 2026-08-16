@@ -3,8 +3,11 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
@@ -498,10 +501,13 @@ def _numbers(value):
     out = []
     if value is None:
         return out
-    if isinstance(value, (list, tuple)):
-        for item in value:
-            out.extend(_numbers(item))
-        return out
+    if not isinstance(value, TEXT_TYPES):
+        try:
+            for item in value:
+                out.extend(_numbers(item))
+            return out
+        except TypeError:
+            pass
     try:
         out.append(float(value))
     except Exception:
@@ -790,7 +796,10 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                squared = 0.0
+                for number in nums:
+                    squared += number * number
+                values.append(squared ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -999,11 +1008,37 @@ if __name__ == '__main__':
 
 
 def close_mapdl(mapdl):
-    if mapdl is not None:
+    if mapdl is None:
+        return
+    try:
+        mapdl.exit(force=True)
+    except TypeError:
         try:
             mapdl.exit()
-        except Exception:
-            pass
+        except Exception as exc:
+            log('MAPDL exit failed: %s' % exc)
+    except Exception as exc:
+        log('MAPDL force exit failed: %s' % exc)
+
+
+def remove_scratch(scratch):
+    if scratch is None:
+        return
+    last_error = None
+    for attempt in range(10):
+        try:
+            shutil.rmtree(str(scratch))
+        except FileNotFoundError:
+            return
+        except Exception as exc:
+            last_error = exc
+        else:
+            if not scratch.exists():
+                return
+            last_error = RuntimeError('directory still exists')
+        if attempt < 9:
+            time.sleep(0.5)
+    log('scratch cleanup failed after 10 attempts for %s: %s' % (scratch, last_error))
 
 
 def _try_get(mapdl, *args):
@@ -1385,13 +1420,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1404,7 +1445,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1460,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        remove_scratch(scratch)
 
 
 def evaluate():

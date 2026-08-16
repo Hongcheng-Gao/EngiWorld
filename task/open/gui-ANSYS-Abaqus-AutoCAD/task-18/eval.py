@@ -3,12 +3,14 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-18-windows', 'open_choice_id': 'cae-open-choice-038', 'source_task': 'task/task-v/ansys/task-11', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'hertz_contact_static_gui', 'analysis_kind': 'contact', 'metrics': ['max_contact_pressure', 'vertical_displacement'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a nonlinear frictionless sphere-on-plate contact case; report maximum contact pressure and displacement.', 'selection_reason': 'Contact is a strong open-choice test because the distractor can draw geometry but cannot solve contact mechanics.', 'artifact_hint': {'ground_truth_files': ['wb_hertz.db', 'wb_hertz.rst', 'wb_hertz.wbpj'], 'abaqus_stems': [], 'ansys_db_files': ['wb_hertz.db', 'wb_hertz.wbpj'], 'ansys_result_files': ['wb_hertz.rst']}, 'span_hint': {'min_span': 10.0}, 'bounds_hint': {'min_span': 10.0}}
+TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-18-windows', 'open_choice_id': 'cae-open-choice-038', 'source_task': 'task/task-v/ansys/task-11', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'hertz_contact_static_gui', 'analysis_kind': 'contact', 'metrics': ['max_contact_pressure', 'vertical_displacement'], 'expected_result_fields': ['U', 'S', 'CPRESS'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a nonlinear frictionless sphere-on-plate contact case; report maximum contact pressure and displacement.', 'selection_reason': 'Contact is a strong open-choice test because the distractor can draw geometry but cannot solve contact mechanics.', 'artifact_hint': {'ground_truth_files': ['wb_hertz.db', 'wb_hertz.rst'], 'abaqus_stems': [], 'ansys_db_files': ['wb_hertz.db'], 'ansys_result_files': ['wb_hertz.rst']}, 'span_hint': {'min_span': 10.0}, 'bounds_hint': {'min_span': 10.0}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -498,10 +500,13 @@ def _numbers(value):
     out = []
     if value is None:
         return out
-    if isinstance(value, (list, tuple)):
-        for item in value:
-            out.extend(_numbers(item))
-        return out
+    if not isinstance(value, TEXT_TYPES):
+        try:
+            for item in value:
+                out.extend(_numbers(item))
+            return out
+        except TypeError:
+            pass
     try:
         out.append(float(value))
     except Exception:
@@ -737,6 +742,12 @@ def check_abaqus_task_specific(model, part):
         if not any('ON' in ci(getattr(step, 'nlgeom', '')) for step in steps):
             log('strict check: large deflection is not enabled')
             return False
+        vertical_forces = []
+        for load in _repo_values(model.loads):
+            vertical_forces.extend(_numbers(getattr(load, 'cf2', None)))
+        if not any(_near(value, -500.0, 0.03) for value in vertical_forces):
+            log('strict check: -500 N vertical sphere force is missing')
+            return False
     return True
 
 def _odb_nodes(odb):
@@ -790,7 +801,10 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                squared = 0.0
+                for number in nums:
+                    squared += number * number
+                values.append(squared ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -878,7 +892,10 @@ def check_abaqus_odb_specific(odb):
             if bb['y'][1] < 19.0 or bb['z'][0] > -49.0 or bb['z'][1] < 49.0:
                 log('strict ODB check: full sphere-on-centered-plate geometry missing')
                 return False
-            spherical = sum(1 for p in xyz if p[1] >= -0.1 and abs(((p[0]) ** 2 + (p[1] - 10.0) ** 2 + (p[2]) ** 2) ** 0.5 - 10.0) <= 0.5)
+            spherical = 0
+            for point in xyz:
+                if point[1] >= -0.1 and abs(((point[0]) ** 2 + (point[1] - 10.0) ** 2 + (point[2]) ** 2) ** 0.5 - 10.0) <= 0.5:
+                    spherical += 1
             if spherical < 12:
                 log('strict ODB check: spherical surface evidence missing')
                 return False
@@ -1001,7 +1018,9 @@ if __name__ == '__main__':
 def close_mapdl(mapdl):
     if mapdl is not None:
         try:
-            mapdl.exit()
+            # Snapshot workers set PYMAPDL_START_INSTANCE=False globally, so
+            # force is required to stop the local instance launched above.
+            mapdl.exit(force=True)
         except Exception:
             pass
 
@@ -1232,6 +1251,42 @@ def _binary_temperature(result, set_index):
     except Exception:
         return None, None, None
 
+def _binary_contact_pressure_max(result, set_index, element_type_by_number):
+    """Return the largest CONTA17x normal pressure stored in the ECT record."""
+    try:
+        import numpy as np
+        enum, element_data, _ = result.element_solution_data(set_index, 'ECT')
+        pressure_max = None
+        for element_number, values in zip(enum, element_data):
+            if element_type_by_number.get(int(element_number)) not in (171, 172, 173, 174, 175, 176, 177):
+                continue
+            if values is None:
+                continue
+            values = np.asarray(values, dtype=float).ravel()
+            # CONTA174 ECT records store each integration-point block in ten
+            # values; CONT:PRES is the third value in each block.
+            pressures = values[2:-1:10]
+            pressures = pressures[np.isfinite(pressures)]
+            if pressures.size:
+                observed = float(np.max(pressures))
+                pressure_max = observed if pressure_max is None else max(pressure_max, observed)
+        return pressure_max
+    except Exception:
+        return None
+
+def _binary_solution_component_range(result, set_index, component):
+    try:
+        import numpy as np
+        _, values = result.nodal_solution(set_index)
+        values = np.asarray(values, dtype=float)
+        component_values = values[:, int(component)]
+        component_values = component_values[np.isfinite(component_values)]
+        if not component_values.size:
+            return None, None
+        return float(np.min(component_values)), float(np.max(component_values))
+    except Exception:
+        return None, None
+
 def check_ansys_result_binary(result_path):
     try:
         import numpy as np
@@ -1247,6 +1302,7 @@ def check_ansys_result_binary(result_path):
         return False
     last = int(result.nsets) - 1
     element_types = set(int(v) for v in result.mesh.etype)
+    element_type_by_number = {int(number): int(etype) for number, etype in zip(result.mesh.enum, result.mesh.etype)}
     element_count = int(result.mesh.enum.size)
     node_count = int(result.mesh.nnum.size)
     bbox_values = [(float(nodes[:, i].min()), float(nodes[:, i].max())) for i in range(3)]
@@ -1366,8 +1422,30 @@ def check_ansys_result_binary(result_path):
         if not (any(t in element_types for t in (170,171,172,173,174,175,176,177)) and len(element_types) >= 2):
             log('strict binary check: contact elements missing')
             return False
-        if bbox_values[1][1] < 19.0 or bbox_values[2][0] > -49.0 or bbox_values[2][1] < 49.0 or not _close(_force_sum(forces, 2), -500.0, 0.03):
-            log('strict binary check: sphere/plate geometry or -500 N force missing')
+        expected_bounds = ((-50.0, 50.0), (-10.0, 20.0), (-50.0, 50.0))
+        if any(not (_close(observed[0], expected[0], 0.0, 0.15) and _close(observed[1], expected[1], 0.0, 0.15)) for observed, expected in zip(bbox_values, expected_bounds)):
+            log('strict binary check: 100 x 10 x 100 plate or radius-10 sphere bounds missing')
+            return False
+        sphere_radius = np.sqrt(nodes[:, 0] ** 2 + (nodes[:, 1] - 10.0) ** 2 + nodes[:, 2] ** 2)
+        sphere_surface_count = int(np.count_nonzero((nodes[:, 1] >= -0.1) & np.isclose(sphere_radius, 10.0, atol=0.08)))
+        if sphere_surface_count < 12 or element_count < 10000 or node_count < 10000:
+            log('strict binary check: true sphere surface or refined solid mesh missing')
+            return False
+        if not _close(_force_sum(forces, 2), -500.0, 0.03):
+            log('strict binary check: total sphere load is not -500 N')
+            return False
+        bottom_codes = {code for code, value, xyz in bcs if xyz is not None and abs(xyz[1] + 10.0) <= 0.1 and abs(value) <= 1.0e-10}
+        top_codes = {code for code, value, xyz in bcs if xyz is not None and xyz[1] >= 19.4 and abs(value) <= 1.0e-10}
+        if not set((1, 2, 3)).issubset(bottom_codes) or not set((1, 3)).issubset(top_codes) or 2 in top_codes:
+            log('strict binary check: fixed plate bottom or laterally restrained/free-Y sphere top missing')
+            return False
+        pressure_max = _binary_contact_pressure_max(result, last, element_type_by_number)
+        uy_min, uy_max = _binary_solution_component_range(result, last, 1)
+        if pressure_max is None or not (1.0 < pressure_max < 1.0e7):
+            log('strict binary check: positive contact pressure result missing')
+            return False
+        if uy_min is None or not (-1.0 < uy_min < -1.0e-6) or uy_max is None or abs(uy_max) >= 1.0:
+            log('strict binary check: solved vertical displacement is implausible')
             return False
     elif domain == 'column_eigen_buckling_gui':
         active = [(value, xyz) for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-9]
@@ -1385,13 +1463,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1404,7 +1488,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1503,8 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        if scratch is not None:
+            shutil.rmtree(str(scratch), ignore_errors=True)
 
 
 def evaluate():

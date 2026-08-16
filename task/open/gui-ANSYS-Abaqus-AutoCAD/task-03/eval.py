@@ -3,12 +3,15 @@ from __future__ import annotations
 
 import json
 import os
+import shutil
 import subprocess
 import sys
+import tempfile
+import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-03-windows', 'open_choice_id': 'cae-open-choice-013', 'source_task': 'task/task-v/abaqus/task-13', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'cantilever_modal_a_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'mode_count'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a modal analysis of a cantilever beam; report the first natural frequency and mode count.', 'selection_reason': 'Modal extraction has direct equivalents in both tools.', 'artifact_hint': {'ground_truth_files': ['Job-Modal-A.cae', 'Job-Modal-A.odb'], 'abaqus_stems': ['Job-Modal-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 420.0, 'y': 12.0, 'z': 10.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-03-windows', 'open_choice_id': 'cae-open-choice-013', 'source_task': 'task/task-v/abaqus/task-13', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'cantilever_modal_a_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'mode_count'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a modal analysis of a cantilever beam; report the first natural frequency and mode count.', 'selection_reason': 'Modal extraction has direct equivalents in both tools.', 'artifact_hint': {'ground_truth_files': ['gt_task_03_ansys.db', 'gt_task_03_ansys.rst'], 'abaqus_stems': [], 'ansys_db_files': ['gt_task_03_ansys.db'], 'ansys_result_files': ['gt_task_03_ansys.rst']}, 'span_hint': {'x': 420.0, 'y': 12.0, 'z': 10.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -117,6 +120,7 @@ def run_abaqus_checker(root, cae_path, odb_path):
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import os
+import re
 import traceback
 from abaqus import *
 from abaqusConstants import *
@@ -498,10 +502,13 @@ def _numbers(value):
     out = []
     if value is None:
         return out
-    if isinstance(value, (list, tuple)):
-        for item in value:
-            out.extend(_numbers(item))
-        return out
+    if not isinstance(value, TEXT_TYPES):
+        try:
+            for item in value:
+                out.extend(_numbers(item))
+            return out
+        except TypeError:
+            pass
     try:
         out.append(float(value))
     except Exception:
@@ -790,7 +797,10 @@ def _field_scalars(frame, name, invariant=False):
             if len(nums) == 1:
                 values.append(nums[0])
             else:
-                values.append(sum(v * v for v in nums) ** 0.5)
+                squared = 0.0
+                for number in nums:
+                    squared += number * number
+                values.append(squared ** 0.5)
     return values
 
 def _frame_field(frame, names, invariant=False):
@@ -815,9 +825,22 @@ def check_abaqus_odb_specific(odb):
 
     if domain in ('cantilever_modal_a_gui', 'cantilever_modal_b_gui', 'fixed_fixed_beam_modal_gui'):
         target = {'cantilever_modal_a_gui': 4, 'cantilever_modal_b_gui': 5, 'fixed_fixed_beam_modal_gui': 3}[domain]
-        positive = [t for t in times if t > 0.0]
-        if len(positive) < target:
-            log('strict ODB check: insufficient solved modal frames')
+        frequencies = []
+        pattern = re.compile(r'\bFREQ(?:UENCY)?\s*=\s*([-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?)', re.I)
+        for modal_frame in frames:
+            match = pattern.search(str(getattr(modal_frame, 'description', '') or ''))
+            if match:
+                try:
+                    frequency = float(match.group(1))
+                    if frequency > 0.0:
+                        frequencies.append(frequency)
+                except Exception:
+                    pass
+        if len(frequencies) < target:
+            log('strict ODB check: insufficient positive modal frequencies in frame descriptions')
+            return False
+        if domain == 'cantilever_modal_a_gui' and not (35.0 <= frequencies[0] <= 65.0):
+            log('strict ODB check: first modal frequency is outside 35-65 Hz')
             return False
     if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
         if len([t for t in times if t != 0.0]) < 3:
@@ -1001,9 +1024,28 @@ if __name__ == '__main__':
 def close_mapdl(mapdl):
     if mapdl is not None:
         try:
-            mapdl.exit()
-        except Exception:
-            pass
+            try:
+                mapdl.exit(force=True)
+            except TypeError:
+                mapdl.exit()
+        except Exception as exc:
+            log('MAPDL exit failed: %s' % exc)
+
+
+def remove_scratch(path):
+    if path is None:
+        return
+    for attempt in range(10):
+        try:
+            shutil.rmtree(str(path))
+            return
+        except FileNotFoundError:
+            return
+        except Exception as exc:
+            if attempt == 9:
+                log('scratch cleanup failed after 10 attempts: %s' % exc)
+                return
+            time.sleep(0.5)
 
 
 def _try_get(mapdl, *args):
@@ -1290,8 +1332,11 @@ def check_ansys_result_binary(result_path):
         if element_count < 200:
             return False
     elif domain == 'cantilever_modal_a_gui':
-        if int(result.nsets) < 4 or not times or min(times) <= 0.0:
-            log('strict binary check: four solved modes missing')
+        if int(result.nsets) < 4 or len(times) < 4 or min(times) <= 0.0:
+            log('strict binary check: four positive solved modes missing')
+            return False
+        if not (35.0 <= times[0] <= 65.0):
+            log('strict binary check: first modal frequency is outside 35-65 Hz')
             return False
     elif domain in ('constrained_thermal_stress_a_gui', 'thermal_stress_bar_gui'):
         if temp_min is None or not (_close(temp_min, 120.0, 0.01) and _close(temp_max, 120.0, 0.01)) or stress_max is None or stress_max < 180.0:
@@ -1385,13 +1430,19 @@ def check_ansys_result_binary(result_path):
 
 def check_ansys_with_mapdl(root, model_path, result_path):
     mapdl = None
+    scratch = None
     try:
         if not check_ansys_result_binary(result_path):
             return False
+        scratch = Path(tempfile.mkdtemp(prefix='__open_choice_ansys_', dir=str(root)))
+        scratch_model = scratch / model_path.name
+        scratch_result = scratch / result_path.name
+        shutil.copy2(str(model_path), str(scratch_model))
+        shutil.copy2(str(result_path), str(scratch_result))
         from ansys.mapdl.core import launch_mapdl
-        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(root), nproc=1, override=True, cleanup_on_exit=False)
-        if model_path.suffix.lower() == '.db':
-            mapdl.resume(str(model_path.with_suffix('')), 'db')
+        mapdl = launch_mapdl(exec_file=ANSYS_EXEC, jobname='eval_open_choice_' + TASK_SPEC['task_id'].replace('-', '_'), run_location=str(scratch), nproc=1, override=True, cleanup_on_exit=True)
+        if scratch_model.suffix.lower() == '.db':
+            mapdl.resume(str(scratch_model.with_suffix('')), 'db')
         else:
             log('project artifact present; using result file inspection')
         if not check_ansys_geometry(mapdl):
@@ -1404,7 +1455,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_analysis_step(mapdl, result_path):
             return False
         mapdl.post1()
-        mapdl.file(str(result_path.with_suffix('')), result_path.suffix.lstrip('.'))
+        mapdl.file(str(scratch_result.with_suffix('')), scratch_result.suffix.lstrip('.'))
         try:
             mapdl.set('LAST')
         except Exception:
@@ -1419,6 +1470,7 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         return False
     finally:
         close_mapdl(mapdl)
+        remove_scratch(scratch)
 
 
 def evaluate():
