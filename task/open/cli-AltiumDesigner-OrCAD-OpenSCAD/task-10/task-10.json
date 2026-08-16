@@ -1,8 +1,8 @@
 {
   "id": "c-open-altium-designer-cadence-orcad-openscad-task-10-windows",
   "snapshot": "OrCAD-Altium-openscad",
-  "instruction": "Complete the task using command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD. The neutral PCB package `demo.ipc2581`, `art_param.json`, and `violations.json` are on the desktop. Generate artwork outputs. Requirements: - Write `gerbers.zip`, `photoplot.log`, and `fixes.json`. - `gerbers.zip` must contain one `<film>.gbr` file for each requested film, with no nested paths. Every member must contain actual image-producing draws, flashes, or regions, not only headers/comments. - `photoplot.log` must summarize the count and names of all generated films and contain no fatal/error result. - `fixes.json` must map every known violation ID: use `reviewed_<type>` for errors and `accepted_<type>_warning` for warnings. [Software] Altium Designer is available at `D:\\Altium\\AD26\\X2.EXE`. OrCAD Capture is available at `D:\\orcad\\tools\\bin\\Capture.exe`. OpenSCAD is available as `openscad`.",
-  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "instruction": "Complete the task using the batch-capable scripting and fabrication-output interfaces of Altium Designer 17.0.6. The native four-layer PCB `demo.PcbDoc`, `demo.pcb.json`, `art_param.json`, and `violations.json` are on the desktop. Generate artwork outputs. Requirements: - Write `gerbers.zip`, `photoplot.log`, and `fixes.json`. - `gerbers.zip` must contain one `<film>.gbr` file for every film requested by `art_param.json`, with no nested paths. Map TOP, GND, POWER, and BOTTOM to the corresponding copper layers in `demo.PcbDoc`. Every member must contain actual image-producing draws, flashes, or regions, not only headers/comments. - Use the requested Gerber RS-274X units. - `photoplot.log` must summarize the count and names of all generated films and contain no fatal/error result. - `fixes.json` must map every known violation ID: use `reviewed_<type>` for errors and `accepted_<type>_warning` for warnings. [Software] Altium Designer 17.0.6 is available at `C:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`.",
+  "source": "https://www.altium.com/documentation/altium-designer/workspacemanager-dlg-gerbersetup-formgerber-setup-ad?version=17.0; https://www.altium.com/documentation/altium-designer/scripting/running-scripts",
   "config": [
     {
       "type": "upload_file",
@@ -13,8 +13,8 @@
             "path": "C:\\Users\\user\\Desktop\\art_param.json"
           },
           {
-            "local_path": "task-10/init_file/demo.ipc2581",
-            "path": "C:\\Users\\user\\Desktop\\demo.ipc2581"
+            "local_path": "task-10/init_file/demo.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\demo.PcbDoc"
           },
           {
             "local_path": "task-10/init_file/demo.pcb.json",
@@ -30,9 +30,7 @@
   ],
   "trajectory": "trajectories/",
   "related_apps": [
-    "altium-designer",
-    "cadence-orcad",
-    "openscad"
+    "altium-designer"
   ],
   "evaluator": {
     "postconfig": [

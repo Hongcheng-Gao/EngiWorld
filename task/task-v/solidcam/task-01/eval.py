@@ -3,335 +3,363 @@ from __future__ import annotations
 import math
 import os
 import re
+from dataclasses import dataclass
 from pathlib import Path
 
-RULE = {'files': {'task-1.nc': {'terms': [['FACE']], 'min_tools': 1, 'min_motion': 12, 'face_grid': {'z': 12.0, 'min_tracks': 4, 'span': 45.0}}}}
-DEFAULT_TARGET = 'C:\\Users\\User\\Desktop'
+
+DEFAULT_TARGET = r"C:\Users\User\Desktop"
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
-TOL = 0.75
+OUTPUT_NAME = "task-1.nc"
 
-FORBIDDEN_EXTENSIONS = {".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd", ".ps1", ".vbs", ".js", ".mjs", ".ts", ".rb", ".lua", ".tcl", ".ahk", ".scr"}
+STOCK_X = 104.0
+STOCK_Y = 64.0
+FINISH_Z = -1.0
+Z_TOL = 0.15
+MAX_INSTALLED_TOOL_DIAMETER_MM = 50.0
 
-
-def check_no_gui_bypass(root: Path) -> bool:
-    try:
-        if not root.exists():
-            return True
-        for path in root.rglob("*"):
-            if path.is_file() and path.name != "eval.py" and path.suffix.lower() in FORBIDDEN_EXTENSIONS:
-                return False
-    except Exception:
-        return False
-    return True
+WORD_RE = re.compile(r"([A-Z])([+-]?(?:\d+(?:\.\d*)?|\.\d+))", re.I)
+PAREN_COMMENT_RE = re.compile(r"\(([^)]*)\)")
+FORBIDDEN_CODES = {"G10", "G51", "G52", "G68", "G69", "G92", "M98", "M99"}
 
 
-def close(a, b, tol=TOL):
+@dataclass
+class Record:
+    line: int
+    motion: int
+    start: tuple[float | None, float | None, float | None]
+    end: tuple[float | None, float | None, float | None]
+    explicit: dict[str, float]
+    ij: tuple[float | None, float | None]
+    radius: float | None
+    tool: int | None
+    wcs: str | None
+    feed: float | None
+    spindle_on: bool
+    speed: float | None
+    length_comp: bool
+    h: int | None
+    plane: int
+    safe_home_before: bool
+
+
+def split_block(raw: str) -> tuple[str, list[str]]:
+    comments = PAREN_COMMENT_RE.findall(raw)
+    code = PAREN_COMMENT_RE.sub(" ", raw)
+    if ";" in code:
+        code, tail = code.split(";", 1)
+        comments.append(tail)
+    return code.upper(), comments
+
+
+def close(a: float, b: float, tol: float) -> bool:
     return abs(float(a) - float(b)) <= tol
 
 
-def strip_code(line: str) -> str:
-    line = re.sub(r"\([^)]*\)", " ", line)
-    return line.split(";", 1)[0].upper()
+def parse_nc(source: str):
+    records: list[Record] = []
+    comments: list[str] = []
+    errors: list[str] = []
+    state = {
+        "unit": 1.0,
+        "absolute": True,
+        "motion": None,
+        "plane": 17,
+        "x": None,
+        "y": None,
+        "z": None,
+        "pending_tool": None,
+        "tool": None,
+        "wcs": None,
+        "feed": None,
+        "speed": None,
+        "spindle_on": False,
+        "length_comp": False,
+        "h": None,
+        "safe_home": False,
+    }
+    tool_changes: list[int] = []
+    m30_lines: list[int] = []
+    after_m30 = False
 
-
-def parse_nc(src: str):
-    records = []
-    state = {"x": None, "y": None, "z": None, "tool": None, "wcs": None, "motion": None}
-    tools = []
-    axes_seen = set()
-    for index, raw in enumerate(src.splitlines()):
-        code = strip_code(raw)
-        if not code.strip():
+    for line_number, raw in enumerate(source.splitlines(), 1):
+        code, block_comments = split_block(raw)
+        comments.extend(block_comments)
+        stripped = code.strip()
+        if not stripped or stripped == "%":
             continue
-        tool_match = re.search(r"\bT0*(\d+)\b", code)
-        if tool_match:
-            state["tool"] = int(tool_match.group(1))
-            tools.append(state["tool"])
-        for wcs in re.findall(r"\bG(5[4-9])\b", code):
-            state["wcs"] = "G" + wcs
-        g_codes = [int(value) for value in re.findall(r"\bG0*(\d+)\b", code)]
-        if 80 in g_codes:
-            state["motion"] = None
-        explicit_motion = next((g for g in g_codes if g in {0, 1, 2, 3, 81, 82, 83, 84}), None)
-        if explicit_motion is not None:
-            state["motion"] = explicit_motion
-        explicit = {}
-        for axis in "XYZABCIJKRF":
-            match = re.search(rf"\b{axis}([+-]?\d+(?:\.\d+)?)", code)
+        if after_m30:
+            residue = re.sub(r"\bN\d+(?:\.\d+)?\b", " ", stripped).strip()
+            if residue and residue != "%":
+                errors.append(f"executable content after M30 at line {line_number}")
+            continue
+        if any(mark in code for mark in ("#", "[", "]")):
+            errors.append(f"macro syntax at line {line_number}")
+
+        words = [(letter.upper(), float(number)) for letter, number in WORD_RE.findall(code)]
+        g_values = [number for letter, number in words if letter == "G"]
+        m_values = [int(round(number)) for letter, number in words if letter == "M" and close(number, round(number), 1e-9)]
+        normalized_codes = {f"G{int(round(value))}" for value in g_values if close(value, round(value), 1e-9)}
+        normalized_codes.update(f"M{value}" for value in m_values)
+        if normalized_codes & FORBIDDEN_CODES:
+            errors.append(f"unsupported transform/subprogram at line {line_number}")
+        if any(81 <= int(round(value)) <= 89 for value in g_values if close(value, round(value), 1e-9)):
+            errors.append(f"drilling cycle at line {line_number}")
+        if any(letter in {"A", "B", "C"} for letter, _ in words):
+            errors.append(f"rotary-axis motion at line {line_number}")
+
+        if any(close(value, 20.0, 1e-9) for value in g_values):
+            state["unit"] = 25.4
+        if any(close(value, 21.0, 1e-9) for value in g_values):
+            state["unit"] = 1.0
+        if any(close(value, 90.0, 1e-9) for value in g_values):
+            state["absolute"] = True
+        if any(close(value, 91.0, 1e-9) for value in g_values):
+            state["absolute"] = False
+        for plane in (17, 18, 19):
+            if any(close(value, float(plane), 1e-9) for value in g_values):
+                state["plane"] = plane
+        for value in g_values:
+            if close(value, round(value), 1e-9) and int(round(value)) in {0, 1, 2, 3}:
+                state["motion"] = int(round(value))
+        for value in g_values:
+            if close(value, round(value), 1e-9) and 54 <= int(round(value)) <= 59:
+                state["wcs"] = f"G{int(round(value))}"
+
+        t_words = [int(round(value)) for letter, value in words if letter == "T" and value > 0 and close(value, round(value), 1e-9)]
+        if t_words:
+            state["pending_tool"] = t_words[-1]
+        s_words = [value for letter, value in words if letter == "S"]
+        if s_words:
+            state["speed"] = s_words[-1]
+        f_words = [value * state["unit"] for letter, value in words if letter == "F"]
+        if f_words:
+            state["feed"] = f_words[-1]
+        h_words = [int(round(value)) for letter, value in words if letter == "H" and value > 0 and close(value, round(value), 1e-9)]
+        if h_words:
+            state["h"] = h_words[-1]
+        if 6 in m_values:
+            if state["pending_tool"] is None:
+                errors.append(f"M6 without a positive T word at line {line_number}")
+            else:
+                state["tool"] = state["pending_tool"]
+                tool_changes.append(state["tool"])
+            state["length_comp"] = False
+            state["h"] = None
+        if 3 in m_values or 4 in m_values:
+            state["spindle_on"] = True
+        if 5 in m_values:
+            state["spindle_on"] = False
+        if any(close(value, 43.0, 1e-9) or close(value, 43.4, 1e-9) for value in g_values):
+            state["length_comp"] = True
+        if any(close(value, 49.0, 1e-9) for value in g_values):
+            state["length_comp"] = False
+
+        is_g28 = any(close(value, 28.0, 1e-9) for value in g_values)
+        is_g53 = any(close(value, 53.0, 1e-9) for value in g_values)
+        axis_words: dict[str, float] = {}
+        for letter, value in words:
+            if letter in {"X", "Y", "Z", "I", "J", "R"}:
+                axis_words[letter.lower()] = value * state["unit"]
+        has_xyz = any(axis in axis_words for axis in ("x", "y", "z"))
+        if is_g28:
+            state["safe_home"] = True
+        elif has_xyz and state["motion"] is not None and not is_g53:
+            start = (state["x"], state["y"], state["z"])
+            end_values = [state["x"], state["y"], state["z"]]
+            for index, axis in enumerate(("x", "y", "z")):
+                if axis not in axis_words:
+                    continue
+                value = axis_words[axis]
+                if state["absolute"]:
+                    end_values[index] = value
+                elif end_values[index] is None:
+                    if not close(value, 0.0, 1e-12):
+                        errors.append(f"incremental move from unknown {axis.upper()} at line {line_number}")
+                else:
+                    end_values[index] += value
+            record = Record(
+                line=line_number,
+                motion=int(state["motion"]),
+                start=start,
+                end=tuple(end_values),
+                explicit=axis_words,
+                ij=(axis_words.get("i"), axis_words.get("j")),
+                radius=axis_words.get("r"),
+                tool=state["tool"],
+                wcs=state["wcs"],
+                feed=state["feed"],
+                spindle_on=bool(state["spindle_on"]),
+                speed=state["speed"],
+                length_comp=bool(state["length_comp"]),
+                h=state["h"],
+                plane=int(state["plane"]),
+                safe_home_before=bool(state["safe_home"]),
+            )
+            records.append(record)
+            state["x"], state["y"], state["z"] = end_values
+            state["safe_home"] = False
+        if 30 in m_values:
+            m30_lines.append(line_number)
+            after_m30 = True
+
+    return records, comments, tool_changes, m30_lines, errors
+
+
+def xy_changed(record: Record) -> bool:
+    sx, sy, _ = record.start
+    ex, ey, _ = record.end
+    return None not in (sx, sy, ex, ey) and (not close(sx, ex, 1e-9) or not close(sy, ey, 1e-9))
+
+
+def tool_diameters_mm(comments: list[str], program_is_inch: bool) -> list[float]:
+    values: list[float] = []
+    for comment in comments:
+        upper = comment.upper()
+        if not re.search(r"FACE\s*MILL|FLAT\s*END|END\s*MILL|\bEM\b|\d+(?:\.\d+)?\s*MM.*\b(?:FL|CRB|CARBIDE|LOC)\b", upper):
+            continue
+        for numerator, denominator in re.findall(r"(?<!\d)(\d+)\s*/\s*(\d+)(?!\d)", upper):
+            if int(denominator):
+                values.append(25.4 * int(numerator) / int(denominator))
+        metric = re.findall(r"(?<![\d.])(\d+(?:\.\d+)?)\s*MM\b", upper)
+        values.extend(float(value) for value in metric)
+        inch = re.findall(r"(?<![\d.])(\d+(?:\.\d+)?)\s*(?:IN|INCH)\b", upper)
+        values.extend(25.4 * float(value) for value in inch)
+        if not metric and not inch and not re.search(r"\d+\s*/\s*\d+", upper):
+            match = re.search(r"(?<![\d.])(\d+(?:\.\d+)?)\s+(?:\d+FL\s+)?(?:FACE\s*MILL|FLAT\s*END|END\s*MILL)", upper)
             if match:
-                explicit[axis.lower()] = float(match.group(1))
-                axes_seen.add(axis)
-        if state["motion"] is None or not any(axis in explicit for axis in ("x", "y", "z", "a", "b", "c")):
-            continue
-        start = {axis: state[axis] for axis in ("x", "y", "z")}
-        for axis in ("x", "y", "z"):
-            if axis in explicit:
-                state[axis] = explicit[axis]
-        records.append({"index": index, "raw": raw.upper(), "code": state["motion"], "start": start, "end": {axis: state[axis] for axis in ("x", "y", "z")}, "explicit": explicit, "tool": state["tool"], "wcs": state["wcs"]})
-    return records, tools, axes_seen
+                raw = float(match.group(1))
+                values.append(raw * (25.4 if program_is_inch and raw <= 4.0 else 1.0))
+    return sorted({round(value, 6) for value in values if 0.5 <= value <= MAX_INSTALLED_TOOL_DIAMETER_MM})
 
 
-def xy_changed(record):
-    s, e = record["start"], record["end"]
-    return s["x"] is not None and s["y"] is not None and e["x"] is not None and e["y"] is not None and (not close(s["x"], e["x"], 1e-6) or not close(s["y"], e["y"], 1e-6))
+def line_distance(point, start, end) -> float:
+    px, py = point
+    ax, ay = start
+    bx, by = end
+    dx, dy = bx - ax, by - ay
+    if close(dx, 0.0, 1e-12) and close(dy, 0.0, 1e-12):
+        return math.hypot(px - ax, py - ay)
+    ratio = max(0.0, min(1.0, ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)))
+    return math.hypot(px - (ax + ratio * dx), py - (ay + ratio * dy))
 
 
-def cut_records(records):
-    return [record for record in records if record["code"] in {1, 2, 3} and xy_changed(record)]
+def arc_polyline(record: Record) -> list[tuple[float, float]]:
+    sx, sy, _ = record.start
+    ex, ey, _ = record.end
+    if None in (sx, sy, ex, ey) or record.plane != 17:
+        return []
+    i, j = record.ij
+    if i is None or j is None:
+        return [(sx, sy), (ex, ey)]
+    cx, cy = sx + i, sy + j
+    radius = math.hypot(sx - cx, sy - cy)
+    if radius <= 1e-9:
+        return []
+    start_angle = math.atan2(sy - cy, sx - cx)
+    end_angle = math.atan2(ey - cy, ex - cx)
+    if record.motion == 2:
+        sweep = -((start_angle - end_angle) % (2 * math.pi))
+    else:
+        sweep = (end_angle - start_angle) % (2 * math.pi)
+    if close(sweep, 0.0, 1e-12):
+        sweep = -2 * math.pi if record.motion == 2 else 2 * math.pi
+    steps = max(8, int(abs(sweep) * radius / 2.0))
+    return [
+        (cx + radius * math.cos(start_angle + sweep * step / steps), cy + radius * math.sin(start_angle + sweep * step / steps))
+        for step in range(steps + 1)
+    ]
 
 
-def tool_order(tools):
-    out = []
-    for tool in tools:
-        if tool not in out:
-            out.append(tool)
-    return out
-
-
-def tool_for_ordinal(tools, ordinal):
-    order = tool_order(tools)
-    return order[int(ordinal) - 1] if 0 < int(ordinal) <= len(order) else None
-
-
-def record_z(record):
-    return record["end"]["z"]
-
-
-def at_z(record, z, tol=TOL):
-    return record_z(record) is not None and close(record_z(record), z, tol)
-
-
-def cut_groups(records, z=None):
-    groups, current = [], []
-    last_index = None
-    last_tool = last_wcs = None
+def cut_segments(records: list[Record]) -> list[tuple[tuple[float, float], tuple[float, float]]]:
+    segments = []
     for record in records:
-        qualifies = record["code"] in {1, 2, 3} and xy_changed(record) and (z is None or at_z(record, z))
-        split = last_index is not None and (record["index"] > last_index + 2 or record["tool"] != last_tool or record["wcs"] != last_wcs)
-        if not qualifies or split:
-            if current:
-                groups.append(current)
-                current = []
-        if qualifies:
-            current.append(record)
-            last_tool, last_wcs = record["tool"], record["wcs"]
-        last_index = record["index"]
-    if current:
-        groups.append(current)
-    return groups
+        if record.motion not in {1, 2, 3} or not xy_changed(record):
+            continue
+        if record.end[2] is None or not close(record.end[2], FINISH_Z, Z_TOL):
+            continue
+        points = arc_polyline(record) if record.motion in {2, 3} else [record.start[:2], record.end[:2]]
+        if any(None in point for point in points):
+            continue
+        segments.extend(zip(points, points[1:]))
+    return segments
 
 
-def group_closed(group):
-    if len(group) < 3:
+def stock_grid(angle_degrees: float):
+    angle = math.radians(angle_degrees)
+    cosine, sine = math.cos(angle), math.sin(angle)
+    xs = [(-STOCK_X / 2) + STOCK_X * index / 12 for index in range(13)]
+    ys = [(-STOCK_Y / 2) + STOCK_Y * index / 8 for index in range(9)]
+    return [
+        (x * cosine - y * sine, x * sine + y * cosine)
+        for x in xs
+        for y in ys
+    ]
+
+
+def covers_stock(records: list[Record], diameters: list[float]) -> bool:
+    segments = cut_segments(records)
+    if not segments:
         return False
-    start = group[0]["start"]
-    end = group[-1]["end"]
-    if None in (start["x"], start["y"], end["x"], end["y"]):
+    for diameter in diameters:
+        radius = diameter / 2.0 + 0.25
+        for angle in range(0, 180, 5):
+            if all(min(line_distance(point, *segment) for segment in segments) <= radius for point in stock_grid(angle)):
+                return True
+    return False
+
+
+def validate_file(path: Path) -> bool:
+    if not path.is_file() or path.stat().st_size < 80 or path.stat().st_size > 2_000_000:
         return False
-    return close(start["x"], end["x"], 1.0) and close(start["y"], end["y"], 1.0)
+    source = path.read_text(encoding="utf-8", errors="ignore")
+    upper = source.upper()
+    records, comments, tool_changes, m30_lines, errors = parse_nc(source)
+    if errors or len(m30_lines) != 1:
+        return False
+    if not re.search(r"\bG(?:20|21)\b", upper) or not re.search(r"\bG90\b", upper):
+        return False
+    if not any("FACE" in comment.upper() and "MILL" in comment.upper() for comment in comments):
+        return False
+    if not tool_changes or not records:
+        return False
 
-
-def hole_visits(records, tools, rule):
-    tool = tool_for_ordinal(tools, rule.get("tool", 1)) if rule.get("tool") else None
-    cycle_codes = set(rule.get("cycle", []))
-    visits = []
+    material = [record for record in records if record.motion in {1, 2, 3} and xy_changed(record)]
+    if not material:
+        return False
+    if len({record.tool for record in material}) != 1 or None in {record.tool for record in material}:
+        return False
+    if len({record.wcs for record in material}) != 1 or None in {record.wcs for record in material}:
+        return False
+    if any(record.feed is None or record.feed <= 0 for record in material):
+        return False
+    if any(not record.spindle_on or record.speed is None or record.speed <= 0 for record in material):
+        return False
+    if any(not record.length_comp or record.h is None or record.h <= 0 for record in material):
+        return False
+    if any(record.plane != 17 for record in material):
+        return False
+    if any(record.end[2] is None or record.end[2] < FINISH_Z - Z_TOL for record in material):
+        return False
+    if not any(record.end[2] is not None and close(record.end[2], FINISH_Z, Z_TOL) for record in material):
+        return False
     for record in records:
-        if tool is not None and record["tool"] != tool:
-            continue
-        e, s = record["end"], record["start"]
-        if e["x"] is None or e["y"] is None or e["z"] is None or e["z"] > float(rule.get("z_max", 1e9)) + TOL:
-            continue
-        if cycle_codes:
-            if record["code"] in cycle_codes:
-                visits.append((e["x"], e["y"]))
-        elif record["code"] in {81, 82, 83, 84}:
-            visits.append((e["x"], e["y"]))
-        elif record["code"] == 1 and s["x"] is not None and s["y"] is not None and s["z"] is not None and close(s["x"], e["x"]) and close(s["y"], e["y"]) and s["z"] - e["z"] > 0.2:
-            visits.append((e["x"], e["y"]))
-    return visits
-
-
-def has_all_points(actual, expected):
-    return all(any(close(x, ex) and close(y, ey) for x, y in actual) for ex, ey in expected)
-
-
-def arc_centers(records):
-    centers = []
-    for record in records:
-        if record["code"] not in {2, 3}:
-            continue
-        s = record["start"]
-        ex = record["explicit"]
-        if s["x"] is not None and s["y"] is not None and "i" in ex and "j" in ex:
-            centers.append((s["x"] + ex["i"], s["y"] + ex["j"]))
-    return centers
-
-
-def circular_centers(records):
-    centers = arc_centers(records)
-    for group in cut_groups(records):
-        if not group_closed(group):
-            continue
-        pts = [(r["end"]["x"], r["end"]["y"]) for r in group]
-        if len(pts) < 6:
-            continue
-        xs, ys = [p[0] for p in pts], [p[1] for p in pts]
-        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
-        radii = [math.hypot(x - cx, y - cy) for x, y in pts]
-        if max(radii) - min(radii) <= 1.5:
-            centers.append((cx, cy))
-    return centers
-
-
-def rect_contains(point, rect, margin=0.0):
-    x, y = point
-    x1, y1, x2, y2 = rect
-    return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
-
-
-def validate_file(path: Path, rule: dict) -> bool:
-    if not path.exists() or path.stat().st_size <= 0:
-        return False
-    src = path.read_text(encoding="utf-8", errors="ignore").upper()
-    code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
-        return False
-    records, tools, axes_seen = parse_nc(src)
-    cuts = cut_records(records)
-    if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
-        return False
-    if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
-        return False
-    for group in rule.get("terms", []):
-        if not any(str(term).upper() in src for term in group):
-            return False
-    if any(axis.upper() in axes_seen for axis in rule.get("forbid_axes", [])):
-        return False
-    for expected_z in rule.get("z_values", []):
-        if not any(at_z(record, expected_z) for record in records):
-            return False
-    z_values = sorted({round(record_z(record), 3) for record in cuts if record_z(record) is not None})
-    if len(z_values) < int(rule.get("min_z_levels", 0)):
-        return False
-    if "face_grid" in rule:
-        item = rule["face_grid"]
-        candidates = [record for record in cuts if "z" not in item or at_z(record, item["z"])]
-        horizontal, vertical = set(), set()
-        span = float(item.get("span", 20.0))
-        for record in candidates:
-            s, e = record["start"], record["end"]
-            if abs(e["x"] - s["x"]) >= span and close(e["y"], s["y"], 0.2):
-                horizontal.add(round((e["y"] + s["y"]) / 2, 1))
-            if abs(e["y"] - s["y"]) >= span and close(e["x"], s["x"], 0.2):
-                vertical.add(round((e["x"] + s["x"]) / 2, 1))
-        if max(len(horizontal), len(vertical)) < int(item["min_tracks"]):
-            return False
-    if "closed" in rule:
-        item = rule["closed"]
-        groups = cut_groups(records, item.get("z"))
-        if sum(group_closed(group) for group in groups) < int(item["min"]):
-            return False
-    if len(cut_groups(records)) < int(rule.get("min_cut_groups", 0)):
-        return False
-    for item in rule.get("hole_sets", []):
-        if not has_all_points(hole_visits(records, tools, item), item["points"]):
-            return False
-    if "any_holes" in rule:
-        item = rule["any_holes"]
-        visits = hole_visits(records, tools, {"tool": item.get("tool"), "z_max": item.get("z_max", 1e9)})
-        unique = []
-        for point in visits:
-            if not any(close(point[0], p[0]) and close(point[1], p[1]) for p in unique):
-                unique.append(point)
-        if len(unique) < int(item["min"]):
-            return False
-    all_visits = hole_visits(records, tools, {"z_max": 1e9})
-    if any(any(close(x, fx) and close(y, fy) for x, y in all_visits) for fx, fy in rule.get("forbidden_holes", [])):
-        return False
-    if "circle_centers" in rule:
-        item = rule["circle_centers"]
-        centers = circular_centers(records)
-        if not has_all_points(centers, item["points"]) or len(centers) < int(item["min"]):
-            return False
-    if sum(1 for record in records if record["code"] in {2, 3}) < int(rule.get("min_arcs", 0)):
-        return False
-    if "region" in rule:
-        item = rule["region"]
-        if sum(rect_contains((r["end"]["x"], r["end"]["y"]), item["rect"]) for r in cuts) < int(item["min"]):
-            return False
-    for item in rule.get("regions", []):
-        if sum(rect_contains((r["end"]["x"], r["end"]["y"]), item["rect"]) for r in cuts) < int(item["min"]):
-            return False
-    for ordinal, minimum in rule.get("tool_min_cut", {}).items():
-        tool = tool_for_ordinal(tools, int(ordinal))
-        if tool is None or sum(record["tool"] == tool for record in cuts) < int(minimum):
-            return False
-    for ordinal, minimum in rule.get("tool_z_levels", {}).items():
-        tool = tool_for_ordinal(tools, int(ordinal))
-        levels = {round(record_z(record), 3) for record in cuts if record["tool"] == tool and record_z(record) is not None}
-        if len(levels) < int(minimum):
-            return False
-    if "z_levels" in rule:
-        item = rule["z_levels"]
-        levels = sorted({round(record_z(r), 3) for r in cuts if record_z(r) is not None and record_z(r) >= float(item["floor"]) - TOL})
-        if len(levels) < int(item["min"]) or not any(close(level, item["floor"]) for level in levels):
-            return False
-        if any(b - a > float(item["max_step"]) + TOL for a, b in zip(levels, levels[1:])):
-            return False
-    for wcs, minimum in rule.get("wcs_motion", {}).items():
-        if sum(record["wcs"] == wcs for record in cuts) < int(minimum):
-            return False
-    if rule.get("avoid_rects"):
-        margin = float(rule.get("avoid_clearance", 0.0))
-        below = float(rule.get("avoid_below", 1e9))
-        for record in cuts:
-            e = record["end"]
-            if e["z"] is not None and e["z"] < below and any(rect_contains((e["x"], e["y"]), rect, margin) for rect in rule["avoid_rects"]):
+        if record.motion == 0 and xy_changed(record):
+            z = record.start[2]
+            if z is None:
+                if not record.safe_home_before:
+                    return False
+            elif z < 1.0:
                 return False
-    if "engrave" in rule:
-        item = rule["engrave"]
-        xs = [r["end"]["x"] for r in cuts]
-        ys = [r["end"]["y"] for r in cuts]
-        if not xs or max(xs) - min(xs) < float(item["min_x_span"]) or max(ys) - min(ys) < float(item["min_y_span"]):
+        if record.motion in {1, 2, 3} and record.end[2] is not None and record.end[2] < FINISH_Z - Z_TOL:
             return False
-        if "max_y_center_abs" in item and abs((min(ys) + max(ys)) / 2) > float(item["max_y_center_abs"]):
-            return False
-    if "tags" in rule:
-        item = rule["tags"]
-        tag_z = float(item["bottom"]) + float(item["height"])
-        tag_moves = sum(record["code"] == 1 and xy_changed(record) and at_z(record, tag_z, 0.35) for record in records)
-        if tag_moves < int(item["min"]):
-            return False
-    for slot in rule.get("slots", []):
-        found = False
-        for record in cuts:
-            s, e = record["start"], record["end"]
-            if record_z(record) is not None and record_z(record) <= float(slot["z_max"]) + TOL and close(s["y"], slot["y"]) and close(e["y"], slot["y"]) and min(s["x"], e["x"]) <= float(slot["xmin"]) + TOL and max(s["x"], e["x"]) >= float(slot["xmax"]) - TOL:
-                found = True
-        if not found:
-            return False
-    if rule.get("turning") and ("X" not in axes_seen or "Z" not in axes_seen):
-        return False
-    if "center_drill" in rule:
-        item = rule["center_drill"]
-        if not any(r["end"]["x"] is not None and r["end"]["z"] is not None and close(r["end"]["x"], item["x"]) and r["end"]["z"] <= float(item["z_max"]) + TOL for r in records):
-            return False
-    if rule.get("outer_last"):
-        groups = [g for g in cut_groups(records) if group_closed(g)]
-        if len(groups) < 2:
-            return False
-        def area(group):
-            xs = [r["end"]["x"] for r in group]; ys = [r["end"]["y"] for r in group]
-            return (max(xs) - min(xs)) * (max(ys) - min(ys))
-        if area(groups[-1]) + 1e-6 < max(area(group) for group in groups[:-1]):
-            return False
-    return True
+
+    program_is_inch = bool(re.search(r"\bG20\b", upper)) and not bool(re.search(r"\bG21\b", upper))
+    diameters = tool_diameters_mm(comments, program_is_inch)
+    return covers_stock(records, diameters)
 
 
 def evaluate() -> bool:
-    if not check_no_gui_bypass(TARGET):
-        return False
-    return all(validate_file(TARGET / name, file_rule) for name, file_rule in RULE["files"].items())
+    return validate_file(TARGET / OUTPUT_NAME)
 
 
 if __name__ == "__main__":

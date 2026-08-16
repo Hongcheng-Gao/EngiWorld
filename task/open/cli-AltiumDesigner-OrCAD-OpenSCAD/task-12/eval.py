@@ -4,7 +4,6 @@ import base64
 import csv
 import io
 import json
-import math
 import re
 import sys
 import zipfile
@@ -13,8 +12,24 @@ from xml.etree import ElementTree as ET
 
 EXPECTED = {
   "collision_report.json": "ewogICJjaGVja2VkX2NvbXBvbmVudHMiOiA0LAogICJjb2xsaXNpb25zIjogW10sCiAgInN0YXR1cyI6ICJjbGVhciIKfQo=",
-  "demo.drl": "TTQ4CklOQ0gsVFoKVDAxQzAuMDEyCiUKVDAxClgwMTAwMDBZMDEwMDAwCk0zMAo=",
-  "ncdrill.log": "TkMgZHJpbGwgZ2VuZXJhdGVkIGZvciBkZW1vLmlwYzI1ODEsIHNwYW4gMS00LCAxIHRvb2wgdXNlZC4K"
+  "demo.drl": "TTQ4DQo7TGF5ZXJfQ29sb3I9OTQ3NDMwNA0KO0ZJTEVfRk9STUFUPTI6NQ0KSU5DSCxMWg0KO1RZUEU9UExBVEVEDQpUMUYwMFMwMEMwLjAxMDAwDQpUMkYwMFMwMEMwLjAxMjAwDQolDQpUMDENClgwMDU5MDU1WTAxMzc3OTUNClQwMg0KWDAwNTkwNTVZMDA1OTA1NQ0KWDAxMzc3OTUNCk0zMA0K",
+  "ncdrill.log": "LS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KTkNEcmlsbCBGaWxlIFJlcG9ydCBGb3I6IGRlbW8uUGNiRG9jICAgOC8xNi8yMDI2ICAxOjAzOjUzIFBNDQotLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tDQoNCkxheWVyIFBhaXIgOiBUb3AgTGF5ZXIgdG8gQm90dG9tIExheWVyDQpBU0NJSSBSb3VuZEhvbGVzIEZpbGUgOiBkZW1vLlRYVA0KDQpUb29sICAgICAgIEhvbGUgU2l6ZSAgICAgICAgICAgICAgIEhvbGUgVG9sZXJhbmNlICAgICAgICAgICAgICAgSG9sZSBUeXBlICAgICAgIEhvbGUgQ291bnQgICBQbGF0ZWQgICAgICAgICBUb29sIFRyYXZlbA0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KVDEgICAgICAxMG1pbCAoMC4yNTRtbSkgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgUm91bmQgICAgICAgICAgICAgMSAgICAgICAgIFBUSCAgICAgICAgMC4wMGluY2ggKDAuMDBtbSkNClQyICAgICAgMTJtaWwgKDAuMzA1bW0pICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgIFJvdW5kICAgICAgICAgICAgIDIgICAgICAgICBQVEggICAgICAgIDAuNzlpbmNoICgyMC4wMG1tKQ0KLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLS0tLQ0KVG90YWxzICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgICAgMw0KDQpUb3RhbCBQcm9jZXNzaW5nIFRpbWUgKGhoOm1tOnNzKSA6IDAwOjAwOjAwDQo="
+}
+
+EXPECTED_UNITS = "INCH"
+EXPECTED_PLATED = True
+EXPECTED_HITS_MM = sorted(
+    [
+        (0.254, 15.0, 35.0),
+        (0.3048, 15.0, 15.0),
+        (0.3048, 35.0, 15.0),
+    ]
+)
+EXPECTED_TOOL_COUNTS_MIL = {10.0: 1, 12.0: 2}
+EXPECTED_COLLISION_REPORT = {
+    "checked_components": 4,
+    "collisions": [],
+    "status": "clear",
 }
 
 
@@ -293,68 +308,55 @@ def _drill_valid(data: bytes) -> bool:
     units = "INCH" if re.search(r"\bINCH\b", text) else "METRIC" if re.search(r"\bMETRIC\b", text) else None
     if units is None:
         return False
-    try:
-        params = json.loads((_desktop() / "nc_param.json").read_text(encoding="utf-8"))
-        board = json.loads((_desktop() / "demo.pcb.json").read_text(encoding="utf-8"))
-        requested_units = str(params["tool_units"]).strip().upper()
-        span_match = re.fullmatch(r"\s*(\d+)\s*-\s*(\d+)\s*", str(params["layers"]))
-        plated = params["plated"]
-        if requested_units not in {"INCH", "METRIC"} or not span_match or not isinstance(plated, bool):
-            return False
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return False
-    if units != requested_units:
+    if units != EXPECTED_UNITS:
         return False
 
-    plating_name = "PLATED" if plated else "NONPLATED"
-    start_layer, end_layer = span_match.groups()
-    file_function = re.compile(
-        rf"^\s*;\s*#@!\s*TF\.FILEFUNCTION\s*,\s*{plating_name}\s*,\s*"
-        rf"{start_layer}\s*,\s*{end_layer}(?:\s*,\s*(?:PTH|NPTH))?\s*$",
-        re.MULTILINE,
-    )
-    if not file_function.search(text) or re.search(r"^\s*%\s*$", text, re.MULTILINE) is None:
+    plating_name = "PLATED" if EXPECTED_PLATED else "NONPLATED"
+    if (
+        re.search(rf"^\s*;\s*TYPE\s*=\s*{plating_name}\s*$", text, re.MULTILINE) is None
+        or re.search(r"^\s*%\s*$", text, re.MULTILINE) is None
+        or (EXPECTED_PLATED and re.search(r"^\s*;\s*TYPE\s*=\s*NONPLATED\s*$", text, re.MULTILINE) is not None)
+    ):
         return False
 
     format_match = re.search(r"FILE_FORMAT\s*=\s*\d+\s*:\s*(\d+)", text)
     decimal_digits = int(format_match.group(1)) if format_match else None
 
     tool_diameters = {
-        match.group(1): float(match.group(2))
-        for match in re.finditer(r"^T(\d+)C([0-9.]+)", text, re.MULTILINE)
+        match.group(1).lstrip("0") or "0": float(match.group(2))
+        for match in re.finditer(r"^T(\d+)(?:F\d+)?(?:S\d+)?C([0-9.]+)", text, re.MULTILINE)
     }
     active_tool = None
     hits = []
+    last_x = None
+    last_y = None
     scale = 25.4 if units == "INCH" else 1.0
     try:
         for raw_line in text.splitlines():
             line = raw_line.strip().rstrip("*")
             selection = re.fullmatch(r"T(\d+)", line)
             if selection:
-                active_tool = selection.group(1)
+                active_tool = selection.group(1).lstrip("0") or "0"
                 continue
             coordinate = re.fullmatch(
-                r"X([-+]?(?:\d+(?:\.\d*)?|\.\d+))Y([-+]?(?:\d+(?:\.\d*)?|\.\d+))",
+                r"(?:X([-+]?(?:\d+(?:\.\d*)?|\.\d+)))?"
+                r"(?:Y([-+]?(?:\d+(?:\.\d*)?|\.\d+)))?",
                 line,
             )
-            if coordinate:
+            if coordinate and (coordinate.group(1) is not None or coordinate.group(2) is not None):
                 if active_tool not in tool_diameters:
                     return False
-                x = _drill_number(coordinate.group(1), decimal_digits)
-                y = _drill_number(coordinate.group(2), decimal_digits)
+                if coordinate.group(1) is not None:
+                    last_x = _drill_number(coordinate.group(1), decimal_digits)
+                if coordinate.group(2) is not None:
+                    last_y = _drill_number(coordinate.group(2), decimal_digits)
+                if last_x is None or last_y is None:
+                    return False
                 diameter = tool_diameters[active_tool]
-                hits.append((diameter * scale, x * scale, y * scale))
+                hits.append((diameter * scale, last_x * scale, last_y * scale))
 
-        padstacks = {
-            item["name"]: float(item["hole_mil"]) * 0.0254
-            for item in board["padstacks"]
-            if float(item["hole_mil"]) > 0
-        }
-        expected = sorted(
-            (padstacks[via["padstack"]], float(via["x"]), float(via["y"]))
-            for via in board["vias"]
-        )
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+        expected = EXPECTED_HITS_MM
+    except (TypeError, ValueError):
         return False
 
     expected_diameters = sorted({hit[0] for hit in expected})
@@ -375,48 +377,28 @@ def _drill_valid(data: bytes) -> bool:
 
 
 def _nc_log_valid(data: bytes) -> bool:
-    text = _text(data)
-    try:
-        params = json.loads((_desktop() / "nc_param.json").read_text(encoding="utf-8"))
-        board = json.loads((_desktop() / "demo.pcb.json").read_text(encoding="utf-8"))
-        holes = {
-            item["name"]: float(item["hole_mil"])
-            for item in board["padstacks"]
-            if float(item["hole_mil"]) > 0
-        }
-        tool_count = len({holes[via["padstack"]] for via in board["vias"]})
-        span = str(params["layers"])
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
+    return _drill_report_valid(data)
+
+
+def _drill_report_valid(data: bytes) -> bool:
+    text = _text(data).upper()
+    if re.search(r"LAYER\s+PAIR\s*:\s*TOP\s+LAYER\s+TO\s+BOTTOM\s+LAYER", text) is None:
         return False
-    lowered = text.casefold()
-    error_scan = re.sub(r"\bno\s+fatal(?:\s+\w+){0,3}\s+errors?\b", "", lowered)
-    error_scan = re.sub(r"\bno\s+errors?\b", "", error_scan)
-    return (
-        "demo.ipc2581" in lowered
-        and span.casefold() in lowered
-        and re.search(rf"\b{tool_count}\s+tools?\b", lowered) is not None
-        and re.search(r"\b(?:fatal|error|failed)\b", error_scan) is None
-    )
+    if re.search(r"ASCII\s+ROUNDHOLES\s+FILE\s*:\s*DEMO\.TXT\b", text) is None:
+        return False
+
+    actual_counts = {}
+    for line in text.splitlines():
+        match = re.match(r"^T\d+\s+([0-9.]+)MIL\b.*?\bROUND\s+(\d+)\s+PTH\b", line)
+        if match:
+            actual_counts[float(match.group(1))] = int(match.group(2))
+    return actual_counts == EXPECTED_TOOL_COUNTS_MIL
 
 
 def _collision_report_valid(path: Path) -> bool:
     try:
         actual = json.loads(path.read_text(encoding="utf-8-sig"))
-        board = json.loads((_desktop() / "demo.pcb.json").read_text(encoding="utf-8"))
-        keepouts = json.loads((_desktop() / "components.json").read_text(encoding="utf-8"))["mechanical_keepouts"]
-        collisions = []
-        for component in board["components"]:
-            for keepout in keepouts:
-                dx = float(component["x"]) - float(keepout["x"])
-                dy = float(component["y"]) - float(keepout["y"])
-                if math.hypot(dx, dy) <= float(keepout["radius"]):
-                    collisions.append({"component": component["ref"], "keepout": keepout["name"]})
-        expected = {
-            "checked_components": len(board["components"]),
-            "collisions": collisions,
-            "status": "clear" if not collisions else "collision",
-        }
-        return actual == expected
+        return actual == EXPECTED_COLLISION_REPORT
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         return False
 
@@ -480,7 +462,7 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    for rel in EXPECTED:
+    for rel in ("collision_report.json", "demo.drl", "ncdrill.log"):
         path = desktop / rel
         if not path.is_file():
             return False

@@ -16,6 +16,34 @@ EXPECTED = {
   "photoplot.log": "R2VuZXJhdGVkIDQgR2VyYmVyIGZpbG1zOiBUT1AsIEJPVFRPTSwgR05ELCBQT1dFUgpObyBmYXRhbCBDQU0gZXJyb3JzLgo="
 }
 
+EXPECTED_FILMS = ("TOP", "BOTTOM", "GND", "POWER")
+EXPECTED_GERBER_UNITS = "INCH"
+EXPECTED_FIXES = {
+    "DRC001": "reviewed_clearance",
+    "DRC002": "accepted_silkscreen_warning",
+}
+EXPECTED_GERBER_IMAGES = {
+    "TOP": (
+        ("draw", "C", 0.02000, 0.19685, 0.19685, 1.77165, 0.19685),
+        ("flash", "C", 0.02400, 0.59055, 1.37795),
+        ("flash", "C", 0.02800, 0.59055, 0.59055),
+        ("flash", "C", 0.02800, 1.37795, 0.59055),
+    ),
+    "BOTTOM": (
+        ("draw", "C", 0.02000, 0.19685, 1.77165, 1.77165, 1.77165),
+        ("flash", "C", 0.02400, 0.59055, 1.37795),
+        ("flash", "C", 0.02800, 0.59055, 0.59055),
+        ("flash", "C", 0.02800, 1.37795, 0.59055),
+    ),
+    "GND": (
+        ("draw", "C", 0.02000, 0.19685, 0.39370, 1.77165, 0.39370),
+        ("draw", "C", 0.02000, 0.50000, 1.10000, 1.50000, 1.10000),
+    ),
+    "POWER": (
+        ("draw", "C", 0.02000, 0.19685, 1.57480, 1.77165, 1.57480),
+    ),
+}
+
 
 def _desktop() -> Path:
     return Path(__file__).resolve().parent
@@ -254,13 +282,8 @@ def _edif_equal(path: Path, expected: bytes) -> bool:
 
 def _gerber_valid(data: bytes) -> bool:
     text = _text(data).upper()
-    try:
-        parameters = json.loads((_desktop() / "art_param.json").read_text(encoding="utf-8"))
-        requested_units = str(parameters["units"]).casefold()
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return False
-    unit_command = "%MOIN*%" if requested_units == "inch" else "%MOMM*%" if requested_units == "mm" else ""
-    if not unit_command or text.count(unit_command) != 1:
+    unit_command = "%MOIN*%" if EXPECTED_GERBER_UNITS == "INCH" else "%MOMM*%"
+    if text.count(unit_command) != 1:
         return False
     if len(re.findall(r"%FS[LT]AX[1-6][1-6]Y[1-6][1-6]\*%", text)) != 1:
         return False
@@ -273,6 +296,97 @@ def _gerber_valid(data: bytes) -> bool:
     aperture_image = re.search(r"%ADD\d+[^%]*\*%", text) and operation
     region_image = "G36*" in text and "G37*" in text and operation
     return bool(aperture_image or region_image)
+
+
+def _gerber_coord(token: str, integer_digits: int, decimal_digits: int, suppression: str) -> float:
+    sign = -1 if token.startswith("-") else 1
+    digits = token.lstrip("+-")
+    if "." in digits:
+        return sign * float(digits)
+    total = integer_digits + decimal_digits
+    if len(digits) > total:
+        raise ValueError("coordinate wider than FS format")
+    if suppression == "T":
+        digits = digits.ljust(total, "0")
+    else:
+        digits = digits.rjust(total, "0")
+    return sign * int(digits) / (10 ** decimal_digits)
+
+
+def _gerber_image_signature(data: bytes) -> tuple[tuple[object, ...], ...] | None:
+    text = _text(data).upper()
+    fs = re.search(r"%FS([LT])A?X(\d)(\d)Y(\d)(\d)\*%", text)
+    if fs is None or (fs.group(2), fs.group(3)) != (fs.group(4), fs.group(5)):
+        return None
+    suppression = fs.group(1)
+    integer_digits = int(fs.group(2))
+    decimal_digits = int(fs.group(3))
+
+    apertures = {}
+    for match in re.finditer(r"%ADD(\d+)([A-Z]+),?([^*%]*)\*%", text):
+        params = [item for item in re.split(r"[X,]", match.group(3)) if item]
+        if match.group(2) != "C" or not params:
+            return None
+        apertures[int(match.group(1))] = (match.group(2), round(float(params[0]), 5))
+
+    body = re.sub(r"%[^%]*%", "", text)
+    body = re.sub(r"G04[^*]*\*", "", body)
+    current_aperture = None
+    current_operation = None
+    current_x = None
+    current_y = None
+    operations = []
+    try:
+        for raw_statement in body.split("*"):
+            statement = "".join(raw_statement.split())
+            if not statement:
+                continue
+            x_match = re.search(r"X([-+]?\d+(?:\.\d+)?)", statement)
+            y_match = re.search(r"Y([-+]?\d+(?:\.\d+)?)", statement)
+            d_match = re.search(r"D0*(\d+)$", statement)
+            d_code = int(d_match.group(1)) if d_match else None
+
+            if d_code is not None and d_code >= 10 and x_match is None and y_match is None:
+                if d_code not in apertures:
+                    return None
+                current_aperture = d_code
+                continue
+            if d_code in {1, 2, 3}:
+                current_operation = d_code
+
+            next_x = current_x if x_match is None else _gerber_coord(
+                x_match.group(1), integer_digits, decimal_digits, suppression
+            )
+            next_y = current_y if y_match is None else _gerber_coord(
+                y_match.group(1), integer_digits, decimal_digits, suppression
+            )
+            if current_operation == 2 and (x_match is not None or y_match is not None):
+                if next_x is None or next_y is None:
+                    return None
+                current_x, current_y = next_x, next_y
+            elif current_operation == 1 and (x_match is not None or y_match is not None):
+                if current_aperture is None or None in {current_x, current_y, next_x, next_y}:
+                    return None
+                start = (round(current_x, 5), round(current_y, 5))
+                end = (round(next_x, 5), round(next_y, 5))
+                if end < start:
+                    start, end = end, start
+                shape, size = apertures[current_aperture]
+                operations.append(("draw", shape, size, *start, *end))
+                current_x, current_y = next_x, next_y
+            elif current_operation == 3:
+                if x_match is not None or y_match is not None:
+                    current_x, current_y = next_x, next_y
+                if current_aperture is None or current_x is None or current_y is None:
+                    return None
+                shape, size = apertures[current_aperture]
+                operations.append(
+                    ("flash", shape, size, round(current_x, 5), round(current_y, 5))
+                )
+                current_operation = None
+    except (KeyError, TypeError, ValueError):
+        return None
+    return tuple(sorted(operations))
 
 
 def _log_equal(actual: bytes, expected: bytes) -> bool:
@@ -290,33 +404,14 @@ def _log_equal(actual: bytes, expected: bytes) -> bool:
 def _fixes_valid(path: Path) -> bool:
     try:
         actual = json.loads(path.read_text(encoding="utf-8-sig"))
-        board = json.loads((_desktop() / "demo.pcb.json").read_text(encoding="utf-8"))
-        known = json.loads((_desktop() / "violations.json").read_text(encoding="utf-8"))["known"]
-        violations = {item["id"]: item for item in board["violations"]}
-        if len(known) != len(set(known)) or set(violations) != set(known):
-            return False
-        expected = {}
-        for violation_id in known:
-            violation = violations[violation_id]
-            violation_type = str(violation["type"]).casefold()
-            severity = str(violation["severity"]).casefold()
-            if severity == "warning":
-                expected[violation_id] = f"accepted_{violation_type}_warning"
-            else:
-                expected[violation_id] = f"reviewed_{violation_type}"
-        return actual == expected
+        return actual == EXPECTED_FIXES
     except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
         return False
 
 
 def _photoplot_log_valid(data: bytes) -> bool:
     text = _text(data)
-    try:
-        films = json.loads((_desktop() / "art_param.json").read_text(encoding="utf-8"))["films"]
-        if not films or len(films) != len(set(films)) or not all(isinstance(item, str) for item in films):
-            return False
-    except (OSError, KeyError, TypeError, ValueError, json.JSONDecodeError):
-        return False
+    films = EXPECTED_FILMS
     lowered = text.casefold()
     error_scan = re.sub(r"\bno\s+fatal(?:\s+\w+){0,3}\s+errors?\b", "", lowered)
     error_scan = re.sub(r"\bno\s+errors?\b", "", error_scan)
@@ -356,10 +451,7 @@ def _content_equal(name: str, actual: bytes, expected: bytes) -> bool:
 
 def _zip_equal(path: Path, _expected: bytes) -> bool:
     try:
-        parameters = json.loads((_desktop() / "art_param.json").read_text(encoding="utf-8"))
-        films = parameters["films"]
-        if not films or len(films) != len(set(films)) or not all(isinstance(item, str) for item in films):
-            return False
+        films = EXPECTED_FILMS
         with zipfile.ZipFile(path) as actual_zip:
             actual_entries = [item for item in actual_zip.infolist() if not item.is_dir()]
             if any(Path(item.filename).name != item.filename for item in actual_entries):
@@ -372,10 +464,14 @@ def _zip_equal(path: Path, _expected: bytes) -> bool:
             expected_names = {f"{film}.gbr".casefold() for film in films}
             if set(actual_names) != expected_names:
                 return False
-            return all(
-                _gerber_valid(actual_zip.read(actual_names[name]))
-                for name in expected_names
-            )
+            for film in films:
+                member = actual_zip.read(actual_names[f"{film}.gbr".casefold()])
+                if not _gerber_valid(member):
+                    return False
+                signature = _gerber_image_signature(member)
+                if signature != tuple(sorted(EXPECTED_GERBER_IMAGES[film])):
+                    return False
+            return True
     except Exception:
         return False
 
