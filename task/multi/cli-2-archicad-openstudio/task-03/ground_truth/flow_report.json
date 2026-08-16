@@ -2,78 +2,599 @@
   "case_id": "multi-cli-2-archicad-openstudio-task-03-windows",
   "software_chain": [
     "archicad",
-    "openstudio"
+    "openstudio",
+    "energyplus"
   ],
   "stage_sequence": [
     {
       "software": "archicad",
       "input": "init.ifc",
-      "output": "stage1.ifc",
-      "handoff": "handoff.json"
+      "output": "stage1.ifc"
     },
     {
       "software": "openstudio",
       "input": "handoff.json",
       "output": "result.osm"
+    },
+    {
+      "software": "energyplus",
+      "input": "run/in.idf",
+      "output": "run/eplusout.sql"
     }
   ],
-  "consumed_handoff_sha256": "3934b1076ced1005c822e7a7a87956b3f0e5d1e54359545f7aced525c6ebfc5f",
-  "source_stage1_sha256": "066f2c5252433df1bb5e20a388d52250a26cfe83135b0c8afb157b09011f9e36",
-  "osm_sha256": "b29f4f35e4a77eeb98254e9ba4aee32ab12e7684823ba17ae7724675f61f97e7",
-  "building_area_m2": 111.5,
+  "consumed_handoff_sha256": "7032aebb4b2504096101d56d183d14d73a6b6fc3c6111b1e6c12798b91328179",
+  "source_stage1_sha256": "db5904b9fc8e19c37e1419e4ddda7b943376ee96504bb1468d246dccbbf3163e",
+  "native_stage_log_sha256": "ea13d52f44b4b585e9c1f8a86b3bb26db21dc929453b2c7829313aa1fb9617bf",
+  "osm_sha256": "2f63aea38d5eeb1b0d33f7ddc2deec6624dd108f4fcbee4281fbfcdfe231801c",
+  "workflow_sha256": "009705ae365ea59097e6e62bdae199b3b2993badc3803441ca1a6f8fa1e6158c",
+  "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+  "energyplus_sql_sha256": "d54c1a82db432399c8c05331277f43c40d62c4750d395e098c385ec8816b77fe",
+  "energyplus_err_sha256": "b659fce2d3167fbc217f403f2037fbc518a5a9480910e8b7bacdc04533cd3fc2",
+  "energyplus_end_sha256": "1020ac692f67f0aa3431ca744f58cd9943ddf3679eff5294bd23adf1f931d3b5",
+  "building_area_m2": 81.0,
   "room_count": 4,
   "thermal_zone_count": 4,
-  "door_count": 3,
-  "window_count": 2,
-  "window_wall_ratio": 0.18,
-  "surface_count": 24,
-  "subsurface_count": 5,
-  "weather_file": "USA_Design_Day.epw",
-  "schedule_set": "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-03-windows",
-  "construction_set": "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-03-windows",
-  "openstudio_version": "3.10.0",
+  "door_count": 0,
+  "window_count": 0,
+  "window_wall_ratio": 0.0,
+  "surface_count": 26,
+  "subsurface_count": 0,
+  "weather_file": "weather.epw",
+  "workflow": "workflow.osw",
+  "energyplus_sql": "run/eplusout.sql",
+  "energyplus_err": "run/eplusout.err",
+  "schedule_set": [
+    "READING Schedule Set",
+    "QUIET-POD-02 Schedule Set",
+    "GALLERY Schedule Set",
+    "QUIET-POD-01 Schedule Set"
+  ],
+  "construction_set": [
+    "EW2A03 Library Wall Construction",
+    "EW2A03 Library Floor Construction",
+    "EW2A03 Library Roof Construction"
+  ],
+  "openstudio_version": "3.10.0+86d7e215a1",
+  "native_cli_executable": "C:/openstudio-3.10.0/bin/openstudio.exe",
+  "native_cli_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+  "energyplus_executable": "C:/openstudio-3.10.0/EnergyPlus/energyplus.exe",
+  "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+  "energyplus_status": "Completed Successfully",
+  "energyplus_severe_errors": 0,
+  "energyplus_fatal_errors": 0,
+  "model_object_counts": {
+    "Space": 4,
+    "ThermalZone": 4,
+    "People": 4,
+    "Lights": 4,
+    "ElectricEquipment": 4,
+    "DesignSpecificationOutdoorAir": 4,
+    "ThermostatSetpointDualSetpoint": 4,
+    "ZoneHVACIdealLoadsAirSystem": 4
+  },
   "spaces": [
     {
-      "name": "READING",
-      "thermal_zone": "READING-ZN",
-      "floor_area_m2": 23.0,
-      "door_count": 1,
-      "window_count": 1
-    },
-    {
-      "name": "GALLERY",
+      "case_id": "multi-cli-2-archicad-openstudio-task-03-windows",
+      "space_name": "GALLERY",
       "thermal_zone": "GALLERY-ZN",
-      "floor_area_m2": 26.25,
-      "door_count": 1,
-      "window_count": 1
+      "floor_area_m2": 15.0,
+      "source_handoff_sha256": "7032aebb4b2504096101d56d183d14d73a6b6fc3c6111b1e6c12798b91328179",
+      "source_stage1_sha256": "db5904b9fc8e19c37e1419e4ddda7b943376ee96504bb1468d246dccbbf3163e",
+      "energy_use_kwh": 1520.683428,
+      "peak_load_w": 429.783272
     },
     {
-      "name": "QUIET-POD-01",
+      "case_id": "multi-cli-2-archicad-openstudio-task-03-windows",
+      "space_name": "QUIET-POD-01",
       "thermal_zone": "QUIET-POD-01-ZN",
-      "floor_area_m2": 29.5,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 9.0,
+      "source_handoff_sha256": "7032aebb4b2504096101d56d183d14d73a6b6fc3c6111b1e6c12798b91328179",
+      "source_stage1_sha256": "db5904b9fc8e19c37e1419e4ddda7b943376ee96504bb1468d246dccbbf3163e",
+      "energy_use_kwh": 1095.130186,
+      "peak_load_w": 439.730046
     },
     {
-      "name": "QUIET-POD-02",
+      "case_id": "multi-cli-2-archicad-openstudio-task-03-windows",
+      "space_name": "QUIET-POD-02",
       "thermal_zone": "QUIET-POD-02-ZN",
-      "floor_area_m2": 32.75,
-      "door_count": 0,
-      "window_count": 0
+      "floor_area_m2": 9.0,
+      "source_handoff_sha256": "7032aebb4b2504096101d56d183d14d73a6b6fc3c6111b1e6c12798b91328179",
+      "source_stage1_sha256": "db5904b9fc8e19c37e1419e4ddda7b943376ee96504bb1468d246dccbbf3163e",
+      "energy_use_kwh": 1066.718792,
+      "peak_load_w": 328.675615
+    },
+    {
+      "case_id": "multi-cli-2-archicad-openstudio-task-03-windows",
+      "space_name": "READING",
+      "thermal_zone": "READING-ZN",
+      "floor_area_m2": 48.0,
+      "source_handoff_sha256": "7032aebb4b2504096101d56d183d14d73a6b6fc3c6111b1e6c12798b91328179",
+      "source_stage1_sha256": "db5904b9fc8e19c37e1419e4ddda7b943376ee96504bb1468d246dccbbf3163e",
+      "energy_use_kwh": 5979.137465,
+      "peak_load_w": 1237.185846
     }
   ],
   "thermal_zones": [
-    "READING-ZN",
     "GALLERY-ZN",
     "QUIET-POD-01-ZN",
-    "QUIET-POD-02-ZN"
+    "QUIET-POD-02-ZN",
+    "READING-ZN"
   ],
-  "osm_tokens": [
-    "ReadingLoadSchedule",
-    "GalleryCirculationSchedule",
-    "QuietPodLowLighting",
-    "QUIET-POD-01-ZN",
-    "QUIET-POD-02-ZN"
+  "energyplus_sql_report_data_count": 315725,
+  "energyplus_sql_simulations_record": {
+    "simulation_index": "1",
+    "energyplus_version": "EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.12 02:55",
+    "timestamp": " YMD=2026.08.12 02:55",
+    "num_timesteps_per_hour": "4",
+    "completed_raw": "FALSE",
+    "completed_successfully_raw": "FALSE",
+    "record_count": 1
+  },
+  "energyplus_completion_evidence": {
+    "err_completed_successfully": true,
+    "err_severe_count": 0,
+    "err_fatal_count": 0,
+    "simulations_flag_anomaly": true
+  },
+  "simulation": {
+    "native_exit_code": 0,
+    "delivery_producer": "openstudio_cli_workflow",
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-11T18:55:57.6402089+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-11T18:55:58.6450563+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-11T18:55:59.6499571+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-11T18:56:00.6544012+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      }
+    ],
+    "sqlite_integrity_check": "ok",
+    "environment_periods": [
+      {
+        "environment_name": "RUN PERIOD 1",
+        "environment_type": 3
+      }
+    ],
+    "hourly_series": [
+      {
+        "space_name": "GALLERY",
+        "thermal_zone": "GALLERY-ZN",
+        "key_value": "GALLERY-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 711990000.0
+      },
+      {
+        "space_name": "GALLERY",
+        "thermal_zone": "GALLERY-ZN",
+        "key_value": "GALLERY-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 791100000.0
+      },
+      {
+        "space_name": "GALLERY",
+        "thermal_zone": "GALLERY-ZN",
+        "key_value": "GALLERY Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 2899911311.1719785
+      },
+      {
+        "space_name": "GALLERY",
+        "thermal_zone": "GALLERY-ZN",
+        "key_value": "GALLERY Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 1071459028.5761677
+      },
+      {
+        "space_name": "GALLERY",
+        "thermal_zone": "GALLERY-ZN",
+        "key_value": "GALLERY Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 429.7832724635573
+      },
+      {
+        "space_name": "GALLERY",
+        "thermal_zone": "GALLERY-ZN",
+        "key_value": "GALLERY Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 307.22230371548153
+      },
+      {
+        "space_name": "QUIET-POD-01",
+        "thermal_zone": "QUIET-POD-01-ZN",
+        "key_value": "QUIET-POD-01-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 209952000.0
+      },
+      {
+        "space_name": "QUIET-POD-01",
+        "thermal_zone": "QUIET-POD-01-ZN",
+        "key_value": "QUIET-POD-01-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 503884800.0
+      },
+      {
+        "space_name": "QUIET-POD-01",
+        "thermal_zone": "QUIET-POD-01-ZN",
+        "key_value": "QUIET-POD-01 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 2788158787.500898
+      },
+      {
+        "space_name": "QUIET-POD-01",
+        "thermal_zone": "QUIET-POD-01-ZN",
+        "key_value": "QUIET-POD-01 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 440473083.3751523
+      },
+      {
+        "space_name": "QUIET-POD-01",
+        "thermal_zone": "QUIET-POD-01-ZN",
+        "key_value": "QUIET-POD-01 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 439.73004551996354
+      },
+      {
+        "space_name": "QUIET-POD-01",
+        "thermal_zone": "QUIET-POD-01-ZN",
+        "key_value": "QUIET-POD-01 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 174.84116344625048
+      },
+      {
+        "space_name": "QUIET-POD-02",
+        "thermal_zone": "QUIET-POD-02-ZN",
+        "key_value": "QUIET-POD-02-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 285622200.0
+      },
+      {
+        "space_name": "QUIET-POD-02",
+        "thermal_zone": "QUIET-POD-02-ZN",
+        "key_value": "QUIET-POD-02-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 825130800.0
+      },
+      {
+        "space_name": "QUIET-POD-02",
+        "thermal_zone": "QUIET-POD-02-ZN",
+        "key_value": "QUIET-POD-02 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 2146951694.4091225
+      },
+      {
+        "space_name": "QUIET-POD-02",
+        "thermal_zone": "QUIET-POD-02-ZN",
+        "key_value": "QUIET-POD-02 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 582482955.3602883
+      },
+      {
+        "space_name": "QUIET-POD-02",
+        "thermal_zone": "QUIET-POD-02-ZN",
+        "key_value": "QUIET-POD-02 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 328.6756145041508
+      },
+      {
+        "space_name": "QUIET-POD-02",
+        "thermal_zone": "QUIET-POD-02-ZN",
+        "key_value": "QUIET-POD-02 Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 177.26637274689074
+      },
+      {
+        "space_name": "READING",
+        "thermal_zone": "READING-ZN",
+        "key_value": "READING-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 4396032000.0
+      },
+      {
+        "space_name": "READING",
+        "thermal_zone": "READING-ZN",
+        "key_value": "READING-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 3516825600.0
+      },
+      {
+        "space_name": "READING",
+        "thermal_zone": "READING-ZN",
+        "key_value": "READING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 6711460941.284639
+      },
+      {
+        "space_name": "READING",
+        "thermal_zone": "READING-ZN",
+        "key_value": "READING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "sum": 6900576332.659745
+      },
+      {
+        "space_name": "READING",
+        "thermal_zone": "READING-ZN",
+        "key_value": "READING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 1169.022992695891
+      },
+      {
+        "space_name": "READING",
+        "thermal_zone": "READING-ZN",
+        "key_value": "READING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "hourly_count": 8760,
+        "distinct_time_index_count": 8760,
+        "max": 1237.185845519737
+      }
+    ],
+    "energyplus_25_1_sql_finalization_order": {
+      "source": "https://github.com/NatLabRockies/EnergyPlus/blob/v25.1.0/src/EnergyPlus/api/EnergyPlusPgm.cc#L358-L398"
+    }
+  },
+  "openstudio_cli_transactions": [
+    {
+      "stage": "openstudio_weather_period_simulation_final_delivery",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-11T18:54:15.1400203+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-11T18:54:18.1704520+00:00",
+      "related_children_exited_at_utc": "2026-08-11T18:54:18.2646646+00:00",
+      "completed_at_utc": "2026-08-11T18:54:21.2950543+00:00",
+      "exit_code": 0,
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-11T18:54:18.2803418+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:54:17.3385951Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:54:17.3385951Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T18:54:19.2852309+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:54:17.3385951Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:54:17.3385951Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T18:54:20.2901047+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:54:17.3385951Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:54:17.3385951Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T18:54:21.2950543+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:54:17.3385951Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:54:17.3385951Z"
+        }
+      ],
+      "sql_sha256": "69ec6b21ce466f065726184187c489e6c697464943e9a64edb531144caa7016a",
+      "err_sha256": "9fc8a650899ac80e4f16eac1761ad2af87b503edae501a1d3e7bbc0257229d70",
+      "stdout_path": "C:\\Users\\user\\Documents\\EngiWorld-task-03\\openstudio_run_stdout.log",
+      "stderr_path": "C:\\Users\\user\\Documents\\EngiWorld-task-03\\openstudio_run_stderr.log",
+      "stdout_tail": [
+
+      ],
+      "stderr_tail": [
+
+      ]
+    },
+    {
+      "stage": "openstudio_weather_period_simulation_final_delivery",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-11T18:55:54.4994178+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-11T18:55:57.5303506+00:00",
+      "related_children_exited_at_utc": "2026-08-11T18:55:57.6245815+00:00",
+      "completed_at_utc": "2026-08-11T18:56:00.6544012+00:00",
+      "exit_code": 0,
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-11T18:55:57.6402089+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T18:55:58.6450563+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T18:55:59.6499571+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T18:56:00.6544012+00:00",
+          "sql_size": 8593408,
+          "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+        }
+      ],
+      "sql_sha256": "d54c1a82db432399c8c05331277f43c40d62c4750d395e098c385ec8816b77fe",
+      "err_sha256": "b659fce2d3167fbc217f403f2037fbc518a5a9480910e8b7bacdc04533cd3fc2",
+      "end_sha256": "1020ac692f67f0aa3431ca744f58cd9943ddf3679eff5294bd23adf1f931d3b5",
+      "stdout_path": "C:\\Users\\user\\Documents\\EngiWorld-task-03\\openstudio_run_stdout.log",
+      "stderr_path": "C:\\Users\\user\\Documents\\EngiWorld-task-03\\openstudio_run_stderr.log",
+      "stdout_tail": [
+
+      ],
+      "stderr_tail": [
+
+      ]
+    }
   ],
-  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe"
+  "final_delivery_transaction": {
+    "stage": "openstudio_weather_period_simulation_final_delivery",
+    "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+    "arguments": [
+      "run",
+      "-w",
+      "C:\\Users\\user\\Desktop\\workflow.osw"
+    ],
+    "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+    "working_directory": "C:\\Users\\user\\Desktop",
+    "started_at_utc": "2026-08-11T18:55:54.4994178+00:00",
+    "openstudio_process_exited_at_utc": "2026-08-11T18:55:57.5303506+00:00",
+    "related_children_exited_at_utc": "2026-08-11T18:55:57.6245815+00:00",
+    "completed_at_utc": "2026-08-11T18:56:00.6544012+00:00",
+    "exit_code": 0,
+    "related_processes_after_wait": 0,
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-11T18:55:57.6402089+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-11T18:55:58.6450563+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-11T18:55:59.6499571+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-11T18:56:00.6544012+00:00",
+        "sql_size": 8593408,
+        "sql_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-11T18:55:56.6357097Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-11T18:55:56.6357097Z"
+      }
+    ],
+    "sql_sha256": "d54c1a82db432399c8c05331277f43c40d62c4750d395e098c385ec8816b77fe",
+    "err_sha256": "b659fce2d3167fbc217f403f2037fbc518a5a9480910e8b7bacdc04533cd3fc2",
+    "end_sha256": "1020ac692f67f0aa3431ca744f58cd9943ddf3679eff5294bd23adf1f931d3b5",
+    "stdout_path": "C:\\Users\\user\\Documents\\EngiWorld-task-03\\openstudio_run_stdout.log",
+    "stderr_path": "C:\\Users\\user\\Documents\\EngiWorld-task-03\\openstudio_run_stderr.log",
+    "stdout_tail": [
+
+    ],
+    "stderr_tail": [
+
+    ]
+  }
 }

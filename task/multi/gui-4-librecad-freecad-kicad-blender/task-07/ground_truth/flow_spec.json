@@ -69,7 +69,16 @@
     "min_lines": 4,
     "no_layers": [
       "GUIDE"
-    ]
+    ],
+    "semantic_keep_outs": {
+      "required": [
+        "GPIO40",
+        "CAM"
+      ],
+      "closed": true,
+      "positive_area": true,
+      "contains_matching_label": true
+    }
   },
   "stl": {
     "file": "stage2_sbc_hat_mount_plate.stl",
@@ -79,7 +88,14 @@
       12.0
     ],
     "bbox_tol": 4.0,
-    "min_triangles": 12
+    "min_triangles": 600,
+    "watertight": true,
+    "fill_ratio_range": [
+      0.18,
+      0.48
+    ],
+    "required_openings": 5,
+    "raised_standoffs": 4
   },
   "kicad": {
     "tokens": [
@@ -89,7 +105,19 @@
       "I2C-J2",
       "EEPROM-U1",
       "PWR-J3"
-    ]
+    ],
+    "footprints": {
+      "J1": 40,
+      "J2": 4,
+      "U1": 8,
+      "J3": 2
+    },
+    "camera_keepout": {
+      "layer": "F.Cu",
+      "positive_area": true,
+      "overlaps_submitted_cam_region": true
+    },
+    "complete_handoff_layer": "Dwgs.User"
   },
   "glb": {
     "file": "stage4_sbc_hat_mount_plate.glb",
@@ -105,7 +133,10 @@
     "accepted_import_evidence": {
       "stage2_stl_object": "stage2_sbc_hat_mount_plate",
       "stage3_svg_object": "stage3_sbc_hat_mount_plate_board_profile.svg"
-    }
+    },
+    "mesh_bound_svg_edges": 4,
+    "brass_standoffs": 4,
+    "gpio_pins": 40
   },
   "diversity_notes": {
     "geometry": "Single-board-computer HAT mount plate with GPIO and camera clearance",
@@ -132,14 +163,13 @@
     "desktop_path": "/home/user/Desktop/seed_sbc_hat_mount_plate.dxf"
   },
   "generated_by": {
-    "script": "generate_assets.py",
-    "packages": [
-      "ezdxf",
-      "trimesh",
-      "pygltflib",
-      "numpy",
-      "xml.sax.saxutils"
-    ]
+    "method": "real-instance GUI workflow",
+    "versions": {
+      "LibreCAD": "2.2.0.2",
+      "FreeCAD": "0.21.2",
+      "KiCad": "10.0.2",
+      "Blender": "4.2.3"
+    }
   },
   "handoff": {
     "file": "stage2_sbc_hat_mount_plate_handoff_outline.dxf"

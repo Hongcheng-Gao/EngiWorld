@@ -233,7 +233,24 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 13,                             !- Name
+  BOOK-STACK RoofExposureSurface,         !- Name
+  Roof,                                   !- Surface Type
+  EW3B07-ConstructionSet Roof,            !- Construction Name
+  BOOK-STACK-ZN,                          !- Zone Name
+  BOOK-STACK,                             !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  13.9, 0.1, 2.4384,                      !- X,Y,Z Vertex 1 {m}
+  13.9, 7.9, 2.4384,                      !- X,Y,Z Vertex 2 {m}
+  9.9, 7.9, 2.4384,                       !- X,Y,Z Vertex 3 {m}
+  9.9, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 11,                             !- Name
   Floor,                                  !- Surface Type
   EW3B07-ConstructionSet Floor,           !- Construction Name
   BOOK-STACK-ZN,                          !- Zone Name
@@ -250,7 +267,7 @@ BuildingSurface:Detailed,
   13.9, 0.1, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 14,                             !- Name
+  Surface 12,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   BOOK-STACK-ZN,                          !- Zone Name
@@ -267,7 +284,7 @@ BuildingSurface:Detailed,
   9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 15,                             !- Name
+  Surface 13,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   BOOK-STACK-ZN,                          !- Zone Name
@@ -284,7 +301,7 @@ BuildingSurface:Detailed,
   9.9, 7.9, 0;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 16,                             !- Name
+  Surface 14,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   BOOK-STACK-ZN,                          !- Zone Name
@@ -301,7 +318,7 @@ BuildingSurface:Detailed,
   13.9, 7.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 17,                             !- Name
+  Surface 15,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   BOOK-STACK-ZN,                          !- Zone Name
@@ -317,27 +334,10 @@ BuildingSurface:Detailed,
   9.9, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
   13.9, 0.1, 0;                           !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 18,                             !- Name
-  Roof,                                   !- Surface Type
-  EW3B07-ConstructionSet Roof,            !- Construction Name
-  BOOK-STACK-ZN,                          !- Zone Name
-  BOOK-STACK,                             !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  13.9, 0.1, 2.4384,                      !- X,Y,Z Vertex 1 {m}
-  13.9, 7.9, 2.4384,                      !- X,Y,Z Vertex 2 {m}
-  9.9, 7.9, 2.4384,                       !- X,Y,Z Vertex 3 {m}
-  9.9, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
-
 Lights,
   BOOK-STACK Lights,                      !- Name
   BOOK-STACK,                             !- Zone or ZoneList or Space or SpaceList Name
-  STACK-LOW-LIGHTING,                     !- Schedule Name
+  BookStackLowLighting,                   !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   4,                                      !- Watts per Floor Area {W/m2}
@@ -359,16 +359,18 @@ Schedule:Day:Interval,
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.01,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.2,                                    !- Value Until Time 2
+  0.08,                                   !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  0.2,                                    !- Value Until Time 3
-  24:00,                                  !- Time 4 {hh:mm}
-  0.05;                                   !- Value Until Time 4
+  0.25,                                   !- Value Until Time 3
+  22:00,                                  !- Time 4 {hh:mm}
+  0.03,                                   !- Value Until Time 4
+  24:00,                                  !- Time 5 {hh:mm}
+  0.01;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  STACK-LOW-LIGHTING Week Rule - Jan1-Dec31, !- Name
+  BookStackLowLighting Week Rule - Jan1-Dec31, !- Name
   Schedule Day 6,                         !- Sunday Schedule:Day Name
   Schedule Day 6,                         !- Monday Schedule:Day Name
   Schedule Day 6,                         !- Tuesday Schedule:Day Name
@@ -383,9 +385,9 @@ Schedule:Week:Daily,
   Schedule Day 6;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  STACK-LOW-LIGHTING,                     !- Name
+  BookStackLowLighting,                   !- Name
   Fractional,                             !- Schedule Type Limits Name
-  STACK-LOW-LIGHTING Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  BookStackLowLighting Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -394,7 +396,7 @@ Schedule:Year,
 People,
   BOOK-STACK People,                      !- Name
   BOOK-STACK,                             !- Zone or ZoneList or Space or SpaceList Name
-  STACK-LOW-LIGHTING,                     !- Number of People Schedule Name
+  BookStackLowLighting,                   !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.02,                                   !- People per Floor Area {person/m2}
@@ -444,7 +446,7 @@ Schedule:Year,
 ElectricEquipment,
   BOOK-STACK Equipment,                   !- Name
   BOOK-STACK,                             !- Zone or ZoneList or Space or SpaceList Name
-  STACK-LOW-LIGHTING,                     !- Schedule Name
+  BookStackLowLighting,                   !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   1,                                      !- Watts per Floor Area {W/m2}
@@ -484,8 +486,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   BOOK-STACK Thermostat,                  !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 ScheduleTypeLimits,
   Temperature,                            !- Name
@@ -502,7 +504,7 @@ Schedule:Day:Interval,
   20;                                     !- Value Until Time 1
 
 Schedule:Week:Daily,
-  Heating Setpoint 20C Week Rule - Jan1-Dec31, !- Name
+  Heating Setpoint 20.0C Week Rule - Jan1-Dec31, !- Name
   Schedule Day 1,                         !- Sunday Schedule:Day Name
   Schedule Day 1,                         !- Monday Schedule:Day Name
   Schedule Day 1,                         !- Tuesday Schedule:Day Name
@@ -517,9 +519,9 @@ Schedule:Week:Daily,
   Schedule Day 1;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  Heating Setpoint 20C,                   !- Name
+  Heating Setpoint 20.0C,                 !- Name
   Temperature,                            !- Schedule Type Limits Name
-  Heating Setpoint 20C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  Heating Setpoint 20.0C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -533,7 +535,7 @@ Schedule:Day:Interval,
   24;                                     !- Value Until Time 1
 
 Schedule:Week:Daily,
-  Cooling Setpoint 24C Week Rule - Jan1-Dec31, !- Name
+  Cooling Setpoint 24.0C Week Rule - Jan1-Dec31, !- Name
   Schedule Day 2,                         !- Sunday Schedule:Day Name
   Schedule Day 2,                         !- Monday Schedule:Day Name
   Schedule Day 2,                         !- Tuesday Schedule:Day Name
@@ -548,9 +550,9 @@ Schedule:Week:Daily,
   Schedule Day 2;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  Cooling Setpoint 24C,                   !- Name
+  Cooling Setpoint 24.0C,                 !- Name
   Temperature,                            !- Schedule Type Limits Name
-  Cooling Setpoint 24C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  Cooling Setpoint 24.0C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -595,7 +597,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   BOOK-STACK-ZN Ventilation per Person,   !- Name
   BOOK-STACK-ZN,                          !- Zone or ZoneList or Space or SpaceList Name
-  STACK-LOW-LIGHTING,                     !- Schedule Name
+  BookStackLowLighting,                   !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -630,6 +632,23 @@ Space,
   ,                                       !- Ceiling Height {m}
   ,                                       !- Volume {m3}
   ;                                       !- Floor Area {m2}
+
+BuildingSurface:Detailed,
+  LOBBY RoofExposureSurface,              !- Name
+  Roof,                                   !- Surface Type
+  EW3B07-ConstructionSet Roof,            !- Construction Name
+  LOBBY-ZN,                               !- Zone Name
+  LOBBY,                                  !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  4.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  4.1, 7.9, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  0.1, 7.9, 2.4384,                       !- X,Y,Z Vertex 3 {m}
+  0.1, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
   Surface 1,                              !- Name
@@ -716,27 +735,10 @@ BuildingSurface:Detailed,
   0.1, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
   4.1, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 6,                              !- Name
-  Roof,                                   !- Surface Type
-  EW3B07-ConstructionSet Roof,            !- Construction Name
-  LOBBY-ZN,                               !- Zone Name
-  LOBBY,                                  !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  4.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  4.1, 7.9, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  0.1, 7.9, 2.4384,                       !- X,Y,Z Vertex 3 {m}
-  0.1, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
-
 Lights,
   LOBBY Lights,                           !- Name
   LOBBY,                                  !- Zone or ZoneList or Space or SpaceList Name
-  PUBLIC-LOAD-CURVE,                      !- Schedule Name
+  LibraryPublicLoadCurve,                 !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   9,                                      !- Watts per Floor Area {W/m2}
@@ -754,16 +756,16 @@ Schedule:Day:Interval,
   06:00,                                  !- Time 1 {hh:mm}
   0.05,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.35,                                   !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.85,                                   !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.15,                                   !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
   0.05;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  PUBLIC-LOAD-CURVE Week Rule - Jan1-Dec31, !- Name
+  LibraryPublicLoadCurve Week Rule - Jan1-Dec31, !- Name
   Schedule Day 4,                         !- Sunday Schedule:Day Name
   Schedule Day 4,                         !- Monday Schedule:Day Name
   Schedule Day 4,                         !- Tuesday Schedule:Day Name
@@ -778,9 +780,9 @@ Schedule:Week:Daily,
   Schedule Day 4;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  PUBLIC-LOAD-CURVE,                      !- Name
+  LibraryPublicLoadCurve,                 !- Name
   Fractional,                             !- Schedule Type Limits Name
-  PUBLIC-LOAD-CURVE Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  LibraryPublicLoadCurve Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -789,7 +791,7 @@ Schedule:Year,
 People,
   LOBBY People,                           !- Name
   LOBBY,                                  !- Zone or ZoneList or Space or SpaceList Name
-  PUBLIC-LOAD-CURVE,                      !- Number of People Schedule Name
+  LibraryPublicLoadCurve,                 !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.1,                                    !- People per Floor Area {person/m2}
@@ -801,7 +803,7 @@ People,
 ElectricEquipment,
   LOBBY Equipment,                        !- Name
   LOBBY,                                  !- Zone or ZoneList or Space or SpaceList Name
-  PUBLIC-LOAD-CURVE,                      !- Schedule Name
+  LibraryPublicLoadCurve,                 !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   5,                                      !- Watts per Floor Area {W/m2}
@@ -841,8 +843,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   LOBBY Thermostat,                       !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   LOBBY-ZN,                               !- Zone Name
@@ -883,7 +885,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   LOBBY-ZN Ventilation per Person,        !- Name
   LOBBY-ZN,                               !- Zone or ZoneList or Space or SpaceList Name
-  PUBLIC-LOAD-CURVE,                      !- Schedule Name
+  LibraryPublicLoadCurve,                 !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -920,41 +922,7 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 10,                             !- Name
-  Wall,                                   !- Surface Type
-  EW3B07-ConstructionSet Wall,            !- Construction Name
-  READING-ROOM-ZN,                        !- Zone Name
-  READING-ROOM,                           !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  9.9, 7.9, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  9.9, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
-  9.9, 7.9, 0;                            !- X,Y,Z Vertex 4 {m}
-
-BuildingSurface:Detailed,
-  Surface 11,                             !- Name
-  Wall,                                   !- Surface Type
-  EW3B07-ConstructionSet Wall,            !- Construction Name
-  READING-ROOM-ZN,                        !- Zone Name
-  READING-ROOM,                           !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  4.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  4.1, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
-  9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
-
-BuildingSurface:Detailed,
-  Surface 12,                             !- Name
+  READING-ROOM RoofExposureSurface,       !- Name
   Roof,                                   !- Surface Type
   EW3B07-ConstructionSet Roof,            !- Construction Name
   READING-ROOM-ZN,                        !- Zone Name
@@ -971,7 +939,24 @@ BuildingSurface:Detailed,
   4.1, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 7,                              !- Name
+  Surface 10,                             !- Name
+  Wall,                                   !- Surface Type
+  EW3B07-ConstructionSet Wall,            !- Construction Name
+  READING-ROOM-ZN,                        !- Zone Name
+  READING-ROOM,                           !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  4.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  4.1, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
+  9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 6,                              !- Name
   Floor,                                  !- Surface Type
   EW3B07-ConstructionSet Floor,           !- Construction Name
   READING-ROOM-ZN,                        !- Zone Name
@@ -988,7 +973,7 @@ BuildingSurface:Detailed,
   9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 8,                              !- Name
+  Surface 7,                              !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   READING-ROOM-ZN,                        !- Zone Name
@@ -1005,7 +990,7 @@ BuildingSurface:Detailed,
   4.1, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 9,                              !- Name
+  Surface 8,                              !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   READING-ROOM-ZN,                        !- Zone Name
@@ -1021,10 +1006,27 @@ BuildingSurface:Detailed,
   9.9, 7.9, 0,                            !- X,Y,Z Vertex 3 {m}
   4.1, 7.9, 0;                            !- X,Y,Z Vertex 4 {m}
 
+BuildingSurface:Detailed,
+  Surface 9,                              !- Name
+  Wall,                                   !- Surface Type
+  EW3B07-ConstructionSet Wall,            !- Construction Name
+  READING-ROOM-ZN,                        !- Zone Name
+  READING-ROOM,                           !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  9.9, 7.9, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  9.9, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
+  9.9, 7.9, 0;                            !- X,Y,Z Vertex 4 {m}
+
 Lights,
   READING-ROOM Lights,                    !- Name
   READING-ROOM,                           !- Zone or ZoneList or Space or SpaceList Name
-  READING-LOAD-CURVE,                     !- Schedule Name
+  ReadingRoomLoadCurve,                   !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   8,                                      !- Watts per Floor Area {W/m2}
@@ -1040,18 +1042,18 @@ Schedule:Day:Interval,
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.02,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.3,                                    !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.9,                                    !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.1,                                    !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
-  0.05;                                   !- Value Until Time 5
+  0.02;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  READING-LOAD-CURVE Week Rule - Jan1-Dec31, !- Name
+  ReadingRoomLoadCurve Week Rule - Jan1-Dec31, !- Name
   Schedule Day 5,                         !- Sunday Schedule:Day Name
   Schedule Day 5,                         !- Monday Schedule:Day Name
   Schedule Day 5,                         !- Tuesday Schedule:Day Name
@@ -1066,9 +1068,9 @@ Schedule:Week:Daily,
   Schedule Day 5;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  READING-LOAD-CURVE,                     !- Name
+  ReadingRoomLoadCurve,                   !- Name
   Fractional,                             !- Schedule Type Limits Name
-  READING-LOAD-CURVE Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  ReadingRoomLoadCurve Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -1077,7 +1079,7 @@ Schedule:Year,
 People,
   READING-ROOM People,                    !- Name
   READING-ROOM,                           !- Zone or ZoneList or Space or SpaceList Name
-  READING-LOAD-CURVE,                     !- Number of People Schedule Name
+  ReadingRoomLoadCurve,                   !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.08,                                   !- People per Floor Area {person/m2}
@@ -1089,7 +1091,7 @@ People,
 ElectricEquipment,
   READING-ROOM Equipment,                 !- Name
   READING-ROOM,                           !- Zone or ZoneList or Space or SpaceList Name
-  READING-LOAD-CURVE,                     !- Schedule Name
+  ReadingRoomLoadCurve,                   !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   3,                                      !- Watts per Floor Area {W/m2}
@@ -1129,8 +1131,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   READING-ROOM Thermostat,                !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   READING-ROOM-ZN,                        !- Zone Name
@@ -1171,7 +1173,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   READING-ROOM-ZN Ventilation per Person, !- Name
   READING-ROOM-ZN,                        !- Zone or ZoneList or Space or SpaceList Name
-  READING-LOAD-CURVE,                     !- Schedule Name
+  ReadingRoomLoadCurve,                   !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -1208,7 +1210,24 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 19,                             !- Name
+  STAFF-OFFICE RoofExposureSurface,       !- Name
+  Roof,                                   !- Surface Type
+  EW3B07-ConstructionSet Roof,            !- Construction Name
+  STAFF-OFFICE-ZN,                        !- Zone Name
+  STAFF-OFFICE,                           !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  17.9, 0.1, 2.4384,                      !- X,Y,Z Vertex 1 {m}
+  17.9, 4.9, 2.4384,                      !- X,Y,Z Vertex 2 {m}
+  14.1, 4.9, 2.4384,                      !- X,Y,Z Vertex 3 {m}
+  14.1, 0.1, 2.4384;                      !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 16,                             !- Name
   Floor,                                  !- Surface Type
   EW3B07-ConstructionSet Floor,           !- Construction Name
   STAFF-OFFICE-ZN,                        !- Zone Name
@@ -1225,7 +1244,7 @@ BuildingSurface:Detailed,
   17.9, 0.1, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 20,                             !- Name
+  Surface 17,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   STAFF-OFFICE-ZN,                        !- Zone Name
@@ -1242,7 +1261,7 @@ BuildingSurface:Detailed,
   14.1, 0.1, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 21,                             !- Name
+  Surface 18,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   STAFF-OFFICE-ZN,                        !- Zone Name
@@ -1259,7 +1278,7 @@ BuildingSurface:Detailed,
   14.1, 4.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 22,                             !- Name
+  Surface 19,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   STAFF-OFFICE-ZN,                        !- Zone Name
@@ -1276,7 +1295,7 @@ BuildingSurface:Detailed,
   17.9, 4.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 23,                             !- Name
+  Surface 20,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   STAFF-OFFICE-ZN,                        !- Zone Name
@@ -1292,27 +1311,10 @@ BuildingSurface:Detailed,
   14.1, 0.1, 0,                           !- X,Y,Z Vertex 3 {m}
   17.9, 0.1, 0;                           !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 24,                             !- Name
-  Roof,                                   !- Surface Type
-  EW3B07-ConstructionSet Roof,            !- Construction Name
-  STAFF-OFFICE-ZN,                        !- Zone Name
-  STAFF-OFFICE,                           !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  17.9, 0.1, 2.4384,                      !- X,Y,Z Vertex 1 {m}
-  17.9, 4.9, 2.4384,                      !- X,Y,Z Vertex 2 {m}
-  14.1, 4.9, 2.4384,                      !- X,Y,Z Vertex 3 {m}
-  14.1, 0.1, 2.4384;                      !- X,Y,Z Vertex 4 {m}
-
 Lights,
   STAFF-OFFICE Lights,                    !- Name
   STAFF-OFFICE,                           !- Zone or ZoneList or Space or SpaceList Name
-  STAFF-OFFICE-SCHEDULE,                  !- Schedule Name
+  StaffOfficeSchedule,                    !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   8,                                      !- Watts per Floor Area {W/m2}
@@ -1328,18 +1330,18 @@ Schedule:Day:Interval,
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.01,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.25,                                   !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.8,                                    !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.05,                                   !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
-  0.05;                                   !- Value Until Time 5
+  0.01;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  STAFF-OFFICE-SCHEDULE Week Rule - Jan1-Dec31, !- Name
+  StaffOfficeSchedule Week Rule - Jan1-Dec31, !- Name
   Schedule Day 7,                         !- Sunday Schedule:Day Name
   Schedule Day 7,                         !- Monday Schedule:Day Name
   Schedule Day 7,                         !- Tuesday Schedule:Day Name
@@ -1354,9 +1356,9 @@ Schedule:Week:Daily,
   Schedule Day 7;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  STAFF-OFFICE-SCHEDULE,                  !- Name
+  StaffOfficeSchedule,                    !- Name
   Fractional,                             !- Schedule Type Limits Name
-  STAFF-OFFICE-SCHEDULE Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  StaffOfficeSchedule Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -1365,7 +1367,7 @@ Schedule:Year,
 People,
   STAFF-OFFICE People,                    !- Name
   STAFF-OFFICE,                           !- Zone or ZoneList or Space or SpaceList Name
-  STAFF-OFFICE-SCHEDULE,                  !- Number of People Schedule Name
+  StaffOfficeSchedule,                    !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.1,                                    !- People per Floor Area {person/m2}
@@ -1377,7 +1379,7 @@ People,
 ElectricEquipment,
   STAFF-OFFICE Equipment,                 !- Name
   STAFF-OFFICE,                           !- Zone or ZoneList or Space or SpaceList Name
-  STAFF-OFFICE-SCHEDULE,                  !- Schedule Name
+  StaffOfficeSchedule,                    !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   10,                                     !- Watts per Floor Area {W/m2}
@@ -1417,8 +1419,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   STAFF-OFFICE Thermostat,                !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   STAFF-OFFICE-ZN,                        !- Zone Name
@@ -1459,7 +1461,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   STAFF-OFFICE-ZN Ventilation per Person, !- Name
   STAFF-OFFICE-ZN,                        !- Zone or ZoneList or Space or SpaceList Name
-  STAFF-OFFICE-SCHEDULE,                  !- Schedule Name
+  StaffOfficeSchedule,                    !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -1496,7 +1498,7 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 25,                             !- Name
+  Surface 21,                             !- Name
   Floor,                                  !- Surface Type
   EW3B07-ConstructionSet Floor,           !- Construction Name
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1513,7 +1515,7 @@ BuildingSurface:Detailed,
   17.9, 4.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 26,                             !- Name
+  Surface 22,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1530,7 +1532,7 @@ BuildingSurface:Detailed,
   14.1, 4.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 27,                             !- Name
+  Surface 23,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1547,7 +1549,7 @@ BuildingSurface:Detailed,
   14.1, 7.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 28,                             !- Name
+  Surface 24,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1564,7 +1566,7 @@ BuildingSurface:Detailed,
   17.9, 7.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 29,                             !- Name
+  Surface 25,                             !- Name
   Wall,                                   !- Surface Type
   EW3B07-ConstructionSet Wall,            !- Construction Name
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1581,7 +1583,7 @@ BuildingSurface:Detailed,
   17.9, 4.9, 0;                           !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 30,                             !- Name
+  TOILET-SUPPORT RoofExposureSurface,     !- Name
   Roof,                                   !- Surface Type
   EW3B07-ConstructionSet Roof,            !- Construction Name
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1600,7 +1602,7 @@ BuildingSurface:Detailed,
 Lights,
   TOILET-SUPPORT Lights,                  !- Name
   TOILET-SUPPORT,                         !- Zone or ZoneList or Space or SpaceList Name
-  SUPPORT-LOW-LOAD,                       !- Schedule Name
+  ToiletSupportLowLoad,                   !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   5,                                      !- Watts per Floor Area {W/m2}
@@ -1616,16 +1618,18 @@ Schedule:Day:Interval,
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.01,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.2,                                    !- Value Until Time 2
+  0.05,                                   !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
   0.2,                                    !- Value Until Time 3
-  24:00,                                  !- Time 4 {hh:mm}
-  0.05;                                   !- Value Until Time 4
+  22:00,                                  !- Time 4 {hh:mm}
+  0.03,                                   !- Value Until Time 4
+  24:00,                                  !- Time 5 {hh:mm}
+  0.01;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  SUPPORT-LOW-LOAD Week Rule - Jan1-Dec31, !- Name
+  ToiletSupportLowLoad Week Rule - Jan1-Dec31, !- Name
   Schedule Day 8,                         !- Sunday Schedule:Day Name
   Schedule Day 8,                         !- Monday Schedule:Day Name
   Schedule Day 8,                         !- Tuesday Schedule:Day Name
@@ -1640,9 +1644,9 @@ Schedule:Week:Daily,
   Schedule Day 8;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  SUPPORT-LOW-LOAD,                       !- Name
+  ToiletSupportLowLoad,                   !- Name
   Fractional,                             !- Schedule Type Limits Name
-  SUPPORT-LOW-LOAD Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  ToiletSupportLowLoad Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -1651,7 +1655,7 @@ Schedule:Year,
 People,
   TOILET-SUPPORT People,                  !- Name
   TOILET-SUPPORT,                         !- Zone or ZoneList or Space or SpaceList Name
-  SUPPORT-LOW-LOAD,                       !- Number of People Schedule Name
+  ToiletSupportLowLoad,                   !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.02,                                   !- People per Floor Area {person/m2}
@@ -1663,7 +1667,7 @@ People,
 ElectricEquipment,
   TOILET-SUPPORT Equipment,               !- Name
   TOILET-SUPPORT,                         !- Zone or ZoneList or Space or SpaceList Name
-  SUPPORT-LOW-LOAD,                       !- Schedule Name
+  ToiletSupportLowLoad,                   !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   1,                                      !- Watts per Floor Area {W/m2}
@@ -1703,8 +1707,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   TOILET-SUPPORT Thermostat,              !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   TOILET-SUPPORT-ZN,                      !- Zone Name
@@ -1745,7 +1749,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   TOILET-SUPPORT-ZN Ventilation per Person, !- Name
   TOILET-SUPPORT-ZN,                      !- Zone or ZoneList or Space or SpaceList Name
-  SUPPORT-LOW-LOAD,                       !- Schedule Name
+  ToiletSupportLowLoad,                   !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -1902,8 +1906,8 @@ LifeCycleCost:NonrecurringCost,
   ServicePeriod;                          !- Start of Costs
 
 !- EngiWorld multi-cli-3-revit-archicad-openstudio-task-07-windows
-!- EngiWorld HandoffHash 9b9ec83b617e
-!- EngiWorld Stage2Hash 9588137d6440
+!- EngiWorld HandoffHash 69d041609cff
+!- EngiWorld Stage2Hash 9b7c8f852d86
 !- EngiWorld weather_file weather.epw
 !- EngiWorld schedule_set EW3B07-ScheduleSet
 !- EngiWorld construction_set EW3B07-ConstructionSet
@@ -1912,6 +1916,7 @@ LifeCycleCost:NonrecurringCost,
 !- EngiWorld BookStackLowLighting
 !- EngiWorld StaffOfficeSchedule
 !- EngiWorld ToiletSupportLowLoad
+!- EngiWorld GeometricFillings
 !- EngiWorld LOBBY
 !- EngiWorld READING-ROOM
 !- EngiWorld BOOK-STACK

@@ -1,65 +1,86 @@
 {
+  "schema": "engiworld.openstudio-flow.v1",
   "case_id": "multi-cli-2-archicad-openstudio-task-09-windows",
+  "revision": "EW2A09",
   "software_chain": [
     "archicad",
-    "openstudio"
+    "openstudio",
+    "energyplus"
   ],
-  "stage_sequence": [
-    {
-      "software": "archicad",
-      "input": "init.ifc",
-      "output": "stage1.ifc",
-      "handoff": "handoff.json"
-    },
-    {
-      "software": "openstudio",
-      "input": "handoff.json",
-      "output": "result.osm"
-    }
-  ],
-  "consumed_handoff_sha256": "d4acbfe22fc1b7a6e9de463156a803b6bcd124d8b67e9227a101748df747adf2",
-  "source_stage1_sha256": "36f3e67e7c7f00e5f207db8ac83893151166480c6810d79bd6653f0dcb98cd83",
-  "osm_sha256": "9cd2d81add57ace62a8012185aa0af9f03f675b56e076c2fc796d3f2c95600f4",
-  "building_area_m2": 124.15,
+  "consumed_handoff_sha256": "705e37ef7c90f5a88a096c30401e8045943d9d08dbeeb56057d89938523a20b0",
+  "source_stage1_sha256": "00c07d9eb795542081ac76226a54bd1f8e2cbb466a312d56dc55d274bf2a1fcc",
+  "native_stage_log_sha256": "622691f5b46833fdb961a271e135c75a88dbdd5d00c81369237f3a288452691c",
+  "osm_sha256": "4523db0d5ce60e2e87f9e6a7269a4770b3d1c590bf644bd9946f58e87bef78f4",
+  "workflow_sha256": "58e2dd4b927b80487b56af49b73a5794962160ea0e153b4fcb6c1eb8d773c4de",
+  "idf_sha256": "37f9cea4d3f91c530cc8e151adb83a6e7c7a4be83e9753969ab2f4e1425372e2",
+  "weather_file": "weather.epw",
+  "weather_sha256": "4f2ee95b98df6f0a91a97ac6e5f38aac52e1700a3e16cf8b238e6a70f0d1dc21",
+  "building_area_m2": 148.0,
   "room_count": 4,
   "thermal_zone_count": 4,
-  "door_count": 4,
-  "window_count": 2,
-  "window_wall_ratio": 0.18,
+  "door_count": 0,
+  "window_count": 0,
+  "window_wall_ratio": 0.0,
   "surface_count": 24,
-  "subsurface_count": 6,
-  "weather_file": "USA_Design_Day.epw",
-  "schedule_set": "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-09-windows",
-  "construction_set": "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-09-windows",
+  "subsurface_count": 0,
+  "schedule_set": [
+    "EW2A09 Activity 120W",
+    "EW2A09 Always On",
+    "EW2A09 Cooling 26C",
+    "EW2A09 Heating 20C",
+    "LaundryServiceSchedule",
+    "QuietStudySchedule",
+    "ResidentialBedroomSchedule",
+    "SocialCommonsSchedule"
+  ],
+  "construction_set": [
+    "EW2A09 Opaque Construction"
+  ],
   "openstudio_version": "3.10.0",
   "spaces": [
     {
       "name": "SOCIAL-COMMONS",
       "thermal_zone": "SOCIAL-COMMONS-ZN",
-      "floor_area_m2": 35.65,
-      "door_count": 1,
-      "window_count": 1
+      "floor_area_m2": 16,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "2cvyGW3FP0ihcYL5rR0ExL",
+      "schedule": "SOCIAL-SPACE-SCHEDULE"
     },
     {
       "name": "BEDROOM-GROUP",
       "thermal_zone": "BEDROOM-GROUP-ZN",
-      "floor_area_m2": 26.25,
-      "door_count": 1,
-      "window_count": 1
+      "floor_area_m2": 96,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_ids": [
+        "0s4DhhVRv2bg8$9xnROM2z",
+        "2turPsEaf00f9_GTNbDdYS",
+        "36relbj9D7wwSTsPZOQMFT",
+        "1DLQ7ctwH1MAnWIo9abD6O",
+        "0O3aHiYETAYAIAFv3EUqD2",
+        "3po1NdHJD8Ahh2IkxPFep2"
+      ],
+      "schedule": "RESIDENTIAL-SCHEDULE",
+      "bedroom_count": 6
     },
     {
       "name": "QUIET-STUDY",
       "thermal_zone": "QUIET-STUDY-ZN",
-      "floor_area_m2": 29.5,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 20,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "2AJL71eRHDF8hYnJDd9x1g",
+      "equipment_assumption": "LOW-EQUIPMENT-STUDY"
     },
     {
       "name": "LAUNDRY",
       "thermal_zone": "LAUNDRY-ZN",
-      "floor_area_m2": 32.75,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 16,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "12QQ5n5sr4r9qW$eloRCk6",
+      "equipment_assumption": "HIGH-EQUIPMENT-LAUNDRY"
     }
   ],
   "thermal_zones": [
@@ -68,11 +89,263 @@
     "QUIET-STUDY-ZN",
     "LAUNDRY-ZN"
   ],
-  "osm_tokens": [
-    "QuietStudyLowEquipment",
-    "LaundryHighEquipment",
-    "ResidentialBedroomSchedule",
-    "SocialCommonsSchedule"
+  "load_assumptions": [
+    {
+      "space_name": "SOCIAL-COMMONS",
+      "people_per_m2": 0.1,
+      "lighting_w_per_m2": 9.0,
+      "equipment_w_per_m2": 8.0,
+      "schedule": "SocialCommonsSchedule"
+    },
+    {
+      "space_name": "BEDROOM-GROUP",
+      "people_per_m2": 0.0625,
+      "lighting_w_per_m2": 6.0,
+      "equipment_w_per_m2": 5.0,
+      "schedule": "ResidentialBedroomSchedule"
+    },
+    {
+      "space_name": "QUIET-STUDY",
+      "people_per_m2": 0.08,
+      "lighting_w_per_m2": 7.0,
+      "equipment_w_per_m2": 3.0,
+      "schedule": "QuietStudySchedule"
+    },
+    {
+      "space_name": "LAUNDRY",
+      "people_per_m2": 0.02,
+      "lighting_w_per_m2": 8.0,
+      "equipment_w_per_m2": 22.0,
+      "schedule": "LaundryServiceSchedule"
+    }
   ],
-  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe"
+  "energyplus_status": "************* EnergyPlus Completed Successfully-- 12 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  2.46sec",
+  "energyplus_warning_count": 12,
+  "energyplus_severe_errors": 0,
+  "energyplus_sql_sha256": "17f5606c5b2f0d4420c488196aed1f8cdbf78b06c904d48bd478026ea0c58fa9",
+  "energyplus_err_sha256": "8e27ced9909d792f24e5c9f4cb153a1936cdc08874156fecb9821dba59f4fd72",
+  "energyplus_end_sha256": "1500103a51877481cadffff4949f87ceb0143aefe14a94a74d1262865fc6f0e8",
+  "simulation": {
+    "sql_integrity_check": "ok",
+    "hourly_series": [
+      {
+        "space_name": "SOCIAL-COMMONS",
+        "key_value": "SOCIAL-COMMONS-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2289513600.0,
+        "max": 466560.0
+      },
+      {
+        "space_name": "SOCIAL-COMMONS",
+        "key_value": "SOCIAL-COMMONS-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2035123200.0,
+        "max": 414720.0
+      },
+      {
+        "space_name": "SOCIAL-COMMONS",
+        "key_value": "SOCIAL-COMMONS IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 12438653902.007395,
+        "max": 9309996.367405334
+      },
+      {
+        "space_name": "SOCIAL-COMMONS",
+        "key_value": "SOCIAL-COMMONS IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 4655210028.5724535,
+        "max": 5376673.242132793
+      },
+      {
+        "space_name": "SOCIAL-COMMONS",
+        "key_value": "SOCIAL-COMMONS IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3455181.639446499,
+        "max": 2586.1101020570372
+      },
+      {
+        "space_name": "SOCIAL-COMMONS",
+        "key_value": "SOCIAL-COMMONS IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1293113.8968256814,
+        "max": 1493.520345036887
+      },
+      {
+        "space_name": "BEDROOM-GROUP",
+        "key_value": "BEDROOM-GROUP-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 10104134400.0,
+        "max": 1866240.0
+      },
+      {
+        "space_name": "BEDROOM-GROUP",
+        "key_value": "BEDROOM-GROUP-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 8420112000.0,
+        "max": 1555200.0
+      },
+      {
+        "space_name": "BEDROOM-GROUP",
+        "key_value": "BEDROOM-GROUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 55727256859.73484,
+        "max": 41933770.07488974
+      },
+      {
+        "space_name": "BEDROOM-GROUP",
+        "key_value": "BEDROOM-GROUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 17378017258.594128,
+        "max": 20205463.63636597
+      },
+      {
+        "space_name": "BEDROOM-GROUP",
+        "key_value": "BEDROOM-GROUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 15479793.572148567,
+        "max": 11648.26946524715
+      },
+      {
+        "space_name": "BEDROOM-GROUP",
+        "key_value": "BEDROOM-GROUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 4827227.016276146,
+        "max": 5612.628787879436
+      },
+      {
+        "space_name": "QUIET-STUDY",
+        "key_value": "QUIET-STUDY-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1729224000.0,
+        "max": 378000.0
+      },
+      {
+        "space_name": "QUIET-STUDY",
+        "key_value": "QUIET-STUDY-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 741096000.0,
+        "max": 162000.0
+      },
+      {
+        "space_name": "QUIET-STUDY",
+        "key_value": "QUIET-STUDY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 13533687758.099827,
+        "max": 9410795.5186045
+      },
+      {
+        "space_name": "QUIET-STUDY",
+        "key_value": "QUIET-STUDY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3473723865.9624805,
+        "max": 4271349.038945533
+      },
+      {
+        "space_name": "QUIET-STUDY",
+        "key_value": "QUIET-STUDY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3759357.710583285,
+        "max": 2614.1098662790278
+      },
+      {
+        "space_name": "QUIET-STUDY",
+        "key_value": "QUIET-STUDY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 964923.2961006891,
+        "max": 1186.485844151537
+      },
+      {
+        "space_name": "LAUNDRY",
+        "key_value": "LAUNDRY-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1219392000.0,
+        "max": 299520.0
+      },
+      {
+        "space_name": "LAUNDRY",
+        "key_value": "LAUNDRY-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3353328000.0,
+        "max": 823680.0
+      },
+      {
+        "space_name": "LAUNDRY",
+        "key_value": "LAUNDRY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 12835706015.838507,
+        "max": 9367925.848772485
+      },
+      {
+        "space_name": "LAUNDRY",
+        "key_value": "LAUNDRY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3183308505.252652,
+        "max": 4664621.324695712
+      },
+      {
+        "space_name": "LAUNDRY",
+        "key_value": "LAUNDRY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3565473.893288474,
+        "max": 2602.201624659023
+      },
+      {
+        "space_name": "LAUNDRY",
+        "key_value": "LAUNDRY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 884252.3625701811,
+        "max": 1295.7281457488086
+      }
+    ],
+    "energy_accounting": "lights + equipment + ideal heating + ideal cooling",
+    "peak_definition": "maximum hourly ideal heating or cooling rate"
+  }
 }

@@ -2,7 +2,9 @@ from __future__ import annotations
 
 import base64
 import importlib.util
+import re
 import shutil
+import struct
 import tempfile
 import zlib
 from pathlib import Path
@@ -211,42 +213,261 @@ def _resolve_arg(spec: str):
     return spec
 
 
-def _panel_route_settings_present(root: Path) -> bool:
+_OLE_MAGIC = b"\xd0\xcf\x11\xe0\xa1\xb1\x1a\xe1"
+_CFB_FREE = 0xFFFFFFFF
+_CFB_END = 0xFFFFFFFE
+_CFB_NONE = 0xFFFFFFFF
+
+
+def _cfb_chain(table, start):
+    result = []
+    seen = set()
+    current = start
+    while current not in {_CFB_FREE, _CFB_END}:
+        if current < 0 or current >= len(table) or current in seen:
+            raise ValueError("invalid CFB sector chain")
+        seen.add(current)
+        result.append(current)
+        current = table[current]
+    return result
+
+
+def _cfb_streams(path: Path):
+    data = path.read_bytes()
+    if not data.startswith(_OLE_MAGIC):
+        raise ValueError("output is not an OLE compound document")
+    sector_size = 1 << struct.unpack_from("<H", data, 30)[0]
+    mini_sector_size = 1 << struct.unpack_from("<H", data, 32)[0]
+
+    def sector(number):
+        start = (number + 1) * sector_size
+        chunk = data[start:start + sector_size]
+        if len(chunk) != sector_size:
+            raise ValueError("truncated CFB sector")
+        return chunk
+
+    fat_count = struct.unpack_from("<I", data, 44)[0]
+    directory_start = struct.unpack_from("<I", data, 48)[0]
+    mini_cutoff = struct.unpack_from("<I", data, 56)[0]
+    mini_fat_start = struct.unpack_from("<I", data, 60)[0]
+    mini_fat_count = struct.unpack_from("<I", data, 64)[0]
+    difat_start = struct.unpack_from("<I", data, 68)[0]
+    difat_count = struct.unpack_from("<I", data, 72)[0]
+
+    difat = list(struct.unpack_from("<109I", data, 76))
+    current = difat_start
+    for _ in range(difat_count):
+        values = struct.unpack(f"<{sector_size // 4}I", sector(current))
+        difat.extend(values[:-1])
+        current = values[-1]
+    fat_sectors = [n for n in difat if n not in {_CFB_FREE, _CFB_END}][:fat_count]
+    fat = []
+    for number in fat_sectors:
+        fat.extend(struct.unpack(f"<{sector_size // 4}I", sector(number)))
+
+    directory = b"".join(sector(n) for n in _cfb_chain(fat, directory_start))
+    entries = []
+    for offset in range(0, len(directory), 128):
+        raw = directory[offset:offset + 128]
+        if len(raw) < 128:
+            break
+        name_len = struct.unpack_from("<H", raw, 64)[0]
+        entries.append({
+            "name": raw[:max(0, name_len - 2)].decode("utf-16le", errors="ignore"),
+            "type": raw[66],
+            "left": struct.unpack_from("<I", raw, 68)[0],
+            "right": struct.unpack_from("<I", raw, 72)[0],
+            "child": struct.unpack_from("<I", raw, 76)[0],
+            "start": struct.unpack_from("<I", raw, 116)[0],
+            "size": struct.unpack_from("<Q", raw, 120)[0],
+        })
+    if not entries or entries[0]["type"] != 5:
+        raise ValueError("invalid CFB directory")
+
+    root = entries[0]
+    root_stream = b"".join(sector(n) for n in _cfb_chain(fat, root["start"]))[:root["size"]]
+    mini_fat = []
+    if mini_fat_count:
+        raw = b"".join(sector(n) for n in _cfb_chain(fat, mini_fat_start))
+        raw = raw[:mini_fat_count * sector_size]
+        mini_fat = list(struct.unpack(f"<{len(raw) // 4}I", raw))
+
+    def siblings(node):
+        result = []
+        seen = set()
+
+        def visit(index):
+            if index == _CFB_NONE:
+                return
+            if index >= len(entries) or index in seen:
+                raise ValueError("invalid CFB directory tree")
+            seen.add(index)
+            visit(entries[index]["left"])
+            result.append(index)
+            visit(entries[index]["right"])
+
+        visit(node)
+        return result
+
+    def stream_bytes(entry):
+        if entry["size"] < mini_cutoff:
+            chunks = []
+            for number in _cfb_chain(mini_fat, entry["start"]):
+                start = number * mini_sector_size
+                chunks.append(root_stream[start:start + mini_sector_size])
+            return b"".join(chunks)[:entry["size"]]
+        return b"".join(sector(n) for n in _cfb_chain(fat, entry["start"]))[:entry["size"]]
+
+    streams = {}
+
+    def descend(parent, prefix):
+        for index in siblings(parent["child"]):
+            entry = entries[index]
+            parts = prefix + (entry["name"],)
+            if entry["type"] == 1:
+                descend(entry, parts)
+            elif entry["type"] == 2:
+                streams[tuple(part.casefold() for part in parts)] = stream_bytes(entry)
+
+    descend(root, ())
+    return streams
+
+
+def _pipe_fields(data):
+    text = data.decode("latin1", errors="ignore")
+    return {
+        key.upper(): value
+        for key, value in re.findall(r"(?:^|\|)([^|=]+)=([^|\x00]*)", text)
+    }
+
+
+def _mil(value):
+    match = re.fullmatch(r"\s*([-+0-9.]+)mil\s*", value or "", flags=re.I)
+    if not match:
+        raise ValueError(f"invalid mil value: {value!r}")
+    return float(match.group(1))
+
+
+def _parse_tracks(data):
+    tracks = []
+    offset = 0
+    while offset < len(data):
+        if offset + 5 > len(data) or data[offset] != 4:
+            raise ValueError("invalid native track record")
+        payload_size = struct.unpack_from("<I", data, offset + 1)[0]
+        end = offset + 5 + payload_size
+        if end > len(data) or payload_size < 45:
+            raise ValueError("truncated native track record")
+        record = data[offset:end]
+        x1, y1, x2, y2, width = struct.unpack_from("<5i", record, 18)
+        layer_id = struct.unpack_from("<I", record, len(record) - 4)[0]
+        tracks.append((x1, y1, x2, y2, width, layer_id))
+        offset = end
+    return tracks
+
+
+def _native_panel_valid(path: Path) -> bool:
     try:
-        data = (Path(root) / "wifi_panel.PcbDoc").read_bytes()
-    except OSError:
+        streams = _cfb_streams(path)
+        eba_data = streams[("embeddedboards6", "data")]
+        board_data = streams[("board6", "data")]
+        track_data = streams[("tracks6", "data")]
+        eba = _pipe_fields(eba_data)
+
+        exact = {
+            "DOCUMENTPATH": "WiFi.PcbDoc",
+            "ROWSPACING": "1133.8583mil",
+            "COLSPACING": "1338.5827mil",
+            "ROWCOUNT": "4",
+            "COLCOUNT": "3",
+            "MIRROR": "TRUE",
+            "ORIGINMODE": "1",
+        }
+        if any(eba.get(key) != value for key, value in exact.items()):
+            return False
+        if eba_data.count(b"DOCUMENTPATH=") != 1:
+            return False
+
+        board_text = board_data.decode("latin1", errors="ignore")
+        mechanical32_id = 16908288 + 32
+        layer_match = re.search(
+            r"V9_CACHE_LAYER(\d+)_LAYERID=" + str(mechanical32_id) + r"\|",
+            board_text,
+        )
+        if not layer_match:
+            return False
+        cache_index = layer_match.group(1)
+        cache_fields = {
+            key: value
+            for key, value in re.findall(
+                r"V9_CACHE_LAYER" + re.escape(cache_index) + r"_([^|=]+)=([^|\x00]*)",
+                board_text,
+            )
+        }
+        if (cache_fields.get("USEDBYPRIMS") != "TRUE" or
+                cache_fields.get("MECHENABLED") != "TRUE"):
+            return False
+
+        tracks = _parse_tracks(track_data)
+        if len(tracks) < 4:
+            return False
+        if any(width != 100000 or layer != mechanical32_id for *_, width, layer in tracks):
+            return False
+
+        tolerance = 1000  # 0.1mil in Altium internal coordinate units.
+        nodes = []
+
+        def node_for(point):
+            for index, existing in enumerate(nodes):
+                if abs(point[0] - existing[0]) <= tolerance and abs(point[1] - existing[1]) <= tolerance:
+                    return index
+            nodes.append(point)
+            return len(nodes) - 1
+
+        edges = []
+        for x1, y1, x2, y2, _, _ in tracks:
+            a, b = node_for((x1, y1)), node_for((x2, y2))
+            if a == b:
+                return False
+            edges.append((a, b))
+        degrees = [0] * len(nodes)
+        adjacency = [set() for _ in nodes]
+        for a, b in edges:
+            degrees[a] += 1
+            degrees[b] += 1
+            adjacency[a].add(b)
+            adjacency[b].add(a)
+        if len(nodes) < 4 or any(degree != 2 for degree in degrees):
+            return False
+        seen = {0}
+        stack = [0]
+        while stack:
+            for neighbor in adjacency[stack.pop()]:
+                if neighbor not in seen:
+                    seen.add(neighbor)
+                    stack.append(neighbor)
+        if len(seen) != len(nodes):
+            return False
+
+        route_min_x = min(min(t[0], t[2]) for t in tracks) / 10000.0
+        route_max_x = max(max(t[0], t[2]) for t in tracks) / 10000.0
+        route_min_y = min(min(t[1], t[3]) for t in tracks) / 10000.0
+        route_max_y = max(max(t[1], t[3]) for t in tracks) / 10000.0
+        eba_min_x, eba_min_y = _mil(eba["X1"]), _mil(eba["Y1"])
+        eba_max_x, eba_max_y = _mil(eba["X2"]), _mil(eba["Y2"])
+        clearances = (
+            eba_min_x - route_min_x,
+            route_max_x - eba_max_x,
+            eba_min_y - route_min_y,
+            route_max_y - eba_max_y,
+        )
+        return all(0 <= clearance <= 2000 for clearance in clearances)
+    except (KeyError, OSError, ValueError, struct.error):
         return False
-    return (
-        b"ROUTETOOLPATHLAYER=MECHANICAL32" in data
-        and b"TRACKWIDTH=10mil" in data
-        and b"RouteToolPath" in data
-    )
 
 
 
 def _run() -> bool:
-    if not check_no_gui_bypass(DESKTOP):
-        return False
-
-    if not _panel_route_settings_present(DESKTOP):
-        return False
-
-    import uuid
-
-    runtime_base = Path(__file__).resolve().parent / "_runtime"
-    runtime_base.mkdir(parents=True, exist_ok=True)
-    root = runtime_base / ("engiworld_eval_" + uuid.uuid4().hex)
-    root.mkdir(parents=True, exist_ok=False)
-    try:
-        _materialize_bundle(root)
-        module = _load_module(root)
-        func = getattr(module, CALL_FUNC)
-        args = [_resolve_arg(arg) for arg in CALL_ARGS]
-        result = func(*args)
-        return _is_pass(result)
-    except Exception:
-        return False
-    finally:
-        shutil.rmtree(root, ignore_errors=True)
+    return _native_panel_valid(DESKTOP / "wifi_panel.PcbDoc")
 if __name__ == "__main__":
     print("True" if _run() else "False")

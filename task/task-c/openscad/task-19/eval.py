@@ -12,6 +12,8 @@ OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 SPEC = {'output': 'task-039_output.stl',
  'bbox': [80.0, 54.0, 42.0],
  'bbox_tol': 1.0,
+ 'volume': 41577.94,
+ 'volume_tol': 20.0,
  'min_triangles': 180,
  'checks': [{'kind': 'cylinder', 'axis': 'y', 'center': [-24.0, 20.0], 'radius': 1.5, 'span': 30.0, 'bins': 10},
             {'kind': 'cylinder', 'axis': 'y', 'center': [-14.0, 20.0], 'radius': 1.5, 'span': 30.0, 'bins': 10},
@@ -160,6 +162,15 @@ def _close(actual, expected, tol):
 
 def _bbox_ok(mesh: Mesh, expected, tol):
     return all(_close(actual, want, tol) for actual, want in zip(mesh.extents, expected))
+
+
+def _mesh_volume(mesh: Mesh) -> float:
+    signed = 0.0
+    for (ax, ay, az), (bx, by, bz), (cx, cy, cz) in mesh.triangles:
+        signed += ax * (by * cz - bz * cy)
+        signed += ay * (bz * cx - bx * cz)
+        signed += az * (bx * cy - by * cx)
+    return abs(signed) / 6.0
 
 
 def _axis_components(point, axis):
@@ -465,6 +476,9 @@ def _evaluate_mesh(path: Path) -> bool:
     if "center" in SPEC:
         center_tol = float(SPEC.get("center_tol", tol))
         if any(abs(a - b) > center_tol for a, b in zip(mesh.center, SPEC["center"])):
+            return False
+    if "volume" in SPEC:
+        if abs(_mesh_volume(mesh) - float(SPEC["volume"])) > float(SPEC.get("volume_tol", 1.0)):
             return False
     return all(_run_mesh_check(mesh, check) for check in SPEC.get("checks", []))
 

@@ -1,28 +1,64 @@
 {
   "case_id": "multi-cli-3-revit-archicad-openstudio-task-01-windows",
-  "generated_at_utc": "2026-08-04T10:24:49Z",
+  "generated_at_utc": "2026-08-11T16:03:24Z",
   "generator": "run_revit_stage.ps1 -> run_archicad_stage.ps1 -> run_openstudio_stage.ps1",
   "native_stage_provenance": {
     "revit": {
       "exe": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
       "product_version": "20240516_1515(x64)",
-      "automation": "IExternalApplication add-in loaded and reached Idling in this remote instance",
-      "marker": "2026-07-06T10:49:33.9139007Z loaded\n2026-07-06T10:49:35.3334701Z idling\n2026-07-06T10:49:35.3337687Z killing-revit\n"
+      "file_version": "25.1.0.44",
+      "bridge_source_sha256": "8b205a19ccf665d5b68da9afcd45e3a2b6174a95cdc9d2afd00f8eb4a8582b28",
+      "bridge_dll_sha256": "46ebf17a38bbe1eaf5e50322225cab3ed5356c72c9f52398928a8eb24ba945b7",
+      "bridge_build": "Release build on the pinned Revit 2025 instance; 0 compile errors",
+      "started_utc": "2026-08-11T15:59:44.4847176Z",
+      "finished_utc": "2026-08-11T16:00:43.5532887Z",
+      "exit_code": 0
     },
     "archicad": {
-      "exe": "C:\\Program Files\\GRAPHISOFT\\Archicad 27\\IFCCommandServerApp.exe",
-      "product_version": "27.0.0 R1 (6000)",
-      "automation": "IFCCommandServerApp launched with --sa new_ifc4 during this remote run",
-      "port": 19756,
-      "process_id": 5140,
-      "responding": true
+      "exe": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe",
+      "product_version": "Archicad 27 build 6000 (Archicad Starter 27.0.0 R1 INT (6000); IFCCommandServer 27.0.0 R1 (6000))",
+      "automation": "JEMI Model.LoadFile, Macro.ValidateIfcModel, Entity.Get, Entity.GetAttribute, Model.SaveFile",
+      "port": 19736,
+      "stage1_ifcroot_count": 105,
+      "stage2_ifcroot_count": 105,
+      "preserved_ifcroot_count": 105,
+      "duplicate_global_ids": 0,
+      "started_utc": "2026-08-11T16:01:23.8416601Z",
+      "finished_utc": "2026-08-11T16:01:24.8755929Z",
+      "exit_code": 0
     },
     "openstudio": {
       "exe": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
-      "version": "OpenStudio 3.10.0+ce46db07de",
+      "version": "3.10.0+86d7e215a1",
+      "energyplus_exe": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
       "energyplus_version": "25.1.0-1c11a3d85f",
-      "automation": "openstudio_ifc_to_energy.rb consumed the Archicad IFC and handoff, forward-translated the OSM, and ran EnergyPlus"
+      "started_utc": "2026-08-11T16:03:23Z",
+      "finished_utc": "2026-08-11T16:03:24Z",
+      "exit_code": 0,
+      "annual_run_period_count": 1,
+      "annual_hour_rows": 8760,
+      "total_site_energy_kwh": 8055.556,
+      "simulation_flags": [
+        "FALSE",
+        "FALSE"
+      ],
+      "err_completed_successfully": true,
+      "severe_or_fatal_count": 0
     }
+  },
+  "init_payload_sha256": {
+    "init.ifc": "8dd67e0b51fe183df7657e38763652a3cf666ef5f8ad7f210cc844d743f1018f",
+    "workflow_spec.json": "34406674ba594a999fda60181b1a7b6eaf6b21b318a180a387ce1474ddb52cd5",
+    "weather.epw": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1",
+    "archicad_ifc4_translator.json": "84e37f424bd35293d84ae3ed802e20766917640aee188fcd0fae76a25fd60529",
+    "run_revit_stage.ps1": "56955335be2cc2a29359fcbcefe78f44b4885218c0837410432b53c83f4ca844",
+    "revit_bridge/Bridge.cs": "8b205a19ccf665d5b68da9afcd45e3a2b6174a95cdc9d2afd00f8eb4a8582b28",
+    "revit_bridge/EngiWorld.BimBridge.csproj": "a923e42386441fd143771d42f9108348bbc8247d337e16d698fde31aa599715b",
+    "revit_bridge/EngiWorld.BimBridge.addin": "feee0a2bf6f16ceff81b8437d627887a78f9d27a969ec8f6b20d2833b60e085b",
+    "revit_bridge/EngiWorld.BimBridge.dll": "46ebf17a38bbe1eaf5e50322225cab3ed5356c72c9f52398928a8eb24ba945b7",
+    "run_archicad_stage.ps1": "f7825177c43afbcad0148e9b2403a0d3da1989dbe26103a422e80182c939374a",
+    "../_common/openstudio_ifc_to_energy.rb": "6e4718795bd7c9d3fe752d04ed507e5a6d8c6eb24ebd914a0b1dad82636bb1b5",
+    "../_common/run_openstudio_stage.ps1": "5eee15384cc78624a434ac54bcf6a085c0467840a08bdf7d1db026d3ed1bfbcf"
   },
   "required_files": [
     "init.ifc",
@@ -42,26 +78,62 @@
     "model_summary.csv",
     "energy_report.csv",
     "run/eplusout.sql",
-    "run/eplusout.err"
+    "run/eplusout.err",
+    "validation_matrix_result.json"
   ],
   "artifact_sha256": {
     "init.ifc": "8dd67e0b51fe183df7657e38763652a3cf666ef5f8ad7f210cc844d743f1018f",
-    "stage1.ifc": "e50f1a642938e4f000488d65e17cb900f145b74baabfb0d5d4a36b9307e9574d",
-    "revit_handoff.json": "958e6d09cf410188783587f4d7c633191a5c69bec917e0ca7a673bf295fe1a35",
-    "stage2.ifc": "b7926e906bf406384453a5189a207c6572b3d078ee1796f60556b7aea631e58d",
-    "archicad_handoff.json": "cbcbb2c36eb3aa274b3440b65c0531cbb72590e1fd963c5e27e646e2263d3fc7",
-    "archicad_validation_report.json": "f918cd953598cb553afa1785b8164cb55377a40f8956d9bfa1a5d91dd91a6acf",
-    "archicad_ifc4_translator.json": "0dcc1b632112be3cfcd66f65532c978c9cfa0c6097382f717d0c736e30daabed",
-    "workflow_spec.json": "9b4d55340a7a5f29ececa796f2765b7bff697efbe5a1bc4de4fba54eb52a3f75",
+    "stage1.ifc": "4d5e04c10b71752f1afa3fea95a75ba6f7d289a7f8dfbd12a8f3cefa74564ee6",
+    "revit_handoff.json": "fa423a8da612f2055fa37e6eb37c99742709acea5083ca4eed2d11e48d0dca15",
+    "stage2.ifc": "6d86d28856e02fef79da6cd019add1e93282de254970e4721ed2a027a054a72a",
+    "archicad_handoff.json": "dd00c167b32fd9e8b7d20b03285123fa4c0bd4c363dbf63eb835f02c178cc002",
+    "archicad_validation_report.json": "7c458f551d62e865ff7a4fe59ecebde21e9b84e758f7dd374cd214e8fc65edc5",
+    "archicad_ifc4_translator.json": "84e37f424bd35293d84ae3ed802e20766917640aee188fcd0fae76a25fd60529",
+    "workflow_spec.json": "34406674ba594a999fda60181b1a7b6eaf6b21b318a180a387ce1474ddb52cd5",
     "weather.epw": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1",
-    "native_stage_log.json": "8131d50ecef70ad3edd9edb1e9da638bc808ca10199ed23abc0e63b87f51c2a1",
-    "workflow.osw": "a08557955a286d47028c62154bd4a88059365c2c5774c5876ce0cd57828a206e",
-    "result.osm": "61b53d282c3b4269ce8ca0a4529af104f7f11b85b378e88ede9dc5768380fb7d",
-    "in.idf": "9f151284a5fd6939addc08ab51bf7f461b991b10620942aa7698d04f1bd893c7",
-    "flow_report.json": "78e5b87c5fa2f39a3eca13f9998efa77018f81cd5462f2f18cbe85d5a0444e7a",
-    "model_summary.csv": "1b649ef634743365bd91b7615d6b5f76f0ddf5f176f9814e672502723014323a",
-    "energy_report.csv": "d8728e6bc66c09605cad3f73bf95adc6caade1586e707b94661205751ac47684",
-    "run/eplusout.sql": "52762f7fa6b7ce7381bf73c3a36a586ae1781bcd15ccb3aaf6944683b7271317",
-    "run/eplusout.err": "cb7c653c3d8cbe9f3524ad50372ec7eef76e8c294a6bc244c1752640ac1023a9"
+    "native_stage_log.json": "6e3aedb81ad5b45adb3df79c0f124444ec7595c724871254f35d0800cb028b08",
+    "workflow.osw": "e49fbc571859138479bea7a631b03a6214076c7c1335f12df24e98a5c844cf71",
+    "result.osm": "1b6d923999ed36491af48a4b31f8a8d01a4b543c5378b309e5e35a9e721cd261",
+    "in.idf": "5bbf6f544a72bfe3b4f5c0174d05bf375a5ee6ba9e358c3438d4dcc20068d63a",
+    "flow_report.json": "dce8756bb37693eaeedc479585c94cacea7a1e62dd53b82417a2648c92de0b06",
+    "model_summary.csv": "ab75a9d13675bb895a42d6b96fe7741446b905844c3424d874570c1c0f92e95b",
+    "energy_report.csv": "3ca8cff7d78f7bfed65543219ae5e2169242dd860d5233af1551925ec108b99c",
+    "run/eplusout.sql": "f002e7148c3f6f897266430c1fa43e4c3dcff7ddd247aea2f8059e439871f5c1",
+    "run/eplusout.err": "0cb1cae3cf994250540cc610c58c2d7e33d0097c2a9472e40171c966c2ae6117",
+    "validation_matrix_result.json": "5d413e44c1469e70f304343537df580d86d55d74262d879b511a376f9a66c5c4"
+  },
+  "remote_artifact_mtime_utc": {
+    "result.osm": "2026-08-11T16:03:23.5360284Z",
+    "in.idf": "2026-08-11T16:03:23.5621249Z",
+    "workflow.osw": "2026-08-11T16:03:23.5621249Z",
+    "flow_report.json": "2026-08-11T16:03:24.5545676Z",
+    "model_summary.csv": "2026-08-11T16:03:24.5388764Z",
+    "energy_report.csv": "2026-08-11T16:03:24.5545676Z",
+    "run/eplusout.sql": "2026-08-11T16:03:24.5388764Z",
+    "run/eplusout.err": "2026-08-11T16:03:24.4754943Z",
+    "native_stage_log.json": "2026-08-11T16:03:24.5646160Z"
+  },
+  "validation": {
+    "baseline": true,
+    "equivalent_json_serialization": true,
+    "negative_duplicate_ifc_guid": false,
+    "negative_fabricated_energy_report": false,
+    "post_patch_windows_formal": true,
+    "post_patch_immutable_tamper_run_revit_stage": false,
+    "post_patch_immutable_tamper_error": "immutable_input_sha256_mismatch:run_revit_stage.ps1"
+  },
+  "remote_cleanup": {
+    "verified_at_utc": "2026-08-12T19:22:14Z",
+    "clean": true,
+    "remaining_desktop_items": [
+      "desktop.ini",
+      "Microsoft Edge.lnk"
+    ],
+    "task_process_count": 0,
+    "listener_19736_count": 0,
+    "listener_19737_count": 0,
+    "revit_addin_residual_count": 0,
+    "task_residue_path_count": 0,
+    "preexisting_revit_journals_retained": true
   }
 }

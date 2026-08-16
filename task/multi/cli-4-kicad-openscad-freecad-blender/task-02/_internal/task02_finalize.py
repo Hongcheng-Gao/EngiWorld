@@ -3,6 +3,8 @@ from __future__ import annotations
 
 import hashlib
 import json
+import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -51,8 +53,9 @@ def version(command: list[str]) -> str:
 def main() -> None:
     work = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     internal = Path(sys.argv[2] if len(sys.argv) > 2 else "/tmp/engiworld-task02-internal")
-    kicad = "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
-    blender = "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+    kicad = os.environ.get("ENGIWORLD_KICAD") or shutil.which("kicad-cli") or "/usr/bin/kicad-cli"
+    freecad = os.environ.get("ENGIWORLD_FREECAD") or shutil.which("freecadcmd") or "freecadcmd"
+    blender = os.environ.get("ENGIWORLD_BLENDER") or shutil.which("blender") or "blender"
 
     missing = [name for name in REQUIRED_ARTIFACTS[:-2] if not (work / name).is_file()]
     if missing:
@@ -64,8 +67,8 @@ def main() -> None:
     params = json.loads((work / "02_openscad_parameters.json").read_text(encoding="utf-8"))
     versions = {
         "Blender": version([blender, "--background", "--version"]),
-        "FreeCAD": version(["freecadcmd", "--version"]),
-        "KiCad": version([kicad, "kicad-cli", "--version"]),
+        "FreeCAD": version([freecad, "--version"]),
+        "KiCad": version([kicad, "--version"]),
         "OpenSCAD": version(["openscad", "--version"]),
     }
     generated_at = datetime.now(timezone.utc).isoformat()

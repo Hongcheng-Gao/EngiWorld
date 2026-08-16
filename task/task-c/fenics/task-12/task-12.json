@@ -1,8 +1,8 @@
 {
   "id": "c-fenics-task-12-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a template `/home/user/Desktop/thermomech_base.py` with completed thermal analysis. Complete the following: 1. Modify and generate `/home/user/Desktop/thermomech.py`: - Keep thermal part and solve for temperature field `T_sol` - Create structural analysis space `VectorFunctionSpace(mesh, 'P', 1)` - Define thermal strain: `epsilon_th = alpha*(T_sol - T0)*I`, with `alpha=1.2e-5`, `T0=20` - Define total strain: `epsilon = sym(grad(u)) + epsilon_th` - Fix both ends and solve displacement field 2. Extract and save to `/home/user/Desktop/summary.txt`: - Global maximum Mises stress - Maximum absolute UX displacement Format: `max_mises, max_ux` [Software] Run your scripts with Python in a legacy FEniCS/DOLFIN environment (e.g. `from dolfin import *`).",
-  "source": "https://github.com/fenics/dolfinx",
+  "instruction": "You are given a template `/home/user/Desktop/thermomech_base.py` with completed thermal analysis. Complete the following: 1. Modify and generate `/home/user/Desktop/thermomech.py`: - Keep thermal part and solve for temperature field `T_sol` - Create structural analysis space `VectorFunctionSpace(mesh, 'P', 1)` - Use plane-strain isotropic elasticity with `E=210000` and `nu=0.3` - Define thermal strain: `epsilon_th = alpha*(T_sol - T0)*I`, with `alpha=1.2e-5`, `T0=20` - Define the strain used in stress as `epsilon = sym(grad(u)) + epsilon_th` - Fully fix both x-end faces and solve displacement field 2. Extract and save to `/home/user/Desktop/summary.txt`: - Global maximum Mises stress projected cellwise to DG0 - Maximum absolute UX displacement over all displacement degrees of freedom Format: `max_mises, max_ux` [Software] Run your scripts with Python in the legacy FEniCS/DOLFIN 2019.1.0 environment (e.g. `from dolfin import *`).",
+  "source": "https://fenicsproject.org/olddocs/dolfin/2019.1.0/python/demos/elasticity/demo_elasticity.py.html",
   "config": [
     {
       "type": "upload_file",

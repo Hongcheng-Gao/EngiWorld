@@ -22,9 +22,10 @@
   },
   "ifc_exchange": {
     "schema": "IFC4",
-    "model_view": "ReferenceView",
-    "space_boundary_level": 2,
-    "minimum_global_id_retention": 0.7,
+    "model_view": "ReferenceView_V1.2",
+    "space_boundary_policy": "preserve upstream relationships and report the observed count; do not fabricate missing boundaries",
+    "minimum_init_to_revit_ifcproduct_global_id_retention": 0.8,
+    "minimum_revit_to_archicad_ifcroot_global_id_retention": 1.0,
     "required_property_sets": [
       "Pset_SpaceCommon",
       "Qto_SpaceBaseQuantities",
@@ -47,10 +48,10 @@
     "input": "stage1.ifc",
     "output": "stage2.ifc",
     "translator": "archicad_ifc4_translator.json",
-    "operation": "Validate containment and second-level space boundaries, classify exterior envelope faces, and export energy properties keyed by IfcSpace GlobalId.",
+    "operation": "Use the installed Archicad 27 IFC command server to load stage1.ifc, run Macro.ValidateIfcModel, query entity and IfcSpace identity data, preserve the observed boundary state and all upstream IfcRoot GlobalIds, and save stage2.ifc. Generate reports from the live JEMI responses and verified Revit handoff.",
     "required_tokens": [
-      "ARCHICAD-QA-PASS",
-      "EXTERIOR-BOUNDARY-CLASSIFIED"
+      "ARCHICAD-IFC-MODEL-VALIDATED",
+      "UPSTREAM-GLOBALIDS-PRESERVED"
     ]
   },
   "storeys": [

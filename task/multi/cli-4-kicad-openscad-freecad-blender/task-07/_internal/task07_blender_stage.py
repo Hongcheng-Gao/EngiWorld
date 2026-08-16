@@ -301,7 +301,11 @@ def main() -> None:
     ]
 
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    engines = {
+        item.identifier
+        for item in scene.bl_rna.properties["render"].fixed_type.properties["engine"].enum_items
+    }
+    scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else "BLENDER_EEVEE"
     scene.render.resolution_x = 1100
     scene.render.resolution_y = 720
     scene.render.resolution_percentage = 100

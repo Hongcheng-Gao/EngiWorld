@@ -1,0 +1,21 @@
+{
+  "schema": "engiworld.task03.eval-matrix.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-03-windows",
+  "snapshot": "cli2-archicad27-openstudio310-win",
+  "host": "iv-v44c5quhrp39",
+  "windows_python": "3.11.9",
+  "evaluator_sha256": "fbf30753a45e50ff7cc3369667c5152d91291ec64f336cbc246a8661dfce5594",
+  "run_stamp_utc": "20260812T190133884324Z",
+  "isolation": "Each case was freshly extracted from its own archive into a separate Windows directory; multi_metrics.json was excluded and each evaluator process wrote only inside its case directory.",
+  "summary": {"total": 6, "positive": 2, "negative": 4, "matched_expectation": 6},
+  "cases": [
+    {"id": "formal", "class": "positive", "purpose": "Current checked-in formal ground truth", "expected_ok": true, "actual_ok": true, "stdout": "True", "errors": [], "started_utc": "2026-08-12T19:01:33.946834+00:00", "completed_utc": "2026-08-12T19:01:36.789196+00:00"},
+    {"id": "csv_row_order", "class": "positive_reasonable_equivalent", "purpose": "Same four required one-to-one space-zone rows and SQL-derived metrics in a different CSV row order; instruction does not constrain row order", "expected_ok": true, "actual_ok": true, "stdout": "True", "errors": [], "started_utc": "2026-08-12T19:01:36.857839+00:00", "completed_utc": "2026-08-12T19:01:39.708238+00:00"},
+    {"id": "missing_native_log", "class": "negative", "purpose": "Reject absence of required native Archicad transaction evidence", "expected_ok": false, "actual_ok": false, "stdout": "False", "errors": ["missing_or_empty:native_stage_log.json"], "started_utc": "2026-08-12T19:01:39.786420+00:00", "completed_utc": "2026-08-12T19:01:39.849469+00:00"},
+    {"id": "duplicate_global_id", "class": "negative", "purpose": "Reject duplicate/lost IfcRoot identity and broken exact GlobalId-specific rename chain", "expected_ok": false, "actual_ok": false, "stdout": "False", "key_errors": ["stage1.ifc:duplicate_global_ids", "stage1.ifc:ifc_root_global_id_set_changed:lost=1:added=0", "handoff.json:source_sha256_mismatch", "native_stage_log.json:artifact_record_mismatch:stage1.ifc"], "started_utc": "2026-08-12T19:01:39.911926+00:00", "completed_utc": "2026-08-12T19:01:42.762889+00:00"},
+    {"id": "same_pod_profile", "class": "negative", "purpose": "Reject two differently named/handled schedules whose effective Monday-Friday profiles are actually identical", "expected_ok": false, "actual_ok": false, "stdout": "False", "errors": ["result.osm:quiet_pod_schedule_profiles_not_distinct", "flow_report:osm_sha256_mismatch"], "started_utc": "2026-08-12T19:01:42.831429+00:00", "completed_utc": "2026-08-12T19:01:45.667721+00:00"},
+    {"id": "single_timeindex", "class": "negative", "purpose": "Reject 8760 apparent rows per series when every row reuses one TimeIndex and lacks annual timestamp coverage", "expected_ok": false, "actual_ok": false, "stdout": "False", "error_summary": {"affected_required_series": 24, "checks": ["hourly_count_or_distinct_timeindex", "annual_timestamp_coverage"], "distinct_timestamp_count": 1}, "started_utc": "2026-08-12T19:01:45.736261+00:00", "completed_utc": "2026-08-12T19:01:48.499062+00:00"}
+  ],
+  "all_matched_expectation": true,
+  "source_windows_receipt_sha256": "b701dc02547edfa90203904406d7bd228910fa5af6b27b6896ba8a53c9aa643a"
+}

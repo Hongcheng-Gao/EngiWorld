@@ -416,7 +416,7 @@ def main() -> None:
 
     mats = {
         "package_translucent": material("package_translucent", (0.10, 0.32, 0.47, 0.28), alpha=0.28),
-        "shield_steel": material("shield_steel", (0.62, 0.67, 0.72, 1.0), metallic=0.9),
+        "shield_steel": material("shield_steel", (0.62, 0.67, 0.72, 0.62), metallic=0.9, alpha=0.62),
         "pcb_green": material("pcb_green", (0.03, 0.38, 0.12, 1.0), metallic=0.05),
         "component_neutral": material("component_neutral", (0.33, 0.36, 0.40, 1.0), metallic=0.18),
         "source_overlay_neutral": material("source_overlay_neutral", (0.45, 0.48, 0.52, 0.18), alpha=0.18),
@@ -458,6 +458,7 @@ def main() -> None:
         obj.data.materials.append(mat)
         if role == "source_overlay":
             obj.hide_render = True
+            obj.hide_set(True)
         move_to_collection(obj, target)
 
     board_bbox = [float(value) for value in kicad["board_bbox_mm"]]
@@ -465,12 +466,21 @@ def main() -> None:
     board_top_z = board_bottom_z + board_bbox[2]
     enclosure_bbox = [float(value) for value in report.get("enclosure_bbox_mm", params["enclosure_bbox_mm"])]
     protected = protected_bounds(report, requirements, components, board_top_z)
+    overlay_inset = 0.08
+    protected_overlay = [
+        protected[0] + overlay_inset,
+        protected[1] + overlay_inset,
+        protected[2] + overlay_inset,
+        protected[3] - overlay_inset,
+        protected[4] - overlay_inset,
+        protected[5] - overlay_inset,
+    ]
 
     overlays: list[bpy.types.Object] = []
     overlay_specs: list[tuple[str, str, str]] = []
     protected_obj = create_box(
         "Protected_Volume_U1",
-        protected,
+        protected_overlay,
         mats["protected_volume_blue"],
         collections["FreeCAD_clearance_overlays"],
         "protected_volume_overlay",
@@ -593,7 +603,11 @@ def main() -> None:
     scene["engiworld_task"] = TASK
     scene["release_decision"] = decision
     scene["freecad_decision"] = str(report.get("decision", "missing"))
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    engines = {
+        item.identifier
+        for item in scene.bl_rna.properties["render"].fixed_type.properties["engine"].enum_items
+    }
+    scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else "BLENDER_EEVEE"
     scene.render.resolution_x = 1200
     scene.render.resolution_y = 800
     scene.render.resolution_percentage = 100

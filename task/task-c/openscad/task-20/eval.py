@@ -12,20 +12,22 @@ OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 SPEC = {'output': 'task-040_output.stl',
  'bbox': [96.0, 72.0, 8.0],
  'bbox_tol': 1.0,
+ 'volume': 47584.35,
+ 'volume_tol': 50.0,
  'min_triangles': 220,
- 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 16.0, 'span': 7.0, 'bins': 18},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-30.0, -20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-30.0, 20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [30.0, -20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [30.0, 20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [19.0919, 19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-19.0919, 19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-19.0919, -19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [19.0919, -19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-42.0, -30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [-42.0, 30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [42.0, -30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4},
-            {'kind': 'cylinder', 'axis': 'z', 'center': [42.0, 30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4}]}
+ 'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 16.0, 'span': 7.0, 'bins': 18, 'tol': 0.35},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-30.0, -20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-30.0, 20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [30.0, -20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [30.0, 20.0], 'radius': 2.5, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [19.0919, 19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-19.0919, 19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-19.0919, -19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [19.0919, -19.0919], 'radius': 2.0, 'span': 7.0, 'bins': 10, 'tol': 0.3},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-42.0, -30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4, 'tol': 0.45},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [-42.0, 30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4, 'tol': 0.45},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [42.0, -30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4, 'tol': 0.45},
+            {'kind': 'cylinder', 'axis': 'z', 'center': [42.0, 30.0], 'radius': 6.0, 'span': 7.0, 'bins': 4, 'tol': 0.45}]}
 
 
 def _parse_stl(path: Path):
@@ -166,6 +168,15 @@ def _close(actual, expected, tol):
 
 def _bbox_ok(mesh: Mesh, expected, tol):
     return all(_close(actual, want, tol) for actual, want in zip(mesh.extents, expected))
+
+
+def _mesh_volume(mesh: Mesh) -> float:
+    signed = 0.0
+    for (ax, ay, az), (bx, by, bz), (cx, cy, cz) in mesh.triangles:
+        signed += ax * (by * cz - bz * cy)
+        signed += ay * (bz * cx - bx * cz)
+        signed += az * (bx * cy - by * cx)
+    return abs(signed) / 6.0
 
 
 def _axis_components(point, axis):
@@ -471,6 +482,9 @@ def _evaluate_mesh(path: Path) -> bool:
     if "center" in SPEC:
         center_tol = float(SPEC.get("center_tol", tol))
         if any(abs(a - b) > center_tol for a, b in zip(mesh.center, SPEC["center"])):
+            return False
+    if "volume" in SPEC:
+        if abs(_mesh_volume(mesh) - float(SPEC["volume"])) > float(SPEC.get("volume_tol", 1.0)):
             return False
     return all(_run_mesh_check(mesh, check) for check in SPEC.get("checks", []))
 

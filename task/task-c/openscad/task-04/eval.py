@@ -46,12 +46,15 @@ def _parse_stl(path: Path):
 
 def _parse_off(path: Path):
     lines = [line.strip() for line in path.read_text(encoding="utf-8", errors="ignore").splitlines() if line.strip() and not line.startswith("#")]
-    if not lines or lines[0] != "OFF":
+    if not lines or not lines[0].startswith("OFF"):
         return []
-    n_vertices, n_faces, _ = [int(v) for v in lines[1].split()[:3]]
-    vertices = [tuple(float(v) for v in lines[2 + i].split()[:3]) for i in range(n_vertices)]
+    inline_counts = lines[0].split()[1:]
+    count_line = inline_counts if len(inline_counts) >= 3 else lines[1].split()
+    data_start = 1 if len(inline_counts) >= 3 else 2
+    n_vertices, n_faces, _ = [int(v) for v in count_line[:3]]
+    vertices = [tuple(float(v) for v in lines[data_start + i].split()[:3]) for i in range(n_vertices)]
     triangles = []
-    for line in lines[2 + n_vertices:2 + n_vertices + n_faces]:
+    for line in lines[data_start + n_vertices:data_start + n_vertices + n_faces]:
         parts = [int(v) for v in line.split()]
         if parts[0] >= 3:
             ids = parts[1:1 + parts[0]]

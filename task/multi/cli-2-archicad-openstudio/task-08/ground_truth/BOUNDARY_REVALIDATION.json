@@ -1,0 +1,45 @@
+{
+  "schema": "engiworld.task08.boundary-revalidation.v2",
+  "case_id": "multi-cli-2-archicad-openstudio-task-08-windows",
+  "run_at_utc": "2026-08-14T09:38:11Z",
+  "scope": "Candidate-boundary and JSON-order evaluator corrections; native GT artifacts were not regenerated or modified.",
+  "host": "local review host",
+  "evaluator_sha256": "aca197ae5c619122f9fddc63fa01f9817b8dbb4df01c4995eaf23c1db2227b73",
+  "task_json_sha256": "ec5f1b80f5e98f014294c7f14bd557b651a5a327c653d0527cd01916077c8b11",
+  "isolation": "Each case was copied independently from formal GT; no mutation state was reused.",
+  "cases": [
+    {
+      "id": "formal_without_generation_helpers",
+      "class": "positive",
+      "change": "Deliver only instruction-facing artifacts; omit both standalone OpenStudio transaction records, all three generation/postprocessing scripts, and all four repository audit documents.",
+      "expected_ok": true,
+      "actual_ok": true,
+      "errors": []
+    },
+    {
+      "id": "reordered_flow_report",
+      "class": "positive_reasonable_equivalent",
+      "change": "Reverse only the top-level JSON key order in flow_report.json.",
+      "expected_ok": true,
+      "actual_ok": true,
+      "errors": []
+    },
+    {
+      "id": "missing_embedded_transaction",
+      "class": "negative",
+      "change": "Remove openstudio_cli_transactions from flow_report.json while retaining the claimed native EnergyPlus outputs.",
+      "expected_ok": false,
+      "actual_ok": false,
+      "errors": [
+        "flow_report:openstudio_transaction_identity_or_exit_mismatch",
+        "flow_report:openstudio_transaction_args_or_input_hash_mismatch",
+        "flow_report:openstudio_transaction_sql_sha256_mismatch",
+        "flow_report:openstudio_transaction_err_sha256_mismatch",
+        "flow_report:openstudio_transaction_end_sha256_mismatch",
+        "flow_report:openstudio_transaction_time_or_stable_samples_invalid",
+        "eplusout.sql:integrity_simulation_version_or_flags"
+      ]
+    }
+  ],
+  "all_cases_matched_expectation": true
+}

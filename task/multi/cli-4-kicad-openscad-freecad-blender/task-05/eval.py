@@ -7,21 +7,32 @@ import json
 import math
 import os
 import re
+import shlex
 import shutil
 import struct
 import subprocess
 import sys
 import tempfile
 import zlib
+from datetime import datetime
 from pathlib import Path
 from typing import Any
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop")).resolve()
+PRODUCTIVE_DESKTOP = Path("/home/user/Desktop")
 SOFTWARE_SEQUENCE = ["KiCad", "OpenSCAD", "FreeCAD", "Blender"]
+EXPECTED_VERSION_PATTERNS = {
+    "KiCad": re.compile(r"(?<![0-9.])10\.0\.4(?![0-9.])"),
+    "OpenSCAD": re.compile(r"\bOpenSCAD version 2021\.01\b", re.IGNORECASE),
+    "FreeCAD": re.compile(r"\bFreeCAD 1\.1\.0\b", re.IGNORECASE),
+    "Blender": re.compile(r"\bBlender 5\.2\.0\b", re.IGNORECASE),
+}
+MIN_RENDER_SIMILARITY = 0.95
 REQUIRED_ARTIFACTS = [
     "01_kicad_board.kicad_pcb",
     "01_kicad_export.json",
+    "01_kicad_board.step",
     "01_kicad_mechanical_map.csv",
     "01_kicad_parameters.scad",
     "02_openscad_enclosure.scad",
@@ -39,7 +50,24 @@ REQUIRED_ARTIFACTS = [
     "final_release_package.json",
 ]
 MIN_FILE_SIZE = {
-    name: 1 for name in REQUIRED_ARTIFACTS
+    "01_kicad_board.kicad_pcb": 800,
+    "01_kicad_export.json": 200,
+    "01_kicad_board.step": 1000,
+    "01_kicad_mechanical_map.csv": 200,
+    "01_kicad_parameters.scad": 200,
+    "02_openscad_enclosure.scad": 300,
+    "02_openscad_enclosure.stl": 1000,
+    "02_openscad_parameters.json": 200,
+    "03_freecad_assembly.step": 1000,
+    "03_freecad_assembly.obj": 1000,
+    "03_freecad_clearance_report.json": 500,
+    "04_blender_review.blend": 1000,
+    "04_blender_review.obj": 1000,
+    "04_blender_review.mtl": 100,
+    "04_blender_review.png": 1000,
+    "04_blender_scene_report.json": 500,
+    "toolchain_invocation_log.json": 500,
+    "final_release_package.json": 500,
 }
 MAX_FILE_SIZE = 200 * 1024 * 1024
 
@@ -78,6 +106,11 @@ def close_vector(actual: Any, expected: Any, tolerance: float, label: str) -> No
 
 def normalized(value: Any) -> str:
     return re.sub(r"[^A-Z0-9]+", "", str(value or "").upper())
+
+
+def version_matches(software: str, value: Any) -> bool:
+    pattern = EXPECTED_VERSION_PATTERNS.get(software)
+    return pattern is not None and pattern.search(str(value or "")) is not None
 
 
 def json_file(path: Path) -> dict[str, Any]:
@@ -357,8 +390,8 @@ def check_required_files() -> None:
         if not path.is_file():
             fail(f"missing required artifact {name}")
         size = path.stat().st_size
-        if size == 0:
-            fail(f"required artifact {name} is empty")
+        if size < MIN_FILE_SIZE[name]:
+            fail(f"required artifact {name} is too small ({size} bytes)")
         if size > MAX_FILE_SIZE:
             fail(f"required artifact {name} is implausibly large ({size} bytes)")
 
@@ -1327,10 +1360,37 @@ def enclosure_coverage(tray, lid):
         if access["access_type"] == "side_window":
             expected_walls = expected_walls.cut(box_shape(access["bounds_mm"]))
     lid_bounds = config["lid_bounds_mm"]
-    expected_lid = box_shape(lid_bounds)
+    probe_margin = max(0.005, min(0.02, config["geometry_tolerance_mm"] / 4.0))
+    lid_probe_bounds = [
+        lid_bounds[0] + probe_margin,
+        lid_bounds[1] + probe_margin,
+        lid_bounds[2] + probe_margin,
+        lid_bounds[3] - probe_margin,
+        lid_bounds[4] - probe_margin,
+        lid_bounds[5] - probe_margin,
+    ]
+    lid_blank = box_shape(lid_probe_bounds)
+    lid_cutters = []
     for access in config["accesses"]:
         if access["access_type"] == "top_bore":
-            expected_lid = expected_lid.cut(cylinder_shape(access["cutter_cylinder_mm"]))
+            x, y, radius, _zmin, _zmax = access["cutter_cylinder_mm"]
+            clipped = cylinder_shape(
+                [x, y, radius + probe_margin, lid_probe_bounds[2], lid_probe_bounds[5]]
+            ).common(lid_blank)
+            if clipped.isNull() or not clipped.isValid() or clipped.Volume <= 0:
+                raise RuntimeError("top-bore cutter does not intersect the trusted lid bounds: " + access["ref"])
+            lid_cutters.append(clipped.removeSplitter())
+    expected_lid = lid_blank
+    if lid_cutters:
+        cutter_union = lid_cutters[0]
+        for cutter in lid_cutters[1:]:
+            cutter_union = cutter_union.fuse(cutter)
+        cutter_union = cutter_union.removeSplitter()
+        if cutter_union.isNull() or not cutter_union.isValid() or cutter_union.Volume <= 0:
+            raise RuntimeError("cannot construct a valid combined top-bore cutter")
+        expected_lid = lid_blank.cut(cutter_union).removeSplitter()
+    if expected_lid.isNull() or not expected_lid.isValid() or expected_lid.Volume <= 0:
+        raise RuntimeError("cannot construct a valid trusted lid reference")
     return {
         "base_slab_coverage": float(tray.common(base_shape).Volume) / max(float(base_shape.Volume), 1e-9),
         "side_wall_coverage": float(tray.common(expected_walls).Volume) / max(float(expected_walls.Volume), 1e-9),
@@ -1566,17 +1626,38 @@ def run_freecad_checker(
     old = (os.environ.get("ENGIWORLD_TASK05_CAD_CONFIG"), os.environ.get("ENGIWORLD_TASK05_CAD_RESULT"))
     os.environ["ENGIWORLD_TASK05_CAD_CONFIG"] = str(config_path)
     os.environ["ENGIWORLD_TASK05_CAD_RESULT"] = str(result_path)
+    completed: subprocess.CompletedProcess[str]
     try:
-        run_command([freecad, str(checker_path)], cwd=runtime, timeout=150, label="FreeCAD/OCC semantic checker")
+        completed = subprocess.run(
+            [freecad, str(checker_path)],
+            cwd=runtime,
+            text=True,
+            capture_output=True,
+            timeout=300,
+            check=False,
+            env={**os.environ, "PYTHONPATH": ""},
+        )
     finally:
         for key, value in zip(("ENGIWORLD_TASK05_CAD_CONFIG", "ENGIWORLD_TASK05_CAD_RESULT"), old):
             if value is None:
                 os.environ.pop(key, None)
             else:
                 os.environ[key] = value
+    if not result_path.is_file():
+        output = (completed.stdout + "\n" + completed.stderr)[-3000:]
+        fail(f"FreeCAD/OCC semantic checker failed with return code {completed.returncode}: {output}")
     payload = json_file(result_path)
     if not payload.get("ok"):
-        fail(f"FreeCAD/OCC checker rejected artifacts: {payload.get('error')}")
+        detail = str(payload.get("traceback") or "")[-3000:]
+        fail(f"FreeCAD/OCC checker rejected artifacts: {payload.get('error')}\n{detail}")
+    output = completed.stdout + "\n" + completed.stderr
+    wrapped_shutdown_sigsegv = (
+        completed.returncode == 1
+        and "Program received signal SIGSEGV" in output
+        and "closeAllDocuments" in output
+    )
+    if completed.returncode not in (0, -11) and not wrapped_shutdown_sigsegv:
+        fail(f"FreeCAD/OCC semantic checker failed with return code {completed.returncode}: {output[-3000:]}")
     result = payload.get("result")
     if not isinstance(result, dict):
         fail("FreeCAD/OCC checker returned no result")
@@ -1588,7 +1669,15 @@ def report_accesses(report: dict[str, Any]) -> dict[str, dict[str, Any]]:
     if isinstance(raw, dict):
         return {str(ref): item for ref, item in raw.items() if isinstance(item, dict)}
     if isinstance(raw, list):
-        return {str(item.get("ref")): item for item in raw if isinstance(item, dict) and item.get("ref")}
+        result: dict[str, dict[str, Any]] = {}
+        for item in raw:
+            if not isinstance(item, dict) or not item.get("ref"):
+                fail("FreeCAD report access_checks list contains an invalid item")
+            ref = str(item["ref"])
+            if ref in result:
+                fail(f"FreeCAD report access_checks contains duplicate {ref}")
+            result[ref] = item
+        return result
     fail("FreeCAD report access_checks must be an object or list")
 
 
@@ -1599,14 +1688,16 @@ def check_access_report(
     geometry_tolerance: float,
     volume_tolerance: float,
 ) -> None:
+    if str(item.get("ref", expected["ref"])) != expected["ref"]:
+        fail(f"FreeCAD report {expected['ref']} reference mismatch")
     reported_type = item.get("access_type", item.get("type"))
-    if reported_type is not None and normalized(reported_type) != normalized(expected["access_type"]):
+    if normalized(reported_type) != normalized(expected["access_type"]):
         fail(f"FreeCAD report {expected['ref']} access type mismatch")
     reported_direction = item.get("direction", item.get("wall_direction"))
-    if reported_direction is not None and normalized(reported_direction) != normalized(expected["direction"]):
+    if normalized(reported_direction) != normalized(expected["direction"]):
         fail(f"FreeCAD report {expected['ref']} access direction mismatch")
     verdicts = [item[key] for key in ("through", "continuous", "access_continuous", "continuity_pass") if key in item]
-    if any(value is not True for value in verdicts):
+    if not verdicts or any(value is not True for value in verdicts):
         fail(f"FreeCAD report {expected['ref']} does not record a passing continuous access")
     if item.get("decision") is not None and normalized(item.get("decision")) not in {"PASS", "PASSED"}:
         fail(f"FreeCAD report {expected['ref']} decision is not pass")
@@ -1615,30 +1706,83 @@ def check_access_report(
     center_error = item.get("center_error_mm")
     if center_error is None and expected["access_type"] == "top_bore":
         center_error = item.get("axis_error_mm")
-    if center_error is not None:
-        close(
-            center_error, measured["center_error_mm"], geometry_tolerance,
-            f"FreeCAD report {expected['ref']} center error",
-        )
-    if "residual_material_volume_mm3" in item:
-        close(
-            item["residual_material_volume_mm3"], measured["residual_material_volume_mm3"],
-            volume_tolerance, f"FreeCAD report {expected['ref']} residual material",
-        )
+    close(
+        center_error, measured["center_error_mm"], geometry_tolerance,
+        f"FreeCAD report {expected['ref']} center error",
+    )
+    close(
+        item.get("residual_material_volume_mm3"), measured["residual_material_volume_mm3"],
+        volume_tolerance, f"FreeCAD report {expected['ref']} residual material",
+    )
     if expected["access_type"] == "top_bore":
         diameter = item.get("finished_diameter_mm", item.get("measured_diameter_mm"))
-        if diameter is not None:
-            close(diameter, measured["finished_diameter_mm"], geometry_tolerance, f"FreeCAD report {expected['ref']} diameter")
+        close(diameter, measured["finished_diameter_mm"], geometry_tolerance, f"FreeCAD report {expected['ref']} diameter")
+        close_vector(
+            item.get("bore_center_xy_mm", item.get("measured_center_xy_mm")),
+            measured["measured_center_xy_mm"],
+            geometry_tolerance,
+            f"FreeCAD report {expected['ref']} bore center",
+        )
+        close_vector(
+            item.get("cutter_z_bounds_mm"),
+            expected["cutter_cylinder_mm"][-2:],
+            geometry_tolerance,
+            f"FreeCAD report {expected['ref']} cutter z bounds",
+        )
+        close_vector(
+            item.get("path_z_bounds_mm"),
+            expected["path_cylinder_mm"][-2:],
+            geometry_tolerance,
+            f"FreeCAD report {expected['ref']} path z bounds",
+        )
     else:
         for field in ("finished_width_mm", "finished_height_mm"):
-            if item.get(field) is not None:
-                close(item[field], measured[field], geometry_tolerance, f"FreeCAD report {expected['ref']} {field}")
-        contract_bounds = item.get("contract_cutter_bounds_mm", item.get("cutter_bounds_mm"))
-        if contract_bounds is not None:
-            close_vector(contract_bounds, expected["bounds_mm"], geometry_tolerance, f"FreeCAD report {expected['ref']} cutter bounds")
-    for key in ("guard_material_present", "guard_wall_material_present", "minimum_guard_material_present"):
-        if key in item and item[key] is not True:
-            fail(f"FreeCAD report {expected['ref']} guard check failed")
+            close(item.get(field), measured[field], geometry_tolerance, f"FreeCAD report {expected['ref']} {field}")
+        contract_bounds = item.get(
+            "contract_cutter_bounds_mm",
+            item.get("cutter_bounds_mm", item.get("bounds_mm")),
+        )
+        close_vector(contract_bounds, expected["bounds_mm"], geometry_tolerance, f"FreeCAD report {expected['ref']} cutter bounds")
+        close(
+            item.get("minimum_guard_mm"), measured["minimum_guard_mm"],
+            geometry_tolerance, f"FreeCAD report {expected['ref']} minimum guard",
+        )
+    guard_verdicts = [
+        item[key]
+        for key in ("guard_material_present", "guard_wall_material_present", "minimum_guard_material_present")
+        if key in item
+    ]
+    if not guard_verdicts or any(value is not True for value in guard_verdicts):
+        fail(f"FreeCAD report {expected['ref']} guard check failed")
+
+
+def check_standoff_report(
+    item: dict[str, Any],
+    ref: str,
+    measured: dict[str, Any],
+    geometry_tolerance: float,
+    volume_tolerance: float,
+) -> None:
+    if str(item.get("ref", ref)) != ref:
+        fail(f"FreeCAD report {ref} reference mismatch")
+    if item.get("continuous_bore") is not True or item.get("standoff_present") is not True:
+        fail(f"FreeCAD report {ref} does not record a present bored standoff")
+    for field in ("axis_error_mm", "concentric_error_mm", "outer_diameter_mm", "bore_diameter_mm"):
+        close(item.get(field), measured[field], geometry_tolerance, f"FreeCAD report {ref} {field}")
+    close_vector(
+        item.get("bore_center_xy_mm"), measured["bore_center_xy_mm"],
+        geometry_tolerance, f"FreeCAD report {ref} bore center",
+    )
+    close_vector(
+        item.get("outer_center_xy_mm"), measured["outer_center_xy_mm"],
+        geometry_tolerance, f"FreeCAD report {ref} outer center",
+    )
+    close(
+        item.get("residual_bore_material_volume_mm3", item.get("bore_residual_mm3")),
+        measured["bore_residual_mm3"],
+        volume_tolerance,
+        f"FreeCAD report {ref} residual bore material",
+    )
 
 
 def check_cad_result(
@@ -1802,10 +1946,23 @@ def check_cad_result(
                 fail(f"FreeCAD report top clearance {ref} must be null or unbounded")
         else:
             close(report_top[ref], measured, geom_tol, f"FreeCAD report top clearance {ref}")
-    for field in ("standoff_checks", "access_checks"):
-        value = report.get(field)
-        if not isinstance(value, (dict, list)) or not value:
-            fail(f"FreeCAD report must include nonempty {field}")
+    accesses = report_accesses(report)
+    expected_accesses = {item["ref"]: item for item in geometry["accesses"]}
+    measured_accesses = result["access_checks"]
+    if set(accesses) != set(expected_accesses):
+        fail("FreeCAD report must include exactly TP1-TP4 and J1 access checks")
+    for ref, expected in expected_accesses.items():
+        check_access_report(
+            accesses[ref], expected, measured_accesses[ref], geom_tol, volume_tol,
+        )
+    report_standoffs = report.get("standoff_checks")
+    if not isinstance(report_standoffs, dict) or set(report_standoffs) != {"MH1", "MH2", "MH3", "MH4"}:
+        fail("FreeCAD report must include exactly MH1-MH4 standoff checks")
+    for ref, measured in result["standoff_checks"].items():
+        item = report_standoffs[ref]
+        if not isinstance(item, dict):
+            fail(f"FreeCAD report {ref} standoff check must be an object")
+        check_standoff_report(item, ref, measured, geom_tol, volume_tol)
 
 
 BLENDER_CHECKER = r'''
@@ -2154,6 +2311,10 @@ def main():
     if any(box[0] < -0.03 or box[1] < -0.03 or box[2] > 1.03 or box[3] > 1.03 for box in framed):
         raise RuntimeError("native scene camera does not frame the physical assembly")
 
+    native_render_resolution = [
+        int(scene.render.resolution_x * scene.render.resolution_percentage / 100),
+        int(scene.render.resolution_y * scene.render.resolution_percentage / 100),
+    ]
     scene.render.resolution_x = 160
     scene.render.resolution_y = 120
     scene.render.resolution_percentage = 100
@@ -2186,6 +2347,7 @@ def main():
         "review_overlay_material_counts": review_overlays,
         "role_collections": sorted(collections),
         "render_similarity": similarity,
+        "native_render_resolution": native_render_resolution,
         "native_reference_surface_distances_mm": native_distances,
         "bridge_reference_surface_distances_mm": bridge_distances,
         "review_reference_surface_distances_mm": review_distances,
@@ -2304,6 +2466,7 @@ def check_blender_report(
     cad_result: dict[str, Any],
     blender_result: dict[str, Any],
     report: dict[str, Any],
+    submitted_png_size: tuple[int, int],
 ) -> None:
     if normalized(report.get("decision")) not in {"PASS", "PASSED"}:
         fail("Blender scene report decision must be pass")
@@ -2321,6 +2484,18 @@ def check_blender_report(
             fail(f"Blender report {field} mismatch")
     if report.get("active_camera") is not None and str(report["active_camera"]) != str(blender_result["active_camera"]):
         fail("Blender report active camera does not match native scene")
+    similarity = number(blender_result.get("render_similarity"), "Blender submitted/rerendered image similarity")
+    if similarity < MIN_RENDER_SIMILARITY:
+        fail(
+            f"Blender review PNG does not match the native scene rerender: "
+            f"similarity {similarity:.4f} < {MIN_RENDER_SIMILARITY:.2f}"
+        )
+    close_vector(
+        list(submitted_png_size),
+        blender_result.get("native_render_resolution"),
+        0,
+        "Blender submitted PNG/native scene render resolution",
+    )
     if report.get("visible_features") is not None and not isinstance(report.get("visible_features"), list):
         fail("Blender report visible_features must be a list when provided")
     roles = report.get("object_roles")
@@ -2357,7 +2532,7 @@ def check_blender_report(
         fail("Blender copied standoff checks must be an object or list")
 
 
-def check_png(path: Path, *, minimum_width: int = 160, minimum_height: int = 120) -> None:
+def check_png(path: Path, *, minimum_width: int = 160, minimum_height: int = 120) -> tuple[int, int]:
     data = path.read_bytes()
     if not data.startswith(b"\x89PNG\r\n\x1a\n"):
         fail(f"{path.name} is not a PNG file")
@@ -2385,6 +2560,7 @@ def check_png(path: Path, *, minimum_width: int = 160, minimum_height: int = 120
         fail(f"{path.name} pixel data cannot be decoded: {exc}")
     if len(raw) < width * height or len(set(raw)) < 16:
         fail(f"{path.name} appears blank or nearly uniform")
+    return width, height
 
 
 def names_from(value: Any, label: str) -> set[str]:
@@ -2395,85 +2571,167 @@ def names_from(value: Any, label: str) -> set[str]:
     return {Path(str(item)).name for item in value}
 
 
+def option_value(argv: list[str], options: set[str]) -> str | None:
+    for index, value in enumerate(argv):
+        if value in options and index + 1 < len(argv):
+            return argv[index + 1]
+        for option in options:
+            if value.startswith(option + "="):
+                return value.split("=", 1)[1]
+    return None
+
+
+def productive_argv_matches(
+    software: str,
+    argv: list[str],
+    expected_inputs: set[str],
+    expected_outputs: set[str],
+) -> bool:
+    args = [str(value) for value in argv[1:]]
+    lowered = [value.lower() for value in args]
+    if any(value in {"--version", "-v", "--help", "-h", "-?"} for value in lowered):
+        return False
+    basenames = {Path(value).name for value in args}
+    if software == "KiCad":
+        if len(lowered) < 3 or lowered[:3] != ["pcb", "export", "step"]:
+            return False
+        output = option_value(args, {"-o", "--output"})
+        return (
+            output is not None
+            and Path(output).name in expected_outputs
+            and "01_kicad_board.kicad_pcb" in basenames
+        )
+    if software == "OpenSCAD":
+        output = option_value(args, {"-o", "--output"})
+        return (
+            output is not None
+            and Path(output).name in expected_outputs
+            and "02_openscad_enclosure.scad" in basenames
+        )
+    if software == "FreeCAD":
+        scripts = [value for value in args if not value.startswith("-") and Path(value).suffix.lower() == ".py"]
+        return len(scripts) == 1
+    if software == "Blender":
+        script = option_value(args, {"--python"})
+        return (
+            "--background" in lowered
+            and script is not None
+            and Path(script).suffix.lower() == ".py"
+        )
+    return False
+
+
 def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> None:
     log = json_file(DESKTOP / "toolchain_invocation_log.json")
     actual = log.get("actual_invocations")
     commands = actual if isinstance(actual, list) else log.get("commands")
     if not isinstance(commands, list) or len(commands) < 4:
         fail("toolchain log must contain productive commands; retries and helper calls are allowed")
-    helper_entries = list(commands)
-    preparation = log.get("preparation")
-    if isinstance(preparation, dict):
-        helper_entries.append(preparation)
-    elif isinstance(preparation, list):
-        helper_entries.extend(item for item in preparation if isinstance(item, dict))
-    trusted_inputs = {"board_input.kicad_pcb", "mechanical_requirements.json", "connector_keepouts.csv", "enclosure_seed.scad"}
-    derived_handoffs = {"01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad", "02_openscad_enclosure.scad", "02_openscad_parameters.json"}
-    recorded_inputs: set[str] = set()
-    recorded_outputs: set[str] = set()
-    for entry in helper_entries:
-        if not isinstance(entry, dict):
-            continue
-        if not isinstance(entry.get("inputs", []), (str, list)) or not isinstance(entry.get("outputs", []), (str, list)):
-            continue
-        recorded_inputs.update(names_from(entry.get("inputs", []), "preparation inputs"))
-        recorded_outputs.update(names_from(entry.get("outputs", []), "preparation outputs"))
-    if not trusted_inputs.issubset(recorded_inputs) or not derived_handoffs.issubset(recorded_outputs):
-        fail("toolchain log does not collectively record derivation of the handoffs from all trusted inputs")
+    def valid_execution(
+        entry: dict[str, Any],
+        expected_inputs: set[str],
+        expected_outputs: set[str],
+        software: str | None,
+        trusted_inputs: dict[str, Path] | None = None,
+    ) -> str | None:
+        if type(entry.get("exit_code")) is not int or entry["exit_code"] != 0:
+            return None
+        if Path(str(entry.get("cwd", ""))).resolve() != PRODUCTIVE_DESKTOP:
+            return None
+        argv = entry.get("argv")
+        command = str(entry.get("command", ""))
+        if not isinstance(argv, list) or not argv or shlex.split(command) != argv:
+            return None
+        inputs = names_from(entry.get("inputs", []), "recorded inputs")
+        outputs = names_from(entry.get("outputs", []), "recorded outputs")
+        if not expected_inputs.issubset(inputs) or not expected_outputs.issubset(outputs):
+            return None
+        if any(Path(str(value)).parent != Path(".") for value in entry.get("outputs", [])):
+            return None
+        try:
+            started = datetime.fromisoformat(str(entry["started_at_utc"]).replace("Z", "+00:00"))
+            finished = datetime.fromisoformat(str(entry["finished_at_utc"]).replace("Z", "+00:00"))
+        except (KeyError, TypeError, ValueError):
+            return None
+        if started.tzinfo is None or finished.tzinfo is None or finished < started:
+            return None
+        input_hashes = entry.get("input_sha256")
+        output_hashes = entry.get("output_sha256")
+        if not isinstance(input_hashes, dict) or not expected_inputs.issubset(input_hashes):
+            return None
+        if not isinstance(output_hashes, dict) or not expected_outputs.issubset(output_hashes):
+            return None
+        trusted_inputs = trusted_inputs or {}
+        for name in expected_inputs:
+            path = trusted_inputs.get(name, DESKTOP / name)
+            if not path.is_file() or input_hashes.get(name) != sha256(path):
+                return None
+        for name in expected_outputs:
+            path = DESKTOP / name
+            if not path.is_file() or output_hashes.get(name) != sha256(path):
+                return None
+        version = str(entry.get("version", "")).strip()
+        if software is not None:
+            token = {"KiCad": "kicad", "OpenSCAD": "openscad", "FreeCAD": "freecad", "Blender": "blender"}[software]
+            if (
+                token not in Path(argv[0]).name.lower()
+                or not version_matches(software, version)
+                or not productive_argv_matches(software, argv, expected_inputs, expected_outputs)
+            ):
+                return None
+        return version
+
+    trusted = trusted_input_paths()
+    prep_inputs = {"board_input.kicad_pcb", "mechanical_requirements.json", "connector_keepouts.csv", "enclosure_seed.scad", "handoff_notes.md"}
+    prep_outputs = {"01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad", "02_openscad_enclosure.scad", "02_openscad_parameters.json"}
+    preparation_index = next(
+        (
+            index for index, entry in enumerate(commands)
+            if isinstance(entry, dict) and valid_execution(
+                entry,
+                prep_inputs,
+                prep_outputs,
+                None,
+                {
+                    "board_input.kicad_pcb": trusted["board"],
+                    "mechanical_requirements.json": trusted["requirements"],
+                    "connector_keepouts.csv": trusted["connectors"],
+                    "enclosure_seed.scad": trusted["seed"],
+                    "handoff_notes.md": trusted["notes"],
+                },
+            ) is not None
+        ),
+        None,
+    )
+    if preparation_index is None:
+        fail("toolchain log lacks a valid recorded handoff preparation")
     logged_sequence = log.get("required_software_sequence")
     if logged_sequence is not None and [normalized(value) for value in logged_sequence] != [normalized(value) for value in SOFTWARE_SEQUENCE]:
         fail("toolchain log required software sequence mismatch")
-    logged_versions = log.get("tool_versions") if isinstance(log.get("tool_versions"), dict) else {}
     expected = {
-        "KiCad": {
-            "input_any": {"board_input.kicad_pcb", "01_kicad_board.kicad_pcb"},
-            "output_all": set(),
-            "output_any": {"01_kicad_board.step", "01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad"},
-        },
-        "OpenSCAD": {
-            "input_all": {"02_openscad_enclosure.scad"},
-            "input_any": {"01_kicad_parameters.scad", "02_openscad_parameters.json"},
-            "output_all": {"02_openscad_enclosure.stl"},
-        },
-        "FreeCAD": {
-            "input_all": {"02_openscad_enclosure.stl", "02_openscad_parameters.json"},
-            "input_any": {"01_kicad_board.kicad_pcb", "01_kicad_export.json"},
-            "output_all": {"03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
-        },
-        "Blender": {
-            "input_all": {"03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
-            "output_all": {"04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"},
-        },
+        "KiCad": ({"01_kicad_board.kicad_pcb"}, {"01_kicad_board.step"}),
+        "OpenSCAD": ({"01_kicad_parameters.scad", "02_openscad_enclosure.scad"}, {"02_openscad_enclosure.stl"}),
+        "FreeCAD": (
+            {"01_kicad_board.step", "02_openscad_enclosure.stl", "02_openscad_parameters.json"},
+            {"03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
+        ),
+        "Blender": (
+            {"03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
+            {"04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"},
+        ),
     }
-    tokens = {"KiCad": "kicad", "OpenSCAD": "openscad", "FreeCAD": "freecad", "Blender": "blender"}
-    previous = -1
+    previous = preparation_index
+    stage_versions: dict[str, str] = {}
     for software in SOFTWARE_SEQUENCE:
-        contract = expected[software]
-        inputs, outputs, versions = set(), set(), set()
-        found = None
+        required_inputs, required_outputs = expected[software]
+        found: int | None = None
         for index, entry in enumerate(commands):
             if index <= previous or not isinstance(entry, dict):
                 continue
-            command = str(entry.get("command", ""))
-            label = " ".join(str(entry.get(key, "")) for key in ("software", "stage"))
-            if tokens[software] not in command.lower() and normalized(software) not in normalized(label):
-                continue
-            inputs.update(names_from(entry.get("inputs", []), f"{software} log inputs"))
-            outputs.update(names_from(entry.get("outputs", []), f"{software} log outputs"))
-            version = str(entry.get("version", entry.get("software_version", ""))).strip()
-            if version:
-                versions.add(version)
-            if str(logged_versions.get(software, "")).strip():
-                versions.add(str(logged_versions[software]).strip())
-            complete = (
-                versions
-                and contract.get("input_all", set()).issubset(inputs)
-                and (not contract.get("input_any") or bool(contract["input_any"] & inputs))
-                and contract.get("output_all", set()).issubset(outputs)
-                and (not contract.get("output_any") or bool(contract["output_any"] & outputs))
-            )
-            if complete:
+            version = valid_execution(entry, required_inputs, required_outputs, software)
+            if version is not None:
                 found = index
+                stage_versions[software] = version
                 break
         if found is None:
             fail(f"toolchain log lacks an ordered, versioned productive {software} stage")
@@ -2482,7 +2740,7 @@ def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> Non
     package = json_file(DESKTOP / "final_release_package.json")
     if normalized(package.get("release_decision")) not in {"PASS", "PASSED"}:
         fail("final release package decision must be pass")
-    if package.get("software_sequence") is not None and [normalized(value) for value in package["software_sequence"]] != [normalized(value) for value in SOFTWARE_SEQUENCE]:
+    if not isinstance(package.get("software_sequence"), list) or [normalized(value) for value in package["software_sequence"]] != [normalized(value) for value in SOFTWARE_SEQUENCE]:
         fail("final release package software sequence mismatch")
     listed = names_from(package.get("required_artifacts", []), "final required_artifacts")
     if not set(REQUIRED_ARTIFACTS).issubset(listed):
@@ -2491,45 +2749,48 @@ def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> Non
     if produced is not None and not set(REQUIRED_ARTIFACTS).issubset(names_from(produced, "final produced_artifacts")):
         fail("final package produced_artifacts omits a required artifact")
     stage_outputs = package.get("stage_outputs")
-    if stage_outputs is not None:
-        if not isinstance(stage_outputs, dict):
-            fail("final package stage_outputs must be an object")
-        expected_stage_outputs = {
-            "KiCad": {"01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad"},
-            "OpenSCAD": {"02_openscad_enclosure.scad", "02_openscad_enclosure.stl", "02_openscad_parameters.json"},
-            "FreeCAD": {"03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
-            "Blender": {"04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"},
-        }
-        for software, required in expected_stage_outputs.items():
-            if not required.issubset(names_from(stage_outputs.get(software, []), f"{software} stage_outputs")):
-                fail(f"final package {software} stage_outputs is incomplete")
+    if not isinstance(stage_outputs, dict):
+        fail("final package stage_outputs must be an object")
+    expected_stage_outputs = {
+        "KiCad": {"01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_board.step", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad"},
+        "OpenSCAD": {"02_openscad_enclosure.scad", "02_openscad_enclosure.stl", "02_openscad_parameters.json"},
+        "FreeCAD": {"03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
+        "Blender": {"04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"},
+    }
+    normalized_stage_outputs = {normalized(key): value for key, value in stage_outputs.items()}
+    for software, required in expected_stage_outputs.items():
+        if not required.issubset(names_from(normalized_stage_outputs.get(normalized(software), []), f"{software} stage_outputs")):
+            fail(f"final package {software} stage_outputs is incomplete")
     hashes = package.get("artifact_sha256")
-    if hashes is not None:
-        if not isinstance(hashes, dict):
-            fail("final package artifact_sha256 must be an object when provided")
-        normalized_hashes = {Path(str(name)).name: value for name, value in hashes.items()}
-        for name, expected_hash in normalized_hashes.items():
-            if name == "final_release_package.json" or name not in REQUIRED_ARTIFACTS:
-                continue
-            if not isinstance(expected_hash, str) or len(expected_hash) != 64:
-                fail(f"final package has an invalid SHA-256 for {name}")
-            if expected_hash.lower() != sha256(DESKTOP / name):
-                fail(f"final package hash mismatch for {name}")
+    hashed_artifacts = set(REQUIRED_ARTIFACTS) - {"final_release_package.json"}
+    if not isinstance(hashes, dict) or not hashed_artifacts.issubset(hashes):
+        fail("final package artifact_sha256 is incomplete")
+    for name in hashed_artifacts:
+        expected_hash = hashes[name]
+        if not isinstance(expected_hash, str) or len(expected_hash) != 64:
+            fail(f"final package has an invalid SHA-256 for {name}")
+        if expected_hash.lower() != sha256(DESKTOP / name):
+            fail(f"final package hash mismatch for {name}")
     checks = package.get("checks")
-    if checks is not None:
-        if not isinstance(checks, dict) or not checks:
-            fail("final package checks must be a nonempty object when provided")
+    if not isinstance(checks, dict) or not checks or not all(value is True for value in checks.values()):
+        fail("final package contains a failed release check")
     versions = package.get("tool_versions")
-    if versions is not None and (
-        not isinstance(versions, dict)
-        or any(not str(versions.get(software, "")).strip() for software in SOFTWARE_SEQUENCE)
-    ):
+    if not isinstance(versions, dict) or any(not str(versions.get(software, "")).strip() for software in SOFTWARE_SEQUENCE):
         fail("final package tool_versions is incomplete")
+    for software in SOFTWARE_SEQUENCE:
+        package_version = str(versions[software]).strip()
+        if not version_matches(software, package_version) or package_version != stage_versions[software]:
+            fail(f"final package {software} version does not match the recorded stage")
     metrics = package.get("key_metrics")
-    if metrics is None:
-        return
-    if not isinstance(metrics, dict):
-        fail("final package key_metrics must be an object when provided")
+    required_metrics = {
+        "access_checks", "board_bbox_mm", "component_top_clearances_mm", "enclosure_bbox_mm",
+        "enclosure_mass_g", "enclosure_volume_mm3", "lid_mass_g", "lid_separation_mm",
+        "lid_volume_mm3", "minimum_side_clearance_mm", "minimum_top_clearance_mm",
+        "side_clearances_mm", "standoff_checks", "tray_mass_g", "tray_volume_mm3",
+        "unintended_interference_volume_mm3",
+    }
+    if not isinstance(metrics, dict) or not required_metrics.issubset(metrics):
+        fail("final package key_metrics is incomplete")
     mass_rel = number(spec["requirements"]["mass_report_relative_tolerance"], "mass report relative tolerance")
     metric_contract = {
         "enclosure_volume_mm3": (cad_result["enclosure_volume_mm3"], max(2.0, cad_result["enclosure_volume_mm3"] * 0.01)),
@@ -2544,12 +2805,52 @@ def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> Non
         "unintended_interference_volume_mm3": (cad_result["unintended_interference_volume_mm3"], 0.1),
     }
     for field, (expected_value, tolerance) in metric_contract.items():
-        if field in metrics:
-            close(metrics[field], expected_value, tolerance, f"final package {field}")
-    if metrics.get("access_checks") is not None and not isinstance(metrics.get("access_checks"), (dict, list)):
-        fail("final package key_metrics access_checks must be an object or list")
-    if metrics.get("standoff_checks") is not None and not isinstance(metrics.get("standoff_checks"), (dict, list)):
-        fail("final package key_metrics standoff_checks must be an object or list")
+        close(metrics[field], expected_value, tolerance, f"final package {field}")
+    geometry = expected_geometry(spec)
+    geom_tol = number(spec["requirements"]["geometry_tolerance_mm"], "geometry tolerance")
+    volume_tol = number(
+        spec["requirements"]["interference_volume_tolerance_mm3"],
+        "interference tolerance",
+    )
+    close_vector(
+        metrics["board_bbox_mm"], spec["board"]["bbox_mm"], geom_tol,
+        "final package board bbox",
+    )
+    close_vector(
+        metrics["enclosure_bbox_mm"], cad_result["enclosure_bbox_mm"], geom_tol,
+        "final package enclosure bbox",
+    )
+    package_side = metrics.get("side_clearances_mm")
+    if not isinstance(package_side, dict) or set(package_side) != {"X_MINUS", "X_PLUS", "Y_MINUS", "Y_PLUS"}:
+        fail("final package must include exactly four side clearances")
+    for direction, measured in cad_result["side_clearances_mm"].items():
+        close(package_side[direction], measured, geom_tol, f"final package side clearance {direction}")
+    package_top = metrics.get("component_top_clearances_mm")
+    if not isinstance(package_top, dict) or set(package_top) != {"TP1", "TP2", "TP3", "TP4", "J1"}:
+        fail("final package must include exactly TP1-TP4 and J1 top clearances")
+    for ref, measured in cad_result["component_top_clearances_mm"].items():
+        if measured is None:
+            if package_top[ref] is not None and normalized(package_top[ref]) not in {"UNBOUNDED", "NOTCOVERED", "OPEN"}:
+                fail(f"final package top clearance {ref} must be null or unbounded")
+        else:
+            close(package_top[ref], measured, geom_tol, f"final package top clearance {ref}")
+    package_accesses = report_accesses(metrics)
+    expected_accesses = {item["ref"]: item for item in geometry["accesses"]}
+    if set(package_accesses) != set(expected_accesses):
+        fail("final package must include exactly TP1-TP4 and J1 access checks")
+    for ref, expected_access in expected_accesses.items():
+        check_access_report(
+            package_accesses[ref], expected_access, cad_result["access_checks"][ref],
+            geom_tol, volume_tol,
+        )
+    package_standoffs = metrics.get("standoff_checks")
+    if not isinstance(package_standoffs, dict) or set(package_standoffs) != {"MH1", "MH2", "MH3", "MH4"}:
+        fail("final package must include exactly MH1-MH4 standoff checks")
+    for ref, measured in cad_result["standoff_checks"].items():
+        item = package_standoffs[ref]
+        if not isinstance(item, dict):
+            fail(f"final package {ref} standoff check must be an object")
+        check_standoff_report(item, ref, measured, geom_tol, volume_tol)
 
 
 def main() -> bool:
@@ -2582,10 +2883,10 @@ def main() -> bool:
         cad_result = run_freecad_checker(runtime, spec, geometry, rerendered_board_step, rerendered_stl)
         check_cad_result(spec, geometry, cad_result, freecad_report)
         blender_result = run_blender_checker(runtime, spec, geometry)
-        check_blender_report(geometry, cad_result, blender_result, blender_report)
+        submitted_png_size = check_png(DESKTOP / "04_blender_review.png", minimum_width=320, minimum_height=240)
+        check_blender_report(geometry, cad_result, blender_result, blender_report, submitted_png_size)
         check_png(runtime / "blender_rerender.png", minimum_width=120, minimum_height=90)
 
-    check_png(DESKTOP / "04_blender_review.png", minimum_width=320, minimum_height=240)
     check_release_chain(spec, cad_result)
     return True
 

@@ -1,78 +1,507 @@
 {
+  "schema": "engiworld-openstudio-native-flow-report-v1",
   "case_id": "multi-cli-2-archicad-openstudio-task-06-windows",
-  "software_chain": [
-    "archicad",
-    "openstudio"
-  ],
-  "stage_sequence": [
-    {
-      "software": "archicad",
-      "input": "init.ifc",
-      "output": "stage1.ifc",
-      "handoff": "handoff.json"
-    },
-    {
-      "software": "openstudio",
-      "input": "handoff.json",
-      "output": "result.osm"
-    }
-  ],
-  "consumed_handoff_sha256": "729903f564d9028774b6f6e1920fe14ddbc8fdef7ace42d0f5b792f34b8e5c3f",
-  "source_stage1_sha256": "ad1b877c0772432636f8fbe89e7c1390675916c1b5e81139b4767eed353ebcdb",
-  "osm_sha256": "155aa091e51bb4fb80347c49c4a82bdca50e055b77953b1b4e6131a475288401",
-  "building_area_m2": 124.15,
+  "software_stage": "openstudio",
+  "consumed_handoff_sha256": "e9a34ffdec47aba183cc432f8fc8b48462b6f4fd8d7fafea43619b71f7d5edbe",
+  "source_stage1_sha256": "c7cd05711eb4edb12fee98eed454a52c02716e6ae19e9952118a1d9de41f1d8b",
+  "osm_sha256": "a83ff12dcc18c73b170f87568238a2a3196ecf76c2555cb97a370f79dd8e166b",
+  "workflow_sha256": "34c8ec756381fa9f1bcaa9862ed7c49663c6fa741d834704be8feac442df2886",
+  "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+  "building_area_m2": 90.0,
   "room_count": 4,
   "thermal_zone_count": 4,
   "door_count": 3,
   "window_count": 1,
-  "window_wall_ratio": 0.18,
   "surface_count": 24,
   "subsurface_count": 4,
-  "weather_file": "USA_Design_Day.epw",
-  "schedule_set": "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-06-windows",
-  "construction_set": "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-06-windows",
+  "weather_file": "weather.epw",
   "openstudio_version": "3.10.0",
+  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+  "weather_source": {
+    "kind": "same_station_tmy3",
+    "repository": "NREL/EnergyPlus v25.1.0 weather",
+    "file": "USA_CO_Golden-NREL.724666_TMY3.epw",
+    "wmo": "724666",
+    "latitude": 39.74,
+    "longitude": -105.18,
+    "time_zone": -7.0,
+    "elevation_m": 1829.0,
+    "sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f"
+  },
   "spaces": [
     {
       "name": "PLAYROOM",
       "thermal_zone": "PLAYROOM-ZN",
-      "floor_area_m2": 35.65,
-      "door_count": 1,
-      "window_count": 1
+      "floor_area_m2": 22.5
     },
     {
       "name": "SICK-BAY",
       "thermal_zone": "SICK-BAY-ZN",
-      "floor_area_m2": 26.25,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 22.5
     },
     {
       "name": "CALM-ROOM",
       "thermal_zone": "CALM-ROOM-ZN",
-      "floor_area_m2": 29.5,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 22.5
     },
     {
       "name": "STAFF-SUPPORT",
       "thermal_zone": "STAFF-SUPPORT-ZN",
-      "floor_area_m2": 32.75,
-      "door_count": 0,
-      "window_count": 0
+      "floor_area_m2": 22.5
     }
   ],
-  "thermal_zones": [
-    "PLAYROOM-ZN",
-    "SICK-BAY-ZN",
-    "CALM-ROOM-ZN",
-    "STAFF-SUPPORT-ZN"
+  "assumptions": {
+    "sick_bay_occupancy_people_m2": 0.035,
+    "playroom_occupancy_people_m2": 0.2,
+    "staff_supervised_spaces": [
+      "SICK-BAY",
+      "CALM-ROOM"
+    ],
+    "calm_room_setpoints_c": [
+      21.5,
+      24.5
+    ]
+  },
+  "simulation": {
+    "sql_integrity_check": "ok",
+    "sql_error_type_counts": {
+      "-1": 11,
+      "0": 11
+    },
+    "hourly_series": [
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2601720000.0,
+        "max": 648000.0,
+        "space_name": "PLAYROOM",
+        "key_value": "PLAYROOM-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1951290000.0,
+        "max": 486000.0,
+        "space_name": "PLAYROOM",
+        "key_value": "PLAYROOM-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3228608159.5864553,
+        "max": 3384149.4133681385,
+        "space_name": "PLAYROOM",
+        "key_value": "PLAYROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 10011679335.113869,
+        "max": 4145350.0032418277,
+        "space_name": "PLAYROOM",
+        "key_value": "PLAYROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 896835.5998851265,
+        "max": 940.0415037133718,
+        "space_name": "PLAYROOM",
+        "key_value": "PLAYROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2781022.03753163,
+        "max": 1151.4861120116188,
+        "space_name": "PLAYROOM",
+        "key_value": "PLAYROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1626075000.0,
+        "max": 405000.0,
+        "space_name": "SICK-BAY",
+        "key_value": "SICK-BAY-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 975645000.0,
+        "max": 243000.0,
+        "space_name": "SICK-BAY",
+        "key_value": "SICK-BAY-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3708258607.919412,
+        "max": 2725174.8645036244,
+        "space_name": "SICK-BAY",
+        "key_value": "SICK-BAY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2691129768.7472243,
+        "max": 2530248.135424839,
+        "space_name": "SICK-BAY",
+        "key_value": "SICK-BAY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1030071.83553317,
+        "max": 756.9930179176735,
+        "space_name": "SICK-BAY",
+        "key_value": "SICK-BAY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 747536.0468742291,
+        "max": 702.8467042846775,
+        "space_name": "SICK-BAY",
+        "key_value": "SICK-BAY IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1463467500.0,
+        "max": 364500.0,
+        "space_name": "CALM-ROOM",
+        "key_value": "CALM-ROOM-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 813037500.0,
+        "max": 202500.0,
+        "space_name": "CALM-ROOM",
+        "key_value": "CALM-ROOM-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3886049027.4270873,
+        "max": 2816199.6089767567,
+        "space_name": "CALM-ROOM",
+        "key_value": "CALM-ROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2984464672.492459,
+        "max": 2529605.081577985,
+        "space_name": "CALM-ROOM",
+        "key_value": "CALM-ROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1079458.063174191,
+        "max": 782.2776691602103,
+        "space_name": "CALM-ROOM",
+        "key_value": "CALM-ROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 829017.9645812386,
+        "max": 702.6680782161071,
+        "space_name": "CALM-ROOM",
+        "key_value": "CALM-ROOM IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2276505000.0,
+        "max": 567000.0,
+        "space_name": "STAFF-SUPPORT",
+        "key_value": "STAFF-SUPPORT-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1951290000.0,
+        "max": 486000.0,
+        "space_name": "STAFF-SUPPORT",
+        "key_value": "STAFF-SUPPORT-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3322988067.995032,
+        "max": 3238625.6024648556,
+        "space_name": "STAFF-SUPPORT",
+        "key_value": "STAFF-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 5556667842.3420315,
+        "max": 3524141.8612182867,
+        "space_name": "STAFF-SUPPORT",
+        "key_value": "STAFF-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 923052.241109731,
+        "max": 899.6182229069042,
+        "space_name": "STAFF-SUPPORT",
+        "key_value": "STAFF-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1543518.8450950088,
+        "max": 978.9282947828574,
+        "space_name": "STAFF-SUPPORT",
+        "key_value": "STAFF-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      }
+    ],
+    "energy_accounting": "lights + electric equipment + ideal heating + ideal cooling",
+    "peak_definition": "maximum hourly ideal heating or cooling rate"
+  },
+  "openstudio_cli_transactions": [
+    {
+      "stage": "openstudio_weather_period_simulation_final_delivery",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-12T08:58:04.7763969+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-12T08:58:08.2283451+00:00",
+      "related_children_exited_at_utc": "2026-08-12T08:58:08.2283451+00:00",
+      "completed_at_utc": "2026-08-12T08:58:14.3087834+00:00",
+      "exit_code": 0,
+      "observed_related_process_ids": [
+        4764
+      ],
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-12T08:58:08.2283451+00:00",
+          "sql_size": 9973760,
+          "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+          "err_size": 3671,
+          "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T08:58:09.2467447+00:00",
+          "sql_size": 9973760,
+          "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+          "err_size": 3671,
+          "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T08:58:10.2494965+00:00",
+          "sql_size": 9973760,
+          "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+          "err_size": 3671,
+          "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T08:58:11.2523498+00:00",
+          "sql_size": 9973760,
+          "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+          "err_size": 3671,
+          "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T08:58:12.2557199+00:00",
+          "sql_size": 9973760,
+          "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+          "err_size": 3671,
+          "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T08:58:13.2579236+00:00",
+          "sql_size": 9973760,
+          "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+          "err_size": 3671,
+          "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+        }
+      ],
+      "sql_sha256": "d10ffd1103782d478b8c5a9c33d227f44f8824b8aa93577c78d9e38abb25cb5e",
+      "err_sha256": "0d416b82a663b8db98b74a39d40b9d3a29a67550aa8d3e5ca61215ec311d132c",
+      "end_sha256": "069cf6f438e5df2e40cf2ea0459bf26adc2839a076cc176d6b1d8b29ed8eac2c",
+      "result_osm_sha256": "a83ff12dcc18c73b170f87568238a2a3196ecf76c2555cb97a370f79dd8e166b",
+      "workflow_sha256": "34c8ec756381fa9f1bcaa9862ed7c49663c6fa741d834704be8feac442df2886",
+      "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+      "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+      "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5"
+    }
   ],
-  "osm_tokens": [
-    "SickBayLowOccupancy",
+  "native_stage_log_sha256": "e7e03d6c7a08d13bd5ebdd06aa3433a445381fbb1cd4f732a76a13f53ee36cfe",
+  "native_cli_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+  "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+  "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+  "energyplus_status": "************* EnergyPlus Completed Successfully-- 11 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  2.73sec",
+  "energyplus_warning_count": 11,
+  "energyplus_severe_errors": 0,
+  "energyplus_fatal_errors": 0,
+  "energyplus_sql_sha256": "d10ffd1103782d478b8c5a9c33d227f44f8824b8aa93577c78d9e38abb25cb5e",
+  "energyplus_err_sha256": "0d416b82a663b8db98b74a39d40b9d3a29a67550aa8d3e5ca61215ec311d132c",
+  "energyplus_end_sha256": "069cf6f438e5df2e40cf2ea0459bf26adc2839a076cc176d6b1d8b29ed8eac2c",
+  "final_delivery": {
+    "stage": "openstudio_weather_period_simulation_final_delivery",
+    "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+    "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+    "arguments": [
+      "run",
+      "-w",
+      "C:\\Users\\user\\Desktop\\workflow.osw"
+    ],
+    "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+    "working_directory": "C:\\Users\\user\\Desktop",
+    "started_at_utc": "2026-08-12T08:58:04.7763969+00:00",
+    "openstudio_process_exited_at_utc": "2026-08-12T08:58:08.2283451+00:00",
+    "related_children_exited_at_utc": "2026-08-12T08:58:08.2283451+00:00",
+    "completed_at_utc": "2026-08-12T08:58:14.3087834+00:00",
+    "exit_code": 0,
+    "observed_related_process_ids": [
+      4764
+    ],
+    "related_processes_after_wait": 0,
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-12T08:58:08.2283451+00:00",
+        "sql_size": 9973760,
+        "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+        "err_size": 3671,
+        "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T08:58:09.2467447+00:00",
+        "sql_size": 9973760,
+        "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+        "err_size": 3671,
+        "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T08:58:10.2494965+00:00",
+        "sql_size": 9973760,
+        "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+        "err_size": 3671,
+        "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T08:58:11.2523498+00:00",
+        "sql_size": 9973760,
+        "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+        "err_size": 3671,
+        "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T08:58:12.2557199+00:00",
+        "sql_size": 9973760,
+        "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+        "err_size": 3671,
+        "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T08:58:13.2579236+00:00",
+        "sql_size": 9973760,
+        "sql_mtime_utc": "2026-08-12T08:58:07.9929192Z",
+        "err_size": 3671,
+        "err_mtime_utc": "2026-08-12T08:58:08.0086897Z",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T08:58:07.9929192Z"
+      }
+    ],
+    "sql_sha256": "d10ffd1103782d478b8c5a9c33d227f44f8824b8aa93577c78d9e38abb25cb5e",
+    "err_sha256": "0d416b82a663b8db98b74a39d40b9d3a29a67550aa8d3e5ca61215ec311d132c",
+    "end_sha256": "069cf6f438e5df2e40cf2ea0459bf26adc2839a076cc176d6b1d8b29ed8eac2c",
+    "result_osm_sha256": "a83ff12dcc18c73b170f87568238a2a3196ecf76c2555cb97a370f79dd8e166b",
+    "workflow_sha256": "34c8ec756381fa9f1bcaa9862ed7c49663c6fa741d834704be8feac442df2886",
+    "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+    "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+    "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5"
+  },
+  "model_summary_sha256": "f057a1186162f8680769596b663f077d94f4750729b83213438eb8a8d2ef92ac",
+  "window_area_m2": 2.16,
+  "gross_outdoor_wall_area_m2": 147.2,
+  "window_wall_ratio": 0.014673913043478263,
+  "schedule_set": [
+    "CALM-ROOM Activity 110W",
+    "CALM-ROOM Cooling Setpoint 24.5C",
+    "CALM-ROOM Heating Setpoint 21.5C",
+    "Calm Room Low Occupancy",
     "CalmRoomComfortSchedule",
-    "ConservativeThermostat",
+    "EW2A06 Always On",
+    "PLAYROOM Activity 110W",
+    "PLAYROOM Cooling Setpoint 25.0C",
+    "PLAYROOM Heating Setpoint 21.0C",
+    "Playroom Active Schedule",
+    "Playroom Occupancy",
+    "SICK-BAY Activity 110W",
+    "SICK-BAY Cooling Setpoint 24.0C",
+    "SICK-BAY Heating Setpoint 21.0C",
+    "STAFF-SUPPORT Activity 110W",
+    "STAFF-SUPPORT Cooling Setpoint 26.0C",
+    "STAFF-SUPPORT Heating Setpoint 20.0C",
+    "Sick Bay Staff-Supervised Schedule",
+    "SickBayLowOccupancy",
+    "Staff Support Occupancy",
     "StaffSupervisedSupport"
   ],
-  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe"
+  "construction_set": [
+    "EW2A06 Door Construction",
+    "EW2A06 Opaque Construction",
+    "EW2A06 Window Construction"
+  ]
 }

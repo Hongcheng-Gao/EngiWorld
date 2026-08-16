@@ -1,0 +1,30 @@
+{
+  "schema": "engiworld.task05.boundary-revalidation.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-05-windows",
+  "run_at_utc": "2026-08-14T09:43:57Z",
+  "scope": "Candidate-boundary-only evaluator correction; native GT artifacts were not regenerated or modified.",
+  "evaluator_sha256": "27266c58ca7e1751d666332584cd911a37173a8ff8ccefe4130ce9740d1b0da6",
+  "task_json_sha256": "c4c13420992e3337cb2b6a4a4dd6efba4ec3465de77609443f4a7db37bc6905c",
+  "isolation": "Each case was copied independently from formal GT; no mutation state was reused.",
+  "cases": [
+    {
+      "id": "helper_free",
+      "class": "positive",
+      "change": "Omit openstudio_postprocess_transaction.json, openstudio_postprocess.py, openstudio_postprocess.rb, and repository audit documents.",
+      "expected_ok": true,
+      "actual_ok": true,
+      "errors": []
+    },
+    {
+      "id": "missing_native_simulation_evidence",
+      "class": "negative",
+      "change": "Remove openstudio_cli_transactions and final_delivery from flow_report.json while retaining claimed simulation outputs.",
+      "expected_ok": false,
+      "actual_ok": false,
+      "errors": [
+        "flow_report:final_delivery_transaction_mismatch"
+      ]
+    }
+  ],
+  "all_cases_matched_expectation": true
+}

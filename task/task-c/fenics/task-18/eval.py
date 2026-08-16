@@ -2,12 +2,176 @@
 from __future__ import annotations
 
 import argparse
+import ast
 import json
+import os
 import re
+import subprocess
+import sys
+import tempfile
 from pathlib import Path
 
 
 FLOAT_RE = re.compile(r"(?<![A-Za-z0-9_])[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[eE][-+]?\d+)?(?![A-Za-z0-9_])")
+PRIVATE_RUNNER = r'''
+import ast, dis, json, math, secrets, sys, types
+from pathlib import Path
+
+MARKER = "__EVAL_PRIVATE_CALLS__"
+
+def dotted_name(node):
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = dotted_name(node.value)
+        return f"{prefix}.{node.attr}" if prefix else node.attr
+    return ""
+
+def code_objects(code):
+    yield code
+    for value in code.co_consts:
+        if isinstance(value, type(code)):
+            yield from code_objects(value)
+
+def main():
+    paths = [Path(arg).resolve() for arg in sys.argv[1:]]
+    token = secrets.token_hex(16)
+    compiled = {}
+    call_names = {}
+    helper_nodes = {}
+    for path in paths:
+        tree = ast.parse(path.read_text(encoding="utf-8"), filename=str(path))
+        names = {}
+        class Instrument(ast.NodeTransformer):
+            def visit_Call(self, node):
+                self.generic_visit(node)
+                node_id = f"{path.name}:{node.lineno}:{node.col_offset}:{len(names)}"
+                helper = f"__ev_{token}_{len(helper_nodes)}"
+                names[node_id] = dotted_name(node.func).lower().split(".")[-1]
+                helper_nodes[helper] = (path.name, node_id)
+                factory = ast.Call(ast.Name(helper, ast.Load()), [], [])
+                return ast.copy_location(ast.Call(factory, [node], []), node)
+        tree = Instrument().visit(tree)
+        ast.fix_missing_locations(tree)
+        compiled[path.name] = compile(tree, str(path), "exec")
+        call_names[path.name] = names
+
+    allowed = {name: set() for name in helper_nodes}
+    for code in compiled.values():
+        for child in code_objects(code):
+            instructions = list(dis.get_instructions(child))
+            for index, instruction in enumerate(instructions):
+                if instruction.opname.startswith("LOAD_") and instruction.argval in allowed:
+                    for candidate in instructions[index + 1:index + 6]:
+                        if "CALL" in candidate.opname and not candidate.opname.startswith("PRECALL"):
+                            allowed[instruction.argval].add((child, candidate.offset))
+                            break
+
+    executed = {path.name: [] for path in paths}
+    captured = {
+        path.name: {"matrices": [], "boundary_meshes": [], "spaces": []}
+        for path in paths
+    }
+    bindings = {}
+    for helper, (filename, node_id) in helper_nodes.items():
+        def make_factory(helper_name=helper, source_name=filename, call_id=node_id):
+            def factory():
+                caller = sys._getframe(1)
+                valid = any(caller.f_code is code and caller.f_lasti == offset for code, offset in allowed[helper_name])
+                def record(value):
+                    if valid:
+                        executed[source_name].append(call_id)
+                        call_name = call_names[source_name][call_id]
+                        if call_name in {"createaij", "create", "mat"} and hasattr(value, "getValuesCSR"):
+                            captured[source_name]["matrices"].append(value)
+                        elif call_name == "boundarymesh" and hasattr(value, "num_cells"):
+                            captured[source_name]["boundary_meshes"].append(value)
+                        elif call_name == "functionspace" and hasattr(value, "ufl_element"):
+                            captured[source_name]["spaces"].append(value)
+                    return value
+                return record
+            return factory
+        bindings[helper] = make_factory()
+
+    def namespace(path, module_name):
+        return {"__name__": module_name, "__file__": str(path), **bindings}
+
+    entry = paths[0]
+    for dependency in paths[1:]:
+        module = types.ModuleType(dependency.stem)
+        module.__dict__.update(namespace(dependency, dependency.stem))
+        sys.modules[dependency.stem] = module
+        exec(compiled[dependency.name], module.__dict__)
+    try:
+        exec(compiled[entry.name], namespace(entry, "__main__"))
+    except SystemExit as exc:
+        if exc.code not in (None, 0):
+            raise
+    result = {}
+    for filename, node_ids in executed.items():
+        calls = [call_names[filename][node_id] for node_id in node_ids]
+        reports = []
+        for matrix in captured[filename]["matrices"]:
+            report = {"matches_trace": False}
+            try:
+                rows, cols = (int(value) for value in matrix.getSize())
+                matrix_type = str(matrix.getType()).lower()
+                indptr, indices, data = matrix.getValuesCSR()
+                actual = {}
+                for row in range(rows):
+                    for offset in range(int(indptr[row]), int(indptr[row + 1])):
+                        actual[(row, int(indices[offset]))] = float(data[offset])
+
+                for boundary_mesh in captured[filename]["boundary_meshes"]:
+                    boundary_cells = boundary_mesh.cells()
+                    boundary_vertices = boundary_mesh.coordinates()
+                    parent_vertices = boundary_mesh.entity_map(0).array()
+                    for q_space in captured[filename]["spaces"]:
+                        q_element = q_space.ufl_element()
+                        if int(q_space.dim()) != int(boundary_mesh.num_cells()) or int(q_element.degree()) != 0:
+                            continue
+                        if "discontinuous" not in str(q_element.family()).lower() and str(q_element.family()).lower() != "dg":
+                            continue
+                        for v_space in captured[filename]["spaces"]:
+                            v_element = v_space.ufl_element()
+                            if int(v_element.degree()) != 1 or int(v_space.dim()) != cols:
+                                continue
+                            if "lagrange" not in str(v_element.family()).lower() or "discontinuous" in str(v_element.family()).lower():
+                                continue
+                            dolfin = sys.modules.get("dolfin")
+                            if dolfin is None:
+                                continue
+                            parent_dofs = dolfin.vertex_to_dof_map(v_space)
+                            expected = {}
+                            for cell_index, vertices in enumerate(boundary_cells):
+                                row = int(q_space.dofmap().cell_dofs(cell_index)[0])
+                                first, second = (int(vertex) for vertex in vertices)
+                                edge_length = math.sqrt(sum(
+                                    (float(boundary_vertices[first][axis]) - float(boundary_vertices[second][axis])) ** 2
+                                    for axis in range(len(boundary_vertices[first]))
+                                ))
+                                for boundary_vertex in (first, second):
+                                    parent_vertex = int(parent_vertices[boundary_vertex])
+                                    column = int(parent_dofs[parent_vertex])
+                                    expected[(row, column)] = expected.get((row, column), 0.0) + edge_length / 2.0
+                            if (
+                                "aij" in matrix_type
+                                and
+                                rows == int(q_space.dim())
+                                and len(actual) == 80
+                                and set(actual) == set(expected)
+                                and all(abs(actual[key] - expected[key]) <= 1.0e-10 for key in expected)
+                            ):
+                                report["matches_trace"] = True
+                report.update({"rows": rows, "cols": cols, "nnz": len(actual), "type": matrix_type})
+            except Exception as exc:
+                report["error"] = type(exc).__name__
+            reports.append(report)
+        result[filename] = {"calls": calls, "matrices": reports}
+    print(MARKER + json.dumps(result, sort_keys=True))
+
+main()
+'''
 
 
 def is_result_artifact(path: Path) -> bool:
@@ -43,13 +207,93 @@ def write_result(path: Path, value: int) -> None:
     path.write_text(json.dumps({"result": int(1 if value else 0)}, ensure_ascii=False) + "\n", encoding="utf-8")
 
 
-def check_task(root: Path) -> bool:
-    required = ["mixed_dim.py", "summary.txt"]
-    for rel in required:
-        if not is_nonempty_file(root / rel):
-            return False
+def dotted_name(node: ast.AST) -> str:
+    if isinstance(node, ast.Name):
+        return node.id
+    if isinstance(node, ast.Attribute):
+        prefix = dotted_name(node.value)
+        return f"{prefix}.{node.attr}" if prefix else node.attr
+    return ""
 
-    vals = parse_floats(read_text(root / "summary.txt"))
+
+def execute_script(root: Path, filename: str, timeout: int = 180) -> tuple[set[str], list[dict[str, object]]]:
+    script = (root / filename).resolve()
+    with tempfile.TemporaryDirectory(prefix="fenics-task18-eval-") as temp_dir:
+        runner = Path(temp_dir) / "runner.py"
+        runner.write_text(PRIVATE_RUNNER, encoding="utf-8")
+        completed = subprocess.run(
+            [sys.executable, str(runner), str(script)], cwd=root,
+            stdout=subprocess.PIPE, stderr=subprocess.STDOUT, text=True, timeout=timeout,
+        )
+        if completed.returncode != 0:
+            raise ValueError("mixed_dim.py did not complete successfully")
+        marker = "__EVAL_PRIVATE_CALLS__"
+        if marker not in completed.stdout:
+            raise ValueError("mixed_dim.py produced no private execution evidence")
+        evidence = json.loads(completed.stdout.rsplit(marker, 1)[1].splitlines()[0])
+    task_evidence = evidence.get(filename, {})
+    if not isinstance(task_evidence, dict):
+        raise ValueError("mixed_dim.py produced malformed private evidence")
+    calls = task_evidence.get("calls", [])
+    matrices = task_evidence.get("matrices", [])
+    if not isinstance(calls, list) or not isinstance(matrices, list):
+        raise ValueError("mixed_dim.py produced malformed private evidence")
+    return set(calls), matrices
+
+
+def check_trace_script(path: Path) -> bool:
+    try:
+        source = read_text(path)
+        tree = ast.parse(source, filename=path.name)
+    except (OSError, SyntaxError, UnicodeError):
+        return False
+    imports: set[str] = set()
+    calls: set[str] = set()
+    strings: set[str] = set()
+    for node in ast.walk(tree):
+        if isinstance(node, ast.Import):
+            imports.update(alias.name.split(".")[0].lower() for alias in node.names)
+        elif isinstance(node, ast.ImportFrom) and node.module:
+            imports.add(node.module.split(".")[0].lower())
+        elif isinstance(node, ast.Call):
+            calls.add(dotted_name(node.func).lower().split(".")[-1])
+        elif isinstance(node, ast.Constant) and isinstance(node.value, str):
+            strings.add(node.value.lower())
+    required_calls = {
+        "unitsquaremesh",
+        "functionspace",
+        "boundarymesh",
+        "entity_map",
+        "vertex_to_dof_map",
+    }
+    matrix_api = "createaij" in calls or ({"create", "settype"}.issubset(calls) and "mat" in calls)
+    return (
+        {"dolfin", "petsc4py"}.issubset(imports)
+        and required_calls.issubset(calls)
+        and matrix_api
+        and any("summary.txt" in value for value in strings)
+    )
+
+
+def check_task(root: Path) -> bool:
+    script = root / "mixed_dim.py"
+    summary = root / "summary.txt"
+    if not script.is_file() or not check_trace_script(script):
+        return False
+
+    summary.unlink(missing_ok=True)
+    executed, matrices = execute_script(root, script.name)
+    runtime_required = {
+        "unitsquaremesh", "functionspace", "boundarymesh", "entity_map",
+        "vertex_to_dof_map",
+    }
+    matrix_api = "createaij" in executed or ({"create", "settype"}.issubset(executed) and "mat" in executed)
+    if not runtime_required.issubset(executed) or not matrix_api or not is_nonempty_file(summary):
+        return False
+    if not any(isinstance(report, dict) and report.get("matches_trace") is True for report in matrices):
+        return False
+
+    vals = parse_floats(read_text(summary))
     if len(vals) < 2:
         return False
     nnz_float, cells_float = vals[0], vals[1]
@@ -59,9 +303,7 @@ def check_task(root: Path) -> bool:
     if abs(nnz_float - nnz) > 1e-6 or abs(cells_float - cells) > 1e-6:
         return False
 
-    if nnz <= 0 or cells <= 0:
-        return False
-    if cells < 10:
+    if nnz != 80 or cells != 40:
         return False
     return True
 

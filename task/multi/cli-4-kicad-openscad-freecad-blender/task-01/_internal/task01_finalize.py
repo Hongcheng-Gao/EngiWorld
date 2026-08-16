@@ -4,6 +4,8 @@ from __future__ import annotations
 import csv
 import hashlib
 import json
+import os
+import shutil
 import socket
 import subprocess
 import sys
@@ -66,8 +68,9 @@ def close_vector(actual: object, expected: list[float], tolerance: float) -> boo
 def main() -> None:
     work = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     internal = Path(sys.argv[2] if len(sys.argv) > 2 else "/tmp/engiworld-task01-internal")
-    kicad = "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
-    blender = "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+    kicad = os.environ.get("ENGIWORLD_KICAD") or shutil.which("kicad-cli") or "/usr/bin/kicad-cli"
+    freecad = os.environ.get("ENGIWORLD_FREECAD") or shutil.which("freecadcmd") or "freecadcmd"
+    blender = os.environ.get("ENGIWORLD_BLENDER") or shutil.which("blender") or "blender"
     freecad_report = json.loads((work / "03_freecad_clearance_report.json").read_text(encoding="utf-8"))
     blender_report = json.loads((work / "04_blender_scene_report.json").read_text(encoding="utf-8"))
     openscad_params = json.loads((work / "02_openscad_parameters.json").read_text(encoding="utf-8"))
@@ -81,8 +84,8 @@ def main() -> None:
         raise RuntimeError("cannot finalize task-01; missing artifacts: " + ", ".join(missing))
     versions = {
         "Blender": version([blender, "--background", "--version"]),
-        "FreeCAD": version(["freecadcmd", "--version"]),
-        "KiCad": version([kicad, "kicad-cli", "--version"]),
+        "FreeCAD": version([freecad, "--version"]),
+        "KiCad": version([kicad, "--version"]),
         "OpenSCAD": version(["openscad", "--version"]),
     }
     generated_at = datetime.now(timezone.utc).isoformat()

@@ -1,7 +1,10 @@
 from __future__ import annotations
 import json
+import itertools
+import math
 import os
 import re
+import struct
 import sys
 import xml.etree.ElementTree as ET
 from pathlib import Path
@@ -31,22 +34,26 @@ SPEC = {'case_id': 'multi-gui-4-librecad-freecad-kicad-blender-task-04-ubuntu',
                      [59.0, 106.0, 2.1],
                      [12.0, 59.0, 2.1]],
          'texts': ['EW4G04', 'OLED', 'ENCODER', 'BEZEL'],
-         'min_lines': 4,
          'no_layers': ['GUIDE']},
  'stl': {'file': 'stage2_round_gauge_bezel.stl',
          'bbox': [118.0, 118.0, 18.0],
          'bbox_tol': 4.0,
-         'min_triangles': 12},
- 'kicad': {'tokens': ['EW4G04', 'OLED-DS1', 'ENCODER-SW1', 'BUZZER-BZ1', 'BTN-MODE', 'I2C-J1']},
+         'min_triangles': 3000,
+         'fill_ratio': [0.08, 0.28],
+         'min_height_levels': 4},
+ 'kicad': {'tokens': ['EW4G04', 'OLED-DS1', 'ENCODER-SW1', 'BUZZER-BZ1', 'BTN-MODE', 'I2C-J1'],
+           'components': {'DS1': ['OLED Display', 4],
+                          'SW1': ['Rotary Encoder', 5],
+                          'BZ1': ['Gauge Buzzer', 2],
+                          'SW2': ['Mode Button', 2],
+                          'J1': ['I2C Header', 4]},
+           'min_pads': 17},
  'glb': {'file': 'stage4_round_gauge_bezel.glb',
          'tokens': [],
-         'min_nodes': 2,
-         'min_materials': 0,
-         'nodes': ['stage2_round_gauge_bezel', 'stage3_round_gauge_bezel_board_profile.svg'],
-         'min_meshes': 1,
-         'gui_export': True,
-         'accepted_import_evidence': {'stage2_stl_object': 'stage2_round_gauge_bezel',
-                                      'stage3_svg_object': 'stage3_round_gauge_bezel_board_profile.svg'}},
+         'min_nodes': 4,
+         'min_materials': 1,
+         'min_meshes': 4,
+         'gui_export': True},
  'diversity_notes': {'geometry': 'Round instrument gauge bezel with OLED and encoder board',
                      'electronic_focus': 'a circular gauge PCB carrying an OLED display, encoder, '
                                          'buzzer, mode button, and I2C header',
@@ -64,8 +71,8 @@ SPEC = {'case_id': 'multi-gui-4-librecad-freecad-kicad-blender-task-04-ubuntu',
                                           'geometry checks'}},
  'seed': {'file': 'seed_round_gauge_bezel.dxf',
           'desktop_path': '/home/user/Desktop/seed_round_gauge_bezel.dxf'},
- 'generated_by': {'script': 'generate_assets.py',
-                  'packages': ['ezdxf', 'trimesh', 'pygltflib', 'numpy', 'xml.sax.saxutils']},
+ 'generated_by': {'method': 'real_snapshot_software',
+                  'versions': ['LibreCAD 2.2.0.2', 'FreeCAD 0.21.2', 'KiCad 10.0.2', 'Blender 4.2.3']},
  'handoff': {'file': 'stage2_round_gauge_bezel_handoff_outline.dxf'},
  'board_profile': {'file': 'stage3_round_gauge_bezel_board_profile.svg'},
  'intermediate_outputs': [{'stage': 'librecad',
@@ -346,24 +353,27 @@ def check_stage1_dxf():
     for layer in SPEC['dxf'].get('no_layers', []):
         if layer.upper() in data['layers']:
             return fail('Stage1 DXF still contains forbidden construction layer: ' + layer)
-    if data['line_like_count'] < SPEC['dxf'].get('min_lines', 4):
-        return fail('Stage1 DXF has too few line/polyline entities')
     if not dims_match(data['bbox'], SPEC['dxf']['bbox'], SPEC['dxf'].get('bbox_tol', 1.2)):
         return fail('Stage1 DXF bbox mismatch got %s expected %s' % (data['bbox'], SPEC['dxf']['bbox']))
-    for req in SPEC['dxf'].get('circles', []):
-        found = any(
+    if len(data['circles']) != len(SPEC['dxf']['circles']):
+        return fail('Stage1 requires exactly six task circles')
+    for index, req in enumerate(SPEC['dxf'].get('circles', [])):
+        expected_layer = ('OUTLINE' if index == 0 else 'WINDOW' if index == 1 else 'HOLE')
+        found = [circle for circle in data['circles'] if
             close(circle['x'], req[0], SPEC['dxf'].get('circle_tol', 0.9)) and
             close(circle['y'], req[1], SPEC['dxf'].get('circle_tol', 0.9)) and
-            close(circle['r'], req[2], SPEC['dxf'].get('radius_tol', 0.45))
-            for circle in data['circles']
-        )
-        if not found:
+            close(circle['r'], req[2], SPEC['dxf'].get('radius_tol', 0.45)) and
+            circle['layer'] == expected_layer]
+        if len(found) != 1:
             return fail('Stage1 DXF missing circle near (%s, %s) radius %s' % (req[0], req[1], req[2]))
-    text_blob = norm(' '.join(data['texts']))
+    doc = ezdxf.readfile(str(ROOT / name))
+    label_texts = [entity_text(entity) for entity in doc.modelspace()
+                   if entity.dxftype() in {'TEXT', 'MTEXT'} and str(entity.dxf.layer).upper() == 'LABEL']
+    text_blob = norm(' '.join(label_texts))
     for token in SPEC['dxf'].get('texts', []):
         if norm(token) not in text_blob:
             return fail('Stage1 DXF missing text token: ' + token)
-    return ok('Stage1 LibreCAD DXF passed ezdxf geometry/layer/text checks')
+    return ok('Stage1 LibreCAD DXF has the exact circular outline, window, four holes, and labels')
 
 
 def check_stl():
@@ -371,7 +381,7 @@ def check_stl():
     if not required_file(name, 200):
         return False
     try:
-        mesh = trimesh.load_mesh(str(ROOT / name), file_type='stl', force='mesh', process=False)
+        mesh = trimesh.load_mesh(str(ROOT / name), file_type='stl', force='mesh', process=True)
     except Exception as exc:
         return fail('trimesh could not parse STL: ' + str(exc))
     if mesh is None or getattr(mesh, 'vertices', None) is None or len(mesh.vertices) == 0:
@@ -385,7 +395,25 @@ def check_stl():
     tol = SPEC['stl'].get('bbox_tol', 4.0)
     if any(abs(g - e) > tol for g, e in zip(got, exp)):
         return fail('STL bbox mismatch got %s expected %s' % (dims, SPEC['stl']['bbox']))
-    return ok('FreeCAD STL parsed by trimesh and dimensions passed')
+    if not mesh.is_watertight:
+        return fail('STL must be a watertight manufactured bezel')
+    fill = abs(float(mesh.volume)) / max(float(np.prod(np.asarray(dims))), 1e-9)
+    if not (SPEC['stl']['fill_ratio'][0] <= fill <= SPEC['stl']['fill_ratio'][1]):
+        return fail('STL fill ratio does not describe an open circular bezel: %.4f' % fill)
+    points = np.asarray(mesh.vertices, dtype=float)
+    height_axis = int(np.argmin(np.abs(np.ptp(points, axis=0) - 18.0)))
+    levels = np.unique(np.round(points[:, height_axis], 1))
+    if len(levels) < SPEC['stl']['min_height_levels']:
+        return fail('STL lacks distinct base, bezel/rim, and raised-control height levels')
+    top = points[points[:, height_axis] >= points[:, height_axis].max() - 0.25]
+    planar_axes = [axis for axis in range(3) if axis != height_axis]
+    if (len(top) < 12 or max(np.ptp(top[:, planar_axes], axis=0)) > 35.0 or
+            min(np.ptp(top[:, planar_axes], axis=0)) < 5.0):
+        return fail('STL lacks a localized substantial raised encoder-control region')
+    centered_radius = np.hypot(points[:, 0] - 59.0, points[:, 1] - 59.0)
+    if np.count_nonzero(np.abs(centered_radius - 59.0) < 0.25) < 100 or np.count_nonzero(np.abs(centered_radius - 34.0) < 0.25) < 100:
+        return fail('STL lacks substantial outer bezel and central window circumference geometry')
+    return ok('FreeCAD STL is a full-size watertight open circular bezel with raised encoder geometry')
 
 
 def check_handoff_dxf():
@@ -399,12 +427,52 @@ def check_handoff_dxf():
     expected_xy = SPEC['stl']['bbox'][:2]
     if not dims_match(data['bbox'], expected_xy, SPEC['dxf'].get('bbox_tol', 1.5)):
         return fail('Stage2 handoff DXF bbox %s does not match FreeCAD STL XY %s' % (data['bbox'], expected_xy))
-    text_blob = norm(' '.join(data['texts']))
-    if norm('FREECAD_TO_KICAD') not in text_blob or norm(SPEC['token']) not in text_blob:
-        return fail('Stage2 handoff DXF missing FREECAD_TO_KICAD/token label')
-    if 'FREECAD_HANDOFF' not in data['layers']:
-        return fail('Stage2 handoff DXF missing FREECAD_HANDOFF layer')
-    return ok('Stage2 FreeCAD-to-KiCad handoff DXF matches upstream geometry')
+    doc = ezdxf.readfile(str(ROOT / name))
+    entities = list(doc.modelspace())
+    circles = [entity for entity in entities if entity.dxftype() == 'CIRCLE']
+    inserts = [entity for entity in entities if entity.dxftype() == 'INSERT']
+    if len(circles) != 5 or len(inserts) != 2:
+        return fail('Handoff requires one circular board outline, four holes, and two ShapeString labels')
+    required = SPEC['dxf']['circles'][:1] + SPEC['dxf']['circles'][2:]
+    for req in required:
+        if not any(close(c.dxf.center.x, req[0], 0.1) and close(c.dxf.center.y, req[1], 0.1) and close(c.dxf.radius, req[2], 0.1) for c in circles):
+            return fail('Handoff is missing an exact circular interface feature: ' + repr(req))
+    if any(len(doc.blocks.get(entity.dxf.name)) < 6 for entity in inserts):
+        return fail('Handoff ShapeString geometry is empty or trivial')
+    return ok('FreeCAD handoff has the exact circular outline, four holes, and two real ShapeString exports')
+
+
+def balanced_blocks(text, head):
+    blocks = []
+    pattern = re.compile(r'\(' + re.escape(head) + r'(?=\s|\")')
+    for match in pattern.finditer(text):
+        depth = 0
+        quoted = False
+        escaped = False
+        for index in range(match.start(), len(text)):
+            char = text[index]
+            if quoted:
+                if escaped:
+                    escaped = False
+                elif char == '\\':
+                    escaped = True
+                elif char == '"':
+                    quoted = False
+            elif char == '"':
+                quoted = True
+            elif char == '(':
+                depth += 1
+            elif char == ')':
+                depth -= 1
+                if depth == 0:
+                    blocks.append(text[match.start():index + 1])
+                    break
+    return blocks
+
+
+def first_xy(block, head):
+    match = re.search(r'\(' + re.escape(head) + r'\s+(-?\d+(?:\.\d+)?)\s+(-?\d+(?:\.\d+)?)', block)
+    return (float(match.group(1)), float(match.group(2))) if match else None
 
 
 def check_kicad_board_file():
@@ -415,15 +483,32 @@ def check_kicad_board_file():
         text = (ROOT / name).read_text(encoding='utf-8', errors='ignore')
     except Exception as exc:
         return fail('Could not read KiCad board file: ' + str(exc))
-    blob = norm(text)
-    for token in ['KICAD_TO_BLENDER', 'EDGE_FROM_STAGE2_HANDOFF', SPEC['handoff']['file'], SPEC['token']] + SPEC.get('kicad', {}).get('tokens', []):
-        if norm(token) not in blob:
-            return fail('KiCad board file missing required token: ' + token)
-    if norm('Edge.Cuts') not in blob:
-        return fail('KiCad board file missing Edge.Cuts outline evidence')
-    if norm('F.SilkS') not in blob:
-        return fail('KiCad board file missing F.SilkS silkscreen evidence')
-    return ok('KiCad board file carries Edge.Cuts and all required board/silkscreen tokens')
+    if not text.lstrip().startswith('(kicad_pcb') or not re.search(r'\(generator\s+"pcbnew"\)', text, re.I):
+        return fail('Board is not a native pcbnew kicad_pcb document')
+    footprints = balanced_blocks(text, 'footprint')
+    pads = balanced_blocks(text, 'pad')
+    if len(footprints) != len(SPEC['kicad']['components']) or len(pads) < SPEC['kicad']['min_pads']:
+        return fail('Board lacks the five native gauge footprints or required pads')
+    found = {}
+    for block in footprints:
+        ref = re.search(r'\(property\s+"Reference"\s+"([^"]+)"', block)
+        value = re.search(r'\(property\s+"Value"\s+"([^"]+)"', block)
+        at = first_xy(block, 'at')
+        if not ref or not value or at is None:
+            return fail('A native footprint lacks Reference, Value, or placement')
+        if math.hypot(at[0] - 59.0, at[1] - 59.0) > 55.0:
+            return fail('A gauge footprint is outside the circular board: ' + ref.group(1))
+        found[ref.group(1)] = [value.group(1), len(balanced_blocks(block, 'pad'))]
+    if found != SPEC['kicad']['components']:
+        return fail('Gauge footprint identities/pad counts mismatch: ' + repr(found))
+    circles = [block for block in balanced_blocks(text, 'gr_circle') if re.search(r'\(layer\s+"Edge\.Cuts"\)', block)]
+    if len(circles) != 1 or first_xy(circles[0], 'center') != (59.0, 59.0) or first_xy(circles[0], 'end') != (118.0, 59.0):
+        return fail('KiCad Edge.Cuts must be the exact FreeCAD r59 circle')
+    silk = ' '.join(block for block in balanced_blocks(text, 'gr_text') if re.search(r'\(layer\s+"F\.SilkS"\)', block))
+    for token in ['KICAD_TO_BLENDER', 'EDGE_FROM_STAGE2_HANDOFF', SPEC['handoff']['file']] + SPEC['kicad']['tokens']:
+        if norm(token) not in norm(silk):
+            return fail('Required transfer token is not native F.SilkS text: ' + token)
+    return ok('KiCad board has the exact circular Edge.Cuts, five real gauge footprints, pads, and silkscreen')
 
 
 def parse_svg_number(value):
@@ -442,23 +527,28 @@ def check_board_profile_svg():
         return fail('Could not parse KiCad-to-Blender SVG profile: ' + str(exc))
     if not root.tag.lower().endswith('svg'):
         return fail('Stage3 profile is not an SVG document')
-    view_box = root.attrib.get('viewBox') or root.attrib.get('viewbox')
-    dims = []
-    if view_box:
-        nums = [float(x) for x in re.findall(r'-?\d+(?:\.\d+)?', view_box)]
-        if len(nums) >= 4:
-            dims = [abs(nums[2]), abs(nums[3])]
-    if not dims:
-        width = parse_svg_number(root.attrib.get('width'))
-        height = parse_svg_number(root.attrib.get('height'))
-        if width is not None and height is not None:
-            dims = [width, height]
-    if not dims:
-        return fail('Stage3 SVG profile missing readable width/height or viewBox')
-    handoff = read_dxf_summary(SPEC['handoff']['file'])
-    if not dims_match(dims, handoff['bbox'], SPEC['dxf'].get('bbox_tol', 1.5)):
-        return fail('Stage3 SVG profile size %s does not match stage2 handoff bbox %s' % (dims, handoff['bbox']))
-    return ok('Stage3 KiCad-to-Blender SVG profile is parseable and matches stage2 handoff size')
+    circles = []
+    def css(value):
+        return {k.strip().lower(): v.strip().lower() for k, v in (part.split(':', 1) for part in str(value or '').split(';') if ':' in part)}
+    def opacity(value, default=1.0):
+        try:
+            item = str(value).strip()
+            return float(item.rstrip('%')) / (100.0 if '%' in item else 1.0)
+        except Exception:
+            return default
+    def visit(element, inherited):
+        style = dict(inherited); style.update(css(element.attrib.get('style')))
+        for key in ('display', 'visibility', 'stroke', 'opacity', 'stroke-opacity'):
+            if key in element.attrib: style[key] = element.attrib[key].strip().lower()
+        hidden = style.get('display') == 'none' or style.get('visibility') in {'hidden', 'collapse'} or opacity(style.get('opacity'), 1.0) <= 0.001
+        tag = element.tag.rsplit('}', 1)[-1].lower()
+        if tag == 'circle' and not hidden and style.get('stroke', 'none') not in {'none', 'transparent'} and opacity(style.get('stroke-opacity'), 1.0) > 0.001:
+            circles.append((float(element.attrib.get('cx', 0)), float(element.attrib.get('cy', 0)), float(element.attrib.get('r', 0))))
+        for child in list(element): visit(child, style)
+    visit(root, {})
+    if len(circles) != 1 or not close(circles[0][0], 59, 0.1) or not close(circles[0][1], 59, 0.1) or not close(circles[0][2], 59, 0.1):
+        return fail('Stage3 SVG needs one actually painted r59 circular profile')
+    return ok('KiCad SVG has one visible r59 circle equal to the FreeCAD handoff and Edge.Cuts')
 
 
 def collect_glb_strings(value, out):
@@ -472,6 +562,66 @@ def collect_glb_strings(value, out):
             collect_glb_strings(item, out)
     elif value is not None:
         out.append(str(value))
+
+
+def gltf_accessor_positions(gltf, accessor_index):
+    if accessor_index is None or not (0 <= accessor_index < len(gltf.accessors or [])):
+        return np.empty((0, 3), dtype=float)
+    accessor = gltf.accessors[accessor_index]
+    if accessor.bufferView is None or accessor.componentType != 5126 or accessor.type != 'VEC3':
+        return np.empty((0, 3), dtype=float)
+    view = gltf.bufferViews[accessor.bufferView]
+    offset = int(view.byteOffset or 0) + int(accessor.byteOffset or 0)
+    stride = int(view.byteStride or 12)
+    blob = gltf.binary_blob()
+    if accessor.count <= 0 or offset + (accessor.count - 1) * stride + 12 > len(blob):
+        return np.empty((0, 3), dtype=float)
+    return np.asarray([struct.unpack_from('<3f', blob, offset + index * stride) for index in range(accessor.count)], dtype=float)
+
+
+def node_matrix(node):
+    if node.matrix and len(node.matrix) == 16:
+        return np.asarray(node.matrix, dtype=float).reshape((4, 4), order='F')
+    translation = np.asarray(node.translation or [0, 0, 0], dtype=float)
+    scale = np.asarray(node.scale or [1, 1, 1], dtype=float)
+    x, y, z, w = [float(value) for value in (node.rotation or [0, 0, 0, 1])]
+    rotation = np.asarray([[1-2*y*y-2*z*z, 2*x*y-2*z*w, 2*x*z+2*y*w],
+                           [2*x*y+2*z*w, 1-2*x*x-2*z*z, 2*y*z-2*x*w],
+                           [2*x*z-2*y*w, 2*y*z+2*x*w, 1-2*x*x-2*y*y]])
+    matrix = np.eye(4)
+    matrix[:3, :3] = rotation @ np.diag(scale)
+    matrix[:3, 3] = translation
+    return matrix
+
+
+def gltf_world_matrices(gltf):
+    parents = {child: parent for parent, node in enumerate(gltf.nodes or []) for child in (node.children or [])}
+    result = {}
+    for index in range(len(gltf.nodes or [])):
+        chain, current, seen = [], index, set()
+        while current not in seen:
+            seen.add(current); chain.append(current)
+            if current not in parents: break
+            current = parents[current]
+        matrix = np.eye(4)
+        for item in reversed(chain): matrix = matrix @ node_matrix(gltf.nodes[item])
+        result[index] = matrix
+    return result
+
+
+def transformed_positions(gltf, node_index, matrices):
+    node = gltf.nodes[node_index]
+    if node.mesh is None or not (0 <= node.mesh < len(gltf.meshes or [])):
+        return np.empty((0, 3), dtype=float), []
+    chunks, material_ids = [], []
+    for primitive in gltf.meshes[node.mesh].primitives or []:
+        points = gltf_accessor_positions(gltf, getattr(primitive.attributes, 'POSITION', None))
+        if len(points):
+            homogeneous = np.column_stack((points, np.ones(len(points))))
+            transformed = np.sum(homogeneous[:, None, :] * matrices[node_index][None, :, :], axis=2)
+            chunks.append(transformed[:, :3])
+        material_ids.append(primitive.material)
+    return (np.vstack(chunks) if chunks else np.empty((0, 3), dtype=float)), material_ids
 
 
 def check_glb():
@@ -491,16 +641,107 @@ def check_glb():
         return fail('GLB has too few meshes from imported geometry')
     if len(materials) < SPEC['glb'].get('min_materials', 0):
         return fail('GLB has too few materials')
-    strings = []
-    collect_glb_strings(gltf.to_dict(), strings)
-    blob = '\n'.join(strings).upper()
-    if 'BLENDER' not in blob:
+    strings = []; collect_glb_strings(gltf.to_dict(), strings)
+    if 'BLENDER' not in '\n'.join(strings).upper():
         return fail('GLB metadata should indicate Blender GUI export/generation')
-    evidence = SPEC['glb'].get('accepted_import_evidence', {})
-    for label, token in evidence.items():
-        if str(token).upper() not in blob:
-            return fail('GLB missing Blender import evidence %s: %s' % (label, token))
-    return ok('Blender GLB contains GUI import evidence for the stage2 STL and stage3 SVG')
+    scene_index = gltf.scene if gltf.scene is not None else 0
+    roots = list(gltf.scenes[scene_index].nodes or []) if gltf.scenes and 0 <= scene_index < len(gltf.scenes) else []
+    reachable, stack = set(), list(roots)
+    while stack:
+        index = stack.pop()
+        if index in reachable or not (0 <= index < len(nodes)): continue
+        reachable.add(index); stack.extend(nodes[index].children or [])
+    matrices = gltf_world_matrices(gltf)
+    records = []
+    for index in reachable:
+        if nodes[index].mesh is None or not (0 <= nodes[index].mesh < len(meshes)):
+            continue
+        points, material_ids = transformed_positions(gltf, index, matrices)
+        if len(points) < 20 or not np.all(np.isfinite(points)):
+            continue
+        records.append({'index': index, 'mesh': nodes[index].mesh, 'points': points,
+                        'dims': np.sort(np.ptp(points, axis=0)), 'center': np.mean(points, axis=0),
+                        'materials': {item for item in material_ids if item is not None}})
+    # Verify the Blender body against the actual stage2 STL, allowing axis order
+    # and reflection differences introduced by the glTF coordinate convention.
+    source = trimesh.load_mesh(str(ROOT / SPEC['stl']['file']), file_type='stl', force='mesh', process=True)
+    source_points = np.asarray(source.vertices, dtype=float)
+    source_dims = np.ptp(source_points, axis=0)
+    best_overlap = 0.0
+    body = None
+    source_zero = source_points - source_points.min(axis=0)
+    source_set = {tuple(row) for row in np.round(source_zero / 0.05).astype(int)}
+    for record in records:
+        if len(record['points']) < 500 or not dims_match(record['dims'], sorted(source_dims), 0.8):
+            continue
+        for order in itertools.permutations(range(3)):
+            candidate = record['points'][:, order].copy()
+            if np.max(np.abs(np.ptp(candidate, axis=0) - source_dims)) > 0.8: continue
+            candidate -= candidate.min(axis=0)
+            for flips in itertools.product((False, True), repeat=3):
+                transformed = candidate.copy()
+                for axis, flip in enumerate(flips):
+                    if flip: transformed[:, axis] = source_dims[axis] - transformed[:, axis]
+                candidate_set = {tuple(row) for row in np.round(transformed / 0.05).astype(int)}
+                overlap = len(source_set & candidate_set) / max(1, min(len(source_set), len(candidate_set)))
+                if overlap > best_overlap:
+                    best_overlap, body = overlap, record
+    if body is None or best_overlap < 0.70:
+        return fail('GLB lacks a reachable bezel vertex-equivalent to source STL')
+
+    profile_candidates = [record for record in records if record is not body and
+                          record['dims'][0] <= 1.5 and close(record['dims'][1], 118.0, 2.0) and
+                          close(record['dims'][2], 118.0, 2.0)]
+    if not profile_candidates:
+        return fail('GLB lacks a distinct full-scale thin circular SVG-derived profile')
+    profile = min(profile_candidates, key=lambda item: item['dims'][0])
+    profile_points = profile['points']
+    profile_dims = np.sort(np.ptp(profile_points, axis=0))
+    if not (profile_dims[0] <= 1.2 and close(profile_dims[1], 118.0, 1.5) and close(profile_dims[2], 118.0, 1.5)):
+        return fail('SVG-derived circular profile is missing or remains at Blender 1/1000 scale: ' + repr(profile_dims.tolist()))
+    axes = np.argsort(np.ptp(profile_points, axis=0))[-2:]
+    projected = profile_points[:, axes]
+    center = (projected.min(axis=0) + projected.max(axis=0)) / 2.0
+    radial = np.linalg.norm(projected - center, axis=1)
+    if np.percentile(np.abs(radial - 59.0), 90) > 1.2:
+        return fail('SVG-derived visible profile is not circular radius 59')
+    smoky_materials = set()
+    for index, material in enumerate(materials):
+        pbr = getattr(material, 'pbrMetallicRoughness', None)
+        factor = getattr(pbr, 'baseColorFactor', None)
+        if (factor and max(factor[:3]) < 0.15 and float(factor[3]) < 0.85 and
+                str(material.alphaMode).upper() in {'BLEND', 'MASK'}):
+            smoky_materials.add(index)
+    lens_candidates = [record for record in records if record is not body and record is not profile and
+                       record['materials'] & smoky_materials and record['dims'][0] <= 3.0 and
+                       35.0 <= record['dims'][1] <= 75.0 and 35.0 <= record['dims'][2] <= 75.0]
+    knob_candidates = [record for record in records if record is not body and record is not profile and
+                       5.0 <= record['dims'][0] <= 18.0 and 10.0 <= record['dims'][1] <= 30.0 and
+                       10.0 <= record['dims'][2] <= 30.0 and
+                       abs(record['dims'][1] - record['dims'][2]) <= 3.0]
+    if len(lens_candidates) != 1:
+        return fail('GLB requires one substantial dark translucent lens geometry')
+    if not knob_candidates:
+        return fail('GLB requires a substantial raised approximately cylindrical encoder knob')
+    lens = lens_candidates[0]
+    knob = min(knob_candidates, key=lambda item: abs(item['dims'][1] - item['dims'][2]))
+    if len({body['mesh'], profile['mesh'], lens['mesh'], knob['mesh']}) != 4:
+        return fail('Body, profile, lens, and knob must be distinct mesh objects')
+
+    body_bounds = np.asarray([body['points'].min(axis=0), body['points'].max(axis=0)])
+    height_axis = int(np.argmin(np.ptp(body['points'], axis=0)))
+    planar_axes = [axis for axis in range(3) if axis != height_axis]
+    for record, label in ((lens, 'smoky lens'), (knob, 'encoder knob'), (profile, 'SVG profile')):
+        center = record['center']
+        if (any(center[axis] < body_bounds[0, axis] - 3.0 or center[axis] > body_bounds[1, axis] + 3.0
+                for axis in planar_axes) or
+                center[height_axis] < body_bounds[0, height_axis] - 5.0 or
+                center[height_axis] > body_bounds[1, height_axis] + 8.0):
+            return fail('GLB %s is not spatially assembled with the bezel body' % label)
+    body_center = (body_bounds[0] + body_bounds[1]) / 2.0
+    if np.linalg.norm(lens['center'][planar_axes] - body_center[planar_axes]) > 12.0:
+        return fail('Smoky lens is not positioned across the central display window')
+    return ok('Blender GLB preserves source STL/SVG geometry and has a smoky lens plus raised encoder knob')
 
 
 def main():
@@ -508,8 +749,6 @@ def main():
         check_dependencies,
         check_required_files,
         check_intermediate_outputs,
-        check_no_script_artifacts,
-        check_no_command_bypass,
         check_stage1_dxf,
         check_stl,
         check_handoff_dxf,

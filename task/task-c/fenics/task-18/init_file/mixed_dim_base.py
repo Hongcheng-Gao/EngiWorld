@@ -4,9 +4,9 @@ import numpy as np
 mesh = UnitSquareMesh(10, 10)
 V = FunctionSpace(mesh, 'P', 1)
 
-# TODO: 创建边界子网格（co-dimension 1）
-# TODO: 在子网格上定义函数空间 Q
-# TODO: 组装混合维变分形式：inner(u, q) * ds
+# TODO: 创建 BoundaryMesh（co-dimension 1）
+# TODO: 在边界网格上定义 DG(0) 空间 Q
+# TODO: 用 BoundaryMesh.entity_map(0) 组装离散 trace 耦合矩阵
 
 u = TrialFunction(V)
-# q = TestFunction(Q)  # 子网格测试函数
+# legacy DOLFIN 不能直接在一个 UFL form 中混合不同 mesh 的函数空间。

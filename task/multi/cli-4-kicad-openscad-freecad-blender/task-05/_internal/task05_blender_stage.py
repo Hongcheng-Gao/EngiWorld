@@ -301,7 +301,11 @@ def main() -> None:
     add_label("J1 Y+", (0.0, 45.0, 14.0), collections["review_labels"], (0.55, 1.0, 0.08, 1.0))
 
     scene = bpy.context.scene
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    engines = {
+        item.identifier
+        for item in scene.bl_rna.properties["render"].fixed_type.properties["engine"].enum_items
+    }
+    scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in engines else "BLENDER_EEVEE"
     scene.render.resolution_x = 960
     scene.render.resolution_y = 720
     scene.render.resolution_percentage = 100

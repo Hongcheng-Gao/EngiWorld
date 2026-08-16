@@ -17,7 +17,7 @@ SPEC = {'output': 'task-025_output.stl',
             {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 3.0, 'span': 15.0, 'bins': 12},
             {'kind': 'angular_clusters',
              'count': 24,
-             'radius_range': [15.0, 17.5],
+             'radius_range': [18.0, 19.2],
              'z_range': [0.0, 16.0],
              'gap': 6.0}]}
 

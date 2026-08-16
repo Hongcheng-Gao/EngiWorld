@@ -34,9 +34,10 @@ module side_access_cutouts() {
 }
 
 module top_access_cutouts() {
+  boolean_cut_epsilon = min(0.05, access_overcut/5);
   for (access = top_accesses)
-    translate([access[1], access[2], access[4]])
-      cylinder(d=access[3], h=access[5]-access[4]);
+    translate([access[1], access[2], access[4]-boolean_cut_epsilon])
+      cylinder(d=access[3]+2*boolean_cut_epsilon, h=access[5]-access[4]+2*boolean_cut_epsilon);
 }
 
 module installed_package() {

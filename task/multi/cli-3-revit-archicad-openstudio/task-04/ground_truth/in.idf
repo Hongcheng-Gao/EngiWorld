@@ -233,9 +233,9 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 10,                             !- Name
-  Wall,                                   !- Surface Type
-  EW3B04-ConstructionSet Wall,            !- Construction Name
+  ENTRY-NICHE RoofExposureSurface,        !- Name
+  Roof,                                   !- Surface Type
+  PitchedRoofConstruction,                !- Construction Name
   ENTRY-NICHE-ZN,                         !- Zone Name
   ENTRY-NICHE,                            !- Space Name
   Outdoors,                               !- Outside Boundary Condition
@@ -244,13 +244,13 @@ BuildingSurface:Detailed,
   WindExposed,                            !- Wind Exposure
   ,                                       !- View Factor to Ground
   ,                                       !- Number of Vertices
-  7.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  7.8, 0, 2.4384,                         !- X,Y,Z Vertex 2 {m}
-  7.8, 0, 0,                              !- X,Y,Z Vertex 3 {m}
-  7.8, 5.8, 0;                            !- X,Y,Z Vertex 4 {m}
+  7.8, 0, 2.4384,                         !- X,Y,Z Vertex 1 {m}
+  7.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  6.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 3 {m}
+  6.8, 0, 2.4384;                         !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 11,                             !- Name
+  Surface 10,                             !- Name
   Wall,                                   !- Surface Type
   EW3B04-ConstructionSet Wall,            !- Construction Name
   ENTRY-NICHE-ZN,                         !- Zone Name
@@ -267,24 +267,7 @@ BuildingSurface:Detailed,
   7.8, 0, 0;                              !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 12,                             !- Name
-  Roof,                                   !- Surface Type
-  EW3B04-ConstructionSet Roof,            !- Construction Name
-  ENTRY-NICHE-ZN,                         !- Zone Name
-  ENTRY-NICHE,                            !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  7.8, 0, 2.4384,                         !- X,Y,Z Vertex 1 {m}
-  7.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  6.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 3 {m}
-  6.8, 0, 2.4384;                         !- X,Y,Z Vertex 4 {m}
-
-BuildingSurface:Detailed,
-  Surface 7,                              !- Name
+  Surface 6,                              !- Name
   Floor,                                  !- Surface Type
   EW3B04-ConstructionSet Floor,           !- Construction Name
   ENTRY-NICHE-ZN,                         !- Zone Name
@@ -301,7 +284,7 @@ BuildingSurface:Detailed,
   7.8, 0, 0;                              !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 8,                              !- Name
+  Surface 7,                              !- Name
   Wall,                                   !- Surface Type
   EW3B04-ConstructionSet Wall,            !- Construction Name
   ENTRY-NICHE-ZN,                         !- Zone Name
@@ -318,7 +301,7 @@ BuildingSurface:Detailed,
   6.8, 0, 0;                              !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 9,                              !- Name
+  Surface 8,                              !- Name
   Wall,                                   !- Surface Type
   EW3B04-ConstructionSet Wall,            !- Construction Name
   ENTRY-NICHE-ZN,                         !- Zone Name
@@ -333,6 +316,23 @@ BuildingSurface:Detailed,
   7.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 2 {m}
   7.8, 5.8, 0,                            !- X,Y,Z Vertex 3 {m}
   6.8, 5.8, 0;                            !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 9,                              !- Name
+  Wall,                                   !- Surface Type
+  EW3B04-ConstructionSet Wall,            !- Construction Name
+  ENTRY-NICHE-ZN,                         !- Zone Name
+  ENTRY-NICHE,                            !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  7.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  7.8, 0, 2.4384,                         !- X,Y,Z Vertex 2 {m}
+  7.8, 0, 0,                              !- X,Y,Z Vertex 3 {m}
+  7.8, 5.8, 0;                            !- X,Y,Z Vertex 4 {m}
 
 Lights,
   ENTRY-NICHE Lights,                     !- Name
@@ -355,34 +355,34 @@ ScheduleTypeLimits,
   Continuous;                             !- Numeric Type
 
 Schedule:Day:Interval,
-  Schedule Day 5,                         !- Name
+  Schedule Day 6,                         !- Name
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.02,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.2,                                    !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.3,                                    !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.08,                                   !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
-  0.05;                                   !- Value Until Time 5
+  0.02;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
   ENTRY-TRANSIENT-SCHEDULE Week Rule - Jan1-Dec31, !- Name
-  Schedule Day 5,                         !- Sunday Schedule:Day Name
-  Schedule Day 5,                         !- Monday Schedule:Day Name
-  Schedule Day 5,                         !- Tuesday Schedule:Day Name
-  Schedule Day 5,                         !- Wednesday Schedule:Day Name
-  Schedule Day 5,                         !- Thursday Schedule:Day Name
-  Schedule Day 5,                         !- Friday Schedule:Day Name
-  Schedule Day 5,                         !- Saturday Schedule:Day Name
-  Schedule Day 5,                         !- Holiday Schedule:Day Name
-  Schedule Day 5,                         !- SummerDesignDay Schedule:Day Name
-  Schedule Day 5,                         !- WinterDesignDay Schedule:Day Name
-  Schedule Day 5,                         !- CustomDay1 Schedule:Day Name
-  Schedule Day 5;                         !- CustomDay2 Schedule:Day Name
+  Schedule Day 6,                         !- Sunday Schedule:Day Name
+  Schedule Day 6,                         !- Monday Schedule:Day Name
+  Schedule Day 6,                         !- Tuesday Schedule:Day Name
+  Schedule Day 6,                         !- Wednesday Schedule:Day Name
+  Schedule Day 6,                         !- Thursday Schedule:Day Name
+  Schedule Day 6,                         !- Friday Schedule:Day Name
+  Schedule Day 6,                         !- Saturday Schedule:Day Name
+  Schedule Day 6,                         !- Holiday Schedule:Day Name
+  Schedule Day 6,                         !- SummerDesignDay Schedule:Day Name
+  Schedule Day 6,                         !- WinterDesignDay Schedule:Day Name
+  Schedule Day 6,                         !- CustomDay1 Schedule:Day Name
+  Schedule Day 6;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
   ENTRY-TRANSIENT-SCHEDULE,               !- Name
@@ -634,6 +634,23 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
+  GARDEN-GALLERY RoofExposureSurface,     !- Name
+  Roof,                                   !- Surface Type
+  PitchedRoofConstruction,                !- Construction Name
+  GARDEN-GALLERY-ZN,                      !- Zone Name
+  GARDEN-GALLERY,                         !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  6.8, 0, 2.4384,                         !- X,Y,Z Vertex 1 {m}
+  6.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  0, 5.8, 2.4384,                         !- X,Y,Z Vertex 3 {m}
+  0, 0, 2.4384;                           !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
   Surface 1,                              !- Name
   Floor,                                  !- Surface Type
   EW3B04-ConstructionSet Floor,           !- Construction Name
@@ -718,27 +735,10 @@ BuildingSurface:Detailed,
   0, 0, 0,                                !- X,Y,Z Vertex 3 {m}
   6.8, 0, 0;                              !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 6,                              !- Name
-  Roof,                                   !- Surface Type
-  EW3B04-ConstructionSet Roof,            !- Construction Name
-  GARDEN-GALLERY-ZN,                      !- Zone Name
-  GARDEN-GALLERY,                         !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  6.8, 0, 2.4384,                         !- X,Y,Z Vertex 1 {m}
-  6.8, 5.8, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  0, 5.8, 2.4384,                         !- X,Y,Z Vertex 3 {m}
-  0, 0, 2.4384;                           !- X,Y,Z Vertex 4 {m}
-
 Lights,
   GARDEN-GALLERY Lights,                  !- Name
   GARDEN-GALLERY,                         !- Zone or ZoneList or Space or SpaceList Name
-  GARDEN-GALLERY-SCHEDULE,                !- Schedule Name
+  GardenGallerySchedule,                  !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   6,                                      !- Watts per Floor Area {W/m2}
@@ -756,16 +756,16 @@ Schedule:Day:Interval,
   06:00,                                  !- Time 1 {hh:mm}
   0.05,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.45,                                   !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.85,                                   !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
   0.2,                                    !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
   0.05;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  GARDEN-GALLERY-SCHEDULE Week Rule - Jan1-Dec31, !- Name
+  GardenGallerySchedule Week Rule - Jan1-Dec31, !- Name
   Schedule Day 4,                         !- Sunday Schedule:Day Name
   Schedule Day 4,                         !- Monday Schedule:Day Name
   Schedule Day 4,                         !- Tuesday Schedule:Day Name
@@ -780,9 +780,9 @@ Schedule:Week:Daily,
   Schedule Day 4;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  GARDEN-GALLERY-SCHEDULE,                !- Name
+  GardenGallerySchedule,                  !- Name
   Fractional,                             !- Schedule Type Limits Name
-  GARDEN-GALLERY-SCHEDULE Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  GardenGallerySchedule Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -791,7 +791,7 @@ Schedule:Year,
 People,
   GARDEN-GALLERY People,                  !- Name
   GARDEN-GALLERY,                         !- Zone or ZoneList or Space or SpaceList Name
-  GARDEN-GALLERY-SCHEDULE,                !- Number of People Schedule Name
+  GardenGallerySchedule,                  !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.08,                                   !- People per Floor Area {person/m2}
@@ -803,7 +803,7 @@ People,
 ElectricEquipment,
   GARDEN-GALLERY Equipment,               !- Name
   GARDEN-GALLERY,                         !- Zone or ZoneList or Space or SpaceList Name
-  GARDEN-GALLERY-SCHEDULE,                !- Schedule Name
+  GardenGallerySchedule,                  !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   3,                                      !- Watts per Floor Area {W/m2}
@@ -885,7 +885,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   GARDEN-GALLERY-ZN Ventilation per Person, !- Name
   GARDEN-GALLERY-ZN,                      !- Zone or ZoneList or Space or SpaceList Name
-  GARDEN-GALLERY-SCHEDULE,                !- Schedule Name
+  GardenGallerySchedule,                  !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -975,12 +975,12 @@ Construction,
   EW Floor Slab;                          !- Layer 1
 
 Construction,
-  EW3B04-ConstructionSet Roof,            !- Name
-  EW Roof Insulation;                     !- Layer 1
-
-Construction,
   EW3B04-ConstructionSet Wall,            !- Name
   EW Wall Insulation;                     !- Layer 1
+
+Construction,
+  PitchedRoofConstruction,                !- Name
+  EW Roof Insulation;                     !- Layer 1
 
 Schedule:Constant,
   Always On Discrete,                     !- Name
@@ -1017,6 +1017,41 @@ ScheduleTypeLimits,
   Discrete,                               !- Numeric Type
   availability;                           !- Unit Type
 
+Schedule:Day:Interval,
+  Schedule Day 5,                         !- Name
+  ,                                       !- Schedule Type Limits Name
+  No,                                     !- Interpolate to Timestep
+  06:00,                                  !- Time 1 {hh:mm}
+  0,                                      !- Value Until Time 1
+  18:00,                                  !- Time 2 {hh:mm}
+  1,                                      !- Value Until Time 2
+  24:00,                                  !- Time 3 {hh:mm}
+  0;                                      !- Value Until Time 3
+
+Schedule:Week:Daily,
+  GalleryDaylightAssumption Week Rule - Jan1-Dec31, !- Name
+  Schedule Day 5,                         !- Sunday Schedule:Day Name
+  Schedule Day 5,                         !- Monday Schedule:Day Name
+  Schedule Day 5,                         !- Tuesday Schedule:Day Name
+  Schedule Day 5,                         !- Wednesday Schedule:Day Name
+  Schedule Day 5,                         !- Thursday Schedule:Day Name
+  Schedule Day 5,                         !- Friday Schedule:Day Name
+  Schedule Day 5,                         !- Saturday Schedule:Day Name
+  Schedule Day 5,                         !- Holiday Schedule:Day Name
+  Schedule Day 5,                         !- SummerDesignDay Schedule:Day Name
+  Schedule Day 5,                         !- WinterDesignDay Schedule:Day Name
+  Schedule Day 5,                         !- CustomDay1 Schedule:Day Name
+  Schedule Day 5;                         !- CustomDay2 Schedule:Day Name
+
+Schedule:Year,
+  GalleryDaylightAssumption,              !- Name
+  ,                                       !- Schedule Type Limits Name
+  GalleryDaylightAssumption Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  1,                                      !- Start Month 1
+  1,                                      !- Start Day 1
+  12,                                     !- End Month 1
+  31;                                     !- End Day 1
+
 OutdoorAir:Node,
   Model Outdoor Air Node;                 !- Name
 
@@ -1042,8 +1077,8 @@ LifeCycleCost:NonrecurringCost,
   ServicePeriod;                          !- Start of Costs
 
 !- EngiWorld multi-cli-3-revit-archicad-openstudio-task-04-windows
-!- EngiWorld HandoffHash 0bdd9b2797d2
-!- EngiWorld Stage2Hash c0ee8785781a
+!- EngiWorld HandoffHash 347a95194c75
+!- EngiWorld Stage2Hash 64fb26350e6c
 !- EngiWorld weather_file weather.epw
 !- EngiWorld schedule_set EW3B04-ScheduleSet
 !- EngiWorld construction_set EW3B04-ConstructionSet

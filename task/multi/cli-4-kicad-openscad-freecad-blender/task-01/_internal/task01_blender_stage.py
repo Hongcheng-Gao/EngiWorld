@@ -198,7 +198,8 @@ def main() -> None:
     scene = bpy.context.scene
     scene["engiworld_task"] = "task-01"
     scene["release_decision"] = report["decision"]
-    scene.render.engine = "BLENDER_EEVEE_NEXT"
+    available_engines = {item.identifier for item in scene.bl_rna.properties["render"].fixed_type.properties["engine"].enum_items}
+    scene.render.engine = "BLENDER_EEVEE_NEXT" if "BLENDER_EEVEE_NEXT" in available_engines else "BLENDER_EEVEE"
     scene.render.resolution_x = 1024
     scene.render.resolution_y = 768
     scene.render.resolution_percentage = 100

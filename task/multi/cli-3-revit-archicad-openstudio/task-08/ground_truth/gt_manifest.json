@@ -1,63 +1,129 @@
 {
   "case_id": "multi-cli-3-revit-archicad-openstudio-task-08-windows",
-  "generated_at_utc": "2026-08-04T11:07:08Z",
-  "generator": "run_revit_stage.ps1 -> run_archicad_stage.ps1 -> run_openstudio_stage.ps1",
-  "native_stage_provenance": {
-    "revit": {
-      "exe": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
-      "product_version": "25.0.0.0",
-      "automation": "C:\\ProgramData\\Autodesk\\Revit\\Addins\\2025\\EngiWorld.BimBridge.addin"
-    },
-    "archicad": {
-      "exe": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe",
-      "product_version": "Archicad 27.0.0 R1 build 6000",
-      "automation": "IFCCommandServerApp.exe --job workflow_spec.json --input-ifc stage1.ifc --translator archicad_ifc4_translator.json --output-ifc stage2.ifc"
-    },
-    "openstudio": {
-      "exe": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
-      "version": "3.10.0+ce46db07de",
-      "energyplus_version": "25.1.0",
-      "automation": "openstudio_ifc_to_energy.rb consumed the Archicad IFC and handoff, forward-translated the OSM, and ran EnergyPlus"
-    }
+  "generated_at_utc": "2026-08-12T14:47:30Z",
+  "generator": "run_revit_stage.ps1 -> run_archicad_stage.ps1 -> extract_ifc_space_geometry.py -> run_openstudio_stage.ps1",
+  "native_versions": {
+    "revit": "25.1.0.44; build 20240516_1515(x64)",
+    "archicad": "Archicad 27 build 6000",
+    "openstudio": "3.10.0+86d7e215a1",
+    "energyplus": "25.1.0-1c11a3d85f"
   },
-  "required_files": [
-    "init.ifc",
-    "stage1.ifc",
-    "revit_handoff.json",
-    "stage2.ifc",
-    "archicad_handoff.json",
-    "archicad_validation_report.json",
-    "archicad_ifc4_translator.json",
-    "workflow_spec.json",
-    "weather.epw",
-    "native_stage_log.json",
-    "workflow.osw",
-    "result.osm",
-    "in.idf",
-    "flow_report.json",
-    "model_summary.csv",
-    "energy_report.csv",
-    "run/eplusout.sql",
-    "run/eplusout.err"
-  ],
-  "artifact_sha256": {
-    "init.ifc": "91161fe0218c054e34c9c38c03818229d22ac2de6982c7aef41059e254a32c48",
-    "stage1.ifc": "406df156c2421e6e99c92743231283ddb7af1f9fc1bcc148aa8b174f0e0301a2",
-    "revit_handoff.json": "27586178e4d5e702f3a8f274752561afd687a9859a86946e946f4ef80c9a9651",
-    "stage2.ifc": "1ce41608c6e1a73b8e03e7d9760a5ec002e7f309219922dc2a39ac7976401bd8",
-    "archicad_handoff.json": "d1975eb135cc29db604df1dfea7318c3f0cb6ba7c1b1b13014ce51082f06e622",
-    "archicad_validation_report.json": "bf4e3ad20ad7fff5c571a256675f9f9c755082d6f3f74746f2661a68ef6c2202",
-    "archicad_ifc4_translator.json": "0dcc1b632112be3cfcd66f65532c978c9cfa0c6097382f717d0c736e30daabed",
-    "workflow_spec.json": "69bbc45726e17be9b053fc409e9993d10c6fdcd46ddbcfa39b1ce820293bb324",
-    "weather.epw": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1",
-    "native_stage_log.json": "47e0b678e82cf2332aa4ef6c19c8460880ff266382363a315ef39a04acb5bd16",
-    "workflow.osw": "185b5c23abec3b380e8bcea9218339e33b5f59a4cbd7f33e256c7be8f5dcda5d",
-    "result.osm": "012836f9a6132be6e56f02e6094ff70577dcd4f9eb48c4e68ccae7ab156f576e",
-    "in.idf": "0d46635e0f324e485ef793a4e032f8bb5059f8665db868ac2ed29bacfd71d259",
-    "flow_report.json": "fd84de2378c238dd01dd6aa92c0af0a6e7606ad99bc751ffe312784800a03971",
-    "model_summary.csv": "772d87729275264c86e9bbee9e81f17290c356c6ecacaa246328f020def607c7",
-    "energy_report.csv": "662b52eab4b3ffdc4831de9a2baae3742bee37e7ca788a80a7633a0adffc7b2e",
-    "run/eplusout.sql": "26b87cc26ce634535321122181442320497ebc7cdc3a456f2978e1d2bc298524",
-    "run/eplusout.err": "f6364c852046521584c4476c05406391fb044a25e79a608f4e93b20cde803e82"
+  "validation": {
+    "local_formal": true,
+    "windows_formal_with_independent_native_rerun": true,
+    "local_matrix_passed": 20,
+    "local_matrix_total": 20,
+    "windows_matrix_passed": 20,
+    "windows_matrix_total": 20
+  },
+  "files": {
+    "EngiWorld.BimBridge.addin": {
+      "size_bytes": 516,
+      "sha256": "8e1bd8ddc7448eb2062bdf1a0c7ee80cd5712fdf24210aece60a0fdb64673c47"
+    },
+    "EngiWorld.BimBridge.dll": {
+      "size_bytes": 54784,
+      "sha256": "9d6ce2803f1fe5e5efb1b021b30b810698b687757461405ad7a7baa40481bcbe"
+    },
+    "GT_GENERATION.md": {
+      "size_bytes": 5789,
+      "sha256": "703d691ec9d7e7419ea4c3ad1ea20c531bba95d58cf70eae2a4fd05348a25459"
+    },
+    "archicad_handoff.json": {
+      "size_bytes": 56350,
+      "sha256": "cd98356b4880be57fb6b2dd4762b7e15d2f3e68592cc3b713c22f14c29598601"
+    },
+    "archicad_ifc4_translator.json": {
+      "size_bytes": 797,
+      "sha256": "e1698beeeb82d9387f8576b660790be2a737e28da91220fc01a2a06a3a8153ce"
+    },
+    "archicad_validation_report.json": {
+      "size_bytes": 57488,
+      "sha256": "a839d5ab90acdac98e98245ee148c9745597e9239749dad3e8d9e55bf81c754b"
+    },
+    "energy_report.csv": {
+      "size_bytes": 647,
+      "sha256": "b7b72af8828eee2a0b4c48b8decb88e078f175209550bca1497c9539b5601490"
+    },
+    "extract_ifc_space_geometry.py": {
+      "size_bytes": 4434,
+      "sha256": "39e0e5558253bab782bcffef7c1366539fe06ed7e5b8eb55895c877d9d3e2b05"
+    },
+    "flow_report.json": {
+      "size_bytes": 1552,
+      "sha256": "c6af9faed9f5d9e42978821360fdbe706a4e8cec165ff88d8a9a736895764532"
+    },
+    "in.idf": {
+      "size_bytes": 95055,
+      "sha256": "f7de131c97f1d1ec940139b80eea9f63639e985e9622983c95d0419d9cccb973"
+    },
+    "init.ifc": {
+      "size_bytes": 67106,
+      "sha256": "91161fe0218c054e34c9c38c03818229d22ac2de6982c7aef41059e254a32c48"
+    },
+    "model_summary.csv": {
+      "size_bytes": 1312,
+      "sha256": "b5e3c1394bf0264a7aefeeb7af4d43d6d3374ab9aac7edce1424cb886f7552c6"
+    },
+    "native_stage_log.json": {
+      "size_bytes": 6389,
+      "sha256": "3d5aa636f437674e22b6d74783b04415ee563989ff95ab4d84739f3827138e4c"
+    },
+    "openstudio_ifc_to_energy.rb": {
+      "size_bytes": 20814,
+      "sha256": "48f3b6e21caae139704565b0373039ffe5f0377a0481b6e70468ac53c233314b"
+    },
+    "result.osm": {
+      "size_bytes": 88877,
+      "sha256": "17f207d21fed93905fdba05080ba99dd9ed2459d453edde867c57ded6ea94c35"
+    },
+    "revit_handoff.json": {
+      "size_bytes": 6569,
+      "sha256": "32f34f2c2158fa5b802734c809a11abf8abb61f3033be8307d9c9429c0c4ff93"
+    },
+    "run/eplusout.err": {
+      "size_bytes": 2879,
+      "sha256": "2f40cccbf5ea7c617f2cef61f3885a914db57954cbb336066ae752cc47fa42ab"
+    },
+    "run/eplusout.sql": {
+      "size_bytes": 1257472,
+      "sha256": "c1f632fc963f8991b5af1effdfed68fcc0106648cd50cc9a3da9aef6e19916f6"
+    },
+    "run_archicad_stage.ps1": {
+      "size_bytes": 22893,
+      "sha256": "52dee7ce5c761783253a387a120015e20c10dea5e797ac7fa5671526342b549d"
+    },
+    "run_openstudio_stage.ps1": {
+      "size_bytes": 1515,
+      "sha256": "69039cac2d6d96a235f0307df0bf0da80bb3d9dc0b5a1cdceee7456c159bad07"
+    },
+    "run_revit_stage.ps1": {
+      "size_bytes": 4630,
+      "sha256": "fb0fe7f5cee09b13a8cebe6f169a02ca410693c1cd2cd0c78131f43d84756268"
+    },
+    "stage1.ifc": {
+      "size_bytes": 77457,
+      "sha256": "6d04acbfc6908e98eed860716eebbf7124e12c1ff0ca4249102c6bcb32d5b088"
+    },
+    "stage2.ifc": {
+      "size_bytes": 74945,
+      "sha256": "6c5c84c9b726e8a33a6231400d41dc1a9f6dec759774700e8a32bc94d88d2f47"
+    },
+    "stage2_space_geometry.json": {
+      "size_bytes": 2549,
+      "sha256": "f7fea21053c86aa8028e9a90253576c4d6ebddbe488be4a84d3a50f5434adae1"
+    },
+    "weather.epw": {
+      "size_bytes": 937759,
+      "sha256": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1"
+    },
+    "workflow.osw": {
+      "size_bytes": 735,
+      "sha256": "b1da1cc5d2e449a7f29adb24966f797ed23c94777e904694c57b3dd16082b6dd"
+    },
+    "workflow_spec.json": {
+      "size_bytes": 8868,
+      "sha256": "ea191a2fd4f6d663912be9bce696d21a9edccd86854121fa6c4c055cf1799d79"
+    }
   }
 }

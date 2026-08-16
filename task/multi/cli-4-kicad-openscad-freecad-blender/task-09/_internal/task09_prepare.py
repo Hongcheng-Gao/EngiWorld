@@ -347,7 +347,7 @@ module lid() {
       cube([package_bbox[0], package_bbox[1], lid_thickness]);
     for (opening = top_keepout_openings)
       translate([opening[2], opening[3], opening[5]])
-        cylinder(d=opening[4], h=opening[6]-opening[5], $fn=384);
+        cylinder(d=opening[4] + 0.02, h=opening[6]-opening[5], $fn=384);
   }
 }
 

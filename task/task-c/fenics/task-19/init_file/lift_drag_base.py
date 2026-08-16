@@ -1,8 +1,7 @@
 from dolfin import *
 
-# 假设已有 Stokes/NS 解文件 velocity.xdmf 和 pressure.xdmf
-# mesh = Mesh()
-# 读取解...
+# 自包含设置：2.2 x 0.41 通道，圆柱中心 (0.2, 0.2)，直径 0.1
+# 用 RectangleMesh + SubMesh 创建带圆柱孔的网格，并求解稳态 Stokes 流。
 
 # TODO: 定义圆柱表面边界标记
 # TODO: 计算升力/阻力系数

@@ -357,6 +357,7 @@ def top_bore_access_check(
     path_shape = Part.makeCylinder(radius, path[5] - path[2], App.Vector(x, y, path[2]))
     path_probe = Part.makeCylinder(max(0.05, radius - geometry_tolerance), path[5] - path[2], App.Vector(x, y, path[2]))
     path_residual = sum(float(part.common(path_probe).Volume) for part in enclosure_parts)
+    open_area_ratio = max(0.0, 1.0 - path_residual / max(float(path_probe.Volume), 1e-9))
     section_z = float(requirements["lid_inner_z_mm"]) + float(requirements["lid_thickness_mm"]) / 2.0
     search = radius + guard
     directions = {
@@ -413,6 +414,8 @@ def top_bore_access_check(
         "minimum_guard_material_present": guard_fraction >= 0.98,
         "path_bounds_mm": path,
         "path_residual_material_volume_mm3": round(path_residual, 6),
+        "carrier_intersection_volume_mm3": round(path_residual, 6),
+        "open_area_ratio": round(open_area_ratio, 6),
         "ref": spec["ref"],
         "through": through,
         "x_mm": x,
@@ -485,12 +488,15 @@ def antenna_keepout_check(
         "bbox_matches_contract": bbox_matches,
         "bbox_mm": [round(value, 6) for value in measured_bbox],
         "carrier_intersection_mm3": round(carrier_intersection, 6),
+        "carrier_intersection_volume_mm3": round(carrier_intersection, 6),
         "component_intersections_mm3": {ref: round(value, 6) for ref, value in component_intersections.items()},
+        "non_a1_component_intersection_volume_mm3": round(component_intersection, 6),
         "direction": "Z_PLUS",
         "exterior_opening_present": lid_cover_area_ratio < 0.999,
         "lid_cover_area_ratio": round(lid_cover_area_ratio, 6),
         "lid_covers_reserved_volume": lid_covers_volume,
         "minimum_radial_clearance_mm": None if minimum_radial is None else round(minimum_radial, 6),
+        "minimum_radial_clearance_to_cavity_wall_mm": None if minimum_radial is None else round(minimum_radial, 6),
         "passed": passed,
         "radial_clearances_mm": {name: None if value is None else round(value, 6) for name, value in radial_clearances.items()},
         "radius_mm": radius,
@@ -624,8 +630,8 @@ def main() -> None:
         "access_checks": access_checks,
         "assembly_mesh": "03_freecad_assembly.obj",
         "assembly_step": "03_freecad_assembly.step",
-        "antenna_carrier_intersection_mm3": antenna_check["carrier_intersection_mm3"],
-        "antenna_component_intersection_mm3": round(sum(antenna_check["component_intersections_mm3"].values()), 6),
+        "antenna_carrier_intersection_mm3": antenna_check["carrier_intersection_volume_mm3"],
+        "antenna_component_intersection_mm3": antenna_check["non_a1_component_intersection_volume_mm3"],
         "antenna_keepout_check": antenna_check,
         "board_bbox_mm": [round(float(v), 6) for v in export["board_bbox_mm"]],
         "board_bottom_z_mm": round(board.BoundBox.ZMin, 6),

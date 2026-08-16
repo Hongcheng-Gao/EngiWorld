@@ -2,7 +2,8 @@
   "case_id": "multi-cli-2-archicad-openstudio-task-02-windows",
   "software_chain": [
     "archicad",
-    "openstudio"
+    "openstudio",
+    "energyplus"
   ],
   "stage_sequence": [
     {
@@ -14,51 +15,583 @@
     {
       "software": "openstudio",
       "input": "handoff.json",
-      "output": "result.osm"
-    }
-  ],
-  "consumed_handoff_sha256": "5611725b95b9be11f65925dac51430ad2412194ae3eddb13d3a0cac7b7ad8ed3",
-  "source_stage1_sha256": "a00a18c56f4b48b9a10c37b4049686a5efb2a7d26101e4e41acc5f2c6df05451",
-  "osm_sha256": "b2b7aaaf0a599e96e796771ff6d101018c35242fee78039b8c40f3b99e5f160f",
-  "building_area_m2": 39.25,
-  "room_count": 2,
-  "thermal_zone_count": 2,
-  "door_count": 2,
-  "window_count": 1,
-  "window_wall_ratio": 0.18,
-  "surface_count": 12,
-  "subsurface_count": 3,
-  "weather_file": "USA_Design_Day.epw",
-  "schedule_set": "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-02-windows",
-  "construction_set": "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-02-windows",
-  "openstudio_version": "3.10.0",
-  "spaces": [
-    {
-      "name": "WAITING",
-      "thermal_zone": "WAITING-ZN",
-      "floor_area_m2": 18.0,
-      "door_count": 1,
-      "window_count": 1
+      "upstream_reference": "stage1.ifc",
+      "output": "result.osm",
+      "workflow": "workflow.osw"
     },
     {
-      "name": "CONSULT",
+      "software": "energyplus",
+      "input": "run/in.idf",
+      "weather": "weather.epw",
+      "output": "run/eplusout.sql"
+    }
+  ],
+  "consumed_handoff_sha256": "b78296aa47cb9e7e0309605d94887883ca77dfa02280be36fb736a8c1df62cfa",
+  "source_stage1_sha256": "843c2e94b1e1ac3aaf66211423333653e1fc5434719b9875a8d5aebe785b7730",
+  "osm_sha256": "7c850abe40ea5eee465a3491cbc12b642d7687b547fe0a1022bb2de7fee13054",
+  "workflow_sha256": "40b3bcb26075b6a20f7ce2e63f1fdeacc3dee59f2cfd9e8a5b5ff0dd06a96445",
+  "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+  "energyplus_sql_sha256": "08ce62a98983c68fe4166563a61e4636de783297b8ea261d164196a038fe2fbf",
+  "energyplus_err_sha256": "210bb9bfc0d8af5132492234746ac0ace0ccba69e866c7d5cde0dfdacf114b3d",
+  "energyplus_end_sha256": "1c93946589a685fc08bd944bdad0c8cf99a0d560a07a1fe1b0542c4c6b9b1c34",
+  "building_area_m2": 21.0,
+  "room_count": 2,
+  "thermal_zone_count": 2,
+  "door_count": 1,
+  "door_subsurface_sides": 2,
+  "window_count": 0,
+  "window_wall_ratio": 0.0,
+  "surface_count": 12,
+  "subsurface_count": 2,
+  "weather_file": "USA_CO_Golden-NREL.724666_TMY3.epw",
+  "weather_file_path": "C:/Users/user/Desktop/weather.epw",
+  "weather_hourly_rows": 8760,
+  "schedule_set": [
+    "Public Waiting Schedule Set",
+    "Private Consult Schedule Set"
+  ],
+  "construction_set": [
+    "EW2A02 Clinic Wall Construction",
+    "EW2A02 Clinic Floor Construction",
+    "EW2A02 Clinic Roof Construction"
+  ],
+  "openstudio_version": "3.10.0+86d7e215a1",
+  "native_cli_executable": "C:/openstudio-3.10.0/bin/openstudio.exe",
+  "native_cli_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+  "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+  "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+  "energyplus_status": "Completed Successfully",
+  "energyplus_severe_errors": 0,
+  "energyplus_fatal_errors": 0,
+  "energyplus_sql": "run/eplusout.sql",
+  "energyplus_err": "run/eplusout.err",
+  "spaces": [
+    {
+      "case_id": "multi-cli-2-archicad-openstudio-task-02-windows",
+      "space_name": "CONSULT",
       "thermal_zone": "CONSULT-ZN",
-      "floor_area_m2": 21.25,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 9.0,
+      "source_handoff_sha256": "b78296aa47cb9e7e0309605d94887883ca77dfa02280be36fb736a8c1df62cfa",
+      "source_stage1_sha256": "843c2e94b1e1ac3aaf66211423333653e1fc5434719b9875a8d5aebe785b7730",
+      "energy_use_kwh": 1221.886554,
+      "peak_load_w": 441.735567
+    },
+    {
+      "case_id": "multi-cli-2-archicad-openstudio-task-02-windows",
+      "space_name": "WAITING",
+      "thermal_zone": "WAITING-ZN",
+      "floor_area_m2": 12.0,
+      "source_handoff_sha256": "b78296aa47cb9e7e0309605d94887883ca77dfa02280be36fb736a8c1df62cfa",
+      "source_stage1_sha256": "843c2e94b1e1ac3aaf66211423333653e1fc5434719b9875a8d5aebe785b7730",
+      "energy_use_kwh": 1831.987185,
+      "peak_load_w": 520.881156
     }
   ],
   "thermal_zones": [
-    "WAITING-ZN",
-    "CONSULT-ZN"
-  ],
-  "osm_tokens": [
-    "WAITING-ZN",
     "CONSULT-ZN",
-    "PublicWaitingSchedule",
-    "PrivateConsultSchedule",
-    "WaitingPeopleLoad",
-    "ConsultPrivacyEnvelope"
+    "WAITING-ZN"
   ],
-  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe"
+  "model_object_counts": {
+    "Space": 2,
+    "ThermalZone": 2,
+    "People": 2,
+    "Lights": 2,
+    "ElectricEquipment": 2,
+    "DesignSpecificationOutdoorAir": 2,
+    "ThermostatSetpointDualSetpoint": 2,
+    "ZoneHVACIdealLoadsAirSystem": 2
+  },
+  "door_pair_evidence": [
+    {
+      "door": "CONSULT to WAITING Door",
+      "space": "CONSULT",
+      "parent_surface": "Surface 8",
+      "adjacent_door": "WAITING to CONSULT Door",
+      "adjacent_space": "WAITING",
+      "adjacent_surface": "Surface 4",
+      "parent_surface_outside_boundary_condition": "Surface"
+    },
+    {
+      "door": "WAITING to CONSULT Door",
+      "space": "WAITING",
+      "parent_surface": "Surface 4",
+      "adjacent_door": "CONSULT to WAITING Door",
+      "adjacent_space": "CONSULT",
+      "adjacent_surface": "Surface 8",
+      "parent_surface_outside_boundary_condition": "Surface"
+    }
+  ],
+  "schedule_profile_evidence": {
+    "WAITING": {
+      "schedule": "Public Waiting Occupancy Schedule",
+      "applies": "Monday-Friday",
+      "hour_value_pairs": [
+        [
+          7,
+          0.05
+        ],
+        [
+          8,
+          0.35
+        ],
+        [
+          9,
+          0.85
+        ],
+        [
+          12,
+          1.0
+        ],
+        [
+          14,
+          0.65
+        ],
+        [
+          17,
+          0.9
+        ],
+        [
+          19,
+          0.25
+        ],
+        [
+          22,
+          0.05
+        ],
+        [
+          24,
+          0.05
+        ]
+      ]
+    },
+    "CONSULT": {
+      "schedule": "Private Consult Occupancy Schedule",
+      "applies": "Monday-Friday",
+      "hour_value_pairs": [
+        [
+          8,
+          0.0
+        ],
+        [
+          9,
+          0.2
+        ],
+        [
+          12,
+          0.75
+        ],
+        [
+          13,
+          0.1
+        ],
+        [
+          14,
+          0.35
+        ],
+        [
+          17,
+          0.7
+        ],
+        [
+          18,
+          0.15
+        ],
+        [
+          20,
+          0.0
+        ],
+        [
+          24,
+          0.0
+        ]
+      ]
+    }
+  },
+  "simulation": {
+    "status": "EnergyPlus Completed Successfully",
+    "native_exit_code": 0,
+    "native_pid": 1560,
+    "native_command": [
+      "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+      "-w",
+      "C:\\Users\\user\\Desktop\\weather.epw",
+      "-d",
+      "C:\\Users\\user\\Documents\\EngiWorld-task-02\\energyplus_direct_2",
+      "C:\\Users\\user\\Desktop\\run\\in.idf"
+    ],
+    "native_started_at_utc": "2026-08-11T15:41:12.318151+00:00",
+    "native_process_exited_at_utc": "2026-08-11T15:41:13.756635+00:00",
+    "native_completed_at_utc": "2026-08-11T15:41:15.302429+00:00",
+    "sqlite_integrity_check": "ok",
+    "simulations_row": {
+      "SimulationIndex": 1,
+      "EnergyPlusVersion": "EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.11 23:41",
+      "TimeStamp": " YMD=2026.08.11 23:41",
+      "NumTimestepsPerHour": 4,
+      "Completed": "FALSE",
+      "CompletedSuccessfully": "FALSE"
+    },
+    "report_data_count": 210605,
+    "environment_period": {
+      "EnvironmentPeriodIndex": 1,
+      "SimulationIndex": 1,
+      "EnvironmentName": "RUN PERIOD 1",
+      "EnvironmentType": 3
+    },
+    "err_first_nonempty_line": "Program Version,EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.11 23:41,",
+    "err_last_nonempty_line": "   ************* EnergyPlus Completed Successfully-- 10 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  1.22sec",
+    "end_text": "EnergyPlus Completed Successfully-- 10 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  1.22sec",
+    "transaction_sidecars": [
+
+    ],
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-11T15:41:13.756635+00:00",
+        "sql_size": 6242304,
+        "sql_mtime_ns": 1786462873699663100,
+        "err_size": 3158,
+        "err_mtime_ns": 1786462873715303600,
+        "end_size": 99,
+        "end_mtime_ns": 1786462873699663100
+      },
+      {
+        "sampled_at_utc": "2026-08-11T15:41:14.261337+00:00",
+        "sql_size": 6242304,
+        "sql_mtime_ns": 1786462873699663100,
+        "err_size": 3158,
+        "err_mtime_ns": 1786462873715303600,
+        "end_size": 99,
+        "end_mtime_ns": 1786462873699663100
+      },
+      {
+        "sampled_at_utc": "2026-08-11T15:41:14.761961+00:00",
+        "sql_size": 6242304,
+        "sql_mtime_ns": 1786462873699663100,
+        "err_size": 3158,
+        "err_mtime_ns": 1786462873715303600,
+        "end_size": 99,
+        "end_mtime_ns": 1786462873699663100
+      },
+      {
+        "sampled_at_utc": "2026-08-11T15:41:15.262642+00:00",
+        "sql_size": 6242304,
+        "sql_mtime_ns": 1786462873699663100,
+        "err_size": 3158,
+        "err_mtime_ns": 1786462873715303600,
+        "end_size": 99,
+        "end_mtime_ns": 1786462873699663100
+      }
+    ],
+    "hourly_series": [
+      {
+        "space_name": "CONSULT",
+        "thermal_zone": "CONSULT-ZN",
+        "key_value": "CONSULT-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "hourly_count": 8760,
+        "sum": 379728000.0
+      },
+      {
+        "space_name": "CONSULT",
+        "thermal_zone": "CONSULT-ZN",
+        "key_value": "CONSULT-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "hourly_count": 8760,
+        "sum": 711990000.0
+      },
+      {
+        "space_name": "CONSULT",
+        "thermal_zone": "CONSULT-ZN",
+        "key_value": "CONSULT Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "hourly_count": 8760,
+        "sum": 2656035746.8999557
+      },
+      {
+        "space_name": "CONSULT",
+        "thermal_zone": "CONSULT-ZN",
+        "key_value": "CONSULT Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "hourly_count": 8760,
+        "sum": 651037847.3564008
+      },
+      {
+        "space_name": "CONSULT",
+        "thermal_zone": "CONSULT-ZN",
+        "key_value": "CONSULT Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "hourly_count": 8760
+      },
+      {
+        "space_name": "CONSULT",
+        "thermal_zone": "CONSULT-ZN",
+        "key_value": "CONSULT Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "hourly_count": 8760
+      },
+      {
+        "space_name": "WAITING",
+        "thermal_zone": "WAITING-ZN",
+        "key_value": "WAITING-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "hourly_count": 8760,
+        "sum": 1099008000.0
+      },
+      {
+        "space_name": "WAITING",
+        "thermal_zone": "WAITING-ZN",
+        "key_value": "WAITING-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "hourly_count": 8760,
+        "sum": 879206400.0
+      },
+      {
+        "space_name": "WAITING",
+        "thermal_zone": "WAITING-ZN",
+        "key_value": "WAITING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "hourly_count": 8760,
+        "sum": 2727425222.537323
+      },
+      {
+        "space_name": "WAITING",
+        "thermal_zone": "WAITING-ZN",
+        "key_value": "WAITING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "hourly_count": 8760,
+        "sum": 1889514243.8169289
+      },
+      {
+        "space_name": "WAITING",
+        "thermal_zone": "WAITING-ZN",
+        "key_value": "WAITING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "hourly_count": 8760
+      },
+      {
+        "space_name": "WAITING",
+        "thermal_zone": "WAITING-ZN",
+        "key_value": "WAITING Ideal Loads",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "hourly_count": 8760
+      }
+    ],
+    "metric_definition": {
+      "energy_use_kwh": "SQL hourly lights + electric equipment + ideal-load heating + ideal-load cooling energy, converted J to kWh, per matched space/zone",
+      "peak_load_w": "Maximum SQL hourly ideal-load heating or cooling rate for the matched zone HVAC Ideal Loads object"
+    },
+    "energyplus_25_1_sql_finalization_order": {
+      "observed_completed": "FALSE",
+      "observed_completed_successfully": "FALSE",
+      "accepted_only_with": "exact 25.1.0-1c11a3d85f build, synchronous native exit 0, stable original files, successful zero-severe ERR/END, one weather run period, and complete 8760-hour required series",
+      "source": "https://github.com/NatLabRockies/EnergyPlus/blob/v25.1.0/src/EnergyPlus/api/EnergyPlusPgm.cc#L358-L398"
+    }
+  },
+  "openstudio_cli_transactions": [
+    {
+      "stage": "openstudio_model_build",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "arguments": [
+        "C:\\Users\\user\\Documents\\EngiWorld-task-02\\task02_build_openstudio.rb"
+      ],
+      "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" \"C:\\Users\\user\\Documents\\EngiWorld-task-02\\task02_build_openstudio.rb\"",
+      "started_at_utc": "2026-08-11T15:17:22.4728276+00:00",
+      "completed_at_utc": "2026-08-11T15:17:23.6029728+00:00",
+      "exit_code": 0,
+      "output": [
+        "{\"status\":\"built\",\"openstudio_version\":\"3.10.0+86d7e215a1\",\"osm_sha256\":\"7c850abe40ea5eee465a3491cbc12b642d7687b547fe0a1022bb2de7fee13054\",\"workflow_sha256\":\"40b3bcb26075b6a20f7ce2e63f1fdeacc3dee59f2cfd9e8a5b5ff0dd06a96445\",\"weather_sha256\":\"c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f\",\"spaces\":[\"WAITING\",\"CONSULT\"],\"zones\":[\"WAITING-ZN\",\"CONSULT-ZN\"],\"surface_count\":12,\"subsurface_count\":2}"
+      ]
+    },
+    {
+      "stage": "openstudio_weather_period_simulation",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-11T15:18:21.8794035+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-11T15:18:24.9095382+00:00",
+      "related_children_exited_at_utc": "2026-08-11T15:18:25.0980177+00:00",
+      "completed_at_utc": "2026-08-11T15:18:28.1286667+00:00",
+      "exit_code": 0,
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-11T15:18:25.1136827+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_utc": "2026-08-11T15:18:24.2661086Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T15:18:24.2661086Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T15:18:26.1185228+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_utc": "2026-08-11T15:18:24.2661086Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T15:18:24.2661086Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T15:18:27.1235751+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_utc": "2026-08-11T15:18:24.2661086Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T15:18:24.2661086Z"
+        },
+        {
+          "sampled_at_utc": "2026-08-11T15:18:28.1286667+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_utc": "2026-08-11T15:18:24.2661086Z",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-11T15:18:24.2661086Z"
+        }
+      ],
+      "sql_sha256": "3860fd61a745054cf01ecd49ad2b97f5b5ebd458727105a19bd0d48f115b04ab",
+      "err_sha256": "c434684ad18a1e447879dbca5bff9ec7304179a00f1799a5de89214573c940f4",
+      "stdout_path": "C:\\Users\\user\\Documents\\EngiWorld-task-02\\openstudio_run_stdout.log",
+      "stderr_path": "C:\\Users\\user\\Documents\\EngiWorld-task-02\\openstudio_run_stderr.log",
+      "stdout_tail": [
+
+      ],
+      "stderr_tail": [
+
+      ]
+    },
+    {
+      "stage": "energyplus_native_verification_run",
+      "executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+      "executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+      "arguments": [
+        "-w",
+        "C:\\Users\\user\\Desktop\\weather.epw",
+        "-d",
+        "C:\\Users\\user\\Documents\\EngiWorld-task-02\\energyplus_direct_2",
+        "C:\\Users\\user\\Desktop\\run\\in.idf"
+      ],
+      "command_line": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe -w C:\\Users\\user\\Desktop\\weather.epw -d C:\\Users\\user\\Documents\\EngiWorld-task-02\\energyplus_direct_2 C:\\Users\\user\\Desktop\\run\\in.idf",
+      "pid": 1560,
+      "started_at_utc": "2026-08-11T15:41:12.318151+00:00",
+      "process_exited_at_utc": "2026-08-11T15:41:13.756635+00:00",
+      "completed_at_utc": "2026-08-11T15:41:15.302429+00:00",
+      "exit_code": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-11T15:41:13.756635+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_ns": 1786462873699663100,
+          "err_size": 3158,
+          "err_mtime_ns": 1786462873715303600,
+          "end_size": 99,
+          "end_mtime_ns": 1786462873699663100
+        },
+        {
+          "sampled_at_utc": "2026-08-11T15:41:14.261337+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_ns": 1786462873699663100,
+          "err_size": 3158,
+          "err_mtime_ns": 1786462873715303600,
+          "end_size": 99,
+          "end_mtime_ns": 1786462873699663100
+        },
+        {
+          "sampled_at_utc": "2026-08-11T15:41:14.761961+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_ns": 1786462873699663100,
+          "err_size": 3158,
+          "err_mtime_ns": 1786462873715303600,
+          "end_size": 99,
+          "end_mtime_ns": 1786462873699663100
+        },
+        {
+          "sampled_at_utc": "2026-08-11T15:41:15.262642+00:00",
+          "sql_size": 6242304,
+          "sql_mtime_ns": 1786462873699663100,
+          "err_size": 3158,
+          "err_mtime_ns": 1786462873715303600,
+          "end_size": 99,
+          "end_mtime_ns": 1786462873699663100
+        }
+      ],
+      "sql_sha256": "08ce62a98983c68fe4166563a61e4636de783297b8ea261d164196a038fe2fbf",
+      "err_sha256": "210bb9bfc0d8af5132492234746ac0ace0ccba69e866c7d5cde0dfdacf114b3d",
+      "evidence_path": "C:\\Users\\user\\Documents\\EngiWorld-task-02\\energyplus_direct_2_evidence.json"
+    }
+  ],
+  "full_disk_sql_inventory": {
+    "generated_at_utc": "2026-08-11T15:57:45.235759+00:00",
+    "search_command": [
+      "cmd.exe",
+      "/d",
+      "/c",
+      "where",
+      "/r",
+      "C:\\",
+      "eplusout.sql"
+    ],
+    "search_exit_code": 0,
+    "search_stderr": "",
+    "count": 3,
+    "records": [
+      {
+        "path": "C:\\Users\\user\\Desktop\\run\\eplusout.sql",
+        "size": 6242304,
+        "mtime_ns": 1786462873699663100,
+        "sha256": "08ce62a98983c68fe4166563a61e4636de783297b8ea261d164196a038fe2fbf",
+        "integrity_check": "ok",
+        "simulation_rows": [
+          {
+            "SimulationIndex": 1,
+            "EnergyPlusVersion": "EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.11 23:41",
+            "TimeStamp": " YMD=2026.08.11 23:41",
+            "NumTimestepsPerHour": 4,
+            "Completed": "FALSE",
+            "CompletedSuccessfully": "FALSE"
+          }
+        ]
+      },
+      {
+        "path": "C:\\Users\\user\\Documents\\EngiWorld-task-02\\energyplus_direct\\eplusout.sql",
+        "size": 6242304,
+        "mtime_ns": 1786462667678409200,
+        "sha256": "b6b5b438fbf2f12b02fe597479ce94f0b6e98bc7fc9c246dda087ce56c647c15",
+        "integrity_check": "ok",
+        "simulation_rows": [
+          {
+            "SimulationIndex": 1,
+            "EnergyPlusVersion": "EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.11 23:37",
+            "TimeStamp": " YMD=2026.08.11 23:37",
+            "NumTimestepsPerHour": 4,
+            "Completed": "FALSE",
+            "CompletedSuccessfully": "FALSE"
+          }
+        ]
+      },
+      {
+        "path": "C:\\Users\\user\\Documents\\EngiWorld-task-02\\energyplus_direct_2\\eplusout.sql",
+        "size": 6242304,
+        "mtime_ns": 1786462873699663100,
+        "sha256": "08ce62a98983c68fe4166563a61e4636de783297b8ea261d164196a038fe2fbf",
+        "integrity_check": "ok",
+        "simulation_rows": [
+          {
+            "SimulationIndex": 1,
+            "EnergyPlusVersion": "EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.11 23:41",
+            "TimeStamp": " YMD=2026.08.11 23:41",
+            "NumTimestepsPerHour": 4,
+            "Completed": "FALSE",
+            "CompletedSuccessfully": "FALSE"
+          }
+        ]
+      }
+    ]
+  },
+  "native_openstudio_postprocess": {
+    "executable": "C:/openstudio-3.10.0/bin/openstudio.exe",
+    "command_line": "openstudio.exe task02_postprocess_openstudio.rb",
+    "started_at_utc": "2026-08-11T16:00:25.5385577Z",
+    "completed_at_utc": "2026-08-11T16:00:25.5385994Z",
+    "exit_code": 0
+  }
 }

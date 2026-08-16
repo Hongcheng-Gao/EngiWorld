@@ -1,5 +1,8 @@
 from pathlib import Path
+import math
+import re
 import subprocess
+import xml.etree.ElementTree as ET
 
 
 DESKTOP = Path(r"C:\Users\user\Desktop")
@@ -10,138 +13,323 @@ JOBNAME = "eval_wb_hertz"
 WBPJ_FILE = DESKTOP / "wb_hertz.wbpj"
 DB_FILE = DESKTOP / "wb_hertz.db"
 RESULT_FILE = DESKTOP / "wb_hertz.rst"
-REQUIRED_FILES = [WBPJ_FILE, DB_FILE, RESULT_FILE]
+REQUIRED_FILES = (WBPJ_FILE, DB_FILE, RESULT_FILE)
 
 
 def is_nonempty_file(path: Path) -> bool:
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+    return path.is_file() and path.stat().st_size > 0
 
 
-def _is_known_generated_script(name: str) -> bool:
-    return (
-        (name.startswith("eval_") and name.endswith((".bat", ".cmd")))
-        or (name.startswith("tmp") and name.endswith((".jou", ".wbjn")))
-    )
-
-
-def _cleanup_known_generated_scripts(desktop_path: Path) -> None:
+def is_workbench_project(path: Path) -> bool:
     try:
-        entries = list(desktop_path.iterdir())
-    except Exception:
-        return
-
-    for entry in entries:
-        try:
-            if not entry.is_file():
-                continue
-        except Exception:
-            continue
-
-        name = entry.name.lower()
-        if not _is_known_generated_script(name):
-            continue
-
-        try:
-            entry.unlink()
-        except Exception:
-            pass
-
-
-def has_forbidden_script_file(desktop_path: Path) -> bool:
-    allowed_names = {"eval.py", "license.py"}
-    forbidden_suffixes = {
-        ".bat",
-        ".cmd",
-        ".ps1",
-        ".vbs",
-        ".js",
-        ".pyw",
-        ".jou",
-        ".wbjn",
+        root = ET.parse(path).getroot()
+    except (OSError, ET.ParseError):
+        return False
+    if root.tag != "Storage":
+        return False
+    project = root.find("Project")
+    if project is None:
+        return False
+    values = {
+        child.tag: (child.text or "").strip()
+        for child in project
+        if child.text
     }
-    try:
-        entries = desktop_path.iterdir()
-    except Exception:
-        return True
+    if values.get("project-type") != "WB2":
+        return False
+    if values.get("external-version-string") != "2026 R1":
+        return False
+    if root.find("Addins") is None or root.find("Containers") is None:
+        return False
 
-    for entry in entries:
-        try:
-            if not entry.is_file():
-                continue
-        except Exception:
-            return True
-
-        name = entry.name.lower()
-        if name in allowed_names:
-            continue
-        if _is_known_generated_script(name):
-            continue
-        if any(name.endswith(ext) for ext in forbidden_suffixes):
-            return True
-
-    return False
+    has_project_reference = False
+    has_static_system = False
+    for obj in root.findall(".//Object"):
+        class_type = (obj.findtext("class-type") or "").strip()
+        member_data = (obj.findtext("member-data") or "").strip()
+        object_name = obj.attrib.get("Name", "")
+        if (
+            class_type == "FileReference"
+            and '"DisplayText": "wb_hertz.wbpj"' in member_data
+            and '"Location": "$(ProjectName).wbpj"' in member_data
+        ):
+            has_project_reference = True
+        if object_name.startswith("/Schematic/") and class_type in {"System", "Component"}:
+            if "Static Structural" in member_data or "Mechanical APDL" in member_data:
+                has_static_system = True
+    return has_project_reference and has_static_system
 
 
 def allsel(mapdl) -> None:
     mapdl.run("ALLSEL,ALL")
 
 
-def sort_max(mapdl, item: str, comp: str = "") -> float:
-    if comp:
-        mapdl.run(f"NSORT,{item},{comp},0,1,ALL")
-    else:
-        mapdl.run(f"NSORT,{item},,0,1,ALL")
-    return float(mapdl.get_value("SORT", 0, "MAX"))
+def sorted_extreme(mapdl, item: str, component: str, maximum: bool) -> float:
+    order = 1 if maximum else 0
+    mapdl.run(f"NSORT,{item},{component},0,{order},ALL")
+    label = "MAX" if maximum else "MIN"
+    return float(mapdl.get_value("SORT", 0, label))
 
 
-def sort_min(mapdl, item: str, comp: str = "") -> float:
-    if comp:
-        mapdl.run(f"NSORT,{item},{comp},0,0,ALL")
-    else:
-        mapdl.run(f"NSORT,{item},,0,0,ALL")
-    return float(mapdl.get_value("SORT", 0, "MIN"))
-
-
-def reaction_fy_on_plane(mapdl, axis: str, value: float, tol: float = 1e-3) -> float:
+def reaction_fy_at_bottom(mapdl) -> float:
     allsel(mapdl)
-    mapdl.nsel("S", "LOC", axis, value - tol, value + tol)
-    count = int(mapdl.get_value("NODE", 0, "COUNT"))
-    if count < 1:
-        raise RuntimeError(f"No nodes found on {axis}={value}.")
+    mapdl.nsel("S", "LOC", "Y", -10.001, -9.999)
+    if int(mapdl.get_value("NODE", 0, "COUNT")) < 4:
+        raise RuntimeError("plate bottom nodes not found")
     mapdl.fsum()
-    fy = float(mapdl.get_value("FSUM", 0, "ITEM", "FY"))
+    value = float(mapdl.get_value("FSUM", 0, "ITEM", "FY"))
     allsel(mapdl)
-    return fy
+    return value
+
+
+def applied_force_fy(mapdl) -> float:
+    """Sum external nodal force, including forces applied through a remote pilot node."""
+    mapdl.prep7()
+    allsel(mapdl)
+    node_ids = [int(value) for value in mapdl.mesh.nnum]
+    total = sum(float(mapdl.get_value("NODE", node, "F", "FY")) for node in node_ids)
+    allsel(mapdl)
+    return total
+
+
+def geometry_is_valid(mapdl) -> bool:
+    allsel(mapdl)
+    nodes = mapdl.mesh.nodes
+    if nodes is None or len(nodes) < 50:
+        return False
+    xs = [float(row[0]) for row in nodes]
+    ys = [float(row[1]) for row in nodes]
+    zs = [float(row[2]) for row in nodes]
+    bounds = (min(xs), max(xs), min(ys), max(ys), min(zs), max(zs))
+    expected = (-50.0, 50.0, -10.0, 20.0, -50.0, 50.0)
+    if any(abs(actual - target) > 0.05 for actual, target in zip(bounds, expected)):
+        return False
+
+    sphere_nodes = []
+    surface_nodes = 0
+    for x, y, z in zip(xs, ys, zs):
+        if y <= 1e-5:
+            continue
+        radius = math.sqrt(x * x + (y - 10.0) ** 2 + z * z)
+        sphere_nodes.append(radius)
+        if 9.7 <= radius <= 10.05:
+            surface_nodes += 1
+    if len(sphere_nodes) < 20 or surface_nodes < 12:
+        return False
+    if max(sphere_nodes) > 10.05:
+        return False
+    return True
+
+
+def mesh_resolution_is_valid(mapdl) -> bool:
+    import numpy as np
+    from scipy.spatial import cKDTree
+
+    nodes = np.asarray(mapdl.mesh.nodes, dtype=float)
+    plate_contact = nodes[
+        (nodes[:, 1] <= 0.0)
+        & (nodes[:, 1] > -3.0)
+        & (np.abs(nodes[:, 0]) < 4.0)
+        & (np.abs(nodes[:, 2]) < 4.0)
+    ]
+    plate_far = nodes[
+        (nodes[:, 1] <= 0.0)
+        & ((np.abs(nodes[:, 0]) > 35.0) | (np.abs(nodes[:, 2]) > 35.0))
+    ]
+    if len(plate_contact) < 4 or len(plate_far) < 4:
+        return False
+
+    contact_nearest = cKDTree(plate_contact).query(plate_contact, k=2)[0][:, 1]
+    far_nearest = cKDTree(plate_far).query(plate_far, k=2)[0][:, 1]
+    contact_median = float(np.median(contact_nearest))
+    far_upper_quartile = float(np.quantile(far_nearest, 0.75))
+    return (
+        0.15 <= contact_median <= 0.45
+        and 1.4 <= far_upper_quartile <= 2.6
+        and far_upper_quartile >= 4.0 * contact_median
+    )
+
+
+def selected_nodes_at_y(mapdl, low: float, high: float) -> list[int]:
+    allsel(mapdl)
+    mapdl.nsel("S", "LOC", "Y", low, high)
+    node_ids = [int(value) for value in mapdl.mesh.nnum]
+    if not node_ids:
+        raise RuntimeError("required Y-plane nodes not found")
+    return node_ids
+
+
+def selected_constraint_map(mapdl) -> dict[int, set[str]]:
+    listing = str(mapdl.dlist("ALL"))
+    rows = re.findall(
+        r"^\s*(\d+)\s+(UX|UY|UZ|ROTX|ROTY|ROTZ)\s+([-+0-9.Ee]+)",
+        listing,
+        flags=re.M,
+    )
+    result = {}
+    for node, label, value in rows:
+        if abs(float(value)) > 1e-10:
+            raise RuntimeError("nonzero displacement constraint found")
+        result.setdefault(int(node), set()).add(label)
+    return result
+
+
+def model_setup_is_valid(mapdl) -> bool:
+    etlist = str(mapdl.etlist()).upper()
+    solid_names = ("SOLID185", "SOLID186", "SOLID187", "SOLID285")
+    contact_names = ("CONTA173", "CONTA174", "CONTA175")
+    present_solids = [name for name in solid_names if name in etlist]
+    present_contacts = [name for name in contact_names if name in etlist]
+    if not present_solids or not present_contacts or "TARGE170" not in etlist:
+        return False
+    for contact_name in present_contacts:
+        contact_block = re.search(
+            rf"ELEMENT TYPE\s+\d+\s+IS {contact_name}[\s\S]*?KEYOPT\(\s*1-\s*6\)=\s*([0-9\s-]+)",
+            etlist,
+        )
+        if not contact_block:
+            return False
+        first_six = [int(value) for value in contact_block.group(1).split()[:6]]
+        if len(first_six) != 6 or first_six[1] not in (0, 1):
+            return False
+
+    type_ids = {}
+    for name in (*present_solids, "TARGE170", *present_contacts):
+        match = re.search(rf"ELEMENT TYPE\s+(\d+)\s+IS {name}", etlist)
+        if not match:
+            return False
+        type_ids[name] = int(match.group(1))
+
+    solid_element_count = 0
+    for name in present_solids:
+        allsel(mapdl)
+        mapdl.esel("S", "TYPE", "", type_ids[name])
+        solid_element_count += int(mapdl.get_value("ELEM", 0, "COUNT"))
+    if solid_element_count < 1:
+        allsel(mapdl)
+        return False
+
+    for name in ("TARGE170", *present_contacts):
+        allsel(mapdl)
+        mapdl.esel("S", "TYPE", "", type_ids[name])
+        if int(mapdl.get_value("ELEM", 0, "COUNT")) < 1:
+            allsel(mapdl)
+            return False
+    allsel(mapdl)
+
+    material = str(mapdl.run("MPLIST,ALL,ALL"))
+    ex_values = [float(value) for value in re.findall(r"^\s*TEMP\s+EX\s*$\s*([-+0-9.Ee]+)", material, flags=re.I | re.M)]
+    poisson_values = [float(value) for value in re.findall(r"^\s*TEMP\s+(?:PRXY|NUXY)\s*$\s*([-+0-9.Ee]+)", material, flags=re.I | re.M)]
+    if not ex_values or any(abs(value - 210000.0) > 1.0 for value in ex_values):
+        return False
+    if not poisson_values or any(abs(value - 0.3) > 1e-6 for value in poisson_values):
+        return False
+    if re.search(r"^\s*TEMP\s+MU\s*$", material, flags=re.I | re.M):
+        return False
+    real_constants = str(mapdl.run("RLIST,ALL"))
+    if "COEFFICIENT OF FRICTION" in real_constants.upper():
+        return False
+
+    bottom_nodes = selected_nodes_at_y(mapdl, -10.001, -9.999)
+    bottom_constraints = selected_constraint_map(mapdl)
+    if set(bottom_constraints) != set(bottom_nodes):
+        return False
+    if any(labels != {"UX", "UY", "UZ"} for labels in bottom_constraints.values()):
+        return False
+
+    allsel(mapdl)
+    all_constraints = selected_constraint_map(mapdl)
+    sphere_constraints = {
+        node: labels for node, labels in all_constraints.items()
+        if node not in set(bottom_nodes)
+    }
+    # A single remote point, two minimally constrained sphere nodes, or a
+    # larger symmetry-style set are all valid ways to remove lateral modes.
+    if not sphere_constraints:
+        return False
+    if any("UY" in labels or not labels.issubset({"UX", "UZ"}) for labels in sphere_constraints.values()):
+        return False
+    constrained_dofs = set().union(*sphere_constraints.values())
+    if not {"UX", "UZ"}.issubset(constrained_dofs):
+        return False
+    allsel(mapdl)
+
+    mapdl.finish()
+    mapdl.slashsolu()
+    status = str(mapdl.run("/STATUS,SOLU")).upper()
+    mapdl.finish()
+    return (
+        "ANALYSIS TYPE" in status
+        and "STATIC (STEADY-STATE)" in status
+        and "NONLINEAR GEOMETRIC EFFECTS" in status
+        and re.search(r"NONLINEAR GEOMETRIC EFFECTS[^\n]*ON", status) is not None
+    )
 
 
 def extract_predictions(mapdl) -> dict:
     mapdl.resume(DB_FILE.stem, "db")
+    if not geometry_is_valid(mapdl):
+        raise RuntimeError("sphere/plate geometry does not match the instruction")
+    if not mesh_resolution_is_valid(mapdl):
+        raise RuntimeError("contact-region or far-field mesh size does not match the instruction")
+    if not model_setup_is_valid(mapdl):
+        raise RuntimeError("contact, material, or support setup does not match the instruction")
+
+    allsel(mapdl)
+    total_elements = int(mapdl.get_value("ELEM", 0, "COUNT"))
+    top_force = applied_force_fy(mapdl)
+
+    allsel(mapdl)
     mapdl.post1()
     mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
     mapdl.set("LAST")
+    final_time = float(mapdl.get_value("ACTIVE", 0, "SET", "TIME"))
+    min_uy = sorted_extreme(mapdl, "U", "Y", maximum=False)
+    max_usum = sorted_extreme(mapdl, "U", "SUM", maximum=True)
+    max_stress = sorted_extreme(mapdl, "S", "EQV", maximum=True)
+    reaction = reaction_fy_at_bottom(mapdl)
+
+    allsel(mapdl)
+    mapdl.run("ETABLE,CPRESS,CONT,PRES")
+    mapdl.run("ESORT,ETAB,CPRESS,0,1")
+    max_contact_pressure = float(mapdl.get_value("SORT", 0, "MAX"))
+    allsel(mapdl)
 
     return {
-        "min_uy_mm": sort_min(mapdl, "U", "Y"),
-        "max_usum_mm": sort_max(mapdl, "U", "SUM"),
-        "max_von_mises_mpa": sort_max(mapdl, "S", "EQV"),
-        "bottom_reaction_fy_n": reaction_fy_on_plane(mapdl, "Y", -10.0),
+        "total_elements": total_elements,
+        "applied_top_force_fy_n": top_force,
+        "bottom_reaction_fy_n": reaction,
+        "final_time": final_time,
+        "min_uy_mm": min_uy,
+        "max_usum_mm": max_usum,
+        "max_von_mises_mpa": max_stress,
+        "max_contact_pressure_mpa": max_contact_pressure,
     }
 
 
-def _kill_ansys_related() -> None:
-    for target in (
-        "ANSYS261.exe",
-        "ansys261.exe",
-        "ANSYS.exe",
-        "ansys.exe",
-        "fluent.exe",
-        "Fluent.exe",
-        "cortex.exe",
-        "Cortex.exe",
-    ):
+def predictions_are_valid(predictions: dict) -> bool:
+    if abs(predictions["applied_top_force_fy_n"] + 500.0) > 5.0:
+        return False
+    if abs(abs(predictions["bottom_reaction_fy_n"]) - 500.0) > 10.0:
+        return False
+    if abs(predictions["final_time"] - 1.0) > 1e-6:
+        return False
+    if not (-1.0 < predictions["min_uy_mm"] < -1e-5):
+        return False
+    if not (1e-5 < predictions["max_usum_mm"] < 2.0):
+        return False
+    if not (1e-3 < predictions["max_von_mises_mpa"] < 10000.0):
+        return False
+    if not (1e-3 < predictions["max_contact_pressure_mpa"] < 10000.0):
+        return False
+    return True
+
+
+def kill_ansys_related() -> None:
+    for image in ("ANSYS261.exe", "ANSYS.exe"):
         try:
             subprocess.run(
-                ["taskkill", "/F", "/IM", target],
+                ["taskkill", "/F", "/T", "/IM", image],
                 capture_output=True,
                 creationflags=0x08000000,
             )
@@ -149,109 +337,13 @@ def _kill_ansys_related() -> None:
             pass
 
 
-
-
-def _coord_span(arr, axis: int):
-    values = [float(v[axis]) for v in arr]
-    return min(values), max(values)
-
-
-def _within(value: float, target: float, tol: float) -> bool:
-    return abs(value - target) <= tol
-
-
-def _check_bounds_from_instruction(mapdl, task_name: str) -> bool:
-    nodes = mapdl.mesh.nodes
-    if nodes is None or len(nodes) < 2:
-        return False
-
-    xmin, xmax = _coord_span(nodes, 0)
-    ymin, ymax = _coord_span(nodes, 1)
-    zmin, zmax = _coord_span(nodes, 2)
-
-    if task_name == "task-01":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 10.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 100.0, 1e-1)
-    if task_name == "task-02":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 1.0, 1e-1)
-    if task_name == "task-03":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 200.0, 1e-1)
-    if task_name == "task-04":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 20.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 20.0, 1e-1)
-    if task_name == "task-05":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 500.0, 5e-1)
-    if task_name == "task-06":
-        return _within(xmin, 25.0, 1e-1) and _within(xmax, 50.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1)
-    if task_name == "task-07":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
-    if task_name == "task-08":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
-    if task_name == "task-11":
-        return (xmax - xmin) > 10.0 and (ymax - ymin) > 10.0 and (zmax - zmin) > 10.0
-    if task_name == "task-12":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 1000.0, 5e-1)
-    if task_name == "task-13":
-        return _within(ymin, 0.0, 1e-2) and _within(ymax, 50.0, 2e-1)
-    if task_name == "task-14":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 500.0, 5e-1)
-    if task_name == "task-18":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 2e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 100.0, 2e-1)
-    if task_name == "task-19":
-        return _within(ymin, 0.0, 1e-2) and _within(ymax, 1000.0, 5e-1)
-    if task_name == "task-20":
-        return _within(xmin, 0.0, 1e-2) and _within(xmax, 100.0, 1e-1) and _within(ymin, 0.0, 1e-2) and _within(ymax, 10.0, 1e-1) and _within(zmin, 0.0, 1e-2) and _within(zmax, 10.0, 1e-1)
-
-    return True
-
-
-def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:
-    mapdl.resume(DB_FILE.stem, "db")
-    if not _check_bounds_from_instruction(mapdl, task_name):
-        return False
-
-    mapdl.post1()
-    mapdl.file(RESULT_FILE.stem, RESULT_FILE.suffix.lstrip("."))
-    try:
-        mapdl.set("LAST")
-    except Exception:
-        try:
-            mapdl.set(1, 1)
-        except Exception:
-            return False
-
-    for key, val in pred.items():
-        try:
-            x = float(val)
-        except Exception:
-            return False
-
-        lk = key.lower()
-        if "temp" in lk and not (-1000.0 <= x <= 5000.0):
-            return False
-        if "freq" in lk and not (x > 0.0):
-            return False
-        if "reaction" in lk and abs(x) < 1e-9:
-            return False
-        if ("uy" in lk or "uz" in lk or "ux" in lk or "rot" in lk) and not (-1e6 <= x <= 1e6):
-            return False
-        if ("von_mises" in lk or "seqv" in lk or "stress" in lk) and abs(x) < 1e-9:
-            return False
-        if "final_time" in lk and not (x > 0.0):
-            return False
-
-    return True
-
 def evaluate() -> bool:
-    _kill_ansys_related()
-    _cleanup_known_generated_scripts(DESKTOP)
-
-    if has_forbidden_script_file(DESKTOP):
+    kill_ansys_related()
+    if any(not is_nonempty_file(path) for path in REQUIRED_FILES):
         return False
-
-    if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
+    if not is_workbench_project(WBPJ_FILE):
         return False
-
     mapdl = None
-    ok = False
     try:
         from ansys.mapdl.core import launch_mapdl
 
@@ -263,17 +355,16 @@ def evaluate() -> bool:
             port=MAPDL_PORT,
             override=True,
         )
-        pred = extract_predictions(mapdl)
-        ok = passes_process_checks(mapdl, pred, task_name="task-11")
+        return predictions_are_valid(extract_predictions(mapdl))
     except Exception:
-        ok = False
+        return False
     finally:
         if mapdl is not None:
             try:
                 mapdl.exit()
             except Exception:
                 pass
-    return ok
+
 
 def main() -> None:
     print("True" if evaluate() else "False")

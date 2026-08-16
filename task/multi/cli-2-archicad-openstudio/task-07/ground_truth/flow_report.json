@@ -1,70 +1,450 @@
 {
+  "schema": "engiworld-openstudio-native-flow-report-v1",
   "case_id": "multi-cli-2-archicad-openstudio-task-07-windows",
-  "software_chain": [
-    "archicad",
-    "openstudio"
-  ],
-  "stage_sequence": [
-    {
-      "software": "archicad",
-      "input": "init.ifc",
-      "output": "stage1.ifc",
-      "handoff": "handoff.json"
-    },
-    {
-      "software": "openstudio",
-      "input": "handoff.json",
-      "output": "result.osm"
-    }
-  ],
-  "consumed_handoff_sha256": "08b7e1544a7fa53fed8a2125971adff940ab87e259caebc3d221bf7c726e2680",
-  "source_stage1_sha256": "4cfaa958d24fef8b7e1c60b8fec4ceb4d1a3352460cf9326c7d44bfd793e2b58",
-  "osm_sha256": "62d49bb8848fd58664132f569f9af206387f57d885d664f5348a9e8d8c097a0b",
-  "building_area_m2": 73.08,
+  "software_stage": "openstudio",
+  "consumed_handoff_sha256": "bbc7f36bac97f7e7acda32bc0280aebd1fb742be69b9fa5be14340672198f834",
+  "source_stage1_sha256": "bf3db9092469b249f26687fd9f7e732b8127335a695b451e615e0fe4270a7c1d",
+  "osm_sha256": "02f9c7b4d9d34e123f6a60f5e9b6345f895d8717a103eb9d3deae3f0d18dafcc",
+  "workflow_sha256": "bc349bd95084cc8a3aae78620888557ec57f96ba819ecff1c2631049206d3b9d",
+  "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+  "building_area_m2": 72.0,
   "room_count": 3,
   "thermal_zone_count": 3,
   "door_count": 3,
   "window_count": 1,
-  "window_wall_ratio": 0.18,
   "surface_count": 18,
   "subsurface_count": 4,
-  "weather_file": "USA_Design_Day.epw",
-  "schedule_set": "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-07-windows",
-  "construction_set": "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-07-windows",
+  "weather_file": "weather.epw",
   "openstudio_version": "3.10.0",
   "spaces": [
     {
       "name": "MARKET-HALL",
+      "ifc_global_id": "2mZbFQi4b3lB7hjUv9viKA",
       "thermal_zone": "MARKET-HALL-ZN",
-      "floor_area_m2": 31.78,
+      "floor_area_m2": 54,
       "door_count": 1,
       "window_count": 1
     },
     {
       "name": "COLD-CHAIN",
+      "ifc_global_id": "2i$fL50eb22QnXtqw7YtWf",
       "thermal_zone": "COLD-CHAIN-ZN",
-      "floor_area_m2": 23.75,
+      "floor_area_m2": 9,
       "door_count": 1,
       "window_count": 0
     },
     {
       "name": "WASTE-HOLDING",
+      "ifc_global_id": "0w_D7uLUP1O8iiPxe1UMfQ",
       "thermal_zone": "WASTE-HOLDING-ZN",
-      "floor_area_m2": 17.55,
+      "floor_area_m2": 9,
       "door_count": 1,
       "window_count": 0
     }
   ],
-  "thermal_zones": [
-    "MARKET-HALL-ZN",
-    "COLD-CHAIN-ZN",
-    "WASTE-HOLDING-ZN"
+  "assumptions": {
+    "cold_chain_equipment_w_m2": 45.0,
+    "waste_people_m2": 0.015,
+    "market_public_schedule": "MarketPublicSchedule",
+    "service_schedule": "ServiceSupportSchedule"
+  },
+  "simulation": {
+    "sql_integrity_check": "ok",
+    "hourly_series": [
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 7947072000.0,
+        "max": 1555200.0,
+        "space_name": "MARKET-HALL",
+        "key_value": "MARKET-HALL-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 7947072000.0,
+        "max": 1555200.0,
+        "space_name": "MARKET-HALL",
+        "key_value": "MARKET-HALL-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 4905738337.874325,
+        "max": 6925870.87964672,
+        "space_name": "MARKET-HALL",
+        "key_value": "MARKET-HALL IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 23667383951.827435,
+        "max": 9145691.745208764,
+        "space_name": "MARKET-HALL",
+        "key_value": "MARKET-HALL IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1362705.0938539791,
+        "max": 1923.853022124089,
+        "space_name": "MARKET-HALL",
+        "key_value": "MARKET-HALL IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 6574273.319952065,
+        "max": 2540.4699292246564,
+        "space_name": "MARKET-HALL",
+        "key_value": "MARKET-HALL IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1158948000.0,
+        "max": 226800.0,
+        "space_name": "COLD-CHAIN",
+        "key_value": "COLD-CHAIN-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 7450380000.0,
+        "max": 1458000.0,
+        "space_name": "COLD-CHAIN",
+        "key_value": "COLD-CHAIN-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 691239373.2356862,
+        "max": 1613796.6611924712,
+        "space_name": "COLD-CHAIN",
+        "key_value": "COLD-CHAIN IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 9984954257.633934,
+        "max": 3175341.912245279,
+        "space_name": "COLD-CHAIN",
+        "key_value": "COLD-CHAIN IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 192010.93700991283,
+        "max": 448.276850331242,
+        "space_name": "COLD-CHAIN",
+        "key_value": "COLD-CHAIN IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2773598.404898315,
+        "max": 882.039420068133,
+        "space_name": "COLD-CHAIN",
+        "key_value": "COLD-CHAIN IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 827820000.0,
+        "max": 162000.0,
+        "space_name": "WASTE-HOLDING",
+        "key_value": "WASTE-HOLDING-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1324512000.0,
+        "max": 259200.0,
+        "space_name": "WASTE-HOLDING",
+        "key_value": "WASTE-HOLDING-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1726979099.3200564,
+        "max": 1910785.2134665318,
+        "space_name": "WASTE-HOLDING",
+        "key_value": "WASTE-HOLDING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2389752043.205041,
+        "max": 1521633.1302289623,
+        "space_name": "WASTE-HOLDING",
+        "key_value": "WASTE-HOLDING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 479716.4164777934,
+        "max": 530.77367040737,
+        "space_name": "WASTE-HOLDING",
+        "key_value": "WASTE-HOLDING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 663820.0120014002,
+        "max": 422.6758695080451,
+        "space_name": "WASTE-HOLDING",
+        "key_value": "WASTE-HOLDING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      }
+    ],
+    "energy_accounting": "lights + electric equipment + ideal heating + ideal cooling",
+    "peak_definition": "maximum hourly ideal heating or cooling rate"
+  },
+  "openstudio_cli_transactions": [
+    {
+      "stage": "openstudio_weather_period_simulation_final_delivery",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-12T10:02:45.6460390+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-12T10:02:49.3984439+00:00",
+      "completed_at_utc": "2026-08-12T10:02:55.5135373+00:00",
+      "exit_code": 0,
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-12T10:02:49.4140792+00:00",
+          "sql_size": 9011200,
+          "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:02:50.4964486+00:00",
+          "sql_size": 9011200,
+          "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:02:51.4993272+00:00",
+          "sql_size": 9011200,
+          "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:02:52.5019686+00:00",
+          "sql_size": 9011200,
+          "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:02:53.5061083+00:00",
+          "sql_size": 9011200,
+          "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:02:54.5098655+00:00",
+          "sql_size": 9011200,
+          "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+          "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+        }
+      ],
+      "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+      "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+      "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c",
+      "result_osm_sha256": "02f9c7b4d9d34e123f6a60f5e9b6345f895d8717a103eb9d3deae3f0d18dafcc",
+      "workflow_sha256": "bc349bd95084cc8a3aae78620888557ec57f96ba819ecff1c2631049206d3b9d",
+      "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+      "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+      "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5"
+    }
   ],
-  "osm_tokens": [
-    "ColdChainHighEquipment",
-    "WasteHoldingLowPeople",
+  "window_area_m2": 2.8,
+  "gross_outdoor_wall_area_m2": 162.0,
+  "window_wall_ratio": 0.01728395061728395,
+  "schedule_set": [
+    "COLD-CHAIN Activity",
+    "COLD-CHAIN Cooling",
+    "COLD-CHAIN Heating",
+    "MARKET-HALL Activity",
+    "MARKET-HALL Cooling",
+    "MARKET-HALL Heating",
     "MarketPublicSchedule",
-    "ServiceSupportSchedule"
+    "ServiceSupportSchedule",
+    "ServiceSupportSchedule 1",
+    "WASTE-HOLDING Activity",
+    "WASTE-HOLDING Cooling",
+    "WASTE-HOLDING Heating"
   ],
-  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe"
+  "construction_set": [
+    "EW2A07 Door Construction",
+    "EW2A07 Opaque Construction",
+    "EW2A07 Window Construction"
+  ],
+  "native_stage_log_sha256": "13a27b772e8dc0d73a0abde0db6b6f8a7df25c10bbfdaffbf9cd01c4c9cd0e2f",
+  "native_cli_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+  "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+  "energyplus_status": "************* EnergyPlus Completed Successfully-- 10 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  2.42sec",
+  "energyplus_warning_count": 10,
+  "energyplus_severe_errors": 0,
+  "energyplus_sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+  "energyplus_err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+  "energyplus_end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c",
+  "model_summary_sha256": "bc5856c3d65946711abdeb6708647b3eabbf7b04f9365247de5832ae82d7c450",
+  "final_delivery": {
+    "stage": "openstudio_weather_period_simulation_final_delivery",
+    "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+    "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+    "arguments": [
+      "run",
+      "-w",
+      "C:\\Users\\user\\Desktop\\workflow.osw"
+    ],
+    "working_directory": "C:\\Users\\user\\Desktop",
+    "started_at_utc": "2026-08-12T10:02:45.6460390+00:00",
+    "openstudio_process_exited_at_utc": "2026-08-12T10:02:49.3984439+00:00",
+    "completed_at_utc": "2026-08-12T10:02:55.5135373+00:00",
+    "exit_code": 0,
+    "related_processes_after_wait": 0,
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-12T10:02:49.4140792+00:00",
+        "sql_size": 9011200,
+        "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:02:50.4964486+00:00",
+        "sql_size": 9011200,
+        "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:02:51.4993272+00:00",
+        "sql_size": 9011200,
+        "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:02:52.5019686+00:00",
+        "sql_size": 9011200,
+        "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:02:53.5061083+00:00",
+        "sql_size": 9011200,
+        "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:02:54.5098655+00:00",
+        "sql_size": 9011200,
+        "sql_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:02:48.5190212Z",
+        "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c"
+      }
+    ],
+    "sql_sha256": "74ed289a6f5100274f19d35c5b0204f2fa43fd302ee8551c6e8c12db6db6f9d0",
+    "err_sha256": "f61a7602d158d097ec15e86c06f9f65a579e3297cea86202181fdcba7f46cc23",
+    "end_sha256": "6cd4596ccc7603aa43e9e343826c5ee75fdedcce53c673f71ce69345f8853e4c",
+    "result_osm_sha256": "02f9c7b4d9d34e123f6a60f5e9b6345f895d8717a103eb9d3deae3f0d18dafcc",
+    "workflow_sha256": "bc349bd95084cc8a3aae78620888557ec57f96ba819ecff1c2631049206d3b9d",
+    "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+    "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+    "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5"
+  }
 }

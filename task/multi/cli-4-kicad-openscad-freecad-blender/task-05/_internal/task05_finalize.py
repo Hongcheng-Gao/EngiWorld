@@ -8,6 +8,7 @@ import math
 import os
 import re
 import shlex
+import shutil
 import socket
 import subprocess
 import sys
@@ -23,6 +24,7 @@ SOFTWARE_SEQUENCE = ["KiCad", "OpenSCAD", "FreeCAD", "Blender"]
 REQUIRED_ARTIFACTS = [
     "01_kicad_board.kicad_pcb",
     "01_kicad_export.json",
+    "01_kicad_board.step",
     "01_kicad_mechanical_map.csv",
     "01_kicad_parameters.scad",
     "02_openscad_enclosure.scad",
@@ -39,8 +41,7 @@ REQUIRED_ARTIFACTS = [
     "toolchain_invocation_log.json",
     "final_release_package.json",
 ]
-BRIDGE_ARTIFACT = "01_kicad_board.step"
-HASHED_ARTIFACTS = [*REQUIRED_ARTIFACTS[:-1], BRIDGE_ARTIFACT]
+HASHED_ARTIFACTS = REQUIRED_ARTIFACTS[:-1]
 FREECAD_REQUIRED_FIELDS = [
     "access_checks",
     "component_top_clearances_mm",
@@ -293,18 +294,12 @@ def overlay_feature_present(tokens: list[str], *pieces: str) -> bool:
 def main() -> None:
     work = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
     internal = Path(sys.argv[2] if len(sys.argv) > 2 else "/tmp/engiworld-task05-internal")
-    kicad = os.environ.get(
-        "ENGIWORLD_KICAD_CLI",
-        "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage",
-    )
-    blender = os.environ.get(
-        "ENGIWORLD_BLENDER",
-        "/home/user/Applications/blender-4.2.3-linux-x64/blender",
-    )
-    freecad = os.environ.get("ENGIWORLD_FREECAD", "freecadcmd")
-    openscad = os.environ.get("ENGIWORLD_OPENSCAD", "openscad")
+    kicad = os.environ.get("ENGIWORLD_KICAD_CLI") or shutil.which("kicad-cli") or "/usr/bin/kicad-cli"
+    blender = os.environ.get("ENGIWORLD_BLENDER") or shutil.which("blender") or "/snap/bin/blender"
+    freecad = os.environ.get("ENGIWORLD_FREECAD") or shutil.which("freecadcmd") or "freecadcmd"
+    openscad = os.environ.get("ENGIWORLD_OPENSCAD") or shutil.which("openscad") or "/usr/bin/openscad"
 
-    missing = [name for name in [*REQUIRED_ARTIFACTS[:-2], BRIDGE_ARTIFACT] if not (work / name).is_file()]
+    missing = [name for name in REQUIRED_ARTIFACTS[:-2] if not (work / name).is_file()]
     if missing:
         raise RuntimeError(f"cannot finalize {TASK}; missing artifacts: " + ", ".join(missing))
     requirements = json.loads((work / "mechanical_requirements.json").read_text(encoding="utf-8"))
@@ -328,94 +323,50 @@ def main() -> None:
     versions = {
         "Blender": version([blender, "--background", "--version"]),
         "FreeCAD": version([freecad, "--version"]),
-        "KiCad": version([kicad, "kicad-cli", "--version"]),
+        "KiCad": version([kicad, "--version"]),
         "OpenSCAD": version([openscad, "--version"]),
     }
     generated_at = datetime.now(timezone.utc).isoformat()
-    prepare_entry = {
-        "command": f"python3 {shlex.quote(str(internal / 'task05_prepare.py'))} {shlex.quote(str(work))}",
-        "inputs": [
-            "board_input.kicad_pcb",
-            "mechanical_requirements.json",
-            "connector_keepouts.csv",
-            "enclosure_seed.scad",
-            "handoff_notes.md",
-        ],
-        "outputs": [
-            "01_kicad_board.kicad_pcb",
-            "01_kicad_export.json",
-            "01_kicad_mechanical_map.csv",
-            "01_kicad_parameters.scad",
-            "02_openscad_enclosure.scad",
-            "02_openscad_parameters.json",
-        ],
-        "software": "Python handoff generator",
-    }
-    productive_commands = [
-        {
-            "command": (
-                f"cd {shlex.quote(str(work))} && {shlex.quote(kicad)} kicad-cli pcb export step "
-                "--force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb"
-            ),
-            "inputs": ["01_kicad_board.kicad_pcb"],
-            "outputs": [BRIDGE_ARTIFACT],
-            "software": "KiCad",
-            "version": versions["KiCad"],
-        },
-        {
-            "command": (
-                f"cd {shlex.quote(str(work))} && {shlex.quote(openscad)} "
-                "-o 02_openscad_enclosure.stl 02_openscad_enclosure.scad"
-            ),
-            "inputs": ["01_kicad_parameters.scad", "02_openscad_enclosure.scad"],
-            "outputs": ["02_openscad_enclosure.stl"],
-            "software": "OpenSCAD",
-            "version": versions["OpenSCAD"],
-        },
-        {
-            "command": (
-                f"ENGIWORLD_WORKDIR={shlex.quote(str(work))} {shlex.quote(freecad)} "
-                f"{shlex.quote(str(internal / 'task05_freecad_stage.py'))}"
-            ),
-            "inputs": [
-                BRIDGE_ARTIFACT,
-                "01_kicad_export.json",
-                "01_kicad_mechanical_map.csv",
-                "02_openscad_enclosure.stl",
-                "02_openscad_parameters.json",
-            ],
-            "outputs": [
-                "03_freecad_assembly.step",
-                "03_freecad_assembly.obj",
-                "03_freecad_clearance_report.json",
-            ],
-            "software": "FreeCAD",
-            "version": versions["FreeCAD"],
-        },
-        {
-            "command": (
-                f"{shlex.quote(blender)} --background --factory-startup --python "
-                f"{shlex.quote(str(internal / 'task05_blender_stage.py'))} -- {shlex.quote(str(work))}"
-            ),
-            "inputs": ["03_freecad_assembly.obj", "03_freecad_clearance_report.json"],
-            "outputs": [
-                "04_blender_review.blend",
-                "04_blender_review.obj",
-                "04_blender_review.mtl",
-                "04_blender_review.png",
-                "04_blender_scene_report.json",
-            ],
-            "software": "Blender",
-            "version": versions["Blender"],
-        },
-    ]
+    evidence_path = work / "stage_execution_evidence.json"
+    if not evidence_path.is_file():
+        raise RuntimeError(f"cannot finalize {TASK} without recorded stage execution evidence")
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    expected_stages = ["prepare", "KiCad", "OpenSCAD", "FreeCAD", "Blender"]
+    if not isinstance(evidence, list):
+        raise RuntimeError(f"{TASK} stage evidence must be a list")
+    selected = []
+    cursor = 0
+    for stage in expected_stages:
+        match = None
+        for index in range(cursor, len(evidence)):
+            candidate = evidence[index]
+            if not isinstance(candidate, dict) or candidate.get("stage") != stage or candidate.get("exit_code") != 0:
+                continue
+            expected_hashes = candidate.get("output_sha256")
+            if not isinstance(expected_hashes, dict) or set(expected_hashes) != set(candidate.get("outputs", [])):
+                continue
+            if all((work / name).is_file() and sha256(work / name) == value for name, value in expected_hashes.items()):
+                match = candidate
+                cursor = index + 1
+                break
+        if match is None:
+            raise RuntimeError(f"{TASK} evidence lacks a successful productive {stage} stage")
+        selected.append(match)
+    for entry in selected:
+        if Path(str(entry.get("cwd", ""))).resolve() != work:
+            raise RuntimeError(f"{TASK} stage did not run directly on the desktop: {entry.get('stage')}")
+        for name, expected_hash in entry["output_sha256"].items():
+            if sha256(work / name) != expected_hash:
+                raise RuntimeError(f"{TASK} stage output changed after execution: {name}")
+        if entry.get("software") in versions:
+            entry["version"] = versions[entry["software"]]
+    prepare_entry = selected[0]
+    productive_commands = selected[1:]
     log = {
-        "actual_invocations": [prepare_entry, *productive_commands],
-        "commands": productive_commands,
+        "actual_invocations": evidence,
+        "commands": selected,
         "generated_at_utc": generated_at,
         "generated_on_host": socket.gethostname(),
-        "preparation": prepare_entry,
-        "productive_software_sequence": [entry["software"] for entry in productive_commands],
         "required_software_sequence": SOFTWARE_SEQUENCE,
         "task": TASK,
         "tool_versions": versions,
@@ -561,8 +512,7 @@ def main() -> None:
     artifact_hashes = {name: sha256(work / name) for name in HASHED_ARTIFACTS if (work / name).is_file()}
     artifact_checks = {
         "all_required_artifacts_present": all((work / name).is_file() for name in REQUIRED_ARTIFACTS[:-1]),
-        "bridge_artifact_present": (work / BRIDGE_ARTIFACT).is_file(),
-        "required_and_bridge_hashes": len(artifact_hashes) == 17 and set(artifact_hashes) == set(HASHED_ARTIFACTS),
+        "required_artifact_hashes": len(artifact_hashes) == 17 and set(artifact_hashes) == set(HASHED_ARTIFACTS),
         "required_subset_of_produced_artifacts": set(REQUIRED_ARTIFACTS).issubset(produced_names),
     }
     toolchain_checks = {
@@ -590,7 +540,7 @@ def main() -> None:
         "extra_artifacts": sorted(produced_names - set(REQUIRED_ARTIFACTS)),
         "generated_at_utc": generated_at,
         "geometry_checks": geometry_checks,
-        "hash_policy": "The 16 required non-self artifacts and productive KiCad STEP bridge are SHA-256 hashed.",
+        "hash_policy": "All 17 required non-self artifacts are SHA-256 hashed.",
         "key_metrics": {
             "access_checks": freecad_report.get("access_checks"),
             "board_bbox_mm": params.get("board_bbox_mm"),
@@ -616,7 +566,7 @@ def main() -> None:
         "stage_outputs": {
             "Blender": productive_commands[3]["outputs"],
             "FreeCAD": productive_commands[2]["outputs"],
-            "KiCad": [*prepare_entry["outputs"][:4], BRIDGE_ARTIFACT],
+            "KiCad": [*prepare_entry["outputs"][:4], "01_kicad_board.step"],
             "OpenSCAD": [
                 "02_openscad_enclosure.scad",
                 "02_openscad_enclosure.stl",

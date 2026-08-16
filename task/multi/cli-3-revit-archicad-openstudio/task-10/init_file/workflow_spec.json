@@ -7,26 +7,45 @@
     "archicad": {"major_version": 27, "minimum_build": 6000, "executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe", "automation_entry": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe"},
     "openstudio": {"version": "3.10.0", "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe", "energyplus_version": "25.1.0"}
   },
-  "ifc_exchange": {"schema": "IFC4", "model_view": "ReferenceView", "space_boundary_level": 2, "minimum_global_id_retention": 0.7, "required_property_sets": ["Pset_SpaceCommon", "Qto_SpaceBaseQuantities", "EngiWorld_EnergyHandoff"]},
+  "ifc_exchange": {"schema": "IFC4", "model_view": "ReferenceView", "space_boundary_policy": "observe_validate_and_preserve_native_export_state", "minimum_global_id_retention": 1.0, "required_property_sets": ["Pset_SpaceCommon", "Qto_SpaceBaseQuantities", "EngiWorld_EnergyHandoff"]},
   "revit_stage": {"input": "init.ifc", "output": "stage1.ifc", "handoff": "revit_handoff.json", "operation": "Retain and rename the three geometric storey spaces for reception, studio and archive uses, and create a Level 3 roof plus one hosted door and window per level.", "required_tokens": ["EW3B10", "RECEPTION-L1", "STUDIO-L2", "ARCHIVE-L3", "THREE-STOREY-STACK", "GEOMETRIC-FILLINGS", "multi-cli-3-revit-archicad-openstudio-task-10-windows"]},
   "archicad_stage": {"input": "stage1.ifc", "output": "stage2.ifc", "translator": "archicad_ifc4_translator.json", "operation": "Validate one function per level, complete GlobalId retention, hosted openings, archive low lighting and studio high equipment semantics.", "required_tokens": ["ARCHICAD-QA-PASS", "ONE-FUNCTION-GROUP-PER-LEVEL", "ARCHIVE-LOW-LIGHTING", "STUDIO-HIGH-LOAD", "RECEPTION-L1", "STUDIO-L2", "ARCHIVE-L3", "multi-cli-3-revit-archicad-openstudio-task-10-windows"]},
-  "storeys": [{"name": "Level 1", "z_m": 0.0}, {"name": "Level 2", "z_m": 3.0}, {"name": "Level 3", "z_m": 6.0}],
-  "roof_geometry": {"ifc_guid": "2LzO4ZliP00xdSmna1lWP8", "storey": "Level 3", "width_m": 8.0, "depth_m": 6.0, "base_z_m": 9.0, "ridge_rise_m": 1.5, "slope_degrees": 20.6},
+  "storeys": [{"name": "Level 1", "source_name": "Ground Floor", "z_m": 0.0}, {"name": "Level 2", "source_name": "Level 2", "z_m": 3.0}, {"name": "Level 3", "source_name": "Level 3", "z_m": 6.0}],
+  "seed_preservation": {
+    "storey_global_ids": {"Level 1": "1ofMKbkXL90x1LpPKmrjLf", "Level 2": "1ofMKbkXL90x1LpPKmrjWN", "Level 3": "1ofMKbkXL90x1LpPKmrjWK"},
+    "slab_global_ids": ["1ofMKbkXL90x1LpPKmrjW7", "1ofMKbkXL90x1LpPKmrjWE", "1ofMKbkXL90x1LpPKmrjW9"],
+    "walls": [
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWL", "storey": "Level 1", "x1_m": 0.0, "y1_m": 0.0, "x2_m": 8.0, "y2_m": 0.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWI", "storey": "Level 1", "x1_m": 8.0, "y1_m": 0.0, "x2_m": 8.0, "y2_m": 6.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWJ", "storey": "Level 1", "x1_m": 8.0, "y1_m": 6.0, "x2_m": 0.0, "y2_m": 6.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWG", "storey": "Level 1", "x1_m": 0.0, "y1_m": 6.0, "x2_m": 0.0, "y2_m": 0.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWH", "storey": "Level 2", "x1_m": 0.0, "y1_m": 0.0, "x2_m": 8.0, "y2_m": 0.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWU", "storey": "Level 2", "x1_m": 8.0, "y1_m": 0.0, "x2_m": 8.0, "y2_m": 6.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWV", "storey": "Level 2", "x1_m": 8.0, "y1_m": 6.0, "x2_m": 0.0, "y2_m": 6.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWS", "storey": "Level 2", "x1_m": 0.0, "y1_m": 6.0, "x2_m": 0.0, "y2_m": 0.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWT", "storey": "Level 3", "x1_m": 0.0, "y1_m": 0.0, "x2_m": 8.0, "y2_m": 0.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWQ", "storey": "Level 3", "x1_m": 8.0, "y1_m": 0.0, "x2_m": 8.0, "y2_m": 6.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWR", "storey": "Level 3", "x1_m": 8.0, "y1_m": 6.0, "x2_m": 0.0, "y2_m": 6.0},
+      {"global_id": "1ofMKbkXL90x1LpPKmrjWO", "storey": "Level 3", "x1_m": 0.0, "y1_m": 6.0, "x2_m": 0.0, "y2_m": 0.0}
+    ]
+  },
+  "roof_geometry": {"ifc_guid": "2LzO4ZliP00xdSmna1lWP8", "storey": "Level 3", "x_m": 0.0, "y_m": 0.0, "width_m": 8.0, "depth_m": 6.0, "base_z_m": 9.0, "ridge_rise_m": 1.5, "thickness_m": 0.24, "slope_degrees": 20.6},
   "spaces": [
-    {"name": "RECEPTION-L1", "ifc_guid": "1ofMKbkXL90x1LpPKmrjdb", "thermal_zone": "RECEPTION-L1-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 0.1, "y_m": 0.1, "z_m": 0.0, "width_m": 7.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "RECEPTION-PUBLIC-LOAD", "people_per_m2": 0.12, "lighting_w_per_m2": 8.0, "equipment_w_per_m2": 6.0, "outdoor_air_l_per_s_person": 8.0}},
-    {"name": "STUDIO-L2", "ifc_guid": "1ofMKbkXL90x1LpPKmrjdZ", "thermal_zone": "STUDIO-L2-ZN", "storey": "Level 2", "energy_geometry": {"x_m": 0.1, "y_m": 0.1, "z_m": 3.0, "width_m": 7.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "STUDIO-HIGH-EQUIPMENT", "people_per_m2": 0.08, "lighting_w_per_m2": 12.0, "equipment_w_per_m2": 30.0, "outdoor_air_l_per_s_person": 10.0}},
-    {"name": "ARCHIVE-L3", "ifc_guid": "1ofMKbkXL90x1LpPKmrjdX", "thermal_zone": "ARCHIVE-L3-ZN", "storey": "Level 3", "energy_geometry": {"x_m": 0.1, "y_m": 0.1, "z_m": 6.0, "width_m": 7.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "ARCHIVE-LOW-LIGHTING", "people_per_m2": 0.01, "lighting_w_per_m2": 3.0, "equipment_w_per_m2": 1.0, "outdoor_air_l_per_s_person": 5.0}}
+    {"name": "RECEPTION-L1", "ifc_guid": "1ofMKbkXL90x1LpPKmrjdb", "retained_seed_global_id": "1ofMKbkXL90x1LpPKmrjdb", "thermal_zone": "RECEPTION-L1-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 0.1, "y_m": 0.1, "z_m": 0.0, "width_m": 7.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "RECEPTION-PUBLIC-LOAD", "people_per_m2": 0.12, "lighting_w_per_m2": 8.0, "equipment_w_per_m2": 6.0, "outdoor_air_l_per_s_person": 8.0}},
+    {"name": "STUDIO-L2", "ifc_guid": "1ofMKbkXL90x1LpPKmrjdZ", "retained_seed_global_id": "1ofMKbkXL90x1LpPKmrjdZ", "thermal_zone": "STUDIO-L2-ZN", "storey": "Level 2", "energy_geometry": {"x_m": 0.1, "y_m": 0.1, "z_m": 3.0, "width_m": 7.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "STUDIO-HIGH-EQUIPMENT", "people_per_m2": 0.08, "lighting_w_per_m2": 12.0, "equipment_w_per_m2": 30.0, "outdoor_air_l_per_s_person": 10.0}},
+    {"name": "ARCHIVE-L3", "ifc_guid": "1ofMKbkXL90x1LpPKmrjdX", "retained_seed_global_id": "1ofMKbkXL90x1LpPKmrjdX", "thermal_zone": "ARCHIVE-L3-ZN", "storey": "Level 3", "energy_geometry": {"x_m": 0.1, "y_m": 0.1, "z_m": 6.0, "width_m": 7.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "ARCHIVE-LOW-LIGHTING", "people_per_m2": 0.01, "lighting_w_per_m2": 3.0, "equipment_w_per_m2": 1.0, "outdoor_air_l_per_s_person": 5.0}}
   ],
   "door_geometries": [
-    {"name": "D-RECEPTION-L1", "ifc_guid": "0xcxRlGMj3PAaPhsy9S3_S", "opening_ifc_guid": "2MipYLVPrBygajaLdhiKiP", "void_relation_ifc_guid": "05hgLINTfAAQDWEMIoLQKG", "fill_relation_ifc_guid": "2tpYLu36z3OQmwSUc99i5A", "storey": "Level 1", "host_wall_index": 0, "overall_width_m": 1.2, "is_external": true, "geometry": {"x_m": 1.0, "y_m": -0.1, "z_m": 0.0, "width_m": 1.2, "depth_m": 0.2, "height_m": 2.1}},
-    {"name": "D-STUDIO-L2", "ifc_guid": "0LBlBwVu5Bj8pKrE9x4otF", "opening_ifc_guid": "3qRY7rZEb04famBZfj5d6U", "void_relation_ifc_guid": "2zQ23VcOD7W9iy8D8Ybnxj", "fill_relation_ifc_guid": "2dlWQBLczDnuAuqo_m3vIJ", "storey": "Level 2", "host_wall_index": 4, "overall_width_m": 1.0, "is_external": true, "geometry": {"x_m": 1.0, "y_m": -0.1, "z_m": 3.0, "width_m": 1.0, "depth_m": 0.2, "height_m": 2.1}},
-    {"name": "D-ARCHIVE-L3", "ifc_guid": "3WIee35fPCx8R_qIj5QMIl", "opening_ifc_guid": "2O4XMZUDv16gYTSeDPOaI$", "void_relation_ifc_guid": "1OXbQ86SD1oPQPF2KRIiUr", "fill_relation_ifc_guid": "1Zl6$ngAL0x8CYze5RCxn9", "storey": "Level 3", "host_wall_index": 8, "overall_width_m": 1.0, "is_external": true, "geometry": {"x_m": 1.0, "y_m": -0.1, "z_m": 6.0, "width_m": 1.0, "depth_m": 0.2, "height_m": 2.1}}
+    {"name": "D-RECEPTION-L1", "storey": "Level 1", "host_wall_index": 0, "overall_width_m": 1.2, "is_external": true, "geometry": {"x_m": 1.0, "y_m": -0.1, "z_m": 0.0, "width_m": 1.2, "depth_m": 0.2, "height_m": 2.1}},
+    {"name": "D-STUDIO-L2", "storey": "Level 2", "host_wall_index": 4, "overall_width_m": 1.0, "is_external": true, "geometry": {"x_m": 1.0, "y_m": -0.1, "z_m": 0.0, "width_m": 1.0, "depth_m": 0.2, "height_m": 2.1}},
+    {"name": "D-ARCHIVE-L3", "storey": "Level 3", "host_wall_index": 8, "overall_width_m": 1.0, "is_external": true, "geometry": {"x_m": 1.0, "y_m": -0.1, "z_m": 0.0, "width_m": 1.0, "depth_m": 0.2, "height_m": 2.1}}
   ],
   "window_geometries": [
-    {"name": "W-RECEPTION-L1", "ifc_guid": "0NT54czGnDIwaFm2JNE2$w", "opening_ifc_guid": "1FjIDQQxH9chPesNWtDn6c", "void_relation_ifc_guid": "2quSu01rf4ERgYkBuAlsIX", "fill_relation_ifc_guid": "1nvIu5nB5Cww3AEdrvkIot", "storey": "Level 1", "host_wall_index": 0, "overall_width_m": 2.0, "is_external": true, "geometry": {"x_m": 4.0, "y_m": -0.1, "z_m": 1.0, "width_m": 2.0, "depth_m": 0.2, "height_m": 1.2}},
-    {"name": "W-STUDIO-L2", "ifc_guid": "0P6$Mxh0H1jQA$o4mStXZR", "opening_ifc_guid": "1NWyJoz1P8YOVU5ptEbvw5", "void_relation_ifc_guid": "1B9yn$aWn3tvebbj7Md8tT", "fill_relation_ifc_guid": "0eVzleIbr3o9KCNrNYoHpB", "storey": "Level 2", "host_wall_index": 4, "overall_width_m": 2.0, "is_external": true, "geometry": {"x_m": 4.0, "y_m": -0.1, "z_m": 4.0, "width_m": 2.0, "depth_m": 0.2, "height_m": 1.2}},
-    {"name": "W-ARCHIVE-L3", "ifc_guid": "2PZEfcNJ96HveLjr8DG9DU", "opening_ifc_guid": "1V3ykl_RXCl8ZldGdcZcPF", "void_relation_ifc_guid": "3Xowa0AdH9IB9yF_8ujSzB", "fill_relation_ifc_guid": "0tkarPLMj5bR5ilijaQlDG", "storey": "Level 3", "host_wall_index": 8, "overall_width_m": 2.0, "is_external": true, "geometry": {"x_m": 4.0, "y_m": -0.1, "z_m": 7.0, "width_m": 2.0, "depth_m": 0.2, "height_m": 1.2}}
+    {"name": "W-RECEPTION-L1", "storey": "Level 1", "host_wall_index": 0, "overall_width_m": 2.0, "is_external": true, "geometry": {"x_m": 4.0, "y_m": -0.1, "z_m": 1.0, "width_m": 2.0, "depth_m": 0.2, "height_m": 1.2}},
+    {"name": "W-STUDIO-L2", "storey": "Level 2", "host_wall_index": 4, "overall_width_m": 2.0, "is_external": true, "geometry": {"x_m": 4.0, "y_m": -0.1, "z_m": 1.0, "width_m": 2.0, "depth_m": 0.2, "height_m": 1.2}},
+    {"name": "W-ARCHIVE-L3", "storey": "Level 3", "host_wall_index": 8, "overall_width_m": 2.0, "is_external": true, "geometry": {"x_m": 4.0, "y_m": -0.1, "z_m": 1.0, "width_m": 2.0, "depth_m": 0.2, "height_m": 1.2}}
   ],
+  "conditioning": {"heating_setpoint_c": 20.0, "cooling_setpoint_c": 26.0, "ideal_air_loads": true},
   "handoff_tokens": ["RECEPTION-PUBLIC-LOAD", "STUDIO-HIGH-EQUIPMENT", "ARCHIVE-LOW-LIGHTING", "THREE-STOREY-HANDOFF"],
   "osm_tokens": ["ReceptionPublicLoad", "StudioHighEquipment", "ArchiveLowLighting", "BuildingStory:Level 3"]
 }

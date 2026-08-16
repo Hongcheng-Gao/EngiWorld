@@ -1,46 +1,41 @@
 {
   "case_id": "multi-cli-2-archicad-openstudio-task-02-windows",
   "software_stage": "archicad",
-  "authoring_software": "Graphisoft Archicad 27 IFCCommandServerApp",
+  "authoring_software": "Graphisoft Archicad 27.0.0 R1 (6000) IFCCommandServerApp",
   "native_cli_executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe",
   "source_file": "stage1.ifc",
-  "source_sha256": "a00a18c56f4b48b9a10c37b4049686a5efb2a7d26101e4e41acc5f2c6df05451",
+  "source_sha256": "843c2e94b1e1ac3aaf66211423333653e1fc5434719b9875a8d5aebe785b7730",
+  "source_init_sha256": "d789e6dad3d9b817036a0e90ee39c9b814a1de0301ab72123a105888935d94da",
   "revision_code": "EW2A02",
-  "required_stage_tokens": [
-    "EW2A02",
-    "WAITING",
-    "CONSULT",
-    "PUBLIC-PRIVATE-SPLIT",
-    "CLINIC-SHELL",
-    "multi-cli-2-archicad-openstudio-task-02-windows"
-  ],
-  "handoff_tokens": [
-    "PUBLIC-WAITING-SCHEDULE",
-    "PRIVATE-CONSULT-SCHEDULE",
-    "HIGHER-WAITING-OCCUPANCY",
-    "LOWER-CONSULT-EXPOSURE"
-  ],
+  "coordination_scope": "PUBLIC-PRIVATE-SPLIT",
+  "baseline": "CLINIC-SHELL",
+  "ifc_root_global_id_count": 95,
+  "ifc_root_global_ids_sha256": "bdebd47583a016a313a7634ac0bd55d5642be14383fe5c29188b28baa9d3220e",
   "spaces": [
     {
       "name": "WAITING",
       "thermal_zone": "WAITING-ZN",
-      "floor_area_m2": 18.0,
+      "floor_area_m2": 12.0,
       "door_count": 1,
-      "window_count": 1
+      "window_count": 0,
+      "ifc_long_name": "C02",
+      "ifc_global_id": "1v3qQm2d95J9Ro$NiQWdTs"
     },
     {
       "name": "CONSULT",
       "thermal_zone": "CONSULT-ZN",
-      "floor_area_m2": 21.25,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 9.0,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_long_name": "C03",
+      "ifc_global_id": "0V92O_gT1AyODVhuvEhgNC"
     }
   ],
   "thermal_zones": [
     "WAITING-ZN",
     "CONSULT-ZN"
   ],
-  "building_area_m2": 39.25,
+  "building_area_m2": 21.0,
   "bim_counts": {
     "IfcProject": 1,
     "IfcSite": 1,
@@ -50,77 +45,55 @@
     "IfcWall": 36,
     "IfcSlab": 2,
     "IfcRoof": 2,
-    "IfcDoor": 2,
-    "IfcWindow": 1,
+    "IfcDoor": 1,
+    "IfcWindow": 0,
     "IfcOpeningElement": 0
   },
-  "door_count": 2,
-  "window_count": 1,
-  "archicad_json_rpc_commands": [
+  "door_count": 1,
+  "window_count": 0,
+  "load_intent": {
+    "WAITING": "higher public occupancy",
+    "CONSULT": "lower private occupancy with higher equipment density"
+  },
+  "archicad_api_commands": [
     {
       "method": "Model.LoadFile",
-      "location": "C:\\Users\\user\\Desktop\\Engiworld\\task\\multi\\cli-2-archicad-openstudio\\task-02\\ground_truth\\init.ifc"
+      "location": "C:\\Users\\user\\Desktop\\init.ifc",
+      "result": "init.ifc"
     },
     {
       "method": "Entity.Modify",
-      "class": "IfcSpace",
-      "name": "WAITING"
+      "select": {
+        "IfcSpace": {
+          "Name": "CONSULT-1"
+        }
+      },
+      "EntityData": {
+        "IfcSpace": {
+          "Name": "CONSULT"
+        }
+      },
+      "result_ref": "3087009799"
     },
     {
       "method": "Entity.Modify",
-      "class": "IfcSpace",
-      "name": "CONSULT"
-    },
-    {
-      "method": "Entity.Modify",
-      "class": "IfcProject",
-      "description_tokens": [
-        "EW2A02",
-        "WAITING",
-        "CONSULT",
-        "PUBLIC-PRIVATE-SPLIT",
-        "CLINIC-SHELL",
-        "multi-cli-2-archicad-openstudio-task-02-windows"
-      ]
-    },
-    {
-      "method": "Entity.Modify",
-      "class": "IfcBuilding",
-      "description_tokens": [
-        "EW2A02",
-        "WAITING",
-        "CONSULT",
-        "PUBLIC-PRIVATE-SPLIT",
-        "CLINIC-SHELL",
-        "multi-cli-2-archicad-openstudio-task-02-windows"
-      ]
-    },
-    {
-      "method": "Entity.Modify",
-      "class": "IfcBuildingStorey",
-      "description_tokens": [
-        "EW2A02",
-        "WAITING",
-        "CONSULT",
-        "PUBLIC-PRIVATE-SPLIT",
-        "CLINIC-SHELL",
-        "multi-cli-2-archicad-openstudio-task-02-windows"
-      ]
-    },
-    {
-      "method": "Entity.Create",
-      "class": "IfcDoor",
-      "name": "ARCHICAD-STAGE-DOOR"
-    },
-    {
-      "method": "Entity.Create",
-      "class": "IfcWindow",
-      "name": "multi-cli-2-archicad-openstudio-task-02-windows"
+      "select": {
+        "IfcProject": {
+          "Name": "L-Shaped Neighborhood Clinic"
+        }
+      },
+      "EntityData": {
+        "IfcProject": {
+          "Description": "EW2A02 | PUBLIC-PRIVATE-SPLIT | CLINIC-SHELL | multi-cli-2-archicad-openstudio-task-02-windows"
+        }
+      },
+      "result_ref": "3087009665"
     },
     {
       "method": "Model.SaveFile",
-      "location": "C:\\Users\\user\\Desktop\\Engiworld\\task\\multi\\cli-2-archicad-openstudio\\task-02\\ground_truth\\stage1.ifc"
+      "location": "C:\\Users\\user\\Desktop\\stage1.ifc",
+      "result": null
     }
   ],
-  "generated_at_utc": "2026-07-06T10:45:00.311525+00:00"
+  "generated_at_utc": "2026-08-11T15:05:12.937820+00:00"
 }

@@ -8,11 +8,11 @@ center_hole_diameter = 6;
 
 difference() {
   union() {
-    cylinder(h = height, r = outside_diameter / 2);
+    cylinder(h = height, r = outside_diameter / 2 - 1);
     for (i = [0 : ribs - 1])
       rotate([0, 0, 360 * i / ribs])
         translate([8, -1, 0])
-          cube([12, 2, height]);
+          cube([11, 2, height]);
   }
 
   translate([0, 0, -1])

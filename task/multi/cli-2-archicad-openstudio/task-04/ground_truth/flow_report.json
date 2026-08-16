@@ -2,7 +2,8 @@
   "case_id": "multi-cli-2-archicad-openstudio-task-04-windows",
   "software_chain": [
     "archicad",
-    "openstudio"
+    "openstudio",
+    "energyplus"
   ],
   "stage_sequence": [
     {
@@ -14,43 +15,91 @@
     {
       "software": "openstudio",
       "input": "handoff.json",
+      "upstream_bim_reference": "stage1.ifc",
       "output": "result.osm"
+    },
+    {
+      "software": "energyplus",
+      "input": "run/in.idf",
+      "output": "run/eplusout.sql"
     }
   ],
-  "consumed_handoff_sha256": "e9a3606613237394891547ad5f7be799cf289afe8668d699fa730583112a0977",
-  "source_stage1_sha256": "0fa4ba48365de38cadb355433250a835841ae2d28b209b991060234fc80c8807",
-  "osm_sha256": "e421f62265a188c97f5aa5c96bb96df302f0afde0249ae5d07a1c79f45ed42cc",
-  "building_area_m2": 49.15,
+  "consumed_handoff_sha256": "7b03499e8f5a0013a05a44c6fd9cdd304dfc470afc8d0393db2c2e7c0716c4ec",
+  "source_stage1_sha256": "4565f535fe661a5385c5a4e0ec0a66df0c417dce2d857a8f12aea250d8c66e81",
+  "native_stage_log_sha256": "369c8288417034e89516f9e2656fd6594502314ec487200d555add2f67f99179",
+  "osm_sha256": "709a120d9999615471fb1d50fb652d9ddf683f2f6b2262ba8a1e3fe98e6201cc",
+  "workflow_sha256": "db9d30b2d9e27bcd65b66c1c4c7bee3a466e0ea1803e4ae881d100eff3eccf4a",
+  "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+  "energyplus_sql_sha256": "b5e9e29397d1a3a5ddf75737898458457e3906ed9d80289383e1ae2add5d3949",
+  "energyplus_err_sha256": "49b77849a0c6244ff4ba1492dd391937b7dbb3a5f8ea8efe64b64c7835299769",
+  "energyplus_end_sha256": "1ac06c4d0e70f9de3eda7531857deccaa7c1f2ab39ee353f091a869ea48f9475",
+  "building_area_m2": 46.0,
   "room_count": 2,
   "thermal_zone_count": 2,
-  "door_count": 2,
+  "door_count": 1,
   "window_count": 0,
   "window_wall_ratio": 0.0,
   "surface_count": 12,
-  "subsurface_count": 2,
-  "weather_file": "USA_Design_Day.epw",
-  "schedule_set": "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-04-windows",
-  "construction_set": "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-04-windows",
-  "openstudio_version": "3.10.0",
+  "subsurface_count": 1,
+  "weather_file": "weather.epw",
+  "workflow": "workflow.osw",
+  "energyplus_sql": "run/eplusout.sql",
+  "energyplus_err": "run/eplusout.err",
+  "schedule_set": [
+    "EngiWorldScheduleSet-multi-cli-2-archicad-openstudio-task-04-windows"
+  ],
+  "construction_set": [
+    "EngiWorldConstructionSet-multi-cli-2-archicad-openstudio-task-04-windows"
+  ],
+  "openstudio_version": "3.10.0+86d7e215a1",
+  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+  "native_cli_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+  "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+  "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+  "energyplus_version": "EnergyPlus, Version 25.1.0-1c11a3d85f, YMD=2026.08.12 13:35",
+  "energyplus_status": "************* EnergyPlus Completed Successfully-- 10 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  1.71sec",
+  "energyplus_severe_errors": 0,
+  "energyplus_fatal_errors": 0,
+  "model_object_counts": {
+    "Space": 2,
+    "ThermalZone": 2,
+    "People": 2,
+    "Lights": 2,
+    "ElectricEquipment": 2,
+    "DesignSpecificationOutdoorAir": 2,
+    "ThermostatSetpointDualSetpoint": 2,
+    "ZoneHVACIdealLoadsAirSystem": 2,
+    "SpaceInfiltrationDesignFlowRate": 1
+  },
   "spaces": [
     {
-      "name": "WORKSHOP",
+      "case_id": "multi-cli-2-archicad-openstudio-task-04-windows",
+      "space_name": "WORKSHOP",
       "thermal_zone": "WORKSHOP-ZN",
-      "floor_area_m2": 27.9,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 30.0,
+      "source_handoff_sha256": "7b03499e8f5a0013a05a44c6fd9cdd304dfc470afc8d0393db2c2e7c0716c4ec",
+      "source_stage1_sha256": "4565f535fe661a5385c5a4e0ec0a66df0c417dce2d857a8f12aea250d8c66e81",
+      "energy_use_kwh": 12480.301481,
+      "peak_load_w": 4344.697505
     },
     {
-      "name": "PARCEL-PICKUP",
+      "case_id": "multi-cli-2-archicad-openstudio-task-04-windows",
+      "space_name": "PARCEL-PICKUP",
       "thermal_zone": "PARCEL-PICKUP-ZN",
-      "floor_area_m2": 21.25,
-      "door_count": 1,
-      "window_count": 0
+      "floor_area_m2": 16.0,
+      "source_handoff_sha256": "7b03499e8f5a0013a05a44c6fd9cdd304dfc470afc8d0393db2c2e7c0716c4ec",
+      "source_stage1_sha256": "4565f535fe661a5385c5a4e0ec0a66df0c417dce2d857a8f12aea250d8c66e81",
+      "energy_use_kwh": 13789.933738,
+      "peak_load_w": 7171.352922
     }
   ],
   "thermal_zones": [
-    "WORKSHOP-ZN",
-    "PARCEL-PICKUP-ZN"
+    "PARCEL-PICKUP-ZN",
+    "WORKSHOP-ZN"
+  ],
+  "space_names": [
+    "PARCEL-PICKUP",
+    "WORKSHOP"
   ],
   "osm_tokens": [
     "WorkshopBaseLoad",
@@ -58,5 +107,326 @@
     "LoadingDoorInfiltration",
     "PARCEL-PICKUP-ZN"
   ],
-  "native_cli_executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe"
+  "energyplus_sql_report_data_count": 263165,
+  "simulation": {
+    "native_exit_code": 0,
+    "delivery_producer": "openstudio_cli_workflow",
+    "hourly_calendar_count": 8760,
+    "unique_hourly_calendar_count": 8760,
+    "hourly_series": [
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 9460800000.0,
+        "max": 1080000.0,
+        "min": 1080000.0,
+        "space_name": "WORKSHOP",
+        "thermal_zone": "WORKSHOP-ZN",
+        "key_value": "WORKSHOP-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 11352960000.0,
+        "max": 1296000.0,
+        "min": 1296000.0,
+        "space_name": "WORKSHOP",
+        "thermal_zone": "WORKSHOP-ZN",
+        "key_value": "WORKSHOP-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 15424242028.358503,
+        "max": 15640911.017652592,
+        "min": 0.0,
+        "space_name": "WORKSHOP",
+        "thermal_zone": "WORKSHOP-ZN",
+        "key_value": "WORKSHOP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 8691083303.430368,
+        "max": 8773304.637306478,
+        "min": 0.0,
+        "space_name": "WORKSHOP",
+        "thermal_zone": "WORKSHOP-ZN",
+        "key_value": "WORKSHOP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 4284511.674544029,
+        "max": 4344.697504903497,
+        "min": 0.0,
+        "space_name": "WORKSHOP",
+        "thermal_zone": "WORKSHOP-ZN",
+        "key_value": "WORKSHOP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2414189.8065084354,
+        "max": 2437.029065918466,
+        "min": 0.0,
+        "space_name": "WORKSHOP",
+        "thermal_zone": "WORKSHOP-ZN",
+        "key_value": "WORKSHOP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2522880000.0,
+        "max": 288000.0,
+        "min": 288000.0,
+        "space_name": "PARCEL-PICKUP",
+        "thermal_zone": "PARCEL-PICKUP-ZN",
+        "key_value": "PARCEL-PICKUP-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1513728000.0,
+        "max": 172800.0,
+        "min": 172800.0,
+        "space_name": "PARCEL-PICKUP",
+        "thermal_zone": "PARCEL-PICKUP-ZN",
+        "key_value": "PARCEL-PICKUP-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 43859181175.77588,
+        "max": 25816870.51923502,
+        "min": 0.0,
+        "space_name": "PARCEL-PICKUP",
+        "thermal_zone": "PARCEL-PICKUP-ZN",
+        "key_value": "PARCEL-PICKUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1747972279.2389698,
+        "max": 6543006.65873827,
+        "min": 0.0,
+        "space_name": "PARCEL-PICKUP",
+        "thermal_zone": "PARCEL-PICKUP-ZN",
+        "key_value": "PARCEL-PICKUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 12183105.882159967,
+        "max": 7171.352922009726,
+        "min": 0.0,
+        "space_name": "PARCEL-PICKUP",
+        "thermal_zone": "PARCEL-PICKUP-ZN",
+        "key_value": "PARCEL-PICKUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 485547.8553441583,
+        "max": 1817.5018496495195,
+        "min": 0.0,
+        "space_name": "PARCEL-PICKUP",
+        "thermal_zone": "PARCEL-PICKUP-ZN",
+        "key_value": "PARCEL-PICKUP IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      }
+    ]
+  },
+  "openstudio_cli_transactions": [
+    {
+      "stage": "openstudio_weather_period_simulation_final_delivery",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-12T05:35:57.126995+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-12T05:35:59.888309+00:00",
+      "related_children_exited_at_utc": "2026-08-12T05:35:59.888309+00:00",
+      "completed_at_utc": "2026-08-12T05:36:05.898680+00:00",
+      "exit_code": 0,
+      "observed_related_process_ids": [
+        7812
+      ],
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-12T05:35:59.888309+00:00",
+          "sql_size": 7999488,
+          "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T05:36:00.895521+00:00",
+          "sql_size": 7999488,
+          "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T05:36:01.896277+00:00",
+          "sql_size": 7999488,
+          "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T05:36:02.896958+00:00",
+          "sql_size": 7999488,
+          "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T05:36:03.897389+00:00",
+          "sql_size": 7999488,
+          "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T05:36:04.897934+00:00",
+          "sql_size": 7999488,
+          "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+          "err_size": 3158,
+          "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+        }
+      ],
+      "sql_sha256": "b5e9e29397d1a3a5ddf75737898458457e3906ed9d80289383e1ae2add5d3949",
+      "err_sha256": "49b77849a0c6244ff4ba1492dd391937b7dbb3a5f8ea8efe64b64c7835299769",
+      "end_sha256": "1ac06c4d0e70f9de3eda7531857deccaa7c1f2ab39ee353f091a869ea48f9475",
+      "result_osm_sha256": "709a120d9999615471fb1d50fb652d9ddf683f2f6b2262ba8a1e3fe98e6201cc",
+      "workflow_sha256": "db9d30b2d9e27bcd65b66c1c4c7bee3a466e0ea1803e4ae881d100eff3eccf4a",
+      "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f"
+    }
+  ],
+  "final_delivery": {
+    "stage": "openstudio_weather_period_simulation_final_delivery",
+    "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+    "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+    "arguments": [
+      "run",
+      "-w",
+      "C:\\Users\\user\\Desktop\\workflow.osw"
+    ],
+    "command_line": "\"C:\\openstudio-3.10.0\\bin\\openstudio.exe\" run -w \"C:\\Users\\user\\Desktop\\workflow.osw\"",
+    "working_directory": "C:\\Users\\user\\Desktop",
+    "started_at_utc": "2026-08-12T05:35:57.126995+00:00",
+    "openstudio_process_exited_at_utc": "2026-08-12T05:35:59.888309+00:00",
+    "related_children_exited_at_utc": "2026-08-12T05:35:59.888309+00:00",
+    "completed_at_utc": "2026-08-12T05:36:05.898680+00:00",
+    "exit_code": 0,
+    "observed_related_process_ids": [
+      7812
+    ],
+    "related_processes_after_wait": 0,
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-12T05:35:59.888309+00:00",
+        "sql_size": 7999488,
+        "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T05:36:00.895521+00:00",
+        "sql_size": 7999488,
+        "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T05:36:01.896277+00:00",
+        "sql_size": 7999488,
+        "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T05:36:02.896958+00:00",
+        "sql_size": 7999488,
+        "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T05:36:03.897389+00:00",
+        "sql_size": 7999488,
+        "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T05:36:04.897934+00:00",
+        "sql_size": 7999488,
+        "sql_mtime_utc": "2026-08-12T05:35:59.212889+00:00",
+        "err_size": 3158,
+        "err_mtime_utc": "2026-08-12T05:35:59.228529+00:00",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T05:35:59.212889+00:00"
+      }
+    ],
+    "sql_sha256": "b5e9e29397d1a3a5ddf75737898458457e3906ed9d80289383e1ae2add5d3949",
+    "err_sha256": "49b77849a0c6244ff4ba1492dd391937b7dbb3a5f8ea8efe64b64c7835299769",
+    "end_sha256": "1ac06c4d0e70f9de3eda7531857deccaa7c1f2ab39ee353f091a869ea48f9475",
+    "result_osm_sha256": "709a120d9999615471fb1d50fb652d9ddf683f2f6b2262ba8a1e3fe98e6201cc",
+    "workflow_sha256": "db9d30b2d9e27bcd65b66c1c4c7bee3a466e0ea1803e4ae881d100eff3eccf4a",
+    "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f"
+  },
+  "weather_source": {
+    "kind": "same_station_tmy3",
+    "filename": "USA_CO_Golden-NREL.724666_TMY3.epw",
+    "location_data_source": "TMY3",
+    "wmo": "724666",
+    "latitude": 39.74,
+    "longitude": -105.18,
+    "time_zone": -7.0,
+    "elevation_m": 1829.0,
+    "source_task": "c-multi-archicad-openstudio-task-02-windows",
+    "source_path_in_that_delivery": "C:\\Users\\user\\Desktop\\weather.epw",
+    "sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f"
+  }
 }

@@ -7,7 +7,16 @@ import hashlib
 import json
 import math
 import re
+import os
+import shutil
+import socket
+import sqlite3
+import subprocess
 import sys
+import tempfile
+import time
+import urllib.request
+from datetime import datetime
 from pathlib import Path
 from typing import Any, Dict, Iterable, List, Set, Tuple
 
@@ -17,9 +26,16 @@ CASE_SPEC = {'case_id': 'multi-cli-2-archicad-openstudio-task-09-windows',
  'required_files': ['init.ifc',
                     'stage1.ifc',
                     'handoff.json',
+                    'native_stage_log.json',
                     'result.osm',
+                    'in.idf',
+                    'workflow.osw',
+                    'weather.epw',
                     'flow_report.json',
-                    'model_summary.csv'],
+                    'model_summary.csv',
+                    'run/eplusout.sql',
+                    'run/eplusout.err',
+                    'run/eplusout.end'],
  'required_spaces': ['SOCIAL-COMMONS', 'BEDROOM-GROUP', 'QUIET-STUDY', 'LAUNDRY'],
  'required_zones': ['SOCIAL-COMMONS-ZN', 'BEDROOM-GROUP-ZN', 'QUIET-STUDY-ZN', 'LAUNDRY-ZN'],
  'stage1_tokens': ['EW2A09',
@@ -34,16 +50,23 @@ CASE_SPEC = {'case_id': 'multi-cli-2-archicad-openstudio-task-09-windows',
                     'HIGH-EQUIPMENT-LAUNDRY',
                     'RESIDENTIAL-SCHEDULE',
                     'SOCIAL-SPACE-SCHEDULE'],
- 'osm_tokens': ['QuietStudyLowEquipment',
-                'LaundryHighEquipment',
-                'ResidentialBedroomSchedule',
-                'SocialCommonsSchedule'],
+ 'osm_tokens': [],
  'summary_tokens': ['SOCIAL-COMMONS', 'BEDROOM-GROUP', 'QUIET-STUDY', 'LAUNDRY'],
- 'min_windows': 2,
- 'min_doors': 4,
+ 'min_windows': 0,
+ 'min_doors': 0,
  'min_roofs': 0,
  'min_storeys': 1,
  'expected_stage': 'archicad'}
+
+INIT_SHA256 = "3a70e23f45c7cbf765bcf07d195966cbbd74f51a1bcc803ae844cb8441286d53"
+ARCHICAD_EXE = Path(r"C:\Program Files\Graphisoft\Archicad 27\IFCCommandServerApp.exe")
+OPENSTUDIO_EXE = Path(r"C:\openstudio-3.10.0\bin\openstudio.exe")
+ENERGYPLUS_EXE = Path(r"C:\openstudio-3.10.0\EnergyPlus\energyplus.exe")
+CANONICAL_PROJECT_DESCRIPTION = "EW2A09 | multi-cli-2-archicad-openstudio-task-09-windows"
+
+DIRECT_ATTRIBUTE_EXCLUSIONS = {
+    "GlobalId", "OwnerHistory", "ObjectPlacement", "Representation",
+}
 
 IFC_CLASSES = [
     "IfcProject",
@@ -107,6 +130,19 @@ def sha256_file(path: Path) -> str:
     return h.hexdigest()
 
 
+def iso_time(value: Any) -> datetime:
+    text = str(value or "")
+    if text.endswith("Z"):
+        text = text[:-1] + "+00:00"
+    # Windows/.NET DateTimeOffset uses seven fractional-second digits; Python
+    # datetime is microsecond based. Trim only unsupported tail precision.
+    text = re.sub(r"(\.\d{6})\d+(?=(?:[+-]\d{2}:\d{2})?$)", r"\1", text)
+    parsed = datetime.fromisoformat(text)
+    if parsed.tzinfo is None:
+        raise ValueError("timezone required")
+    return parsed
+
+
 def norm(value: Any) -> str:
     return re.sub(r"[^A-Z0-9]+", "-", str(value or "").upper()).strip("-")
 
@@ -123,8 +159,28 @@ def read_text(path: Path, limit: int = 25_000_000) -> str:
     return data.decode("utf-8", errors="ignore")
 
 
+def check_epw(path: Path, errors: List[str]) -> None:
+    try:
+        with path.open("r", encoding="utf-8-sig", errors="strict") as stream:
+            header = [next(stream).rstrip("\r\n") for _ in range(8)]
+            records = [line.rstrip("\r\n") for line in stream if line.strip()]
+        location = next(csv.reader([header[0]]))
+        if len(location) < 10 or location[0].strip().upper() != "LOCATION" or len(records) < 8760:
+            raise ValueError
+        for value in location[6:10]:
+            float(value)
+        for line in (records[0], records[-1]):
+            fields = next(csv.reader([line]))
+            if len(fields) < 35:
+                raise ValueError
+            for value in fields[:5]:
+                int(value)
+    except Exception:
+        errors.append("weather.epw:invalid_structure")
+
+
 def load_json(path: Path) -> Dict[str, Any]:
-    with path.open("r", encoding="utf-8") as f:
+    with path.open("r", encoding="utf-8-sig") as f:
         data = json.load(f)
     if not isinstance(data, dict):
         raise ValueError(f"{path.name} is not a JSON object")
@@ -456,8 +512,6 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
     require_tokens(text, required_zones, errors, "result.osm:zones")
     require_tokens(text, required_tokens, errors, "result.osm:tokens")
     require_tokens(text, flow_tokens, errors, "result.osm:flow_tokens")
-    if handoff_hash[:12].upper() not in up:
-        errors.append("result.osm:missing_handoff_hash_prefix")
     counts = {
         "space_count": len(re.findall(r"\bOS:SPACE\s*,", up)),
         "zone_count": len(re.findall(r"\bOS:THERMALZONE\s*,", up)),
@@ -520,10 +574,10 @@ def check_flow_report(
         errors.append(f"flow_report:area_mismatch:{area:.3f}!={handoff_area:.3f}")
     room_count = first_number(data, "room_count")
     zone_count = first_number(data, "thermal_zone_count")
-    if room_count is not None and int(round(room_count)) != len(required_spaces):
-        errors.append("flow_report:room_count_mismatch")
-    if zone_count is not None and int(round(zone_count)) != len(required_zones):
-        errors.append("flow_report:thermal_zone_count_mismatch")
+    if room_count is not None and int(round(room_count)) != osm_counts["space_count"]:
+        errors.append("flow_report:room_count_mismatch_osm")
+    if zone_count is not None and int(round(zone_count)) != osm_counts["zone_count"]:
+        errors.append("flow_report:thermal_zone_count_mismatch_osm")
     if first_number(data, "surface_count") is not None and int(first_number(data, "surface_count") or 0) != osm_counts["surface_count"]:
         errors.append("flow_report:surface_count_mismatch_osm")
     if first_number(data, "subsurface_count") is not None and int(first_number(data, "subsurface_count") or 0) != osm_counts["subsurface_count"]:
@@ -629,6 +683,540 @@ def check_model_summary_csv(
             errors.append(f"model_summary.csv:eui_out_of_range:{eui:.3f}")
 
 
+def osm_objects(text: str) -> List[Tuple[str, List[str]]]:
+    result = []
+    for raw in re.findall(r"(?ms)^OS:[A-Za-z0-9:]+\s*,.*?;", text):
+        clean = re.sub(r"!-[^\r\n]*", "", raw)
+        fields = [value.strip() for value in re.split(r"[,;]", clean)]
+        result.append((fields[0].upper(), fields[1:]))
+    return result
+
+
+def handle(value: Any) -> str:
+    return str(value or "").strip().strip("{}")
+
+
+def canonical_direct_value(value: Any, active: Set[Tuple[str,int]] | None = None) -> Any:
+    active = active or set()
+    if isinstance(value, (tuple, list)):
+        return tuple(canonical_direct_value(item, active) for item in value)
+    if hasattr(value, "is_a") and callable(value.is_a):
+        gid = getattr(value, "GlobalId", None)
+        if gid:
+            return ("IfcRoot", str(value.is_a()), str(gid))
+        marker = (str(value.is_a()), int(value.id()))
+        if marker in active:
+            return ("IfcCycle", str(value.is_a()))
+        active.add(marker)
+        info = value.get_info(include_identifier=False, recursive=False)
+        attributes = tuple(
+            (str(key), canonical_direct_value(item, active))
+            for key, item in info.items() if key != "type"
+        )
+        active.remove(marker)
+        return ("IfcEntity", str(value.is_a()), attributes)
+    if isinstance(value, float):
+        return round(value, 12)
+    if value is None or isinstance(value, (str, int, bool)):
+        return value
+    return str(value)
+
+
+def canonical_direct_attributes(entity: Any) -> Dict[str, Any]:
+    info = entity.get_info(include_identifier=False, recursive=False)
+    return {
+        str(key): canonical_direct_value(value)
+        for key, value in info.items()
+        if key != "type" and key not in DIRECT_ATTRIBUTE_EXCLUSIONS
+    }
+
+
+def canonical_owner_history(entity: Any) -> Any:
+    return canonical_direct_value(getattr(entity,"OwnerHistory",None))
+
+
+def product_host_graph(model: Any) -> Dict[str,Tuple[Tuple[str,str],...]]:
+    graph: Dict[str,List[Tuple[str,str]]] = {}
+    def add(gid: Any, edge: str, other: Any) -> None:
+        if gid and other: graph.setdefault(str(gid),[]).append((edge,str(other)))
+    for rel in model.by_type("IfcRelVoidsElement"):
+        add(getattr(rel.RelatedOpeningElement,"GlobalId",None),"voids",getattr(rel.RelatingBuildingElement,"GlobalId",None))
+    for rel in model.by_type("IfcRelFillsElement"):
+        add(getattr(rel.RelatedBuildingElement,"GlobalId",None),"fills",getattr(rel.RelatingOpeningElement,"GlobalId",None))
+    for rel in model.by_type("IfcRelContainedInSpatialStructure"):
+        host=getattr(rel.RelatingStructure,"GlobalId",None)
+        for item in rel.RelatedElements:add(getattr(item,"GlobalId",None),"contained_in",host)
+    for rel in model.by_type("IfcRelAggregates"):
+        host=getattr(rel.RelatingObject,"GlobalId",None)
+        for item in rel.RelatedObjects:add(getattr(item,"GlobalId",None),"aggregated_by",host)
+    return {gid:tuple(sorted(edges)) for gid,edges in graph.items()}
+
+
+def product_representation_metadata(product: Any) -> Any:
+    representation=getattr(product,"Representation",None)
+    if representation is None:return None
+    reps=[]
+    for rep in getattr(representation,"Representations",()) or ():
+        context=getattr(rep,"ContextOfItems",None)
+        reps.append((str(getattr(rep,"RepresentationIdentifier",None)),str(getattr(rep,"RepresentationType",None)),canonical_direct_value(context)))
+    return (str(getattr(representation,"Name",None)),str(getattr(representation,"Description",None)),tuple(reps))
+
+
+def product_world_signature(model: Any, product: Any, hosts: Dict[str,Tuple[Tuple[str,str],...]]) -> Dict[str,Any]:
+    import ifcopenshell.geom  # type: ignore
+    import ifcopenshell.util.placement  # type: ignore
+    placement=getattr(product,"ObjectPlacement",None)
+    matrix=ifcopenshell.util.placement.get_local_placement(placement) if placement is not None else None
+    placement_signature=None if matrix is None else tuple(round(float(x),9) for row in matrix for x in row)
+    geometry=None
+    if getattr(product,"Representation",None) is not None:
+        settings=ifcopenshell.geom.settings();settings.set(settings.USE_WORLD_COORDS,True)
+        shape=ifcopenshell.geom.create_shape(settings,product);raw=shape.geometry
+        vertices=[tuple(float(raw.verts[i+j]) for j in range(3)) for i in range(0,len(raw.verts),3)]
+        triangles=[tuple(int(raw.faces[i+j]) for j in range(3)) for i in range(0,len(raw.faces),3)]
+        areas=[];signed_volume=0.0;planes: Dict[Tuple[float,...],Dict[str,Any]]={};edges: Dict[Tuple[int,int],int]={}
+        for ia,ib,ic in triangles:
+            a,b,c=vertices[ia],vertices[ib],vertices[ic]
+            ux,uy,uz=(b[i]-a[i] for i in range(3));vx,vy,vz=(c[i]-a[i] for i in range(3))
+            nx,ny,nz=uy*vz-uz*vy,uz*vx-ux*vz,ux*vy-uy*vx;length=math.sqrt(nx*nx+ny*ny+nz*nz);area=length/2.0
+            if length>1e-12:
+                normal=[nx/length,ny/length,nz/length]
+                for component in normal:
+                    if abs(component)>1e-9:
+                        if component<0:normal=[-x for x in normal]
+                        break
+                d=-sum(normal[i]*a[i] for i in range(3));key=tuple(round(x,7) for x in (*normal,d));group=planes.setdefault(key,{"area":0.0,"points":[]});group["area"]+=area;group["points"].extend((a,b,c))
+            areas.append(area);signed_volume+=(a[0]*(b[1]*c[2]-b[2]*c[1])-a[1]*(b[0]*c[2]-b[2]*c[0])+a[2]*(b[0]*c[1]-b[1]*c[0]))/6.0
+            for left,right in ((ia,ib),(ib,ic),(ic,ia)):
+                edge=tuple(sorted((left,right)));edges[edge]=edges.get(edge,0)+1
+        flat=[coordinate for vertex in vertices for coordinate in vertex]
+        bbox=tuple(round(value,7) for axis in range(3) for value in (min(v[axis] for v in vertices),max(v[axis] for v in vertices))) if vertices else ()
+        faces=[]
+        for key,group in planes.items():
+            points=group["points"];face_bbox=tuple(round(value,7) for axis in range(3) for value in (min(v[axis] for v in points),max(v[axis] for v in points)))
+            faces.append((key,round(group["area"],7),face_bbox))
+        geometry=(bbox,round(sum(areas),7),round(abs(signed_volume),7),bool(edges) and all(count==2 for count in edges.values()),tuple(sorted(faces)))
+    gid=str(product.GlobalId)
+    return {"type":str(product.is_a()),"placement":placement_signature,"representation":product_representation_metadata(product),"geometry":geometry,"hosts":hosts.get(gid,())}
+
+
+def model_product_signatures(model: Any) -> Dict[str,Dict[str,Any]]:
+    hosts=product_host_graph(model)
+    return {str(product.GlobalId):product_world_signature(model,product,hosts) for product in model.by_type("IfcProduct")}
+
+
+def product_equivalence_signature(signature: Dict[str,Any]) -> Dict[str,Any]:
+    return {key:value for key,value in signature.items() if key != "placement"}
+
+
+def parse_labeled_objects(path: Path) -> List[Dict[str, Any]]:
+    objects: List[Dict[str, Any]] = []
+    current: Dict[str, Any] | None = None
+    for line_number, line in enumerate(read_text(path).splitlines(), 1):
+        if current is None:
+            match = re.match(r"^\s*([A-Za-z][A-Za-z0-9:]*)\s*,\s*$", line)
+            if match:
+                current = {"type": match.group(1).upper(), "fields": [], "line": line_number}
+            continue
+        value_part, _, comment = line.partition("!-")
+        value = value_part.strip().rstrip(",;").strip()
+        label = comment.strip() if comment else ""
+        current["fields"].append({"value": value, "label": label})
+        if ";" in value_part:
+            objects.append(current)
+            current = None
+    return objects
+
+
+def labeled(obj: Dict[str, Any], wanted: str) -> str | None:
+    wanted_norm = norm(wanted)
+    for field in obj.get("fields", []):
+        if norm(re.sub(r"\s*\{[^}]*\}\s*$", "", str(field.get("label", "")))) == wanted_norm:
+            return str(field.get("value", "")).strip()
+    return None
+
+
+def vertices(obj: Dict[str, Any], errors: List[str], label: str) -> List[Tuple[float, float, float]]:
+    result: List[Tuple[float, float, float]] = []
+    for field in obj.get("fields", []):
+        if re.match(r"X,Y,Z Vertex \d+", str(field.get("label", "")), flags=re.IGNORECASE):
+            try:
+                xyz = tuple(float(x.strip()) for x in str(field.get("value", "")).split(","))
+                if len(xyz) != 3 or not all(math.isfinite(x) for x in xyz): raise ValueError
+                result.append(xyz)  # type: ignore[arg-type]
+            except Exception: errors.append(f"{label}:invalid_vertex")
+    return result
+
+
+def polygon_area(points: List[Tuple[float, float, float]]) -> float:
+    if len(points) < 3: return 0.0
+    nx = ny = nz = 0.0
+    for a, b in zip(points, points[1:] + points[:1]):
+        nx += (a[1] - b[1]) * (a[2] + b[2]); ny += (a[2] - b[2]) * (a[0] + b[0]); nz += (a[0] - b[0]) * (a[1] + b[1])
+    return 0.5 * math.sqrt(nx * nx + ny * ny + nz * nz)
+
+
+def canonical_shell(objects: List[Dict[str, Any]], owner_field: str, errors: List[str], label: str) -> Dict[str, Tuple[Any, ...]]:
+    shells: Dict[str, List[Any]] = {}
+    edges: Dict[str, Dict[Any, int]] = {}
+    for obj in objects:
+        if obj["type"] not in ("OS:SURFACE", "BUILDINGSURFACE:DETAILED"): continue
+        owner = labeled(obj, owner_field) or ""
+        pts = vertices(obj, errors, label)
+        if not owner or len(pts) < 3 or polygon_area(pts) <= 1e-6:
+            errors.append(f"{label}:invalid_surface")
+            continue
+        stype = norm(labeled(obj, "Surface Type")); stype = "ROOF" if stype in ("ROOFCEILING", "CEILING") else stype
+        rounded = [tuple(round(x, 6) for x in p) for p in pts]
+        shells.setdefault(owner, []).append((stype, tuple(sorted(rounded))))
+        owner_edges = edges.setdefault(owner, {})
+        for a, b in zip(rounded, rounded[1:] + rounded[:1]):
+            edge = tuple(sorted((a, b))); owner_edges[edge] = owner_edges.get(edge, 0) + 1
+    for owner, counts in edges.items():
+        if any(value != 2 for value in counts.values()): errors.append(f"{label}:shell_not_closed:{owner}")
+    return {owner:tuple(sorted(values)) for owner,values in shells.items()}
+
+
+def floor_areas(objects: List[Dict[str, Any]], owner_field: str) -> Dict[str,float]:
+    result: Dict[str,float] = {}
+    for obj in objects:
+        if obj["type"] not in ("OS:SURFACE","BUILDINGSURFACE:DETAILED") or norm(labeled(obj,"Surface Type")) != "FLOOR": continue
+        owner=labeled(obj,owner_field) or ""; result[owner]=result.get(owner,0.0)+polygon_area(vertices(obj,[],"area"))
+    return result
+
+
+def check_geometry_and_handles(paths: Dict[str, Path], errors: List[str]) -> None:
+    osm = parse_labeled_objects(paths["result.osm"]); idf = parse_labeled_objects(paths["in.idf"])
+    handles: Dict[str, Dict[str, Any]] = {}
+    pattern = re.compile(r"^\{[0-9a-fA-F-]{36}\}$")
+    for obj in osm:
+        value = labeled(obj, "Handle")
+        normalized = handle(value)
+        if not value or not pattern.fullmatch(value) or normalized in handles: errors.append(f"result.osm:invalid_or_duplicate_handle:{obj['line']}")
+        else: handles[normalized] = obj
+    osm_spaces = {labeled(x,"Name"):x for x in osm if x["type"]=="OS:SPACE"}
+    idf_spaces = {labeled(x,"Name"):x for x in idf if x["type"]=="SPACE"}
+    if set(osm_spaces) != set(CASE_SPEC["required_spaces"]) or set(idf_spaces) != set(osm_spaces): errors.append("openstudio_idf:space_set")
+    osm_shells = canonical_shell(osm,"Space Name",errors,"result.osm")
+    osm_floor_areas=floor_areas(osm,"Space Name")
+    named_osm_shells = {name:osm_shells.get(labeled(space,"Handle") or "",()) for name,space in osm_spaces.items()}
+    idf_shells = canonical_shell(idf,"Space Name",errors,"in.idf")
+    for name in CASE_SPEC["required_spaces"]:
+        shell = named_osm_shells.get(name,()); translated = idf_shells.get(name,())
+        types = {x[0] for x in shell}
+        if not {"FLOOR","WALL","ROOF"}.issubset(types) or len(shell) < 6: errors.append(f"result.osm:incomplete_shell:{name}")
+        if shell != translated: errors.append(f"openstudio_idf:surface_geometry_mismatch:{name}")
+        floor_area = osm_floor_areas.get(labeled(osm_spaces[name],"Handle") or "",0.0)
+        if floor_area <= 1.0: errors.append(f"result.osm:floor_area_invalid:{name}")
+    if len(set(named_osm_shells.values())) != len(named_osm_shells): errors.append("result.osm:overlapping_duplicate_shell")
+
+
+def canonical_forward_translate(paths: Dict[str, Path], errors: List[str]) -> Path | None:
+    if os.name != "nt" or not OPENSTUDIO_EXE.is_file(): return None
+    temp = Path(tempfile.mkdtemp(prefix="ew09-ft-"))
+    script = temp / "forward.rb"; output = temp / "in.idf"
+    script.write_text("require 'openstudio'\nm=OpenStudio::Model::Model.load(OpenStudio::Path.new(ARGV[0])).get\nw=OpenStudio::EnergyPlus::ForwardTranslator.new.translateModel(m)\nraise unless w.save(ARGV[1],true)\n")
+    proc = subprocess.run([str(OPENSTUDIO_EXE),str(script),str(paths["result.osm"]),str(output)],capture_output=True,text=True,timeout=120)
+    if proc.returncode or not output.is_file(): errors.append("openstudio_forward_translation:failed"); shutil.rmtree(temp,ignore_errors=True); return None
+    if sha256_file(output) != sha256_file(paths["in.idf"]): errors.append("in.idf:not_canonical_forward_translation")
+    return temp
+
+
+def sql_signature(path: Path, spaces: Dict[str, str], errors: List[str], label: str) -> Dict[str, Any]:
+    result: Dict[str, Any] = {"series":{}}
+    try:
+        con=sqlite3.connect(str(path));
+        if con.execute("pragma integrity_check").fetchone()[0]!="ok": raise ValueError
+        simulation=con.execute("select EnergyPlusVersion,Completed,CompletedSuccessfully from Simulations").fetchall()
+        if len(simulation)!=1 or "25.1.0" not in str(simulation[0][0]) or tuple(str(x).upper() for x in simulation[0][1:]) not in (("TRUE","TRUE"),("FALSE","FALSE")): raise ValueError
+        result["version"]=str(simulation[0][0]); result["zones"]={str(x[0]).upper() for x in con.execute("select ZoneName from Zones")}
+        result["errors"]=tuple(con.execute("select ErrorType,ErrorMessage,Count from Errors order by ErrorIndex").fetchall())
+        variables=("Zone Lights Electricity Energy","Zone Electric Equipment Electricity Energy","Zone Ideal Loads Zone Total Heating Energy","Zone Ideal Loads Zone Total Cooling Energy","Zone Ideal Loads Zone Total Heating Rate","Zone Ideal Loads Zone Total Cooling Rate")
+        for space,zone in spaces.items():
+            for variable in variables:
+                key=space+" IDEAL LOADS" if "Ideal Loads" in variable else zone
+                row=con.execute("SELECT COUNT(*),COUNT(DISTINCT rd.TimeIndex),SUM(rd.Value),MAX(rd.Value) FROM ReportData rd JOIN ReportDataDictionary d USING(ReportDataDictionaryIndex) JOIN Time t USING(TimeIndex) WHERE d.KeyValue=? AND d.Name=? AND d.ReportingFrequency='Hourly' AND COALESCE(t.WarmupFlag,0)=0",(key,variable)).fetchone()
+                values=(int(row[0]),int(row[1]),float(row[2] or 0),float(row[3] or 0)); result["series"][(space,variable)]=values
+                if values[:2]!=(8760,8760): errors.append(f"{label}:annual_series:{space}:{variable}")
+        con.close()
+    except Exception as exc: errors.append(f"{label}:invalid:{type(exc).__name__}")
+    return result
+
+
+def rerun_energyplus(paths: Dict[str, Path], submitted: Dict[str, Any], spaces: Dict[str,str], errors: List[str]) -> None:
+    if os.name != "nt" or not ENERGYPLUS_EXE.is_file(): return
+    temp=Path(tempfile.mkdtemp(prefix="ew09-eplus-",dir="C:\\"))
+    try:
+        inputs=temp/"inputs"; output=temp/"output"; inputs.mkdir(); output.mkdir()
+        local_idf=inputs/"in.idf"; local_epw=inputs/"weather.epw"; shutil.copy2(paths["in.idf"],local_idf); shutil.copy2(paths["weather.epw"],local_epw)
+        proc=subprocess.run([str(ENERGYPLUS_EXE),"-x","-w",str(local_epw),"-d",str(output),str(local_idf)],cwd=str(inputs),capture_output=True,text=True,timeout=300)
+        if proc.returncode: errors.append(f"energyplus_rerun:exit:{proc.returncode}"); return
+        err=read_text(output/"eplusout.err")
+        if "EnergyPlus Completed Successfully" not in err or "0 Severe Errors" not in err: errors.append("energyplus_rerun:unsuccessful")
+        fresh=sql_signature(output/"eplusout.sql",spaces,errors,"energyplus_rerun.sql")
+        if submitted.get("zones") != fresh.get("zones"): errors.append("energyplus_rerun:zone_set_mismatch")
+        for key,value in submitted.get("series",{}).items():
+            other=fresh.get("series",{}).get(key)
+            if not other or value[:2]!=other[:2] or any(not math.isclose(value[i],other[i],rel_tol=1e-7,abs_tol=1e-4) for i in (2,3)): errors.append(f"energyplus_rerun:series_mismatch:{key[0]}:{key[1]}")
+    finally: shutil.rmtree(temp,ignore_errors=True)
+
+
+def rerun_archicad_stage(paths: Dict[str, Path], errors: List[str]) -> None:
+    if os.name != "nt" or not ARCHICAD_EXE.is_file(): return
+    temp = Path(tempfile.mkdtemp(prefix="ew09-ac-rerun-", dir="C:\\"))
+    fresh_stage = temp / "stage1.ifc"; fresh_handoff = temp / "handoff.json"; fresh_log = temp / "native_stage_log.json"
+    database = temp / "database"; transactions: List[Dict[str, Any]] = []; proc: subprocess.Popen[Any] | None = None
+    sock = socket.socket(); sock.bind(("127.0.0.1", 0)); port = int(sock.getsockname()[1]); sock.close()
+
+    def rpc(method: str, params: Dict[str, Any]) -> Any:
+        request = {"method": method, "params": params}; raw = json.dumps(request, separators=(",", ":"))
+        started = datetime.now().astimezone().isoformat()
+        call = urllib.request.Request(f"http://127.0.0.1:{port}/JEMI", data=raw.encode(), headers={"Content-Type":"application/json"}, method="POST")
+        with urllib.request.urlopen(call, timeout=15) as response:
+            body = json.loads(response.read().decode("utf-8-sig")); status = int(response.status)
+        completed = datetime.now().astimezone().isoformat()
+        transactions.append({"request":request,"request_json":raw,"status":status,"response":body,"started_at_utc":started,"completed_at_utc":completed})
+        if status != 200 or body.get("error"): raise RuntimeError(f"JEMI {method} failed")
+        return body.get("result")
+
+    try:
+        import ifcopenshell  # type: ignore
+        proc = subprocess.Popen([str(ARCHICAD_EXE),"--p",str(port),"--m","EW09-EVAL-RERUN","--d",str(database),"--sa","new_ifc4"],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL)
+        deadline = time.monotonic() + 25
+        while time.monotonic() < deadline:
+            if proc.poll() is not None: raise RuntimeError("IFC command server exited")
+            try:
+                with urllib.request.urlopen(f"http://127.0.0.1:{port}/HEALTH",timeout=1) as response:
+                    if response.status == 200: break
+            except Exception: time.sleep(0.2)
+        else: raise TimeoutError("IFC command server health timeout")
+
+        rpc("Model.LoadFile", {"location":str(paths["init.ifc"])})
+        changes = (
+            ("IfcSpace","2cvyGW3FP0ihcYL5rR0ExL",{"Name":"LOUNGE"},{"Name":"SOCIAL-COMMONS","LongName":"SOCIAL-COMMONS-ZN"}),
+            ("IfcSpace","2AJL71eRHDF8hYnJDd9x1g",{"Name":"SHARED-KITCHEN"},{"Name":"QUIET-STUDY","LongName":"QUIET-STUDY-ZN | LOW-EQUIPMENT-STUDY"}),
+            ("IfcSpace","12QQ5n5sr4r9qW$eloRCk6",{"Name":"LAUNDRY"},{"Name":"LAUNDRY","LongName":"LAUNDRY-ZN | HIGH-EQUIPMENT-LAUNDRY"}),
+            *tuple(("IfcSpace",gid,{"Name":name},{"LongName":"BEDROOM-GROUP-ZN | BEDROOM-GROUP | BEDROOM-COUNT-PRESERVED"}) for gid,name in (
+                ("0s4DhhVRv2bg8$9xnROM2z","BED-1"),("2turPsEaf00f9_GTNbDdYS","BED-2"),("36relbj9D7wwSTsPZOQMFT","BED-3"),
+                ("1DLQ7ctwH1MAnWIo9abD6O","BED-4"),("0O3aHiYETAYAIAFv3EUqD2","BED-5"),("3po1NdHJD8Ahh2IkxPFep2","BED-6"))),
+            ("IfcProject","2BlDJ8uLf6lRdJ7nhdcylY",{"Name":"c11 result"},{"Description":CANONICAL_PROJECT_DESCRIPTION}),
+        )
+        for cls,gid,selector,update in changes:
+            selection={"GlobalId":gid,**selector}; result=rpc("Entity.Modify",{"select":{cls:selection},"EntityData":{cls:update}})
+            if not result: raise RuntimeError("empty modify result")
+        rpc("Model.SaveFile", {"location":str(fresh_stage)})
+        if not fresh_stage.is_file(): raise RuntimeError("fresh stage missing")
+
+        import ifcopenshell.geom  # type: ignore
+        candidate=ifcopenshell.open(str(paths["stage1.ifc"])); fresh=ifcopenshell.open(str(fresh_stage))
+        candidate_roots={x.GlobalId:x for x in candidate.by_type("IfcRoot")}; fresh_roots={x.GlobalId:x for x in fresh.by_type("IfcRoot")}
+        mismatch=set(candidate_roots) != set(fresh_roots)
+        task_space_names = {
+            "2cvyGW3FP0ihcYL5rR0ExL":"SOCIAL-COMMONS", "2AJL71eRHDF8hYnJDd9x1g":"QUIET-STUDY", "12QQ5n5sr4r9qW$eloRCk6":"LAUNDRY",
+            "0s4DhhVRv2bg8$9xnROM2z":"BED-1", "2turPsEaf00f9_GTNbDdYS":"BED-2", "36relbj9D7wwSTsPZOQMFT":"BED-3",
+            "1DLQ7ctwH1MAnWIo9abD6O":"BED-4", "0O3aHiYETAYAIAFv3EUqD2":"BED-5", "3po1NdHJD8Ahh2IkxPFep2":"BED-6",
+        }
+        project_gid="2BlDJ8uLf6lRdJ7nhdcylY"; allowed_gids=set(task_space_names)|{project_gid}
+        allowed_fresh_differences: Dict[str,Set[str]] = {}
+        for gid in set(candidate_roots) & set(fresh_roots):
+            left,right=candidate_roots[gid],fresh_roots[gid]
+            permitted = allowed_fresh_differences.get(gid,set())
+            left_attrs=canonical_direct_attributes(left); right_attrs=canonical_direct_attributes(right)
+            if set(left_attrs) != set(right_attrs) or any(a not in permitted and left_attrs[a] != right_attrs[a] for a in set(left_attrs) & set(right_attrs)): mismatch=True
+            if canonical_owner_history(left) != canonical_owner_history(right): mismatch=True
+        for gid,name in task_space_names.items():
+            if gid not in candidate_roots or str(candidate_roots[gid].Name) != name: mismatch=True
+        seed=ifcopenshell.open(str(paths["init.ifc"])); seed_roots={x.GlobalId:x for x in seed.by_type("IfcRoot")}
+        for gid in set(candidate_roots) & set(seed_roots):
+            for attr in ("Name","LongName","Description","ObjectType"):
+                if str(getattr(candidate_roots[gid],attr,None)) != str(getattr(seed_roots[gid],attr,None)) and gid not in allowed_gids: mismatch=True
+        candidate_products=model_product_signatures(candidate);fresh_products=model_product_signatures(fresh)
+        if set(candidate_products) != set(fresh_products) or any(product_equivalence_signature(candidate_products[gid]) != product_equivalence_signature(fresh_products[gid]) for gid in set(candidate_products) & set(fresh_products)): mismatch=True
+
+        fresh_handoff.write_text(json.dumps({"source_init_sha256":sha256_file(paths["init.ifc"]),"fresh_stage_sha256":sha256_file(fresh_stage),"root_ids":sorted(fresh_roots),"changed_global_ids":[x[1] for x in changes]},indent=2),encoding="utf-8")
+        fresh_log.write_text(json.dumps({"executable_sha256":sha256_file(ARCHICAD_EXE),"port":port,"transactions":transactions,"stage_sha256":sha256_file(fresh_stage)},indent=2),encoding="utf-8")
+        handoff=load_json(paths["handoff.json"])
+        if handoff.get("source_init_sha256") != sha256_file(paths["init.ifc"]) or handoff.get("source_stage1_sha256") != sha256_file(paths["stage1.ifc"]): mismatch=True
+        semantic_text=" ".join(str(getattr(candidate_roots[gid],a,"")) for gid in allowed_gids if gid in candidate_roots for a in ("Name","LongName","Description","ObjectType"))+json.dumps(handoff,ensure_ascii=False)
+        for token in ("EW2A09","LOW-EQUIPMENT-STUDY","HIGH-EQUIPMENT-LAUNDRY","BEDROOM-COUNT-PRESERVED","SOCIAL-SPACE-SCHEDULE","RESIDENTIAL-SCHEDULE"):
+            if token not in semantic_text: mismatch=True
+        if mismatch: errors.append("archicad_fresh_rerun:stage_or_handoff_mismatch")
+    except Exception as exc:
+        errors.append(f"archicad_fresh_rerun:failed:{type(exc).__name__}")
+    finally:
+        if proc and proc.poll() is None:
+            proc.terminate()
+            try: proc.wait(timeout=5)
+            except subprocess.TimeoutExpired: proc.kill(); proc.wait(timeout=5)
+        shutil.rmtree(temp,ignore_errors=True)
+
+
+def check_task09_deep(root: Path, paths: Dict[str, Path], handoff: Dict[str, Any], flow: Dict[str, Any], errors: List[str]) -> None:
+    if sha256_file(paths["init.ifc"]) != INIT_SHA256:
+        errors.append("init.ifc:seed_hash_mismatch")
+    check_epw(paths["weather.epw"], errors)
+    try:
+        import ifcopenshell  # type: ignore
+        seed = ifcopenshell.open(str(paths["init.ifc"])); stage = ifcopenshell.open(str(paths["stage1.ifc"]))
+        seed_roots = {x.GlobalId for x in seed.by_type("IfcRoot")}; stage_roots = {x.GlobalId for x in stage.by_type("IfcRoot")}
+        if not seed_roots.issubset(stage_roots): errors.append("stage1.ifc:seed_root_removed")
+        seed_beds = {x.GlobalId for x in seed.by_type("IfcSpace") if re.fullmatch(r"BED-[1-6]", str(x.Name))}
+        stage_beds = {x.GlobalId for x in stage.by_type("IfcSpace") if re.fullmatch(r"BED-[1-6]", str(x.Name))}
+        if len(seed_beds) != 6 or stage_beds != seed_beds: errors.append("stage1.ifc:bedroom_count_or_identity_not_preserved")
+        names = {str(x.Name):x for x in stage.by_type("IfcSpace")}
+        if not {"SOCIAL-COMMONS","QUIET-STUDY","LAUNDRY","COURTYARD","DINING"}.issubset(names): errors.append("stage1.ifc:required_or_preserved_space_missing")
+        if len(stage.by_type("IfcRoof")) != len(seed.by_type("IfcRoof")) or len(stage.by_type("IfcBuildingStorey")) != len(seed.by_type("IfcBuildingStorey")): errors.append("stage1.ifc:roof_or_storey_baseline_changed")
+        protected = [
+            x for x in seed.by_type("IfcSpace")
+            if re.fullmatch(r"BED-[1-6]", str(x.Name)) or str(x.Name) in {"COURTYARD", "DINING"}
+        ] + list(seed.by_type("IfcRoof")) + list(seed.by_type("IfcBuildingStorey"))
+        for before in protected:
+            after = stage.by_guid(str(before.GlobalId))
+            before_attrs = canonical_direct_attributes(before)
+            after_attrs = canonical_direct_attributes(after) if after is not None else {}
+            if re.fullmatch(r"BED-[1-6]", str(getattr(before, "Name", ""))):
+                before_attrs.pop("LongName", None)
+                after_attrs.pop("LongName", None)
+            if after is None or before_attrs != after_attrs:
+                errors.append(f"stage1.ifc:protected_entity_changed:{before.GlobalId}")
+        seed_laundry = [x for x in seed.by_type("IfcSpace") if str(x.Name) == "LAUNDRY"]
+        if len(seed_laundry) != 1 or str(stage.by_guid(str(seed_laundry[0].GlobalId)).Name) != "LAUNDRY":
+            errors.append("stage1.ifc:existing_laundry_not_preserved")
+        social_candidates = [x for x in seed.by_type("IfcSpace") if any(token in str(x.Name).upper() for token in ("LOUNGE", "SOCIAL", "COMMON"))]
+        if len(social_candidates) != 1:
+            errors.append("init.ifc:social_common_source_ambiguous")
+        else:
+            social_after = stage.by_guid(str(social_candidates[0].GlobalId))
+            if social_after is None or str(social_after.Name) != "SOCIAL-COMMONS":
+                errors.append("stage1.ifc:existing_social_common_not_preserved")
+    except Exception as exc:
+        errors.append(f"stage1.ifc:deep_parse_failed:{type(exc).__name__}")
+    log = load_json(paths["native_stage_log.json"])
+    proc = log.get("command_server_process", {})
+    actual_archicad_hash = sha256_file(ARCHICAD_EXE) if ARCHICAD_EXE.is_file() else proc.get("executable_sha256")
+    if not actual_archicad_hash or proc.get("executable_sha256") != actual_archicad_hash or "27.0.0" not in str(proc.get("product_version")):
+        errors.append("native_stage_log.json:archicad_identity_mismatch")
+    txs = log.get("native_transactions", {}).get("Items", [])
+    methods = [item.get("request",{}).get("method") for item in txs]
+    if not methods or methods[0] != "Model.LoadFile" or methods[-1] != "Model.SaveFile" or not any(method in {"Entity.Modify", "Entity.Create"} for method in methods):
+        errors.append("native_stage_log.json:transaction_sequence")
+    if any(item.get("status") != 200 or item.get("response",{}).get("error") or (item.get("request",{}).get("method") == "Entity.Modify" and not item.get("response",{}).get("result")) for item in txs):
+        errors.append("native_stage_log.json:unsuccessful_transaction")
+    if log.get("artifacts",{}).get("stage1.ifc",{}).get("sha256") != sha256_file(paths["stage1.ifc"]): errors.append("native_stage_log.json:stage1_hash_mismatch")
+    if log.get("artifacts",{}).get("handoff.json",{}).get("sha256") != sha256_file(paths["handoff.json"]): errors.append("native_stage_log.json:handoff_hash_mismatch")
+    try:
+        if not iso_time(log["native_stage_started_at_utc"]) < iso_time(log["native_stage_completed_at_utc"]): raise ValueError
+        load_path = str(txs[0]["request"]["params"]["location"]).lower(); save_path = str(txs[-1]["request"]["params"]["location"]).lower()
+        if not load_path.endswith("desktop\\init.ifc") or not save_path.endswith("desktop\\stage1.ifc"): raise ValueError
+        for left,right in zip(txs,txs[1:]):
+            if iso_time(left["completed_at_utc"]) > iso_time(right["started_at_utc"]): raise ValueError
+        import ifcopenshell  # type: ignore
+        seed_model=ifcopenshell.open(str(paths["init.ifc"])); stage_model=ifcopenshell.open(str(paths["stage1.ifc"]))
+        seed_by_gid={x.GlobalId:x for x in seed_model.by_type("IfcRoot")}; stage_by_gid={x.GlobalId:x for x in stage_model.by_type("IfcRoot")}
+        declared_fields=set(); declared_new_gids=set()
+        for item in txs:
+            method = item.get("request",{}).get("method")
+            if method == "Entity.Create":
+                request=json.loads(item.get("request_json","{}")) if item.get("request_json") else item["request"]
+                for entity_data in request.get("params",{}).get("EntityData",{}).values():
+                    if isinstance(entity_data,dict) and entity_data.get("GlobalId"):
+                        declared_new_gids.add(str(entity_data["GlobalId"]))
+                continue
+            if method != "Entity.Modify": continue
+            request=json.loads(item.get("request_json","{}")) if item.get("request_json") else item["request"]
+            params=request["params"]; select=params.get("select",{}); update=params.get("EntityData",{})
+            cls=next(iter(select)); selector=select[cls]; gid=selector.get("GlobalId"); changes=update.get(cls,{})
+            if gid not in seed_by_gid or gid not in stage_by_gid: raise ValueError
+            before,after=seed_by_gid[gid],stage_by_gid[gid]
+            if selector.get("Name") is not None and str(before.Name)!=str(selector["Name"]): raise ValueError
+            if not changes or any(str(getattr(after,key,None))!=str(value) for key,value in changes.items()): raise ValueError
+            declared_fields.update((gid,str(key)) for key in changes)
+        actual_changed_fields=set()
+        for gid in set(seed_by_gid) & set(stage_by_gid):
+            before_attrs=canonical_direct_attributes(seed_by_gid[gid]); after_attrs=canonical_direct_attributes(stage_by_gid[gid])
+            for attr in set(before_attrs) | set(after_attrs):
+                if before_attrs.get(attr) != after_attrs.get(attr): actual_changed_fields.add((gid,attr))
+            if canonical_owner_history(seed_by_gid[gid]) != canonical_owner_history(stage_by_gid[gid]): actual_changed_fields.add((gid,"OwnerHistory"))
+        seed_products=model_product_signatures(seed_model);stage_products=model_product_signatures(stage_model)
+        for gid in set(seed_products) & set(stage_products):
+            before=seed_products.get(gid,{});after=stage_products.get(gid,{})
+            for attr in ("placement","representation","geometry","hosts"):
+                if before.get(attr) != after.get(attr): actual_changed_fields.add((gid,{"placement":"ObjectPlacement","representation":"Representation","geometry":"Representation","hosts":"HostGraph"}[attr]))
+        if not actual_changed_fields.issubset(declared_fields): raise ValueError
+        if not (set(stage_by_gid) - set(seed_by_gid)).issubset(declared_new_gids): raise ValueError
+    except Exception:
+        errors.append("native_stage_log.json:transaction_artifact_causality")
+
+    text = read_text(paths["result.osm"]); objects = osm_objects(text)
+    by_kind: Dict[str,List[List[str]]] = {}
+    for kind, fields in objects: by_kind.setdefault(kind,[]).append(fields)
+    spaces = {fields[1]:fields for fields in by_kind.get("OS:SPACE",[])}
+    zones = {fields[1]:fields for fields in by_kind.get("OS:THERMALZONE",[])}
+    zone_by_handle = {handle(fields[0]):name for name,fields in zones.items()}
+    exported = {name:zone_by_handle.get(handle(fields[10])) for name,fields in spaces.items() if zone_by_handle.get(handle(fields[10]))}
+    if len(exported) != len(spaces): errors.append("result.osm:space_without_zone")
+    if set(exported.values()) != set(zones): errors.append("result.osm:orphan_zone")
+    if not set(CASE_SPEC["required_spaces"]).issubset(exported): errors.append("result.osm:required_space_missing")
+    definitions = {kind:{handle(x[0]):x for x in by_kind.get(kind,[])} for kind in ("OS:PEOPLE:DEFINITION","OS:LIGHTS:DEFINITION","OS:ELECTRICEQUIPMENT:DEFINITION")}
+    schedules = {handle(x[0]):x for kind,values in by_kind.items() if kind.startswith("OS:SCHEDULE:") for x in values}
+    spaces_by_handle = {handle(x[0]):x for x in spaces.values()}; loads = {name:[] for name in exported}
+    for kind in ("OS:PEOPLE","OS:LIGHTS","OS:ELECTRICEQUIPMENT"):
+        for item in by_kind.get(kind,[]):
+            space = spaces_by_handle.get(handle(item[3])); definition = definitions[kind+":DEFINITION"].get(handle(item[2])); schedule = schedules.get(handle(item[4]))
+            if not space or not definition or not schedule: errors.append(f"result.osm:dangling_load:{item[1]}")
+            elif space[1] in loads: loads[space[1]].append((kind,definition,schedule))
+    if any({x[0] for x in loads[name]} != {"OS:PEOPLE","OS:LIGHTS","OS:ELECTRICEQUIPMENT"} for name in exported): errors.append("result.osm:incomplete_load_set")
+    try:
+        equipment = {name:next(item for item in loads[name] if item[0]=="OS:ELECTRICEQUIPMENT")[1] for name in CASE_SPEC["required_spaces"]}
+        density = {name:float(item[4]) for name,item in equipment.items()}
+        if not density["QUIET-STUDY"] < min(density["SOCIAL-COMMONS"],density["BEDROOM-GROUP"]) or not density["LAUNDRY"] > max(density["SOCIAL-COMMONS"],density["BEDROOM-GROUP"]): errors.append("result.osm:use_load_order_invalid")
+    except Exception: errors.append("result.osm:equipment_density_parse")
+    thermostat_handles = {handle(x[0]) for x in by_kind.get("OS:THERMOSTATSETPOINT:DUALSETPOINT",[])}
+    ideal_handles = {handle(x[0]) for x in by_kind.get("OS:ZONEHVAC:IDEALLOADSAIRSYSTEM",[])}
+    equipment_lists = by_kind.get("OS:ZONEHVAC:EQUIPMENTLIST",[])
+    for name, zone_name in exported.items():
+        zone = zones[zone_name]; lists = [x for x in equipment_lists if handle(x[2]) == handle(zone[0])]
+        if handle(zone[19]) not in thermostat_handles or len(lists) != 1 or handle(lists[0][4]) not in ideal_handles: errors.append(f"result.osm:hvac_chain:{name}")
+    rulesets = {x[1]:x for x in by_kind.get("OS:SCHEDULE:RULESET",[])}
+    use_schedule_handles = set()
+    for name in CASE_SPEC["required_spaces"]:
+        for _,_,schedule in loads.get(name,[]): use_schedule_handles.add(handle(schedule[0]))
+    if len(use_schedule_handles) < 2: errors.append("result.osm:use_schedule_profiles_not_distinct")
+
+    check_geometry_and_handles(paths,errors)
+    ft_temp=canonical_forward_translate(paths,errors)
+    if ft_temp: shutil.rmtree(ft_temp,ignore_errors=True)
+
+    osw = load_json(paths["workflow.osw"])
+    if osw.get("seed_file") != "result.osm" or osw.get("weather_file") != "weather.epw": errors.append("workflow.osw:binding_mismatch")
+    if flow.get("weather_sha256") != sha256_file(paths["weather.epw"]): errors.append("flow_report:weather_hash_mismatch")
+    err_text = read_text(paths["run/eplusout.err"]); end_text = read_text(paths["run/eplusout.end"])
+    if "EnergyPlus Completed Successfully" not in err_text or "0 Severe Errors" not in err_text or "EnergyPlus Completed Successfully" not in end_text: errors.append("energyplus:unsuccessful")
+    try:
+        connection = sqlite3.connect(str(paths["run/eplusout.sql"])); simulation = connection.execute("select EnergyPlusVersion,Completed,CompletedSuccessfully from Simulations").fetchall()
+        if connection.execute("pragma integrity_check").fetchone()[0] != "ok" or len(simulation)!=1 or "25.1.0" not in str(simulation[0][0]): errors.append("eplusout.sql:integrity_or_version")
+        flags=tuple(str(x).upper() for x in simulation[0][1:])
+        if flags not in (("TRUE","TRUE"),("FALSE","FALSE")): errors.append("eplusout.sql:completion_flags")
+        variables=("Zone Lights Electricity Energy","Zone Electric Equipment Electricity Energy","Zone Ideal Loads Zone Total Heating Energy","Zone Ideal Loads Zone Total Cooling Energy","Zone Ideal Loads Zone Total Heating Rate","Zone Ideal Loads Zone Total Cooling Rate")
+        hourly=flow.get("simulation",{}).get("hourly_series",[]); reported={(x.get("space_name"),x.get("variable")):x for x in hourly}
+        sql_data={}
+        for name in exported:
+            for variable in variables:
+                item=reported.get((name,variable),{}); key=item.get("key_value")
+                row=connection.execute("SELECT COUNT(*),COUNT(DISTINCT rd.TimeIndex),SUM(rd.Value),MAX(rd.Value) FROM ReportData rd JOIN ReportDataDictionary d USING(ReportDataDictionaryIndex) JOIN Time t USING(TimeIndex) WHERE d.KeyValue=? AND d.Name=? AND d.ReportingFrequency='Hourly' AND t.WarmupFlag=0",(key,variable)).fetchone()
+                values=(int(row[0]),int(row[1]),float(row[2] or 0),float(row[3] or 0));sql_data[(name,variable)]=values
+                if values[:2]!=(8760,8760) or int(item.get("count",0))!=8760 or abs(float(item.get("sum",math.inf))-values[2])>max(1e-6,abs(values[2])*1e-12): errors.append(f"eplusout.sql:hourly_mismatch:{name}:{variable}")
+        with paths["model_summary.csv"].open(newline="",encoding="utf-8") as stream: rows=list(csv.DictReader(stream))
+        if {(x["space_name"],x["thermal_zone"]) for x in rows} != set(exported.items()): errors.append("model_summary.csv:space_zone_set")
+        for row in rows:
+            name=row["space_name"]; energy=sum(sql_data[(name,v)][2] for v in variables[:4])/3.6e6; peak=max(sql_data[(name,v)][3] for v in variables[4:])
+            if abs(float(row["energy_use_kwh"])-energy)>1e-6 or abs(float(row["peak_load_w"])-peak)>1e-6: errors.append(f"model_summary.csv:sql_recompute:{name}")
+        connection.close()
+    except Exception as exc: errors.append(f"eplusout.sql:deep_validation:{type(exc).__name__}")
+    submitted=sql_signature(paths["run/eplusout.sql"],exported,errors,"submitted.sql")
+    rerun_energyplus(paths,submitted,exported,errors)
+
+
 def evaluate(root: Path) -> Tuple[bool, List[str]]:
     errors: List[str] = []
     paths = require_files(root, CASE_SPEC["required_files"], errors)
@@ -655,12 +1243,6 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     if CASE_SPEC.get("min_roofs", 0):
         stage1_min_counts["IfcRoof"] = CASE_SPEC.get("min_roofs", 0)
     stage1_info = check_ifc_basic(stage1, CASE_SPEC["stage1_tokens"], stage1_min_counts, errors, "stage1.ifc")
-    stage1_header = stage1_info["text"][:5000].upper()
-    is_archicad_27 = "ARCHICAD 27" in stage1_header or bool(
-        re.search(r"IFCAPPLICATION\([^;]*'27'[^;]*'ARCHICAD", stage1_header)
-    )
-    if "IFCOPENSHELL" in stage1_header or not is_archicad_27:
-        errors.append("stage1.ifc:archicad_version_not_27")
     check_stage_derives_from_init(init_path, stage1, init_info, stage1_info, errors)
 
     handoff = paths["handoff.json"]
@@ -680,6 +1262,7 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     osm_counts = check_osm(paths["result.osm"], handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], CASE_SPEC["osm_tokens"], flow_tokens, errors)
     flow_data = check_flow_report(paths["flow_report.json"], handoff, paths["result.osm"], handoff_data, osm_counts, stage1_info, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors)
     check_model_summary_csv(paths["model_summary.csv"], handoff_hash, sha256_file(stage1), handoff_data, flow_data, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], CASE_SPEC.get("summary_tokens", []), errors)
+    check_task09_deep(root, paths, handoff_data, flow_data, errors)
 
     return not errors, errors
 

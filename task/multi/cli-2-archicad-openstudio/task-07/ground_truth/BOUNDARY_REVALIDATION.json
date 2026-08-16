@@ -1,0 +1,37 @@
+{
+  "schema": "engiworld.task07.boundary-revalidation.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-07-windows",
+  "run_at_utc": "2026-08-14T09:50:50Z",
+  "scope": "Candidate-boundary-only evaluator correction; native GT artifacts were not regenerated or modified.",
+  "evaluator_sha256": "5999a7675da54dfa52d8ef93f9faf422a13b1e5282a148e685a700f30a1478db",
+  "task_json_sha256": "fd95e2ba7e57bf48ba180eeb0b295c825e58e3627f5f93e7df3ffb052b970637",
+  "isolation": "Each case was copied independently from formal GT; no mutation state was reused.",
+  "cases": [
+    {
+      "id": "helper_free",
+      "class": "positive",
+      "change": "Omit both standalone OpenStudio transaction sidecars, both postprocessor scripts, and repository audit documents.",
+      "expected_ok": true,
+      "actual_ok": true,
+      "errors": []
+    },
+    {
+      "id": "missing_native_simulation_evidence",
+      "class": "negative",
+      "change": "Remove openstudio_cli_transactions and final_delivery from flow_report.json while retaining claimed simulation outputs.",
+      "expected_ok": false,
+      "actual_ok": false,
+      "errors": [
+        "flow_report:missing_stage_sequence",
+        "flow_report:openstudio_transaction_identity_or_exit_mismatch",
+        "flow_report:openstudio_transaction_args_or_input_hash_mismatch",
+        "flow_report:openstudio_transaction_sql_sha256_mismatch",
+        "flow_report:openstudio_transaction_err_sha256_mismatch",
+        "flow_report:openstudio_transaction_end_sha256_mismatch",
+        "flow_report:openstudio_transaction_time_or_stable_samples_invalid",
+        "eplusout.sql:integrity_simulation_version_or_flags"
+      ]
+    }
+  ],
+  "all_cases_matched_expectation": true
+}

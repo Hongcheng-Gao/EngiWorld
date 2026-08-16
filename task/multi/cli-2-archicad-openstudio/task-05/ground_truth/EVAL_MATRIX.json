@@ -1,0 +1,20 @@
+{
+  "schema":"engiworld.task05.eval-matrix.v1",
+  "case_id":"multi-cli-2-archicad-openstudio-task-05-windows",
+  "snapshot":"cli2-archicad27-openstudio310-win",
+  "host":"iv-v44c5quhrp39",
+  "evaluator_sha256":"89d44cb21a386af45a788ac02c6ee0270a104c2a9e18c353df9d35d922d01f25",
+  "run_stamp_utc":"20260812T191542989170Z",
+  "isolation":"Each archive was freshly extracted into a separate Windows directory; metrics were case-local.",
+  "summary":{"total":6,"positive":2,"negative":4,"matched_expectation":6},
+  "cases":[
+    {"id":"formal","class":"positive","expected_ok":true,"actual_ok":true,"errors":[],"started_utc":"2026-08-12T19:15:43.077405+00:00","completed_utc":"2026-08-12T19:15:44.292907+00:00"},
+    {"id":"json_key_order","class":"positive_reasonable_equivalent","purpose":"Only top-level key order of the postprocess transaction changed; all structured values and bound artifact hashes remained identical","expected_ok":true,"actual_ok":true,"errors":[],"started_utc":"2026-08-12T19:15:44.371100+00:00","completed_utc":"2026-08-12T19:15:45.574793+00:00"},
+    {"id":"missing_postprocess_rb","class":"negative","purpose":"Reject missing required native postprocess script","expected_ok":false,"actual_ok":false,"errors":["missing_or_empty:openstudio_postprocess.rb"],"started_utc":"2026-08-12T19:15:45.643324+00:00","completed_utc":"2026-08-12T19:15:45.721984+00:00"},
+    {"id":"duplicate_global_id","class":"negative","purpose":"Reject duplicate/lost IfcRoot identity and broken upstream hash chain","expected_ok":false,"actual_ok":false,"key_errors":["stage1.ifc:duplicate_global_ids","stage1.ifc:ifcroot_exact_set_mismatch","handoff.json:source_sha256_mismatch","native_stage_log.json:artifact_mismatch:stage1.ifc"],"started_utc":"2026-08-12T19:15:45.800606+00:00","completed_utc":"2026-08-12T19:15:47.009880+00:00"},
+    {"id":"zero_exhaust_flow","class":"negative","purpose":"Reject a finishing-booth exhaust fan with zero maximum flow","expected_ok":false,"actual_ok":false,"key_errors":["result.osm:booth_exhaust_fan_invalid_or_disconnected","flow_report:osm_sha256_mismatch","openstudio_postprocess_transaction.json:provenance_or_artifact_mismatch"],"started_utc":"2026-08-12T19:15:47.088482+00:00","completed_utc":"2026-08-12T19:15:48.297584+00:00"},
+    {"id":"single_timeindex","class":"negative","purpose":"Reject collapsed hourly SQL and broken series/key bijection","expected_ok":false,"actual_ok":false,"key_errors":["flow_report:hourly_series_value_mismatch","flow_report:ideal_or_fan_sql_key_bijection_mismatch","flow_report:delivery_sql_sha256_mismatch"],"started_utc":"2026-08-12T19:15:48.376170+00:00","completed_utc":"2026-08-12T19:15:49.035448+00:00"}
+  ],
+  "all_matched_expectation":true,
+  "source_windows_receipt_sha256":"79d208f6834ae3d33de7c32a5daca988708c29a02cf4131c7b24fa9255d63ea0"
+}

@@ -3,12 +3,7 @@
   "owner": "taozhuo",
   "title": "Wearable charger cradle with pogo pins and strap slots",
   "domain": "wearable_charging_cradle",
-  "software_chain": [
-    "librecad",
-    "freecad",
-    "kicad",
-    "blender"
-  ],
+  "software_chain": ["librecad", "freecad", "kicad", "blender"],
   "token": "EW4G09",
   "required_files": [
     "stage1_wearable_charger_cradle.dxf",
@@ -20,111 +15,70 @@
   ],
   "dxf": {
     "file": "stage1_wearable_charger_cradle.dxf",
-    "bbox": [
-      105.0,
-      48.0
-    ],
-    "bbox_tol": 1.5,
-    "circle_tol": 1.0,
-    "radius_tol": 0.5,
-    "layers": [
-      "OUTLINE",
-      "STRAP_SLOT",
-      "HOLE",
-      "LABEL"
-    ],
-    "circles": [
-      [
-        18.0,
-        24.0,
-        2.0
-      ],
-      [
-        87.0,
-        24.0,
-        2.0
-      ],
-      [
-        48.0,
-        24.0,
-        1.2
-      ],
-      [
-        57.0,
-        24.0,
-        1.2
-      ],
-      [
-        52.5,
-        10.0,
-        2.8
-      ],
-      [
-        52.5,
-        38.0,
-        2.8
-      ]
-    ],
-    "texts": [
-      "EW4G09",
-      "POGO+",
-      "POGO-",
-      "STRAP"
-    ],
-    "min_lines": 4,
-    "no_layers": [
-      "GUIDE"
-    ]
+    "bbox": [105.0, 48.0],
+    "bbox_tol": 0.15,
+    "circle_tol": 0.05,
+    "radius_tol": 0.03,
+    "layers": ["OUTLINE", "STRAP_SLOT", "HOLE", "LABEL"],
+    "circles": [[18.0, 24.0, 2.0], [87.0, 24.0, 2.0], [48.0, 24.0, 1.2], [57.0, 24.0, 1.2], [52.5, 10.0, 2.8], [52.5, 38.0, 2.8]],
+    "texts": ["EW4G09", "POGO+", "POGO-", "STRAP"],
+    "slot_count": 2,
+    "no_layers": ["GUIDE"]
   },
   "stl": {
     "file": "stage2_wearable_charger_cradle.stl",
-    "bbox": [
-      105.0,
-      48.0,
-      20.0
-    ],
-    "bbox_tol": 4.0,
-    "min_triangles": 12
+    "bbox": [105.0, 48.0, 20.0],
+    "bbox_tol": 0.08,
+    "min_triangles": 100,
+    "watertight": true,
+    "non_box_fill_range": [0.05, 0.8],
+    "through_holes": 6,
+    "strap_slots": 2
   },
   "kicad": {
-    "tokens": [
-      "EW4G09",
-      "POGO-P1",
-      "POGO-P2",
-      "CHG-U1",
-      "MAGNET-M1",
-      "USB-J1",
-      "NTC-R1"
-    ]
+    "tokens": ["EW4G09", "POGO-P1", "POGO-P2", "CHG-U1", "MAGNET-M1", "USB-J1", "NTC-R1"],
+    "nets": ["VBUS", "VBAT", "GND", "NTC", "POGO_POS", "POGO_NEG"],
+    "complete_handoff_layer": "Dwgs.User"
   },
   "glb": {
     "file": "stage4_wearable_charger_cradle.glb",
+    "nodes": ["stage2_wearable_charger_cradle", "stage3_wearable_charger_cradle_board_profile.svg"],
     "tokens": [],
     "min_nodes": 2,
     "min_materials": 0,
-    "nodes": [
-      "stage2_wearable_charger_cradle",
-      "stage3_wearable_charger_cradle_board_profile.svg"
-    ],
     "min_meshes": 1,
+    "pogo_centers": [[48.0, 24.0], [57.0, 24.0]],
+    "gold_metallic_pogo_count": 2,
+    "strap_highlight_count": 2,
     "gui_export": true,
     "accepted_import_evidence": {
       "stage2_stl_object": "stage2_wearable_charger_cradle",
       "stage3_svg_object": "stage3_wearable_charger_cradle_board_profile.svg"
     }
   },
-  "diversity_notes": {
-    "geometry": "Wearable charger cradle with pogo pins and strap slots",
-    "electronic_focus": "a charger PCB with two pogo pins, charger IC, magnet marker, USB input, and NTC resistor",
-    "visualization_focus": "a wearable cradle scene with gold pogo pins and strap-slot geometry highlighted"
+  "seed": {
+    "file": "seed_wearable_charger_cradle.dxf",
+    "desktop_path": "/home/user/Desktop/seed_wearable_charger_cradle.dxf",
+    "sha256": "fdbb723af3e6865854350e20fe7f6cb47899e862a0e2a65147d0c2ca26cacde0"
   },
+  "gt_provenance": {
+    "instance": "i-yeslqxefpc4c5qx3440g",
+    "date": "2026-08-13",
+    "software_versions": ["LibreCAD 2.2.0.2", "FreeCAD 0.21.2", "KiCad 10.0.2", "Blender 4.2.3"],
+    "real_software_generated": true
+  },
+  "handoff": {"file": "stage2_wearable_charger_cradle_handoff_outline.dxf"},
+  "board_file": {"file": "stage3_wearable_charger_cradle_board.kicad_pcb"},
+  "board_profile": {"file": "stage3_wearable_charger_cradle_board_profile.svg"},
+  "intermediate_outputs": [
+    {"stage": "librecad", "file": "stage1_wearable_charger_cradle.dxf", "type": "dxf", "consumed_by": "freecad", "eval_check": "check_stage1_dxf"},
+    {"stage": "freecad", "file": "stage2_wearable_charger_cradle.stl", "type": "stl", "consumed_by": "blender", "eval_check": "check_stl"},
+    {"stage": "freecad", "file": "stage2_wearable_charger_cradle_handoff_outline.dxf", "type": "dxf", "consumed_by": "kicad", "eval_check": "check_handoff_dxf"},
+    {"stage": "kicad", "file": "stage3_wearable_charger_cradle_board.kicad_pcb", "type": "kicad_pcb", "consumed_by": "blender", "eval_check": "check_kicad_board_file"},
+    {"stage": "kicad", "file": "stage3_wearable_charger_cradle_board_profile.svg", "type": "svg", "consumed_by": "blender", "eval_check": "check_board_profile_svg"}
+  ],
   "eval_dependencies": {
-    "pip_packages": [
-      "ezdxf",
-      "trimesh",
-      "pygltflib",
-      "numpy"
-    ],
+    "pip_packages": ["ezdxf", "trimesh", "pygltflib", "numpy"],
     "vm_preinstalled": true,
     "usage": {
       "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
@@ -132,65 +86,5 @@
       "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
       "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
     }
-  },
-  "seed": {
-    "file": "seed_wearable_charger_cradle.dxf",
-    "desktop_path": "/home/user/Desktop/seed_wearable_charger_cradle.dxf"
-  },
-  "generated_by": {
-    "script": "generate_assets.py",
-    "packages": [
-      "ezdxf",
-      "trimesh",
-      "pygltflib",
-      "numpy",
-      "xml.sax.saxutils"
-    ]
-  },
-  "handoff": {
-    "file": "stage2_wearable_charger_cradle_handoff_outline.dxf"
-  },
-  "board_profile": {
-    "file": "stage3_wearable_charger_cradle_board_profile.svg"
-  },
-  "intermediate_outputs": [
-    {
-      "stage": "librecad",
-      "file": "stage1_wearable_charger_cradle.dxf",
-      "type": "dxf",
-      "consumed_by": "freecad",
-      "eval_check": "check_stage1_dxf"
-    },
-    {
-      "stage": "freecad",
-      "file": "stage2_wearable_charger_cradle.stl",
-      "type": "stl",
-      "consumed_by": "blender",
-      "eval_check": "check_stl"
-    },
-    {
-      "stage": "freecad",
-      "file": "stage2_wearable_charger_cradle_handoff_outline.dxf",
-      "type": "dxf",
-      "consumed_by": "kicad",
-      "eval_check": "check_handoff_dxf"
-    },
-    {
-      "stage": "kicad",
-      "file": "stage3_wearable_charger_cradle_board.kicad_pcb",
-      "type": "kicad_pcb",
-      "consumed_by": "blender",
-      "eval_check": "check_kicad_board_file"
-    },
-    {
-      "stage": "kicad",
-      "file": "stage3_wearable_charger_cradle_board_profile.svg",
-      "type": "svg",
-      "consumed_by": "blender",
-      "eval_check": "check_board_profile_svg"
-    }
-  ],
-  "board_file": {
-    "file": "stage3_wearable_charger_cradle_board.kicad_pcb"
   }
 }

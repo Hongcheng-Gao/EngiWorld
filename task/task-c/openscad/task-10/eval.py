@@ -11,9 +11,9 @@ OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 
 SPEC = {'output': 'task-030_output.stl',
  'bbox': [80.0, 30.0, 5.5],
- 'bbox_tol': 1.0,
- 'min_triangles': 24,
- 'checks': [{'kind': 'raised', 'z_min': 4.8, 'x_span': 18.0, 'y_span': 5.0}]}
+ 'bbox_tol': 0.2,
+ 'min_triangles': 200,
+ 'checks': [{'kind': 'raised_text_signature', 'top_z': 5.5, 'components': 3}]}
 
 
 def _parse_stl(path: Path):
@@ -307,6 +307,94 @@ def _has_raised(mesh: Mesh, check):
             max(p[1] for p in pts) - min(p[1] for p in pts) >= float(check["y_span"]))
 
 
+def _has_raised_text_signature(mesh: Mesh, check):
+    top_z = float(check["top_z"])
+    top_faces = [tri for tri in mesh.triangles if all(abs(p[2] - top_z) <= 0.05 for p in tri)]
+    if len(top_faces) < 60:
+        return False
+
+    vertex_ids = {}
+    faces = []
+    for triangle in top_faces:
+        face = []
+        for x, y, _ in triangle:
+            key = (round(x, 4), round(y, 4))
+            if key not in vertex_ids:
+                vertex_ids[key] = len(vertex_ids)
+            face.append(vertex_ids[key])
+        faces.append(face)
+
+    edge_owners = {}
+    adjacency = [set() for _ in faces]
+    for face_index, (a, b, c) in enumerate(faces):
+        for edge in ((a, b), (b, c), (c, a)):
+            edge_owners.setdefault(tuple(sorted(edge)), []).append(face_index)
+    for owners in edge_owners.values():
+        if len(owners) == 2:
+            first, second = owners
+            adjacency[first].add(second)
+            adjacency[second].add(first)
+
+    components = []
+    seen = set()
+    for start in range(len(faces)):
+        if start in seen:
+            continue
+        stack = [start]
+        seen.add(start)
+        component = []
+        while stack:
+            face_index = stack.pop()
+            component.append(face_index)
+            for neighbor in adjacency[face_index]:
+                if neighbor not in seen:
+                    seen.add(neighbor)
+                    stack.append(neighbor)
+        components.append(component)
+    if len(components) != int(check["components"]):
+        return False
+
+    points_by_id = {value: key for key, value in vertex_ids.items()}
+    signatures = []
+    for component in components:
+        component_set = set(component)
+        vertices = {vertex for face_index in component for vertex in faces[face_index]}
+        xs = [points_by_id[vertex][0] for vertex in vertices]
+        ys = [points_by_id[vertex][1] for vertex in vertices]
+        boundary_edges = [edge for edge, owners in edge_owners.items()
+                          if len(owners) == 1 and owners[0] in component_set]
+        boundary_graph = {}
+        for first, second in boundary_edges:
+            boundary_graph.setdefault(first, set()).add(second)
+            boundary_graph.setdefault(second, set()).add(first)
+        loops = 0
+        visited = set()
+        for vertex in boundary_graph:
+            if vertex in visited:
+                continue
+            loops += 1
+            stack = [vertex]
+            visited.add(vertex)
+            while stack:
+                current = stack.pop()
+                for neighbor in boundary_graph[current]:
+                    if neighbor not in visited:
+                        visited.add(neighbor)
+                        stack.append(neighbor)
+        signatures.append((min(xs), max(xs), min(ys), max(ys), loops))
+
+    signatures.sort()
+    expected = [(-12.0, -0.9, 2), (0.1, 7.4, 1), (8.7, 16.4, 1)]
+    for actual, wanted in zip(signatures, expected):
+        min_x, max_x, min_y, max_y, loops = actual
+        want_min_x, want_max_x, want_loops = wanted
+        if abs(min_x - want_min_x) > 0.8 or abs(max_x - want_max_x) > 0.8:
+            return False
+        if abs(min_y + 5.0) > 0.3 or abs(max_y - 6.47) > 0.3 or loops != want_loops:
+            return False
+    return True
+
+
 def _has_steps(mesh: Mesh, check):
     tol = float(check.get("tol", 0.75))
     depth = float(check["depth"])
@@ -431,6 +519,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_box_outline(mesh, check)
     if kind == "raised":
         return _has_raised(mesh, check)
+    if kind == "raised_text_signature":
+        return _has_raised_text_signature(mesh, check)
     if kind == "steps":
         return _has_steps(mesh, check)
     if kind == "angular_clusters":

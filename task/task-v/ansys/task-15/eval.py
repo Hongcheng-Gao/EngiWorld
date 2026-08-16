@@ -1,331 +1,309 @@
 from pathlib import Path
 from shutil import which
+import glob
+import math
+import os
+import re
 import subprocess
 import tempfile
-import os
-import glob
-import re
+
 
 FLUENT_EXEC_FILE = r"C:\Program Files\ANSYS Inc\v261\fluent\ntbin\win64\fluent.exe"
-
 DESKTOP = Path(r"C:\Users\user\Desktop")
+CASE_FILE = DESKTOP / "pipe_laminar.cas"
 DATA_FILE = DESKTOP / "pipe_laminar.dat"
-MESH_FILE = DESKTOP / "pipe_laminar.msh"
-REQUIRED_FILES = [MESH_FILE, DATA_FILE]
+REQUIRED_FILES = (CASE_FILE, DATA_FILE)
+FLOAT_RE = r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?"
 
 
 def is_nonempty_file(path: Path) -> bool:
-    return path.exists() and path.is_file() and path.stat().st_size > 0
+    return path.is_file() and path.stat().st_size > 0
 
-
-def _is_known_generated_script(name: str) -> bool:
-    return (
-        (name.startswith("eval_") and name.endswith((".bat", ".cmd")))
-        or (name.startswith("tmp") and name.endswith((".jou", ".wbjn")))
-    )
-
-
-def _cleanup_known_generated_scripts(desktop_path: Path) -> None:
-    try:
-        entries = list(desktop_path.iterdir())
-    except Exception:
-        return
-
-    for entry in entries:
-        try:
-            if not entry.is_file():
-                continue
-        except Exception:
-            continue
-
-        name = entry.name.lower()
-        if not _is_known_generated_script(name):
-            continue
-
-        try:
-            entry.unlink()
-        except Exception:
-            pass
-
-
-def has_forbidden_script_file(desktop_path: Path) -> bool:
-    allowed_names = {"eval.py", "license.py"}
-    forbidden_suffixes = {
-        ".bat",
-        ".cmd",
-        ".ps1",
-        ".vbs",
-        ".js",
-        ".pyw",
-        ".jou",
-        ".wbjn",
-    }
-    try:
-        entries = desktop_path.iterdir()
-    except Exception:
-        return True
-
-    for entry in entries:
-        try:
-            if not entry.is_file():
-                continue
-        except Exception:
-            return True
-
-        name = entry.name.lower()
-        if name in allowed_names:
-            continue
-        if _is_known_generated_script(name):
-            continue
-        if any(name.endswith(ext) for ext in forbidden_suffixes):
-            return True
-
-    return False
 
 def find_fluent_executable() -> str:
     explicit = Path(FLUENT_EXEC_FILE)
-    if explicit.exists() and explicit.is_file():
+    if explicit.is_file():
         return str(explicit)
-
-    cmd = which("fluent")
-    if cmd:
-        return cmd
-
+    command = which("fluent")
+    if command:
+        return command
     candidates = []
     for key, value in os.environ.items():
         if key.startswith("AWP_ROOT"):
             candidates.append(Path(value) / "fluent" / "ntbin" / "win64" / "fluent.exe")
-
-    for pattern in [
+    for pattern in (
         r"C:\Program Files\ANSYS Inc\ANSYS Student\v*\fluent\ntbin\win64\fluent.exe",
         r"C:\Program Files\ANSYS Inc\v*\fluent\ntbin\win64\fluent.exe",
-    ]:
-        for p in glob.glob(pattern):
-            candidates.append(Path(p))
+    ):
+        candidates.extend(Path(item) for item in glob.glob(pattern))
+    for candidate in candidates:
+        if candidate.is_file():
+            return str(candidate)
+    raise FileNotFoundError("Fluent executable not found")
 
-    for p in candidates:
-        if p.exists() and p.is_file():
-            return str(p)
-    raise FileNotFoundError("Fluent executable not found in PATH or common install paths")
+
+def decode_case(path: Path) -> str:
+    return path.read_bytes().decode("latin-1", errors="ignore")
+
+
+def extract_zone(text: str, zone_type: str, zone_name: str) -> str:
+    start = re.search(
+        rf"\(39\s+\([^\n]*\b{re.escape(zone_type)}\s+{re.escape(zone_name)}\s+1\)\(",
+        text,
+        flags=re.I,
+    )
+    if not start:
+        return ""
+    following = text[start.start() :]
+    end = following.find("\n(39 ", 5)
+    return following if end < 0 else following[:end]
+
+
+def case_configuration_is_valid(path: Path) -> bool:
+    text = decode_case(path)
+    low = text.lower()
+    required = (
+        '(0 "fluent26.1.',
+        "(2 3)",
+        "(rp-3d? . #t)",
+        "(rp-double? . #t)",
+        "(rp-seg? . #t)",
+        "(rp-unsteady? . #f)",
+        "(rp-lam? . #t)",
+        "(rp-turb? . #f)",
+        "(rp-visc? . #t)",
+        "(flow/scheme 20)",
+        "(pressure/scheme 12)",
+        "(mom/scheme 1)",
+        "(density (constant . 998.2)",
+        "(viscosity (constant . 0.001003)",
+        "(material . water-liquid)",
+        "(cfd-post-mesh-info ((0 0 (fluid) (wall wall fluid) (outlet pressure-outlet fluid) (inlet velocity-inlet fluid)))",
+    )
+    if not all(token in low for token in required):
+        return False
+
+    inlet = extract_zone(text, "velocity-inlet", "inlet").lower()
+    outlet = extract_zone(text, "pressure-outlet", "outlet").lower()
+    wall = extract_zone(text, "wall", "wall").lower()
+    return (
+        "(vmag (constant . 0.1)" in inlet
+        and "(flow-direction-component ((constant . 1)" in inlet
+        and "(p (constant . 0)" in outlet
+        and "(moving? . #f)" in wall
+    )
 
 
 def extract_predictions(root: Path) -> dict:
-    jou = """
-/file/read-case pipe_laminar.msh
-/file/read-data pipe_laminar.dat
+    journal = """/file/read-case-data pipe_laminar.cas
+/mesh/check
 /report/surface-integrals/area-weighted-avg outlet () x-velocity no
 /exit yes
 """
-    with tempfile.NamedTemporaryFile(mode="w", encoding="utf-8", suffix=".jou", dir=root, delete=False) as fp:
-        fp.write(jou)
-        jou_path = Path(fp.name)
-
+    with tempfile.NamedTemporaryFile(
+        mode="w", encoding="ascii", suffix=".jou", dir=root, delete=False
+    ) as stream:
+        stream.write(journal)
+        journal_path = Path(stream.name)
     try:
-        fluent_exe = find_fluent_executable()
         proc = subprocess.run(
-            [fluent_exe, "2ddp", "-g", "-i", jou_path.name],
+            [find_fluent_executable(), "3ddp", "-g", "-t1", "-i", journal_path.name],
             cwd=root,
             capture_output=True,
             text=True,
             timeout=300,
         )
-        if proc.returncode != 0:
-            raise RuntimeError("fluent failed")
-        out = (proc.stdout or "") + "\n" + (proc.stderr or "")
-        values = re.findall(r"outlet\s+([-+]?\d*\.?\d+(?:[eE][-+]?\d+)?)", out)
-        if not values:
-            raise RuntimeError("outlet x-velocity value not found")
-        return {"centerline_velocity_m_s": abs(float(values[-1]))}
+        output = (proc.stdout or "") + "\n" + (proc.stderr or "")
+        if (
+            proc.returncode != 0
+            or "Error:" in output
+            or 'Reading "pipe_laminar.cas"' not in output
+            or 'Reading "pipe_laminar.dat"' not in output
+            or "Checking mesh" not in output
+            or "Done." not in output
+        ):
+            raise RuntimeError("Fluent did not load and check the case/data cleanly")
+
+        extents = {}
+        for axis in "xyz":
+            match = re.search(
+                rf"{axis}-coordinate:\s*min \(m\) =\s*({FLOAT_RE}),\s*max \(m\) =\s*({FLOAT_RE})",
+                output,
+                flags=re.I,
+            )
+            if not match:
+                raise RuntimeError(f"{axis} extent not found")
+            extents[axis] = (float(match.group(1)), float(match.group(2)))
+
+        patterns = {
+            "nodes": r"(\d+)\s+nodes,\s+binary",
+            "hexahedral_cells": r"(\d+)\s+hexahedral cells",
+            "interior_faces": r"(\d+)\s+quadrilateral interior faces",
+            "inlet_faces": r"(\d+)\s+quadrilateral velocity-inlet faces",
+            "outlet_faces": r"(\d+)\s+quadrilateral pressure-outlet faces",
+            "wall_faces": r"(\d+)\s+quadrilateral wall faces",
+        }
+        predictions = {"extents": extents}
+        for key, pattern in patterns.items():
+            match = re.search(pattern, output, flags=re.I)
+            if not match:
+                raise RuntimeError(f"{key} not found")
+            predictions[key] = int(match.group(1))
+
+        volume = re.search(rf"minimum volume \(m3\):\s*({FLOAT_RE})", output, flags=re.I)
+        velocities = re.findall(rf"^\s*outlet\s+({FLOAT_RE})\s*$", output, flags=re.I | re.M)
+        if not volume or not velocities:
+            raise RuntimeError("cell volume or outlet velocity not found")
+        predictions["minimum_cell_volume_m3"] = float(volume.group(1))
+        predictions["outlet_mean_x_velocity_m_s"] = float(velocities[-1])
+        return predictions
     finally:
         try:
-            jou_path.unlink()
+            journal_path.unlink()
         except OSError:
             pass
 
 
-def _kill_ansys_related() -> None:
-    for target in (
-        "ANSYS261.exe",
-        "ansys261.exe",
-        "ANSYS.exe",
-        "ansys.exe",
-        "fluent.exe",
-        "Fluent.exe",
-        "cortex.exe",
-        "Cortex.exe",
-    ):
+def solution_and_near_wall_layers_are_valid(root: Path, outlet_mean: float) -> bool:
+    import ansys.fluent.core as pyfluent
+    from ansys.fluent.core.services.field_data import SurfaceDataType
+
+    solver = pyfluent.launch_fluent(
+        mode="solver",
+        precision="double",
+        processor_count=1,
+        dimension=3,
+        ui_mode="no_gui",
+        start_watchdog=False,
+    )
+    try:
+        solver.settings.file.read_case_data(file_name=str(root / CASE_FILE.stem))
+        plane_name = "__eval_mid_plane"
+        solver.settings.results.surfaces.plane_surface[plane_name] = {
+            "method": "yz-plane",
+            "x": 0.05,
+        }
+        surface_data = solver.fields.field_data.get_surface_data(
+            data_types=[SurfaceDataType.Vertices, SurfaceDataType.FacesConnectivity],
+            surfaces=[plane_name],
+        )[plane_name]
+        vertices = surface_data[SurfaceDataType.Vertices]
+        faces = surface_data[SurfaceDataType.FacesConnectivity]
+        if len(vertices) < 25 or len(faces) < 16:
+            return False
+
+        radii = [math.hypot(float(row[1]), float(row[2])) for row in vertices]
+        if max(radii) > 0.00202 or abs(max(radii) - 0.002) > 2e-5:
+            return False
+
+        adjacency = [set() for _ in vertices]
+        for face in faces:
+            indices = [int(value) for value in face]
+            for index, first in enumerate(indices):
+                second = indices[(index + 1) % len(indices)]
+                adjacency[first].add(second)
+                adjacency[second].add(first)
+
+        wall_vertices = [index for index, radius in enumerate(radii) if radius >= 0.00198]
+        if len(wall_vertices) < 16:
+            return False
+        chains = 0
+        for start in wall_vertices:
+            current = start
+            for _ in range(3):
+                candidates = [
+                    neighbor
+                    for neighbor in adjacency[current]
+                    if 1e-7 < radii[current] - radii[neighbor] < 5e-4
+                ]
+                if not candidates:
+                    break
+                current = min(candidates, key=lambda neighbor: radii[current] - radii[neighbor])
+            else:
+                chains += 1
+        if chains < 0.8 * len(wall_vertices):
+            return False
+
+        velocity = solver.fields.field_data.get_scalar_field_data(
+            field_name="x-velocity",
+            surfaces=[plane_name],
+        )[plane_name]
+        wall_velocity = [abs(float(velocity[index])) for index in wall_vertices]
+        core_velocity = [
+            float(value)
+            for value, radius in zip(velocity, radii)
+            if radius <= 0.0005
+        ]
+        if not core_velocity or max(float(value) for value in velocity) < 1.25 * outlet_mean:
+            return False
+        if sum(core_velocity) / len(core_velocity) < 1.15 * outlet_mean:
+            return False
+        if max(wall_velocity) > 0.05 * outlet_mean:
+            return False
+
+        pressure = solver.fields.field_data.get_scalar_field_data(
+            field_name="pressure",
+            surfaces=["inlet", "outlet"],
+        )
+        inlet_pressure = sum(float(value) for value in pressure["inlet"]) / len(pressure["inlet"])
+        outlet_pressure = sum(float(value) for value in pressure["outlet"]) / len(pressure["outlet"])
+        return 1.0 < inlet_pressure - outlet_pressure < 1000.0
+    finally:
+        solver.exit()
+
+
+def predictions_are_valid(predictions: dict) -> bool:
+    targets = {
+        "x": (0.0, 0.100),
+        "y": (-0.002, 0.002),
+        "z": (-0.002, 0.002),
+    }
+    for axis, expected in targets.items():
+        actual = predictions["extents"][axis]
+        if any(abs(got - want) > 2e-5 for got, want in zip(actual, expected)):
+            return False
+    if not (500 <= predictions["nodes"] <= 2_000_000):
+        return False
+    if not (500 <= predictions["hexahedral_cells"] <= 2_000_000):
+        return False
+    if predictions["interior_faces"] <= predictions["hexahedral_cells"]:
+        return False
+    if predictions["inlet_faces"] < 20 or predictions["outlet_faces"] < 20:
+        return False
+    if predictions["wall_faces"] < 100:
+        return False
+    if predictions["minimum_cell_volume_m3"] <= 0.0:
+        return False
+    return 0.095 <= predictions["outlet_mean_x_velocity_m_s"] <= 0.105
+
+
+def kill_fluent_related() -> None:
+    for image in ("fluent.exe", "cortex.exe"):
         try:
             subprocess.run(
-                ["taskkill", "/F", "/IM", target],
+                ["taskkill", "/F", "/T", "/IM", image],
                 capture_output=True,
                 creationflags=0x08000000,
             )
         except Exception:
             pass
 
-_FLOAT_RE = r"[-+]?(?:\d*\.\d+|\d+\.?)(?:[eE][-+]?\d+)?"
-
-
-def _decode_file(path: Path) -> str:
-    try:
-        return path.read_bytes().decode("latin-1", errors="ignore")
-    except Exception:
-        return ""
-
-
-def _extract_case_config_blob(case_file: Path) -> str:
-    text = _decode_file(case_file)
-    if not text:
-        return ""
-    m = re.search(r"\(case-config\s*\(\(.*?\)\)\)", text, flags=re.S)
-    if not m:
-        return ""
-    return m.group(0)
-
-
-def _case_config_has_true(blob: str, key: str) -> bool:
-    if not blob:
-        return False
-    return f"({key} . #t)" in blob
-
-
-def _case_config_has_false(blob: str, key: str) -> bool:
-    if not blob:
-        return False
-    return f"({key} . #f)" in blob
-
-
-def _extract_mesh_extents_2d(text: str):
-    if not text:
-        return None
-    m = re.search(r"\(10\s+\(1\s+[0-9a-f]+\s+[0-9a-f]+\s+1\s+2\)\((.*?)\)\)", text, flags=re.S | re.I)
-    if not m:
-        return None
-    nums = [float(x) for x in re.findall(_FLOAT_RE, m.group(1))]
-    if len(nums) < 4 or len(nums) % 2:
-        return None
-    xs = nums[0::2]
-    ys = nums[1::2]
-    return min(xs), max(xs), min(ys), max(ys)
-
-
-def _contains_all(text: str, tokens) -> bool:
-    low = (text or "").lower()
-    return all(t.lower() in low for t in tokens)
-
-
-def _within(value: float, target: float, tol: float) -> bool:
-    return abs(value - target) <= tol
-
-
-def passes_process_checks(pred: dict, case_file: Path = None, data_file: Path = None, mesh_file: Path = None) -> bool:
-    if case_file is not None:
-        case_text = _decode_file(case_file)
-        if not case_text:
-            return False
-
-        blob = _extract_case_config_blob(case_file)
-        if not blob:
-            return False
-
-        if not _case_config_has_false(blob, "rp-unsteady?"):
-            return False
-        if not _case_config_has_false(blob, "rp-3d?"):
-            return False
-        if not _case_config_has_true(blob, "rp-visc?"):
-            return False
-
-        name = case_file.name.lower()
-        case_low = case_text.lower()
-
-        if name == "cavity.cas":
-            if not _contains_all(case_low, ["(2 2)", "wall top", "wall bottom", "wall left", "wall right"]):
-                return False
-        elif name == "poiseuille_shear.cas":
-            if not _contains_all(case_low, ["(2 2)", "velocity-inlet inlet", "pressure-outlet outlet", "wall top", "wall bottom"]):
-                return False
-        elif name == "poiseuille_2d.cas":
-            if not _contains_all(case_low, ["(2 2)", "velocity-inlet inlet", "pressure-outlet outlet", "wall top", "wall bottom"]):
-                return False
-        elif name == "couette.cas":
-            if not _contains_all(case_low, ["(2 2)", "wall top", "wall bottom"]):
-                return False
-            if not (
-                _contains_all(case_low, ["symmetry left", "symmetry right"])
-                or _contains_all(case_low, ["periodic left", "periodic right"])
-            ):
-                return False
-
-        ext = _extract_mesh_extents_2d(case_text)
-        if ext is not None:
-            xmin, xmax, ymin, ymax = ext
-            if name == "cavity.cas":
-                if not (_within(xmin, 0.0, 5e-5) and _within(xmax, 1e-3, 5e-5) and _within(ymin, 0.0, 5e-5) and _within(ymax, 1e-3, 5e-5)):
-                    return False
-            elif name == "poiseuille_shear.cas":
-                if not (_within(xmin, 0.0, 1e-3) and _within(xmax, 2e-1, 1e-3) and _within(ymin, 0.0, 1e-4) and _within(ymax, 2e-3, 1e-4)):
-                    return False
-            elif name == "poiseuille_2d.cas":
-                if not (_within(xmin, 0.0, 2e-3) and _within(xmax, 1.0, 2e-3) and _within(ymin, 0.0, 1e-4) and _within(ymax, 2e-3, 1e-4)):
-                    return False
-            elif name == "couette.cas":
-                if not (_within(xmin, 0.0, 1e-3) and _within(xmax, 1e-1, 1e-3) and _within(ymin, 0.0, 1e-4) and _within(ymax, 2e-3, 1e-4)):
-                    return False
-
-    if mesh_file is not None:
-        mesh_text = _decode_file(mesh_file)
-        if not mesh_text:
-            return False
-        mesh_low = mesh_text.lower()
-        name = mesh_file.name.lower()
-
-        if name == "pipe_laminar.msh":
-            if not _contains_all(mesh_low, ["velocity-inlet inlet", "pressure-outlet outlet", "wall wall"]):
-                return False
-            if "(2 3)" in mesh_low:
-                return False
-
-            ext = _extract_mesh_extents_2d(mesh_text)
-            if ext is None:
-                return False
-            xmin, xmax, ymin, ymax = ext
-            if not (_within(xmin, 0.0, 2e-3) and _within(xmax, 1e-1, 2e-3) and _within(ymin, 0.0, 2e-4) and _within(ymax, 2e-3, 2e-4)):
-                return False
-
-    if "lid_speed_m_s" in pred:
-        v = pred["lid_speed_m_s"]
-        if not (0.01 <= v <= 0.5):
-            return False
-    if "wall_shear_pa" in pred:
-        v = pred["wall_shear_pa"]
-        if not (1e-4 <= v <= 50.0):
-            return False
-    if "centerline_velocity_m_s" in pred:
-        v = pred["centerline_velocity_m_s"]
-        if not (1e-4 <= v <= 5.0):
-            return False
-    if "top_wall_shear_pa" in pred:
-        v = pred["top_wall_shear_pa"]
-        if not (1e-4 <= v <= 100.0):
-            return False
-
-    return True
-
 
 def evaluate() -> bool:
-    _kill_ansys_related()
-    _cleanup_known_generated_scripts(DESKTOP)
-
-    if has_forbidden_script_file(DESKTOP):
-        return False
-
-    if any(not is_nonempty_file(p) for p in REQUIRED_FILES):
+    kill_fluent_related()
+    if any(not is_nonempty_file(path) for path in REQUIRED_FILES):
         return False
     try:
-        pred = extract_predictions(DESKTOP)
+        if not case_configuration_is_valid(CASE_FILE):
+            return False
+        predictions = extract_predictions(DESKTOP)
+        return predictions_are_valid(predictions) and solution_and_near_wall_layers_are_valid(
+            DESKTOP,
+            predictions["outlet_mean_x_velocity_m_s"],
+        )
     except Exception:
         return False
-    return passes_process_checks(pred, case_file=None, data_file=DATA_FILE, mesh_file=MESH_FILE)
+
 
 def main() -> None:
     print("True" if evaluate() else "False")

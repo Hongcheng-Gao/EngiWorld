@@ -1,7 +1,7 @@
 {
   "id": "c-openfast-task-02-ubuntu",
   "snapshot": "openfast5",
-  "instruction": "You are given the TurbSim input template `/home/user/Desktop/turbsim_base.inp`. Complete the following from the command line: 1. Modify and generate `/home/user/Desktop/turbsim.inp`: - Set IEC turbulence class B (`IECturbc=B`) - Set reference wind speed to 8 m/s and `RefHt=90 m` - Run TurbSim to generate `/home/user/Desktop/wind_8ms.bts` 2. Create the OpenFAST main file `/home/user/Desktop/case_turb.fst`: - In InflowWind, use `WindType=3` (TurbSim binary), and set `Filename` to `wind_8ms.bts` - Set simulation time to 60 s 3. Execute `turbsim turbsim.inp` and `openfast case_turb`. 4. Write a post-processing script to parse `case_turb.out`: - Extract the `GenPwr` time series and compute mean and standard deviation - Save to `/home/user/Desktop/summary.txt` in this format: `mean_pwr_kw, std_pwr_kw` 5. Do not use GUI tools. [Init Package Note] - Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. - Continue following the original task workflow: generate/modify required files and compute outputs yourself. - Only initialization inputs are included; no answer/result artifacts are preloaded. [Software] Run `openfast` from a terminal (use the full path if it is not on PATH).",
+  "instruction": "You are given the complete TurbSim template `/home/user/Desktop/turbsim_base.inp`, OpenFAST base case `/home/user/Desktop/case_turb_base.fst`, InflowWind base `/home/user/Desktop/inflow_turb_base.dat`, and their dependencies. From the command line: 1. Copy the TurbSim template to `/home/user/Desktop/wind_8ms.inp`, retain the supplied seeds, grid, time settings, and IEC turbulence class B, and confirm `URef=8 m/s` and `RefHt=90 m`. Run `turbsim wind_8ms.inp` so TurbSim creates `/home/user/Desktop/wind_8ms.bts`. 2. Create `/home/user/Desktop/case_turb.fst` from the supplied base. Use the supplied InflowWind file with `WindType=3` and `FileName_BTS=wind_8ms.bts`, and run the OpenFAST case for 60 s. 3. Execute the matching snapshot binaries (use full paths if needed) and retain their normal-termination logs. 4. Write `/home/user/Desktop/postprocess.py` to parse the complete `case_turb.out` `GenPwr` series and compute its arithmetic mean and population standard deviation (`ddof=0`). Save `/home/user/Desktop/summary.txt` as `mean_pwr_kw, std_pwr_kw`. 5. Do not use GUI tools. [Init Package Note] The archive contains only initialization inputs and a complete version-matched dependency closure; generate all result artifacts yourself.",
   "source": "https://github.com/openFAST/r-test",
   "config": [
     {
@@ -9,10 +9,17 @@
       "parameters": {
         "files": [
           {
-            "local_path": "task-02/init_file/turbsim_base.inp",
-            "path": "/home/user/Desktop/turbsim_base.inp"
+            "local_path": "task-02/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
           }
         ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
       }
     }
   ],

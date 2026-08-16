@@ -150,6 +150,25 @@ def check_xdmf_artifact(path: Path) -> None:
             raise ValueError(f"missing XDMF companion file: {ref_path.name}")
 
 
+def checkpoint_candidates(path: Path) -> list[tuple[str, int]]:
+    root = ET.parse(path).getroot()
+    counts: dict[str, int] = {}
+    candidates: list[tuple[str, int]] = []
+    for element in root.iter():
+        if local_tag(element) != "attribute":
+            continue
+        name = element.attrib.get("Name", "").strip()
+        item_type = element.attrib.get("ItemType", "").lower()
+        if not name or item_type != "finiteelementfunction":
+            continue
+        index = counts.get(name, 0)
+        candidates.append((name, index))
+        counts[name] = index + 1
+    if not candidates:
+        raise ValueError("displacement.xdmf contains no DOLFIN finite-element checkpoint")
+    return candidates
+
+
 def check_submission_artifacts() -> None:
     solve_script = ROOT / "solve_submission.py"
     xdmf_path = ROOT / "displacement.xdmf"
@@ -166,7 +185,9 @@ def cell_density(grid: list[list[float]], x: float, y: float) -> float:
     return grid[row][col]
 
 
-def solve_compliance_with_dolfin(grid: list[list[float]]) -> float:
+def solve_compliance_with_dolfin(
+    grid: list[list[float]], displacement_artifact: Path | None = None
+) -> float:
     try:
         import dolfin as df
     except Exception as exc:  # pragma: no cover - depends on VM solver image
@@ -238,14 +259,39 @@ def solve_compliance_with_dolfin(grid: list[list[float]]) -> float:
     load_form = df.dot(traction, v) * ds(1)
     df.solve(a == load_form, solution, bc)
 
+    if displacement_artifact is not None:
+        expected = solution.vector().get_local()
+        scale = max(1.0, max((abs(value) for value in expected), default=0.0))
+        matching_checkpoint = False
+        for field_name, checkpoint_index in checkpoint_candidates(displacement_artifact):
+            submitted_solution = df.Function(vector_space)
+            try:
+                with df.XDMFFile(mesh.mpi_comm(), str(displacement_artifact)) as xdmf:
+                    xdmf.read_checkpoint(submitted_solution, field_name, checkpoint_index)
+            except Exception:
+                continue
+            submitted = submitted_solution.vector().get_local()
+            if len(submitted) != len(expected):
+                continue
+            if all(
+                math.isfinite(actual) and abs(actual - reference) <= 1.0e-8 * scale
+                for actual, reference in zip(submitted, expected)
+            ):
+                matching_checkpoint = True
+                break
+        if not matching_checkpoint:
+            raise ValueError("displacement checkpoint does not match density_field.csv")
+
     compliance = abs(float(df.assemble(df.dot(traction, solution) * ds(1))))
     if not math.isfinite(compliance) or compliance <= 0:
         raise ValueError("invalid compliance")
     return compliance
 
 
-def solve_compliance(grid: list[list[float]]) -> float:
-    return solve_compliance_with_dolfin(grid)
+def solve_compliance(
+    grid: list[list[float]], displacement_artifact: Path | None = None
+) -> float:
+    return solve_compliance_with_dolfin(grid, displacement_artifact)
 
 
 def score_from_metrics(submitted_compliance: float, baseline_compliance: float) -> float:
@@ -267,7 +313,7 @@ def evaluate() -> float:
     validate_density(submitted_grid)
 
     baseline_compliance = solve_compliance(baseline_grid)
-    submitted_compliance = solve_compliance(submitted_grid)
+    submitted_compliance = solve_compliance(submitted_grid, ROOT / "displacement.xdmf")
     return score_from_metrics(submitted_compliance, baseline_compliance)
 
 

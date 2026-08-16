@@ -1,0 +1,232 @@
+{
+  "case_id": "multi-cli-3-revit-archicad-openstudio-task-01-windows",
+  "status": "passed",
+  "full_run": {
+    "total": 38,
+    "passed_expectations": 38,
+    "candidate_positive": 3,
+    "candidate_negative": 34,
+    "evaluator_cleanup": 1,
+    "platforms": [
+      "local",
+      "windows"
+    ]
+  },
+  "receipt_scope": "Seventeen detailed rows survived from the contemporaneous matrix output. The complete run aggregate records 38/38 expectations passed; no names or per-case outcomes are asserted for the other 21 rows.",
+  "post_patch_windows_validation": {
+    "verified_at_utc": "2026-08-12T19:21:00Z",
+    "formal_candidate": {
+      "result": true,
+      "errors": [],
+      "energyplus_rerun": "OpenStudio-bundled EnergyPlus 25.1.0 completed on the pinned Windows instance"
+    },
+    "representative_immutable_tamper": {
+      "file": "run_revit_stage.ps1",
+      "result": false,
+      "errors": [
+        "immutable_input_sha256_mismatch:run_revit_stage.ps1"
+      ],
+      "isolated_copy": true
+    }
+  },
+  "detailed_row_count": 17,
+  "detailed_rows_preserved": [
+    {
+      "case": "baseline",
+      "passed": true,
+      "ok": true,
+      "expected_error": null,
+      "errors": []
+    },
+    {
+      "case": "equivalent_json_member_order",
+      "passed": true,
+      "ok": true,
+      "expected_error": null,
+      "errors": []
+    },
+    {
+      "case": "equivalent_osm_order_and_handle",
+      "passed": true,
+      "ok": true,
+      "expected_error": null,
+      "errors": []
+    },
+    {
+      "case": "rpc_loadfile_error",
+      "passed": true,
+      "ok": false,
+      "expected_error": "rpc_error_response",
+      "errors": [
+        "archicad_validation_report:rpc_error_response:1",
+        "native_stage_log.json:archicad:validation_report_sha256_mismatch"
+      ]
+    },
+    {
+      "case": "rpc_getattribute_error",
+      "passed": true,
+      "ok": false,
+      "expected_error": "rpc_error_response",
+      "errors": [
+        "archicad_validation_report:rpc_error_response:14",
+        "native_stage_log.json:archicad:validation_report_sha256_mismatch"
+      ]
+    },
+    {
+      "case": "osm_token_placeholder",
+      "passed": true,
+      "ok": false,
+      "expected_error": "space_cardinality_mismatch",
+      "errors": [
+        "result.osm:missing_handoff_hash_prefix",
+        "result.osm:missing_stage2_hash_prefix",
+        "result.osm:missing_metadata:weather_file",
+        "result.osm:missing_metadata:schedule_set",
+        "result.osm:missing_metadata:construction_set",
+        "result.osm:space_count_too_low:0<2",
+        "result.osm:thermal_zone_count_too_low:0<2",
+        "result.osm:orphan_field_line:1",
+        "result.osm:space_cardinality_mismatch:0",
+        "result.osm:thermal_zone_cardinality_mismatch:0",
+        "result.osm:space_object_count:COMMUNITY-ACTIVITY:0",
+        "result.osm:space_object_count:QUIET-COUNSELLING:0"
+      ]
+    },
+    {
+      "case": "sql_duplicate_timestamps",
+      "passed": true,
+      "ok": false,
+      "expected_error": "annual_calendar_coverage_mismatch",
+      "errors": [
+        "eplusout.sql:annual_calendar_coverage_mismatch",
+        "eplusout.sql:annual_simulation_day_coverage_mismatch"
+      ]
+    },
+    {
+      "case": "stage2_nontarget_wall_rename_synced",
+      "passed": true,
+      "ok": false,
+      "expected_error": "forward_semantics_changed",
+      "errors": [
+        "stage1_to_stage2:forward_semantics_changed:19myyKNoHFAOD1xel_nBJU:IfcWall.Name"
+      ]
+    },
+    {
+      "case": "immutable_workflow_spec",
+      "passed": true,
+      "ok": false,
+      "expected_error": "immutable_input_sha256_mismatch:workflow_spec.json",
+      "errors": [
+        "immutable_input_sha256_mismatch:workflow_spec.json"
+      ]
+    },
+    {
+      "case": "revit_archicad_handoff_mismatch",
+      "passed": true,
+      "ok": false,
+      "expected_error": "revit_semantic_mismatch",
+      "errors": [
+        "archicad_handoff.json:space_semantic_mismatch:COMMUNITY-ACTIVITY:lighting_w_per_m2",
+        "stage2.ifc:space_property_handoff_mismatch:COMMUNITY-ACTIVITY:lighting_w_per_m2",
+        "archicad_handoff.json:revit_semantic_mismatch:COMMUNITY-ACTIVITY:lighting_w_per_m2",
+        "result.osm:missing_handoff_hash_prefix",
+        "result.osm:load_density_mismatch:COMMUNITY-ACTIVITY:OS:LIGHTS",
+        "in.idf:load_density_mismatch:COMMUNITY-ACTIVITY:LIGHTS",
+        "in.idf:missing_handoff_hash_prefix",
+        "flow_report:consumed_handoff_sha256_mismatch",
+        "model_summary.csv:source_handoff_sha256_mismatch",
+        "model_summary.csv:space_row_count:QUIET-COUNSELLING",
+        "model_summary.csv:zone_row_count:QUIET-COUNSELLING-ZN",
+        "energy_report.csv:source_handoff_sha256_mismatch"
+      ]
+    },
+    {
+      "case": "sql_peak_csv_flow_mismatch",
+      "passed": true,
+      "ok": false,
+      "expected_error": "peak_load_mismatch_with_sql",
+      "errors": [
+        "energy_report.csv:peak_load_mismatch_with_sql",
+        "flow_report:peak_load_mismatch_with_sql"
+      ]
+    },
+    {
+      "case": "seed_ifcelement_mutation",
+      "passed": true,
+      "ok": false,
+      "expected_error": "seed_ifcelement_name_changed",
+      "errors": [
+        "init_to_stage1:seed_ifcelement_name_changed:19myyKNoHFAOD1xel_nBJO",
+        "revit_handoff.json:source_sha256_mismatch",
+        "stage1_to_stage2:forward_semantics_changed:19myyKNoHFAOD1xel_nBJO:IfcSlab.Name",
+        "archicad_validation_report:source_sha256_mismatch",
+        "archicad_handoff.json:stage1_sha256_mismatch",
+        "native_stage_log.json:revit:output_sha256_mismatch",
+        "native_stage_log.json:archicad:input_sha256_mismatch"
+      ]
+    },
+    {
+      "case": "extra_handoff_space",
+      "passed": true,
+      "ok": false,
+      "expected_error": "space_cardinality_mismatch",
+      "errors": [
+        "archicad_handoff.json:space_cardinality_mismatch",
+        "result.osm:missing_handoff_hash_prefix",
+        "archicad_handoff.json:space_cardinality_mismatch",
+        "in.idf:missing_handoff_hash_prefix",
+        "flow_report:consumed_handoff_sha256_mismatch",
+        "archicad_handoff.json:space_cardinality_mismatch",
+        "model_summary.csv:source_handoff_sha256_mismatch",
+        "model_summary.csv:space_row_count:QUIET-COUNSELLING",
+        "model_summary.csv:zone_row_count:QUIET-COUNSELLING-ZN",
+        "energy_report.csv:source_handoff_sha256_mismatch",
+        "workflow.osw:source_handoff_sha256_mismatch",
+        "native_stage_log.json:archicad:handoff_sha256_mismatch"
+      ]
+    },
+    {
+      "case": "extra_osm_space",
+      "passed": true,
+      "ok": false,
+      "expected_error": "space_cardinality_mismatch",
+      "errors": [
+        "result.osm:duplicate_handle:{dfc65edc-e460-4dff-b73f-e7b855bb7967}",
+        "result.osm:space_cardinality_mismatch:3",
+        "result.osm:space_object_count:COMMUNITY-ACTIVITY:2"
+      ]
+    },
+    {
+      "case": "extra_summary_row",
+      "passed": true,
+      "ok": false,
+      "expected_error": "row_count_mismatch",
+      "errors": [
+        "model_summary.csv:row_count_mismatch:3!=2",
+        "model_summary.csv:space_row_count:COMMUNITY-ACTIVITY",
+        "model_summary.csv:zone_row_count:COMMUNITY-ACTIVITY-ZN",
+        "model_summary.csv:area_sum_mismatch_with_handoff"
+      ]
+    },
+    {
+      "case": "extra_sql_zone",
+      "passed": true,
+      "ok": false,
+      "expected_error": "zone_cardinality_mismatch",
+      "errors": [
+        "eplusout.sql:zone_cardinality_mismatch:3",
+        "eplusout.sql:zone_name_set_mismatch"
+      ]
+    },
+    {
+      "case": "rerun_cleanup_pass_and_failure",
+      "passed": true,
+      "pass_errors": [],
+      "fail_errors": [
+        "energyplus_rerun:nonzero_exit:2"
+      ],
+      "pass_clean": true,
+      "fail_clean": true
+    }
+  ]
+}

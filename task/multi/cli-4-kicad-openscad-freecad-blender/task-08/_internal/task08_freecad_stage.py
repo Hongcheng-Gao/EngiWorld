@@ -466,7 +466,8 @@ def creepage_web_check(tray: Part.Shape, requirements: dict[str, Any]) -> tuple[
 
 
 def main() -> None:
-    work = Path(os.environ.get("ENGIWORLD_WORKDIR") or (sys.argv[1] if len(sys.argv) > 1 else ".")).resolve()
+    argument = Path(sys.argv[1]) if len(sys.argv) > 1 else None
+    work = Path(os.environ.get("ENGIWORLD_WORKDIR") or (str(argument) if argument is not None and argument.is_dir() else ".")).resolve()
     requirements = json.loads((work / "mechanical_requirements.json").read_text(encoding="utf-8"))
     params = json.loads((work / "02_openscad_parameters.json").read_text(encoding="utf-8"))
     export = json.loads((work / "01_kicad_export.json").read_text(encoding="utf-8"))

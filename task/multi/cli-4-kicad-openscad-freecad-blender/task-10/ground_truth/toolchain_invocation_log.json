@@ -1,7 +1,22 @@
 {
   "actual_invocations": [
     {
-      "command": "python3 /home/user/Desktop/task10_targeted_fix_v2/task10_prepare.py /home/user/Desktop/task10_targeted_fix_v2",
+      "argv": [
+        "python3",
+        "/tmp/engiworld-task10-repair/internal/task10_prepare.py",
+        "/home/user/Desktop"
+      ],
+      "command": "python3 /tmp/engiworld-task10-repair/internal/task10_prepare.py /home/user/Desktop",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:33:58.803375+00:00",
+      "input_sha256": {
+        "board_input.kicad_pcb": "be5aa3b020990feda1e9a74f8245d6f9664c398dd7121c0f6c54c9962f632417",
+        "connector_keepouts.csv": "f828b53e457fc768b725da59777737fdf92707fdca6ec7ea66d55a066c0a7d4f",
+        "enclosure_seed.scad": "e4396832ffae84637b442b76d43dde0522c74c4da07a097a5f9a5420a901c55a",
+        "handoff_notes.md": "e55371281e92bbcb9ebc9394b734a7fe3c1c290c56bb2075676d2007ac56a109",
+        "mechanical_requirements.json": "4dc7a7cd6a3bd1f3ea37342f989af9276d95f35d7b7fa9cb5a96b1fecd5dc528"
+      },
       "inputs": [
         "board_input.kicad_pcb",
         "mechanical_requirements.json",
@@ -9,6 +24,14 @@
         "enclosure_seed.scad",
         "handoff_notes.md"
       ],
+      "output_sha256": {
+        "01_kicad_board.kicad_pcb": "be5aa3b020990feda1e9a74f8245d6f9664c398dd7121c0f6c54c9962f632417",
+        "01_kicad_export.json": "aa84fb02ebdbfa3de8e447610ba5036a22e7742490933e258d75f9a361891db8",
+        "01_kicad_mechanical_map.csv": "fe0495a69f2d330e33a1fc3fe7635b7154e5b7d832b505e2746c403fc144afb6",
+        "01_kicad_parameters.scad": "e1256b4d07722bab930234bc54c800f72e07e0bba8f4c4bfa2fe25f72444f713",
+        "02_openscad_enclosure.scad": "e87fdb046d634e066dedfbef9184fd7088f53b5abddf357073c70315021d6536",
+        "02_openscad_parameters.json": "4ef2ad25cea27626a4fe9f5b250457a9afbc1e46b951ccb099f599973815f75b"
+      },
       "outputs": [
         "01_kicad_board.kicad_pcb",
         "01_kicad_export.json",
@@ -18,33 +41,94 @@
         "02_openscad_parameters.json"
       ],
       "software": "Python handoff generator",
-      "version": "3.12.3"
+      "stage": "prepare",
+      "started_at_utc": "2026-08-11T21:33:58.771895+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
     },
     {
-      "command": "cd /home/user/Desktop/task10_targeted_fix_v2 && /home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage kicad-cli pcb export step --force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb",
+      "argv": [
+        "/usr/bin/kicad-cli",
+        "pcb",
+        "export",
+        "step",
+        "--force",
+        "--board-only",
+        "--output",
+        "01_kicad_board.step",
+        "01_kicad_board.kicad_pcb"
+      ],
+      "command": "/usr/bin/kicad-cli pcb export step --force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:34:17.505713+00:00",
+      "input_sha256": {
+        "01_kicad_board.kicad_pcb": "be5aa3b020990feda1e9a74f8245d6f9664c398dd7121c0f6c54c9962f632417"
+      },
       "inputs": [
         "01_kicad_board.kicad_pcb"
       ],
+      "output_sha256": {
+        "01_kicad_board.step": "b689d427100254e91441cea3d0de590bdc6c8080d1e21a999ef7eeff8fa9e470"
+      },
       "outputs": [
         "01_kicad_board.step"
       ],
       "software": "KiCad",
-      "version": "10.0.2"
+      "stage": "KiCad",
+      "started_at_utc": "2026-08-11T21:34:17.289087+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "5473016727865154d3ca1c9d44abd31992295d2fc3c1ce075fa1de2887a5df72",
+      "version": "10.0.4"
     },
     {
-      "command": "cd /home/user/Desktop/task10_targeted_fix_v2 && openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
+      "argv": [
+        "/usr/bin/openscad",
+        "-o",
+        "02_openscad_enclosure.stl",
+        "02_openscad_enclosure.scad"
+      ],
+      "command": "/usr/bin/openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:34:21.750821+00:00",
+      "input_sha256": {
+        "01_kicad_parameters.scad": "e1256b4d07722bab930234bc54c800f72e07e0bba8f4c4bfa2fe25f72444f713",
+        "02_openscad_enclosure.scad": "e87fdb046d634e066dedfbef9184fd7088f53b5abddf357073c70315021d6536"
+      },
       "inputs": [
         "01_kicad_parameters.scad",
         "02_openscad_enclosure.scad"
       ],
+      "output_sha256": {
+        "02_openscad_enclosure.stl": "d73b68fbd9298d3227fb0397af08c90c3d22e10485d691fd2a6b469665d43bc1"
+      },
       "outputs": [
         "02_openscad_enclosure.stl"
       ],
       "software": "OpenSCAD",
+      "stage": "OpenSCAD",
+      "started_at_utc": "2026-08-11T21:34:17.537256+00:00",
+      "stderr_sha256": "945e538f74f70f20a9a5832018e2fc1cdbffaf49e7141836592e85086a13fc79",
+      "stdout_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
       "version": "OpenSCAD version 2021.01"
     },
     {
-      "command": "ENGIWORLD_WORKDIR=/home/user/Desktop/task10_targeted_fix_v2 freecadcmd /home/user/Desktop/task10_targeted_fix_v2/task10_freecad_stage.py",
+      "argv": [
+        "/home/user/.local/bin/freecadcmd",
+        "/tmp/engiworld-task10-repair/internal/task10_freecad_stage.py"
+      ],
+      "command": "/home/user/.local/bin/freecadcmd /tmp/engiworld-task10-repair/internal/task10_freecad_stage.py",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:35:41.334171+00:00",
+      "input_sha256": {
+        "01_kicad_board.step": "b689d427100254e91441cea3d0de590bdc6c8080d1e21a999ef7eeff8fa9e470",
+        "01_kicad_export.json": "aa84fb02ebdbfa3de8e447610ba5036a22e7742490933e258d75f9a361891db8",
+        "01_kicad_mechanical_map.csv": "fe0495a69f2d330e33a1fc3fe7635b7154e5b7d832b505e2746c403fc144afb6",
+        "02_openscad_enclosure.stl": "d73b68fbd9298d3227fb0397af08c90c3d22e10485d691fd2a6b469665d43bc1",
+        "02_openscad_parameters.json": "4ef2ad25cea27626a4fe9f5b250457a9afbc1e46b951ccb099f599973815f75b"
+      },
       "inputs": [
         "01_kicad_board.step",
         "01_kicad_export.json",
@@ -52,20 +136,45 @@
         "02_openscad_enclosure.stl",
         "02_openscad_parameters.json"
       ],
+      "output_sha256": {
+        "03_freecad_assembly.obj": "d2825e4eb69fcde0f4176db7fd6f351ae3ed68b0ef487e37c272658a427b587c",
+        "03_freecad_assembly.step": "f03c64b21a947b4579f303511eb3b069caa0e748b361ef3430030e2e21726dc2",
+        "03_freecad_clearance_report.json": "542d1c28f50cdba72595c0564a3735a5915acd7c57c74aaa5b01a921aefd01b6"
+      },
       "outputs": [
         "03_freecad_assembly.step",
         "03_freecad_assembly.obj",
         "03_freecad_clearance_report.json"
       ],
       "software": "FreeCAD",
-      "version": "FreeCAD 0.21.2 Revision: 33771 (Git)"
+      "stage": "FreeCAD",
+      "started_at_utc": "2026-08-11T21:34:35.222988+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "357436f278c6bb48d12ca912331b176738d33c2f40a97e25331b907459f98e5a"
     },
     {
-      "command": "/home/user/Applications/blender-4.2.3-linux-x64/blender --background --factory-startup --python /home/user/Desktop/task10_targeted_fix_v2/task10_blender_stage.py -- /home/user/Desktop/task10_targeted_fix_v2",
+      "argv": [
+        "/snap/bin/blender",
+        "--background",
+        "--factory-startup",
+        "--python",
+        "/tmp/engiworld-task10-repair/internal/task10_blender_stage.py",
+        "--",
+        "/home/user/Desktop"
+      ],
+      "command": "/snap/bin/blender --background --factory-startup --python /tmp/engiworld-task10-repair/internal/task10_blender_stage.py -- /home/user/Desktop",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:35:58.170296+00:00",
+      "input_sha256": {
+        "03_freecad_assembly.obj": "d2825e4eb69fcde0f4176db7fd6f351ae3ed68b0ef487e37c272658a427b587c",
+        "03_freecad_clearance_report.json": "542d1c28f50cdba72595c0564a3735a5915acd7c57c74aaa5b01a921aefd01b6"
+      },
       "inputs": [
         "03_freecad_assembly.obj",
         "03_freecad_clearance_report.json"
       ],
+      "output_sha256": {},
       "outputs": [
         "04_blender_review.blend",
         "04_blender_review.obj",
@@ -74,56 +183,40 @@
         "04_blender_scene_report.json"
       ],
       "software": "Blender",
-      "version": "Blender 4.2.3 LTS"
-    }
-  ],
-  "commands": [
-    {
-      "command": "cd /home/user/Desktop/task10_targeted_fix_v2 && /home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage kicad-cli pcb export step --force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb",
-      "inputs": [
-        "01_kicad_board.kicad_pcb"
-      ],
-      "outputs": [
-        "01_kicad_board.step"
-      ],
-      "software": "KiCad",
-      "version": "10.0.2"
+      "stage": "Blender",
+      "started_at_utc": "2026-08-11T21:35:56.541771+00:00",
+      "stderr_sha256": "02657022ff6276c6063e335dd0298fa2ae921e6a5e34e6aed35ed462d89cb403",
+      "stdout_sha256": "0ed553a6e4fb405644332bad49427e84a1adb6817aedde8ecee4460205f4ef31"
     },
     {
-      "command": "cd /home/user/Desktop/task10_targeted_fix_v2 && openscad -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
-      "inputs": [
-        "01_kicad_parameters.scad",
-        "02_openscad_enclosure.scad"
+      "argv": [
+        "/snap/bin/blender",
+        "--background",
+        "--factory-startup",
+        "--python",
+        "/tmp/engiworld-task10-repair/internal/task10_blender_stage.py",
+        "--",
+        "/home/user/Desktop"
       ],
-      "outputs": [
-        "02_openscad_enclosure.stl"
-      ],
-      "software": "OpenSCAD",
-      "version": "OpenSCAD version 2021.01"
-    },
-    {
-      "command": "ENGIWORLD_WORKDIR=/home/user/Desktop/task10_targeted_fix_v2 freecadcmd /home/user/Desktop/task10_targeted_fix_v2/task10_freecad_stage.py",
-      "inputs": [
-        "01_kicad_board.step",
-        "01_kicad_export.json",
-        "01_kicad_mechanical_map.csv",
-        "02_openscad_enclosure.stl",
-        "02_openscad_parameters.json"
-      ],
-      "outputs": [
-        "03_freecad_assembly.step",
-        "03_freecad_assembly.obj",
-        "03_freecad_clearance_report.json"
-      ],
-      "software": "FreeCAD",
-      "version": "FreeCAD 0.21.2 Revision: 33771 (Git)"
-    },
-    {
-      "command": "/home/user/Applications/blender-4.2.3-linux-x64/blender --background --factory-startup --python /home/user/Desktop/task10_targeted_fix_v2/task10_blender_stage.py -- /home/user/Desktop/task10_targeted_fix_v2",
+      "command": "/snap/bin/blender --background --factory-startup --python /tmp/engiworld-task10-repair/internal/task10_blender_stage.py -- /home/user/Desktop",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:36:54.910757+00:00",
+      "input_sha256": {
+        "03_freecad_assembly.obj": "d2825e4eb69fcde0f4176db7fd6f351ae3ed68b0ef487e37c272658a427b587c",
+        "03_freecad_clearance_report.json": "542d1c28f50cdba72595c0564a3735a5915acd7c57c74aaa5b01a921aefd01b6"
+      },
       "inputs": [
         "03_freecad_assembly.obj",
         "03_freecad_clearance_report.json"
       ],
+      "output_sha256": {
+        "04_blender_review.blend": "c481800f215774a0fab4152d6ddedb156b9d21d7ef7b71c64cc08e19b65532d6",
+        "04_blender_review.mtl": "3f4f5a315d926898094540e13fd05a568acaed63079e751059002f940fac898f",
+        "04_blender_review.obj": "d922f79117fe4f44f038787b2c79085b824c6ab69c39847063885455932a9eda",
+        "04_blender_review.png": "54faa8e0dd3e11c165f55fc878976176d12de5faaf8782e75c878cab7be44e8d",
+        "04_blender_scene_report.json": "52c54ae08133937aa7aed5c043d881066b2b68bfe286e85183e185e921498459"
+      },
       "outputs": [
         "04_blender_review.blend",
         "04_blender_review.obj",
@@ -132,37 +225,139 @@
         "04_blender_scene_report.json"
       ],
       "software": "Blender",
-      "version": "Blender 4.2.3 LTS"
+      "stage": "Blender",
+      "started_at_utc": "2026-08-11T21:36:40.176273+00:00",
+      "stderr_sha256": "e90180fb55f0a2326a0ce2f9d18bf30422a292fdcde323393203997eef5f89d5",
+      "stdout_sha256": "a4007cc96af41136896a085f6cb8b1d2119d351960df8be6f88479eb77b1ff1a"
+    },
+    {
+      "argv": [
+        "/home/user/.local/bin/freecadcmd",
+        "/tmp/engiworld-task10-repair/internal/task10_freecad_stage.py"
+      ],
+      "command": "/home/user/.local/bin/freecadcmd /tmp/engiworld-task10-repair/internal/task10_freecad_stage.py",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:49:26.805466+00:00",
+      "input_sha256": {
+        "01_kicad_board.step": "b689d427100254e91441cea3d0de590bdc6c8080d1e21a999ef7eeff8fa9e470",
+        "01_kicad_export.json": "aa84fb02ebdbfa3de8e447610ba5036a22e7742490933e258d75f9a361891db8",
+        "01_kicad_mechanical_map.csv": "fe0495a69f2d330e33a1fc3fe7635b7154e5b7d832b505e2746c403fc144afb6",
+        "02_openscad_enclosure.stl": "d73b68fbd9298d3227fb0397af08c90c3d22e10485d691fd2a6b469665d43bc1",
+        "02_openscad_parameters.json": "4ef2ad25cea27626a4fe9f5b250457a9afbc1e46b951ccb099f599973815f75b"
+      },
+      "inputs": [
+        "01_kicad_board.step",
+        "01_kicad_export.json",
+        "01_kicad_mechanical_map.csv",
+        "02_openscad_enclosure.stl",
+        "02_openscad_parameters.json"
+      ],
+      "output_sha256": {
+        "03_freecad_assembly.obj": "d2825e4eb69fcde0f4176db7fd6f351ae3ed68b0ef487e37c272658a427b587c",
+        "03_freecad_assembly.step": "1bcd8d15561906f02befd1cdcde5b530ab71fc9b79e23914f4e91694a2144eb5",
+        "03_freecad_clearance_report.json": "75a754de9a487a3a0449860fb4fea38a0c06a0557a41a719ab890ba7194ffb87"
+      },
+      "outputs": [
+        "03_freecad_assembly.step",
+        "03_freecad_assembly.obj",
+        "03_freecad_clearance_report.json"
+      ],
+      "software": "FreeCAD",
+      "stage": "FreeCAD",
+      "started_at_utc": "2026-08-11T21:48:21.023489+00:00",
+      "stderr_sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855",
+      "stdout_sha256": "357436f278c6bb48d12ca912331b176738d33c2f40a97e25331b907459f98e5a",
+      "version": "FreeCAD 1.1.0 Revision: 20260325 (Git shallow)"
+    },
+    {
+      "argv": [
+        "/snap/bin/blender",
+        "--background",
+        "--factory-startup",
+        "--python",
+        "/tmp/engiworld-task10-repair/internal/task10_blender_stage.py",
+        "--",
+        "/home/user/Desktop"
+      ],
+      "command": "/snap/bin/blender --background --factory-startup --python /tmp/engiworld-task10-repair/internal/task10_blender_stage.py -- /home/user/Desktop",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T21:50:26.634937+00:00",
+      "input_sha256": {
+        "03_freecad_assembly.obj": "d2825e4eb69fcde0f4176db7fd6f351ae3ed68b0ef487e37c272658a427b587c",
+        "03_freecad_clearance_report.json": "75a754de9a487a3a0449860fb4fea38a0c06a0557a41a719ab890ba7194ffb87"
+      },
+      "inputs": [
+        "03_freecad_assembly.obj",
+        "03_freecad_clearance_report.json"
+      ],
+      "output_sha256": {
+        "04_blender_review.blend": "f832da621e7f79828de3cb9c3dc0640893314dcea79f92ab9bf6bea4b2588c9d",
+        "04_blender_review.mtl": "3f4f5a315d926898094540e13fd05a568acaed63079e751059002f940fac898f",
+        "04_blender_review.obj": "d922f79117fe4f44f038787b2c79085b824c6ab69c39847063885455932a9eda",
+        "04_blender_review.png": "0ee83766619a01610b16b47430badb4127de08503dc31dd02b6a8592e04db3f7",
+        "04_blender_scene_report.json": "26eaec5a879c2385aa87a6a934dc76c4c18d724ae35d44cf9a62c6558d21e56f"
+      },
+      "outputs": [
+        "04_blender_review.blend",
+        "04_blender_review.obj",
+        "04_blender_review.mtl",
+        "04_blender_review.png",
+        "04_blender_scene_report.json"
+      ],
+      "software": "Blender",
+      "stage": "Blender",
+      "started_at_utc": "2026-08-11T21:50:11.974122+00:00",
+      "stderr_sha256": "e90180fb55f0a2326a0ce2f9d18bf30422a292fdcde323393203997eef5f89d5",
+      "stdout_sha256": "f1da04aa9dc5dd93f318917b6a851f57b02fc32168f9a3bf2bdef5a5bd7f2dec"
+    },
+    {
+      "argv": [
+        "/snap/bin/blender",
+        "--background",
+        "--factory-startup",
+        "--python",
+        "/tmp/engiworld-task10-repair/internal/task10_blender_stage.py",
+        "--",
+        "/home/user/Desktop"
+      ],
+      "command": "/snap/bin/blender --background --factory-startup --python /tmp/engiworld-task10-repair/internal/task10_blender_stage.py -- /home/user/Desktop",
+      "cwd": "/home/user/Desktop",
+      "exit_code": 0,
+      "finished_at_utc": "2026-08-11T22:08:14.596065+00:00",
+      "input_sha256": {
+        "03_freecad_assembly.obj": "d2825e4eb69fcde0f4176db7fd6f351ae3ed68b0ef487e37c272658a427b587c",
+        "03_freecad_clearance_report.json": "75a754de9a487a3a0449860fb4fea38a0c06a0557a41a719ab890ba7194ffb87"
+      },
+      "inputs": [
+        "03_freecad_assembly.obj",
+        "03_freecad_clearance_report.json"
+      ],
+      "output_sha256": {
+        "04_blender_review.blend": "af9dc555ca42b0cf26fdcb9cb0f11caa5b1890263dad796a190c304ea1a46e53",
+        "04_blender_review.mtl": "3f4f5a315d926898094540e13fd05a568acaed63079e751059002f940fac898f",
+        "04_blender_review.obj": "d922f79117fe4f44f038787b2c79085b824c6ab69c39847063885455932a9eda",
+        "04_blender_review.png": "83240d25bbb2ab038f9a60ed90b60a8c1c1c132b98d8d0dbe26422b1c71b4cd4",
+        "04_blender_scene_report.json": "26eaec5a879c2385aa87a6a934dc76c4c18d724ae35d44cf9a62c6558d21e56f"
+      },
+      "outputs": [
+        "04_blender_review.blend",
+        "04_blender_review.obj",
+        "04_blender_review.mtl",
+        "04_blender_review.png",
+        "04_blender_scene_report.json"
+      ],
+      "software": "Blender",
+      "stage": "Blender",
+      "started_at_utc": "2026-08-11T22:07:59.556858+00:00",
+      "stderr_sha256": "e90180fb55f0a2326a0ce2f9d18bf30422a292fdcde323393203997eef5f89d5",
+      "stdout_sha256": "8e781d63f854c9235e955c9d5293168ebe913911e5a35d5374ab1c0cee3e15eb",
+      "version": "Blender 5.2.0 LTS (hash fbe6228777e7 built 2026-07-14 01:32:04)"
     }
   ],
-  "generated_at_utc": "2026-08-07T23:19:56.797195+00:00",
-  "generated_on_host": "iv-yes96gsu80bw80d01mgl",
-  "preparation": {
-    "command": "python3 /home/user/Desktop/task10_targeted_fix_v2/task10_prepare.py /home/user/Desktop/task10_targeted_fix_v2",
-    "inputs": [
-      "board_input.kicad_pcb",
-      "mechanical_requirements.json",
-      "connector_keepouts.csv",
-      "enclosure_seed.scad",
-      "handoff_notes.md"
-    ],
-    "outputs": [
-      "01_kicad_board.kicad_pcb",
-      "01_kicad_export.json",
-      "01_kicad_mechanical_map.csv",
-      "01_kicad_parameters.scad",
-      "02_openscad_enclosure.scad",
-      "02_openscad_parameters.json"
-    ],
-    "software": "Python handoff generator",
-    "version": "3.12.3"
-  },
-  "productive_software_sequence": [
-    "KiCad",
-    "OpenSCAD",
-    "FreeCAD",
-    "Blender"
-  ],
+  "generated_at_utc": "2026-08-11T22:08:14.946670+00:00",
+  "generated_on_host": "iv-yeslqxk1z4wh2ys1urpz",
   "required_software_sequence": [
     "KiCad",
     "OpenSCAD",
@@ -171,9 +366,9 @@
   ],
   "task": "task-10",
   "tool_versions": {
-    "Blender": "Blender 4.2.3 LTS",
-    "FreeCAD": "FreeCAD 0.21.2 Revision: 33771 (Git)",
-    "KiCad": "10.0.2",
+    "Blender": "Blender 5.2.0 LTS (hash fbe6228777e7 built 2026-07-14 01:32:04)",
+    "FreeCAD": "FreeCAD 1.1.0 Revision: 20260325 (Git shallow)",
+    "KiCad": "10.0.4",
     "OpenSCAD": "OpenSCAD version 2021.01"
   }
 }

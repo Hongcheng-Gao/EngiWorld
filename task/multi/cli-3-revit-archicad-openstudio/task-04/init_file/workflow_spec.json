@@ -7,14 +7,22 @@
     "archicad": {"major_version": 27, "minimum_build": 6000, "executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe", "automation_entry": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe"},
     "openstudio": {"version": "3.10.0", "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe", "energyplus_version": "25.1.0"}
   },
-  "ifc_exchange": {"schema": "IFC4", "model_view": "ReferenceView", "space_boundary_level": 2, "minimum_global_id_retention": 0.7, "required_property_sets": ["Pset_SpaceCommon", "Qto_SpaceBaseQuantities", "EngiWorld_EnergyHandoff"]},
+  "ifc_exchange": {
+    "schema": "IFC4", "model_view": "ReferenceView", "requested_space_boundary_level": 2,
+    "space_boundary_policy": "Request Revit level 2, inspect the relationships actually written by Revit and Archicad, preserve the observed upstream state, and never fabricate missing relationships.",
+    "minimum_product_global_id_retention": 0.8,
+    "global_id_policy": "Preserve every seed IfcElement and spatial-container GlobalId, at least 80 percent of seed IfcProduct GlobalIds, give ENTRY-NICHE a new IfcSpace GlobalId, and preserve every stage1 IfcRoot GlobalId through Archicad without duplicates.",
+    "required_property_sets": ["Pset_SpaceCommon", "Qto_SpaceBaseQuantities", "EngiWorld_EnergyHandoff"]
+  },
   "revit_stage": {"input": "init.ifc", "output": "stage1.ifc", "handoff": "revit_handoff.json", "operation": "Preserve the gallery footprint, form the entry niche, and add a moderate gable roof with geometric representation.", "required_tokens": ["EW3B04", "GARDEN-GALLERY", "ENTRY-NICHE", "PITCHED-ROOF", "ROOF-SLOPE-MODERATE", "multi-cli-3-revit-archicad-openstudio-task-04-windows"]},
-  "archicad_stage": {"input": "stage1.ifc", "output": "stage2.ifc", "translator": "archicad_ifc4_translator.json", "operation": "Validate roof, slab, wall and envelope classifications and export gallery assumptions keyed by retained IfcSpace GlobalId.", "required_tokens": ["ARCHICAD-QA-PASS", "ROOF-CLASSIFIED", "SLAB-CLASSIFIED", "WALL-CLASSIFIED", "GALLERY-ENVELOPE-QA", "GARDEN-GALLERY", "ENTRY-NICHE", "multi-cli-3-revit-archicad-openstudio-task-04-windows"]},
+  "archicad_stage": {"input": "stage1.ifc", "output": "stage2.ifc", "translator": "archicad_ifc4_translator.json", "operation": "Validate roof, slab, wall and envelope classifications, observe and preserve the actual upstream space-boundary state without fabrication, and export gallery assumptions keyed by retained IfcSpace GlobalId.", "required_tokens": ["ARCHICAD-QA-PASS", "ROOF-CLASSIFIED", "SLAB-CLASSIFIED", "WALL-CLASSIFIED", "GALLERY-ENVELOPE-QA", "GARDEN-GALLERY", "ENTRY-NICHE", "multi-cli-3-revit-archicad-openstudio-task-04-windows"]},
   "storeys": [{"name": "Level 1", "z_m": 0.0}],
-  "roof_geometry": {"width_m": 7.8, "depth_m": 5.8, "base_z_m": 2.4384, "ridge_rise_m": 1.2, "slope_degrees": 17.1},
+  "roof_geometry": {"x_m": 0.0, "y_m": 0.0, "width_m": 7.8, "depth_m": 5.8, "base_z_m": 2.4384, "ridge_rise_m": 1.2, "thickness_m": 0.15, "slope_degrees": 22.48},
+  "zone_conditioning": {"strategy": "separate_dual_setpoint_thermostat_with_ideal_air_loads", "one_system_per_zone": true, "heating_setpoint_c": 20.0, "cooling_setpoint_c": 24.0, "object_names_are_semantic": false},
+  "daylight_assumption": {"name": "GalleryDaylightAssumption", "scope": "GARDEN-GALLERY", "representation": "metadata_schedule", "requires_daylighting_control": false},
   "spaces": [
-    {"name": "GARDEN-GALLERY", "ifc_guid": "1FHtKvaivC_PGP$ZOF5Zhg", "thermal_zone": "GARDEN-GALLERY-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 0.0, "y_m": 0.0, "z_m": 0.0, "width_m": 6.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "GARDEN-GALLERY-SCHEDULE", "people_per_m2": 0.08, "lighting_w_per_m2": 6.0, "equipment_w_per_m2": 3.0, "outdoor_air_l_per_s_person": 8.0}},
-    {"name": "ENTRY-NICHE", "ifc_guid": "3NriTe4q1Qlv0eYxqPhPvQ", "thermal_zone": "ENTRY-NICHE-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 6.8, "y_m": 0.0, "z_m": 0.0, "width_m": 1.0, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "ENTRY-TRANSIENT-SCHEDULE", "people_per_m2": 0.02, "lighting_w_per_m2": 4.0, "equipment_w_per_m2": 1.0, "outdoor_air_l_per_s_person": 5.0}}
+    {"name": "GARDEN-GALLERY", "thermal_zone": "GARDEN-GALLERY-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 0.0, "y_m": 0.0, "z_m": 0.0, "width_m": 6.8, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "GARDEN-GALLERY-SCHEDULE", "people_per_m2": 0.08, "lighting_w_per_m2": 6.0, "equipment_w_per_m2": 3.0, "outdoor_air_l_per_s_person": 8.0}},
+    {"name": "ENTRY-NICHE", "thermal_zone": "ENTRY-NICHE-ZN", "storey": "Level 1", "energy_geometry": {"x_m": 6.8, "y_m": 0.0, "z_m": 0.0, "width_m": 1.0, "depth_m": 5.8, "height_m": 2.4384}, "energy_semantics": {"schedule_category": "ENTRY-TRANSIENT-SCHEDULE", "people_per_m2": 0.02, "lighting_w_per_m2": 4.0, "equipment_w_per_m2": 1.0, "outdoor_air_l_per_s_person": 5.0}}
   ],
   "handoff_tokens": ["PITCHED-ROOF-CONSTRUCTION", "GALLERY-DAYLIGHT", "ROOF-EXPOSURE", "GARDEN-GALLERY-SCHEDULE"],
   "osm_tokens": ["PitchedRoofConstruction", "GalleryDaylightAssumption", "RoofExposureSurface", "GardenGallerySchedule"]

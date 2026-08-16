@@ -4,6 +4,8 @@ from __future__ import annotations
 import hashlib
 import json
 import os
+import shlex
+import shutil
 import socket
 import subprocess
 import sys
@@ -55,13 +57,15 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
-def version(command: list[str], fallback: str = "") -> str:
-    try:
-        completed = subprocess.run(command, text=True, stdout=subprocess.PIPE, stderr=subprocess.STDOUT, timeout=40, check=False)
-    except OSError:
-        return fallback or "unreported (tool unavailable)"
-    lines = [line.strip() for line in completed.stdout.splitlines() if line.strip()]
-    return lines[0] if lines else f"unreported (return code {completed.returncode})"
+def version(command: list[str]) -> str:
+    completed = subprocess.run(command, text=True, capture_output=True, timeout=60, check=False)
+    output = (completed.stdout + "\n" + completed.stderr).strip()
+    if completed.returncode != 0:
+        raise RuntimeError(f"version command failed ({completed.returncode}): {shlex.join(command)}\n{output}")
+    lines = [line.strip() for line in output.splitlines() if line.strip() and not line.strip().endswith("%")]
+    if not lines:
+        raise RuntimeError(f"version command returned no usable output: {shlex.join(command)}")
+    return lines[0]
 
 
 def png_dimensions(path: Path) -> tuple[int, int]:
@@ -71,79 +75,64 @@ def png_dimensions(path: Path) -> tuple[int, int]:
     return int.from_bytes(data[16:20], "big"), int.from_bytes(data[20:24], "big")
 
 
-def normalize_step_whitespace(path: Path) -> None:
-    data = path.read_bytes()
-    normalized = b"\n".join(line.rstrip(b" \t\r") for line in data.split(b"\n"))
-    if normalized != data:
-        path.write_bytes(normalized)
-
-
 def main() -> None:
     work = Path(sys.argv[1] if len(sys.argv) > 1 else ".").resolve()
+    internal = Path(sys.argv[2] if len(sys.argv) > 2 else "/tmp/engiworld-task08-internal")
     requirements = json_load(work / "mechanical_requirements.json")
     export = json_load(work / "01_kicad_export.json")
     params = json_load(work / "02_openscad_parameters.json")
     freecad = json_load(work / "03_freecad_clearance_report.json")
     blender = json_load(work / "04_blender_scene_report.json")
-    existing_log = json_load(work / "toolchain_invocation_log.json")
-    recorded_versions = existing_log.get("tool_versions", {}) if isinstance(existing_log.get("tool_versions"), dict) else {}
     if any(value.get("task") != TASK for value in (requirements, export, params, freecad, blender)):
         raise ValueError("task identity mismatch while finalizing task-08")
-    kicad = os.environ.get("ENGIWORLD_KICAD", "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage")
-    blender_bin = os.environ.get("ENGIWORLD_BLENDER", "/home/user/Applications/blender-4.2.3-linux-x64/blender")
-    freecad_bin = os.environ.get("ENGIWORLD_FREECAD", "freecadcmd")
-    openscad_bin = os.environ.get("ENGIWORLD_OPENSCAD", "openscad")
-    internal = Path(__file__).resolve().parent
+    kicad = os.environ.get("ENGIWORLD_KICAD_CLI") or shutil.which("kicad-cli") or "/usr/bin/kicad-cli"
+    blender_bin = os.environ.get("ENGIWORLD_BLENDER") or shutil.which("blender") or "/snap/bin/blender"
+    freecad_bin = os.environ.get("ENGIWORLD_FREECAD") or shutil.which("freecadcmd") or "/home/user/.local/bin/freecadcmd"
+    openscad_bin = os.environ.get("ENGIWORLD_OPENSCAD") or shutil.which("openscad") or "/usr/bin/openscad"
     tool_versions = {
-        "KiCad": version([kicad, "kicad-cli", "--version"], str(recorded_versions.get("KiCad", ""))),
-        "OpenSCAD": version([openscad_bin, "--version"], str(recorded_versions.get("OpenSCAD", ""))),
-        "FreeCAD": version([freecad_bin, "--version"], str(recorded_versions.get("FreeCAD", ""))),
-        "Blender": version([blender_bin, "--version"], str(recorded_versions.get("Blender", ""))),
+        "KiCad": version([kicad, "--version"]),
+        "OpenSCAD": version([openscad_bin, "--version"]),
+        "FreeCAD": version([freecad_bin, "--version"]),
+        "Blender": version([blender_bin, "--background", "--version"]),
     }
-    commands = [
-        {
-            "command": f"cd {work} && {kicad} kicad-cli pcb export step --force --board-only --output 01_kicad_board.step 01_kicad_board.kicad_pcb",
-            "inputs": ["01_kicad_board.kicad_pcb"],
-            "outputs": ["01_kicad_board.step"],
-            "software": "KiCad",
-            "version": tool_versions["KiCad"],
-        },
-        {
-            "command": f"cd {work} && {openscad_bin} -o 02_openscad_enclosure.stl 02_openscad_enclosure.scad",
-            "inputs": ["01_kicad_parameters.scad", "02_openscad_enclosure.scad"],
-            "outputs": ["02_openscad_enclosure.stl"],
-            "software": "OpenSCAD",
-            "version": tool_versions["OpenSCAD"],
-        },
-        {
-            "command": f"ENGIWORLD_WORKDIR={work} {freecad_bin} {internal / 'task08_freecad_stage.py'}",
-            "inputs": ["01_kicad_board.step", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "02_openscad_enclosure.stl", "02_openscad_parameters.json"],
-            "outputs": ["03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"],
-            "software": "FreeCAD",
-            "version": tool_versions["FreeCAD"],
-        },
-        {
-            "command": f"{blender_bin} --background --factory-startup --python {internal / 'task08_blender_stage.py'} -- {work}",
-            "inputs": ["03_freecad_assembly.obj", "03_freecad_clearance_report.json"],
-            "outputs": ["04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"],
-            "software": "Blender",
-            "version": tool_versions["Blender"],
-        },
-    ]
-    preparation = {
-        "command": f"python3 {internal / 'task08_prepare.py'} {work}",
-        "inputs": ["board_input.kicad_pcb", "mechanical_requirements.json", "connector_keepouts.csv", "enclosure_seed.scad", "handoff_notes.md"],
-        "outputs": ["01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad", "02_openscad_enclosure.scad", "02_openscad_parameters.json"],
-        "software": "Python handoff generator",
-        "version": sys.version.split()[0],
-    }
+    evidence_path = work / "stage_execution_evidence.json"
+    if not evidence_path.is_file():
+        raise RuntimeError(f"cannot finalize {TASK} without recorded stage execution evidence")
+    evidence = json.loads(evidence_path.read_text(encoding="utf-8"))
+    expected_stages = ["prepare", "KiCad", "OpenSCAD", "FreeCAD", "Blender"]
+    if not isinstance(evidence, list):
+        raise RuntimeError(f"{TASK} stage evidence must be a list")
+    selected = []
+    cursor = 0
+    for stage in expected_stages:
+        match = None
+        for index in range(cursor, len(evidence)):
+            candidate = evidence[index]
+            if not isinstance(candidate, dict) or candidate.get("stage") != stage or candidate.get("exit_code") != 0:
+                continue
+            expected_hashes = candidate.get("output_sha256")
+            if not isinstance(expected_hashes, dict) or set(expected_hashes) != set(candidate.get("outputs", [])):
+                continue
+            if all((work / name).is_file() and sha256(work / name) == value for name, value in expected_hashes.items()):
+                match = candidate
+                cursor = index + 1
+                break
+        if match is None:
+            raise RuntimeError(f"{TASK} evidence lacks a successful productive {stage} stage")
+        selected.append(match)
+    for entry in selected:
+        if Path(str(entry.get("cwd", ""))).resolve() != work:
+            raise RuntimeError(f"{TASK} stage did not run directly on the desktop: {entry.get('stage')}")
+        for name, expected_hash in entry["output_sha256"].items():
+            if sha256(work / name) != expected_hash:
+                raise RuntimeError(f"{TASK} stage output changed after execution: {name}")
+        if entry.get("software") in tool_versions:
+            entry["version"] = tool_versions[entry["software"]]
     log = {
-        "actual_invocations": [preparation, *commands],
-        "commands": commands,
+        "actual_invocations": evidence,
+        "commands": selected,
         "generated_at_utc": datetime.now(timezone.utc).isoformat(),
         "generated_on_host": socket.gethostname(),
-        "preparation": preparation,
-        "productive_software_sequence": SOFTWARE_SEQUENCE,
         "required_software_sequence": SOFTWARE_SEQUENCE,
         "task": TASK,
         "tool_versions": tool_versions,
@@ -218,15 +207,20 @@ def main() -> None:
             "enclosure_bbox_mm": freecad["enclosure_bbox_mm"],
             "enclosure_mass_g": freecad["enclosure_mass_g"],
             "enclosure_volume_mm3": freecad["enclosure_volume_mm3"],
+            "lid_mass_g": freecad["lid_mass_g"],
+            "lid_separation_mm": freecad["lid_separation_mm"],
+            "lid_volume_mm3": freecad["lid_volume_mm3"],
             "minimum_side_clearance_mm": freecad["minimum_side_clearance_mm"],
             "minimum_top_clearance_mm": freecad["minimum_top_clearance_mm"],
             "creepage_web_check": creepage,
             "side_clearances_mm": freecad["side_clearances_mm"],
             "standoff_checks": standoff_checks,
+            "tray_mass_g": freecad["tray_mass_g"],
+            "tray_volume_mm3": freecad["tray_volume_mm3"],
             "unintended_interference_volume_mm3": freecad["unintended_interference_volume_mm3"],
         },
         "produced_artifacts": REQUIRED_ARTIFACTS,
-        "release_checks": release_checks,
+        "checks": release_checks,
         "release_decision": decision,
         "required_artifacts": REQUIRED_ARTIFACTS,
         "software_sequence": SOFTWARE_SEQUENCE,

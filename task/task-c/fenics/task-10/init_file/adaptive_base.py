@@ -8,7 +8,11 @@ bc = DirichletBC(V, u_D, lambda x, on_b: on_b)
 
 u = TrialFunction(V)
 v = TestFunction(V)
-f = Constant(0.0)
+f = Expression(
+    '400*(1 - 100*(pow(x[0]-0.5, 2) + pow(x[1]-0.5, 2)))'
+    '*exp(-100*(pow(x[0]-0.5, 2) + pow(x[1]-0.5, 2)))',
+    degree=4,
+)
 
 a = inner(grad(u), grad(v)) * dx
 L = f * v * dx

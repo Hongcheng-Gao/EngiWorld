@@ -1,36 +1,31 @@
 {
-  "translator_id": "EngiWorld-EnergyAnalysis-IFC4-2026.1",
   "archicad_major_version": 27,
+  "minimum_build": 6000,
   "schema": "IFC4",
-  "model_view": "ReferenceView",
-  "exchange_requirement": "EnergyAnalysis",
-  "space_export": {
-    "export_zones_as": "IfcSpace",
-    "include_space_boundaries": true,
-    "space_boundary_level": 2,
-    "include_base_quantities": true
+  "model_view": "ReferenceView_V1.2",
+  "command_server": {
+    "load_method": "Model.LoadFile",
+    "validation_method": "Macro.ValidateIfcModel",
+    "save_method": "Model.SaveFile"
   },
-  "geometry": {
-    "representation": "SweptSolid",
-    "fallback_representation": "Tessellation",
-    "length_unit": "METRE",
-    "coordinate_base": "ProjectOrigin"
-  },
-  "properties": {
-    "include_psets": true,
-    "include_classifications": true,
-    "required_space_fields": [
+  "entity_queries": {
+    "entity_type": "IfcSpace",
+    "selection_method": "Entity.Get",
+    "attribute_method": "Entity.GetAttribute",
+    "space_attributes": [
+      "GlobalId",
       "Name",
-      "LongName",
-      "GrossFloorArea",
-      "BuildingStorey",
-      "ExternalBoundary",
-      "ThermalZone",
-      "ScheduleCategory",
-      "LightingPowerDensityWPerM2",
-      "EquipmentPowerDensityWPerM2",
-      "PeoplePerM2",
-      "OutdoorAirLPerSPerson"
+      "LongName"
     ]
+  },
+  "space_boundaries": {
+    "policy": "observe_validate_and_preserve_upstream_state_without_fabrication",
+    "generate_missing_relationships": false,
+    "require_stage2_count_to_equal_stage1": true
+  },
+  "global_ids": {
+    "preserve_all_stage1_ifcroot_ids": true,
+    "reject_duplicates": true
   }
 }
+

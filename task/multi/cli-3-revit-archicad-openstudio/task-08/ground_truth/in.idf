@@ -233,6 +233,23 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
+  L1-LAB RoofExposureSurface,             !- Name
+  Roof,                                   !- Surface Type
+  EW3B08-ConstructionSet Roof,            !- Construction Name
+  L1-LAB-ZN,                              !- Zone Name
+  L1-LAB,                                 !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  7.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  7.1, 6.9, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  0.1, 6.9, 2.4384,                       !- X,Y,Z Vertex 3 {m}
+  0.1, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
   Surface 1,                              !- Name
   Floor,                                  !- Surface Type
   EW3B08-ConstructionSet Floor,           !- Construction Name
@@ -317,27 +334,10 @@ BuildingSurface:Detailed,
   0.1, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
   7.1, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 6,                              !- Name
-  Roof,                                   !- Surface Type
-  EW3B08-ConstructionSet Roof,            !- Construction Name
-  L1-LAB-ZN,                              !- Zone Name
-  L1-LAB,                                 !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  7.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  7.1, 6.9, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  0.1, 6.9, 2.4384,                       !- X,Y,Z Vertex 3 {m}
-  0.1, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
-
 Lights,
   L1-LAB Lights,                          !- Name
   L1-LAB,                                 !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT,                     !- Schedule Name
+  L1-LAB LabHighEquipment,                !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   12,                                     !- Watts per Floor Area {W/m2}
@@ -359,18 +359,18 @@ Schedule:Day:Interval,
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.1,                                    !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.6,                                    !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
   1,                                      !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.3,                                    !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
-  0.05;                                   !- Value Until Time 5
+  0.1;                                    !- Value Until Time 5
 
 Schedule:Week:Daily,
-  LAB-HIGH-EQUIPMENT Week Rule - Jan1-Dec31, !- Name
+  L1-LAB LabHighEquipment Week Rule - Jan1-Dec31, !- Name
   Schedule Day 4,                         !- Sunday Schedule:Day Name
   Schedule Day 4,                         !- Monday Schedule:Day Name
   Schedule Day 4,                         !- Tuesday Schedule:Day Name
@@ -385,9 +385,9 @@ Schedule:Week:Daily,
   Schedule Day 4;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  LAB-HIGH-EQUIPMENT,                     !- Name
+  L1-LAB LabHighEquipment,                !- Name
   Fractional,                             !- Schedule Type Limits Name
-  LAB-HIGH-EQUIPMENT Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  L1-LAB LabHighEquipment Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -396,7 +396,7 @@ Schedule:Year,
 People,
   L1-LAB People,                          !- Name
   L1-LAB,                                 !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT,                     !- Number of People Schedule Name
+  L1-LAB LabHighEquipment,                !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.08,                                   !- People per Floor Area {person/m2}
@@ -446,7 +446,7 @@ Schedule:Year,
 ElectricEquipment,
   L1-LAB Equipment,                       !- Name
   L1-LAB,                                 !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT,                     !- Schedule Name
+  L1-LAB LabHighEquipment,                !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   45,                                     !- Watts per Floor Area {W/m2}
@@ -486,8 +486,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   L1-LAB Thermostat,                      !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 ScheduleTypeLimits,
   Temperature,                            !- Name
@@ -504,7 +504,7 @@ Schedule:Day:Interval,
   20;                                     !- Value Until Time 1
 
 Schedule:Week:Daily,
-  Heating Setpoint 20C Week Rule - Jan1-Dec31, !- Name
+  Heating Setpoint 20.0C Week Rule - Jan1-Dec31, !- Name
   Schedule Day 1,                         !- Sunday Schedule:Day Name
   Schedule Day 1,                         !- Monday Schedule:Day Name
   Schedule Day 1,                         !- Tuesday Schedule:Day Name
@@ -519,9 +519,9 @@ Schedule:Week:Daily,
   Schedule Day 1;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  Heating Setpoint 20C,                   !- Name
+  Heating Setpoint 20.0C,                 !- Name
   Temperature,                            !- Schedule Type Limits Name
-  Heating Setpoint 20C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  Heating Setpoint 20.0C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -535,7 +535,7 @@ Schedule:Day:Interval,
   24;                                     !- Value Until Time 1
 
 Schedule:Week:Daily,
-  Cooling Setpoint 24C Week Rule - Jan1-Dec31, !- Name
+  Cooling Setpoint 24.0C Week Rule - Jan1-Dec31, !- Name
   Schedule Day 2,                         !- Sunday Schedule:Day Name
   Schedule Day 2,                         !- Monday Schedule:Day Name
   Schedule Day 2,                         !- Tuesday Schedule:Day Name
@@ -550,9 +550,9 @@ Schedule:Week:Daily,
   Schedule Day 2;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  Cooling Setpoint 24C,                   !- Name
+  Cooling Setpoint 24.0C,                 !- Name
   Temperature,                            !- Schedule Type Limits Name
-  Cooling Setpoint 24C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  Cooling Setpoint 24.0C Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -597,7 +597,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   L1-LAB-ZN Ventilation per Person,       !- Name
   L1-LAB-ZN,                              !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT,                     !- Schedule Name
+  L1-LAB LabHighEquipment,                !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -634,41 +634,7 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 10,                             !- Name
-  Wall,                                   !- Surface Type
-  EW3B08-ConstructionSet Wall,            !- Construction Name
-  L1-PREP-ZN,                             !- Zone Name
-  L1-PREP,                                !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  9.9, 6.9, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  9.9, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
-  9.9, 6.9, 0;                            !- X,Y,Z Vertex 4 {m}
-
-BuildingSurface:Detailed,
-  Surface 11,                             !- Name
-  Wall,                                   !- Surface Type
-  EW3B08-ConstructionSet Wall,            !- Construction Name
-  L1-PREP-ZN,                             !- Zone Name
-  L1-PREP,                                !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
-  7.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
-  7.1, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
-  9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
-
-BuildingSurface:Detailed,
-  Surface 12,                             !- Name
+  L1-PREP RoofExposureSurface,            !- Name
   Roof,                                   !- Surface Type
   EW3B08-ConstructionSet Roof,            !- Construction Name
   L1-PREP-ZN,                             !- Zone Name
@@ -685,7 +651,24 @@ BuildingSurface:Detailed,
   7.1, 0.1, 2.4384;                       !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 7,                              !- Name
+  Surface 10,                             !- Name
+  Wall,                                   !- Surface Type
+  EW3B08-ConstructionSet Wall,            !- Construction Name
+  L1-PREP-ZN,                             !- Zone Name
+  L1-PREP,                                !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  7.1, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  7.1, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
+  9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 6,                              !- Name
   Floor,                                  !- Surface Type
   EW3B08-ConstructionSet Floor,           !- Construction Name
   L1-PREP-ZN,                             !- Zone Name
@@ -702,7 +685,7 @@ BuildingSurface:Detailed,
   9.9, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 8,                              !- Name
+  Surface 7,                              !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L1-PREP-ZN,                             !- Zone Name
@@ -719,7 +702,7 @@ BuildingSurface:Detailed,
   7.1, 0.1, 0;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 9,                              !- Name
+  Surface 8,                              !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L1-PREP-ZN,                             !- Zone Name
@@ -735,10 +718,27 @@ BuildingSurface:Detailed,
   9.9, 6.9, 0,                            !- X,Y,Z Vertex 3 {m}
   7.1, 6.9, 0;                            !- X,Y,Z Vertex 4 {m}
 
+BuildingSurface:Detailed,
+  Surface 9,                              !- Name
+  Wall,                                   !- Surface Type
+  EW3B08-ConstructionSet Wall,            !- Construction Name
+  L1-PREP-ZN,                             !- Zone Name
+  L1-PREP,                                !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  9.9, 6.9, 2.4384,                       !- X,Y,Z Vertex 1 {m}
+  9.9, 0.1, 2.4384,                       !- X,Y,Z Vertex 2 {m}
+  9.9, 0.1, 0,                            !- X,Y,Z Vertex 3 {m}
+  9.9, 6.9, 0;                            !- X,Y,Z Vertex 4 {m}
+
 Lights,
   L1-PREP Lights,                         !- Name
   L1-PREP,                                !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT,                  !- Schedule Name
+  L1-PREP PrepMediumEquipment,            !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   10,                                     !- Watts per Floor Area {W/m2}
@@ -756,16 +756,16 @@ Schedule:Day:Interval,
   06:00,                                  !- Time 1 {hh:mm}
   0.05,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.4,                                    !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.75,                                   !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.15,                                   !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
   0.05;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  PREP-MEDIUM-EQUIPMENT Week Rule - Jan1-Dec31, !- Name
+  L1-PREP PrepMediumEquipment Week Rule - Jan1-Dec31, !- Name
   Schedule Day 5,                         !- Sunday Schedule:Day Name
   Schedule Day 5,                         !- Monday Schedule:Day Name
   Schedule Day 5,                         !- Tuesday Schedule:Day Name
@@ -780,9 +780,9 @@ Schedule:Week:Daily,
   Schedule Day 5;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  PREP-MEDIUM-EQUIPMENT,                  !- Name
+  L1-PREP PrepMediumEquipment,            !- Name
   Fractional,                             !- Schedule Type Limits Name
-  PREP-MEDIUM-EQUIPMENT Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  L1-PREP PrepMediumEquipment Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -791,7 +791,7 @@ Schedule:Year,
 People,
   L1-PREP People,                         !- Name
   L1-PREP,                                !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT,                  !- Number of People Schedule Name
+  L1-PREP PrepMediumEquipment,            !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.05,                                   !- People per Floor Area {person/m2}
@@ -803,7 +803,7 @@ People,
 ElectricEquipment,
   L1-PREP Equipment,                      !- Name
   L1-PREP,                                !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT,                  !- Schedule Name
+  L1-PREP PrepMediumEquipment,            !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   25,                                     !- Watts per Floor Area {W/m2}
@@ -843,8 +843,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   L1-PREP Thermostat,                     !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   L1-PREP-ZN,                             !- Zone Name
@@ -885,7 +885,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   L1-PREP-ZN Ventilation per Person,      !- Name
   L1-PREP-ZN,                             !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT,                  !- Schedule Name
+  L1-PREP PrepMediumEquipment,            !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -922,7 +922,24 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 13,                             !- Name
+  L2-LAB RoofExposureSurface,             !- Name
+  Roof,                                   !- Surface Type
+  EW3B08-ConstructionSet Roof,            !- Construction Name
+  L2-LAB-ZN,                              !- Zone Name
+  L2-LAB,                                 !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  7.1, 0.1, 5.4384,                       !- X,Y,Z Vertex 1 {m}
+  7.1, 6.9, 5.4384,                       !- X,Y,Z Vertex 2 {m}
+  0.1, 6.9, 5.4384,                       !- X,Y,Z Vertex 3 {m}
+  0.1, 0.1, 5.4384;                       !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 11,                             !- Name
   Floor,                                  !- Surface Type
   EW3B08-ConstructionSet Floor,           !- Construction Name
   L2-LAB-ZN,                              !- Zone Name
@@ -939,7 +956,7 @@ BuildingSurface:Detailed,
   7.1, 0.1, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 14,                             !- Name
+  Surface 12,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-LAB-ZN,                              !- Zone Name
@@ -956,7 +973,7 @@ BuildingSurface:Detailed,
   0.1, 0.1, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 15,                             !- Name
+  Surface 13,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-LAB-ZN,                              !- Zone Name
@@ -973,7 +990,7 @@ BuildingSurface:Detailed,
   0.1, 6.9, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 16,                             !- Name
+  Surface 14,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-LAB-ZN,                              !- Zone Name
@@ -990,7 +1007,7 @@ BuildingSurface:Detailed,
   7.1, 6.9, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 17,                             !- Name
+  Surface 15,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-LAB-ZN,                              !- Zone Name
@@ -1006,27 +1023,10 @@ BuildingSurface:Detailed,
   0.1, 0.1, 3,                            !- X,Y,Z Vertex 3 {m}
   7.1, 0.1, 3;                            !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 18,                             !- Name
-  Roof,                                   !- Surface Type
-  EW3B08-ConstructionSet Roof,            !- Construction Name
-  L2-LAB-ZN,                              !- Zone Name
-  L2-LAB,                                 !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  7.1, 0.1, 5.4384,                       !- X,Y,Z Vertex 1 {m}
-  7.1, 6.9, 5.4384,                       !- X,Y,Z Vertex 2 {m}
-  0.1, 6.9, 5.4384,                       !- X,Y,Z Vertex 3 {m}
-  0.1, 0.1, 5.4384;                       !- X,Y,Z Vertex 4 {m}
-
 Lights,
   L2-LAB Lights,                          !- Name
   L2-LAB,                                 !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT 1,                   !- Schedule Name
+  L2-LAB LabHighEquipment,                !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   12,                                     !- Watts per Floor Area {W/m2}
@@ -1042,18 +1042,18 @@ Schedule:Day:Interval,
   Fractional,                             !- Schedule Type Limits Name
   No,                                     !- Interpolate to Timestep
   06:00,                                  !- Time 1 {hh:mm}
-  0.05,                                   !- Value Until Time 1
+  0.1,                                    !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.6,                                    !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
   1,                                      !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.3,                                    !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
-  0.05;                                   !- Value Until Time 5
+  0.1;                                    !- Value Until Time 5
 
 Schedule:Week:Daily,
-  LAB-HIGH-EQUIPMENT 1 Week Rule - Jan1-Dec31, !- Name
+  L2-LAB LabHighEquipment Week Rule - Jan1-Dec31, !- Name
   Schedule Day 6,                         !- Sunday Schedule:Day Name
   Schedule Day 6,                         !- Monday Schedule:Day Name
   Schedule Day 6,                         !- Tuesday Schedule:Day Name
@@ -1068,9 +1068,9 @@ Schedule:Week:Daily,
   Schedule Day 6;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  LAB-HIGH-EQUIPMENT 1,                   !- Name
+  L2-LAB LabHighEquipment,                !- Name
   Fractional,                             !- Schedule Type Limits Name
-  LAB-HIGH-EQUIPMENT 1 Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  L2-LAB LabHighEquipment Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -1079,7 +1079,7 @@ Schedule:Year,
 People,
   L2-LAB People,                          !- Name
   L2-LAB,                                 !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT 1,                   !- Number of People Schedule Name
+  L2-LAB LabHighEquipment,                !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.08,                                   !- People per Floor Area {person/m2}
@@ -1091,7 +1091,7 @@ People,
 ElectricEquipment,
   L2-LAB Equipment,                       !- Name
   L2-LAB,                                 !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT 1,                   !- Schedule Name
+  L2-LAB LabHighEquipment,                !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   45,                                     !- Watts per Floor Area {W/m2}
@@ -1131,8 +1131,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   L2-LAB Thermostat,                      !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   L2-LAB-ZN,                              !- Zone Name
@@ -1173,7 +1173,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   L2-LAB-ZN Ventilation per Person,       !- Name
   L2-LAB-ZN,                              !- Zone or ZoneList or Space or SpaceList Name
-  LAB-HIGH-EQUIPMENT 1,                   !- Schedule Name
+  L2-LAB LabHighEquipment,                !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -1210,7 +1210,24 @@ Space,
   ;                                       !- Floor Area {m2}
 
 BuildingSurface:Detailed,
-  Surface 19,                             !- Name
+  L2-PREP RoofExposureSurface,            !- Name
+  Roof,                                   !- Surface Type
+  EW3B08-ConstructionSet Roof,            !- Construction Name
+  L2-PREP-ZN,                             !- Zone Name
+  L2-PREP,                                !- Space Name
+  Outdoors,                               !- Outside Boundary Condition
+  ,                                       !- Outside Boundary Condition Object
+  SunExposed,                             !- Sun Exposure
+  WindExposed,                            !- Wind Exposure
+  ,                                       !- View Factor to Ground
+  ,                                       !- Number of Vertices
+  9.9, 0.1, 5.4384,                       !- X,Y,Z Vertex 1 {m}
+  9.9, 6.9, 5.4384,                       !- X,Y,Z Vertex 2 {m}
+  7.1, 6.9, 5.4384,                       !- X,Y,Z Vertex 3 {m}
+  7.1, 0.1, 5.4384;                       !- X,Y,Z Vertex 4 {m}
+
+BuildingSurface:Detailed,
+  Surface 16,                             !- Name
   Floor,                                  !- Surface Type
   EW3B08-ConstructionSet Floor,           !- Construction Name
   L2-PREP-ZN,                             !- Zone Name
@@ -1227,7 +1244,7 @@ BuildingSurface:Detailed,
   9.9, 0.1, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 20,                             !- Name
+  Surface 17,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-PREP-ZN,                             !- Zone Name
@@ -1244,7 +1261,7 @@ BuildingSurface:Detailed,
   7.1, 0.1, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 21,                             !- Name
+  Surface 18,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-PREP-ZN,                             !- Zone Name
@@ -1261,7 +1278,7 @@ BuildingSurface:Detailed,
   7.1, 6.9, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 22,                             !- Name
+  Surface 19,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-PREP-ZN,                             !- Zone Name
@@ -1278,7 +1295,7 @@ BuildingSurface:Detailed,
   9.9, 6.9, 3;                            !- X,Y,Z Vertex 4 {m}
 
 BuildingSurface:Detailed,
-  Surface 23,                             !- Name
+  Surface 20,                             !- Name
   Wall,                                   !- Surface Type
   EW3B08-ConstructionSet Wall,            !- Construction Name
   L2-PREP-ZN,                             !- Zone Name
@@ -1294,27 +1311,10 @@ BuildingSurface:Detailed,
   7.1, 0.1, 3,                            !- X,Y,Z Vertex 3 {m}
   9.9, 0.1, 3;                            !- X,Y,Z Vertex 4 {m}
 
-BuildingSurface:Detailed,
-  Surface 24,                             !- Name
-  Roof,                                   !- Surface Type
-  EW3B08-ConstructionSet Roof,            !- Construction Name
-  L2-PREP-ZN,                             !- Zone Name
-  L2-PREP,                                !- Space Name
-  Outdoors,                               !- Outside Boundary Condition
-  ,                                       !- Outside Boundary Condition Object
-  SunExposed,                             !- Sun Exposure
-  WindExposed,                            !- Wind Exposure
-  ,                                       !- View Factor to Ground
-  ,                                       !- Number of Vertices
-  9.9, 0.1, 5.4384,                       !- X,Y,Z Vertex 1 {m}
-  9.9, 6.9, 5.4384,                       !- X,Y,Z Vertex 2 {m}
-  7.1, 6.9, 5.4384,                       !- X,Y,Z Vertex 3 {m}
-  7.1, 0.1, 5.4384;                       !- X,Y,Z Vertex 4 {m}
-
 Lights,
   L2-PREP Lights,                         !- Name
   L2-PREP,                                !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT 1,                !- Schedule Name
+  L2-PREP PrepMediumEquipment,            !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Lighting Level {W}
   10,                                     !- Watts per Floor Area {W/m2}
@@ -1332,16 +1332,16 @@ Schedule:Day:Interval,
   06:00,                                  !- Time 1 {hh:mm}
   0.05,                                   !- Value Until Time 1
   08:00,                                  !- Time 2 {hh:mm}
-  0.5,                                    !- Value Until Time 2
+  0.4,                                    !- Value Until Time 2
   18:00,                                  !- Time 3 {hh:mm}
-  1,                                      !- Value Until Time 3
+  0.75,                                   !- Value Until Time 3
   22:00,                                  !- Time 4 {hh:mm}
-  0.2,                                    !- Value Until Time 4
+  0.15,                                   !- Value Until Time 4
   24:00,                                  !- Time 5 {hh:mm}
   0.05;                                   !- Value Until Time 5
 
 Schedule:Week:Daily,
-  PREP-MEDIUM-EQUIPMENT 1 Week Rule - Jan1-Dec31, !- Name
+  L2-PREP PrepMediumEquipment Week Rule - Jan1-Dec31, !- Name
   Schedule Day 7,                         !- Sunday Schedule:Day Name
   Schedule Day 7,                         !- Monday Schedule:Day Name
   Schedule Day 7,                         !- Tuesday Schedule:Day Name
@@ -1356,9 +1356,9 @@ Schedule:Week:Daily,
   Schedule Day 7;                         !- CustomDay2 Schedule:Day Name
 
 Schedule:Year,
-  PREP-MEDIUM-EQUIPMENT 1,                !- Name
+  L2-PREP PrepMediumEquipment,            !- Name
   Fractional,                             !- Schedule Type Limits Name
-  PREP-MEDIUM-EQUIPMENT 1 Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
+  L2-PREP PrepMediumEquipment Week Rule - Jan1-Dec31, !- Schedule:Week Name 1
   1,                                      !- Start Month 1
   1,                                      !- Start Day 1
   12,                                     !- End Month 1
@@ -1367,7 +1367,7 @@ Schedule:Year,
 People,
   L2-PREP People,                         !- Name
   L2-PREP,                                !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT 1,                !- Number of People Schedule Name
+  L2-PREP PrepMediumEquipment,            !- Number of People Schedule Name
   People/Area,                            !- Number of People Calculation Method
   ,                                       !- Number of People
   0.05,                                   !- People per Floor Area {person/m2}
@@ -1379,7 +1379,7 @@ People,
 ElectricEquipment,
   L2-PREP Equipment,                      !- Name
   L2-PREP,                                !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT 1,                !- Schedule Name
+  L2-PREP PrepMediumEquipment,            !- Schedule Name
   Watts/Area,                             !- Design Level Calculation Method
   ,                                       !- Design Level {W}
   25,                                     !- Watts per Floor Area {W/m2}
@@ -1419,8 +1419,8 @@ ScheduleTypeLimits,
 
 ThermostatSetpoint:DualSetpoint,
   L2-PREP Thermostat,                     !- Name
-  Heating Setpoint 20C,                   !- Heating Setpoint Temperature Schedule Name
-  Cooling Setpoint 24C;                   !- Cooling Setpoint Temperature Schedule Name
+  Heating Setpoint 20.0C,                 !- Heating Setpoint Temperature Schedule Name
+  Cooling Setpoint 24.0C;                 !- Cooling Setpoint Temperature Schedule Name
 
 HVACTemplate:Zone:IdealLoadsAirSystem,
   L2-PREP-ZN,                             !- Zone Name
@@ -1461,7 +1461,7 @@ DesignSpecification:OutdoorAir,
 ZoneVentilation:DesignFlowRate,
   L2-PREP-ZN Ventilation per Person,      !- Name
   L2-PREP-ZN,                             !- Zone or ZoneList or Space or SpaceList Name
-  PREP-MEDIUM-EQUIPMENT 1,                !- Schedule Name
+  L2-PREP PrepMediumEquipment,            !- Schedule Name
   Flow/Person,                            !- Design Flow Rate Calculation Method
   ,                                       !- Design Flow Rate {m3/s}
   ,                                       !- Flow Rate per Floor Area {m3/s-m2}
@@ -1618,8 +1618,8 @@ LifeCycleCost:NonrecurringCost,
   ServicePeriod;                          !- Start of Costs
 
 !- EngiWorld multi-cli-3-revit-archicad-openstudio-task-08-windows
-!- EngiWorld HandoffHash d1975eb135cc
-!- EngiWorld Stage2Hash 1ce41608c6e1
+!- EngiWorld HandoffHash cd98356b4880
+!- EngiWorld Stage2Hash 6c5c84c9b726
 !- EngiWorld weather_file weather.epw
 !- EngiWorld schedule_set EW3B08-ScheduleSet
 !- EngiWorld construction_set EW3B08-ConstructionSet

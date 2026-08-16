@@ -1,8 +1,8 @@
 {
   "id": "c-fenics-task-10-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a Poisson-equation template `/home/user/Desktop/adaptive_base.py` whose exact solution has a high-gradient peak at the center. Complete the following: 1. Modify and generate `/home/user/Desktop/adaptive.py`: - Define target functional `M = u_sol*dx` (or center-point value) - Use `adaptive_solve(a == L, u_sol, bc, M)` - Set parameter: `problem.parameters[\"error_control\"][\"dual_variational_solver\"][\"linear_solver\"] = \"cg\"` - Extract final refined cell count - Extract value at center `(0.5, 0.5)` 2. Run and save to `/home/user/Desktop/summary.txt`: Format: `num_cells, center_value` [Software] Run your scripts with Python in a legacy FEniCS/DOLFIN environment (e.g. `from dolfin import *`).",
-  "source": "https://github.com/fenics/dolfinx",
+  "instruction": "You are given a Poisson-equation template `/home/user/Desktop/adaptive_base.py` whose manufactured exact solution has a high-gradient Gaussian peak at the center. Complete the following: 1. Modify and generate `/home/user/Desktop/adaptive.py`: - Define target functional `M = u_sol*dx` - Create a `LinearVariationalProblem(a, L, u_sol, bc)` and an `AdaptiveLinearVariationalSolver(problem, M)` - Set parameter: `solver.parameters[\"error_control\"][\"dual_variational_solver\"][\"linear_solver\"] = \"cg\"` - Solve to tolerance `1e-5` - Extract the final leaf solution's refined cell count - Extract its value at center `(0.5, 0.5)` 2. Run and save to `/home/user/Desktop/summary.txt`: Format: `num_cells, center_value` [Software] Run your scripts with Python in the legacy FEniCS/DOLFIN 2019.1.0 environment (e.g. `from dolfin import *`).",
+  "source": "https://fenicsproject.org/olddocs/dolfin/2019.1.0/python/demos/auto-adaptive-poisson/demo_auto-adaptive-poisson.py.html",
   "config": [
     {
       "type": "upload_file",

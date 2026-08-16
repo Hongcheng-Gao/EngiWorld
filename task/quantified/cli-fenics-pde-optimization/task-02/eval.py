@@ -12,7 +12,7 @@ from collections import deque
 from pathlib import Path
 
 ROOT = Path(os.environ.get("EVAL_ROOT", "/home/user/Desktop"))
-TASK = {'id': 'opt-fenics-02', 'title': 'FEniCS conductive heat-path thermal-resistance optimization', 'kind': 'heat', 'interface': 'cli', 'primary_software': 'fenics', 'objective': 'Minimize thermal resistance from a fixed heat source to a fixed cold boundary.', 'objective_direction': 'minimize', 'metric_name': 'thermal_resistance', 'metric_units': 'K_per_W_normalized', 'design_file': 'conductivity_mask.csv', 'result_file': 'temperature.xdmf', 'required_outputs': ['conductivity_mask.csv', 'solve_submission.py', 'temperature.xdmf'], 'domain': {'width': 1.0, 'height': 1.0, 'unit': 'm'}, 'design_grid': {'rows': 20, 'cols': 20, 'row_axis': 'y', 'col_axis': 'x', 'row_0_location': 'bottom edge', 'col_0_location': 'left cold boundary'}, 'solver_mesh': {'nx': 40, 'ny': 40, 'cell_type': 'triangle'}, 'material': {'base_conductivity': 1.0, 'high_conductivity': 25.0}, 'thermal': {'cold_boundary': 'x = 0', 'cold_boundary_temperature': 0.0, 'insulated_boundaries': ['y = 0', 'y = height', 'x = width except heat patch'], 'heat_source_cell': [10, 18], 'heat_power': 1.0}, 'design_budget': {'type': 'high_conductivity_area_fraction', 'max_fraction': 0.3, 'threshold': 0.5}, 'constraints': {'mask_min': 0.0, 'mask_max': 1.0}, 'calibration_status': 'pending_vm_calibration', 'baseline': {'file': 'baseline_conductivity_mask.csv', 'artifact': 'init_file/baseline_conductivity_mask.csv', 'metric_value': None, 'metric_units': 'K_per_W_normalized', 'metric_source': 'computed_dynamically_by_eval_on_fenics_vm'}, 'invalid_sample': {'artifact': 'ground_truth/invalid/conductivity_mask.csv'}}
+TASK = {'id': 'opt-fenics-02', 'title': 'FEniCS conductive heat-path thermal-resistance optimization', 'kind': 'heat', 'interface': 'cli', 'primary_software': 'fenics', 'objective': 'Minimize thermal resistance from a fixed heat source to a fixed cold boundary.', 'objective_direction': 'minimize', 'metric_name': 'thermal_resistance', 'metric_units': 'K_per_W_normalized', 'design_file': 'conductivity_mask.csv', 'result_file': 'temperature.xdmf', 'required_outputs': ['conductivity_mask.csv', 'solve_submission.py', 'temperature.xdmf'], 'domain': {'width': 1.0, 'height': 1.0, 'unit': 'm'}, 'design_grid': {'rows': 20, 'cols': 20, 'row_axis': 'y', 'col_axis': 'x', 'row_0_location': 'bottom edge', 'col_0_location': 'left cold boundary'}, 'solver_mesh': {'nx': 40, 'ny': 40, 'cell_type': 'triangle'}, 'material': {'base_conductivity': 1.0, 'high_conductivity': 25.0}, 'thermal': {'cold_boundary': 'x = 0', 'cold_boundary_temperature': 0.0, 'insulated_boundaries': ['y = 0', 'y = height', 'x = width except heat patch'], 'heat_source_cell': [10, 18], 'heat_power': 1.0}, 'design_budget': {'type': 'high_conductivity_material_budget', 'max_fraction': 0.3, 'threshold': 0.5}, 'constraints': {'mask_min': 0.0, 'mask_max': 1.0}, 'calibration_status': 'calibrated_on_snapshot', 'baseline': {'file': 'baseline_conductivity_mask.csv', 'artifact': 'init_file/baseline_conductivity_mask.csv', 'metric_value': 1.141173289564719, 'metric_units': 'K_per_W_normalized', 'metric_source': 'computed_dynamically_by_eval_on_fenics_vm'}, 'invalid_sample': {'artifact': 'ground_truth/invalid/conductivity_mask.csv'}}
 LEGACY_FENICS_MODULES = {"dolfin", "fenics"}
 
 
@@ -201,6 +201,24 @@ def check_xdmf_artifact(filename: str) -> None:
             raise ValueError(f"missing XDMF companion file: {ref.name}")
 
 
+def checkpoint_candidates(path: Path) -> list[tuple[str, int]]:
+    root = ET.parse(path).getroot()
+    counts: dict[str, int] = {}
+    candidates: list[tuple[str, int]] = []
+    for element in root.iter():
+        if local_tag(element) != "attribute":
+            continue
+        name = element.attrib.get("Name", "").strip()
+        if not name or element.attrib.get("ItemType", "").lower() != "finiteelementfunction":
+            continue
+        index = counts.get(name, 0)
+        candidates.append((name, index))
+        counts[name] = index + 1
+    if not candidates:
+        raise ValueError("temperature.xdmf contains no DOLFIN finite-element checkpoint")
+    return candidates
+
+
 def check_predictions_artifact() -> None:
     path = ROOT / "predictions.json"
     if not path.exists() or not path.is_file() or path.stat().st_size <= 0:
@@ -210,7 +228,9 @@ def check_predictions_artifact() -> None:
         raise ValueError("predictions.json must be a JSON object or list")
 
 
-def scalar_metric_with_dolfin(grid: list[list[float]]) -> float:
+def scalar_metric_with_dolfin(
+    grid: list[list[float]], result_artifact: Path | None = None
+) -> float:
     try:
         import dolfin as df
     except Exception as exc:
@@ -293,6 +313,28 @@ def scalar_metric_with_dolfin(grid: list[list[float]]) -> float:
         cold_temp = float(thermal["cold_boundary_temperature"])
         bc = df.DirichletBC(V, df.Constant(cold_temp), left_boundary)
         df.solve(a_form == l_form, solution, bc)
+        if result_artifact is not None:
+            expected = solution.vector().get_local()
+            scale = max(1.0, max((abs(value) for value in expected), default=0.0))
+            matching_checkpoint = False
+            for field_name, checkpoint_index in checkpoint_candidates(result_artifact):
+                submitted_solution = df.Function(V)
+                try:
+                    with df.XDMFFile(mesh.mpi_comm(), str(result_artifact)) as xdmf:
+                        xdmf.read_checkpoint(submitted_solution, field_name, checkpoint_index)
+                except Exception:
+                    continue
+                submitted = submitted_solution.vector().get_local()
+                if len(submitted) != len(expected):
+                    continue
+                if all(
+                    math.isfinite(actual) and abs(actual - reference) <= 1.0e-8 * scale
+                    for actual, reference in zip(submitted, expected)
+                ):
+                    matching_checkpoint = True
+                    break
+            if not matching_checkpoint:
+                raise ValueError("temperature checkpoint does not match conductivity_mask.csv")
         values = solution.vector().get_local()
         tmax = float(max(values))
         return max(0.0, (tmax - cold_temp) / heat_power)
@@ -346,14 +388,14 @@ def parameter_rmse(params: dict[str, float]) -> float:
     return math.sqrt(sum(errors) / max(1, len(errors)))
 
 
-def metric_from_artifact(path: Path) -> float:
+def metric_from_artifact(path: Path, result_artifact: Path | None = None) -> float:
     if TASK["kind"] == "parameters":
         return parameter_rmse(read_params(path))
     grid = read_grid(path)
     if path.name == TASK["baseline"]["file"]:
         assert_baseline_is_unchanged(grid)
     validate_grid(grid)
-    return scalar_metric_with_dolfin(grid)
+    return scalar_metric_with_dolfin(grid, result_artifact)
 
 
 def check_outputs() -> None:
@@ -381,7 +423,9 @@ def score_from_metrics(submitted: float, baseline: float) -> float:
 def evaluate() -> float:
     check_outputs()
     baseline = metric_from_artifact(ROOT / TASK["baseline"]["file"])
-    submitted = metric_from_artifact(ROOT / TASK["design_file"])
+    submitted = metric_from_artifact(
+        ROOT / TASK["design_file"], ROOT / TASK["result_file"]
+    )
     return score_from_metrics(submitted, baseline)
 
 

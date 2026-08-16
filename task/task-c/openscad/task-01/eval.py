@@ -13,7 +13,7 @@ SPEC = {'output': 'task-021_output.stl',
  'bbox': [90.0, 70.0, 85.0],
  'bbox_tol': 1.0,
  'min_triangles': 24,
- 'checks': [{'kind': 'box_outline', 'xs': [-6.0, 6.0], 'ys': [28.5, 36.5], 'zs': [9.0, 41.0], 'tol': 1.0}]}
+ 'checks': [{'kind': 'box_outline', 'xs': [-6.0, 6.0], 'ys': [30.0, 35.0], 'zs': [9.0, 41.0], 'tol': 1.0}]}
 
 
 def _parse_stl(path: Path):

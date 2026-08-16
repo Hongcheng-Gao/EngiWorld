@@ -12,16 +12,14 @@ OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 SPEC = {'output': 'task-037_output.stl',
  'bbox': [50.0, 50.0, 16.0],
  'bbox_tol': 1.0,
+ 'volume': 28232.45,
+ 'volume_tol': 150.0,
  'min_triangles': 120,
  'checks': [{'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 25.0, 'span': 15.0, 'bins': 18},
             {'kind': 'cylinder', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 4.0, 'span': 15.0, 'bins': 12},
-            {'kind': 'cylinder',
-             'axis': 'z',
-             'center': [0.0, 0.0],
-             'radius': 21.0,
-             'span': 0.8,
-             'bins': 18,
-             'axial_range': [7.5, 8.5]}]}
+            {'kind': 'circle_at', 'axis': 'z', 'center': [0.0, 0.0], 'radius': 21.0, 'axial': 8.0, 'bins': 18, 'tol': 0.35},
+            {'kind': 'v_groove', 'outer_radius': 25.0, 'root_radius': 21.0,
+             'lower_z': 4.0, 'root_z': 8.0, 'upper_z': 12.0, 'tol': 0.3, 'bins': 36}]}
 
 
 def _parse_stl(path: Path):
@@ -162,6 +160,15 @@ def _close(actual, expected, tol):
 
 def _bbox_ok(mesh: Mesh, expected, tol):
     return all(_close(actual, want, tol) for actual, want in zip(mesh.extents, expected))
+
+
+def _mesh_volume(mesh: Mesh) -> float:
+    signed = 0.0
+    for (ax, ay, az), (bx, by, bz), (cx, cy, cz) in mesh.triangles:
+        signed += ax * (by * cz - bz * cy)
+        signed += ay * (bz * cx - bx * cz)
+        signed += az * (bx * cy - by * cx)
+    return abs(signed) / 6.0
 
 
 def _axis_components(point, axis):
@@ -328,6 +335,50 @@ def _has_steps(mesh: Mesh, check):
     return True
 
 
+def _has_v_groove(mesh: Mesh, check):
+    outer = float(check["outer_radius"])
+    root = float(check["root_radius"])
+    lower_z = float(check["lower_z"])
+    root_z = float(check["root_z"])
+    upper_z = float(check["upper_z"])
+    tol = float(check.get("tol", 0.35))
+    required_bins = int(check.get("bins", 24))
+
+    def section_points(section_z):
+        points = []
+        for triangle in mesh.triangles:
+            for first, second in ((triangle[0], triangle[1]), (triangle[1], triangle[2]), (triangle[2], triangle[0])):
+                z1, z2 = first[2], second[2]
+                if section_z < min(z1, z2) - 1e-7 or section_z > max(z1, z2) + 1e-7:
+                    continue
+                if abs(z2 - z1) <= 1e-9:
+                    if abs(section_z - z1) <= 1e-7:
+                        points.extend((first, second))
+                    continue
+                ratio = (section_z - z1) / (z2 - z1)
+                points.append((first[0] + ratio * (second[0] - first[0]),
+                               first[1] + ratio * (second[1] - first[1]), section_z))
+        return points
+
+    for section_z in (1.0, 3.0, 5.0, 6.0, 7.0, root_z, 9.0, 10.0, 11.0, 13.0, 15.0):
+        if section_z < lower_z or section_z > upper_z:
+            expected_radius = outer
+        else:
+            expected_radius = root + abs(section_z - root_z)
+        points = section_points(section_z)
+        radii = [math.hypot(point[0], point[1]) for point in points]
+        if not radii or abs(max(radii) - expected_radius) > tol:
+            return False
+        bins = set()
+        for point, radius in zip(points, radii):
+            if abs(radius - expected_radius) <= tol:
+                angle = math.atan2(point[1], point[0])
+                bins.add(int(((angle + math.pi) / (2 * math.pi)) * 72) % 72)
+        if len(bins) < required_bins:
+            return False
+    return True
+
+
 def _has_angular_clusters(mesh: Mesh, check):
     center = check.get("center", [0.0, 0.0])
     r0, r1 = check["radius_range"]
@@ -441,6 +492,8 @@ def _run_mesh_check(mesh: Mesh, check):
         return _has_raised(mesh, check)
     if kind == "steps":
         return _has_steps(mesh, check)
+    if kind == "v_groove":
+        return _has_v_groove(mesh, check)
     if kind == "angular_clusters":
         return _has_angular_clusters(mesh, check)
     return False
@@ -467,6 +520,9 @@ def _evaluate_mesh(path: Path) -> bool:
     if "center" in SPEC:
         center_tol = float(SPEC.get("center_tol", tol))
         if any(abs(a - b) > center_tol for a, b in zip(mesh.center, SPEC["center"])):
+            return False
+    if "volume" in SPEC:
+        if abs(_mesh_volume(mesh) - float(SPEC["volume"])) > float(SPEC.get("volume_tol", 1.0)):
             return False
     return all(_run_mesh_check(mesh, check) for check in SPEC.get("checks", []))
 

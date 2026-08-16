@@ -23,8 +23,10 @@
   "ifc_exchange": {
     "schema": "IFC4",
     "model_view": "ReferenceView",
-    "space_boundary_level": 2,
-    "minimum_global_id_retention": 0.7,
+    "requested_space_boundary_level": 2,
+    "space_boundary_policy": "Request Revit space-boundary level 2, inspect the relationships actually written by both native applications, preserve the observed upstream state in Archicad, and do not fabricate missing relationships or claim unsupported second-level boundaries.",
+    "minimum_global_id_retention": 0.8,
+    "global_id_policy": "Revit must retain every seed IfcElement GlobalId, at least 80 percent of seed IfcProduct GlobalIds, and all spatial-container GlobalIds; Archicad must retain every stage1 IfcRoot GlobalId and reject duplicates.",
     "required_property_sets": [
       "Pset_SpaceCommon",
       "Qto_SpaceBaseQuantities",
@@ -40,15 +42,14 @@
       "EW3B02",
       "RETAIL-SALES",
       "PREP-KITCHEN",
-      "DRY-STORAGE",
-      "BACK-OF-HOUSE"
+      "DRY-STORAGE"
     ]
   },
   "archicad_stage": {
     "input": "stage1.ifc",
     "output": "stage2.ifc",
     "translator": "archicad_ifc4_translator.json",
-    "operation": "Validate the public-service split and second-level space boundaries, then export load assumptions keyed by retained IfcSpace GlobalId.",
+    "operation": "Validate public-service containment in the live Archicad IFC command-server model, audit the space-boundary relationships actually present in stage1.ifc and stage2.ifc without fabrication, preserve all upstream IfcRoot GlobalIds, and export load assumptions keyed by retained IfcSpace GlobalId.",
     "required_tokens": [
       "ARCHICAD-QA-PASS",
       "PUBLIC-SERVICE-SEPARATION",

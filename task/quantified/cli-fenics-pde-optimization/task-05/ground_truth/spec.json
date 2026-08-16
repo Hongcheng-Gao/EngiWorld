@@ -33,6 +33,27 @@
     "mechanical_load": 0.8,
     "thermal_load": 1.2
   },
+  "forward_model": {
+    "elastic_scale": "E / 100000",
+    "response": "(mechanical_load / elastic_scale) * x * (1 - x) + (thermal_load / k) * sin(pi * x) + alpha * x^2"
+  },
+  "fenics_verification_pde": {
+    "domain": "0 <= x <= 1",
+    "strong_form": "-u''(x) = 2*A + B*pi^2*sin(pi*x) - 2*alpha",
+    "coefficients": {
+      "A": "mechanical_load / (E / 100000)",
+      "B": "thermal_load / k"
+    },
+    "boundary_conditions": {
+      "u(0)": 0.0,
+      "u(1)": "alpha"
+    },
+    "discretization": {
+      "mesh_cells": 200,
+      "element": "CG2"
+    },
+    "prediction_rule": "Use the exact response equation at each observation x; the FEniCS solution verifies the equivalent boundary-value problem."
+  },
   "observations": [
     {
       "x": 0.15,
@@ -67,15 +88,27 @@
       "alpha"
     ]
   },
-  "calibration_status": "pending_vm_calibration",
+  "calibration_status": "calibrated_on_snapshot",
   "baseline": {
     "file": "baseline_parameters.json",
     "artifact": "init_file/baseline_parameters.json",
-    "metric_value": null,
+    "metric_value": 0.2395122005694583,
     "metric_units": "normalized_observation_units",
     "metric_source": "computed_dynamically_by_eval_on_fenics_vm"
   },
   "invalid_sample": {
     "artifact": "ground_truth/invalid/parameters.json"
+  },
+  "reference": {
+    "artifact": "ground_truth/reference/parameters.json",
+    "metric_value": 0.0003822634871501113,
+    "normalized_observation_rmse_improvement": 0.9984039915868952,
+    "native_output": "ground_truth/reference/predictions.json"
+  },
+  "native_environment": {
+    "snapshot": "FEniCS",
+    "dolfin": "2019.1.0",
+    "python": "3.10.20",
+    "verification_mesh": "UnitIntervalMesh(200), CG2"
   }
 }
