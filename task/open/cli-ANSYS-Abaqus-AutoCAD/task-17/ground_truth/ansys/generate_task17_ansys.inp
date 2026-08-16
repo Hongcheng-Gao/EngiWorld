@@ -1,0 +1,253 @@
+/BATCH
+/CLEAR,NOSTART
+/FILNAME,gt_task_17_ansys,1
+/TITLE,EngiWorld Task-17 restrained steel bar under uniform temperature rise
+
+/PREP7
+ET,1,SOLID185
+MP,EX,1,210000
+MP,PRXY,1,0.3
+MP,ALPX,1,1.5E-5
+
+BLOCK,0,100,0,10,0,10
+ESIZE,5
+LSEL,ALL
+LESIZE,ALL,5
+ALLSEL,ALL
+TYPE,1
+MAT,1
+MSHKEY,1
+MSHAPE,0,3D
+VMESH,ALL
+
+ESEL,S,TYPE,,1
+CM,BAR_ELEMENTS,ELEM
+NSLE,S
+CM,BAR_NODES,NODE
+*GET,NODE_COUNT,NODE,0,COUNT
+*GET,ELEMENT_COUNT,ELEM,0,COUNT
+*GET,X_MIN,NODE,0,MNLOC,X
+*GET,X_MAX,NODE,0,MXLOC,X
+*GET,Y_MIN,NODE,0,MNLOC,Y
+*GET,Y_MAX,NODE,0,MXLOC,Y
+*GET,Z_MIN,NODE,0,MNLOC,Z
+*GET,Z_MAX,NODE,0,MXLOC,Z
+
+CMSEL,S,BAR_NODES,NODE
+NSEL,R,LOC,X,0
+CM,LEFT_END_NODES,NODE
+*GET,LEFT_NODE_COUNT,NODE,0,COUNT
+D,ALL,UX,0
+
+CMSEL,S,BAR_NODES,NODE
+NSEL,R,LOC,X,100
+CM,RIGHT_END_NODES,NODE
+*GET,RIGHT_NODE_COUNT,NODE,0,COUNT
+D,ALL,UX,0
+
+CMSEL,S,BAR_NODES,NODE
+NSEL,R,LOC,X,0
+NSEL,R,LOC,Y,0
+NSEL,R,LOC,Z,0
+*GET,ANCHOR_A_COUNT,NODE,0,COUNT
+*GET,ANCHOR_A_NODE,NODE,0,NUM,MIN
+D,ANCHOR_A_NODE,UY,0
+D,ANCHOR_A_NODE,UZ,0
+
+CMSEL,S,BAR_NODES,NODE
+NSEL,R,LOC,X,0
+NSEL,R,LOC,Y,10
+NSEL,R,LOC,Z,0
+*GET,ANCHOR_B_COUNT,NODE,0,COUNT
+*GET,ANCHOR_B_NODE,NODE,0,NUM,MIN
+D,ANCHOR_B_NODE,UZ,0
+
+ALLSEL,ALL
+BF,ALL,TEMP,100
+*GET,E_VALUE,EX,1,TEMP,0
+*GET,NU_VALUE,PRXY,1,TEMP,0
+*GET,ALPHA_VALUE,ALPX,1,TEMP,0
+
+*IF,NODE_COUNT,NE,189,THEN
+  /COM,ERROR: expected 189 nodes for the mapped 5 mm mesh
+  /EXIT,NOSAVE
+*ENDIF
+*IF,ELEMENT_COUNT,NE,80,THEN
+  /COM,ERROR: expected 80 SOLID185 elements for the mapped 5 mm mesh
+  /EXIT,NOSAVE
+*ENDIF
+*IF,LEFT_NODE_COUNT,NE,9,THEN
+  /COM,ERROR: left end does not contain 9 nodes
+  /EXIT,NOSAVE
+*ENDIF
+*IF,RIGHT_NODE_COUNT,NE,9,THEN
+  /COM,ERROR: right end does not contain 9 nodes
+  /EXIT,NOSAVE
+*ENDIF
+*IF,ANCHOR_A_COUNT,NE,1,THEN
+  /COM,ERROR: anchor A is not unique
+  /EXIT,NOSAVE
+*ENDIF
+*IF,ANCHOR_B_COUNT,NE,1,THEN
+  /COM,ERROR: anchor B is not unique
+  /EXIT,NOSAVE
+*ENDIF
+
+/OUTPUT,model_listing,txt
+ETLIST,ALL
+MPLIST,ALL
+CMLIST,ALL
+NLIST,ALL
+ELIST,ALL
+/OUTPUT
+
+/OUTPUT,load_listing,txt
+DLIST,ALL
+BFLIST,ALL,TEMP
+BFELIST,ALL,TEMP
+FLIST,ALL
+SFELIST,ALL
+SFLLIST,ALL
+SFALIST,ALL
+/OUTPUT
+
+FINISH
+
+/SOLU
+TREF,20
+SAVE,gt_task_17_ansys,db
+FINISH
+
+/PREP7
+CDWRITE,DB,gt_task_17_ansys,cdb
+FINISH
+
+/SOLU
+ANTYPE,STATIC,NEW
+NLGEOM,OFF
+EQSLV,SPARSE
+NSUBST,1,1,1
+OUTRES,ALL,ALL
+ALLSEL,ALL
+SOLVE
+SAVE,gt_task_17_ansys,db
+FINISH
+
+/POST1
+FILE,gt_task_17_ansys,rst
+/OUTPUT,result_sets,txt
+SET,LIST
+/OUTPUT
+SET,LAST
+RSYS,0
+*GET,RESULT_TIME,ACTIVE,0,SET,TIME
+*GET,RESULT_LOAD_STEP,ACTIVE,0,SET,LSTP
+*GET,RESULT_SUBSTEP,ACTIVE,0,SET,SBST
+
+CMSEL,S,BAR_NODES,NODE
+NSORT,S,X,0,1,ALL
+*GET,MAX_SX,SORT,0,MAX
+*GET,MIN_SX,SORT,0,MIN
+ABS_MAX_SX=ABS(MAX_SX)
+ABS_MIN_SX=ABS(MIN_SX)
+THERMAL_STRESS=ABS_MAX_SX
+*IF,ABS_MIN_SX,GT,THERMAL_STRESS,THEN
+  THERMAL_STRESS=ABS_MIN_SX
+*ENDIF
+NSORT,S,EQV,0,1,ALL
+*GET,MAX_SEQV,SORT,0,MAX
+
+CMSEL,S,LEFT_END_NODES,NODE
+FSUM
+*GET,LEFT_RF_X,FSUM,0,ITEM,FX
+CMSEL,S,RIGHT_END_NODES,NODE
+FSUM
+*GET,RIGHT_RF_X,FSUM,0,ITEM,FX
+ABS_LEFT_RF=ABS(LEFT_RF_X)
+ABS_RIGHT_RF=ABS(RIGHT_RF_X)
+REACTION_FORCE=ABS_LEFT_RF
+*IF,ABS_RIGHT_RF,GT,REACTION_FORCE,THEN
+  REACTION_FORCE=ABS_RIGHT_RF
+*ENDIF
+
+ALLSEL,ALL
+/OUTPUT,nodal_stress,txt
+PRNSOL,S,COMP
+/OUTPUT
+/OUTPUT,nodal_displacement,txt
+PRNSOL,U,COMP
+/OUTPUT
+/OUTPUT,reaction_listing,txt
+PRRSOL,F
+/OUTPUT
+
+*CFOPEN,metrics,json
+*VWRITE
+('{')
+*VWRITE,THERMAL_STRESS
+('  "thermal_stress": ',E24.16,',')
+*VWRITE,REACTION_FORCE
+('  "reaction_force": ',E24.16)
+*VWRITE
+('}')
+*CFCLOS
+
+*CFOPEN,model_audit,json
+*VWRITE
+('{')
+*VWRITE
+('  "schema_version": 2,')
+*VWRITE
+('  "task_id": "c-open-abaqus-ansys-autocad-task-17-windows",')
+*VWRITE
+('  "software": "ANSYS Mechanical APDL 2026 R1 v261",')
+*VWRITE
+('  "analysis": "static_structural_with_prescribed_uniform_temperature",')
+*VWRITE
+('  "units": "N-mm-MPa-degC",')
+*VWRITE
+('  "element_type": "SOLID185",')
+*VWRITE,E_VALUE,NU_VALUE,ALPHA_VALUE
+('  "material": {"youngs_modulus_mpa": ',E24.16,', "poisson_ratio": ',E24.16,', "alpha_per_c": ',E24.16,'},')
+*VWRITE,X_MIN,X_MAX,Y_MIN,Y_MAX,Z_MIN,Z_MAX
+('  "bounds_mm": {"x": [',E24.16,',',E24.16,'], "y": [',E24.16,',',E24.16,'], "z": [',E24.16,',',E24.16,']},')
+*VWRITE
+('  "mesh_size_mm": 5.0,')
+*VWRITE,NODE_COUNT,ELEMENT_COUNT
+('  "node_count": ',E24.16,', "element_count": ',E24.16,',')
+*VWRITE,LEFT_NODE_COUNT,RIGHT_NODE_COUNT
+('  "left_end_node_count": ',E24.16,', "right_end_node_count": ',E24.16,',')
+*VWRITE,ANCHOR_A_NODE,ANCHOR_B_NODE
+('  "anchor_nodes": [',E24.16,',',E24.16,'],')
+*VWRITE
+('  "reference_temperature_c": 20.0,')
+*VWRITE
+('  "uniform_temperature_c": 100.0,')
+*VWRITE
+('  "boundary": "UX=0 on all nodes of X=0 and X=100; UY=UZ=0 at (0,0,0); UZ=0 at (0,10,0)",')
+*VWRITE
+('  "extra_mechanical_load_count": 0')
+*VWRITE
+('}')
+*CFCLOS
+
+*CFOPEN,result_audit,json
+*VWRITE
+('{')
+*VWRITE
+('  "schema_version": 2,')
+*VWRITE
+('  "result_file": "gt_task_17_ansys.rst",')
+*VWRITE,RESULT_LOAD_STEP,RESULT_SUBSTEP,RESULT_TIME
+('  "load_step": ',E24.16,', "substep": ',E24.16,', "result_time": ',E24.16,',')
+*VWRITE,MIN_SX,MAX_SX,MAX_SEQV
+('  "stress": {"min_sx_mpa": ',E24.16,', "max_sx_mpa": ',E24.16,', "max_seqv_mpa": ',E24.16,'},')
+*VWRITE,LEFT_RF_X,RIGHT_RF_X
+('  "reaction": {"left_sum_fx_n": ',E24.16,', "right_sum_fx_n": ',E24.16,'},')
+*VWRITE,THERMAL_STRESS,REACTION_FORCE
+('  "metrics": {"thermal_stress": ',E24.16,', "reaction_force": ',E24.16,'}')
+*VWRITE
+('}')
+*CFCLOS
+FINISH
+/EXIT,NOSAVE
