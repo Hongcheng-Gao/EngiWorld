@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-8.nc': {'terms': [['DRILL'], ['POCKET', 'PROFILE', 'HELIX']], 'min_tools': 3, 'min_motion': 24, 'hole_sets': [{'tool': 2, 'points': [(40, 20), (40, -20), (-40, 20), (-40, -20)], 'z_max': -1.0}], 'circle_centers': {'points': [(0, 20), (0, -20)], 'min': 2}, 'z_values': [-1.0, 9.0]}}}
+RULE = {'files': {'task-8.nc': {'terms': [['DRILL'], ['POCKET', 'PROFILE', 'HELIX']], 'min_tools': 3, 'min_motion': 24, 'numbered_hole_sets': [{'tool': 1, 'points': [(40, 20), (40, -20), (-40, 20), (-40, -20)], 'z_max': 17.5, 'z_tol': 0.15}, {'tool': 2, 'points': [(40, 20), (40, -20), (-40, 20), (-40, -20)], 'z_max': -1.0, 'z_tol': 0.15}], 'tool_circle_centers': {'tool': 3, 'points': [(0, 20), (0, -20)], 'z': 9.0, 'tol': 0.2, 'min': 2}, 'z_values': [-1.0, 9.0]}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,12 +189,56 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def numbered_hole_visits(records, rule):
+    tool = int(rule["tool"])
+    z_max = float(rule.get("z_max", 1e9))
+    z_tol = float(rule.get("z_tol", 0.15))
+    visits = []
+    for record in records:
+        if record["tool"] != tool:
+            continue
+        end, start = record["end"], record["start"]
+        if end["x"] is None or end["y"] is None or end["z"] is None or end["z"] > z_max + z_tol:
+            continue
+        if record["code"] in {81, 82, 83, 84}:
+            visits.append((end["x"], end["y"]))
+        elif (record["code"] == 1 and start["x"] is not None and start["y"] is not None
+              and start["z"] is not None and close(start["x"], end["x"])
+              and close(start["y"], end["y"]) and start["z"] - end["z"] > 0.2):
+            visits.append((end["x"], end["y"]))
+    return visits
+
+
+def tool_circle_centers(records, rule):
+    tool = int(rule["tool"])
+    floor = float(rule["z"])
+    tol = float(rule.get("tol", 0.2))
+    centers = []
+    for record in records:
+        if (record["tool"] != tool or record["code"] not in {2, 3}
+                or record_z(record) is None or not close(record_z(record), floor, tol)):
+            continue
+        start, explicit = record["start"], record["explicit"]
+        if start["x"] is not None and start["y"] is not None and "i" in explicit and "j" in explicit:
+            centers.append((start["x"] + explicit["i"], start["y"] + explicit["j"]))
+    for group in cut_groups(records, floor):
+        if not group or group[0]["tool"] != tool or not group_closed(group) or len(group) < 4:
+            continue
+        points = [(record["end"]["x"], record["end"]["y"]) for record in group]
+        xs, ys = [point[0] for point in points], [point[1] for point in points]
+        cx, cy = (min(xs) + max(xs)) / 2, (min(ys) + max(ys)) / 2
+        radii = [math.hypot(x - cx, y - cy) for x, y in points]
+        if max(radii) - min(radii) <= 1.5:
+            centers.append((cx, cy))
+    return centers
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
@@ -202,6 +246,14 @@ def validate_file(path: Path, rule: dict) -> bool:
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
         return False
+    for item in rule.get("numbered_hole_sets", []):
+        if not has_all_points(numbered_hole_visits(records, item), item["points"]):
+            return False
+    if "tool_circle_centers" in rule:
+        item = rule["tool_circle_centers"]
+        centers = tool_circle_centers(records, item)
+        if not has_all_points(centers, item["points"]) or len(centers) < int(item["min"]):
+            return False
     for group in rule.get("terms", []):
         if not any(str(term).upper() in src for term in group):
             return False

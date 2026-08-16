@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-18.nc': {'terms': [['SLOT', 'POCKET'], ['DOGBONE']], 'min_tools': 1, 'min_motion': 32, 'min_cut_groups': 4, 'min_arcs': 16, 'z_values': [0.0]}}}
+RULE = {'files': {'task-18.nc': {'min_tools': 1, 'exact_tools': [1], 'min_motion': 24, 'min_cut_groups': 4, 'dogbone_slots': {'centers': [[-32.0, -18.0], [32.0, -18.0], [-32.0, 18.0], [32.0, 18.0]], 'half_size': [14.0, 6.0], 'tool_radius': 4.0, 'bottom': 0.0, 'bottom_tolerance': 0.08, 'corner_tolerance': 1.0, 'min_relief': 0.5, 'max_relief_distance': 4.25}}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,16 +189,31 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def interval_covered(intervals, low, high, tolerance=0.3):
+    merged_end = low
+    for start, end in sorted((min(a, b), max(a, b)) for a, b in intervals):
+        if end < merged_end - tolerance:
+            continue
+        if start > merged_end + tolerance:
+            return False
+        merged_end = max(merged_end, end)
+        if merged_end >= high - tolerance:
+            return True
+    return False
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
+        return False
+    if "exact_tools" in rule and tool_order(tools) != [int(tool) for tool in rule["exact_tools"]]:
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
         return False
@@ -255,6 +270,58 @@ def validate_file(path: Path, rule: dict) -> bool:
             return False
     if sum(1 for record in records if record["code"] in {2, 3}) < int(rule.get("min_arcs", 0)):
         return False
+    if "dogbone_slots" in rule:
+        item = rule["dogbone_slots"]
+        bottom = float(item["bottom"])
+        bottom_tol = float(item["bottom_tolerance"])
+        if any(record_z(record) is not None and record_z(record) < bottom - bottom_tol for record in records):
+            return False
+        bottom_cuts = [record for record in cuts if record_z(record) is not None and close(record_z(record), bottom, bottom_tol)]
+        if not bottom_cuts:
+            return False
+        half_x, half_y = map(float, item["half_size"])
+        radius = float(item["tool_radius"])
+        corner_tol = float(item["corner_tolerance"])
+        min_relief = float(item["min_relief"])
+        max_relief_distance = float(item["max_relief_distance"])
+        points = []
+        for record in bottom_cuts:
+            for point in (record["start"], record["end"]):
+                if point["x"] is not None and point["y"] is not None:
+                    points.append((point["x"], point["y"]))
+        rectangles = [[cx - half_x, cy - half_y, cx + half_x, cy + half_y] for cx, cy in item["centers"]]
+        if any(not any(rect_contains(point, rect, 0.25) for rect in rectangles) for point in points):
+            return False
+        for cx, cy in item["centers"]:
+            cx, cy = float(cx), float(cy)
+            if sum(rect_contains(point, [cx - half_x, cy - half_y, cx + half_x, cy + half_y], 0.5) for point in points) < 12:
+                return False
+            center_half_x = half_x - radius
+            center_half_y = half_y - radius
+            for expected_y in (cy - center_half_y, cy + center_half_y):
+                intervals = []
+                for record in bottom_cuts:
+                    start, end = record["start"], record["end"]
+                    if close(start["y"], expected_y, 0.25) and close(end["y"], expected_y, 0.25):
+                        intervals.append((start["x"], end["x"]))
+                if not interval_covered(intervals, cx - center_half_x, cx + center_half_x):
+                    return False
+            for expected_x in (cx - center_half_x, cx + center_half_x):
+                intervals = []
+                for record in bottom_cuts:
+                    start, end = record["start"], record["end"]
+                    if close(start["x"], expected_x, 0.25) and close(end["x"], expected_x, 0.25):
+                        intervals.append((start["y"], end["y"]))
+                if not interval_covered(intervals, cy - center_half_y, cy + center_half_y):
+                    return False
+            for sx in (-1.0, 1.0):
+                for sy in (-1.0, 1.0):
+                    kink_x = cx + sx * center_half_x
+                    kink_y = cy + sy * center_half_y
+                    if not any(math.hypot(x - kink_x, y - kink_y) <= corner_tol for x, y in points):
+                        return False
+                    if not any(sx * (x - kink_x) >= min_relief and sy * (y - kink_y) >= min_relief and math.hypot(x - kink_x, y - kink_y) <= max_relief_distance for x, y in points):
+                        return False
     if "region" in rule:
         item = rule["region"]
         if sum(rect_contains((r["end"]["x"], r["end"]["y"]), item["rect"]) for r in cuts) < int(item["min"]):

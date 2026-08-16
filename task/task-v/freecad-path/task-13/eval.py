@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-13.nc': {'terms': [['FACE'], ['PROFILE']], 'min_tools': 1, 'min_motion': 20, 'wcs_motion': {'G54': 8, 'G55': 8}, 'closed': {'min': 2}}}}
+RULE = {'files': {'task-13.nc': {'terms': [['FACE'], ['PROFILE']], 'min_tools': 1, 'min_motion': 20, 'coordinate_groups': {'min_groups': 2, 'min_cut': 8, 'face_min_tracks': 4, 'face_min_span': 40.0, 'face_cross_span': 20.0, 'profile_min_x_span': 30.0, 'profile_min_y_span': 30.0, 'absolute_regions': [[-75, -35, -5, 35], [5, -35, 75, 35]]}, 'closed': {'min': 2}}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,12 +189,79 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def record_inside_rect(record, rect):
+    points = []
+    for endpoint in (record["start"], record["end"]):
+        if endpoint["x"] is not None and endpoint["y"] is not None:
+            points.append((endpoint["x"], endpoint["y"]))
+    return bool(points) and all(rect_contains(point, rect) for point in points)
+
+
+def has_face_and_profile(records, item):
+    cuts = cut_records(records)
+    if len(cuts) < int(item["min_cut"]):
+        return False
+
+    tracks_by_z = {}
+    for record in cuts:
+        start, end = record["start"], record["end"]
+        if None in (start["x"], start["y"], end["x"], end["y"], end["z"]):
+            continue
+        z_key = round(end["z"], 2)
+        directions = tracks_by_z.setdefault(z_key, {"horizontal": set(), "vertical": set()})
+        if abs(end["x"] - start["x"]) >= float(item["face_min_span"]) and close(end["y"], start["y"], 0.2):
+            directions["horizontal"].add(round((start["y"] + end["y"]) / 2.0, 1))
+        if abs(end["y"] - start["y"]) >= float(item["face_min_span"]) and close(end["x"], start["x"], 0.2):
+            directions["vertical"].add(round((start["x"] + end["x"]) / 2.0, 1))
+
+    face_ok = False
+    for directions in tracks_by_z.values():
+        for tracks in directions.values():
+            if len(tracks) >= int(item["face_min_tracks"]) and max(tracks) - min(tracks) >= float(item["face_cross_span"]):
+                face_ok = True
+                break
+        if face_ok:
+            break
+
+    profile_ok = False
+    for group in cut_groups(records):
+        if not group_closed(group):
+            continue
+        xs = [record["end"]["x"] for record in group]
+        ys = [record["end"]["y"] for record in group]
+        if (max(xs) - min(xs) >= float(item["profile_min_x_span"]) and
+                max(ys) - min(ys) >= float(item["profile_min_y_span"])):
+            profile_ok = True
+            break
+    return face_ok and profile_ok
+
+
+def has_independent_coordinate_groups(records, item):
+    wcs_groups = {}
+    for record in records:
+        if record["wcs"] is not None:
+            wcs_groups.setdefault(record["wcs"], []).append(record)
+    valid_wcs_groups = [
+        group for group in wcs_groups.values()
+        if has_face_and_profile(group, item)
+    ]
+    if len(valid_wcs_groups) >= int(item["min_groups"]):
+        return True
+
+    valid_absolute_groups = 0
+    for rect in item.get("absolute_regions", []):
+        group = [record for record in records if record_inside_rect(record, rect)]
+        if has_face_and_profile(group, item):
+            valid_absolute_groups += 1
+    return valid_absolute_groups >= int(item["min_groups"])
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
@@ -280,6 +347,9 @@ def validate_file(path: Path, rule: dict) -> bool:
             return False
     for wcs, minimum in rule.get("wcs_motion", {}).items():
         if sum(record["wcs"] == wcs for record in cuts) < int(minimum):
+            return False
+    if "coordinate_groups" in rule:
+        if not has_independent_coordinate_groups(records, rule["coordinate_groups"]):
             return False
     if rule.get("avoid_rects"):
         margin = float(rule.get("avoid_clearance", 0.0))

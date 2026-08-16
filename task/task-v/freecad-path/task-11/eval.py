@@ -5,7 +5,31 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-11.nc': {'terms': [['POCKET']], 'min_tools': 1, 'min_motion': 20, 'min_cut_groups': 2, 'regions': [{'rect': [-50, -30, -1, 30], 'min': 5}, {'rect': [1, -30, 50, 30], 'min': 5}], 'avoid_rects': [[-67.5, -60, 67.5, -50], [-67.5, 50, 67.5, 60]], 'avoid_clearance': 3.0, 'avoid_below': 20.0}}}
+RULE = {
+    "files": {
+        "task-11.nc": {
+            "min_tools": 1,
+            "min_motion": 20,
+            "tool_number_min_cut": {"1": 20},
+            "pocket_machining": {
+                "tool": 1,
+                "tool_radius": 4.0,
+                "top": 18.0,
+                "floor": 8.0,
+                "tol": 0.2,
+                "rects": [[-50, -25, -10, 25], [10, -25, 50, 25]],
+                "sample_step": 4.0,
+            },
+            "fixture_clearance": {
+                "rects": [[-67.5, -60, 67.5, -50], [-67.5, 50, 67.5, 60]],
+                "tool_radius": 4.0,
+                "clearance": 3.0,
+                "below": 20.0,
+                "sample_step": 0.5,
+            },
+        }
+    }
+}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,18 +213,179 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def _arc_geometry(record):
+    start, end, explicit = record["start"], record["end"], record["explicit"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return None
+    sx, sy, ex, ey = start["x"], start["y"], end["x"], end["y"]
+    if "i" in explicit or "j" in explicit:
+        cx = sx + explicit.get("i", 0.0)
+        cy = sy + explicit.get("j", 0.0)
+    elif "r" in explicit:
+        radius = abs(explicit["r"])
+        dx, dy = ex - sx, ey - sy
+        chord = math.hypot(dx, dy)
+        if chord <= 1e-9 or chord > 2.0 * radius + 1e-6:
+            return None
+        mx, my = (sx + ex) / 2.0, (sy + ey) / 2.0
+        height = math.sqrt(max(0.0, radius * radius - chord * chord / 4.0))
+        candidates = [
+            (mx - dy * height / chord, my + dx * height / chord),
+            (mx + dy * height / chord, my - dx * height / chord),
+        ]
+
+        def candidate_sweep(center):
+            a0 = math.atan2(sy - center[1], sx - center[0])
+            a1 = math.atan2(ey - center[1], ex - center[0])
+            return (a1 - a0) % (2.0 * math.pi) if record["code"] == 3 else (a0 - a1) % (2.0 * math.pi)
+
+        want_major = explicit["r"] < 0.0
+        cx, cy = min(candidates, key=lambda c: (candidate_sweep(c) > math.pi) != want_major)
+    else:
+        return None
+    r0, r1 = math.hypot(sx - cx, sy - cy), math.hypot(ex - cx, ey - cy)
+    if r0 <= 1e-9 or abs(r0 - r1) > 0.05:
+        return None
+    a0, a1 = math.atan2(sy - cy, sx - cx), math.atan2(ey - cy, ex - cx)
+    if math.hypot(ex - sx, ey - sy) <= 1e-7:
+        sweep = 2.0 * math.pi
+    elif record["code"] == 3:
+        sweep = (a1 - a0) % (2.0 * math.pi)
+    else:
+        sweep = (a0 - a1) % (2.0 * math.pi)
+    return cx, cy, (r0 + r1) / 2.0, a0, sweep
+
+
+def sample_motion(record, max_step):
+    start, end = record["start"], record["end"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return None
+    if record["code"] in {0, 1}:
+        length = math.hypot(end["x"] - start["x"], end["y"] - start["y"])
+        count = max(1, int(math.ceil(length / max_step)))
+        return [
+            (start["x"] + (end["x"] - start["x"]) * i / count,
+             start["y"] + (end["y"] - start["y"]) * i / count,
+             i / count)
+            for i in range(count + 1)
+        ]
+    if record["code"] not in {2, 3}:
+        return None
+    arc = _arc_geometry(record)
+    if arc is None:
+        return None
+    cx, cy, radius, a0, sweep = arc
+    count = max(4, int(math.ceil(radius * sweep / max_step)))
+    direction = 1.0 if record["code"] == 3 else -1.0
+    return [
+        (cx + radius * math.cos(a0 + direction * sweep * i / count),
+         cy + radius * math.sin(a0 + direction * sweep * i / count),
+         i / count)
+        for i in range(count + 1)
+    ]
+
+
+def point_rect_distance(point, rect):
+    x, y = point
+    xmin, ymin, xmax, ymax = rect
+    dx = max(xmin - x, 0.0, x - xmax)
+    dy = max(ymin - y, 0.0, y - ymax)
+    return math.hypot(dx, dy)
+
+
+def validate_pocket_machining(records, item):
+    tool = int(item["tool"])
+    radius = float(item["tool_radius"])
+    top = float(item["top"])
+    floor = float(item["floor"])
+    tol = float(item.get("tol", 0.2))
+    rects = [tuple(map(float, rect)) for rect in item["rects"]]
+    floor_centers = []
+
+    for record in records:
+        if record["code"] not in {1, 2, 3} or record_z(record) is None:
+            continue
+        start_z = record["start"]["z"] if record["start"]["z"] is not None else record_z(record)
+        if min(start_z, record_z(record)) >= top - tol:
+            continue
+        if record["tool"] != tool:
+            return False
+        samples = sample_motion(record, 0.75)
+        if not samples:
+            return False
+        for x, y, fraction in samples:
+            z = start_z + (record_z(record) - start_z) * fraction
+            if z >= top - tol:
+                continue
+            if z < floor - tol:
+                return False
+            for angle_index in range(24):
+                angle = 2.0 * math.pi * angle_index / 24.0
+                swept = (x + radius * math.cos(angle), y + radius * math.sin(angle))
+                if not any(rect_contains(swept, rect, 0.25) for rect in rects):
+                    return False
+            if close(z, floor, tol):
+                floor_centers.append((x, y))
+
+    if not floor_centers:
+        return False
+    step = float(item.get("sample_step", 4.0))
+    for rect in rects:
+        x1, y1, x2, y2 = rect
+        x = min(x1, x2) + radius
+        while x <= max(x1, x2) - radius + 1e-9:
+            y = min(y1, y2) + radius
+            while y <= max(y1, y2) - radius + 1e-9:
+                if not any(math.hypot(x - cx, y - cy) <= radius + 0.35 for cx, cy in floor_centers):
+                    return False
+                y += step
+            x += step
+    return True
+
+
+def validate_fixture_clearance(records, item):
+    required = float(item["tool_radius"]) + float(item["clearance"])
+    below = float(item["below"])
+    step = float(item.get("sample_step", 0.5))
+    rects = [tuple(map(float, rect)) for rect in item["rects"]]
+    for record in records:
+        if record["code"] not in {0, 1, 2, 3}:
+            continue
+        start_z, end_z = record["start"]["z"], record["end"]["z"]
+        if start_z is None or end_z is None or min(start_z, end_z) >= below:
+            continue
+        if record["tool"] != 1:
+            return False
+        if xy_changed(record):
+            samples = sample_motion(record, step)
+            if not samples:
+                return False
+        else:
+            end = record["end"]
+            if end["x"] is None or end["y"] is None:
+                return False
+            samples = [(end["x"], end["y"], 1.0)]
+        for x, y, fraction in samples:
+            z = start_z + (end_z - start_z) * fraction
+            if z < below and any(point_rect_distance((x, y), rect) < required - 1e-6 for rect in rects):
+                return False
+    return True
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
+        return False
+    if "pocket_machining" in rule and not validate_pocket_machining(records, rule["pocket_machining"]):
         return False
     for group in rule.get("terms", []):
         if not any(str(term).upper() in src for term in group):
@@ -232,6 +417,8 @@ def validate_file(path: Path, rule: dict) -> bool:
         if sum(group_closed(group) for group in groups) < int(item["min"]):
             return False
     if len(cut_groups(records)) < int(rule.get("min_cut_groups", 0)):
+        return False
+    if "fixture_clearance" in rule and not validate_fixture_clearance(records, rule["fixture_clearance"]):
         return False
     for item in rule.get("hole_sets", []):
         if not has_all_points(hole_visits(records, tools, item), item["points"]):
@@ -265,6 +452,9 @@ def validate_file(path: Path, rule: dict) -> bool:
     for ordinal, minimum in rule.get("tool_min_cut", {}).items():
         tool = tool_for_ordinal(tools, int(ordinal))
         if tool is None or sum(record["tool"] == tool for record in cuts) < int(minimum):
+            return False
+    for tool, minimum in rule.get("tool_number_min_cut", {}).items():
+        if sum(record["tool"] == int(tool) for record in cuts) < int(minimum):
             return False
     for ordinal, minimum in rule.get("tool_z_levels", {}).items():
         tool = tool_for_ordinal(tools, int(ordinal))

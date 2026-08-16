@@ -5,7 +5,46 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-12.nc': {'terms': [['TOOL_SPEC T1 TYPE=ENDMILL DIAMETER=12.000MM CUTTING_EDGE_HEIGHT=25.000MM LENGTH=75.000MM SHANK_DIAMETER=12.000MM'], ['TOOL_CONTROLLER T1 OPERATION=FACE SPINDLE=6000RPM HORIZONTAL_FEED=600MM/MIN VERTICAL_FEED=180MM/MIN'], ['TOOL_SPEC T2 TYPE=DRILL DIAMETER=6.000MM LENGTH=80.000MM TIP_ANGLE=118.000DEG'], ['TOOL_CONTROLLER T2 OPERATION=DRILLING SPINDLE=5000RPM HORIZONTAL_FEED=180MM/MIN VERTICAL_FEED=180MM/MIN'], ['TOOL_SPEC T3 TYPE=ENDMILL DIAMETER=8.000MM CUTTING_EDGE_HEIGHT=20.000MM LENGTH=65.000MM SHANK_DIAMETER=8.000MM'], ['TOOL_CONTROLLER T3 OPERATION=PROFILE_ROUGH SPINDLE=7000RPM HORIZONTAL_FEED=500MM/MIN VERTICAL_FEED=150MM/MIN'], ['TOOL_SPEC T4 TYPE=ENDMILL DIAMETER=6.000MM CUTTING_EDGE_HEIGHT=18.000MM LENGTH=60.000MM SHANK_DIAMETER=6.000MM'], ['TOOL_CONTROLLER T4 OPERATION=PROFILE_FINISH SPINDLE=8000RPM HORIZONTAL_FEED=300MM/MIN VERTICAL_FEED=100MM/MIN'], ['OPERATION FACE T1'], ['OPERATION DRILLING T2'], ['OPERATION PROFILE_ROUGH T3'], ['OPERATION PROFILE_FINISH T4']], 'min_tools': 4, 'min_motion': 30, 'min_rapid': 8, 'face_grid': {'z': 18.0, 'min_tracks': 6, 'span': 100.0}, 'hole_sets': [{'tool': 2, 'points': [(-30, -20), (30, -20), (30, 20), (-30, 20)], 'z_max': -1.0}], 'closed': {'z': 0.0, 'min': 1}, 'min_cut_groups': 3, 'tool_min_cut': {'1': 12, '3': 4, '4': 4}, 'z_values': [18.0, -1.0, 0.5, 0.0]}}}
+RULE = {
+    "files": {
+        "task-12.nc": {
+            "tool_comments": [
+                ("TOOL_SPEC", 1, {"TYPE": "ENDMILL", "DIAMETER": (12, "MM"), "CUTTING_EDGE_HEIGHT": (25, "MM"), "LENGTH": (75, "MM"), "SHANK_DIAMETER": (12, "MM")}),
+                ("TOOL_CONTROLLER", 1, {"OPERATION": "FACE", "SPINDLE": (6000, "RPM"), "HORIZONTAL_FEED": (600, "MM/MIN"), "VERTICAL_FEED": (180, "MM/MIN")}),
+                ("TOOL_SPEC", 2, {"TYPE": "DRILL", "DIAMETER": (6, "MM"), "LENGTH": (80, "MM"), "TIP_ANGLE": (118, "DEG")}),
+                ("TOOL_CONTROLLER", 2, {"OPERATION": "DRILLING", "SPINDLE": (5000, "RPM"), "HORIZONTAL_FEED": (180, "MM/MIN"), "VERTICAL_FEED": (180, "MM/MIN")}),
+                ("TOOL_SPEC", 3, {"TYPE": "ENDMILL", "DIAMETER": (8, "MM"), "CUTTING_EDGE_HEIGHT": (20, "MM"), "LENGTH": (65, "MM"), "SHANK_DIAMETER": (8, "MM")}),
+                ("TOOL_CONTROLLER", 3, {"OPERATION": "PROFILE_ROUGH", "SPINDLE": (7000, "RPM"), "HORIZONTAL_FEED": (500, "MM/MIN"), "VERTICAL_FEED": (150, "MM/MIN")}),
+                ("TOOL_SPEC", 4, {"TYPE": "ENDMILL", "DIAMETER": (6, "MM"), "CUTTING_EDGE_HEIGHT": (18, "MM"), "LENGTH": (60, "MM"), "SHANK_DIAMETER": (6, "MM")}),
+                ("TOOL_CONTROLLER", 4, {"OPERATION": "PROFILE_FINISH", "SPINDLE": (8000, "RPM"), "HORIZONTAL_FEED": (300, "MM/MIN"), "VERTICAL_FEED": (100, "MM/MIN")}),
+            ],
+            "operation_controls": [
+                {"comment": "OPERATION FACE T1", "tool": 1, "spindle": 6000, "hfeed": 600, "vfeed": 180, "require_horizontal": True, "require_vertical": True},
+                {"comment": "OPERATION DRILLING T2", "tool": 2, "spindle": 5000, "hfeed": 180, "vfeed": 180, "require_horizontal": False, "require_vertical": True},
+                {"comment": "OPERATION PROFILE_ROUGH T3", "tool": 3, "spindle": 7000, "hfeed": 500, "vfeed": 150, "require_horizontal": True, "require_vertical": True},
+                {"comment": "OPERATION PROFILE_FINISH T4", "tool": 4, "spindle": 8000, "hfeed": 300, "vfeed": 100, "require_horizontal": True, "require_vertical": True},
+            ],
+            "exact_tools": [1, 2, 3, 4],
+            "min_motion": 12,
+            "min_rapid": 4,
+            "face_coverage": {
+                "tool": 1,
+                "z_range": [17.0, 18.25],
+                "part_rect": [-60, -40, 60, 40],
+                "tool_radius": 6.0,
+                "grid_step": 5.0,
+                "sample_step": 1.0,
+                "min_coverage": 0.75,
+            },
+            "hole_sets": [{"tool": 2, "points": [(-30, -20), (30, -20), (30, 20), (-30, 20)], "z_max": -1.0}],
+            "profile_envelopes": [
+                {"tool": 3, "part_rect": [-60, -40, 60, 40], "part_top": 18.0, "radius": 4.0, "tol": 0.75, "min_side_fraction": 0.70},
+                {"tool": 4, "part_rect": [-60, -40, 60, 40], "part_top": 18.0, "radius": 3.0, "tol": 0.75, "min_side_fraction": 0.70},
+            ],
+            "profile_depth_order": {"rough_tool": 3, "finish_tool": 4, "tolerance": 0.75},
+        }
+    }
+}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -32,6 +71,136 @@ def close(a, b, tol=TOL):
 def strip_code(line: str) -> str:
     line = re.sub(r"\([^)]*\)", " ", line)
     return line.split(";", 1)[0].upper()
+
+
+def normalize_comment(text: str) -> str:
+    return " ".join(text.strip().upper().split())
+
+
+def parse_value(text: str):
+    match = re.fullmatch(r"([+-]?\d+(?:\.\d+)?)([A-Z/]+)", text)
+    if not match:
+        return None
+    return float(match.group(1)), match.group(2)
+
+
+def validate_tool_comments(src: str, expected) -> bool:
+    comments = [normalize_comment(text) for text in re.findall(r"\(([^()]*)\)", src)]
+    if sum(comment.startswith("TOOL_SPEC ") for comment in comments) != 4:
+        return False
+    if sum(comment.startswith("TOOL_CONTROLLER ") for comment in comments) != 4:
+        return False
+    for kind, tool, fields in expected:
+        prefix = rf"^{kind}\s+T0*{tool}\b"
+        matches = [comment for comment in comments if re.search(prefix, comment)]
+        if len(matches) != 1:
+            return False
+        actual = dict(re.findall(r"([A-Z_]+)=([^\s]+)", matches[0]))
+        if set(actual) != set(fields):
+            return False
+        for name, wanted in fields.items():
+            value = actual[name]
+            if isinstance(wanted, tuple):
+                parsed = parse_value(value)
+                if parsed is None or parsed[1] != wanted[1] or not close(parsed[0], wanted[0], 1e-6):
+                    return False
+            elif value != wanted:
+                return False
+    return True
+
+
+def validate_operation_controls(src: str, expected) -> bool:
+    lines = [line.strip().upper() for line in src.splitlines() if line.strip()]
+    comments = [
+        normalize_comment(match.group(1)) if (match := re.fullmatch(r"\(([^()]*)\)", line)) else None
+        for line in lines
+    ]
+    operation_comments = [comment for comment in comments if comment and comment.startswith("OPERATION ")]
+    if len(operation_comments) != len(expected):
+        return False
+
+    for item in expected:
+        marker = normalize_comment(item["comment"])
+        indices = [index for index, comment in enumerate(comments) if comment == marker]
+        if len(indices) != 1:
+            return False
+        start = indices[0] + 1
+        end = next(
+            (
+                index
+                for index in range(start, len(lines))
+                if comments[index] and (
+                    comments[index].startswith("FINISH OPERATION")
+                    or comments[index].startswith("OPERATION ")
+                )
+            ),
+            len(lines),
+        )
+        block = lines[start:end]
+        changes = []
+        for line in block:
+            code = strip_code(line)
+            match = re.search(r"\bM0?6\b.*\bT0*(\d+)\b|\bT0*(\d+)\b.*\bM0?6\b", code)
+            if match:
+                changes.append(int(match.group(1) or match.group(2)))
+        if changes != [int(item["tool"])]:
+            return False
+        spindles = [
+            float(value)
+            for line in block
+            if re.search(r"\bM0?3\b", strip_code(line))
+            for value in re.findall(r"\bS([+-]?\d+(?:\.\d+)?)", strip_code(line))
+        ]
+        if not spindles or any(not close(value, item["spindle"], 0.5) for value in spindles):
+            return False
+
+        state = {"x": None, "y": None, "z": None, "motion": None, "feed": None}
+        horizontal = vertical = 0
+        for line in block:
+            code = strip_code(line)
+            g_codes = [int(value) for value in re.findall(r"\bG0*(\d+)\b", code)]
+            explicit_motion = next((value for value in g_codes if value in {0, 1, 2, 3}), None)
+            if explicit_motion is not None:
+                state["motion"] = explicit_motion
+            feed_match = re.search(r"\bF([+-]?\d+(?:\.\d+)?)", code)
+            if feed_match:
+                state["feed"] = float(feed_match.group(1))
+            explicit = {}
+            for axis in "XYZ":
+                match = re.search(rf"\b{axis}([+-]?\d+(?:\.\d+)?)", code)
+                if match:
+                    explicit[axis.lower()] = float(match.group(1))
+            if not explicit:
+                continue
+            start_pos = {axis: state[axis] for axis in "xyz"}
+            for axis, value in explicit.items():
+                state[axis] = value
+            if state["motion"] not in {1, 2, 3}:
+                continue
+            xy_move = any(
+                axis in explicit
+                and start_pos[axis] is not None
+                and not close(start_pos[axis], state[axis], 1e-9)
+                for axis in ("x", "y")
+            )
+            z_move = (
+                "z" in explicit
+                and start_pos["z"] is not None
+                and not close(start_pos["z"], state["z"], 1e-9)
+            )
+            if xy_move:
+                horizontal += 1
+                if state["feed"] is None or not close(state["feed"], item["hfeed"], 0.5):
+                    return False
+            elif z_move:
+                vertical += 1
+                if state["feed"] is None or not close(state["feed"], item["vfeed"], 0.5):
+                    return False
+        if item.get("require_horizontal") and horizontal == 0:
+            return False
+        if item.get("require_vertical") and vertical == 0:
+            return False
+    return True
 
 
 def parse_nc(src: str):
@@ -189,18 +358,135 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def record_sample_points(record, step=1.0):
+    start, end = record["start"], record["end"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return []
+    sx, sy, ex, ey = start["x"], start["y"], end["x"], end["y"]
+    explicit = record["explicit"]
+    if record["code"] in {2, 3} and "i" in explicit and "j" in explicit:
+        cx, cy = sx + explicit["i"], sy + explicit["j"]
+        radius = math.hypot(sx - cx, sy - cy)
+        if radius > 1e-9:
+            start_angle = math.atan2(sy - cy, sx - cx)
+            end_angle = math.atan2(ey - cy, ex - cx)
+            sweep = (start_angle - end_angle) % (2 * math.pi) if record["code"] == 2 else (end_angle - start_angle) % (2 * math.pi)
+            if sweep < 1e-9 and close(sx, ex, 1e-6) and close(sy, ey, 1e-6):
+                sweep = 2 * math.pi
+            count = max(1, int(math.ceil(radius * sweep / max(float(step), 1e-6))))
+            direction = -1.0 if record["code"] == 2 else 1.0
+            return [
+                (cx + radius * math.cos(start_angle + direction * sweep * index / count),
+                 cy + radius * math.sin(start_angle + direction * sweep * index / count))
+                for index in range(count + 1)
+            ]
+    length = math.hypot(ex - sx, ey - sy)
+    count = max(1, int(math.ceil(length / max(float(step), 1e-6))))
+    return [(sx + (ex - sx) * index / count, sy + (ey - sy) * index / count) for index in range(count + 1)]
+
+
+def validate_face_coverage(records, item):
+    tool = int(item["tool"])
+    z_min, z_max = map(float, item["z_range"])
+    candidates = [
+        record for record in records
+        if record["tool"] == tool and record["code"] in {1, 2, 3} and xy_changed(record)
+        and record_z(record) is not None and z_min - TOL <= record_z(record) <= z_max + TOL
+    ]
+    samples = [point for record in candidates for point in record_sample_points(record, item.get("sample_step", 1.0))]
+    if not samples:
+        return False
+    x1, y1, x2, y2 = map(float, item["part_rect"])
+    x1, x2, y1, y2 = min(x1, x2), max(x1, x2), min(y1, y2), max(y1, y2)
+    step = float(item.get("grid_step", 5.0))
+    nx = max(1, int(math.ceil((x2 - x1) / step)))
+    ny = max(1, int(math.ceil((y2 - y1) / step)))
+    grid = [(x1 + (ix + 0.5) * (x2 - x1) / nx, y1 + (iy + 0.5) * (y2 - y1) / ny) for ix in range(nx) for iy in range(ny)]
+    reach = float(item["tool_radius"]) + float(item.get("sample_step", 1.0))
+    covered = sum(any(math.hypot(x - px, y - py) <= reach for px, py in samples) for x, y in grid)
+    return covered / len(grid) >= float(item["min_coverage"])
+
+
+def profile_side_depths(records, item):
+    tool = int(item["tool"])
+    radius = float(item["radius"])
+    tol = float(item.get("tol", 0.75))
+    fraction = float(item.get("min_side_fraction", 0.70))
+    x1, y1, x2, y2 = map(float, item["part_rect"])
+    expected = (min(x1, x2) - radius, min(y1, y2) - radius, max(x1, x2) + radius, max(y1, y2) + radius)
+    xmin, ymin, xmax, ymax = expected
+    part_top = float(item.get("part_top", 1e9))
+    candidates = [
+        record for record in records
+        if record["tool"] == tool and record["code"] in {1, 2, 3} and xy_changed(record)
+        and record_z(record) is not None and record_z(record) <= part_top + TOL
+    ]
+    points = []
+    for record in candidates:
+        z = record_z(record)
+        if z is None:
+            continue
+        for x, y in record_sample_points(record, 1.0):
+            points.append((x, y, z))
+    if not points:
+        return []
+
+    def distance_to_part(x, y):
+        dx = max(min(x1, x2) - x, 0.0, x - max(x1, x2))
+        dy = max(min(y1, y2) - y, 0.0, y - max(y1, y2))
+        return math.hypot(dx, dy)
+
+    if any(distance_to_part(x, y) < radius - tol for x, y, _ in points):
+        return []
+
+    bottom = [(x, z) for x, y, z in points if abs(y - ymin) <= tol]
+    top = [(x, z) for x, y, z in points if abs(y - ymax) <= tol]
+    left = [(y, z) for x, y, z in points if abs(x - xmin) <= tol]
+    right = [(y, z) for x, y, z in points if abs(x - xmax) <= tol]
+    sides = (bottom, top, left, right)
+    required_spans = ((xmax - xmin) * fraction, (xmax - xmin) * fraction, (ymax - ymin) * fraction, (ymax - ymin) * fraction)
+    if any(not side or max(value for value, _ in side) - min(value for value, _ in side) < required for side, required in zip(sides, required_spans)):
+        return []
+    return [z for side in sides for _, z in side]
+
+
+def validate_profile_envelopes(records, rules, depth_order=None):
+    depths = {}
+    for item in rules:
+        item_depths = profile_side_depths(records, item)
+        if not item_depths:
+            return False
+        depths[int(item["tool"])] = item_depths
+    if depth_order:
+        rough = depths.get(int(depth_order["rough_tool"]))
+        finish = depths.get(int(depth_order["finish_tool"]))
+        if not rough or not finish or min(finish) > min(rough) + float(depth_order.get("tolerance", TOL)):
+            return False
+    return True
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
+        return False
+    if not validate_tool_comments(src, rule.get("tool_comments", [])):
+        return False
+    if not validate_operation_controls(src, rule.get("operation_controls", [])):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
         return False
+    if "exact_tools" in rule and tool_order(tools) != [int(tool) for tool in rule["exact_tools"]]:
+        return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
+        return False
+    if "face_coverage" in rule and not validate_face_coverage(records, rule["face_coverage"]):
+        return False
+    if not validate_profile_envelopes(records, rule.get("profile_envelopes", []), rule.get("profile_depth_order")):
         return False
     for group in rule.get("terms", []):
         if not any(str(term).upper() in src for term in group):
@@ -213,19 +499,6 @@ def validate_file(path: Path, rule: dict) -> bool:
     z_values = sorted({round(record_z(record), 3) for record in cuts if record_z(record) is not None})
     if len(z_values) < int(rule.get("min_z_levels", 0)):
         return False
-    if "face_grid" in rule:
-        item = rule["face_grid"]
-        candidates = [record for record in cuts if "z" not in item or at_z(record, item["z"])]
-        horizontal, vertical = set(), set()
-        span = float(item.get("span", 20.0))
-        for record in candidates:
-            s, e = record["start"], record["end"]
-            if abs(e["x"] - s["x"]) >= span and close(e["y"], s["y"], 0.2):
-                horizontal.add(round((e["y"] + s["y"]) / 2, 1))
-            if abs(e["y"] - s["y"]) >= span and close(e["x"], s["x"], 0.2):
-                vertical.add(round((e["x"] + s["x"]) / 2, 1))
-        if max(len(horizontal), len(vertical)) < int(item["min_tracks"]):
-            return False
     if "closed" in rule:
         item = rule["closed"]
         groups = cut_groups(records, item.get("z"))
