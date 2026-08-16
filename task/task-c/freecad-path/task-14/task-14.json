@@ -1,16 +1,16 @@
 {
   "id": "c-freecad-path-task-14-ubuntu",
   "snapshot": "freecad-path0.21.2",
-  "instruction": "Open /home/user/Desktop/broken_boundary_pocket.step in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Create a FreeCAD Path/CAM Job with Boundary Repair and Pocket Shape operations. Repair or rebuild the pocket boundary in FreeCAD so it can generate stable CAM pocket toolpaths. Remove the duplicate edge and close the 0.05 mm gap, then machine the pocket to floor Z=5.000 mm. Tool definition: T1 is an end mill for the repaired closed pocket boundary, with S7000 rpm and F500 mm/min. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-14.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
-  "source": "https://wiki.freecad.org/CAM_Sanity；https://wiki.freecad.org/Part_CheckGeometry；https://wiki.freecad.org/CAM_Pocket_Shape https://wiki.freecad.org/CAM_Sanity%EF%BC%9Bhttps:/wiki.freecad.org/Part_CheckGeometry%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Pocket_Shape",
+  "instruction": "Open /home/user/Desktop/broken_boundary_pocket.FCStd in FreeCAD 0.21.2 Path/CAM. Preserve its original BrokenPocketBoundary sketch as defect evidence. It defines an intended centered 100 x 60 mm pocket boundary at the stock top Z=18 mm (X=-50..50 mm, Y=-30..30 mm), but contains one fully duplicated bottom segment and a 0.05 mm gap from (-50, -29.95, 18) to (-50, -30.00, 18). Repair or rebuild it as an editable closed planar boundary with exactly four unique edges and no duplicate geometry, and create an editable Sketcher sketch whose visible name is exactly BoundaryRepair. Create exactly one FreeCAD Path/CAM Job with exactly one native Pocket Shape operation based on the repaired boundary face. Keep the uploaded 120 x 80 x 18 mm StockModel and its untranslated G54 model coordinates. Machine from StartDepth Z=18.000 mm to the absolute model-coordinate floor FinalDepth Z=5.000 mm (13.000 mm below the top). Use T1 as an 8 mm flat end mill using the standard FreeCAD endmill ToolBit shape, with forward/clockwise spindle direction (M3) at S7000 rpm and both horizontal and vertical cutting feeds F500 mm/min. Use safe and clearance heights above Z=18 mm, a finite positive stepdown, a reasonable stepover, zero extra offset, and the stock LinuxCNC postprocessor. Save the editable FreeCAD document and its matching native postprocessed program using exactly these absolute paths: /home/user/Desktop/task-14.FCStd and /home/user/Desktop/task-14.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketShape.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketBase.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Area.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/PathScripts/PathUtils.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Geom.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Controller.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Tools/Bit/5mm_Endmill.fctb\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py\nhttps://wiki.freecad.org/index.php?title=CAM_Pocket_Shape&oldid=1262258\nhttps://wiki.freecad.org/index.php?title=Part_CheckGeometry&oldid=1268333\nhttps://linuxcnc.org/docs/2.8/html/gcode/m-code.html#mcode:m2-m30",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
         "files": [
           {
-            "local_path": "task-14/init_file/broken_boundary_pocket.step",
-            "path": "/home/user/Desktop/broken_boundary_pocket.step"
+            "local_path": "task-14/init_file/broken_boundary_pocket.FCStd",
+            "path": "/home/user/Desktop/broken_boundary_pocket.FCStd"
           }
         ]
       }
@@ -37,8 +37,12 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true"
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "/home/user/Desktop/eval.py"
+      ],
+      "shell": false
     },
     "expected": {
       "type": "rule",

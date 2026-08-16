@@ -1,41 +1,79 @@
 {
   "task": "task-20",
+  "software": "FreeCAD Path/CAM",
+  "version": "0.21.2",
   "unit": "mm",
-  "program": 2040,
-  "pocket_count": 3,
-  "through_holes": 16,
-  "counterbores": 2,
-  "surface_regions": 1,
+  "wcs": "G54",
+  "model_bounds": {
+    "xmin": -90.0,
+    "xmax": 90.0,
+    "ymin": -50.0,
+    "ymax": 50.0,
+    "zmin": -18.0,
+    "zmax": 0.0
+  },
+  "stock_bounds": {
+    "xmin": -95.0,
+    "xmax": 95.0,
+    "ymin": -55.0,
+    "ymax": 55.0,
+    "zmin": -18.0,
+    "zmax": 1.0
+  },
+  "pockets": [
+    {"center": [-55.0, 15.0], "length": 34.0, "width": 24.0, "radius": 4.0, "floor_z": -4.0},
+    {"center": [0.0, 15.0], "length": 34.0, "width": 24.0, "radius": 4.0, "floor_z": -6.0},
+    {"center": [55.0, 15.0], "length": 34.0, "width": 24.0, "radius": 4.0, "floor_z": -8.0}
+  ],
+  "ordinary_through_holes": {
+    "diameter": 5.0,
+    "x": [-70.0, -50.0, -30.0, -10.0, 10.0, 30.0, 50.0, 70.0],
+    "y": [-32.0, -16.0],
+    "count": 16
+  },
+  "counterbores": [
+    {"center": [-78.0, 38.0], "pilot_diameter": 5.0, "counterbore_diameter": 12.0, "floor_z": -4.0},
+    {"center": [78.0, 38.0], "pilot_diameter": 5.0, "counterbore_diameter": 12.0, "floor_z": -4.0}
+  ],
+  "surface_region": {
+    "xmin": -22.0,
+    "xmax": 22.0,
+    "ymin": 33.0,
+    "ymax": 43.0,
+    "floor_z": -0.5
+  },
+  "fixtures": [
+    {"bounds": [-112.0, -102.0, -40.0, -20.0, -2.0, 4.0]},
+    {"bounds": [-112.0, -102.0, 20.0, 40.0, -2.0, 4.0]},
+    {"bounds": [102.0, 112.0, -40.0, -20.0, -2.0, 4.0]},
+    {"bounds": [102.0, 112.0, 20.0, 40.0, -2.0, 4.0]}
+  ],
   "fixture_clearance_min": 3.0,
-  "tool_classes": [
-    {
-      "tool": 1,
-      "class": "facing"
-    },
-    {
-      "tool": 2,
-      "class": "pocketing and profiling"
-    },
-    {
-      "tool": 3,
-      "class": "drilling"
-    },
-    {
-      "tool": 4,
-      "class": "counterboring"
-    },
-    {
-      "tool": 5,
-      "class": "surface finishing"
-    }
+  "expected_profile_swept_clearance": 4.0,
+  "safe_height": 5.0,
+  "clearance_height": 8.0,
+  "tools": [
+    {"tool": 1, "role": "facing", "shape": "endmill", "diameter": 20.0, "spindle": 7000, "feed": 500},
+    {"tool": 2, "role": "pocketing and profiling", "shape": "endmill", "diameter": 8.0, "spindle": 7000, "feed": 500},
+    {"tool": 3, "role": "through drilling", "shape": "drill", "diameter": 5.0, "tip_angle": 118.0, "spindle": 7000, "feed": 500},
+    {"tool": 4, "role": "counterbore helix", "shape": "endmill", "diameter": 10.0, "spindle": 7000, "feed": 500},
+    {"tool": 5, "role": "surface finishing", "shape": "ballend", "diameter": 6.0, "spindle": 7000, "feed": 500}
   ],
   "operations": [
-    "Face",
-    "Pocket",
-    "Drilling",
-    "Counterbore",
-    "Surface",
-    "Profile"
+    {"type": "MillFace", "tool": 1, "start_z": 1.0, "final_z": 0.0, "step_down": 1.0, "step_over_percent": 60.0},
+    {"type": "PocketShape", "tool": 2, "pocket": 1, "start_z": 0.0, "final_z": -4.0, "step_down": 2.0, "step_over_percent": 50.0},
+    {"type": "PocketShape", "tool": 2, "pocket": 2, "start_z": 0.0, "final_z": -6.0, "step_down": 2.0, "step_over_percent": 50.0},
+    {"type": "PocketShape", "tool": 2, "pocket": 3, "start_z": 0.0, "final_z": -8.0, "step_down": 2.0, "step_over_percent": 50.0},
+    {"type": "Drilling", "tool": 3, "location_count": 18, "start_z": 0.0, "nominal_final_z": -20.0, "retract_z": 2.0, "extra_offset": "Drill Tip"},
+    {"type": "Helix", "tool": 4, "location_count": 2, "start_z": 0.0, "final_z": -4.0, "step_down": 2.0},
+    {"type": "Surface", "tool": 5, "start_z": 0.0, "final_z": -0.5, "scan_type": "Planar", "cut_pattern": "ZigZag", "layer_mode": "Single-pass", "sample_interval": 1.0, "depth_offset": 0.0, "step_over_percent": 25.0},
+    {"type": "Profile", "tool": 2, "side": "Outside", "direction": "CW", "use_compensation": true, "start_z": 0.0, "final_z": -18.0, "step_down": 3.0}
   ],
-  "post_log_required": true
+  "postprocessor": "linuxcnc",
+  "post_log_required": true,
+  "outputs": [
+    "/home/user/Desktop/task-20.FCStd",
+    "/home/user/Desktop/task-20.nc",
+    "/home/user/Desktop/post_log.txt"
+  ]
 }
