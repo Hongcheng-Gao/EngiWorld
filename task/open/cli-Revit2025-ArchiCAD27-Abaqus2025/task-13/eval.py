@@ -5,7 +5,14 @@ import re
 from pathlib import Path
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "C:/Users/user/Desktop"))
-SPEC = {'products': [{'class': 'IfcDoor', 'name': 'ACCESSIBLE-WC-DOOR', 'storey': 'Level 0', 'tokens': ['ACCESSIBLE', 'CLEAR WIDTH', 'WAITING ROUTE', 'WC'], 'predefined': 'DOOR'}], 'annotations': [{'class': 'IfcSpace', 'name': 'WC-ACC', 'tokens': ['ACCESSIBLE', 'WAITING ROUTE', 'PATIENT', 'UNISEX']}]}
+SPEC = {
+    "products": [
+        {"class": "IfcDoor", "scope": "changed_or_new", "groups": [["ACCESSIBLE", "BARRIER FREE", "ADAPTED"], ["WC", "TOILET", "RESTROOM"], ["DOOR", "ENTRY", "ACCESS"]]},
+    ],
+    "annotations": [
+        {"class": "IfcSpace", "groups": [["ACCESSIBLE", "BARRIER FREE", "ADAPTED", "WC ACC"], ["WC", "TOILET", "RESTROOM"], ["WAITING ROUTE", "ROUTE FROM WAITING", "WAITING ACCESS", "WAITING APPROACH"]]},
+    ],
+}
 
 DIRECT_IFC_TOOLS = ("ifcopenshell", "xbim", "bcfier", "ifcpatch", "ifcconvert", "ifccsv", "ifcclash")
 DIRECT_WRITE_TOKENS = ("result.ifc", "desktop\\result.ifc", "desktop/result.ifc")
@@ -77,20 +84,22 @@ def history_contains_bypass(root):
 
 
 def native_export_provenance(path, model):
-    apps = " ".join(
+    sources = [
         " ".join(
             str(getattr(app, attr, "") or "")
             for attr in ("ApplicationIdentifier", "ApplicationFullName", "Version")
         )
         for app in model.by_type("IfcApplication")
-    )
-    text = f"{apps} {read_text_safe(path, 8000)}".lower()
+    ]
+    header = getattr(getattr(model, "header", None), "file_name", None)
+    if header is not None:
+        sources.extend([getattr(header, "preprocessor_version", ""), getattr(header, "originating_system", "")])
+    text = " ".join(str(item or "") for item in sources).lower()
     if any(token in text for token in DIRECT_IFC_TOOLS) or "/dev/null" in text:
         return False
     revit_2025 = "revit" in text and ("2025" in text or re.search(r"\b25(?:\.|\b)", text))
     archicad_27 = "archicad" in text and re.search(r"\b27(?:\.|\b)", text)
-    abaqus_2025 = ("abaqus" in text or "simulia" in text) and "2025" in text
-    return bool(revit_2025 or archicad_27 or abaqus_2025)
+    return bool(revit_2025 or archicad_27)
 
 
 def header_looks_graphisoft_edm(path):
@@ -167,6 +176,20 @@ def has_tokens(obj, model, tokens):
     return all(text_norm(token) in haystack for token in tokens)
 
 
+def has_semantic_groups(obj, model, groups):
+    haystack = object_search_text(obj, model)
+    return all(any(text_norm(token) in haystack for token in group) for group in groups)
+
+
+def is_upper_storey(obj, model):
+    storey = parent_storey(obj, model)
+    if storey is None:
+        return False
+    storeys = model.by_type("IfcBuildingStorey")
+    elevations = [float(getattr(item, "Elevation", 0.0) or 0.0) for item in storeys]
+    return bool(elevations) and float(getattr(storey, "Elevation", 0.0) or 0.0) >= max(elevations) - 1e-6
+
+
 def ifc_bbox(model):
     try:
         import numpy as np
@@ -203,7 +226,7 @@ def bbox_preserved(init_model, result_model, tol=0.75):
     init_bbox = ifc_bbox(init_model)
     result_bbox = ifc_bbox(result_model)
     if init_bbox is None or result_bbox is None:
-        return True
+        return False
     for a, b in zip(init_bbox[0] + init_bbox[1], result_bbox[0] + result_bbox[1]):
         if abs(float(a) - float(b)) > tol:
             return False
@@ -223,22 +246,34 @@ def check_baseline(init_model, result_model):
 
 
 def check_required_products(init_model, result_model):
+    init_by_id = {getattr(obj, "GlobalId", None): obj for obj in init_model.by_type("IfcRoot")}
+    used_ids = set()
     increases = {}
     for item in SPEC.get("products", []):
-        increases[item["class"]] = increases.get(item["class"], 0) + 1
-        matches = objects_by_name(result_model, item["class"], item["name"])
-        if not matches:
+        count = int(item.get("count", 1))
+        scope = item.get("scope", "new")
+        if scope == "new":
+            increases[item["class"]] = increases.get(item["class"], 0) + count
+        matches = []
+        for obj in result_model.by_type(item["class"]):
+            gid = getattr(obj, "GlobalId", None)
+            if not gid or gid in used_ids:
+                continue
+            if gid in init_by_id:
+                if scope != "changed_or_new":
+                    continue
+                if object_search_text(obj, result_model) == object_search_text(init_by_id[gid], init_model):
+                    continue
+            elif scope not in ("new", "changed_or_new"):
+                continue
+            if not has_semantic_groups(obj, result_model, item.get("groups", [])):
+                continue
+            if item.get("storey_scope") == "upper" and not is_upper_storey(obj, result_model):
+                continue
+            matches.append(obj)
+        if len(matches) < count:
             return False
-        obj = matches[0]
-        if item.get("storey"):
-            storey = parent_storey(obj, result_model)
-            if storey is None or not same_name(getattr(storey, "Name", ""), item["storey"]):
-                return False
-        predefined = item.get("predefined")
-        if predefined and hasattr(obj, "PredefinedType") and text_norm(getattr(obj, "PredefinedType", "")) != text_norm(predefined):
-            return False
-        if item.get("tokens") and not has_tokens(obj, result_model, item["tokens"]):
-            return False
+        used_ids.update(getattr(obj, "GlobalId", None) for obj in matches[:count])
     for cls, inc in increases.items():
         if len(result_model.by_type(cls)) - len(init_model.by_type(cls)) < inc:
             return False
@@ -246,12 +281,16 @@ def check_required_products(init_model, result_model):
 
 
 def check_annotations(result_model):
+    used_ids = set()
     for item in SPEC.get("annotations", []):
-        matches = objects_by_name(result_model, item["class"], item["name"])
+        matches = [
+            obj for obj in result_model.by_type(item["class"])
+            if getattr(obj, "GlobalId", None) not in used_ids
+            and has_semantic_groups(obj, result_model, item.get("groups", []))
+        ]
         if not matches:
             return False
-        if not any(has_tokens(obj, result_model, item.get("tokens", [])) for obj in matches):
-            return False
+        used_ids.add(getattr(matches[0], "GlobalId", None))
     return True
 
 

@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-6.nc': {'terms': [['FACE'], ['DRILL'], ['PROFILE', 'CONTOUR']], 'min_tools': 2, 'min_motion': 24, 'face_grid': {'min_tracks': 3, 'span': 40.0}, 'any_holes': {'tool': 2, 'min': 4}, 'closed': {'min': 1}}}}
+RULE = {'files': {'task-6.nc': {'terms': [['FACE'], ['DRILL'], ['PROFILE', 'CONTOUR']], 'min_tools': 2, 'min_motion': 24, 'face_grid': {'min_tracks': 3, 'span': 40.0}, 'any_holes': {'cycle': [81, 83], 'min': 4}, 'closed': {'min': 1}}}}
 DEFAULT_TARGET = 'C:\\Users\\User\\Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -125,10 +125,20 @@ def group_closed(group):
     if len(group) < 3:
         return False
     start = group[0]["start"]
-    end = group[-1]["end"]
-    if None in (start["x"], start["y"], end["x"], end["y"]):
+    if None in (start["x"], start["y"]):
         return False
-    return close(start["x"], end["x"], 1.0) and close(start["y"], end["y"], 1.0)
+    points = [(start["x"], start["y"])] + [(record["end"]["x"], record["end"]["y"]) for record in group]
+    if any(None in point for point in points):
+        return False
+    for left in range(len(points)):
+        for right in range(left + 4, len(points)):
+            if math.hypot(points[left][0] - points[right][0], points[left][1] - points[right][1]) > 3.0:
+                continue
+            subpath = points[left:right + 1]
+            xs, ys = [point[0] for point in subpath], [point[1] for point in subpath]
+            if max(xs) - min(xs) >= 20.0 and max(ys) - min(ys) >= 20.0:
+                return True
+    return False
 
 
 def hole_visits(records, tools, rule):
@@ -238,7 +248,7 @@ def validate_file(path: Path, rule: dict) -> bool:
             return False
     if "any_holes" in rule:
         item = rule["any_holes"]
-        visits = hole_visits(records, tools, {"tool": item.get("tool"), "z_max": item.get("z_max", 1e9)})
+        visits = hole_visits(records, tools, {"tool": item.get("tool"), "cycle": item.get("cycle", []), "z_max": item.get("z_max", 1e9)})
         unique = []
         for point in visits:
             if not any(close(point[0], p[0]) and close(point[1], p[1]) for p in unique):
