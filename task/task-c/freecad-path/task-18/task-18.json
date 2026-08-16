@@ -1,8 +1,8 @@
 {
   "id": "c-freecad-path-task-18-ubuntu",
   "snapshot": "freecad-path0.21.2",
-  "instruction": "Open /home/user/Desktop/relief_surface.step in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Create a FreeCAD Path/CAM Job with 3D Pocket roughing and Surface finishing operations. Use T1 for 3D Pocket roughing with 0.5 mm stock, and T2 for 3D Surface finishing with stepover no larger than 1.5 mm. Tool definitions: T1 is for 3D Pocket roughing; T2 is for 3D Surface finishing with stepover <= 1.5 mm; use S7000 rpm and F500 mm/min for both tools. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-18.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
-  "source": "https://wiki.freecad.org/CAM_Pocket3D；https://wiki.freecad.org/CAM_Surface https://wiki.freecad.org/CAM_Pocket3D%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Surface",
+  "instruction": "Open /home/user/Desktop/relief_surface.step in FreeCAD 0.21.2 Path/CAM. The STEP is one centered relief solid in its machining coordinates: X=-60..60 mm, Y=-40..40 mm, Z=0..18 mm, with a 120 x 80 x 10 mm base and a central spherical relief of radius 30 mm centered at (0,0,-12), rising from the Z10 plane to Z18. Create one native Path Job using the model bounding box as stock with zero extension and G54 in these coordinates. Select the exposed Z10 planar face and spherical face for both native operations. First create a native 3D Pocket roughing operation with T1, a D10 flat end mill, StartDepth 18 mm, FinalDepth 10 mm, StepDown 2 mm, 50% stepover, and exactly 0.5 mm lateral stock using the operation's native ExtraOffset. Then create a native 3D Surface finishing operation with T2, a D6 ball end mill, Planar ZigZag single-pass scanning, 1 mm sample interval, zero DepthOffset, and stepover no larger than 1.5 mm; 25% gives 1.5 mm. Use SafeHeight 20 mm, ClearanceHeight 23 mm, S7000 rpm, forward spindle, and horizontal and vertical feed F500 mm/min for both operations. Keep the operation order as roughing then finishing, use the native linuxcnc post, write /home/user/Desktop/task-18.nc, and save the editable recomputable native document as /home/user/Desktop/task-18.FCStd. Both operations must remain active, non-empty, and Up-to-date after recompute.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Main/Job.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Pocket.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketBase.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Surface.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/SurfaceSupport.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Controller.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Bit.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py\nhttps://wiki.freecad.org/index.php?title=CAM_Pocket3D&oldid=1263757\nhttps://wiki.freecad.org/index.php?title=CAM_Surface&oldid=1264007\nhttps://linuxcnc.org/docs/2.8/html/gcode/m-code.html#mcode:m2-m30",
   "config": [
     {
       "type": "upload_file",
@@ -37,8 +37,12 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true"
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "/home/user/Desktop/eval.py"
+      ],
+      "shell": false
     },
     "expected": {
       "type": "rule",

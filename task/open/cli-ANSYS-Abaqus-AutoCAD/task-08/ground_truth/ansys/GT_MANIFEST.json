@@ -1,49 +1,83 @@
 {
-  "status": "generated_generic_remote",
+  "status": "verified_real_snapshot",
   "task": "task-08",
-  "task_id": "c-cae-commercial-open-choice-task-08-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-08-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
   "solver": "ansys",
-  "analysis_kind": "contact",
-  "domain": "nonlinear_contact_block_plate",
-  "metrics": [
-    "max_contact_pressure",
-    "vertical_displacement",
-    "reaction_force"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "e8e8c888ec041c91fc43a1f0bbf098a67498f83016bdb478e28fdc0ff08cfcd9",
-  "generated_at_epoch": 1783166161.434588,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
-  "files": [
-    {
-      "file": "gt_task_08_ansys.db",
-      "size": 458752,
-      "sha256": "fb0b7f0a6fd0e4a3a397ceb12e6228b53bd854e720aaeb6a96bc25affb439cc6"
-    },
-    {
-      "file": "gt_task_08_ansys.rst",
-      "size": 458752,
-      "sha256": "c4825dbb89c1cd3f09170668af933ebb6bd68381cb085c88b978efd185a91c4f"
-    },
-    {
-      "file": "metrics.json",
-      "size": 94,
-      "sha256": "196a5930eb2e3a053770f5b428aa1e85fbd384dd3257f962ea876420e30b54db"
-    }
-  ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "software_version": "ANSYS Mechanical APDL 2026 R1 v261, build 26.1",
+  "analysis_kind": "nonlinear static surface-to-surface contact",
+  "job": "Job-Contact",
+  "generated_on": "2026-08-14",
+  "synthetic_or_offline_solver_data": false,
+  "provenance": {
+    "access": "OSWorld REST through the supplied SSH tunnel at http://127.0.0.1:15047",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip": "10.0.6.47",
+    "public_ip": "115.190.150.137",
+    "generation_evidence": "../validation/generation/ansys/run.out",
+    "generation_evidence_sha256": "7a1a8edbf92fb4e69e4b33260327fdf15214c2d69d8fd40292d16bfbc4a6d76b",
+    "native_model_audit": "../validation/generation/ansys/task08_model_audit.txt",
+    "native_model_audit_sha256": "881301ee8eab0c3eec452938e713f3f1c90a2678744ac3032b828a4774d3ff5f"
   },
-  "license_precheck": {
-    "license_status": "license_ok",
-    "license_stdout_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-08/ground_truth/generation/ansys/license_generate_task_08_ansys_stdout.txt",
-    "license_exitcode_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-08/ground_truth/generation/ansys/license_generate_task_08_ansys_exitcode.txt",
-    "license_stdout_last_line": "==================================================",
-    "license_exitcode_raw": "exitcode=0",
-    "license_exitcode": 0
+  "model_audit": {
+    "units": "N-mm-MPa",
+    "plate": "100 x 100 x 5 mm; 400 SOLID185; 5 mm mesh; 441 bottom nodes fully fixed",
+    "block": "20 x 20 x 30 mm at global X/Y=40..60 and Z=5..35; 490 SOLID185; 2.857/3 mm mesh",
+    "material": "Steel, E=210000 MPa, Poisson=0.3, assigned to both disconnected solids",
+    "contact": "400 TARGE170 faces on complete plate top and 49 CONTA174 faces on complete block bottom; shared real set 10; frictionless separable hard contact; zero initial gap and penetration",
+    "load": "10 MPa inward pressure on all 49 block-top solid faces; total nominal load 4000 N",
+    "step": "static; NLGEOM ON; final time 1.0; 8 converged substeps; 10 cumulative equilibrium iterations",
+    "result_fields": "native final-set CPRESS, U, S, and RF",
+    "solver_messages": "0 errors and 0 warnings in the formal generation run"
+  },
+  "metrics": {
+    "max_contact_pressure": 11.7571132183075,
+    "vertical_displacement": -0.001644440161982312,
+    "reaction_force": 4000.114351315791
+  },
+  "metric_definitions": {
+    "max_contact_pressure": "MPa; maximum positive final-set CONTA174 CPRESS on the block/plate interface",
+    "vertical_displacement": "mm; minimum final-set global UZ over the complete block top, downward negative",
+    "reaction_force": "N; sum of final-set global FZ reactions over the complete fixed plate bottom, upward positive"
+  },
+  "files": [
+    {"file": "Job-Contact.db", "size": 917504, "sha256": "4047ccb3d080c66e01e26055b0d8382d934302400e3e28bf8f985e7270728128"},
+    {"file": "Job-Contact.rst", "size": 7929856, "sha256": "1b01c59db7c57e385d1b5ffd11048db294452874991d58a45ccc08f1b156f2a7"},
+    {"file": "metrics.json", "size": 136, "sha256": "64033278494f19d4f832956ec376f2e43dab56db560d6772a4873b1686adecef"}
+  ],
+  "source_instruction_sha256": "9cb21c929a24eb4a681027e886f33b3334e3e65ee71db228c5c0caf4de63f965",
+  "task_definition_sha256": "7b2f790c321d3a2263f023122ce26cf7be27f79b163a9505a6717965d4217b59",
+  "evaluator_sha256": "53380d511cd14692c15e0ff8a6b6bab25479fd809f3527cc6e4fcb73af9929ae",
+  "open_choice_spec_sha256": "0a7a3b8f6efa0cb600ba9f2cd7b9c0da4de47897b3f753128fddcba69da6f498",
+  "validation_matrix": "../validation/validation_matrix.json",
+  "validation_matrix_sha256": "7527a7c164a836cad9416b0492acbbfabdc9a48d4ee54d6d04e27c88198b8806",
+  "reasonable_equivalent": {
+    "description": "ANSYS v261 CONTA174 pure-penalty normal-contact formulation using KEYOPT(2)=1, independently solved with distinct native DB/RST hashes and accepted by the frozen evaluator.",
+    "input": "../validation/generation/ansys/equivalent_penalty_contact.inp",
+    "input_sha256": "c9d674d14aa5393d9042e2f732df2fa22a4b2148b397c83a3c53ca8a6cc0b9aa",
+    "generation_report": "../validation/generation/ansys/equivalent_penalty_contact/generation_report.json",
+    "generation_report_sha256": "8e2d0495d0e2904fe5949114e218ffa5632be0521d2cd7adf0be02e8d28378fe",
+    "validation_case": "../validation/cases/equivalent_penalty_contact/case_report.json",
+    "validation_case_sha256": "18a160e0f016464786f3094c8358adcf3a607c057ee316e339b7ec838706247b",
+    "db_sha256": "86e3221795cb9fe7e669fee2f5e00335838bbc48b2d14290f81ca50ac9ac0569",
+    "rst_sha256": "305111d359abae90b4cd4e589e4bb32ce530a229febdfbe3a6537795fa0b5475"
+  },
+  "formal_regression": "../validation/formal_regression.json",
+  "formal_regression_sha256": "b3efcc265cbb97c09f6e4716da6292b87f7520451c4110a0e58867efe3dc1ed7",
+  "official_sources": "../validation/official_sources.md",
+  "official_sources_sha256": "7433b0212a1890c551e6c975f7559bb741677a9152c5559ea39baa3851038b27",
+  "official_source_status": "../validation/official_source_status.json",
+  "official_source_status_sha256": "619aa1a39429a89d53eae1efe627769226b1e5ae76d434eb10892ebd5ce02a84",
+  "final_instance_cleanup": "../validation/final_cleanup.json",
+  "final_instance_cleanup_sha256": "e38917ad5c51b3983eb668c4b1f218c6bdb0fcd3fefe0746410906e80d120e91",
+  "archive_manifest": "../../audit_archive/ARCHIVE_MANIFEST.json",
+  "archive_manifest_sha256": "10f8c9e5ddddf54a6ec1fe2d55e595f039262de9e517e14924021727e8d4b363",
+  "abaqus_branch": {
+    "formal_ground_truth_present": false,
+    "reason": "The old real ODB uses 5/10 mm meshes. A compliant 3/5 mm 1586-node model is rejected by Abaqus 2025LE at writeInput and submit because the edition is limited to 1000 nodes.",
+    "writeinput_evidence": "../validation/abaqus_limitation/writeinput_attempt_summary.json",
+    "writeinput_evidence_sha256": "bd785cae6dfa2ca1b288ad04d35e74caf32332ea3420e1aca7f7b38119b93035",
+    "submit_evidence": "../validation/abaqus_limitation/submit_attempt_summary.json",
+    "submit_evidence_sha256": "294d57e67a3a5f63a22e787b67f8817fcc800429b203ad3a116d84589407e965"
   }
 }

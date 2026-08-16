@@ -1,40 +1,142 @@
 {
-  "status": "generated_generic_remote",
-  "task": "task-13",
-  "task_id": "c-cae-commercial-open-choice-task-13-windows",
+  "schema_version": 2,
+  "task": "task/open/cli-ANSYS-Abaqus-AutoCAD/task-13",
+  "task_id": "c-open-abaqus-ansys-autocad-task-13-windows",
   "solver": "abaqus",
-  "analysis_kind": "static_structural",
-  "domain": "plane_stress_plate_hole",
-  "metrics": [
-    "stress_concentration_proxy",
-    "max_stress"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "f156544dffb1a0dcb8f5a4a4d4b5082633841cc8fefa4d0574ebc772b3e5fa9c",
-  "generated_at_epoch": 1783166849.7574909,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
-  "files": [
-    {
-      "file": "gt_task_13_abaqus.cae",
-      "size": 57344,
-      "sha256": "789d2cac512107eb32a486a65ca75119e6dbf62491e5d97c3d4b525440a93504"
-    },
-    {
-      "file": "gt_task_13_abaqus.odb",
-      "size": 281644,
-      "sha256": "bc686ece648193df04cc09791d83a5fd758a6b26f2ae80f47e0a79b934be9e97"
-    },
-    {
-      "file": "metrics.json",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "task_definition": {
+    "path": "task-13.json",
+    "sha256": "404b089e157d18dc942c002cbaaf0fe9ec39cb665f2e300982b49119d21bd314",
+    "size": 4267
+  },
+  "open_choice_spec": {
+    "path": "ground_truth/open_choice_spec.json",
+    "sha256": "94165109b173352587dd9486789a2925e831f99f2d47e9d2a22026bbf8e81274",
+    "size": 2096
+  },
+  "instruction": {
+    "path": "task-13.json#instruction",
+    "sha256_utf8": "cb91fd8fffbbeea5b4a33d6805f32a85379ec3cc6ed36a5307be11b3d0406fec"
+  },
+  "evaluator": {
+    "path": "eval.py",
+    "sha256": "773a0689673e7a6c061b114289de2626e1e27ba354da7f41c8867dc148740de2",
+    "size": 81078
+  },
+  "ground_truth": {
+    "native_files": [
+      {
+        "path": "ground_truth/abaqus/Task13-Plate-With-Hole.cae",
+        "sha256": "d8e0bc65896f5d29b7e9430e262ab645e82d7c24e6a779ba6193d07d97525397",
+        "size": 57344
+      },
+      {
+        "path": "ground_truth/abaqus/Task13-Plate-With-Hole.odb",
+        "sha256": "a7f28da6bb162ab7ad59394568517a0e4dd45224b7e47607455088fb1eaa97e3",
+        "size": 383984
+      }
+    ],
+    "metrics_file": {
+      "path": "ground_truth/abaqus/metrics.json",
+      "sha256": "ea23911dcdced4be3f5d265be04a4f6a20d680180a8169a7699eaa1e28a7877b",
       "size": 95,
-      "sha256": "a7f374f8ad1d85e98f4248054663a0f9ceb063e9527af02067a5936201ac5846"
+      "line_endings": "CRLF preserved from the real solver generation session"
+    },
+    "metrics": {
+      "max_stress": 28.226333618164062,
+      "stress_concentration_proxy": 2.8226333618164063
+    }
+  },
+  "generation_evidence": [
+    {
+      "path": "ground_truth/validation/abaqus/generation_report.json",
+      "sha256": "acd17ef4c568c4db97bd209863899ebb0cedd064859c47242562ffdd1a13e480",
+      "size": 10912
+    },
+    {
+      "path": "ground_truth/validation/abaqus/model_audit.json",
+      "sha256": "28fb3a29458be21ad9da052db19b6826e678f89a0b765e7a64248bb95caa428f",
+      "size": 1381
+    },
+    {
+      "path": "ground_truth/validation/abaqus/mesh_generation_audit.json",
+      "sha256": "c6ae23976573bacbaba7a13aee71a338b4e24647bea4b13163173f1174e9ba25",
+      "size": 899
+    },
+    {
+      "path": "ground_truth/validation/abaqus/result_audit.json",
+      "sha256": "4c9ded8c82d233a9b69031ff973213598196acec2fb85b459c424bdc1a35c7c0",
+      "size": 1030
     }
   ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "validation_matrix": {
+    "definition_path": "ground_truth/validation/matrix/matrix.json",
+    "definition_sha256": "2c1011a2121ceda12b5e133a3e8669c8fa84cd6529019cbbd68d289a95b5c567",
+    "summary_path": "ground_truth/validation/matrix/matrix_summary.json",
+    "summary_sha256": "04213f3f6e4d863f2a186cd2b0e5f9343bff511cfe3977ca92a670f7239425fe",
+    "runner_path": "ground_truth/validation/matrix/run_task13_evaluator_case.py",
+    "runner_sha256": "4596c7a22ea3f2054c2d021840c2f4ca36423a8295127b17d60712e5c494477c",
+    "counts": {
+      "total": 38,
+      "positive": 4,
+      "negative": 34,
+      "native_solve": 22,
+      "local": 16,
+      "passed_contract": 38
+    },
+    "all_expected_outcomes_met": true,
+    "all_cleanup_confirmed": true
+  },
+  "formal_regression": {
+    "passed": true,
+    "report": {
+      "path": "ground_truth/validation/formal_regression/abaqus_evaluator_run_report.json",
+      "sha256": "b8f054370b3edb2568b2c02b13b68ffc3ff0901cb4aabd109201b30f8e40b74d"
+    },
+    "evidence": [
+      {
+        "path": "ground_truth/validation/formal_regression/abaqus_evaluator_evidence/eval_detail.txt",
+        "sha256": "9ef24c306ea3da2c5aec61b31451176f182ee68a6868127c619c8041bdcab2d0"
+      },
+      {
+        "path": "ground_truth/validation/formal_regression/abaqus_evaluator_evidence/eval_result.txt",
+        "sha256": "ca4a016eae14ab0c7ebb935a6e24ae8b512958f25c788f11eb99566d066b7957"
+      },
+      {
+        "path": "ground_truth/validation/formal_regression/abaqus_evaluator_evidence/evaluator.stdout.txt",
+        "sha256": "ca4a016eae14ab0c7ebb935a6e24ae8b512958f25c788f11eb99566d066b7957"
+      },
+      {
+        "path": "ground_truth/validation/formal_regression/abaqus_evaluator_evidence/evaluator.stderr.txt",
+        "sha256": "e3b0c44298fc1c149afbf4c8996fb92427ae41e4649b934ca495991b7852b855"
+      }
+    ]
+  },
+  "release_evidence": {
+    "final_cleanup": {
+      "path": "ground_truth/validation/session/final_cleanup.json",
+      "sha256": "b9b6a5d39102e3eacb92a1633504b3b5936eced4af68ac3e70c72f2f31124ca2"
+    },
+    "post_cleanup_inventory": {
+      "path": "ground_truth/validation/session/post_cleanup_inventory.json",
+      "sha256": "ba192eab1c2a92805897b53ea00ab0fc8f7431338cb55764f8352a6b20e6b6f4",
+      "clean_for_task13": true
+    },
+    "tunnel_close": {
+      "path": "ground_truth/validation/session/tunnel_close.json",
+      "sha256": "8b62492d1f8de53b54d96e386925bca602a0941158c020d16ce8147bcf908f03",
+      "ok": true
+    }
+  },
+  "self_validation": {
+    "verified_at": "2026-08-16T06:45:33Z",
+    "all_referenced_files_exist": true,
+    "all_referenced_hashes_match": true,
+    "all_referenced_sizes_match": true,
+    "task_definition_and_spec_hashes_match": true,
+    "metrics_match_generation_and_result_audits": true,
+    "formal_evaluator_matches_candidate": true,
+    "formal_ground_truth_matches_generated_candidate": true,
+    "formal_regression_passed": true
   }
 }

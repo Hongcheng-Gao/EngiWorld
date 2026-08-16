@@ -1,48 +1,93 @@
 {
-  "status": "generated_generic_remote",
+  "status": "verified_real_snapshot",
   "task": "task-01",
-  "task_id": "c-cae-commercial-open-choice-task-01-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-01-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
   "solver": "ansys",
-  "analysis_kind": "static_structural",
-  "domain": "axisymmetric_plate_static",
-  "metrics": [
-    "center_deflection",
-    "max_mises"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "d38820e7ae5b410797218473f0fd76fc67ff01a552261e8ac0790dd73d13903e",
-  "generated_at_epoch": 1783165845.12336,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "software": "ANSYS Mechanical APDL 2026 R1, build 26.1 UP20260202",
+  "analysis": "2D axisymmetric static structural",
+  "job": "Job-Plate",
+  "source_instruction_sha256": "356ac91379d9e46242df0e84a4aee9fb160270c1e69eb73559809c354595e841",
+  "evaluator_sha256": "f0192f71b4a49d7944ce02101bcd030b46c01a147e95591fb8b12ade23bdb340",
+  "generated_on": "2026-08-11",
+  "provenance": {
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip": "10.0.6.47",
+    "access": "OSWorld REST through SSH tunnel http://127.0.0.1:15047",
+    "public_ip_from_mapping": "115.190.150.137",
+    "generator_input": "gt_task_01_ansys.inp",
+    "native_solver_log": "Job-Plate.log",
+    "synthetic_or_offline_solver_data": false,
+    "generation_evidence": "../validation/generation/ansys_gt_generation.json",
+    "job_name_evidence": "Job-Plate.log records INITIAL/CURRENT JOBNAME=Job-Plate"
+  },
+  "metrics": {
+    "center_deflection": -0.5041166200000455,
+    "max_mises": 164.502575767526,
+    "max_mises_definition": "maximum final-set nodal-extrapolated S,EQV"
+  },
+  "model_audit": {
+    "element_family": "PLANE183",
+    "axisymmetric_keyopt_3": 1,
+    "nodes": 128,
+    "elements": 25,
+    "total_equivalent_fy_n": -785.3981633974483,
+    "support_fy_n": 785.39816339768
+  },
   "files": [
     {
-      "file": "gt_task_01_ansys.db",
-      "size": 917504,
-      "sha256": "ec346461b639bf8abcec5d194d7018ace069c058c07cf0c139e4e4d572e11442"
+      "file": "Job-Plate.db",
+      "size": 196608,
+      "sha256": "09ddaf6d5c258feda438d9b64c59c9431ea77cf09723fb07935f377bd4df80d4"
     },
     {
-      "file": "gt_task_01_ansys.rst",
-      "size": 589824,
-      "sha256": "7d23199a4f6dee245619679cd8f50c852d1f0551882dbece1276c67dee3c5e1d"
+      "file": "Job-Plate.rst",
+      "size": 327680,
+      "sha256": "c0e8d5af1634483d216e0203486e53b2758ab2e8dafb43d2252b7a84f8c4c748"
     },
     {
       "file": "metrics.json",
-      "size": 53,
-      "sha256": "6eaeed89c983c77195710aedd389339ca5f3a8dcfb8703289ea7e6063c445d11"
+      "size": 90,
+      "sha256": "524643f91989a2f665377bbdcc2d0b4430e88082c4cd09f4552f588553f11bad"
+    },
+    {
+      "file": "gt_task_01_ansys.inp",
+      "size": 2118,
+      "sha256": "4ab54ae69d5901a2de28fc9c94cb271e5c6f9f8ca21f2e5601ff087ba72db55f"
+    },
+    {
+      "file": "Job-Plate.log",
+      "size": 27188,
+      "sha256": "6de5b3613d04744a4cbe8b50e0eede6e7dc6c80d72ae0928a874fb2c9f41c3ff"
+    },
+    {
+      "file": "native_audit.txt",
+      "size": 379,
+      "sha256": "52f9077bab50ef3804a6b94364b0f37486f893c807d809370add7aaa0abaf709"
     }
   ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "validation": {
+    "ground_truth_positive": "../validation/cases/ansys_gt_positive.json",
+    "equivalent_plane182_tb_positive": "../validation/cases/ansys_equivalent_plane182_tb_positive.json",
+    "negative_missing_rst": "../validation/cases/ansys_negative_missing_rst.json",
+    "negative_metrics_only": "../validation/cases/negative_metrics_only.json",
+    "negative_tampered_metrics": "../validation/cases/ansys_negative_tampered_metrics.json",
+    "negative_stale_rst_same_topology": "../validation/cases/ansys_negative_stale_rst_same_topology.json",
+    "negative_mismatched_rst_mesh": "../validation/cases/ansys_negative_mismatched_rst_mesh.json",
+    "negative_wrong_actual_material": "../validation/cases/ansys_negative_wrong_actual_material.json",
+    "negative_nonzero_acel": "../validation/cases/ansys_negative_nonzero_acel.json",
+    "negative_wrong_job_name": "../validation/cases/ansys_negative_wrong_job_name.json",
+    "all_cases_restored_remote_baseline": true
   },
-  "license_precheck": {
-    "license_status": "license_ok",
-    "license_stdout_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-01/ground_truth/generation/ansys/license_generate_task_01_ansys_stdout.txt",
-    "license_exitcode_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-01/ground_truth/generation/ansys/license_generate_task_01_ansys_exitcode.txt",
-    "license_stdout_last_line": "==================================================",
-    "license_exitcode_raw": "exitcode=0",
-    "license_exitcode": 0
-  }
+  "final_instance_cleanup": {
+    "status": "verified_clean",
+    "evidence": "../validation/final_cleanup.json",
+    "cleanup_script_sha256": "5e7c4d28a3d7b9af31772916f4eade54b8bc93a37867361ad6a5d380b5a34529"
+  },
+  "official_sources": [
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_PLANE182.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_PLANE183.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_CDWRITE.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_IRLF.html"
+  ]
 }

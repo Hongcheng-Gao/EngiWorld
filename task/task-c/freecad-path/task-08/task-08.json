@@ -1,8 +1,8 @@
 {
   "id": "c-freecad-path-task-08-ubuntu",
   "snapshot": "freecad-path0.21.2",
-  "instruction": "Open /home/user/Desktop/rest_shape.step in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Create a FreeCAD Path/CAM Job with Pocket Shape and Rest Machining operations. First use T1 to clear the main pocket, then use T2 to machine all small-radius corners and narrow remaining regions. The target floor is Z=6.000 mm. Tool definitions: T1 is a clearing end mill; T2 is a smaller rest-machining end mill; use S7000 rpm and F500 mm/min for both tools. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-08.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
-  "source": "https://wiki.freecad.org/CAM_Pocket_Shape；https://wiki.freecad.org/CAM_Adaptive https://wiki.freecad.org/CAM_Pocket_Shape%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Adaptive",
+  "instruction": "Open /home/user/Desktop/rest_shape.step in FreeCAD 0.21.2 Path/CAM. The model is a 120 x 80 x 18 mm part with a nominal cross-shaped pocket floor at absolute model Z=6.000 mm. The cross consists of a central 60 x 36 mm region (X=-30..30, Y=-18..18) and four narrow residual regions: X=-4..4, Y=18..30; X=-4..4, Y=-30..-18; X=-42..-30, Y=-4..4; and X=30..42, Y=-4..4. Create one native Path Job using the source model and stock equal to its 120 x 80 x 18 mm bounding box, with exactly two native operations in this order. First use a native Pocket Shape operation with native T1 of 10 mm cutting diameter on the central region. Then, because FreeCAD 0.21.2 has no native Rest Machining operation or automatic previous-operation rest-stock linkage, implement the version-correct equivalent with a native Adaptive operation in Clearing mode using native T2 of 4 mm cutting diameter on the four explicit narrow residual boundaries. The nominal selected regions have the stated planar extents; the cutter sweep may naturally leave cutter-radius internal corners. Both operations must start at Z=18.000 mm, finish at Z=6.000 mm, leave no stock, use S7000 rpm, and use F500 mm/min for both horizontal and vertical cutting feeds. Use exactly G54, the LinuxCNC postprocessor, and millimeters; do not override the LinuxCNC preamble or postamble. Save the editable document and its directly posted program using exactly these absolute file paths: /home/user/Desktop/task-08.FCStd and /home/user/Desktop/task-08.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2 https://github.com/FreeCAD/FreeCAD/commit/b9bfa5c5507506e4515816414cd27f4851d00489 https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/InitGui.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Job.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Stock.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Tool/Controller.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/PocketShape.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Adaptive.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/Command.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py",
   "config": [
     {
       "type": "upload_file",
@@ -37,8 +37,11 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true"
+      "command": [
+        "/usr/bin/python3",
+        "/home/user/Desktop/eval.py"
+      ],
+      "shell": false
     },
     "expected": {
       "type": "rule",

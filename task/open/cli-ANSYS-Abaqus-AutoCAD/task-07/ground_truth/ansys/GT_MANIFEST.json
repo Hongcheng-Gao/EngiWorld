@@ -1,48 +1,88 @@
 {
-  "status": "generated_generic_remote",
-  "task": "task-07",
-  "task_id": "c-cae-commercial-open-choice-task-07-windows",
-  "solver": "ansys",
-  "analysis_kind": "static_structural",
-  "domain": "shaft_torsion_a",
-  "metrics": [
-    "twist_angle",
-    "max_stress"
+  "analysis": "3D static torsion of a solid circular shaft",
+  "archive_manifest": "audit_archive/ARCHIVE_MANIFEST.json",
+  "archive_manifest_sha256": "badd583434c53f2eb431ed7604e7ac4635ae9a292b750532ead4213dbba2de26",
+  "completion_evidence": [
+    "validation/generation/ansys/remote_status.json",
+    "validation/generation/ansys/Job-Torsion-A.log"
   ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "6ad38ad75fde5348b7a55bd5c10d341287a1856bcc112adb70742538e6635710",
-  "generated_at_epoch": 1783166126.543147,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "evaluator_sha256": "6bde54dd0fe02ff4340e46e9d0d9439304168c1046b8e97621c7dfe9175726e9",
   "files": [
     {
-      "file": "gt_task_07_ansys.db",
-      "size": 131072,
-      "sha256": "702e68816e07f64a35e6cfcb5a38dd8400ce4becfb9ef4ffd9f360b969fb2bae"
+      "file": "Job-Torsion-A.db",
+      "sha256": "32c8e8ebf53f38ca186d1b2da46d2980510fac4658380c067a51473d02c23060",
+      "size": 262144
     },
     {
-      "file": "gt_task_07_ansys.rst",
-      "size": 327680,
-      "sha256": "934f7b08d52f93c772fc516bcaa0cb37b5b8a24b7e67608550cc5016e379cc9b"
+      "file": "Job-Torsion-A.rst",
+      "sha256": "feed3467d4075bf9c9db4aea85a99c107d7dcb1de43b06701a438f27af39cfcb",
+      "size": 393216
     },
     {
       "file": "metrics.json",
-      "size": 48,
-      "sha256": "a75d2eee964cc7774c1d6a61ed8f0448dc4f21b8e8a911a209f5f1dda11015d4"
+      "sha256": "12cb0e753f3c7675c94a4c1cc299865fe8970383dc0660462053d012ef1d0194",
+      "size": 87
     }
   ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "final_instance_cleanup": "validation/final_cleanup.json",
+  "final_instance_cleanup_sha256": "dd5d61dd19cb3fb42d788818d67cb1a497518ff59842588a52c25a8da79d4408",
+  "formal_regression": "validation/formal_regression.json",
+  "formal_regression_sha256": "087d8ccd474b6c18cff05f9699624032a514949b7934b24c51aa38e2a47d2b8e",
+  "generated_on": "2026-08-14",
+  "generation_evidence": "validation/generation/ansys/operation_result.json",
+  "job": "Job-Torsion-A",
+  "local_audit": "validation/local_audit.json",
+  "local_audit_sha256": "afc0a04e69feec28e2b763184a6bf4afd33f35913f0b65ac76626cd2b56664ee",
+  "metric_definitions": {
+    "max_mises_mpa": "MPa; maximum final nodal equivalent stress from the RST",
+    "twist_angle_rad": "radians; pilot-node ROTY at final RST result set"
   },
-  "license_precheck": {
-    "license_status": "license_ok",
-    "license_stdout_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-07/ground_truth/generation/ansys/license_generate_task_07_ansys_stdout.txt",
-    "license_exitcode_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-07/ground_truth/generation/ansys/license_generate_task_07_ansys_exitcode.txt",
-    "license_stdout_last_line": "==================================================",
-    "license_exitcode_raw": "exitcode=0",
-    "license_exitcode": 0
-  }
+  "metrics": {
+    "max_mises_mpa": 9.22933484886487,
+    "twist_angle_rad": 0.0010555621735678
+  },
+  "model": "Model-Torsion-A",
+  "model_audit": {
+    "analysis": "static; NLGEOM OFF",
+    "coupling": "CERIG UXYZ equivalent",
+    "element_type": "SOLID185",
+    "fixed_end": "Y=0 ENCASTRE",
+    "free_end": "Y=80 RP at (0,80,0)",
+    "geometry": "solid circular shaft, radius 5 mm, length 80 mm, global Y axis",
+    "load": "global MY=850 N*mm",
+    "material": {
+      "E_mpa": 210000.0,
+      "name": "Steel",
+      "poisson": 0.3
+    },
+    "mesh_target_mm": 4.0,
+    "native_audit": "validation/generation/ansys/native_audit.txt"
+  },
+  "native_audit": "validation/generation/ansys/native_audit.txt",
+  "official_source_status": "validation/official_source_status.json",
+  "official_source_status_sha256": "c42632664d09013aa90986b64e1d72f7c43a8c89194a30e0379f24bbc5120309",
+  "official_sources": "validation/official_sources.md",
+  "open_choice_spec_sha256": "6bc19c730ee82733fe6f34d9f683ad4c8215508caa4d7be8b68b78c94763541a",
+  "provenance": {
+    "access": "OSWorld REST through supplied SSH tunnel at http://127.0.0.1:15047",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip": "10.0.6.47",
+    "public_ip": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software_versions": {
+    "abaqus": "Abaqus/Standard Learning Edition 2025",
+    "ansys": "ANSYS Mechanical APDL 2026 R1, release 26.1"
+  },
+  "solver": "ansys",
+  "source_instruction_sha256": "fc38346ae0a114181a90dd06a6ce87c6c706d28c9f2f3377ccc29f3b85a386a6",
+  "status": "verified_real_snapshot",
+  "step": "Step-Torque-A",
+  "synthetic_or_offline_solver_data": false,
+  "task": "task-07",
+  "task_definition_sha256": "fa8fe84bddbbd1651414795142e3828f80ef52b8f018942de530abcd94d77b9f",
+  "task_id": "c-open-abaqus-ansys-autocad-task-07-windows",
+  "validation_matrix": "validation/validation_matrix.json",
+  "validation_matrix_sha256": "31ce377c12bba8a93527782845e64c711a558e6a65c4eb3dd9387ce67792cc87"
 }

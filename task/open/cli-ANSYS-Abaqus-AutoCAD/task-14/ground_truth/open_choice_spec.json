@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-14-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-14-windows",
   "open_choice_id": "cae-open-choice-024",
   "source_task": "task/task-c/ansys/task-04",
   "original_software": "ansys",
@@ -9,26 +9,27 @@
   "domain": "transient_thermal_conduction",
   "analysis_kind": "thermal",
   "metrics": [
-    "probe_temperature",
+    "temperature_x4_c",
+    "temperature_x6_c",
     "time_value"
   ],
   "expected_result_fields": [
     "NT11"
   ],
   "require_metrics_json": true,
-  "visible_goal": "Solve a transient one-dimensional heat-conduction block; report temperatures at the specified probes and time.",
-  "selection_reason": "Transient thermal conduction is solver-agnostic and not dependent on fluid modules.",
+  "visible_goal": "Solve the specified transient one-dimensional heat-conduction block; report final centerline temperatures at X=4 mm and X=6 mm and the saved result time.",
+  "selection_reason": "ANSYS Mechanical APDL 2026 R1 can satisfy the complete 2 mm three-dimensional mesh and transient thermal requirements in this Snapshot.",
   "artifact_hint": {
     "ground_truth_files": [
-      "apdl_transient_thermal.db",
-      "apdl_transient_thermal.rth"
+      "Task14-Transient-Thermal.db",
+      "Task14-Transient-Thermal.rth"
     ],
     "abaqus_stems": [],
     "ansys_db_files": [
-      "apdl_transient_thermal.db"
+      "Task14-Transient-Thermal.db"
     ],
     "ansys_result_files": [
-      "apdl_transient_thermal.rth"
+      "Task14-Transient-Thermal.rth"
     ]
   },
   "span_hint": {
@@ -48,6 +49,18 @@
     "z": [
       0.0,
       20.0
+    ]
+  },
+  "probe_coordinates_mm": {
+    "temperature_x4_c": [
+      4.0,
+      10.0,
+      10.0
+    ],
+    "temperature_x6_c": [
+      6.0,
+      10.0,
+      10.0
     ]
   }
 }

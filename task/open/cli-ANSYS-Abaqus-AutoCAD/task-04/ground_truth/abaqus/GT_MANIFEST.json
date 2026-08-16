@@ -1,34 +1,148 @@
 {
-  "status": "bootstrapped_from_source_original",
-  "task": "task-04",
-  "task_id": "c-cae-commercial-open-choice-task-04-windows",
-  "solver": "abaqus",
-  "analysis_kind": "static_structural",
-  "domain": "solid_bar_tension",
-  "metrics": [
-    "free_end_displacement",
-    "axial_stress"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "145081a684ddc477ac2fa7eb872a0821452aae67173fc8b20a9986e05641172c",
-  "generated_at_epoch": 1783138443.4254742,
-  "remote_host": null,
-  "note": "Original solver artifacts copied from source_original; metrics fields are present for eval field checks.",
+  "analysis": "3D solid linear static tension",
+  "evaluator_sha256": "53c72933e9e384f8efd3c4613d5de120a9b8b7ff2aca66f1b22499c17685306f",
   "files": [
     {
       "file": "Job-Tension.cae",
-      "size": 57344,
-      "sha256": "f4748de07e20499211453bb6208b6139a795d268d1268f3fe1b06c3baafc1689"
+      "sha256": "acc353040fc27bf5237e032db32c1dbd2f0a633e416fd0e19a6c5ea70a92497c",
+      "size": 53248
     },
     {
       "file": "Job-Tension.odb",
-      "size": 241116,
-      "sha256": "140fd4ca26bc755a42df8c122bdc03aa9df4c8b29fca3262aa38cc4e742548ba"
+      "sha256": "80210d7483090a3145ffed1b3b1a47375f59d02dc7db3e64cd649ba85789f3f7",
+      "size": 240456
     },
     {
       "file": "metrics.json",
-      "size": 58,
-      "sha256": "d1c63dde68f7e60f45578b035fa1a9d4a8289e6209362cf7663482c1b635b1e4"
+      "sha256": "dac366e94691de420724f4e68a414672ebb317332f99782b4ca8aa5589a56488",
+      "size": 91
     }
-  ]
+  ],
+  "final_instance_cleanup": {
+    "evidence": "../validation/final_cleanup.json",
+    "required_baseline_process": "ANSYS.exe -v PID 7200"
+  },
+  "generated_on": "2026-08-12",
+  "job": "Job-Tension",
+  "metric_definitions": {
+    "axial_stress": "MPa; -sum(final global RF1 over every X=0 fixed-face node) / 100 mm^2",
+    "free_end_displacement": "mm; final global U1 at the unique undeformed node (100, 5, 5)"
+  },
+  "metrics": {
+    "axial_stress": 10.00000015258789,
+    "free_end_displacement": 0.004753996152430773
+  },
+  "model": "Model-Tension",
+  "model_audit": {
+    "boundary_condition": {
+      "dofs": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "face_x_mm": 0.0,
+      "type": "Encastre"
+    },
+    "dependent_instance": true,
+    "geometry_mm": {
+      "x": [
+        0.0,
+        100.0
+      ],
+      "y": [
+        0.0,
+        10.0
+      ],
+      "z": [
+        0.0,
+        10.0
+      ]
+    },
+    "load": {
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "face_x_mm": 100.0,
+      "magnitude_mpa": 10.0,
+      "resultant_n": 1000.0,
+      "type": "SurfaceTraction GENERAL"
+    },
+    "material": {
+      "name": "Steel",
+      "poissons_ratio": 0.3,
+      "youngs_modulus_mpa": 210000.0
+    },
+    "mesh": {
+      "element_types": [
+        "C3D8R"
+      ],
+      "elements": 80,
+      "fixed_face_nodes": 9,
+      "global_seed_mm": 5.0,
+      "loaded_face_nodes": 9,
+      "nodes": 189
+    },
+    "odb_job_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "outputs": {
+      "max_mises_mpa": 10.700273513793945,
+      "stress_element_count": 80,
+      "stress_value_count": 80,
+      "variables": [
+        "U",
+        "RF",
+        "S"
+      ]
+    },
+    "section": {
+      "material": "Steel",
+      "name": "Solid-Steel",
+      "type": "HomogeneousSolidSection"
+    }
+  },
+  "official_sources": [
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEELMRefMap/simaelm-r-3delem.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-elasticpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-homogeneoussolidsectionpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-partinstancepyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-staticsteppyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-surfacetractionpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-fieldoutputrequestpyc.htm"
+  ],
+  "open_choice_spec_sha256": "6b57188e85ea9cff965a103fcafb2bb642a70a745fd671d41bc054539936e233",
+  "provenance": {
+    "access": "OSWorld REST through supplied SSH tunnel http://127.0.0.1:15047",
+    "completion_evidence": [
+      "../validation/generation/Job-Tension_abaqus.log",
+      "../validation/generation/Job-Tension_abaqus.sta"
+    ],
+    "generation_evidence": "../validation/generation/abaqus_gt_generation.json",
+    "generator": "../validation/generation/repair_cli_task04_abaqus.py",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "native_audit": "../validation/generation/abaqus_native_audit.json",
+    "private_ip_from_mapping": "10.0.6.47",
+    "public_ip_from_mapping": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "reasonable_equivalents_verified": [
+    "Abaqus C3D20R mesh",
+    "ANSYS SOLID186 mesh",
+    "ANSYS rotated nodal coordinate systems with global result metrics"
+  ],
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "solver": "abaqus",
+  "source_instruction_sha256": "453e4483778afe1c257ca801149f17ecd404f9805deda98afb7c602b8aa6169f",
+  "status": "verified_real_snapshot",
+  "step": "Step-Load",
+  "task": "task-04",
+  "task_definition_sha256": "f82afe48080c23d4040b01d9f91c7e7583de8b58bfdc60449935d1cf3e58387e",
+  "task_id": "c-open-abaqus-ansys-autocad-task-04-windows",
+  "validation": {
+    "all_cases_use_isolated_snapshot_state": true,
+    "formal_ground_truth_final": "../validation/cases/final_formal_abaqus_v1/validation_result.json",
+    "local_audit": "../validation/local_audit.json",
+    "matrix": "../validation/validation_matrix.json"
+  }
 }

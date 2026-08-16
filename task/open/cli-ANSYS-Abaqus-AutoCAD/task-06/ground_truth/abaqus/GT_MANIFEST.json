@@ -1,34 +1,171 @@
 {
-  "status": "bootstrapped_from_source_original",
-  "task": "task-06",
-  "task_id": "c-cae-commercial-open-choice-task-06-windows",
-  "solver": "abaqus",
-  "analysis_kind": "thermal",
-  "domain": "steady_heat_conduction",
-  "metrics": [
-    "probe_temperature",
-    "heat_flux_optional"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "6b32908c6a4b59614d5f7c42a3539ed22bf17d5ebe93f1716ab1edfc634b257e",
-  "generated_at_epoch": 1783138443.4275122,
-  "remote_host": null,
-  "note": "Original solver artifacts copied from source_original; metrics fields are present for eval field checks.",
+  "analysis": "3D steady-state heat conduction",
+  "evaluator_sha256": "ec0425d209aee1ff4dfde919e5f103dc795d632fbc94c3f05d5048661652617d",
   "files": [
     {
       "file": "Job-Thermal.cae",
-      "size": 65536,
-      "sha256": "91434b1c8d74c26e63eb7929bfbd4a727b9085c9018b39aa4bfb56297635f2d3"
+      "sha256": "667821b610ace8fc81849b92f1f6354f67854ff4752fe39a09cdeb75ae8b61f6",
+      "size": 61440
     },
     {
       "file": "Job-Thermal.odb",
-      "size": 374316,
-      "sha256": "922c9fde36a0da864cf796685b9ca079c926c98bde921d4771bb8b7892e142c8"
+      "sha256": "06f071c2c806128a6cdec4af54d942416d7fb13da11a35f4879913f8712813cc",
+      "size": 373692
     },
     {
       "file": "metrics.json",
-      "size": 60,
-      "sha256": "5ce97814fd7141b4282f3f523a1cb380ce1aea846aedab43463cb8c9058b7293"
+      "sha256": "15c1862a25d5667cef26507d4f54b12ab2410035857962159f1f8273aa36273e",
+      "size": 86
     }
-  ]
+  ],
+  "final_instance_cleanup": {
+    "evidence": "../validation/final_cleanup.json",
+    "evidence_sha256": "8706424bcf2cbcfccabd6e64f98100bea40542e41c59b776bebad0f6e035dac5",
+    "required_baseline_process": "the unique pre-existing ANSYS.exe -v process, matched by PID, creation time, name, and command line"
+  },
+  "generated_on": "2026-08-13",
+  "job": "Job-Thermal",
+  "metric_definitions": {
+    "heat_flux_x_w_per_mm2": "W/mm^2; arithmetic mean final global +X HFL component over the complete solid",
+    "midplane_temperature_c": "degC; arithmetic mean final NT11 over every node on X=50 mm"
+  },
+  "metrics": {
+    "heat_flux_x_w_per_mm2": 0.3199999928474426,
+    "midplane_temperature_c": 60.0
+  },
+  "model": "Model-SteadyConduction",
+  "model_audit": {
+    "boundary_conditions": [
+      {
+        "complete_face_node_count": 33,
+        "face_x_mm": 0.0,
+        "name": "BC-X0-100C",
+        "temperature_c": 100.0
+      },
+      {
+        "complete_face_node_count": 33,
+        "face_x_mm": 100.0,
+        "name": "BC-X100-20C",
+        "temperature_c": 20.0
+      }
+    ],
+    "dependent_instance": true,
+    "geometry_mm": {
+      "x": [
+        0.0,
+        100.0
+      ],
+      "y": [
+        0.0,
+        50.0
+      ],
+      "z": [
+        0.0,
+        10.0
+      ]
+    },
+    "material": {
+      "conductivity_w_per_mm_k": 0.4,
+      "name": "Copper"
+    },
+    "mesh": {
+      "center_nodes": 1,
+      "element_type": "DC3D8",
+      "elements": 400,
+      "global_seed_mm": 5.0,
+      "nodes": 693
+    },
+    "other_thermal_loads": [],
+    "outputs": {
+      "hfl_integration_point_values": 3200,
+      "nodal_temperature_values": 693,
+      "variables": [
+        "NT11",
+        "HFL",
+        "RFL11"
+      ]
+    },
+    "result": {
+      "max_transverse_heat_flux_w_per_mm2": 5.473399426698727e-15,
+      "x0_reaction_heat_flow_w": 160.0,
+      "x0_temperature_range_c": [
+        100.0,
+        100.0
+      ],
+      "x100_reaction_heat_flow_w": -160.0,
+      "x100_temperature_range_c": [
+        20.0,
+        20.0
+      ]
+    },
+    "section": {
+      "material": "Copper",
+      "name": "Solid-Copper",
+      "type": "HomogeneousSolidSection"
+    },
+    "signatures": {
+      "elements_sha256": "e88fb42725b472d2cb37ce595eb575618df18d78bb5fd7b849a00d8c7709ebf5",
+      "hfl_sha256": "44afd8052a731e7ce483ff68bb003e55e7f649ee3820e997b94b4e4a1f06d489",
+      "nodes_sha256": "2cd9c89257c411ad0b31a0916b92d231b0fba75a843f52b6ec061b25e5780310",
+      "temperature_sha256": "f103cf821ac928dca56bff15f641c23bff50311a634488279a14b302a04874c5"
+    },
+    "step": {
+      "frames": 2,
+      "name": "Step-Thermal",
+      "odb_job_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+      "response": "STEADY_STATE"
+    }
+  },
+  "official_sources": [
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEANLRefMap/simaanl-c-heattransfer.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEELMRefMap/simaelm-r-3delem.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEOUTRefMap/simaout-c-std-nodalvariables.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEOUTRefMap/simaout-c-std-elementintegrationpointvariables.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-odbopenodbcommandpyc.htm"
+  ],
+  "official_source_status": {
+    "all_final_http_200": true,
+    "evidence": "../validation/official_source_status.json",
+    "evidence_sha256": "e130c30c2978b1f2a5f9e28c03e6fe3ec4524aee8954480edc88cf483cd972a5",
+    "source_count": 38
+  },
+  "open_choice_spec_sha256": "59546f8799cb7639f5f9702fe13dcad7f1da30a85e7c91069ffb84b81d012acd",
+  "provenance": {
+    "access": "OSWorld REST through the supplied SSH tunnel at http://127.0.0.1:15047",
+    "completion_evidence": [
+      "../validation/generation/Job-Thermal_abaqus.log",
+      "../validation/generation/Job-Thermal_abaqus.sta"
+    ],
+    "generation_evidence": "../validation/generation/abaqus_gt_generation.json",
+    "generator": "../validation/generation/repair_cli_task06_abaqus.py",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "native_audit": "../validation/generation/abaqus_native_audit.json",
+    "private_ip_from_mapping": "10.0.6.47",
+    "public_ip_from_mapping": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "reasonable_equivalents_verified": [
+    "Abaqus constant amplitude on the prescribed temperatures",
+    "Abaqus positive density and specific heat unused by a steady-state step",
+    "Abaqus passive NODE FILE, EL FILE, FILE FORMAT, and ENERGY output requests",
+    "Abaqus region-scoped RFL output request",
+    "ANSYS consistent SI-unit geometry and conductivity"
+  ],
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "solver": "abaqus",
+  "source_instruction_sha256": "59b105439130d5ce46d0988f116a2fe4f018dc91230adbf0a51dfc8f8b299a6e",
+  "status": "verified_real_snapshot",
+  "step": "Step-Thermal",
+  "synthetic_or_offline_solver_data": false,
+  "task": "task-06",
+  "task_definition_sha256": "a319ab3ecd0bb4969654e6e970097ae2693f1fd31108255c3ad6212b5d4df933",
+  "task_id": "c-open-abaqus-ansys-autocad-task-06-windows",
+  "validation": {
+    "all_remote_cases_use_independent_snapshot_state": true,
+    "formal_regression": "../validation/formal_regression.json",
+    "formal_regression_sha256": "ad191f67e2a976baab9a1fe86367b2f0f2d6d7accfe24dffe134458cea3f0651",
+    "matrix": "../validation/validation_matrix.json",
+    "matrix_sha256": "45add431c2f91b4297806ef74626de6e58e82935730de8183b75c86ad9e897ce"
+  }
 }

@@ -1,0 +1,253 @@
+/BATCH
+/FILNAME,Job-FlangeHole,1
+/TITLE,EngiWorld CLI task-03 shell plate with central hole under edge tension
+/PREP7
+
+ET,1,SHELL181
+KEYOPT,1,3,2
+KEYOPT,1,8,2
+MP,EX,1,210000
+MP,PRXY,1,0.3
+SECTYPE,1,SHELL,,Plate-Section
+SECDATA,1,1,0,5
+SECOFFSET,MID
+
+BOPTN,KEEP,NO
+BLC4,0,0,120,240
+*GET,rectangle_area,AREA,0,NUM,MAX
+CYL4,60,120,6
+*GET,hole_area,AREA,0,NUM,MAX
+ASBA,rectangle_area,hole_area
+NUMMRG,ALL
+NUMCMP,ALL
+ALLSEL,ALL
+*GET,plate_area,AREA,0,NUM,MAX
+CM,PLATE_AREA,AREA
+
+SELTOL,1.0E-5
+LSEL,S,LOC,X,0
+CM,LEFT_EDGE_LINES,LINE
+LSEL,S,LOC,X,120
+CM,RIGHT_EDGE_LINES,LINE
+LSEL,S,LOC,Y,0
+CM,BOTTOM_EDGE_LINES,LINE
+LSEL,S,LOC,Y,240
+CM,TOP_EDGE_LINES,LINE
+LSEL,S,RADIUS,,6
+CM,HOLE_EDGE_LINES,LINE
+*GET,hole_line_count,LINE,0,COUNT
+ALLSEL,ALL
+
+LESIZE,ALL,10
+CMSEL,S,HOLE_EDGE_LINES
+LESIZE,ALL,2.4,,,,1
+ALLSEL,ALL
+TYPE,1
+MAT,1
+SECNUM,1
+MSHKEY,0
+MSHAPE,0,2D
+AMESH,plate_area
+ALLSEL,ALL
+
+CMSEL,S,LEFT_EDGE_LINES
+NSLL,S,1
+CM,LEFT_EDGE_NODES,NODE
+*GET,left_node_count,NODE,0,COUNT
+CMSEL,S,RIGHT_EDGE_LINES
+NSLL,S,1
+CM,RIGHT_EDGE_NODES,NODE
+*GET,right_node_count,NODE,0,COUNT
+CMSEL,S,HOLE_EDGE_LINES
+NSLL,S,1
+CM,HOLE_EDGE_NODES,NODE
+*GET,hole_node_count,NODE,0,COUNT
+ESLN,S,0
+CM,HOLE_ADJACENT_ELEMENTS,ELEM
+*GET,hole_element_count,ELEM,0,COUNT
+
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,0
+CM,BOTTOM_LEFT,NODE
+*GET,bottom_left_count,NODE,0,COUNT
+*GET,bl_node,NODE,0,NUM,MIN
+NSEL,S,LOC,X,120
+NSEL,R,LOC,Y,0
+CM,BOTTOM_RIGHT,NODE
+*GET,bottom_right_count,NODE,0,COUNT
+*GET,br_node,NODE,0,NUM,MIN
+NSEL,S,LOC,X,0
+NSEL,R,LOC,Y,240
+CM,TOP_LEFT,NODE
+*GET,top_left_count,NODE,0,COUNT
+*GET,tl_node,NODE,0,NUM,MIN
+ALLSEL,ALL
+
+edge_load=8
+CMSEL,S,LEFT_EDGE_NODES
+F,ALL,FX,-80
+NSEL,R,LOC,Y,0
+F,ALL,FX,-40
+CMSEL,S,LEFT_EDGE_NODES
+NSEL,R,LOC,Y,240
+F,ALL,FX,-40
+left_total_fx=-edge_load*240
+
+CMSEL,S,RIGHT_EDGE_NODES
+F,ALL,FX,80
+NSEL,R,LOC,Y,0
+F,ALL,FX,40
+CMSEL,S,RIGHT_EDGE_NODES
+NSEL,R,LOC,Y,240
+F,ALL,FX,40
+right_total_fx=edge_load*240
+
+ALLSEL,ALL
+D,bl_node,UX,0
+D,bl_node,UY,0
+D,bl_node,UZ,0
+D,br_node,UY,0
+D,br_node,UZ,0
+D,tl_node,UZ,0
+DLIST,ALL
+*GET,node_count,NODE,0,COUNT
+*GET,element_count,ELEM,0,COUNT
+SAVE,Job-FlangeHole,db
+FINISH
+
+/SOLU
+ANTYPE,STATIC
+OUTRES,ALL,ALL
+SOLVE
+FINISH
+SAVE,Job-FlangeHole,db
+
+/POST1
+FILE,Job-FlangeHole,rst
+SET,LAST
+
+CMSEL,S,LEFT_EDGE_NODES
+*GET,current_node,NODE,0,NUM,MIN
+left_u1_sum=0
+*DO,ii,1,left_node_count
+  *GET,node_u1,NODE,current_node,U,X
+  left_u1_sum=left_u1_sum+node_u1
+  *GET,current_node,NODE,current_node,NXTH
+*ENDDO
+left_mean_u1=left_u1_sum/left_node_count
+
+CMSEL,S,RIGHT_EDGE_NODES
+*GET,current_node,NODE,0,NUM,MIN
+right_u1_sum=0
+*DO,ii,1,right_node_count
+  *GET,node_u1,NODE,current_node,U,X
+  right_u1_sum=right_u1_sum+node_u1
+  *GET,current_node,NODE,current_node,NXTH
+*ENDDO
+right_mean_u1=right_u1_sum/right_node_count
+edge_displacement=right_mean_u1-left_mean_u1
+
+ALLSEL,ALL
+ETABLE,ERAS
+SHELL,TOP
+ETABLE,SEQV_TOP,S,EQV
+max_mises_top=0
+*GET,current_elem,ELEM,0,NUM,MIN
+*DO,jj,1,element_count
+  *GET,element_mises,ELEM,current_elem,ETAB,SEQV_TOP
+  max_mises_top=MAX(max_mises_top,element_mises)
+  *GET,current_elem,ELEM,current_elem,NXTH
+*ENDDO
+ETABLE,ERAS
+SHELL,MID
+ETABLE,SEQV_MID,S,EQV
+max_mises_mid=0
+*GET,current_elem,ELEM,0,NUM,MIN
+*DO,jj,1,element_count
+  *GET,element_mises,ELEM,current_elem,ETAB,SEQV_MID
+  max_mises_mid=MAX(max_mises_mid,element_mises)
+  *GET,current_elem,ELEM,current_elem,NXTH
+*ENDDO
+ETABLE,ERAS
+SHELL,BOT
+ETABLE,SEQV_BOT,S,EQV
+max_mises_bottom=0
+*GET,current_elem,ELEM,0,NUM,MIN
+*DO,jj,1,element_count
+  *GET,element_mises,ELEM,current_elem,ETAB,SEQV_BOT
+  max_mises_bottom=MAX(max_mises_bottom,element_mises)
+  *GET,current_elem,ELEM,current_elem,NXTH
+*ENDDO
+max_mises=MAX(max_mises_top,max_mises_mid,max_mises_bottom)
+stress_concentration_proxy=max_mises/(edge_load/1)
+ALLSEL,ALL
+
+*CFOPEN,metrics,json
+*VWRITE,stress_concentration_proxy
+('{"stress_concentration_proxy": ',E24.16,',')
+*VWRITE,max_mises
+(' "max_mises": ',E24.16,',')
+*VWRITE,edge_displacement
+(' "edge_displacement": ',E24.16,'}')
+*CFCLOS
+
+*CFOPEN,native_audit,txt
+*VWRITE
+('software=ANSYS Mechanical APDL 2026 R1')
+*VWRITE
+('release=26.1')
+*VWRITE
+('analysis=3D shell static structural')
+*VWRITE
+('job_name=Job-FlangeHole')
+*VWRITE
+('element_type=SHELL181')
+*VWRITE
+('keyopt_3_full_integration_incompatible_modes=2')
+*VWRITE
+('keyopt_8_section_point_storage=2')
+*VWRITE
+('section=SECTYPE SHELL; thickness=1 mm; material=1; theta=0; numpt=5')
+*VWRITE
+('material=Steel equivalent; EX=210000 MPa; PRXY=0.3')
+*VWRITE
+('geometry=120 x 240 mm shell midsurface; center=(60,120) mm; hole radius=6 mm')
+*VWRITE
+('mesh=global line size 10 mm; hole line size 2.4 mm')
+*VWRITE
+('boundary=BL UX UY UZ; BR UY UZ; TL UZ; rotations free')
+*VWRITE
+('loading=linear SHELL181 consistent nodal FX equivalent of 8 N/mm on each vertical edge')
+*VWRITE,node_count
+('nodes=',F16.0)
+*VWRITE,element_count
+('elements=',F16.0)
+*VWRITE,hole_line_count
+('hole_edge_lines=',F16.0)
+*VWRITE,hole_node_count
+('hole_edge_nodes=',F16.0)
+*VWRITE,hole_element_count
+('hole_adjacent_elements=',F16.0)
+*VWRITE,left_node_count,right_node_count
+('left_edge_nodes=',F16.0,', right_edge_nodes=',F16.0)
+*VWRITE,bottom_left_count,bottom_right_count,top_left_count
+('bottom_left_nodes=',F16.0,', bottom_right_nodes=',F16.0,', top_left_nodes=',F16.0)
+*VWRITE,bl_node,br_node,tl_node
+('constraint_node_ids_bl_br_tl=',F16.0,',',F16.0,',',F16.0)
+*VWRITE
+('constraint_signature=BL:UX,UY,UZ; BR:UY,UZ; TL:UZ')
+*VWRITE,left_total_fx,right_total_fx
+('left_total_fx_n=',E24.16,', right_total_fx_n=',E24.16)
+*VWRITE,left_mean_u1,right_mean_u1
+('left_mean_u1_mm=',E24.16,', right_mean_u1_mm=',E24.16)
+*VWRITE,stress_concentration_proxy
+('stress_concentration_proxy=',E24.16)
+*VWRITE,max_mises
+('max_mises_mpa=',E24.16)
+*VWRITE,edge_displacement
+('edge_displacement_mm=',E24.16)
+*VWRITE,max_mises_top,max_mises_mid,max_mises_bottom
+('max_mises_top_mid_bottom_mpa=',E24.16,',',E24.16,',',E24.16)
+*CFCLOS
+FINISH
+/EXIT,NOSAVE

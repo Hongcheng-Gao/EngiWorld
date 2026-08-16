@@ -1,34 +1,1112 @@
 {
-  "status": "bootstrapped_from_source_original",
-  "task": "task-07",
-  "task_id": "c-cae-commercial-open-choice-task-07-windows",
-  "solver": "abaqus",
-  "analysis_kind": "static_structural",
-  "domain": "shaft_torsion_a",
-  "metrics": [
-    "twist_angle",
-    "max_stress"
+  "analysis": "3D static torsion of a solid circular shaft",
+  "archive_manifest": "audit_archive/ARCHIVE_MANIFEST.json",
+  "archive_manifest_sha256": "badd583434c53f2eb431ed7604e7ac4635ae9a292b750532ead4213dbba2de26",
+  "completion_evidence": [
+    "validation/generation/abaqus/remote_status.json"
   ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "6ad38ad75fde5348b7a55bd5c10d341287a1856bcc112adb70742538e6635710",
-  "generated_at_epoch": 1783138443.428498,
-  "remote_host": null,
-  "note": "Original solver artifacts copied from source_original; metrics fields are present for eval field checks.",
+  "evaluator_sha256": "6bde54dd0fe02ff4340e46e9d0d9439304168c1046b8e97621c7dfe9175726e9",
   "files": [
     {
       "file": "Job-Torsion-A.cae",
-      "size": 53248,
-      "sha256": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254"
+      "sha256": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254",
+      "size": 53248
     },
     {
       "file": "Job-Torsion-A.odb",
-      "size": 288676,
-      "sha256": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2"
+      "sha256": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2",
+      "size": 288676
     },
     {
       "file": "metrics.json",
-      "size": 46,
-      "sha256": "f8831c09a4fffae4a7af7cce4ac6760af650e979754ffa40c1c1b74cc6df2fb8"
+      "sha256": "c437e2285e5835b7801a55333a5327cbf9f43d260e7628b11e638265cbb0b871",
+      "size": 89
     }
-  ]
+  ],
+  "final_instance_cleanup": "validation/final_cleanup.json",
+  "final_instance_cleanup_sha256": "dd5d61dd19cb3fb42d788818d67cb1a497518ff59842588a52c25a8da79d4408",
+  "formal_regression": "validation/formal_regression.json",
+  "formal_regression_sha256": "087d8ccd474b6c18cff05f9699624032a514949b7934b24c51aa38e2a47d2b8e",
+  "generated_on": "2026-08-14",
+  "generation_evidence": "validation/generation/abaqus/operation_result.json",
+  "job": "Job-Torsion-A",
+  "local_audit": "validation/local_audit.json",
+  "local_audit_sha256": "afc0a04e69feec28e2b763184a6bf4afd33f35913f0b65ac76626cd2b56664ee",
+  "metric_definitions": {
+    "max_mises_mpa": "MPa; maximum final von Mises stress over the shaft solid",
+    "twist_angle_rad": "radians; free-end RP-1 rotation about global Y from the final ODB frame"
+  },
+  "metrics": {
+    "max_mises_mpa": 7.232201099395752,
+    "twist_angle_rad": 0.0014535984955728054
+  },
+  "model": "Model-Torsion-A",
+  "model_audit": {
+    "cae": {
+      "element_signature_count": 80,
+      "element_types": [
+        "C3D8R"
+      ],
+      "geometry": {
+        "bbox": {
+          "x": [
+            -5.0,
+            5.0
+          ],
+          "y": [
+            0.0,
+            80.0
+          ],
+          "z": [
+            -5.0,
+            5.0
+          ]
+        },
+        "cells": 1,
+        "centerline_node_count": 21,
+        "dimensionality": "",
+        "elements": 80,
+        "expected_cylinder_volume_mm3": 6283.185307179587,
+        "faces": 3,
+        "nodes": 189,
+        "outer_radius_node_count": 168,
+        "part_type": "DEFORMABLE_BODY",
+        "radial_max_mm": 5.0,
+        "radial_min_mm": 4.440892098500626e-16,
+        "volume_mm3": 6283.185359684078,
+        "y0_node_count": 9,
+        "y80_node_count": 9
+      },
+      "instance_name": "CYL-1",
+      "job_model": "Model-Torsion-A",
+      "job_name": "Job-Torsion-A",
+      "material": {
+        "elastic": [
+          210000.0,
+          0.3
+        ],
+        "name": "Steel"
+      },
+      "model_name": "Model-Torsion-A",
+      "node_signature_count": 189,
+      "part_name": "CYL",
+      "section_assignments": [
+        {
+          "cell_indices": [
+            0
+          ],
+          "material": "Steel",
+          "region": "ALL_CELLS",
+          "region_repr": "('ALL_CELLS', 'CYL', 1, 1, 0)",
+          "section": "Sec-Solid",
+          "section_class": "HomogeneousSolidSection"
+        }
+      ],
+      "seed_mm": 4.0
+    },
+    "checks": [
+      {
+        "expected": "Abaqus 2025",
+        "name": "runtime_and_odb_are_abaqus_2025",
+        "observed": {
+          "api": "2516 ABAQUS/STANDARD LEARNING EDITION 2025 ABAQUS_STANDARD",
+          "odb_marker": true
+        },
+        "passed": true
+      },
+      {
+        "expected": "Abaqus/Standard Learning Edition 2025",
+        "name": "learning_edition_identity",
+        "observed": {
+          "api": "2516 ABAQUS/STANDARD LEARNING EDITION 2025 ABAQUS_STANDARD",
+          "odb_marker": true
+        },
+        "passed": true
+      },
+      {
+        "expected": "Model-Torsion-A",
+        "name": "exact_model_exists",
+        "observed": [
+          "Model-1",
+          "Model-Torsion-A"
+        ],
+        "passed": true
+      },
+      {
+        "expected": "CYL",
+        "name": "exact_part_exists",
+        "observed": [
+          "CYL"
+        ],
+        "passed": true
+      },
+      {
+        "expected": "CYL-1",
+        "name": "exact_instance_exists",
+        "observed": [
+          "CYL-1"
+        ],
+        "passed": true
+      },
+      {
+        "expected": {
+          "instances": [
+            "CYL-1"
+          ],
+          "parts": [
+            "CYL"
+          ]
+        },
+        "name": "target_model_has_one_part_and_one_instance",
+        "observed": {
+          "instances": [
+            "CYL-1"
+          ],
+          "parts": [
+            "CYL"
+          ]
+        },
+        "passed": true
+      },
+      {
+        "expected": "Model-Torsion-A",
+        "name": "exact_job_is_bound_to_model",
+        "observed": "Model-Torsion-A",
+        "passed": true
+      },
+      {
+        "expected": "ON",
+        "name": "instance_is_dependent",
+        "observed": 1.0,
+        "passed": true
+      },
+      {
+        "name": "part_is_3d_deformable_solid",
+        "observed": {
+          "bbox": {
+            "x": [
+              -5.0,
+              5.0
+            ],
+            "y": [
+              0.0,
+              80.0
+            ],
+            "z": [
+              -5.0,
+              5.0
+            ]
+          },
+          "cells": 1,
+          "centerline_node_count": 21,
+          "dimensionality": "",
+          "elements": 80,
+          "expected_cylinder_volume_mm3": 6283.185307179587,
+          "faces": 3,
+          "nodes": 189,
+          "outer_radius_node_count": 168,
+          "part_type": "DEFORMABLE_BODY",
+          "radial_max_mm": 5.0,
+          "radial_min_mm": 4.440892098500626e-16,
+          "volume_mm3": 6283.185359684078,
+          "y0_node_count": 9,
+          "y80_node_count": 9
+        },
+        "passed": true
+      },
+      {
+        "expected": {
+          "x": [
+            -5,
+            5
+          ],
+          "y": [
+            0,
+            80
+          ],
+          "z": [
+            -5,
+            5
+          ]
+        },
+        "name": "shaft_bbox_is_exact",
+        "observed": {
+          "x": [
+            -5.0,
+            5.0
+          ],
+          "y": [
+            0.0,
+            80.0
+          ],
+          "z": [
+            -5.0,
+            5.0
+          ]
+        },
+        "passed": true
+      },
+      {
+        "name": "mesh_proves_solid_circular_shaft",
+        "observed": {
+          "bbox": {
+            "x": [
+              -5.0,
+              5.0
+            ],
+            "y": [
+              0.0,
+              80.0
+            ],
+            "z": [
+              -5.0,
+              5.0
+            ]
+          },
+          "cells": 1,
+          "centerline_node_count": 21,
+          "dimensionality": "",
+          "elements": 80,
+          "expected_cylinder_volume_mm3": 6283.185307179587,
+          "faces": 3,
+          "nodes": 189,
+          "outer_radius_node_count": 168,
+          "part_type": "DEFORMABLE_BODY",
+          "radial_max_mm": 5.0,
+          "radial_min_mm": 4.440892098500626e-16,
+          "volume_mm3": 6283.185359684078,
+          "y0_node_count": 9,
+          "y80_node_count": 9
+        },
+        "passed": true
+      },
+      {
+        "expected": 6283.185307179587,
+        "name": "geometric_volume_is_cylinder",
+        "observed": 6283.185359684078,
+        "passed": true
+      },
+      {
+        "expected": "BaseSolidRevolve feature",
+        "name": "feature_tree_contains_base_solid_revolve",
+        "observed": [
+          {
+            "class": "Feature",
+            "name": "Solid revolve-1",
+            "repr": "mdb.models['Model-Torsion-A'].parts['CYL'].features['Solid revolve-1']"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "expected": [
+          210000.0,
+          0.3
+        ],
+        "name": "steel_elastic_properties",
+        "observed": [
+          210000.0,
+          0.3
+        ],
+        "passed": true
+      },
+      {
+        "expected": 4.0,
+        "name": "global_seed_is_4mm",
+        "observed": 4.0,
+        "passed": true
+      },
+      {
+        "expected": [
+          "C3D8R"
+        ],
+        "name": "all_elements_are_c3d8r",
+        "observed": [
+          "C3D8R"
+        ],
+        "passed": true
+      },
+      {
+        "expected": "Step-Torque-A",
+        "name": "single_static_general_step",
+        "observed": {
+          "analysis_steps": [
+            "Step-Torque-A"
+          ],
+          "type": "StaticStep"
+        },
+        "passed": true
+      },
+      {
+        "expected": {
+          "node_labels": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ]
+        },
+        "name": "encastre_covers_complete_y0_end",
+        "observed": {
+          "active_bcs": [
+            "BC-FIX"
+          ],
+          "create_step": null,
+          "diagnostics": [
+            {
+              "name": "BC-FIX",
+              "objects": [
+                {
+                  "class": "TypeBC",
+                  "region": "('SET_FIX', 'Assembly', 1, 1, 0)",
+                  "repr": "mdb.models['Model-Torsion-A'].boundaryConditions['BC-FIX']"
+                },
+                {
+                  "class": "TypeBCState",
+                  "repr": "mdb.models['Model-Torsion-A'].steps['Initial'].boundaryConditionStates['BC-FIX']",
+                  "status": "CREATED"
+                },
+                {
+                  "class": "TypeBCState",
+                  "repr": "mdb.models['Model-Torsion-A'].steps['Step-Torque-A'].boundaryConditionStates['BC-FIX']",
+                  "status": "PROPAGATED"
+                }
+              ],
+              "state_steps": [
+                "Initial",
+                "Step-Torque-A"
+              ]
+            }
+          ],
+          "face_areas": [
+            78.53981633974483
+          ],
+          "node_labels": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9
+          ],
+          "region": null,
+          "state_steps": [
+            "Initial",
+            "Step-Torque-A"
+          ],
+          "types": [
+            "TypeBC",
+            "TypeBCState",
+            "TypeBCState"
+          ]
+        },
+        "passed": true
+      },
+      {
+        "expected": "CYL-1",
+        "name": "odb_exact_instance_exists",
+        "observed": [
+          "ASSEMBLY",
+          "CYL-1"
+        ],
+        "passed": true
+      },
+      {
+        "name": "cae_odb_node_mesh_identity",
+        "observed": {
+          "cae_bbox": {
+            "x": [
+              -5.0,
+              5.0
+            ],
+            "y": [
+              0.0,
+              80.0
+            ],
+            "z": [
+              -5.0,
+              5.0
+            ]
+          },
+          "cae_count": 189,
+          "odb_bbox": {
+            "x": [
+              -5.0,
+              5.0
+            ],
+            "y": [
+              0.0,
+              80.0
+            ],
+            "z": [
+              -5.0,
+              5.0
+            ]
+          },
+          "odb_count": 189
+        },
+        "passed": true
+      },
+      {
+        "name": "cae_odb_element_identity",
+        "observed": {
+          "cae_count": 80,
+          "cae_types": [
+            "C3D8R"
+          ],
+          "odb_count": 80,
+          "odb_types": [
+            "C3D8R"
+          ]
+        },
+        "passed": true
+      },
+      {
+        "expected": {
+          "cells": [
+            0
+          ],
+          "material": "Steel"
+        },
+        "name": "solid_section_covers_all_cells",
+        "observed": {
+          "cae_assignments": [
+            {
+              "cell_indices": [
+                0
+              ],
+              "material": "Steel",
+              "region": "ALL_CELLS",
+              "region_repr": "('ALL_CELLS', 'CYL', 1, 1, 0)",
+              "section": "Sec-Solid",
+              "section_class": "HomogeneousSolidSection"
+            }
+          ],
+          "cae_direct_cell_coverage": true,
+          "odb_full_mesh_cross_check": true
+        },
+        "passed": true
+      },
+      {
+        "expected": {
+          "element_count": 80,
+          "material": "Steel"
+        },
+        "name": "odb_section_covers_same_full_shaft",
+        "observed": [
+          {
+            "element_labels": [
+              1,
+              2,
+              3,
+              4,
+              5,
+              6,
+              7,
+              8,
+              9,
+              10,
+              11,
+              12,
+              13,
+              14,
+              15,
+              16,
+              17,
+              18,
+              19,
+              20,
+              21,
+              22,
+              23,
+              24,
+              25,
+              26,
+              27,
+              28,
+              29,
+              30,
+              31,
+              32,
+              33,
+              34,
+              35,
+              36,
+              37,
+              38,
+              39,
+              40,
+              41,
+              42,
+              43,
+              44,
+              45,
+              46,
+              47,
+              48,
+              49,
+              50,
+              51,
+              52,
+              53,
+              54,
+              55,
+              56,
+              57,
+              58,
+              59,
+              60,
+              61,
+              62,
+              63,
+              64,
+              65,
+              66,
+              67,
+              68,
+              69,
+              70,
+              71,
+              72,
+              73,
+              74,
+              75,
+              76,
+              77,
+              78,
+              79,
+              80
+            ],
+            "material": "STEEL",
+            "section": "Section-ASSEMBLY_CYL-1_ALL_CELLS"
+          }
+        ],
+        "passed": true
+      },
+      {
+        "expected": [
+          210000.0,
+          0.3
+        ],
+        "name": "odb_material_matches_cae_steel",
+        "observed": [
+          210000.0,
+          0.3
+        ],
+        "passed": true
+      },
+      {
+        "expected": "Step-Torque-A",
+        "name": "odb_exact_step_exists",
+        "observed": [
+          "Step-Torque-A"
+        ],
+        "passed": true
+      },
+      {
+        "expected": "completed successfully",
+        "name": "odb_job_completed_successfully",
+        "observed": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+        "passed": true
+      },
+      {
+        "expected": {
+          "last_frame_value": 1.0,
+          "minimum": 2
+        },
+        "name": "odb_has_initial_and_final_frames",
+        "observed": {
+          "count": 2,
+          "last_frame_value": 1.0
+        },
+        "passed": true
+      },
+      {
+        "expected": [
+          "U",
+          "S",
+          "UR",
+          "RF",
+          "RM"
+        ],
+        "name": "odb_required_fields_are_populated",
+        "observed": {
+          "counts": {
+            "RF": 190,
+            "RM": 190,
+            "S": 80,
+            "U": 190,
+            "UR": 190
+          },
+          "names": [
+            "CF",
+            "CM",
+            "E",
+            "RF",
+            "RM",
+            "S",
+            "U",
+            "UR"
+          ]
+        },
+        "passed": true
+      },
+      {
+        "expected": [
+          0.0,
+          80.0,
+          0.0
+        ],
+        "name": "odb_rp_nodeset_identifies_exact_reference_point",
+        "observed": {
+          "coordinates": [
+            0.0,
+            80.0,
+            0.0
+          ],
+          "node_count": 1,
+          "set": "RP-1"
+        },
+        "passed": true
+      },
+      {
+        "expected": [
+          0.0,
+          80.0,
+          0.0
+        ],
+        "name": "rp1_is_at_free_end_center",
+        "observed": {
+          "assembly_reference_points": [
+            {
+              "coordinates": null,
+              "key": 6.0,
+              "repr": "mdb.models['Model-Torsion-A'].rootAssembly.referencePoints[6]"
+            }
+          ],
+          "cross_proof": {
+            "cae_odb_elements_identical": true,
+            "cae_odb_nodes_identical": true,
+            "cae_rp_set_identity": true,
+            "odb_rp_coordinates": [
+              0.0,
+              80.0,
+              0.0
+            ]
+          },
+          "reference_points": [
+            {
+              "coordinates": null,
+              "key": 6.0,
+              "repr": "mdb.models['Model-Torsion-A'].rootAssembly.referencePoints[6]"
+            }
+          ],
+          "set": null
+        },
+        "passed": true
+      },
+      {
+        "expected": {
+          "control_point_coordinates": [
+            0.0,
+            80.0,
+            0.0
+          ],
+          "surface_node_labels": [
+            181,
+            182,
+            183,
+            184,
+            185,
+            186,
+            187,
+            188,
+            189
+          ]
+        },
+        "name": "whole_free_end_kinematic_coupling_all_6dof",
+        "observed": {
+          "active_constraints": [
+            "COUPLE-RP1"
+          ],
+          "control_point": null,
+          "control_point_references": [
+            {
+              "coordinates": null,
+              "key": 6.0,
+              "repr": "mdb.models['Model-Torsion-A'].rootAssembly.referencePoints[6]"
+            }
+          ],
+          "coupling_type": "KINEMATIC",
+          "cross_proof": {
+            "cae_odb_mesh_identical": true,
+            "cae_rp_identity": true,
+            "odb_rp_coordinates": [
+              0.0,
+              80.0,
+              0.0
+            ]
+          },
+          "dofs": {
+            "u1": "ON",
+            "u2": "ON",
+            "u3": "ON",
+            "ur1": "ON",
+            "ur2": "ON",
+            "ur3": "ON"
+          },
+          "influence_radius": "WHOLE_SURFACE",
+          "surface": null,
+          "surface_face_areas": [
+            78.53981633974483
+          ],
+          "surface_node_labels": [
+            181,
+            182,
+            183,
+            184,
+            185,
+            186,
+            187,
+            188,
+            189
+          ],
+          "type": "Coupling"
+        },
+        "passed": true
+      },
+      {
+        "expected": {
+          "cm2": 850.0,
+          "reference_point_coordinates": [
+            0.0,
+            80.0,
+            0.0
+          ],
+          "step": "Step-Torque-A"
+        },
+        "name": "cm2_850_is_applied_to_rp_in_target_step",
+        "observed": {
+          "active_loads": [
+            "LOAD-M"
+          ],
+          "components": [
+            0.0,
+            850.0,
+            0.0
+          ],
+          "create_step": null,
+          "cross_proof": {
+            "cae_odb_mesh_identical": true,
+            "cae_rp_identity": true,
+            "odb_rp_coordinates": [
+              0.0,
+              80.0,
+              0.0
+            ]
+          },
+          "diagnostics": [
+            {
+              "class": "Moment",
+              "region": "('RP-1', 'Assembly', 1, 1, 0)",
+              "repr": "mdb.models['Model-Torsion-A'].loads['LOAD-M']"
+            },
+            {
+              "class": "MomentState",
+              "repr": "mdb.models['Model-Torsion-A'].steps['Initial'].loadStates['LOAD-M']"
+            },
+            {
+              "class": "MomentState",
+              "cm1": 0.0,
+              "cm2": 850.0,
+              "cm3": 0.0,
+              "repr": "mdb.models['Model-Torsion-A'].steps['Step-Torque-A'].loadStates['LOAD-M']",
+              "status": "CREATED"
+            }
+          ],
+          "reference_points": [
+            {
+              "coordinates": null,
+              "key": 6.0,
+              "repr": "mdb.models['Model-Torsion-A'].rootAssembly.referencePoints[6]"
+            }
+          ],
+          "region": null,
+          "state_steps": [
+            "Initial",
+            "Step-Torque-A"
+          ],
+          "type": "Moment"
+        },
+        "passed": true
+      },
+      {
+        "expected": "one RP value with positive UR2 and negligible UR1/UR3",
+        "name": "twist_is_exact_rp_ur2_not_global_max",
+        "observed": [
+          {
+            "components": [
+              -3.349085555382248e-17,
+              0.0014535984955728054,
+              -8.748047753146047e-17
+            ],
+            "instance": "",
+            "node_label": 1
+          }
+        ],
+        "passed": true
+      },
+      {
+        "name": "max_mises_uses_full_shaft_stress_field",
+        "observed": {
+          "covered_elements": 80,
+          "finite_values": 80,
+          "max_mises_mpa": 7.232201099395752,
+          "shaft_elements": 80
+        },
+        "passed": true
+      },
+      {
+        "expected": -850.0,
+        "name": "fixed_end_reaction_balances_applied_torque",
+        "observed": {
+          "fixed_rf_node_count": 9,
+          "rm2_count": 9,
+          "rm2_sum_n_mm": 0.0,
+          "source": "sum(z*RF1-x*RF3)_at_fixed_end",
+          "value_n_mm": -849.9999777338235
+        },
+        "passed": true
+      },
+      {
+        "expected": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254",
+        "name": "input_cae_is_byte_unchanged",
+        "observed": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254",
+        "passed": true
+      },
+      {
+        "expected": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2",
+        "name": "input_odb_is_byte_unchanged",
+        "observed": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2",
+        "passed": true
+      }
+    ],
+    "inputs": {
+      "cae": {
+        "path": "C:\\Users\\user\\AppData\\Local\\Temp\\codex_cli_task07_abaqus_inspect_912dfca3bd12\\Job-Torsion-A.cae",
+        "sha256_after": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254",
+        "sha256_before": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254",
+        "size": 53248,
+        "unchanged": true
+      },
+      "odb": {
+        "path": "C:\\Users\\user\\AppData\\Local\\Temp\\codex_cli_task07_abaqus_inspect_912dfca3bd12\\Job-Torsion-A.odb",
+        "sha256_after": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2",
+        "sha256_before": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2",
+        "size": 288676,
+        "unchanged": true
+      }
+    },
+    "metrics": {
+      "max_mises_mpa": 7.232201099395752,
+      "twist_angle_rad": 0.0014535984955728054
+    },
+    "odb": {
+      "element_types": [
+        "C3D8R"
+      ],
+      "elements": 80,
+      "field_counts": {
+        "RF": 190,
+        "RM": 190,
+        "S": 80,
+        "U": 190,
+        "UR": 190
+      },
+      "field_names": [
+        "CF",
+        "CM",
+        "E",
+        "RF",
+        "RM",
+        "S",
+        "U",
+        "UR"
+      ],
+      "fixed_end_reaction": {
+        "rf_node_count": 9,
+        "rm2_count": 9,
+        "rm2_sum_n_mm": 0.0,
+        "source": "sum(z*RF1-x*RF3)_at_fixed_end",
+        "value_n_mm": -849.9999777338235
+      },
+      "instance_name": "CYL-1",
+      "job_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+      "last_frame_value": 1.0,
+      "material": {
+        "elastic": [
+          210000.0,
+          0.3
+        ],
+        "name": "Steel"
+      },
+      "nodes": 189,
+      "rp_coordinates": [
+        0.0,
+        80.0,
+        0.0
+      ],
+      "rp_set_name": "RP-1",
+      "rp_ur": [
+        {
+          "components": [
+            -3.349085555382248e-17,
+            0.0014535984955728054,
+            -8.748047753146047e-17
+          ],
+          "instance": "",
+          "node_label": 1
+        }
+      ],
+      "section_assignments": [
+        {
+          "element_labels": [
+            1,
+            2,
+            3,
+            4,
+            5,
+            6,
+            7,
+            8,
+            9,
+            10,
+            11,
+            12,
+            13,
+            14,
+            15,
+            16,
+            17,
+            18,
+            19,
+            20,
+            21,
+            22,
+            23,
+            24,
+            25,
+            26,
+            27,
+            28,
+            29,
+            30,
+            31,
+            32,
+            33,
+            34,
+            35,
+            36,
+            37,
+            38,
+            39,
+            40,
+            41,
+            42,
+            43,
+            44,
+            45,
+            46,
+            47,
+            48,
+            49,
+            50,
+            51,
+            52,
+            53,
+            54,
+            55,
+            56,
+            57,
+            58,
+            59,
+            60,
+            61,
+            62,
+            63,
+            64,
+            65,
+            66,
+            67,
+            68,
+            69,
+            70,
+            71,
+            72,
+            73,
+            74,
+            75,
+            76,
+            77,
+            78,
+            79,
+            80
+          ],
+          "material": "STEEL",
+          "section": "Section-ASSEMBLY_CYL-1_ALL_CELLS"
+        }
+      ],
+      "step_names": [
+        "Step-Torque-A"
+      ],
+      "stress_element_coverage": 80,
+      "stress_finite_value_count": 80,
+      "target_step_frames": 2
+    },
+    "passed": true,
+    "read_only": true,
+    "schema_version": 1,
+    "software_versions": {
+      "mdb.version": 2516.0,
+      "odb.jobData.analysisCode": "ABAQUS_STANDARD",
+      "odb.jobData.version": "Abaqus/Standard Learning Edition 2025"
+    },
+    "status": "passed",
+    "task": "task/open/cli-ANSYS-Abaqus-AutoCAD/task-07"
+  },
+  "native_audit": "validation/generation/abaqus/native_audit.json",
+  "official_source_status": "validation/official_source_status.json",
+  "official_source_status_sha256": "c42632664d09013aa90986b64e1d72f7c43a8c89194a30e0379f24bbc5120309",
+  "official_sources": "validation/official_sources.md",
+  "open_choice_spec_sha256": "6bc19c730ee82733fe6f34d9f683ad4c8215508caa4d7be8b68b78c94763541a",
+  "provenance": {
+    "access": "OSWorld REST through supplied SSH tunnel at http://127.0.0.1:15047",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip": "10.0.6.47",
+    "public_ip": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software_versions": {
+    "abaqus": "Abaqus/Standard Learning Edition 2025",
+    "ansys": "ANSYS Mechanical APDL 2026 R1, release 26.1"
+  },
+  "solver": "abaqus",
+  "source_instruction_sha256": "fc38346ae0a114181a90dd06a6ce87c6c706d28c9f2f3377ccc29f3b85a386a6",
+  "status": "verified_real_snapshot",
+  "step": "Step-Torque-A",
+  "synthetic_or_offline_solver_data": false,
+  "task": "task-07",
+  "task_definition_sha256": "fa8fe84bddbbd1651414795142e3828f80ef52b8f018942de530abcd94d77b9f",
+  "task_id": "c-open-abaqus-ansys-autocad-task-07-windows",
+  "validation_matrix": "validation/validation_matrix.json",
+  "validation_matrix_sha256": "31ce377c12bba8a93527782845e64c711a558e6a65c4eb3dd9387ce67792cc87"
 }
