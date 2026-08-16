@@ -1,48 +1,110 @@
 {
-  "status": "generated_generic_remote",
-  "task": "task-04",
-  "task_id": "c-cae-commercial-open-choice-task-04-windows",
-  "solver": "ansys",
-  "analysis_kind": "static_structural",
-  "domain": "solid_bar_tension",
-  "metrics": [
-    "free_end_displacement",
-    "axial_stress"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "145081a684ddc477ac2fa7eb872a0821452aae67173fc8b20a9986e05641172c",
-  "generated_at_epoch": 1783166022.478146,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "analysis": "3D solid linear static tension",
+  "evaluator_sha256": "53c72933e9e384f8efd3c4613d5de120a9b8b7ff2aca66f1b22499c17685306f",
   "files": [
     {
-      "file": "gt_task_04_ansys.db",
-      "size": 196608,
-      "sha256": "57fff653a07120d636ecd8b8b2d11eac761295c6878481e8c43393cecfb9bb9b"
+      "file": "Job-Tension.db",
+      "sha256": "8a2837b76be0c052a6e9228341d13a202623e39e9f9c8f7295d0c8ce112125f3",
+      "size": 196608
     },
     {
-      "file": "gt_task_04_ansys.rst",
-      "size": 327680,
-      "sha256": "f20d5fc118a1edba6c1857f62b445427afee1df7bf21ea461467825395ca06d4"
+      "file": "Job-Tension.rst",
+      "sha256": "21002fbe07f505c0df4d65529dcbbf8fe6fb0ad0d60caca464d7d0c6e7d22feb",
+      "size": 393216
     },
     {
       "file": "metrics.json",
-      "size": 60,
-      "sha256": "a052a0e9adff5f00b799883c90d8c0eac5a27f4ab39d39bcecdf3e6000b79256"
+      "sha256": "51c9bfe64dd3de21ed2b8a3599425569333ac4fbdcae717485af5e03e2e4c3fa",
+      "size": 97
     }
   ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "final_instance_cleanup": {
+    "evidence": "../validation/final_cleanup.json",
+    "required_baseline_process": "ANSYS.exe -v PID 7200"
   },
-  "license_precheck": {
-    "license_status": "license_ok",
-    "license_stdout_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-04/ground_truth/generation/ansys/license_generate_task_04_ansys_stdout.txt",
-    "license_exitcode_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-04/ground_truth/generation/ansys/license_generate_task_04_ansys_exitcode.txt",
-    "license_stdout_last_line": "==================================================",
-    "license_exitcode_raw": "exitcode=0",
-    "license_exitcode": 0
+  "generated_on": "2026-08-12",
+  "job": "Job-Tension",
+  "metric_definitions": {
+    "axial_stress": "MPa; -sum(final global RF1 over every X=0 fixed-face node) / 100 mm^2",
+    "free_end_displacement": "mm; final global U1 at the unique undeformed node (100, 5, 5)"
+  },
+  "metrics": {
+    "axial_stress": 9.99999999999965,
+    "free_end_displacement": 0.004743271872048588
+  },
+  "model_audit": {
+    "boundary_condition": "UX=UY=UZ=0 on all 9 X=0 face nodes, no other constraints",
+    "center_node": 170,
+    "element_type": "SOLID185",
+    "fixed_rf1_n": -999.999999999965,
+    "geometry_mm": {
+      "x": [
+        0.0,
+        100.0
+      ],
+      "y": [
+        0.0,
+        10.0
+      ],
+      "z": [
+        0.0,
+        10.0
+      ]
+    },
+    "independent_db_resolve_required_by_evaluator": true,
+    "load": "SFA PRES=-10 MPa on complete X=100 area; outward global +X; 1000 N resultant",
+    "material": {
+      "poissons_ratio": 0.3,
+      "youngs_modulus_mpa": 210000.0
+    },
+    "mesh": {
+      "elements": 80,
+      "global_size_mm": 5.0,
+      "nodes": 189
+    },
+    "solver_error_count": 0,
+    "solver_warning_count": 1
+  },
+  "official_sources": [
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID185.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID186.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID187.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_MP.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_SFA.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_PRRSOL.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_RESUME.html"
+  ],
+  "open_choice_spec_sha256": "6b57188e85ea9cff965a103fcafb2bb642a70a745fd671d41bc054539936e233",
+  "provenance": {
+    "access": "OSWorld REST through supplied SSH tunnel http://127.0.0.1:15047",
+    "generation_evidence": "../validation/generation/ansys_gt_generation.json",
+    "generator_input": "../validation/generation/repair_cli_task04_ansys.inp",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "native_audit": "../validation/generation/ansys_native_audit.txt",
+    "native_solver_log": "../validation/generation/Job-Tension_ansys_run.out",
+    "private_ip_from_mapping": "10.0.6.47",
+    "public_ip_from_mapping": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "reasonable_equivalents_verified": [
+    "Abaqus C3D20R mesh",
+    "ANSYS SOLID186 mesh",
+    "ANSYS rotated nodal coordinate systems with global result metrics"
+  ],
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software": "ANSYS Mechanical APDL 2026 R1, release 26.1, build UP20260202",
+  "solver": "ansys",
+  "source_instruction_sha256": "453e4483778afe1c257ca801149f17ecd404f9805deda98afb7c602b8aa6169f",
+  "status": "verified_real_snapshot",
+  "step": "load step 1, substep 1",
+  "task": "task-04",
+  "task_definition_sha256": "f82afe48080c23d4040b01d9f91c7e7583de8b58bfdc60449935d1cf3e58387e",
+  "task_id": "c-open-abaqus-ansys-autocad-task-04-windows",
+  "validation": {
+    "all_cases_use_isolated_snapshot_state": true,
+    "formal_ground_truth_final": "../validation/cases/final_formal_ansys_v1/validation_result.json",
+    "local_audit": "../validation/local_audit.json",
+    "matrix": "../validation/validation_matrix.json",
+    "same_labels_wrong_result_negative": "../validation/cases/final_matrix_negative_ansys_same_label_wrong_result_v1/validation_result.json"
   }
 }

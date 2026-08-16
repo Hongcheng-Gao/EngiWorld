@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-12-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-12-windows",
   "open_choice_id": "cae-open-choice-022",
   "source_task": "task/task-c/ansys/task-02",
   "original_software": "ansys",
@@ -12,24 +12,33 @@
     "center_deflection",
     "max_stress"
   ],
+  "metric_contract": {
+    "center_deflection": "Signed final axial displacement in mm at (X,Y)=(0,1): Abaqus U2 or ANSYS UY; downward is negative.",
+    "max_stress": "Final maximum von Mises stress in MPa: Abaqus integration-point S.Mises, or ANSYS saved nodally averaged S,EQV in SET,LAST.",
+    "extra_fields_allowed": false,
+    "reported_values_must_match_native_result": true,
+    "cross_solver_stress_equality_required": false
+  },
   "expected_result_fields": [
     "U",
     "S"
   ],
   "require_metrics_json": true,
-  "visible_goal": "Build and solve an axisymmetric circular plate with a clamped outer edge and uniform pressure; report center deflection and stress.",
+  "visible_goal": "Build and solve the specified axisymmetric circular plate with a clamped outer edge and top pressure; report native-result-bound center deflection and solver-position-specific maximum von Mises stress.",
   "selection_reason": "Axisymmetric plate statics matches the Abaqus-origin family and is cross-solver feasible.",
   "artifact_hint": {
     "ground_truth_files": [
-      "apdl_plate.db",
-      "apdl_plate.rst"
+      "Task12-Axisymmetric-Plate.db",
+      "Task12-Axisymmetric-Plate.rst"
     ],
-    "abaqus_stems": [],
+    "abaqus_stems": [
+      "Task12-Axisymmetric-Plate"
+    ],
     "ansys_db_files": [
-      "apdl_plate.db"
+      "Task12-Axisymmetric-Plate.db"
     ],
     "ansys_result_files": [
-      "apdl_plate.rst"
+      "Task12-Axisymmetric-Plate.rst"
     ]
   },
   "span_hint": {

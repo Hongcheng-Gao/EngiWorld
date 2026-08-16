@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-06-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-06-windows",
   "open_choice_id": "cae-open-choice-006",
   "source_task": "task/task-c/abaqus/task-06",
   "original_software": "abaqus",
@@ -9,30 +9,51 @@
   "domain": "steady_heat_conduction",
   "analysis_kind": "thermal",
   "metrics": [
-    "probe_temperature",
-    "heat_flux_optional"
+    "midplane_temperature_c",
+    "heat_flux_x_w_per_mm2"
   ],
   "expected_result_fields": [
-    "NT11"
+    "NT11",
+    "HFL",
+    "RFL11"
   ],
   "require_metrics_json": true,
-  "visible_goal": "Solve a steady heat-conduction block with fixed temperatures on opposite ends; report mid-plane or probe temperatures.",
+  "visible_goal": "Solve the specified steady heat-conduction block with fixed temperatures on opposite ends; report the X=50 mm mean temperature and the normalized global +X heat-flux density.",
   "selection_reason": "Steady thermal conduction is available in both commercial solvers.",
   "artifact_hint": {
     "ground_truth_files": [
       "Job-Thermal.cae",
-      "Job-Thermal.odb"
+      "Job-Thermal.odb",
+      "Job-Thermal.db",
+      "Job-Thermal.rth"
     ],
     "abaqus_stems": [
       "Job-Thermal"
     ],
-    "ansys_db_files": [],
-    "ansys_result_files": []
+    "ansys_db_files": [
+      "Job-Thermal.db"
+    ],
+    "ansys_result_files": [
+      "Job-Thermal.rth"
+    ]
   },
   "span_hint": {
     "x": 100.0,
     "y": 50.0,
     "z": 10.0
   },
-  "bounds_hint": null
+  "bounds_hint": {
+    "midplane_temperature_c": [
+      59.99,
+      60.01
+    ],
+    "heat_flux_x_w_per_mm2": [
+      0.3199,
+      0.3201
+    ],
+    "end_reaction_heat_flow_w_abs": [
+      159.9,
+      160.1
+    ]
+  }
 }
