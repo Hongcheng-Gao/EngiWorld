@@ -84,7 +84,7 @@ def _parse_netlist(text: str, signal_names: list[str]) -> list[tuple[str, list[t
 def evaluate(submission_dir: str) -> bool:
     sub = Path(submission_dir).resolve()
     target = None
-    for name in ("mystery_netlist.txt", "answer.txt"):
+    for name in ("mystery_netlist.txt",):
         cand = sub / name
         if cand.is_file():
             target = cand

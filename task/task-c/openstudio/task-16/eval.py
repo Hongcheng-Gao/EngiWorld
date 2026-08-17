@@ -51,6 +51,12 @@ end
 def check_basic(model)
   return false unless model.getBuilding.nameString == SPEC['building']
   return false unless model.getBuildingStorys.size == SPEC['metrics']['story_count']
+  return false unless SPEC.fetch('stories', []).all? do |story_spec|
+    story = model.getBuildingStoryByName(story_spec['name'])
+    next false if story.empty?
+    nominal_z = opt(story.get.nominalZCoordinate)
+    !nominal_z.nil? && ok_close(nominal_z, story_spec['z'], 0.06)
+  end
   return false unless model.getSpaces.size == SPEC['metrics']['space_count']
   return false unless model.getThermalZones.size == SPEC['metrics']['zone_count']
   return false unless model.getSurfaces.size == SPEC['metrics']['surface_count']
@@ -113,6 +119,7 @@ def check_windows(model)
     expected_head = (s_spec['z0'] || 0).to_f + w['head'].to_f
     expected_area = (w['end']-w['start'])*(w['head']-w['sill'])
     matches.any? do |sub|
+      next false if w['name'] && sub.nameString != w['name']
       b = sub_bounds(sub)
       axis_ok = if ['south','north'].include?(w['wall'])
         ok_close(b[0], w['start'], 0.06) && ok_close(b[3], w['end'], 0.06)

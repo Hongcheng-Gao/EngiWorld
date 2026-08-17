@@ -17,7 +17,7 @@ BRD_ONLY = {"X1"}
 
 
 def _find_deliverable(root: Path) -> Path | None:
-    for name in ("consistency_report.md", "answer.md"):
+    for name in ("consistency_report.md",):
         cand = root / name
         if cand.exists():
             return cand

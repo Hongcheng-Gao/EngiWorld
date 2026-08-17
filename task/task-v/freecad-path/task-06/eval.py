@@ -22,7 +22,7 @@ TARGET = Path(os.environ.get("ENGIWORLD_EVAL_TARGET", "/home/user/Desktop"))
 STEP_NAME = "simple_cam_job.step"
 FCSTD_NAME = "task-6.FCStd"
 NC_NAME = "task-6.nc"
-EXPECTED_STEP_SHA256 = "b8583cb4f37edeac903aa1c2ca45e4f59496573aeeb28d139e28f24fb9a6bafa"
+EXPECTED_STEP_SHA256 = "ee23b94014200f74c5c9ce9a55442d0193ed2b7047a9bad478829a9e6fd10425"
 MARKER = "TASK_V06_RESULT="
 FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".pyc", ".pyo", ".ipynb", ".sh", ".bash", ".zsh",
@@ -239,7 +239,7 @@ from Path.Post.Processor import PostProcessor
 
 EXPECTED_VERSION = ("0", "21", "2", "33771 (Git)")
 EXPECTED_COMMIT = "b9bfa5c5507506e4515816414cd27f4851d00489"
-EXPECTED_STEP_SHA256 = "b8583cb4f37edeac903aa1c2ca45e4f59496573aeeb28d139e28f24fb9a6bafa"
+EXPECTED_STEP_SHA256 = "ee23b94014200f74c5c9ce9a55442d0193ed2b7047a9bad478829a9e6fd10425"
 ENDMILL_SHAPE = pathlib.Path("/usr/lib/freecad/Mod/Path/Tools/Shape/endmill.fcstd")
 DRILL_SHAPE = pathlib.Path("/usr/lib/freecad/Mod/Path/Tools/Shape/drill.fcstd")
 TOOL_SHAPE_SHA256 = {

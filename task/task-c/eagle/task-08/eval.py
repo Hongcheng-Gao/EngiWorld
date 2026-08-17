@@ -13,6 +13,7 @@ BUNDLE = {'eval_inner.py': 'eNq1WOtu4kYU/u+nOJ39sbZEHAzkR1G80jZLV1E3KUrYVaUociZ4
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('violating.brd', '/home/user/Desktop/violating.brd')]
+REQUIRED_OUTPUTS = ('clean.brd',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +105,8 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

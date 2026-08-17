@@ -13,6 +13,7 @@ BUNDLE = {'eval_inner.py': 'eNqlWP9u2zgS/l9PwVMPqJQ4Wjtt0ta7btFNW1xwaHfRtLfApT2G
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('fab_capability.md', '/home/user/Desktop/fab_capability.md')]
+REQUIRED_OUTPUTS = ('hdi_6layer.dru',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +105,8 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

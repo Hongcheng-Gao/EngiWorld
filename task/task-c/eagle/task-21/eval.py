@@ -13,6 +13,7 @@ BUNDLE = {'eval_inner.py': 'eNqdVm1v2zYQ/q5fceO+SJ2tOGk3dAZUoE2cLmi7DUmzD0sDlpHO
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('README.txt', '/home/user/Desktop/README.txt'), ('test.lbr', '/home/user/Desktop/test.lbr')]
+REQUIRED_OUTPUTS = ('consistency.md',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +105,8 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

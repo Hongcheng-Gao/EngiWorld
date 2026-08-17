@@ -22,7 +22,7 @@ STEP = TARGET / "rect_pocket_block.step"
 FCSTD = TARGET / "task-4.FCStd"
 NC = TARGET / "task-4.nc"
 FREECADCMD = Path("/usr/bin/freecadcmd")
-EXPECTED_STEP_SHA256 = "bbd090016c878f5bc07cde812a2de916678cc4de782df04f5b58c8b1741e1a41"
+EXPECTED_STEP_SHA256 = "ea5ce06d5cc2d0d92068e6a7a462539ef1eaec8f894ab993a5cbae81bcb0b767"
 EXPECTED_VERSION = ("0", "21", "2", "33771 (Git)")
 EXPECTED_COMMIT = "b9bfa5c5507506e4515816414cd27f4851d00489"
 TIMESTAMP_RE = re.compile(r"\(Output Time:[^()\r\n]*\)")
@@ -478,7 +478,7 @@ from Path.Post.Processor import PostProcessor
 
 EXPECTED_VERSION=("0","21","2","33771 (Git)")
 EXPECTED_COMMIT="b9bfa5c5507506e4515816414cd27f4851d00489"
-EXPECTED_STEP_SHA256="bbd090016c878f5bc07cde812a2de916678cc4de782df04f5b58c8b1741e1a41"
+EXPECTED_STEP_SHA256="ea5ce06d5cc2d0d92068e6a7a462539ef1eaec8f894ab993a5cbae81bcb0b767"
 ENDMILL_FILE="/usr/share/freecad/Mod/Path/Tools/Bit/5mm_Endmill.fctb"
 def number(value):return float(getattr(value,"Value",value))
 def close(a,b,t=1e-6):

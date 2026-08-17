@@ -42,7 +42,7 @@ def _wire_key(w: ET.Element) -> tuple[float, float, float, float, float, str]:
 def evaluate(submission_dir: str) -> bool:
     sub = Path(submission_dir).resolve()
     target = None
-    for name in ("coin_panel.brd", "answer.brd"):
+    for name in ("coin_panel.brd",):
         cand = sub / name
         if cand.exists():
             target = cand

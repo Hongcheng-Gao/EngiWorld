@@ -23,7 +23,7 @@ STEP = TARGET / "chamfer_plate.step"
 FCSTD = TARGET / "task-5.FCStd"
 NC = TARGET / "task-5.nc"
 FREECADCMD = Path("/usr/bin/freecadcmd")
-EXPECTED_STEP_SHA256 = "8ec817c169849de20f8fd852faf71a7fffb18b48c21259f129d4fe88a4e46825"
+EXPECTED_STEP_SHA256 = "3dee7fadff603a1a0da54840d1d09b1eceead6c5cdbafc83f2b090cc3289523f"
 EXPECTED_VERSION = ("0", "21", "2", "33771 (Git)")
 EXPECTED_COMMIT = "b9bfa5c5507506e4515816414cd27f4851d00489"
 NUMBER = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)"
@@ -429,7 +429,7 @@ import Path.Op.Util as PathOpUtil
 
 EXPECTED_VERSION=("0","21","2","33771 (Git)")
 EXPECTED_COMMIT="b9bfa5c5507506e4515816414cd27f4851d00489"
-EXPECTED_STEP_SHA256="8ec817c169849de20f8fd852faf71a7fffb18b48c21259f129d4fe88a4e46825"
+EXPECTED_STEP_SHA256="3dee7fadff603a1a0da54840d1d09b1eceead6c5cdbafc83f2b090cc3289523f"
 HOLES=((-25.0,-15.0),(25.0,-15.0),(-25.0,15.0),(25.0,15.0))
 def num(v):return float(getattr(v,"Value",v))
 def close(a,b,t=1e-6):

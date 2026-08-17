@@ -32,7 +32,7 @@ def _ipc_records(text: str) -> list[tuple[str, str]]:
 def evaluate(submission_dir: str) -> bool:
     sub = Path(submission_dir).resolve()
     target = None
-    for name in ("board.ipc", "answer.ipc"):
+    for name in ("board.ipc",):
         cand = sub / name
         if cand.exists():
             target = cand

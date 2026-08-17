@@ -17,7 +17,7 @@ TARGET = Path(os.environ.get("ENGIWORLD_EVAL_TARGET", "/home/user/Desktop"))
 STEP_NAME = "plate_100x60x12.step"
 FCSTD_NAME = "task-1.FCStd"
 NC_NAME = "task-1.nc"
-EXPECTED_STEP_SHA256 = "1e219fdb908ec2b038c532e00f1469adf6e691a774ca82bbf539905266dd3b32"
+EXPECTED_STEP_SHA256 = "dce6385db59c56d75e3229c65b6240008f553b722937dfdf995e6b180674e536"
 FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
     ".ps1", ".vbs", ".js", ".mjs", ".ts", ".rb", ".lua", ".tcl",

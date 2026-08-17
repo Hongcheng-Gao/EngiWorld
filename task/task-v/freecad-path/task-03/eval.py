@@ -22,7 +22,7 @@ TARGET = Path(os.environ.get("ENGIWORLD_EVAL_TARGET", "/home/user/Desktop"))
 STEP_NAME = "drill_plate.step"
 FCSTD_NAME = "task-3.FCStd"
 NC_NAME = "task-3.nc"
-EXPECTED_STEP_SHA256 = "5a3e3af2f8e62785ce034b61a9dc1bf86d8160e9884b95f760e6645c8b276a66"
+EXPECTED_STEP_SHA256 = "9fda7becde0bd2ff39666e9ee082ff603de8569676844fd1c1f6d00489d79c74"
 FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".pyc", ".pyo", ".ipynb", ".sh", ".bash", ".zsh",
     ".bat", ".cmd", ".ps1", ".vbs", ".js", ".mjs", ".ts", ".rb",
@@ -207,7 +207,7 @@ from Path.Post.Processor import PostProcessor
 
 EXPECTED_VERSION = ("0", "21", "2", "33771 (Git)")
 EXPECTED_COMMIT = "b9bfa5c5507506e4515816414cd27f4851d00489"
-EXPECTED_STEP_SHA256 = "5a3e3af2f8e62785ce034b61a9dc1bf86d8160e9884b95f760e6645c8b276a66"
+EXPECTED_STEP_SHA256 = "9fda7becde0bd2ff39666e9ee082ff603de8569676844fd1c1f6d00489d79c74"
 HOLES = {(-25.0, -15.0), (-25.0, 15.0), (25.0, -15.0), (25.0, 15.0)}
 SOURCE_BOUNDS = (-60.0, 60.0, -40.0, 40.0, 0.0, 12.0)
 MODEL_BOUNDS = (-60.0, 60.0, -40.0, 40.0, -12.0, 0.0)

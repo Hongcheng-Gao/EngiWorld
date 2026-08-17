@@ -5,6 +5,8 @@ import importlib.util
 import shutil
 import tempfile
 import zlib
+import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 
 
@@ -13,6 +15,7 @@ BUNDLE = {'eval_inner.py': 'eNqdWG1v2zgS/q5fMat+qLTrKLHb/bC6Kots49sLLk2LJMUe4Muq
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('routed.brd', '/home/user/Desktop/routed.brd')]
+REQUIRED_OUTPUTS = ('teardropped.brd',)
 
 
 def _decode(payload: str) -> bytes:
@@ -73,6 +76,27 @@ def _load_module(root: Path):
             except ValueError:
                 pass
     return module
+
+
+def _signal_wires(path: Path) -> Counter[tuple[str, tuple[tuple[str, str], ...]]]:
+    root = ET.parse(path).getroot()
+    wires: Counter[tuple[str, tuple[tuple[str, str], ...]]] = Counter()
+    for signal in root.findall(".//signals/signal"):
+        name = signal.get("name", "")
+        for wire in signal.findall("wire"):
+            wires[(name, tuple(sorted(wire.attrib.items())))] += 1
+    return wires
+
+
+def _all_original_routing_preserved() -> bool:
+    try:
+        original = _signal_wires(DESKTOP / "routed.brd")
+        submitted = _signal_wires(DESKTOP / "teardropped.brd")
+    except (OSError, ET.ParseError):
+        return False
+    return not bool(original - submitted)
+
+
 def _is_pass(result) -> bool:
     if isinstance(result, bool):
         return result
@@ -104,6 +128,10 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
+    if not _all_original_routing_preserved():
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

@@ -39,7 +39,7 @@ def _parse_width_mm(value: str | None) -> float | None:
 def evaluate(submission_dir: str) -> bool:
     sub = Path(submission_dir).resolve()
     target = None
-    for name in ("classed.sch", "answer.sch"):
+    for name in ("classed.sch",):
         cand = sub / name
         if cand.exists():
             target = cand

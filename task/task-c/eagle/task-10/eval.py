@@ -89,7 +89,7 @@ def _wire_match(
 def evaluate(submission_dir: str) -> bool:
     sub = Path(submission_dir).resolve()
     target = None
-    for name in ("fanout.brd", "answer.brd"):
+    for name in ("fanout.brd",):
         p = sub / name
         if p.exists():
             target = p
