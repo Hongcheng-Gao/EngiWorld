@@ -1,7 +1,7 @@
 {
   "id": "c-fenics-task-06-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a legacy FEniCS/DOLFIN nonlinear Poisson-equation template `/home/user/Desktop/nonlinear_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/nonlinear.py`: - Define nonlinear residual: `F = (1 + u**2)*inner(grad(u), grad(v))*dx - f*v*dx`, with `f=Constant(1.0)` - Use `NonlinearVariationalProblem(F, u, bc)` - Set: `solver.parameters['newton_solver']['relative_tolerance'] = 1e-6` - Solve 2. Extract the value at center `(0.5, 0.5)` and the global maximum; for this symmetric mesh the center is the maximum up to numerical tolerance - Save to `/home/user/Desktop/summary.txt` in this format: `center_value, max_value` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx.",
+  "instruction": "You are given a legacy FEniCS/DOLFIN nonlinear Poisson-equation template `/home/user/Desktop/nonlinear_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/nonlinear.py`: - Define nonlinear residual: `F = (1 + u**2)*inner(grad(u), grad(v))*dx - f*v*dx`, with `f=Constant(1.0)` - Define its Jacobian with `J = derivative(F, u, du)`, where `du = TrialFunction(V)`, and use `NonlinearVariationalProblem(F, u, bc, J)` - Set: `solver.parameters['newton_solver']['relative_tolerance'] = 1e-6` - Solve 2. Extract the value at center `(0.5, 0.5)` and the global maximum; for this symmetric mesh the center is the maximum up to numerical tolerance - Save to `/home/user/Desktop/summary.txt` in this format: `center_value, max_value` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx. In this image, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `nonlinear_base.py`.",
   "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
@@ -37,7 +37,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

@@ -1,7 +1,7 @@
 {
   "id": "c-fenics-task-14-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given an incomplete legacy FEniCS/DOLFIN DG template `/home/user/Desktop/dg_base.py` for `-0.01*u'' + u' = 0` on `[0,1]` with `u(0)=0` and `u(1)=1`. Complete the following: 1. Modify and generate `/home/user/Desktop/dg.py`: - Define the diffusion term using `inner(grad(u), grad(v))*dx` with `eps=0.01` - Define a consistent upwind convection term for `beta=1` - Use `dS` for the interior-face numerical flux and a stable DG diffusion treatment such as SIPG - Weakly enforce both Dirichlet values through `ds` boundary integrals 2. Solve and extract the value at `x=0.5` and the global maximum - Save to `/home/user/Desktop/summary.txt` in this format: `mid_value, max_value` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx.",
+  "instruction": "You are given an incomplete legacy FEniCS/DOLFIN DG template `/home/user/Desktop/dg_base.py` for `-0.01*u'' + u' = 0` on `[0,1]` with `u(0)=0` and `u(1)=1`. Complete the following: 1. Modify and generate `/home/user/Desktop/dg.py`: - Define the diffusion term using `inner(grad(u), grad(v))*dx` with `eps=0.01` - Define a consistent upwind convection term for `beta=1` - Use `dS` for the interior-face numerical flux and a stable DG diffusion treatment such as SIPG - Weakly enforce both Dirichlet values through `ds` boundary integrals 2. Solve and extract the value at `x=0.5` and the global maximum - Save to `/home/user/Desktop/summary.txt` in this format: `mid_value, max_value` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx. In this image, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `dg_base.py`.",
   "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
@@ -37,7 +37,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
