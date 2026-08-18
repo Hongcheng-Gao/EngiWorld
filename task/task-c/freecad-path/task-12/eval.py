@@ -140,6 +140,11 @@ def ensure_regular(path: Path, minimum: int, maximum: int) -> bool:
     )
 
 
+def normalized_text_sha256(path: Path) -> str:
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def strict_equal(actual: object, expected: object) -> bool:
     if type(actual) is not type(expected):
         return False
@@ -545,6 +550,11 @@ def close(a, b, tolerance=1e-6):
     return math.isfinite(float(a)) and abs(float(a) - float(b)) <= tolerance
 
 
+def normalized_text_sha256(path):
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def bounds(shape):
     box = shape.BoundBox
     return (box.XMin, box.XMax, box.YMin, box.YMax, box.ZMin, box.ZMax)
@@ -645,7 +655,7 @@ def validate_step(path):
 def validate_document(fcstd, step, nc, repost):
     if tuple(App.Version()[:4]) != EXPECTED_VERSION or App.Version()[-1] != EXPECTED_COMMIT:
         return False
-    if hashlib.sha256(step.read_bytes()).hexdigest() != EXPECTED_STEP_SHA256:
+    if normalized_text_sha256(step) != EXPECTED_STEP_SHA256:
         return False
     step_shape = validate_step(step)
     if step_shape is None:
@@ -915,7 +925,7 @@ def main() -> bool:
     if not ensure_regular(step, 5_000, 5_000_000):
         return fail("invalid STEP file")
     try:
-        if hashlib.sha256(step.read_bytes()).hexdigest() != EXPECTED_STEP_SHA256:
+        if normalized_text_sha256(step) != EXPECTED_STEP_SHA256:
             return fail("unexpected STEP file")
     except OSError:
         return fail("unreadable STEP file")

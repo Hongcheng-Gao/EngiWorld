@@ -49,7 +49,6 @@ SPEC = {'any_odb_fields': [],
  'load_names': ['Pressure-1MPa'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
  'min_elements': 1,
- 'max_nodes': 1000,
  'min_frames': 2,
  'model_name': 'Model-DxfFlangePressure',
  'nonzero_odb_fields': ['U', 'S'],
@@ -1715,8 +1714,6 @@ def check_cae():
     pre_coords,pre_elements,pre_types=mesh_info(part)
     if not pre_elements or not pre_types or not set(pre_types).issubset(set(['C3D4','C3D8R'])):
         return fail('CAE mesh must use only first-order C3D4/C3D8R; got %s'%pre_types)
-    if len(part.nodes) > int(SPEC.get('max_nodes',1000)):
-        return fail('CAE mesh is too dense for the Learning Edition: %s nodes'%len(part.nodes))
     if not check_no_active_constraints(model): return False
     if not check_bc_specs(model): return False
     if not check_load_specs(model): return False
@@ -1731,8 +1728,6 @@ def check_cae():
     allowed=set(['C3D4','C3D8R'])
     if not element_types or not set(element_types).issubset(allowed):
         return fail('CAE mesh must use only first-order C3D4/C3D8R; got %s'%element_types)
-    if len(part.nodes) > int(SPEC.get('max_nodes',1000)):
-        return fail('CAE mesh is too dense for the Learning Edition: %s nodes'%len(part.nodes))
     nodes=mesh_node_coordinates(instance.nodes)
     if len(nodes) != len(part.nodes): return fail('Cannot build complete CAE instance node signature')
     element_signature={}

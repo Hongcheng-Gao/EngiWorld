@@ -1,10 +1,13 @@
 # Ground Truth Generation
 
-Generated with a local Python artifact-generation workflow before repository packaging.
+Regenerated in the assigned `FreeCAD0.21.2` snapshot with FreeCADCmd 0.21.2,
+revision 33771, commit `b9bfa5c5507506e4515816414cd27f4851d00489`.
 
-Package APIs used:
-- `trimesh`, `manifold3d`, and `numpy`: Boolean-union the reference primitives into one watertight solid, export STL geometry, and compute reference metrics
-- `ezdxf`: profile and required-zone DXF drawing
-- Python `json`: constraints, reference metrics, and score metadata
+The generation document imported this task's `baseline.stl` and `profile.dxf`,
+read `constraints.json`, and built the hinge reinforcement from three fixed
+hinge support prisms, the panel-load prism, base plate, and three continuous
+longitudinal ribs. FreeCAD fused the features into one valid solid and exported
+`optimized.stl` through its Mesh module.
 
-The reference is not a unique answer. The evaluator assigns a continuous score from the submitted STL geometry.
+The production evaluator independently accepted the connected, watertight,
+consistently oriented STL with score `1.0`.

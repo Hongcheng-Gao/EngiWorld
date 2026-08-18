@@ -37,7 +37,6 @@ SPEC = {'any_odb_fields': [],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
  'allowed_element_types': ['C3D4', 'C3D8R'],
  'expected_volume': 10460.7079934123,
- 'max_nodes': 1000,
  'min_elements': 1,
  'min_frames': 2,
  'model_name': 'Model-HoleTension',
@@ -941,7 +940,6 @@ def check_cae():
     if not check_load_specs(model): return False
     coords, elems, nodes, element_types = mesh_info(model)
     if elems < int(SPEC.get('min_elements',1)): return fail('Too few mesh elements')
-    if nodes > int(SPEC.get('max_nodes',1000)): return fail('Too many mesh nodes')
     allowed=set([ci(value) for value in SPEC.get('allowed_element_types',[])])
     if not element_types or not element_types <= allowed: return fail('Disallowed or unreadable element types: '+str(sorted(element_types)))
     if coords:

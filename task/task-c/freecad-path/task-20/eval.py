@@ -81,6 +81,11 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path):
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def freeze_file(source, target, minimum, maximum):
     flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
     try:
@@ -116,7 +121,7 @@ def freeze_file(source, target, minimum, maximum):
 
 
 def validate_params(path):
-    if not regular_file(path, 1_000, 100_000) or sha256(path) != EXPECTED_PARAMS_SHA256:
+    if not regular_file(path, 1_000, 100_000) or normalized_text_sha256(path) != EXPECTED_PARAMS_SHA256:
         return False
     try:
         data = json.loads(path.read_text(encoding="utf-8"))
@@ -445,9 +450,9 @@ def validate_post_log(path, step_path, fcstd_path, nc_path):
     if any(lowered.count("path.op." + name.lower()) < modules.count(name) for name in set(modules)):
         return False
     expected_hashes = {
-        "NC": sha256(nc_path),
+        "NC": normalized_text_sha256(nc_path),
         "FCStd": sha256(fcstd_path),
-        "STEP": sha256(step_path),
+        "STEP": normalized_text_sha256(step_path),
     }
     for label, digest in expected_hashes.items():
         pattern = r"(?i)\b{}\b[^\n]{{0,30}}\bsha[-_ ]?256\b[^0-9a-f]{{0,12}}([0-9a-f]{{64}})".format(label)
@@ -942,7 +947,7 @@ def validate_freecad(step_path, fcstd_path, nc_path, log_path, workdir):
 def main():
     if not FREECADCMD.is_file():
         return fail("freecadcmd missing")
-    if not regular_file(STEP, 10_000, 5_000_000) or sha256(STEP) != EXPECTED_STEP_SHA256:
+    if not regular_file(STEP, 10_000, 5_000_000) or normalized_text_sha256(STEP) != EXPECTED_STEP_SHA256:
         return fail("wrong init STEP")
     if not validate_params(PARAMS):
         return fail("wrong params.json")
@@ -964,7 +969,7 @@ def main():
         for name, (source, target, minimum, maximum) in frozen.items():
             if not freeze_file(source, target, minimum, maximum):
                 return fail("could not freeze " + name)
-        if sha256(frozen["step"][1]) != EXPECTED_STEP_SHA256 or not validate_params(frozen["params"][1]):
+        if normalized_text_sha256(frozen["step"][1]) != EXPECTED_STEP_SHA256 or not validate_params(frozen["params"][1]):
             return fail("init changed during evaluation")
         if not validate_archive(frozen["fcstd"][1]) or not validate_nc(frozen["nc"][1]):
             return fail("GT changed during evaluation")

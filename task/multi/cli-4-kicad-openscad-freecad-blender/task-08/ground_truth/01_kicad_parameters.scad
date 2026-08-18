@@ -1,6 +1,6 @@
 // Generated from task-08 KiCad and frozen mechanical contract.
 // source_mechanical_map = 01_kicad_mechanical_map.csv
-// input_board_sha256 = b78f78bf02af634bd0e880c8879363c4ccf97dbc0f452de9e2e497bef401feb3
+// input_board_sha256 = 204af52052f31c4424f191de036779daba6f06e905bf7f61084ac51fb5b6ea1a
 board_bbox = [176.000000, 38.000000, 1.600000];
 package_bbox = [190.000000, 52.000000, 23.600000];
 cavity_bounds = [-92.000000, -23.000000, 92.000000, 23.000000];

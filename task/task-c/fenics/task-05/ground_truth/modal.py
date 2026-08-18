@@ -1,3 +1,20 @@
+import os
+import sys
+
+
+if os.environ.get("CONDA_DEFAULT_ENV") != "fenics-legacy":
+    os.execv(
+        "/bin/bash",
+        [
+            "/bin/bash",
+            "-lc",
+            'source /home/user/miniconda3/etc/profile.d/conda.sh && '
+            'conda activate fenics-legacy && exec python3 "$@"',
+            "fenics-legacy",
+            *sys.argv,
+        ],
+    )
+
 from dolfin import *
 from slepc4py import SLEPc
 from petsc4py import PETSc

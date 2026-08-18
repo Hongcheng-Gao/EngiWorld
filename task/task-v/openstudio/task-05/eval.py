@@ -201,6 +201,7 @@ def surface_data(objects):
             "type": fields[2],
             "space": fields[4],
             "obc": fields[5],
+            "obc_object": fields[6],
             "vertices": points,
             "area": polygon_area_3d(points),
         })

@@ -71,6 +71,11 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path: Path) -> str:
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def safe_fcstd_container(path: Path) -> bool:
     if not regular_file(path, 20 * 1024 * 1024) or not zipfile.is_zipfile(path):
         return False
@@ -689,7 +694,7 @@ def evaluate_in_freecad() -> bool:
         for path, maximum in ((STEP_PATH, 5 * 1024 * 1024), (FCSTD_PATH, 20 * 1024 * 1024), (NC_PATH, 5 * 1024 * 1024))
     ):
         return False
-    if sha256(STEP_PATH) != EXPECTED_STEP_SHA256:
+    if normalized_text_sha256(STEP_PATH) != EXPECTED_STEP_SHA256:
         return False
 
     source_shape = Part.read(str(STEP_PATH))

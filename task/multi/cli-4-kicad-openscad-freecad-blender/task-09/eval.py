@@ -2,6 +2,7 @@
 from __future__ import annotations
 
 import csv
+import concurrent.futures
 import hashlib
 import json
 import math
@@ -891,44 +892,126 @@ def run_kicad_export(answer_board: Path, output_step: Path, runtime: Path) -> No
 def load_mesh_metrics(path: Path) -> dict[str, Any]:
     try:
         import numpy as np
-        import trimesh
     except Exception as exc:
         fail(f"evaluator mesh dependencies unavailable: {exc}")
     try:
-        loaded = trimesh.load_mesh(str(path), file_type="stl", process=True)
-        if isinstance(loaded, trimesh.Scene):
-            meshes = [mesh for mesh in loaded.geometry.values() if isinstance(mesh, trimesh.Trimesh)]
-            if not meshes:
-                fail(f"{path.name} contains no mesh geometry")
-            mesh = trimesh.util.concatenate(meshes)
-        else:
-            mesh = loaded
-        if not isinstance(mesh, trimesh.Trimesh) or len(mesh.vertices) < 20 or len(mesh.faces) < 30:
-            fail(f"{path.name} has implausibly little triangle geometry")
-        bounds = np.asarray(mesh.bounds, dtype=float)
-        volume = abs(float(mesh.volume))
-        if not bool(mesh.is_watertight) or not bool(mesh.is_winding_consistent) or volume <= 0:
-            fail(f"{path.name} must be a watertight, consistently wound positive-volume mesh")
-        components = []
-        for component in mesh.split(only_watertight=False):
-            if len(component.faces) < 4:
+        data = path.read_bytes()
+        triangles = None
+        if len(data) >= 84:
+            facet_count = struct.unpack_from("<I", data, 80)[0]
+            if facet_count > 0 and 84 + facet_count * 50 == len(data):
+                dtype = np.dtype([("normal", "<f4", (3,)), ("vertices", "<f4", (3, 3)), ("attribute", "<u2")])
+                triangles = np.asarray(np.frombuffer(data, dtype=dtype, count=facet_count, offset=84)["vertices"], dtype=float)
+        if triangles is None:
+            values = []
+            for line in data.decode("utf-8", errors="strict").splitlines():
+                fields = line.strip().split()
+                if fields and fields[0].lower() == "vertex" and len(fields) == 4:
+                    values.append([float(value) for value in fields[1:]])
+            if not values or len(values) % 3:
+                fail(f"{path.name} is not a valid binary or ASCII STL triangle mesh")
+            triangles = np.asarray(values, dtype=float).reshape((-1, 3, 3))
+        if not np.isfinite(triangles).all():
+            fail(f"{path.name} contains non-finite coordinates")
+
+        vertex_ids = {}
+        vertices = []
+        faces = []
+        seen_faces = set()
+        for triangle in triangles:
+            ids = []
+            for raw in triangle:
+                key = tuple(round(float(value), 8) for value in raw)
+                if key not in vertex_ids:
+                    vertex_ids[key] = len(vertices)
+                    vertices.append(key)
+                ids.append(vertex_ids[key])
+            if len(set(ids)) != 3:
                 continue
-            cbounds = np.asarray(component.bounds, dtype=float)
+            points = np.asarray([vertices[index] for index in ids], dtype=float)
+            if float(np.linalg.norm(np.cross(points[1] - points[0], points[2] - points[0]))) <= 1e-12:
+                continue
+            canonical = tuple(sorted(ids))
+            if canonical not in seen_faces:
+                seen_faces.add(canonical)
+                faces.append(tuple(ids))
+        if len(vertices) < 20 or len(faces) < 30:
+            fail(f"{path.name} has implausibly little triangle geometry")
+
+        edge_uses = {}
+        for face_index, (a, b, c) in enumerate(faces):
+            for start, end in ((a, b), (b, c), (c, a)):
+                edge = (min(start, end), max(start, end))
+                edge_uses.setdefault(edge, []).append((face_index, 1 if start < end else -1))
+        if any(len(uses) != 2 for uses in edge_uses.values()):
+            fail(f"{path.name} must be a watertight mesh")
+        if any(uses[0][1] + uses[1][1] != 0 for uses in edge_uses.values()):
+            fail(f"{path.name} must be consistently wound")
+
+        vertex_array = np.asarray(vertices, dtype=float)
+        face_array = np.asarray(faces, dtype=int)
+
+        def calculate(face_indices):
+            points = vertex_array[face_array[np.asarray(face_indices, dtype=int)]]
+            cross = np.cross(points[:, 1] - points[:, 0], points[:, 2] - points[:, 0])
+            signed = np.einsum("ij,ij->i", points[:, 0], np.cross(points[:, 1], points[:, 2])) / 6.0
+            signed_volume = float(signed.sum())
+            used = np.unique(face_array[np.asarray(face_indices, dtype=int)].reshape(-1))
+            local_vertices = vertex_array[used]
+            local_bounds = np.asarray([local_vertices.min(axis=0), local_vertices.max(axis=0)], dtype=float)
+            center = ((points.sum(axis=1) / 4.0) * signed[:, None]).sum(axis=0) / signed_volume
+            return local_bounds, abs(signed_volume), float((np.linalg.norm(cross, axis=1) * 0.5).sum()), center
+
+        neighbors = [set() for _ in faces]
+        for uses in edge_uses.values():
+            first, second = uses[0][0], uses[1][0]
+            neighbors[first].add(second)
+            neighbors[second].add(first)
+        groups = []
+        unseen = set(range(len(faces)))
+        while unseen:
+            seed = unseen.pop()
+            group = {seed}
+            stack = [seed]
+            while stack:
+                adjacent = neighbors[stack.pop()] & unseen
+                unseen.difference_update(adjacent)
+                group.update(adjacent)
+                stack.extend(adjacent)
+            groups.append(sorted(group))
+
+        bounds, volume, area, center = calculate(range(len(faces)))
+        if volume <= 0 or area <= 0:
+            fail(f"{path.name} must be a positive-volume mesh")
+        components = []
+        for group in groups:
+            if len(group) < 4:
+                continue
+            cbounds, component_volume, _component_area, _component_center = calculate(group)
             components.append({
                 "bounds": [float(value) for value in cbounds.reshape(-1)],
                 "bbox": [float(value) for value in cbounds[1] - cbounds[0]],
-                "volume": abs(float(component.volume)),
-                "faces": int(len(component.faces)),
+                "volume": component_volume,
+                "faces": len(group),
             })
+        canonical = hashlib.sha256()
+        canonical_faces = sorted(
+            tuple(sorted(vertices[index] for index in face))
+            for face in faces
+        )
+        for face in canonical_faces:
+            for vertex in face:
+                canonical.update(struct.pack("<3d", *vertex))
         return {
             "bounds": [float(value) for value in bounds.reshape(-1)],
             "bbox": [float(value) for value in bounds[1] - bounds[0]],
             "volume": volume,
-            "area": float(mesh.area),
-            "center": [float(value) for value in np.asarray(mesh.center_mass, dtype=float)],
-            "vertices": int(len(mesh.vertices)),
-            "faces": int(len(mesh.faces)),
+            "area": area,
+            "center": [float(value) for value in center],
+            "vertices": len(vertices),
+            "faces": len(faces),
             "components": components,
+            "canonical_geometry_sha256": canonical.hexdigest(),
         }
     except EvaluationError:
         raise
@@ -964,6 +1047,8 @@ def compare_meshes(submitted: dict[str, Any], rendered: dict[str, Any], geometry
         fail("submitted STL volume differs materially from the submitted SCAD rerender")
     if abs(submitted["area"] - rendered["area"]) > max(10.0, rendered["area"] * 0.01):
         fail("submitted STL area differs materially from the submitted SCAD rerender")
+    if submitted["canonical_geometry_sha256"] != rendered["canonical_geometry_sha256"]:
+        fail("submitted STL triangle geometry differs from the OpenSCAD rerender")
 
 
 FREECAD_CHECKER = r'''
@@ -1096,7 +1181,7 @@ def cylinder_shape(volume):
 
 
 def overlap(first, second):
-    common = float(first.common(second).Volume)
+    common = float(first.common((second,), 1e-6).Volume)
     return {
         "common_volume_mm3": common,
         "first_only_volume_mm3": max(0.0, float(first.Volume) - common),
@@ -1488,7 +1573,9 @@ def main():
     rerendered_board = read_step(config["rerendered_board_step"])
     submitted_board = read_step(config["submitted_board_step"])
     submitted_parts, submitted_material, submitted_facets = mesh_solids(config["submitted_stl"])
-    rendered_parts, rendered_material, rendered_facets = mesh_solids(config["rerendered_stl"])
+    if config.get("rerendered_stl_canonical_match") is not True:
+        raise RuntimeError("parent evaluator did not establish canonical STL equality")
+    rendered_parts, rendered_material, rendered_facets = submitted_parts, submitted_material, submitted_facets
     assembly = read_step(config["assembly_step"])
     _doc, objects = read_step_objects(config["assembly_step"])
 
@@ -1550,15 +1637,20 @@ def main():
     interference["enclosure"]["PCB"] = float(material.common(board).Volume)
     total_interference = sum(value for role in interference.values() for value in role.values())
 
-    access_by_geometry = {}
-    heater_exposure_by_geometry = {}
-    for label, combined in (
-        ("submitted_stl", submitted_material),
-        ("rerendered_stl", rendered_material),
-        ("assembly_step", material),
-    ):
-        access_by_geometry[label] = [access_metrics(combined, item) for item in config["accesses"]]
-        heater_exposure_by_geometry[label] = heater_exposure_metrics(access_by_geometry[label])
+    submitted_access = [access_metrics(submitted_material, item) for item in config["accesses"]]
+    assembly_access = [access_metrics(material, item) for item in config["accesses"]]
+    submitted_exposure = heater_exposure_metrics(submitted_access)
+    assembly_exposure = heater_exposure_metrics(assembly_access)
+    access_by_geometry = {
+        "submitted_stl": submitted_access,
+        "rerendered_stl": submitted_access,
+        "assembly_step": assembly_access,
+    }
+    heater_exposure_by_geometry = {
+        "submitted_stl": submitted_exposure,
+        "rerendered_stl": submitted_exposure,
+        "assembly_step": assembly_exposure,
+    }
 
     side = {direction: side_clearance(material, board, direction) for direction in ("X_MINUS", "X_PLUS", "Y_MINUS", "Y_PLUS")}
     top_clearances = {
@@ -1571,8 +1663,18 @@ def main():
         "x_wall": inside(tray, config["enclosure_bbox_mm"][0] / 2.0 - config["wall_mm"] / 2.0, config["enclosure_bbox_mm"][1] / 2.0 - 2.0, 6.0),
         "y_wall": inside(tray, 0, config["enclosure_bbox_mm"][1] / 2.0 - config["wall_mm"] / 2.0, 6.0),
     }
-    submitted_vs_rendered = overlap(submitted_material, rendered_material)
-    assembly_vs_submitted = overlap(material, submitted_material)
+    submitted_vs_rendered = {
+        "common_volume_mm3": float(submitted_material.Volume),
+        "first_only_volume_mm3": 0.0,
+        "second_only_volume_mm3": 0.0,
+        "symmetric_difference_volume_mm3": 0.0,
+    }
+    tray_vs_submitted = overlap(tray, submitted_tray)
+    lid_vs_submitted = overlap(lid, submitted_lid)
+    assembly_vs_submitted = {
+        key: tray_vs_submitted[key] + lid_vs_submitted[key]
+        for key in tray_vs_submitted
+    }
     assembly_board_comparison = overlap(board, rerendered_board_installed)
     submitted_board_comparison = overlap(submitted_board, rerendered_board)
     assembly_submitted_board_comparison = overlap(board, submitted_board_installed)
@@ -1602,10 +1704,10 @@ def main():
         "lid": metrics(lid),
         "board": metrics(board),
         "components": component_geometry,
-        "tray_vs_submitted": overlap(tray, submitted_tray),
-        "lid_vs_submitted": overlap(lid, submitted_lid),
-        "tray_vs_rerendered": overlap(tray, rendered_tray),
-        "lid_vs_rerendered": overlap(lid, rendered_lid),
+        "tray_vs_submitted": tray_vs_submitted,
+        "lid_vs_submitted": lid_vs_submitted,
+        "tray_vs_rerendered": tray_vs_submitted,
+        "lid_vs_rerendered": lid_vs_submitted,
         "lid_separation_mm": float(lid.BoundBox.ZMin - tray.BoundBox.ZMax),
         "tray_lid_intersection_mm3": float(tray.common(lid).Volume),
         "tray_sanity": tray_sanity,
@@ -1637,6 +1739,9 @@ except Exception as exc:
     payload = {"ok": False, "error": str(exc), "traceback": traceback.format_exc()}
 with open(result_path, "w") as handle:
     json.dump(payload, handle, indent=2, sort_keys=True)
+    handle.flush()
+    os.fsync(handle.fileno())
+os._exit(0)
 '''
 
 
@@ -1688,6 +1793,7 @@ def run_freecad_checker(
         "submitted_board_step": str(DESKTOP / "01_kicad_board.step"),
         "submitted_stl": str(DESKTOP / "02_openscad_enclosure.stl"),
         "rerendered_stl": str(rerendered_stl),
+        "rerendered_stl_canonical_match": True,
         "assembly_step": str(DESKTOP / "03_freecad_assembly.step"),
         "reference_bridge_obj": str(runtime / "assembly_reference.obj"),
         "enclosure_bbox_mm": enclosure,
@@ -2051,6 +2157,7 @@ BLENDER_CHECKER = r'''
 import json
 import math
 import os
+import time
 import traceback
 
 import bpy
@@ -2420,6 +2527,11 @@ def main():
     native_camera = camera.name
     native_bounds = world_bounds(native)
 
+    deadline = time.monotonic() + 110.0
+    while not os.path.isfile(config["reference_obj_path"]):
+        if time.monotonic() >= deadline:
+            raise RuntimeError("FreeCAD reference OBJ was not produced before Blender validation")
+        time.sleep(0.05)
     reference_objects = import_obj(config["reference_obj_path"])
     reference_roles = classify(reference_objects, "evaluator STEP reference")
     reference_role_meshes = role_meshes(reference_roles)
@@ -2965,22 +3077,41 @@ def main() -> bool:
         runtime = Path(temp_dir)
         rerendered_board_step = runtime / "kicad_board_rerender.step"
         rerendered_stl = runtime / "openscad_rerender.stl"
-        run_kicad_export(DESKTOP / "01_kicad_board.kicad_pcb", rerendered_board_step, runtime)
         openscad = resolve_executable("openscad", ["/usr/bin/openscad"])
-        run_command(
-            [openscad, "-o", str(rerendered_stl), str(DESKTOP / "02_openscad_enclosure.scad")],
-            cwd=runtime,
-            timeout=150,
-            label="OpenSCAD tray/lid rerender",
-        )
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            kicad_future = executor.submit(
+                run_kicad_export,
+                DESKTOP / "01_kicad_board.kicad_pcb",
+                rerendered_board_step,
+                runtime,
+            )
+            openscad_future = executor.submit(
+                run_command,
+                [openscad, "-o", str(rerendered_stl), str(DESKTOP / "02_openscad_enclosure.scad")],
+                cwd=runtime,
+                timeout=150,
+                label="OpenSCAD tray/lid rerender",
+            )
+            kicad_future.result()
+            openscad_future.result()
         if not rerendered_stl.is_file() or rerendered_stl.stat().st_size < 1000:
             fail("OpenSCAD rerender did not produce a substantial STL")
         submitted_mesh = load_mesh_metrics(DESKTOP / "02_openscad_enclosure.stl")
         rendered_mesh = load_mesh_metrics(rerendered_stl)
         compare_meshes(submitted_mesh, rendered_mesh, geometry)
-        cad_result = run_freecad_checker(runtime, spec, geometry, rerendered_board_step, rerendered_stl)
+        with concurrent.futures.ThreadPoolExecutor(max_workers=2) as executor:
+            cad_future = executor.submit(
+                run_freecad_checker,
+                runtime,
+                spec,
+                geometry,
+                rerendered_board_step,
+                rerendered_stl,
+            )
+            blender_future = executor.submit(run_blender_checker, runtime, spec, geometry)
+            cad_result = cad_future.result()
+            blender_result = blender_future.result()
         check_cad_result(spec, geometry, cad_result, freecad_report)
-        blender_result = run_blender_checker(runtime, spec, geometry)
         check_blender_report(geometry, cad_result, blender_result, blender_report)
         check_png(runtime / "blender_rerender.png", minimum_width=120, minimum_height=90)
 
