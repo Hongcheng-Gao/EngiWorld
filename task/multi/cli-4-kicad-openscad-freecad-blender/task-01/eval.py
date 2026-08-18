@@ -602,37 +602,92 @@ def run_kicad_export(answer_board: Path, output_step: Path, runtime: Path) -> No
 def load_mesh_metrics(path: Path) -> dict[str, Any]:
     try:
         import numpy as np
-        import trimesh
     except Exception as exc:
         fail(f"evaluator mesh dependencies unavailable: {exc}")
     try:
-        loaded = trimesh.load_mesh(str(path), file_type="stl", process=True)
-        if isinstance(loaded, trimesh.Scene):
-            meshes = [mesh for mesh in loaded.geometry.values() if isinstance(mesh, trimesh.Trimesh)]
-            if not meshes:
-                fail(f"{path.name} contains no mesh geometry")
-            mesh = trimesh.util.concatenate(meshes)
-        else:
-            mesh = loaded
-        if not isinstance(mesh, trimesh.Trimesh):
-            fail(f"{path.name} is not a triangle mesh")
-        if len(mesh.vertices) < 20 or len(mesh.faces) < 30:
+        import struct
+
+        data = path.read_bytes()
+        triangles = None
+        if len(data) >= 84:
+            facet_count = struct.unpack_from("<I", data, 80)[0]
+            if facet_count > 0 and 84 + facet_count * 50 == len(data):
+                record_type = np.dtype([
+                    ("normal", "<f4", (3,)),
+                    ("vertices", "<f4", (3, 3)),
+                    ("attribute", "<u2"),
+                ])
+                records = np.frombuffer(data, dtype=record_type, count=facet_count, offset=84)
+                triangles = np.asarray(records["vertices"], dtype=float)
+        if triangles is None:
+            vertices = []
+            for line in data.decode("utf-8", errors="strict").splitlines():
+                fields = line.strip().split()
+                if fields and fields[0].lower() == "vertex" and len(fields) == 4:
+                    vertices.append([float(value) for value in fields[1:]])
+            if not vertices or len(vertices) % 3:
+                fail(f"{path.name} is not a valid binary or ASCII STL triangle mesh")
+            triangles = np.asarray(vertices, dtype=float).reshape((-1, 3, 3))
+
+        if not np.isfinite(triangles).all():
+            fail(f"{path.name} contains non-finite coordinates")
+        vertex_ids: dict[tuple[float, float, float], int] = {}
+        mesh_vertices: list[tuple[float, float, float]] = []
+        faces: list[tuple[int, int, int]] = []
+        seen_faces: set[tuple[int, int, int]] = set()
+        for triangle in triangles:
+            ids = []
+            for raw in triangle:
+                key = tuple(round(float(value), 8) for value in raw)
+                if key not in vertex_ids:
+                    vertex_ids[key] = len(mesh_vertices)
+                    mesh_vertices.append(key)
+                ids.append(vertex_ids[key])
+            if len(set(ids)) != 3:
+                continue
+            points = np.asarray([mesh_vertices[index] for index in ids], dtype=float)
+            if float(np.linalg.norm(np.cross(points[1] - points[0], points[2] - points[0]))) <= 1e-12:
+                continue
+            canonical = tuple(sorted(ids))
+            if canonical in seen_faces:
+                continue
+            seen_faces.add(canonical)
+            faces.append(tuple(ids))
+
+        if len(mesh_vertices) < 20 or len(faces) < 30:
             fail(f"{path.name} has implausibly little geometry")
-        bounds = np.asarray(mesh.bounds, dtype=float)
+        edge_uses: dict[tuple[int, int], list[tuple[int, int]]] = {}
+        for face_index, (a, b, c) in enumerate(faces):
+            for start, end in ((a, b), (b, c), (c, a)):
+                edge = (min(start, end), max(start, end))
+                edge_uses.setdefault(edge, []).append((face_index, 1 if start < end else -1))
+        if any(len(uses) != 2 for uses in edge_uses.values()):
+            fail(f"{path.name} must be a watertight mesh")
+        if any(uses[0][1] + uses[1][1] != 0 for uses in edge_uses.values()):
+            fail(f"{path.name} must be consistently wound")
+
+        vertex_array = np.asarray(mesh_vertices, dtype=float)
+        face_array = np.asarray(faces, dtype=int)
+        face_points = vertex_array[face_array]
+        cross = np.cross(face_points[:, 1] - face_points[:, 0], face_points[:, 2] - face_points[:, 0])
+        signed_tetra = np.einsum("ij,ij->i", face_points[:, 0], np.cross(face_points[:, 1], face_points[:, 2])) / 6.0
+        signed_volume = float(signed_tetra.sum())
+        volume = abs(signed_volume)
+        area = float((np.linalg.norm(cross, axis=1) * 0.5).sum())
+        if volume <= 0 or area <= 0:
+            fail(f"{path.name} must be a positive-volume mesh")
+        center = ((face_points.sum(axis=1) / 4.0) * signed_tetra[:, None]).sum(axis=0) / signed_volume
+        bounds = np.asarray([vertex_array.min(axis=0), vertex_array.max(axis=0)], dtype=float)
         dims = bounds[1] - bounds[0]
-        volume = abs(float(mesh.volume))
-        area = float(mesh.area)
-        center = np.asarray(mesh.center_mass, dtype=float)
-        if not bool(mesh.is_watertight) or not bool(mesh.is_winding_consistent) or volume <= 0 or area <= 0:
-            fail(f"{path.name} must be a watertight, consistently wound positive-volume mesh")
+
         return {
             "bounds": [float(value) for value in bounds.reshape(-1)],
             "bbox": [float(value) for value in dims],
             "volume": volume,
             "area": area,
             "center": [float(value) for value in center],
-            "vertices": int(len(mesh.vertices)),
-            "faces": int(len(mesh.faces)),
+            "vertices": len(mesh_vertices),
+            "faces": len(faces),
         }
     except EvaluationError:
         raise
@@ -764,21 +819,20 @@ def inside(shape, x, y, z):
     return bool(shape.isInside(App.Vector(float(x), float(y), float(z)), 1e-4, False))
 
 
-def run_containing(values, empty_flags, target, step):
-    index = min(range(len(values)), key=lambda i: abs(values[i] - target))
-    if not empty_flags[index]:
+def empty_span(center, low, high, empty_at, precision):
+    if not empty_at(center) or empty_at(low) or empty_at(high):
         return None
-    left = right = index
-    while left > 0 and empty_flags[left - 1]:
-        left -= 1
-    while right + 1 < len(values) and empty_flags[right + 1]:
-        right += 1
-    return [values[left] - step / 2.0, values[right] + step / 2.0]
 
+    def transition(material_value, empty_value):
+        while abs(empty_value - material_value) > precision:
+            midpoint = (material_value + empty_value) / 2.0
+            if empty_at(midpoint):
+                empty_value = midpoint
+            else:
+                material_value = midpoint
+        return (material_value + empty_value) / 2.0
 
-def samples(start, end, step=0.1):
-    count = int(math.floor((end - start) / step))
-    return [start + index * step for index in range(count + 1)]
+    return [transition(low, center), transition(high, center)]
 
 
 def box_from_bounds(bounds):
@@ -836,10 +890,20 @@ def aperture_metrics(shape, aperture):
     center_z = aperture["center_z_mm"]
     x_mid = (wall_x[0] + wall_x[1]) / 2.0
     search_margin = config["aperture_center_tolerance_mm"] + config["geometry_tolerance_mm"] + 0.2
-    y_values = samples(ymin - search_margin, ymax + search_margin, step)
-    z_values = samples(zmin - search_margin, zmax + search_margin, step)
-    y_span = run_containing(y_values, [not inside(shape, x_mid, value, center_z) for value in y_values], center_y, step)
-    z_span = run_containing(z_values, [not inside(shape, x_mid, center_y, value) for value in z_values], center_z, step)
+    y_span = empty_span(
+        center_y,
+        ymin - search_margin,
+        ymax + search_margin,
+        lambda value: not inside(shape, x_mid, value, center_z),
+        step,
+    )
+    z_span = empty_span(
+        center_z,
+        zmin - search_margin,
+        zmax + search_margin,
+        lambda value: not inside(shape, x_mid, center_y, value),
+        step,
+    )
     measured_width = y_span[1] - y_span[0] if y_span else 0.0
     measured_height = z_span[1] - z_span[0] if z_span else 0.0
     measured_center_y = (y_span[0] + y_span[1]) / 2.0 if y_span else float("inf")
@@ -1197,7 +1261,10 @@ def run_freecad_checker(
     rerendered_stl: Path,
     freecad_report: dict[str, Any],
 ) -> dict[str, Any]:
-    freecad = resolve_executable("freecadcmd", ["/usr/bin/freecadcmd", "/usr/bin/FreeCADCmd"])
+    freecad = resolve_executable(
+        "freecadcmd",
+        ["/home/user/.local/bin/freecadcmd", "/usr/bin/freecadcmd", "/usr/bin/FreeCADCmd"],
+    )
     req = spec["requirements"]
     board = spec["board"]
     components = []

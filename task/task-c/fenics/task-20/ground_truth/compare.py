@@ -3,13 +3,17 @@ import json
 
 
 ROOT = Path(__file__).resolve().parent
+METRIC_FILES = {
+    "job_a": "job_a_metrics.json",
+    "job_b": "job_b_metrics.json",
+}
 
 
 def load(job):
     xdmf = ROOT / (job + ".xdmf")
     if not xdmf.is_file() or xdmf.stat().st_size == 0:
         raise RuntimeError("Missing XDMF output: " + str(xdmf))
-    return json.loads((ROOT / (job + "_metrics.json")).read_text(encoding="utf-8"))
+    return json.loads((ROOT / METRIC_FILES[job]).read_text(encoding="utf-8"))
 
 
 def main():

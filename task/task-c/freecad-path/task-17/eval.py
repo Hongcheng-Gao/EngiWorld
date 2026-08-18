@@ -96,6 +96,11 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path):
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def freeze_file(source, target, minimum, maximum):
     flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
     try:
@@ -639,6 +644,9 @@ def close(a,b,t=1e-6):
   left,right=number(a),number(b)
   return math.isfinite(left) and math.isfinite(right) and abs(left-right)<=t
  except (AttributeError,TypeError,ValueError):return False
+def normalized_text_sha256(path):
+ data=path.read_bytes().replace(b"\r\n",b"\n").replace(b"\r",b"\n")
+ return hashlib.sha256(data).hexdigest()
 def proxy_module(obj):return getattr(getattr(obj,"Proxy",None).__class__,"__module__","")
 def same_volume(first,second,t=1e-4):
  try:return first.isValid() and second.isValid() and first.cut(second).Volume<=t and second.cut(first).Volume<=t
@@ -895,7 +903,7 @@ def export_job(job,path):
  return path.is_file() and path.stat().st_size>500
 def validate(step_path,fcstd_path,repost_a,repost_b,fresh_a,fresh_b):
  if tuple(App.Version()[:4])!=EXPECTED_VERSION or App.Version()[-1]!=EXPECTED_COMMIT:return False
- if hashlib.sha256(step_path.read_bytes()).hexdigest()!=EXPECTED_STEP_SHA256:return False
+ if normalized_text_sha256(step_path)!=EXPECTED_STEP_SHA256:return False
  source=Part.read(str(step_path))
  if source is None or len(source.Solids)!=1 or not exact_bounds(source,(-60,60,-40,40,0,18)) or not close(source.Volume,172800,1e-3):return False
  expected_a,expected_b=expected_shapes()
@@ -1066,7 +1074,7 @@ def main():
         fcstd = frozen / FCSTD.name
         nc_a = frozen / NC_A.name
         nc_b = frozen / NC_B.name
-        if not freeze_file(STEP, step, 1_000, 10_000_000) or sha256(step) != EXPECTED_STEP_SHA256:
+        if not freeze_file(STEP, step, 1_000, 10_000_000) or normalized_text_sha256(step) != EXPECTED_STEP_SHA256:
             return fail("invalid init STEP")
         if not freeze_file(FCSTD, fcstd, 10_000, 20_000_000) or not validate_archive(fcstd):
             return fail("invalid answer FCStd archive")

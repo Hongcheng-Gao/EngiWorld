@@ -111,6 +111,11 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path):
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def freeze_file(source, target, minimum, maximum):
     flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
     try:
@@ -154,7 +159,7 @@ def freeze_file(source, target, minimum, maximum):
 
 
 def validate_csv(path):
-    if not regular_file(path, 100, 10_000) or sha256(path) != EXPECTED_CSV_SHA256:
+    if not regular_file(path, 100, 10_000) or normalized_text_sha256(path) != EXPECTED_CSV_SHA256:
         return False
     try:
         with path.open("r", encoding="utf-8", newline="") as stream:
@@ -1322,7 +1327,7 @@ def main():
         return fail("wrong tool_candidates.csv")
     if not regular_file(STEP, 5_000, 5_000_000):
         return fail("invalid STEP file")
-    if sha256(STEP) != EXPECTED_STEP_SHA256:
+    if normalized_text_sha256(STEP) != EXPECTED_STEP_SHA256:
         return fail("wrong init STEP")
     if not validate_archive(FCSTD):
         return fail("invalid FCStd archive")
@@ -1344,7 +1349,7 @@ def main():
             return fail("could not freeze NC")
         if not validate_csv(frozen_csv):
             return fail("CSV changed during evaluation")
-        if sha256(frozen_step) != EXPECTED_STEP_SHA256:
+        if normalized_text_sha256(frozen_step) != EXPECTED_STEP_SHA256:
             return fail("STEP changed during evaluation")
         if not validate_freecad(frozen_step, frozen_fcstd, frozen_nc, workdir):
             return fail("FreeCAD validation failed")

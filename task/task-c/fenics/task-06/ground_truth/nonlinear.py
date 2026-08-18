@@ -1,3 +1,20 @@
+import os
+import sys
+
+
+if os.environ.get("CONDA_DEFAULT_ENV") != "fenics-legacy":
+    os.execv(
+        "/bin/bash",
+        [
+            "/bin/bash",
+            "-lc",
+            'source /home/user/miniconda3/etc/profile.d/conda.sh && '
+            'conda activate fenics-legacy && exec python3 "$@"',
+            "fenics-legacy",
+            *sys.argv,
+        ],
+    )
+
 from dolfin import *
 
 mesh = UnitSquareMesh(32, 32)
@@ -7,8 +24,9 @@ u = Function(V)
 v = TestFunction(V)
 f = Constant(1.0)
 F = (1 + u**2)*inner(grad(u), grad(v))*dx - f*v*dx
+J = derivative(F, u)
 
-problem = NonlinearVariationalProblem(F, u, bc)
+problem = NonlinearVariationalProblem(F, u, bc, J)
 solver = NonlinearVariationalSolver(problem)
 solver.parameters["newton_solver"]["relative_tolerance"] = 1e-6
 solver.solve()

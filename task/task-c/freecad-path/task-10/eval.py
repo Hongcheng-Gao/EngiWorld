@@ -121,6 +121,11 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path: Path) -> str:
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def stage_file(source: Path, destination: Path, maximum_size: int) -> bool:
     flags = (
         os.O_RDONLY
@@ -1118,7 +1123,10 @@ def evaluate_in_freecad() -> bool:
         return False
     if not safe_fcstd_container(FCSTD_PATH):
         return False
-    if sha256(PART_PATH) != EXPECTED_PART_SHA256 or sha256(FIXTURE_PATH) != EXPECTED_FIXTURE_SHA256:
+    if (
+        normalized_text_sha256(PART_PATH) != EXPECTED_PART_SHA256
+        or normalized_text_sha256(FIXTURE_PATH) != EXPECTED_FIXTURE_SHA256
+    ):
         return False
 
     part_shape = Part.read(str(PART_PATH))

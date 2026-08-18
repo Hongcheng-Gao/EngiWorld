@@ -49,6 +49,11 @@ def sha256(path: Path) -> str:
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path: Path) -> str:
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def close(a, b, tolerance: float = 1e-5) -> bool:
     return abs(float(a) - float(b)) <= tolerance
 
@@ -590,7 +595,10 @@ def evaluate_in_freecad() -> bool:
     ]
     if not all(regular_file(path, 20 * 1024 * 1024 if path.suffix == ".FCStd" else 5 * 1024 * 1024) for path in required):
         return False
-    if sha256(STEP_PATH) != EXPECTED_STEP_SHA256 or sha256(VARIANTS_PATH) != EXPECTED_VARIANTS_SHA256:
+    if (
+        normalized_text_sha256(STEP_PATH) != EXPECTED_STEP_SHA256
+        or normalized_text_sha256(VARIANTS_PATH) != EXPECTED_VARIANTS_SHA256
+    ):
         return False
     try:
         variants = validate_variants(json.loads(VARIANTS_PATH.read_text(encoding="utf-8")))

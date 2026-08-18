@@ -96,6 +96,11 @@ def sha256(path):
     return digest.hexdigest()
 
 
+def normalized_text_sha256(path):
+    data = path.read_bytes().replace(b"\r\n", b"\n").replace(b"\r", b"\n")
+    return hashlib.sha256(data).hexdigest()
+
+
 def freeze_file(source, target, minimum, maximum):
     flags = os.O_RDONLY | os.O_CLOEXEC | os.O_NOFOLLOW
     try:
@@ -610,7 +615,7 @@ def main():
         return fail("freecadcmd missing")
     if not regular_file(STEP, 2_000, 2_000_000):
         return fail("invalid STEP file")
-    if sha256(STEP) != EXPECTED_STEP_SHA256:
+    if normalized_text_sha256(STEP) != EXPECTED_STEP_SHA256:
         return fail("wrong init STEP")
     if not validate_archive(FCSTD):
         return fail("invalid FCStd archive")
@@ -627,7 +632,7 @@ def main():
             return fail("could not freeze FCStd")
         if not freeze_file(NC, frozen_nc, 10_000, 2_000_000):
             return fail("could not freeze NC")
-        if sha256(frozen_step) != EXPECTED_STEP_SHA256:
+        if normalized_text_sha256(frozen_step) != EXPECTED_STEP_SHA256:
             return fail("STEP changed during evaluation")
         if not validate_freecad(frozen_step, frozen_fcstd, frozen_nc, workdir):
             return fail("FreeCAD validation failed")
