@@ -936,6 +936,54 @@ def check_keyword_bcs_loads(model, proc):
 
     return True
 
+
+def check_task07_keywords(model, proc, min_bc=None, min_load=None):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
+    except Exception:
+        return fail('Cannot inspect BC/load keyword blocks')
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+    if not any(names_equal(step, 'Initial') and header.startswith('*BOUNDARY') and
+               any('ENCASTRE' in ci(line) for line in lines)
+               for step, header, lines in groups):
+        return fail('Initial-step ENCASTRE keyword not found')
+    req = proc.get('load_signatures', [])[0]
+    for step, header, lines in groups:
+        if not names_equal(step, req.get('step')) or not header.startswith('*CLOAD'):
+            continue
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            dof = safe_float(fields[1], None) if len(fields) > 1 else None
+            value = safe_float(fields[2], None) if len(fields) > 2 else None
+            if (dof is not None and int(dof) == 5 and value is not None and value > 0.0 and
+                    close_enough(value, req['component_value'],
+                                 tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3)):
+                return True
+    return fail('Step-Torque-A CM2=850 keyword not found')
+
 def check_step(model, step_spec):
     step_name = PROCESS_SPEC['artifact']['step_name']
     step_key = find_key_ci(model.steps, step_name)
@@ -1030,17 +1078,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_task07_keywords(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

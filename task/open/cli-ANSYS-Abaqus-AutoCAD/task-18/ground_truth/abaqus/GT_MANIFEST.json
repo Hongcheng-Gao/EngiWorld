@@ -1,40 +1,42 @@
 {
-  "status": "generated_generic_remote",
-  "task": "task-18",
-  "task_id": "c-cae-commercial-open-choice-task-18-windows",
-  "solver": "abaqus",
-  "analysis_kind": "contact",
-  "domain": "hertz_contact_static",
-  "metrics": [
-    "max_contact_pressure",
-    "vertical_displacement"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "096e5823eaf8bafe9560fa6cfa8efd771e3939b924e924d15ff995e0bb81e2cf",
-  "generated_at_epoch": 1783166908.071885,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "status": "generated_from_provided_init_and_evaluator_verified",
+  "task_id": "c-open-abaqus-ansys-autocad-task-18-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "solver": "Abaqus Learning Edition 2025",
+  "generation_workflow": "Abaqus cae noGUI opened task18_punch_plate_init.cae, completed IndentationStep/contact/BC/output/job in that model, submitted Task18_PunchPlate, waited for JOB_STATUS_COMPLETED_SUCCESSFULLY, and extracted metrics from the final ODB frame.",
+  "metrics_rewrite_workflow": "Abaqus 2025 odbAccess reopened the verified Task18_PunchPlate.odb, independently recomputed the same four final-frame metrics, and wrote the JSON payload in binary mode with explicit LF bytes.",
+  "opened_init_sha256": "0b4946bcc8e5b25df2a0ab59219fbf2d75a2696d82bacea072ae27cadd3bad2b",
+  "model": {
+    "formulation": "2D plane strain",
+    "material": "EngineeringPolymer: E=2100 MPa, nu=0.35, linear elastic demonstration",
+    "plate_nodes": 533,
+    "plate_elements": 480,
+    "element_type": "CPE4R",
+    "punch": "analytical rigid semicircle, radius 5 mm",
+    "prescribed_displacement_mm": -0.1,
+    "reaction_force_unit": "N/mm of out-of-plane thickness"
+  },
+  "solution": {
+    "status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "frames": 25,
+    "max_contact_pressure": 60.13602828979492,
+    "punch_vertical_displacement": -0.10000000149011612,
+    "punch_reaction_force": 79.49980163574219,
+    "plate_bottom_reaction_force": 79.49979320168495,
+    "punch_raw_reaction_force": -79.49980163574219,
+    "plate_bottom_raw_reaction_force": 79.49979320168495,
+    "max_mises_stress": 35.938419342041016
+  },
+  "verification": {
+    "eval_sha256": "b666615f95b852b2e93939edcd1e8e7d9d2d71f8425a920ca0a1d52a64293bc8",
+    "production_result": "True\\n",
+    "topology_chain": "Exact mesh signatures match init to GT and GT to ODB for Plate-1; exact CAE punch geometry/placement/reference point and ODB reference-point node/location link the analytical rigid punch.",
+    "semantic_checks": "PlateSection binds EngineeringPolymer; the supplied and completed punch edge signatures match; generated PUNCH_CONTACT is a radius-5 semicircle represented by START plus two CIRCL segments with exact endpoints and common center; Initial finite-sliding hard-frictionless contact, exact boundary DOFs and extraction-set members, one CPU, and opposite raw reaction signs are verified.",
+    "negative_tests": "Config-only, init-as-candidate, missing ODB, wrong displacement, NO SEPARATION, and a real Abaqus V-shaped two-LINE punch candidate all returned False\\n."
+  },
   "files": [
-    {
-      "file": "gt_task_18_abaqus.cae",
-      "size": 53248,
-      "sha256": "fc5dfefc5028f0b811b8d58f988054ae6fa240f55ae900466b7697e1824a0b2d"
-    },
-    {
-      "file": "gt_task_18_abaqus.odb",
-      "size": 276020,
-      "sha256": "cf261ca185c05e73c719c980b319855c485d94c4b1ebc0b67db57414cb2ff316"
-    },
-    {
-      "file": "metrics.json",
-      "size": 100,
-      "sha256": "11e66849064c27e7b9692d8c0aeff42331e6c1367a0f55d236c1c5da0916a8e1"
-    }
-  ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
-  }
+    {"file": "Task18_PunchPlate_GT.cae", "size": 65536, "sha256": "27d1f6423b6d22201822efcf4f32092cc7f2f5887ef8474ce2c035677a861e3a"},
+    {"file": "Task18_PunchPlate.odb", "size": 1179140, "sha256": "f3561cc3b6f84d1ab7cc1568a41113496ee72ab20718f6a4b9f822a20bffab5c"},
+    {"file": "metrics.json", "size": 190, "sha256": "1bf4fb79ec45f5862d06e395cf82aa729e76a2b249039348da0dd67eb6f12ca9"}
+  ]
 }

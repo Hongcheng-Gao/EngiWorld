@@ -1,0 +1,27 @@
+Task: v-blender-task-31-ubuntu
+Snapshot: Blender-4.2.3
+Final status: eval_blocked
+
+The current GT is valid. In the designated Blender 4.2.3 LTS Snapshot, the
+embedded evaluator imported animated.abc and passed all nine checks with score
+1.0. The archive is Ogawa, is 1,594,858 bytes, contains the animated Blob
+PolyMesh with 642 vertices and 1,280 faces, and samples deformation extents of
+approximately 2.0, 3.0, and 2.0 at frames 1, 15, and 30.
+
+The production evaluator contract is internally inconsistent. task-31.json
+runs:
+
+    blender --background --python /home/user/Desktop/eval.py
+
+and exact_match compares the complete OSWorld command stdout to exactly
+"True\n". Blender prints the wrapper result first and its normal version/quit
+banner afterward, so the actual stdout is:
+
+    True
+    Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+
+    Blender quit
+
+The command returns 0, but exact_match is necessarily false. This cannot be
+fixed by changing a valid GT. No instruction, init, GT, or eval file was
+modified.

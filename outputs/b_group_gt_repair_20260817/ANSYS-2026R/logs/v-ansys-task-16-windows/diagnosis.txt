@@ -1,0 +1,23 @@
+v-ansys-task-16-windows diagnosis on ANSYS Fluent 2026 R1 (v261)
+
+A replacement poiseuille_2d.cas/poiseuille_2d.dat was generated in real Fluent
+2026 R1. The 1920-cell, 2025-node solution passes the direct and
+evaluator-style temporary-copy probes, including mesh, material, boundary,
+mass-balance, and physical-solution checks; both probes end with
+INNER_RESULT=True. Candidate SHA-256 values are:
+
+  CAS ad049c38b9ab67168f34643bc0f470b1cac15e171f541f70263a2506db29fbde
+  DAT 28a0cae1f129ec3e739be45f3fad4ebb835b543190f581adef01ccfc011e400b
+
+Blocking evaluator conflict:
+The formal evaluator fails first at eval.py:82 on
+"if not mesh.nodes or not mesh.elements". Both values are nonempty NumPy arrays,
+whose Python truth value is undefined, so the runtime raises ValueError before
+the downstream checks. A valid nonempty GT mesh cannot avoid this evaluator
+error. The candidate was retained only as audit evidence and was not written
+back over the formal GT.
+
+Evidence: candidate_generation.log, candidate_inner_probe.log,
+candidate_inner_probe_temp.log, and exact_eval_diagnosis.log.
+
+Final status: eval_blocked

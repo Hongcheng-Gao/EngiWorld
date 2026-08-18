@@ -1,0 +1,15 @@
+software=Abaqus/CAE Learning Edition 2025
+model=Model-Contact
+load_object=Pressure region=SURF_BLOCK_TOP distributionType=UNIFORM
+load_keyword_step=Step-1 keyword=*Dsload data=SURF_BLOCK_TOP,P,10.
+block_instance_bbox=x=40..60,y=40..60,z=5..35
+plate_instance_bbox=x=0..100,y=0..100,z=0..5
+block_top_surface_bbox=x=40..60,y=40..60,z=35
+block_bottom_surface_bbox=x=40..60,y=40..60,z=5
+plate_top_surface_bbox=x=0..100,y=0..100,z=5
+boundary_object=TypeBC region=SET_PLATE_BOT
+boundary_keyword_step=Initial data=SET_PLATE_BOT,ENCASTRE
+interaction_object=SurfaceToSurfaceStd
+contact_keyword_step=Initial keyword=*Contact Pair interaction=IntProp-1 secondary=SURF_BLOCK_BOT main=SURF_PLATE_TOP
+contact_property=Hard Contact,Frictionless
+coordinate_note=The required block top at part-local Z=30 is assembly Z=35 after aligning block-bottom Z=0 to plate-top Z=5.

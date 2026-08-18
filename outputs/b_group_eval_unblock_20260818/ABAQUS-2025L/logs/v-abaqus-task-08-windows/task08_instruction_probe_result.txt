@@ -1,0 +1,32 @@
+step.initialInc=0.05
+step.minInc=1e-08
+step.maxInc=0.1
+step.maxNumInc=200
+step.nlgeom=ON
+step.previous=Initial
+interaction.createStepName=<AttributeError>
+interaction.sliding=FINITE
+interaction.main=('SURF_PLATE_TOP', 'Assembly', 1, 9, 0)
+interaction.secondary=('SURF_BLOCK_BOTTOM', 'Assembly', 1, 9, 0)
+interaction.interactionProperty=<AttributeError>
+interaction.suppressed=False
+property.normalBehavior=({'allowSeparation': ON, 'clearanceAtZeroContactPressure': 0.0, 'constraintEnforcementMethod': DEFAULT, 'contactStiffness': 0.0, 'contactStiffnessScaleFactor': 1.0, 'initialStiffnessScaleFactor': 1.0, 'lowerQuadraticRatio': 0.33333, 'maxStiffness': None, 'overclosureFactor': 0.0, 'overclosureMeasure': 0.0, 'pressureOverclosure': HARD, 'stiffnessBehavior': LINEAR, 'stiffnessRatio': 0.01, 'table': (), 'upperQuadraticFactor': 0.03})
+property.tangentialBehavior=({'absoluteDistance': 0.0, 'dependencies': 0, 'directionality': ISOTROPIC, 'elasticSlipStiffness': None, 'exponentialDecayDefinition': COEFFICIENTS, 'formulation': FRICTIONLESS, 'fraction': 0.0, 'maximumElasticSlip': FRACTION, 'nStateDependentVars': 0, 'pressureDependency': OFF, 'shearStressLimit': None, 'slipRateDependency': OFF, 'table': (), 'temperatureDependency': OFF, 'useProperties': OFF})
+property.normalBehavior.pressureOverclosure=HARD
+property.normalBehavior.allowSeparation=ON
+property.normalBehavior.formulation=<AttributeError>
+property.tangentialBehavior.pressureOverclosure=<AttributeError>
+property.tangentialBehavior.allowSeparation=<AttributeError>
+property.tangentialBehavior.formulation=FRICTIONLESS
+Block.mesh_control.TECHNIQUE=STRUCTURED
+Block.mesh_control.ELEM_SHAPE=HEX
+Block.mesh_control.ALGORITHM=NONE
+Plate.mesh_control.TECHNIQUE=STRUCTURED
+Plate.mesh_control.ELEM_SHAPE=HEX
+Plate.mesh_control.ALGORITHM=NONE
+keyword_step=Initial | *Friction | 0.,
+keyword_step=Initial | *Surface Behavior, pressure-overclosure=HARD
+keyword_step=Initial | *Contact Pair, interaction=Frictionless-Hard, type=SURFACE TO SURFACE | SURF_BLOCK_BOTTOM, SURF_PLATE_TOP
+keyword_step=Step-Contact | *Step, name=Step-Contact, nlgeom=YES, inc=200
+keyword_step=Step-Contact | *Static | 0.05, 1., 1e-08, 0.1
+keyword_step=Step-Contact | *End Step

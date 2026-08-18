@@ -1,13 +1,18 @@
 {
   "id": "v-abaqus-task-08-windows",
   "snapshot": "ABAQUS-2025L",
-  "instruction": "Use Abaqus to build a contact analysis assembly from scratch. Use the N-mm-MPa unit system. Model Definition: Create two 3D Deformable Solid parts using Extrusion. For Part-1 (Block), sketch a rectangle from (0, 0) to (20, 20) in the X-Y plane and extrude along the global Z-axis to 30 mm. For Part-2 (Plate), sketch a rectangle from (0, 0) to (100, 100) in the X-Y plane and extrude along the global Z-axis to 5 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a single Solid Homogeneous section using Steel and assign it to both the block and the plate. Assembly: Instantiate both parts in the assembly. Apply a Coincident Point constraint to align the center of the block bottom face (10, 10, 0) with the center of the plate top face (50, 50, 5). Verify that the block sits directly on top of the plate with no gap and no initial penetration. Analysis Step: Create a Static, General step named Step-1 with nonlinear geometry enabled (Nlgeom = ON). Contact Interaction: Establish a General Contact (Standard) or Surface-to-Surface Contact (Standard) interaction. Assign the plate top face (outer surface at Z = 5) as the master surface and the block bottom face (outer surface at Z = 0 of the block instance) as the slave surface. Configure the contact property as Frictionless with Hard Contact. Loads and Boundary Conditions: Apply an Encastre boundary condition to the bottom face of the plate (Z = 0). Apply a pressure of 10 MPa to the top face of the block (Z = 30 mm), acting downward toward the block interior (global -Z direction). Discretization: Mesh the block with element type C3D8R using a global seed size of 3 mm. Mesh the plate with element type C3D8R using a global seed size of 5 mm. Job Execution: Create a job named Job-Contact, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Review the contact pressure CPRESS contour and the Mises stress contour in the output database. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Contact.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-Contact.odb. Run the solver to completion and ensure a result file is generated.",
-  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "instruction": "Use Abaqus/CAE to complete the provided block-on-plate nonlinear contact seed model in the N-mm-MPa unit system. Start from C:\\Users\\user\\Desktop\\Contact-Seed.cae; do not rebuild or replace its preloaded geometry, material, section, assembly, named surfaces, or named sets. The seed contains an unmeshed 10 mm x 10 mm x 12 mm 3D deformable Block, an unmeshed 30 mm x 30 mm x 4 mm 3D deformable Plate, Steel with E = 210000 MPa and nu = 0.3, the Steel-Solid homogeneous solid section assigned to both parts, and dependent instances with BLOCK-1 centered on PLATE-1: block X/Y = 10..20 mm and Z = 4..16 mm, plate X/Y = 0..30 mm and Z = 0..4 mm. Preserve the named regions SURF_BLOCK_TOP, SURF_BLOCK_BOTTOM, SURF_PLATE_TOP, SET_PLATE_BOTTOM, SET_BLOCK_GUIDE_A, and SET_BLOCK_GUIDE_B. Analysis: create a Static, General step named Step-Contact after Initial with Nlgeom = ON, initial increment 0.05, maximum increment 0.1, minimum increment 1e-8, and at most 200 increments. Contact: create one finite-sliding Surface-to-Surface Contact (Standard) interaction active in Initial, using SURF_PLATE_TOP as the main surface and SURF_BLOCK_BOTTOM as the secondary surface; use one interaction property with Hard normal contact, separation allowed, and frictionless tangential behavior. Boundary conditions: apply ENCASTRE to SET_PLATE_BOTTOM; to remove only the block's frictionless in-plane rigid-body modes, set U1 = U2 = 0 on SET_BLOCK_GUIDE_A and U2 = 0 on SET_BLOCK_GUIDE_B, leaving U3 unconstrained on both guide sets. Load: in Step-Contact apply a uniform positive pressure of 5 MPa to SURF_BLOCK_TOP, acting inward/downward; the 100 mm2 loaded area gives a 500 N resultant. Mesh: use structured HEX C3D8R elements, a 2 mm global seed on Block, and a 3 mm global seed on Plate; generate both meshes. Output: request U, S, RF, and contact stress output so the solved ODB contains CPRESS for the required contact pair. Job and deliverables: create and submit Job-Contact, wait for successful completion, verify nonzero displacement, Mises stress, and CPRESS results and pressure/reaction equilibrium, then save the completed database as C:\\Users\\user\\Desktop\\Job-Contact.cae with the solved output database at C:\\Users\\user\\Desktop\\Job-Contact.odb.",
+  "source": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEEXCRefMap/simaexc-c-caeproc.htm https://docs.software.vt.edu/abaqusv2025/English/SIMACAEITNRefMap/simaitn-c-contactpairform.htm https://docs.software.vt.edu/abaqusv2025/English/SIMACAEOUTRefMap/simaout-c-dboutput-elementoutput.htm https://edu.3ds.com/en/software/abaqus-learning-edition",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
+        "files": [
+          {
+            "local_path": "task-08/init_file/Contact-Seed.cae",
+            "path": "C:\\Users\\user\\Desktop\\Contact-Seed.cae"
+          }
+        ]
       }
     },
     {
@@ -15,7 +20,8 @@
       "parameters": {
         "command": [
           "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
-          "cae"
+          "cae",
+          "database=C:\\Users\\user\\Desktop\\Contact-Seed.cae"
         ]
       }
     }

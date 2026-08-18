@@ -931,6 +931,67 @@ def check_keyword_bcs_loads(model, proc):
 
     return True
 
+
+def check_task16_temperature_keywords(model, proc, min_bc=None):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if len(model.predefinedFields.keys()) < len(proc.get('predefined_temperatures', [])):
+            return fail('Predefined temperature field count too low')
+    except Exception:
+        return fail('Cannot inspect temperature keyword blocks')
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+
+    bc_req = proc.get('bc_signatures', [])[0]
+    bc_found = False
+    for step, header, lines in groups:
+        if not names_equal(step, bc_req.get('step')) or not header.startswith('*BOUNDARY'):
+            continue
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            first = safe_float(fields[1], None) if len(fields) > 1 else None
+            last = safe_float(fields[2], first) if len(fields) > 2 else first
+            value = safe_float(fields[3], None) if len(fields) > 3 else None
+            if (first is not None and last is not None and int(first) <= 11 <= int(last) and
+                    value is not None and close_enough(
+                        value, bc_req['magnitude'], tol=bc_req['tol'], rel=1.0e-3)):
+                bc_found = True
+                break
+    if not bc_found:
+        return fail('Step-Heat-A temperature BC 95 keyword not found')
+
+    initial_req = proc.get('predefined_temperatures', [])[0]
+    for step, header, lines in groups:
+        if (names_equal(step, initial_req.get('step')) and
+                header.startswith('*INITIAL CONDITIONS') and 'TEMPERATURE' in header):
+            for line in lines:
+                fields = [field.strip() for field in line.split(',')]
+                value = safe_float(fields[-1], None) if fields else None
+                if value is not None and close_enough(
+                        value, initial_req['magnitude'], tol=GEOM_TOL, rel=1.0e-3):
+                    return True
+    return fail('Initial uniform temperature 25 keyword not found')
+
 def check_step(model, step_spec):
     step_name = PROCESS_SPEC['artifact']['step_name']
     step_key = find_key_ci(model.steps, step_name)
@@ -1025,17 +1086,13 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_task16_temperature_keywords(model, proc, min_bc=min_bc):
         return False, model
-    ok('BC check passed')
+    ok('Temperature BC/initial-field keyword checks passed')
 
     if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
         return False, model
     ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model
@@ -1046,11 +1103,6 @@ def check_cae_process(cae_path):
         return False, model
     if proc.get('contact', None):
         ok('Contact check passed')
-
-    if not check_predefined_temperature(model, proc.get('predefined_temperatures', [])):
-        return False, model
-    if proc.get('predefined_temperatures', []):
-        ok('Predefined temperature check passed')
 
     return True, model
 

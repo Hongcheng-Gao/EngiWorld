@@ -948,6 +948,206 @@ def check_keyword_bcs_loads(model, proc):
 
     return True
 
+
+def keyword_groups_for_steps(model):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+    except Exception:
+        return []
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+    return groups
+
+
+def task03_boundary_matches(group, req):
+    step_name, header, lines = group
+    if not header.startswith('*BOUNDARY') or not names_equal(step_name, req.get('step')):
+        return False
+    numbers = {'u1': 1, 'u2': 2, 'u3': 3}
+    for name, expected in req.get('dofs', {}).items():
+        target = numbers[name.lower()]
+        matched = False
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            first = safe_float(fields[1], None) if len(fields) > 1 else None
+            last = safe_float(fields[2], first) if len(fields) > 2 else first
+            value = safe_float(fields[3], 0.0) if len(fields) > 3 else 0.0
+            if (first is not None and last is not None and
+                    int(first) <= target <= int(last) and
+                    close_enough(value, expected, tol=ABS_TOL, rel=1.0e-3)):
+                matched = True
+                break
+        if not matched:
+            return False
+    return True
+
+
+def task03_edge_load_matches(group, req, region_name):
+    step_name, header, lines = group
+    if not names_equal(step_name, req.get('step')):
+        return False
+    if not header.startswith('*DSLOAD'):
+        return False
+    target = float(req['magnitude'])
+    tolerance = float(req.get('tol', ABS_TOL))
+    for line in lines:
+        fields = [field.strip() for field in line.split(',')]
+        if len(fields) < 3:
+            continue
+        value = safe_float(fields[2], None)
+        if (names_equal(fields[0], region_name) and ci(fields[1]) == 'EDNOR' and
+                value is not None and value > 0.0 and
+                close_enough(value, target, tol=tolerance, rel=1.0e-3)):
+            return True
+    return False
+
+
+def task03_region_name(region):
+    if isinstance(region, (list, tuple)):
+        return region[0] if region else None
+    return region
+
+
+def task03_surface_from_name(model, surface_name):
+    assembly = model.rootAssembly
+    for repo_name in ('surfaces', 'allSurfaces', 'allInternalSurfaces'):
+        try:
+            surface = get_repo_value_ci(getattr(assembly, repo_name), surface_name)
+        except Exception:
+            surface = None
+        if surface is not None:
+            return surface
+    return None
+
+
+def task03_surface_matches(model, surface_name, expected_x, expected_y_min,
+                           expected_y_max):
+    surface = task03_surface_from_name(model, surface_name)
+    if surface is None:
+        return False
+    try:
+        coords = [tuple(float(value) for value in node.coordinates)
+                  for node in surface.nodes]
+    except Exception:
+        return False
+    if len(coords) < 2:
+        return False
+    if any(not close_enough(point[0], expected_x, tol=GEOM_TOL, rel=1.0e-6)
+           for point in coords):
+        return False
+    return (close_enough(min(point[1] for point in coords), expected_y_min,
+                         tol=GEOM_TOL, rel=1.0e-6) and
+            close_enough(max(point[1] for point in coords), expected_y_max,
+                         tol=GEOM_TOL, rel=1.0e-6))
+
+
+def task03_load_object_semantics(load_obj):
+    if 'SHELLEDGELOAD' not in class_name(load_obj):
+        return None
+    try:
+        region_name = task03_region_name(getattr(load_obj, 'region'))
+        direction = tuple(float(value) for value in getattr(load_obj, 'directionVector'))
+        traction = ci(getattr(load_obj, 'traction'))
+        suppressed = symbol_to_bool(getattr(load_obj, 'suppressed', False))
+    except Exception:
+        return None
+    if not region_name or traction != 'NORMAL' or suppressed or len(direction) != 3:
+        return None
+    return str(region_name), direction
+
+
+def task03_direction_matches(observed, expected):
+    return all(close_enough(observed[index], expected[index],
+                            tol=ABS_TOL, rel=1.0e-6)
+               for index in range(3))
+
+
+def check_task03_keyword_signatures(model, part_obj, proc, min_bc, min_load):
+    try:
+        if len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
+    except Exception:
+        return fail('Cannot inspect BC/load repositories')
+    groups = keyword_groups_for_steps(model)
+    if not groups:
+        return fail('Cannot read keyword blocks')
+    bc_groups = [group for group in groups if group[1].startswith('*BOUNDARY')]
+    used = set()
+    for req in proc.get('bc_signatures', []):
+        match = next((i for i, group in enumerate(bc_groups)
+                      if i not in used and task03_boundary_matches(group, req)), None)
+        if match is None:
+            return fail('Required keyword BC signature not found: ' + str(req))
+        used.add(match)
+    xyz = collect_node_xyz(part_obj.nodes)
+    if not xyz:
+        return fail('Cannot inspect shell mesh coordinates for edge loads')
+    x_min = min(point[0] for point in xyz)
+    x_max = max(point[0] for point in xyz)
+    y_min = min(point[1] for point in xyz)
+    y_max = max(point[1] for point in xyz)
+    semantics = [
+        (x_min, (-1.0, 0.0, 0.0)),
+        (x_max, (1.0, 0.0, 0.0)),
+    ]
+    load_objects = [model.loads[key] for key in model.loads.keys()]
+    used_objects = set()
+    matched_regions = []
+    for expected_x, expected_direction in semantics:
+        match = None
+        match_region = None
+        for index, load_obj in enumerate(load_objects):
+            if index in used_objects:
+                continue
+            observed = task03_load_object_semantics(load_obj)
+            if observed is None:
+                continue
+            region_name, direction = observed
+            if (task03_direction_matches(direction, expected_direction) and
+                    task03_surface_matches(model, region_name, expected_x,
+                                           y_min, y_max)):
+                match = index
+                match_region = region_name
+                break
+        if match is None:
+            return fail('ShellEdgeLoad NORMAL traction region/direction mismatch at x=%s' %
+                        str(expected_x))
+        used_objects.add(match)
+        matched_regions.append(match_region)
+    if names_equal(matched_regions[0], matched_regions[1]):
+        return fail('Left and right ShellEdgeLoad objects must use distinct regions')
+
+    load_groups = [group for group in groups if group[1].startswith('*DSLOAD')]
+    used_groups = set()
+    for req, region_name in zip(proc.get('load_signatures', []), matched_regions):
+        match = next((i for i, group in enumerate(load_groups)
+                      if i not in used_groups and task03_edge_load_matches(
+                          group, req, region_name)), None)
+        if match is None:
+            return fail('Required EDNOR shell edge load not found: ' + region_name)
+        used_groups.add(match)
+    return True
+
 def check_step(model, step_spec):
     step_name = PROCESS_SPEC['artifact']['step_name']
     step_key = find_key_ci(model.steps, step_name)
@@ -1042,17 +1242,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_task03_keyword_signatures(model, part_obj, proc, min_bc, min_load):
         return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

@@ -1,0 +1,52 @@
+{
+  "task_id": "c-blender-task-25-ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "verified_utc": "2026-08-18T02:53:28Z",
+  "software": "Blender 4.2.3 LTS",
+  "build_hash": "0e22e4fcea03",
+  "staging": {
+    "config": [
+      "init_file/scene.blend -> /home/user/Desktop/scene.blend",
+      "init_file/stub_gray.png -> /home/user/Desktop/stub_gray.png"
+    ],
+    "ground_truth": [
+      "ground_truth/wood.png -> /home/user/Desktop/wood.png",
+      "ground_truth/answer.blend -> /home/user/Desktop/answer.blend"
+    ],
+    "postconfig": "eval.py -> /home/user/Desktop/eval.py"
+  },
+  "remote_sha256": {
+    "scene.blend": "0c1f340b28398372d3bc8ede612ae8b78c91cd347188f67de3733c6a0e53b387",
+    "stub_gray.png": "6fed69920de493e42a4d0928615912757a44228c05f11a12e63451d0055784a7",
+    "wood.png": "4da8934fe28eea8d45074df471c1c64b40d6b7f9a7ac0f99dfa4477abe0a1834",
+    "answer.blend": "eabc4fe4f5051be17bdb1725609ef34a4d34f2475fe2446babdf8f027d71b73b",
+    "eval.py": "86f3eac3d2b8970ce0603d8eb2fffec117add7809631aef85f8efb7094cd65c1"
+  },
+  "evaluator_fix": {
+    "before": "active is image_nodes[0]",
+    "after": "active == image_nodes[0]",
+    "reason": "Separate Blender RNA collection lookups return different Python wrappers for the same node. Blender equality and as_pointer() identify the same RNA node, while Python object identity does not. The corrected check still requires the sole WoodBake image node to be the material's active bake target."
+  },
+  "formal_eval": {
+    "command": "python3 /home/user/Desktop/eval.py",
+    "shell": true,
+    "stdout": "True\n",
+    "stderr": "",
+    "returncode": 0,
+    "expected": "True\n",
+    "exact_match": true,
+    "score": 1.0
+  },
+  "cleanup": {
+    "removed": [
+      "/home/user/Desktop/scene.blend",
+      "/home/user/Desktop/stub_gray.png",
+      "/home/user/Desktop/wood.png",
+      "/home/user/Desktop/answer.blend",
+      "/home/user/Desktop/eval.py",
+      "/home/user/Desktop/_runtime"
+    ],
+    "desktop_after": ["__pycache__"],
+    "active_blender_processes_after": 0
+  }
+}

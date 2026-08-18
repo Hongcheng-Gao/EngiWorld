@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-06-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a steady-state heat conduction analysis in a consistent millimeter-based unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a rectangle from (0, 0) to (100, 50) in the X-Y plane and extrude along the global Z-axis to a thickness of 10 mm. This produces a plate with in-plane dimensions 100 mm x 50 mm and thickness 10 mm. Material and Section: Define a material named Copper with thermal conductivity = 0.0004 W/(mm·K), equivalent to 400 W/(m·K). Create a Solid Homogeneous section using Copper and assign it to the entire plate. Assembly: Create one dependent instance of the plate. Analysis Step: Create a Heat Transfer, Steady-state step named Step-Thermal. Loads and Boundary Conditions: Apply a temperature of 100 degC to the end face at X = 0 (the face with normal in -X, dimensions 50 mm x 10 mm). Apply a temperature of 20 degC to the end face at X = 100 mm (the face with normal in +X, dimensions 50 mm x 10 mm). Keep all other faces adiabatic by applying no thermal boundary condition to them. Discretization: Mesh the plate with a global seed size of 5 mm. Assign the element type DC3D8 and generate the mesh. Job Execution: Create a job named Job-Thermal, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Thermal.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Thermal.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-06/task-06.json",
+  "config_sha256": "a87bf66801cc5862481de364ffc449d4adcb918e59a73c3f259ec2d5122503f4",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-06/eval.py",
+  "eval_sha256": "8034a422ecce4d493a595c280813533cb2ad6c9aea1131d1e5765fe9444fdf16",
+  "started_utc": "2026-08-18T02:57:35.062734+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-06/ground_truth/Job-Thermal.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Thermal.cae",
+      "size": 65536,
+      "sha256": "91434b1c8d74c26e63eb7929bfbd4a727b9085c9018b39aa4bfb56297635f2d3",
+      "response": "File Uploaded: 65536 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-06/ground_truth/Job-Thermal.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Thermal.odb",
+      "size": 374316,
+      "sha256": "922c9fde36a0da864cf796685b9ca079c926c98bde921d4771bb8b7892e142c8",
+      "response": "File Uploaded: 374316 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-06/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 38493,
+      "sha256": "8034a422ecce4d493a595c280813533cb2ad6c9aea1131d1e5765fe9444fdf16",
+      "response": "File Uploaded: 38493 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] Temperature BC keyword checks passed\n[PASS] Load check passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 38493
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 303
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Thermal.cae",
+      "Length": 69632
+    },
+    {
+      "Name": "Job-Thermal.odb",
+      "Length": 374316
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T02:57:47.208498+00:00"
+}

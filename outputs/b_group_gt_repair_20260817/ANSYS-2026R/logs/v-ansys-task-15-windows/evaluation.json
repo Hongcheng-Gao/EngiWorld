@@ -1,0 +1,129 @@
+{
+  "task_id": "v-ansys-task-15-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-15",
+  "instruction": "Use ANSYS Fluent to complete a 3D laminar pipe-flow analysis. Physical problem: Steady laminar flow of water through a straight circular pipe. Coordinate system and geometry: - Use a 3D model. - Use SI units in Fluent. - The pipe axis is along the global X direction. - The pipe length is 100 mm, equivalent to 0.100 m. - The pipe diameter is 4 mm, equivalent to 0.004 m. - The pipe radius is 0.002 m. - The circular cross-section is centered on the X axis: - Cross-section center: Y = 0 m, Z = 0 m - Radius: 0.002 m - The pipe domain should extend from: - X = 0 m at the inlet - X = 0.100 m at the outlet Boundary zone names: - Name the inlet boundary: inlet - Name the outlet boundary: outlet - Name the pipe wall boundary: wall Model parameters: - Fluid: water - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Use a structured hexahedral or swept mesh. - Include 3 boundary-layer layers near the pipe wall. - Use sufficient axial and radial resolution to resolve the laminar velocity profile. Boundary conditions: - Inlet: - Velocity inlet - Mean inlet velocity = 0.1 m/s in the positive X direction - Outlet: - Pressure outlet - Gauge pressure = 0 Pa - Pipe wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialize the solution and iterate until convergence. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\pipe_laminar.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\pipe_laminar.dat Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-15/task-15.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-15/eval.py",
+  "eval_sha256": "58f15c81d2d842774c7bc03eebc710a434582ab7f9539e7639f71aa8a1d89001",
+  "started_utc": "2026-08-17T13:09:16.646682+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "python",
+        "C:\\Users\\user\\Desktop\\license.py"
+      ],
+      "shell": false,
+      "response": "python C:\\Users\\user\\Desktop\\license.py launched successfully"
+    },
+    {
+      "command": [
+        "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe",
+        "-g"
+      ],
+      "shell": false,
+      "response": "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe -g launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-15/ground_truth/pipe_laminar.cas",
+      "remote_path": "C:\\Users\\user\\Desktop\\pipe_laminar.cas",
+      "size": 2565464,
+      "sha256": "3858ead5624b996f4f40bde06b8e300fd77416d2fd75287fb88004cb04a8896b",
+      "response": "File Uploaded: 2565464 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-15/ground_truth/pipe_laminar.dat",
+      "remote_path": "C:\\Users\\user\\Desktop\\pipe_laminar.dat",
+      "size": 2898300,
+      "sha256": "0e3ed6a1e134331e0a21d3ae580e095566e15ae8dabbb8a130b9ad1dff2c3e20",
+      "response": "File Uploaded: 2898300 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-15/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 11054,
+      "sha256": "58f15c81d2d842774c7bc03eebc710a434582ab7f9539e7639f71aa8a1d89001",
+      "response": "File Uploaded: 11054 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "C:\\Users\\user\\AppData\\Roaming\\Python\\Python311\\site-packages\\ansys\\fluent\\core\\services\\field_data.py:398: PyFluentDeprecationWarning: Function 'get_surface_data' is deprecated since version v0.34.0. Use 'get_field_data' instead.\n  return self._field_data_accessor(*args, **kwargs)\nC:\\Users\\user\\AppData\\Roaming\\Python\\Python311\\site-packages\\ansys\\fluent\\core\\field_data_interfaces.py:635: PyFluentDeprecationWarning: Structured face connectivity output is deprecated and will be replaced by the flat format in a future release. In the current release, pass 'flatten_connectivity=True' argument while creating the 'SurfaceFieldDataRequest' to request data in the flat format.\n  warnings.warn(\nC:\\Users\\user\\AppData\\Roaming\\Python\\Python311\\site-packages\\ansys\\fluent\\core\\services\\field_data.py:398: PyFluentDeprecationWarning: Function 'get_scalar_field_data' is deprecated since version v0.34.0. Use 'get_field_data' instead.\n  return self._field_data_accessor(*args, **kwargs)\nC:\\Users\\user\\AppData\\Roaming\\Python\\Python311\\site-packages\\ansys\\fluent\\core\\services\\field_data.py:398: PyFluentDeprecationWarning: Function 'get_scalar_field_data' is deprecated since version v0.34.0. Use 'get_field_data' instead.\n  return self._field_data_accessor(*args, **kwargs)\n",
+    "output": "\nReading \"C:\\Users\\user\\Desktop\\pipe_laminar.cas\"...\n\nBuffering for file scan...\n\n\n\n   20000 hexahedral cells, zone  2, binary.\n   57600 quadrilateral interior faces, zone  8, binary.\n     400 quadrilateral velocity-inlet faces, zone  6, binary.\n     400 quadrilateral pressure-outlet faces, zone  5, binary.\n    4000 quadrilateral wall faces, zone  4, binary.\n   22491 nodes, binary.\n22491 node flags, binary.\n\nBuilding...\n     mesh\n     materials,\n     interface,\n     domains,\n\tmixture\n     zones,\n\twall\n\toutlet\n\tinlet\n\tdefault-interior\n\tfluid\n     parallel,\nDone.\n\nReading \"C:\\Users\\user\\Desktop\\pipe_laminar.dat\"...\n\n\n\nParallel variables...\nDone.\nTrue\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 0.0,
+  "passed": false,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 11054
+    },
+    {
+      "Name": "fluent-20260817-210927-9660.trn",
+      "Length": 3433
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    },
+    {
+      "Name": "pipe_laminar.cas",
+      "Length": 2565464
+    },
+    {
+      "Name": "pipe_laminar.dat",
+      "Length": 2898300
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-17T13:10:10.534289+00:00"
+}

@@ -1,0 +1,36 @@
+Task: c-blender-task-25-ubuntu
+Snapshot: Blender-4.2.3
+Status: eval_blocked
+
+Production staging and command:
+  config: scene.blend and stub_gray.png -> /home/user/Desktop
+  candidate: wood.png and answer.blend -> /home/user/Desktop
+  postconfig: eval.py -> /home/user/Desktop/eval.py
+  command: python3 /home/user/Desktop/eval.py
+
+Current eval result: False\n, return code 0.
+
+The evaluator's own detailed scorecard passes the PNG existence, 512x512
+resolution, brown hue, banding, luma variation, dark/light extrema, blend
+opening, Board/WoodMat preservation, and procedural node graph. The only
+failure is active_wood_bake_target.
+
+The decoded inner evaluator constructs nodes = list(mat.node_tree.nodes),
+then separately reads active = mat.node_tree.nodes.active, and requires:
+  active is image_nodes[0]
+
+Blender 4.2.3 LTS minimal reproduction on the staged answer.blend:
+  ACTIVE_NAME='WoodBakeNode'
+  IMAGE_NAME='WoodBakeNode'
+  IS=False
+  EQ=True
+  ACTIVE_PTR=125772265818528
+  IMAGE_PTR=125772265818528
+  PTR_EQUAL=True
+
+Both Python objects wrap the same Blender RNA node, proven by equality and
+identical as_pointer() values. Python object identity is not stable across
+separate Blender collection lookups, so the evaluator rejects the valid
+active node. Changing GT cannot make separate RNA wrapper instances satisfy
+Python `is`; the check must compare `==`, `as_pointer()`, or stable node name.
+Per task rules, eval.py was not modified and GT was not changed.

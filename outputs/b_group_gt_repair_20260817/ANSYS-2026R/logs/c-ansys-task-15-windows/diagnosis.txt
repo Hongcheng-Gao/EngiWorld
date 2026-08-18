@@ -1,0 +1,22 @@
+Status: eval_blocked
+Task: c-ansys-task-15-windows
+Snapshot: ANSYS-2026R (ANSYS 2026 R1 / v261)
+
+The native pipe_laminar.cas and pipe_laminar.dat load successfully on the assigned
+snapshot. The evaluator completes its mesh, zone, material, boundary-condition,
+and field-data checks and prints True with return code 0.
+
+Minimal reproduction:
+  python C:\Users\user\Desktop\eval.py
+
+Observed stdout begins with Fluent case/data loading diagnostics and ends with:
+  True
+
+The task evaluator is configured with an exact output match against "True\n".
+Because Fluent/PyFluent writes the successful file-loading transcript to stdout
+before the final marker, the valid result receives score 0.0. This behavior is
+produced by the current evaluator/runtime combination and cannot be corrected by
+changing the native GT without attempting to suppress evaluator-owned output.
+
+Full stdout, stderr, return code, uploaded SHA-256 values, and cleanup evidence are
+preserved in evaluation.json in this directory.

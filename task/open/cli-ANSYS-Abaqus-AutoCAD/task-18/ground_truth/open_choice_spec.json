@@ -1,43 +1,38 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-18-windows",
-  "open_choice_id": "cae-open-choice-028",
-  "source_task": "task/task-c/ansys/task-11",
-  "original_software": "ansys",
-  "alternative_software": "abaqus",
-  "distractor_software": "autocad",
-  "interface": "cli",
-  "domain": "hertz_contact_static",
-  "analysis_kind": "contact",
-  "metrics": [
-    "max_contact_pressure",
-    "vertical_displacement"
+  "task_id": "c-open-abaqus-ansys-autocad-task-18-windows",
+  "open_choice_id": "cae-open-choice-018-redesign-20260818",
+  "selected_software": "abaqus",
+  "software_version": "Abaqus Learning Edition 2025",
+  "interface": "cli_noGUI",
+  "domain": "two_dimensional_plane_strain_rigid_punch_indentation",
+  "analysis_kind": "nonlinear_static_contact",
+  "selection_reason": "The user-authorized redesign supplies a native Abaqus init and explicitly narrows execution to the installed Abaqus 2025 Learning Edition, avoiding a false three-tool promise and verification-only ANSYS dependency.",
+  "initial_artifact": "init_file/task18_punch_plate_init.cae",
+  "initial_state": "The engineering-polymer plate geometry, material, section, structured CPE4R mesh, analytical rigid punch, assembly placement, surfaces, and part sets exist; analysis step, interaction, boundary conditions, extraction assembly sets, job, and results are absent.",
+  "ground_truth_files": [
+    "abaqus/Task18_PunchPlate_GT.cae",
+    "abaqus/Task18_PunchPlate.odb",
+    "abaqus/metrics.json",
+    "abaqus/GT_MANIFEST.json"
   ],
-  "expected_result_fields": [
-    "U",
-    "S"
-  ],
-  "require_metrics_json": true,
-  "visible_goal": "Build and solve a nonlinear frictionless sphere-on-plate contact case; report maximum contact pressure and displacement.",
-  "selection_reason": "Contact is a strong open-choice test because the distractor can draw geometry but cannot solve contact mechanics.",
-  "artifact_hint": {
-    "ground_truth_files": [
-      "wb_hertz.db",
-      "wb_hertz.rst",
-      "wb_hertz.wbpj"
-    ],
-    "abaqus_stems": [],
-    "ansys_db_files": [
-      "wb_hertz.db",
-      "wb_hertz.wbpj"
-    ],
-    "ansys_result_files": [
-      "wb_hertz.rst"
-    ]
+  "model": {
+    "formulation": "2D plane strain",
+    "plate_bounds": [[-20.0, 20.0], [-12.0, 0.0]],
+    "punch_radius_mm": 5.0,
+    "punch_center": [0.0, 5.0],
+    "element_type": "CPE4R",
+    "plate_nodes": 533,
+    "plate_elements": 480,
+    "material": {"name": "EngineeringPolymer", "youngs_modulus_mpa": 2100.0, "poissons_ratio": 0.35, "model": "linear elastic demonstration"},
+    "prescribed_displacement_mm": -0.1,
+    "force_unit": "N/mm of out-of-plane thickness",
+    "contact": "finite-sliding, hard normal, frictionless tangential"
   },
-  "span_hint": {
-    "min_span": 10.0
-  },
-  "bounds_hint": {
-    "min_span": 10.0
-  }
+  "metrics": ["max_contact_pressure", "punch_vertical_displacement", "punch_reaction_force", "max_mises_stress"],
+  "required_odb_fields": ["CPRESS", "COPEN", "U", "S", "RF"],
+  "official_sources": [
+    "https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEELMRefMap/simaelm-c-2delem.htm",
+    "https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEITNRefMap/simaitn-c-contactconstraints.htm",
+    "https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEOUTRefMap/simaout-c-stdoutputvar.htm"
+  ]
 }

@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-10-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a torsion analysis of a circular shaft (Variant B). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Revolution. Sketch a rectangle from (0, 0) to (6, 72) in the X-Y plane, using the left vertical edge at X = 0 as the revolution axis (global Y-axis). Revolve 360 deg to generate a solid cylinder with diameter 12 mm and length 72 mm, aligned with the global Y-axis. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Solid Homogeneous section using Steel and assign it to the entire shaft. Assembly: Create one dependent instance of the shaft. Analysis Step: Create a Static, General step named Step-Torque-B. Constraints and Boundary Conditions: Create a reference point RP-1 at the center of the free end face (Y = 72 mm, X = 0, Z = 0). Apply a kinematic coupling constraint between the free end face and RP-1, coupling all 6 degrees of freedom. Apply an Encastre boundary condition to the fixed end face at Y = 0. Loading: Apply a torque (Moment) of 920 N*mm at RP-1 about the shaft axis (global Y-axis, component MY). Discretization: Mesh the shaft with a global seed size of 4 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-Torsion-B, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Open the output database. Review the Mises stress contour. Query the RP-1 rotation magnitude (UR). Query the shear stress components at any node located on the shaft outer surface (radius approximately 6 mm). Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Torsion-B.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Torsion-B.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-10/task-10.json",
+  "config_sha256": "131716e403ffa4a184d207186f4e3734ff8f1d89b28e94ba322dc60bf2da83f8",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-10/eval.py",
+  "eval_sha256": "6b554353909fc91e48e4b01b4c84fd746f8fccf2f6efaf09001e61f933f738b2",
+  "started_utc": "2026-08-18T03:04:11.603029+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-10/ground_truth/Job-Torsion-B.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Torsion-B.cae",
+      "size": 53248,
+      "sha256": "41569cdf8ed096f16702aa8e4a4f9b459e6b861b1f67bc33c70444bde031af6b",
+      "response": "File Uploaded: 53248 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-10/ground_truth/Job-Torsion-B.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Torsion-B.odb",
+      "size": 322732,
+      "sha256": "5b1a5352dc2e3915e02a318b174bebcb03f6458c3d64481761ac6607858b1327",
+      "response": "File Uploaded: 322732 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-10/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 35472,
+      "sha256": "6b554353909fc91e48e4b01b4c84fd746f8fccf2f6efaf09001e61f933f738b2",
+      "response": "File Uploaded: 35472 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] Coupling check passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 35472
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 300
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Torsion-B.cae",
+      "Length": 53248
+    },
+    {
+      "Name": "Job-Torsion-B.odb",
+      "Length": 322732
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T03:04:21.985787+00:00"
+}

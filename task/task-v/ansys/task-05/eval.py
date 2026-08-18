@@ -203,7 +203,16 @@ def strict_process_check(mapdl, pred):
 
     if "BEAM188" not in element_text or int(mapdl.get_value("ELEM", 0, "COUNT")) != 20:
         return False
-    if not all(token in material_text for token in ("210000", "0.300", "7.850")):
+    material = {
+        label: float(match.group(1))
+        for label in ("EX", "NUXY", "DENS")
+        if (match := re.search(rf"\b{label}\b[^\r\n]*\r?\n\s*({FLOAT})", material_text))
+    }
+    if not (
+        close(material.get("EX"), 210000.0, 210.0)
+        and close(material.get("NUXY"), 0.3, 3.0e-4)
+        and close(material.get("DENS"), 7.85e-9, 7.85e-12)
+    ):
         return False
     x_levels = sorted({round(row[0], 8) for row in coordinates})
     if len(x_levels) != 21 or not close(x_levels[0], 0.0, 1.0e-8) or not close(x_levels[-1], 500.0, 1.0e-8):

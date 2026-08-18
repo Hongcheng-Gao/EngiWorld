@@ -1,0 +1,119 @@
+{
+  "task_id": "v-ansys-task-02-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-02",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve an axisymmetric circular plate model. Physical problem: A thin circular plate with a clamped outer edge is subjected to a uniform transverse pressure. Coordinate system and geometry: - Use a 2D axisymmetric model with PLANE183. - In the axisymmetric cross-section, X is the radial direction and Y is the axial/thickness direction. - The symmetry axis is X = 0. - Model the rectangular cross-section 0 <= X <= 50 mm and 0 <= Y <= 1 mm. - The clamped outer edge is X = 50 mm. - The loaded top surface is Y = 1 mm. Model parameters: - Material: linear elastic steel. - Young's modulus E = 210000 MPa. - Poisson's ratio = 0.3. - Enable the PLANE183 axisymmetric option. Mesh: - Use a mapped quadrilateral mesh. - Use 25 uniform element divisions in the radial X direction. - Use 4 uniform element divisions through the thickness in the Y direction. - The final mesh must contain 100 PLANE183 elements. Boundary conditions and load: - On the symmetry axis X = 0, set UX = 0. - On the clamped outer edge X = 50 mm, set UX = 0 and UY = 0. - Apply a uniform pressure of 0.1 MPa on Y = 1 mm, acting in the negative Y direction. Analysis type: - Static structural analysis. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as C:\\Users\\user\\Desktop\\apdl_plate.db. - Save the structural result file as C:\\Users\\user\\Desktop\\apdl_plate.rst. - Run the solver to completion and save the final solved state in both files.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-02/task-02.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-02/eval.py",
+  "eval_sha256": "84f628a0dd890f4ed22de2fc44f0b4730b34fb2e7f25d445c36ca790d0e49a87",
+  "started_utc": "2026-08-17T12:47:24.557053+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
+      ],
+      "shell": false,
+      "response": "powershell -NoProfile -Command $licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g' launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-02/ground_truth/apdl_plate.db",
+      "remote_path": "C:\\Users\\user\\Desktop\\apdl_plate.db",
+      "size": 262144,
+      "sha256": "8707b8ea4ef24681a348685b204b497a084706a6cf892847e9970df33c1089e0",
+      "response": "File Uploaded: 262144 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-02/ground_truth/apdl_plate.rst",
+      "remote_path": "C:\\Users\\user\\Desktop\\apdl_plate.rst",
+      "size": 393216,
+      "sha256": "11d3b0107dff1cd664f60d5dd8cc54d3ac0c19c7f2217ce82bf752a65ff68ae6",
+      "response": "File Uploaded: 393216 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-02/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 7074,
+      "sha256": "84f628a0dd890f4ed22de2fc44f0b4730b34fb2e7f25d445c36ca790d0e49a87",
+      "response": "File Uploaded: 7074 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "apdl_plate.db",
+      "Length": 262144
+    },
+    {
+      "Name": "apdl_plate.rst",
+      "Length": 393216
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 7074
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-17T12:47:53.593736+00:00"
+}

@@ -1,0 +1,14 @@
+v-ansys-task-10-windows diagnosis on ANSYS Fluent 2026 R1 (v261)
+
+Native evaluator internal result: True.
+Fluent loaded the native case/data and reported 8000 quadrilateral cells, 8421
+nodes, 20 inlet faces, 20 outlet faces, and 400 faces on each wall.
+
+Blocking evaluator conflict:
+The vm_command_line stdout contains all Fluent case/data loading and mesh
+building messages before the final "True\n". The task uses exact_match and
+expects the complete output to be exactly "True\n". Therefore the evaluator
+scores 0 even though its own internal check returns True. GT contents cannot
+silence evaluator-side PyFluent output.
+
+Final status: eval_blocked

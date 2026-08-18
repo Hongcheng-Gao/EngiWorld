@@ -1,0 +1,41 @@
+Task: v-blender-task-29-ubuntu
+Snapshot: Blender-4.2.3
+Status: eval_blocked
+
+Initial formal GT result:
+  inner score: 0.0
+  imported keyframe range: 2.0..31.0
+  frame 1 location: (0, 0, 0)
+  frame 30 location: (0, 0, 1.9930298)
+
+The init scene was independently inspected in Blender 4.2.3 and has scene
+range 1..30, action keys 1.0 and 30.0, locations Z=0 and Z=2, Metric units,
+Unit Scale 1.0, and meters.
+
+Blender 4.2.3's FBX exporter/importer pair shifts the exported baked range by
+one frame. A native Blender export transaction compensated only the temporary
+bake range to 0..29, then restored the open scene range to 1..30. The resulting
+binary FBX has SHA-256
+530f1edd1e2d506673a88b3c57060f447c42c9545348ef40fb49b727c2111939,
+size 14956 bytes, FBX version 7400, Y UpAxis=1, UnitScaleFactor=100, animation
+stack/curves, Cube dimensions 1 m, imported keys 1.0..30.0, and imported
+locations Z=0 and Z=1.9930298. The evaluator's inner 11 checks all pass and
+return score 1.0.
+
+The production evaluator command is:
+  blender --background --python /home/user/Desktop/eval.py
+
+OSWorld get_vm_command_line returns the command's complete stdout:
+  True
+  Blender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)
+
+  Blender quit
+
+The task metric is exact_match with expected `True\n`. The repository's
+get_vm_command_line returns response.json()["output"] without filtering, and
+exact_match uses direct string equality. Consequently the valid candidate's
+production output does not equal `True\n`. GT cannot suppress Blender's own
+post-script banner. eval.py/evaluator configuration was not changed.
+
+Because the task is not formally passed, the generated candidate is retained
+only as candidate_part.fbx evidence and was not written over the task GT.

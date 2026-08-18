@@ -945,6 +945,133 @@ def check_keyword_bcs_loads(model, proc):
 
     return True
 
+
+def keyword_blocks(model):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+    except Exception:
+        return []
+    step_name = 'Initial'
+    blocks = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            blocks.append((step_name, header, lines[1:]))
+    return blocks
+
+
+def keyword_boundary_matches(group, req):
+    step_name, header, lines = group
+    if not header.startswith('*BOUNDARY') or not names_equal(step_name, req.get('step')):
+        return False
+    mapping = {'u1': 1, 'u2': 2, 'u3': 3, 'ur1': 4, 'ur2': 5, 'ur3': 6}
+    for name, expected in req.get('dofs', {}).items():
+        target = mapping.get(name.lower())
+        observed = []
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            if len(fields) >= 2 and ci(fields[1]) == 'ENCASTRE':
+                observed.append(0.0)
+                continue
+            first = safe_float(fields[1], None) if len(fields) > 1 else None
+            last = safe_float(fields[2], first) if len(fields) > 2 else first
+            if first is not None and last is not None and int(first) <= target <= int(last):
+                observed.append(safe_float(fields[3], 0.0) if len(fields) > 3 else 0.0)
+        if expected == 'SET' and not observed:
+            return False
+        if expected == 'UNSET' and observed:
+            return False
+        if expected not in ('SET', 'UNSET'):
+            if not any(close_enough(value, expected, tol=ABS_TOL, rel=1.0e-3)
+                       for value in observed):
+                return False
+    magnitude = req.get('magnitude', None)
+    if magnitude is not None:
+        found = False
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            value = safe_float(fields[3], None) if len(fields) > 3 else None
+            if value is not None and close_enough(
+                    value, magnitude, tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3):
+                found = True
+                break
+        if not found:
+            return False
+    return True
+
+
+def keyword_cload_matches(group, req):
+    step_name, header, lines = group
+    types = [ci(value) for value in req.get('type_any', [])]
+    if not header.startswith('*CLOAD') or not names_equal(step_name, req.get('step')):
+        return False
+    component = ci(req.get('component', ''))
+    if 'CONCENTRATEDFORCE' in types and component.startswith('CF'):
+        target_dof = int(component[2:])
+    elif 'MOMENT' in types and component.startswith('CM'):
+        target_dof = int(component[2:]) + 3
+    else:
+        return False
+    for line in lines:
+        fields = [field.strip() for field in line.split(',')]
+        dof = safe_float(fields[1], None) if len(fields) > 1 else None
+        value = safe_float(fields[2], None) if len(fields) > 2 else None
+        if dof is None or value is None or int(dof) != target_dof:
+            continue
+        if req.get('sign') == 'positive' and value <= 0.0:
+            continue
+        if req.get('sign') == 'negative' and value >= 0.0:
+            continue
+        expected = req.get('component_value', None)
+        if expected is None or close_enough(
+                value, expected, tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3):
+            return True
+    return False
+
+
+def check_keyword_signatures(model, proc, min_bc=None, min_load=None):
+    try:
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
+    except Exception:
+        return fail('Cannot inspect BC/load repositories')
+    blocks = keyword_blocks(model)
+    if not blocks:
+        return fail('Cannot read keyword blocks')
+    bc_groups = [group for group in blocks if group[1].startswith('*BOUNDARY')]
+    used = set()
+    for req in proc.get('bc_signatures', []):
+        match = next((i for i, group in enumerate(bc_groups)
+                      if i not in used and keyword_boundary_matches(group, req)), None)
+        if match is None:
+            return fail('Required keyword BC signature not found: ' + str(req))
+        used.add(match)
+    load_groups = [group for group in blocks if group[1].startswith('*CLOAD')]
+    used = set()
+    for req in proc.get('load_signatures', []):
+        match = next((i for i, group in enumerate(load_groups)
+                      if i not in used and keyword_cload_matches(group, req)), None)
+        if match is None:
+            return fail('Required keyword load signature not found: ' + str(req))
+        used.add(match)
+    return True
+
 def check_step(model, step_spec):
     step_name = PROCESS_SPEC['artifact']['step_name']
     step_key = find_key_ci(model.steps, step_name)
@@ -1039,17 +1166,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_keyword_signatures(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

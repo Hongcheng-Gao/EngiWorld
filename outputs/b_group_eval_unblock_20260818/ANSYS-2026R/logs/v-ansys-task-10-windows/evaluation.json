@@ -1,0 +1,130 @@
+{
+  "task_id": "v-ansys-task-10-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10",
+  "instruction": "Use the ANSYS Fluent GUI to complete a two-dimensional steady laminar channel-flow analysis. Physical problem: Water flows through a straight two-dimensional rectangular channel. Geometry and coordinate system: - Use a 2D planar model in SI units. - The channel domain occupies 0 <= X <= 0.200 m and 0 <= Y <= 0.002 m. - Name the boundary zones exactly: X = 0 m: inlet; X = 0.200 m: outlet; Y = 0 m: bottom; Y = 0.002 m: top. Mesh: - Use a structured quadrilateral mesh. - Use 400 uniform divisions along the channel length. - Use 20 uniform divisions across the channel height. - The final mesh must contain 8000 quadrilateral cells. Material: - Fluid: water-liquid. - Density = 998.2 kg/m^3. - Dynamic viscosity = 0.001003 Pa*s. - Use constant material properties. Boundary conditions: - inlet: velocity-inlet with X velocity = 0.2 m/s and Y velocity = 0 m/s. - outlet: pressure-outlet with gauge pressure = 0 Pa. - top and bottom: stationary no-slip walls. Solver setup: - Pressure-based solver. - Steady formulation. - Laminar viscous model. - SIMPLE pressure-velocity coupling. - Pressure discretization: Second Order. - Momentum discretization: Second Order Upwind. - Hybrid initialization. - Run 500 iterations. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the case file as C:\\Users\\user\\Desktop\\poiseuille_shear.cas. - Save the data file as C:\\Users\\user\\Desktop\\poiseuille_shear.dat. - Ensure both files contain the final solved state.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10/task-10.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10/eval.py",
+  "eval_sha256": "f167482c0d44c0ef9a71c8f80796ae71d8963f3b2b034d45a1dc0766aebfbbe3",
+  "started_utc": "2026-08-18T03:12:25.788889+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe' -ArgumentList '2ddp'"
+      ],
+      "shell": false,
+      "response": "powershell -NoProfile -Command $licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe' -ArgumentList '2ddp' launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10/ground_truth/poiseuille_shear.cas",
+      "remote_path": "C:\\Users\\user\\Desktop\\poiseuille_shear.cas",
+      "size": 1198701,
+      "sha256": "2d61434049170146449e998c2b28039bb4bc3ec930629fc005da10dee063ef91",
+      "response": "File Uploaded: 1198701 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10/ground_truth/poiseuille_shear.dat",
+      "remote_path": "C:\\Users\\user\\Desktop\\poiseuille_shear.dat",
+      "size": 2462679,
+      "sha256": "0d5c76abfa5aaf48af93cc1553fb09ae4ca9ff65077cc83cfc1bcb2e5d9dcce3",
+      "response": "File Uploaded: 2462679 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10/ground_truth/poiseuille_shear.msh",
+      "remote_path": "C:\\Users\\user\\Desktop\\poiseuille_shear.msh",
+      "size": 636984,
+      "sha256": "d523e3a0df15d500698da02c5c53cf0102a6ce2ff2bedc405743304b85ce8e33",
+      "response": "File Uploaded: 636984 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-10/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 9418,
+      "sha256": "f167482c0d44c0ef9a71c8f80796ae71d8963f3b2b034d45a1dc0766aebfbbe3",
+      "response": "File Uploaded: 9418 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 9418
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    },
+    {
+      "Name": "poiseuille_shear.cas",
+      "Length": 1198701
+    },
+    {
+      "Name": "poiseuille_shear.dat",
+      "Length": 2462679
+    },
+    {
+      "Name": "poiseuille_shear.msh",
+      "Length": 636984
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-18T03:13:16.718057+00:00"
+}

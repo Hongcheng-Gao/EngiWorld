@@ -1,0 +1,23 @@
+v-ansys-task-06-windows diagnosis on ANSYS Mechanical APDL 2026 R1 (v261)
+
+Current evaluator result: False (return code 0).
+
+Native database inspection before the blocking command:
+- Element type: PLANE183, 8-node axisymmetric solid
+- Current DOF/model status: UX/UY, AXISYMMETRIC MODEL
+- Element count: 10
+- Node count: 45
+- Bounds: X=[25,50], Y=[0,10], Z=[0,0] mm
+
+Blocking evaluator conflict:
+strict_process_check executes mapdl.run("KEYOPT,1,LIST"). This is not a valid
+MAPDL command form for listing key options. ANSYS v261 reports:
+"Ename must be input as a positive number, rather than 0" and
+"For element type = 1 (LINK1), KEYOPT(3) = 1 is invalid".
+PyMAPDL raises MapdlCommandIgnoredError, which evaluate() catches and converts
+to False. The preceding ETLIST already identifies the model as axisymmetric,
+so no GT change can prevent this evaluator exception.
+
+Raw v261 command evidence: raw_probe.log (ETLIST, exact KEYOPT exception, and evaluator traceback)
+
+Final status: eval_blocked

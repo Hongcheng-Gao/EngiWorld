@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-07-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a torsion analysis of a circular shaft (Variant A). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Revolution. Sketch a rectangle from (0, 0) to (5, 80) in the X-Y plane, using the left vertical edge at X = 0 as the revolution axis (global Y-axis). Revolve 360 deg to generate a solid cylinder with diameter 10 mm and length 80 mm, aligned with the global Y-axis. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Solid Homogeneous section using Steel and assign it to the entire shaft. Assembly: Create one dependent instance of the shaft. Analysis Step: Create a Static, General step named Step-Torque-A. Loads and Boundary Conditions: Apply an Encastre boundary condition to the fixed end face at Y = 0. Create a reference point RP-1 at the center of the free end face (Y = 80 mm) and establish a kinematic coupling between RP-1 and that end face. Apply a torque (Moment) of 850 N*mm at RP-1 about the global Y-axis. Discretization: Mesh the shaft with a global seed size of 4 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-Torsion-A, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Torsion-A.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-Torsion-A.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-07/task-07.json",
+  "config_sha256": "d3cc557d868aa890792b5ff47a1b7827d905afbf953f8e1e849ab7d45854aad6",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-07/eval.py",
+  "eval_sha256": "c83830f36b0f76f72d1165c20221307d221470527eeaa63bc391d56e3cec247d",
+  "started_utc": "2026-08-18T02:58:26.133682+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-07/ground_truth/Job-Torsion-A.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Torsion-A.cae",
+      "size": 53248,
+      "sha256": "ac95b249c545469cf8b628381c7abf00d6a5e66bc7fa961ec14bf8ef6a6cd254",
+      "response": "File Uploaded: 53248 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-07/ground_truth/Job-Torsion-A.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Torsion-A.odb",
+      "size": 288676,
+      "sha256": "4e42fabcad484543ddc53708243c5a84e0a23e78215f4d3ff42601cb146220a2",
+      "response": "File Uploaded: 288676 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-07/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 38297,
+      "sha256": "c83830f36b0f76f72d1165c20221307d221470527eeaa63bc391d56e3cec247d",
+      "response": "File Uploaded: 38297 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] Coupling check passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 38297
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 300
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Torsion-A.cae",
+      "Length": 53248
+    },
+    {
+      "Name": "Job-Torsion-A.odb",
+      "Length": 288676
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T02:58:35.636620+00:00"
+}

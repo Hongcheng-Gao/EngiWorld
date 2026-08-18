@@ -1,0 +1,153 @@
+{
+  "task_id": "v-ansys-task-03-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-03",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve a 2D plane-stress plate model. Physical problem: A rectangular plate with a central circular hole is subjected to uniaxial tensile loading. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The plate width is along the X direction. - The plate length is along the Y direction. - The plate occupies: - 0 ≤ X ≤ 100 mm - 0 ≤ Y ≤ 200 mm - Plate thickness: 1 mm - A circular hole is located at the plate center: - Hole center: (X, Y) = (50, 100) mm - Hole diameter: 10 mm - Hole radius: 5 mm Model parameters: - Material: linear elastic steel - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Element type: PLANE183 - Element behavior: plane stress with thickness option - Thickness: 1 mm - Mesh: - Global element size: 5 mm - Local element size around the circular hole: 1 mm Boundary conditions and load: - Apply uniform uniaxial tension in the X direction. - Apply a nominal tensile stress of 10 MPa on the left and right vertical edges: - On the left edge X = 0, apply traction in the -X direction. - On the right edge X = 100, apply traction in the +X direction. - Do not constrain the full top or bottom edges. - Apply only the minimum displacement constraints required to remove rigid-body motion, without altering the uniaxial tensile stress field. For example: - Fix UX = 0 and UY = 0 at one reference node. - Fix UY = 0 at a second reference node separated in the X direction. - The circular hole boundary must remain traction-free. Analysis type: - Static structural analysis. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as: C:\\Users\\user\\Desktop\\apdl_hole_plate.db - Save the structural result file as: C:\\Users\\user\\Desktop\\apdl_hole_plate.rst. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-03/task-03.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-03/eval.py",
+  "eval_sha256": "d532ae8b200263bd42b9ac4d53a44907f60a6d8d1ad288a4a889334304b912ec",
+  "started_utc": "2026-08-17T12:48:36.007222+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "python",
+        "C:\\Users\\user\\Desktop\\license.py"
+      ],
+      "shell": false,
+      "response": "python C:\\Users\\user\\Desktop\\license.py launched successfully"
+    },
+    {
+      "command": [
+        "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
+        "-g"
+      ],
+      "shell": false,
+      "response": "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe -g launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-03/ground_truth/apdl_hole_plate.db",
+      "remote_path": "C:\\Users\\user\\Desktop\\apdl_hole_plate.db",
+      "size": 1572864,
+      "sha256": "f6c06fd18b5d6f1f31696b760df69c627d20e549a5803a94f720ddd0aada0844",
+      "response": "File Uploaded: 1572864 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-03/ground_truth/apdl_hole_plate.rst",
+      "remote_path": "C:\\Users\\user\\Desktop\\apdl_hole_plate.rst",
+      "size": 1245184,
+      "sha256": "a50810304e1e593c79ff956bd6e80f7c4fddb5e5c10cc7b65b6b193b1c0cf15d",
+      "response": "File Uploaded: 1245184 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-03/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 10165,
+      "sha256": "d532ae8b200263bd42b9ac4d53a44907f60a6d8d1ad288a4a889334304b912ec",
+      "response": "File Uploaded: 10165 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": ".__tmp__.inp",
+      "Length": 9
+    },
+    {
+      "Name": ".__tmp__.out",
+      "Length": 38
+    },
+    {
+      "Name": "apdl_hole_plate.db",
+      "Length": 1572864
+    },
+    {
+      "Name": "apdl_hole_plate.rst",
+      "Length": 1245184
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 10165
+    },
+    {
+      "Name": "eval_apdl_hole_plate.bat",
+      "Length": 10
+    },
+    {
+      "Name": "eval_apdl_hole_plate.err",
+      "Length": 481
+    },
+    {
+      "Name": "eval_apdl_hole_plate.lock",
+      "Length": 0
+    },
+    {
+      "Name": "eval_apdl_hole_plate.log",
+      "Length": 0
+    },
+    {
+      "Name": "eval_apdl_hole_plate.page",
+      "Length": 0
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-17T12:48:45.833685+00:00"
+}

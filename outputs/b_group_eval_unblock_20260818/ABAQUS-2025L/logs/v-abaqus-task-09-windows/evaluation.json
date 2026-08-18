@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-09-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a simply supported beam analysis under a uniformly distributed load. Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a 10 mm x 10 mm rectangle in the Y-Z plane and extrude along the global X-axis to a length of 200 mm. This produces a beam with cross-section 10 mm x 10 mm and span 200 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Solid Homogeneous section using Steel and assign it to the entire beam. Assembly: Create one dependent instance of the beam. Analysis Step: Create a Static, General step named Step-Load. Loads and Boundary Conditions: Create a reference point RP-1 at the geometric center of the left end face (X = 0, Y = 5 mm, Z = 5 mm) and couple it kinematically to that end face. Create a reference point RP-2 at the geometric center of the right end face (X = 200 mm, Y = 5 mm, Z = 5 mm) and couple it kinematically to that end face. At RP-1, constrain U1 = U2 = U3 = 0 and UR2 = UR3 = 0 to model a pinned support that allows rotation about the beam axis (UR1). At RP-2, constrain U2 = U3 = 0 and UR2 = UR3 = 0 to model a roller support that allows axial motion (U1) and rotation about the beam axis (UR1). Apply a pressure of 0.05 MPa downward on the beam top surface (Y = 10 mm face). This loading is equivalent to a uniformly distributed load q = 0.5 N/mm. Discretization: Mesh the beam with a global seed size of 5 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-UDL, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-UDL.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-UDL.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-09/task-09.json",
+  "config_sha256": "04a344581f8dd197e301f7719a62147b4b108650ad51803cf93d6b9cfa13c9dc",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-09/eval.py",
+  "eval_sha256": "5959c6cf173694142182045f75c075d06b3336d07a001c54d6416e5fbbcdd1bf",
+  "started_utc": "2026-08-18T11:36:51.777691+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-09/ground_truth/Job-UDL.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-UDL.cae",
+      "size": 61440,
+      "sha256": "03362a08563a064d355fe314eaea9dfade88e307b4c276abb04e8c791b04adf3",
+      "response": "File Uploaded: 61440 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-09/ground_truth/Job-UDL.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-UDL.odb",
+      "size": 317480,
+      "sha256": "a2b66a3e28bc6baafbc0be67863f34f46c04cc340b13c58fd7143ad93823063f",
+      "response": "File Uploaded: 317480 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-09/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 44973,
+      "sha256": "5959c6cf173694142182045f75c075d06b3336d07a001c54d6416e5fbbcdd1bf",
+      "response": "File Uploaded: 44973 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] Coupling check passed\n[PASS] Pressure DSLOAD internal set/full top surface footprint check passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 44973
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 377
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-UDL.cae",
+      "Length": 65536
+    },
+    {
+      "Name": "Job-UDL.odb",
+      "Length": 317480
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T11:37:00.844393+00:00"
+}

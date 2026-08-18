@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-16-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a transient heat-transfer analysis of a rectangular solid block (Variant A). Use the N-mm-MPa unit system with appropriate thermal units. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a rectangle from (0, 0) to (60, 18) and extrude it by 12 mm to produce a block of size 60 mm x 18 mm x 12 mm. Material and Section: Define a material named Steel with density = 7.85e-9 tonne/mm^3, thermal conductivity = 0.045 W/(mm·K), and specific heat = 4.5e8 mJ/(tonne·K). Create a Homogeneous Solid Section using Steel and assign it to the entire block. Assembly: Create one dependent instance of the block. Analysis Step: Create a Heat Transfer step named Step-Heat-A with transient response. Set the time period to 300 s, the initial increment to 2 s, the maximum increment to 15 s, and the maximum allowable temperature change per increment DELTMX to 10. Initial and Boundary Conditions: Apply an initial uniform temperature of 25 degC to the whole block. Apply a temperature boundary condition of 95 degC on the X = 0 face during Step-Heat-A. Discretization: Mesh the block with a global seed size of 4 mm. Assign DC3D8 heat-transfer brick elements and generate the mesh. Job Execution: Create a job named Job-TransientHeat-A, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Review the temperature field at the final time. Record the average temperature near the X = 0 heated face, the average temperature in the X approximately 5 mm band, and the final analysis time. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-TransientHeat-A.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-TransientHeat-A.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-16/task-16.json",
+  "config_sha256": "eac3a29e0e3c42e16d00b62713753bb2cc13ba861a35d32663827f955d198b28",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-16/eval.py",
+  "eval_sha256": "82112b0c58bdd9d2a20a32eafa9e7e97bc00a66a302976cd04b936643140fa11",
+  "started_utc": "2026-08-18T03:15:32.155036+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-16/ground_truth/Job-TransientHeat-A.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-TransientHeat-A.cae",
+      "size": 61440,
+      "sha256": "fb1802185d10b4e056383802e816a09e88dea555e38cd397ba9a9d4a8bd3f840",
+      "response": "File Uploaded: 61440 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-16/ground_truth/Job-TransientHeat-A.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-TransientHeat-A.odb",
+      "size": 481624,
+      "sha256": "dcf9abc1dcea4752fe307bae5052908116c89a48631bbb57f79287742d89fe1c",
+      "response": "File Uploaded: 481624 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-16/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 38992,
+      "sha256": "82112b0c58bdd9d2a20a32eafa9e7e97bc00a66a302976cd04b936643140fa11",
+      "response": "File Uploaded: 38992 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] Temperature BC/initial-field keyword checks passed\n[PASS] Load check passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 38992
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 317
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-TransientHeat-A.cae",
+      "Length": 65536
+    },
+    {
+      "Name": "Job-TransientHeat-A.odb",
+      "Length": 481624
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T03:15:41.559474+00:00"
+}

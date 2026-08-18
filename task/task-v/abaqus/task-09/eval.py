@@ -954,17 +954,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    bc_ok = check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc)
-    if bc_ok:
-        ok('BC check passed')
-    else:
-        if not check_keyword_bcs_fallback_b(model, proc):
-            return False, model
-        ok('Keyword BC fallback passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+    if not check_task09_keyword_signatures(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model
@@ -1025,6 +1017,258 @@ def check_keyword_bcs_fallback_b(model, proc):
             return fail('Keyword BC fallback missing pattern: ' + pat)
 
     return True
+
+
+def task09_region_name(region):
+    if isinstance(region, (list, tuple)):
+        return region[0] if region else None
+    return region
+
+
+def task09_normalized_name(name):
+    return ''.join(character for character in ci(name)
+                   if character.isalnum())
+
+
+def task09_has_user_dsl_set(model):
+    for repo_name in ('sets', 'allSets'):
+        try:
+            names = getattr(model.rootAssembly, repo_name).keys()
+        except Exception:
+            return True
+        if any('DSL' in task09_normalized_name(name) for name in names):
+            return True
+    return False
+
+
+def check_task09_keyword_signatures(model, proc, min_bc=None, min_load=None):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
+    except Exception:
+        return fail('Cannot inspect BC/load keyword blocks')
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+
+    bc_groups = [group for group in groups if group[1].startswith('*BOUNDARY')]
+    numbers = {'u1': 1, 'u2': 2, 'u3': 3, 'ur1': 4, 'ur2': 5, 'ur3': 6}
+    used = set()
+    for req in proc.get('bc_signatures', []):
+        match = None
+        for index, (step, header, lines) in enumerate(bc_groups):
+            if index in used or not names_equal(step, req.get('step')):
+                continue
+            good = True
+            for name, expected in req.get('dofs', {}).items():
+                target = numbers[name.lower()]
+                found = False
+                for line in lines:
+                    fields = [field.strip() for field in line.split(',')]
+                    first = safe_float(fields[1], None) if len(fields) > 1 else None
+                    last = safe_float(fields[2], first) if len(fields) > 2 else first
+                    value = safe_float(fields[3], 0.0) if len(fields) > 3 else 0.0
+                    if (first is not None and last is not None and
+                            int(first) <= target <= int(last) and
+                            close_enough(value, expected, tol=ABS_TOL, rel=1.0e-3)):
+                        found = True
+                        break
+                if not found:
+                    good = False
+                    break
+            if good:
+                match = index
+                break
+        if match is None:
+            return fail('Required support BC keyword not found: ' + str(req))
+        used.add(match)
+
+    if task09_has_user_dsl_set(model):
+        return fail('CAE contains a user-created DSL-named assembly set')
+
+    pressure_regions = []
+    try:
+        for key in model.loads.keys():
+            load_obj = model.loads[key]
+            if 'PRESSURE' not in class_name(load_obj):
+                continue
+            if symbol_to_bool(getattr(load_obj, 'suppressed', False)) is True:
+                continue
+            if ci(getattr(load_obj, 'distributionType', '')) != 'UNIFORM':
+                continue
+            region_name = task09_region_name(getattr(load_obj, 'region', None))
+            if region_name:
+                pressure_regions.append(str(region_name))
+    except Exception:
+        return fail('Cannot inspect Pressure load objects')
+    if len(pressure_regions) != 1:
+        return fail('Expected exactly one active uniform Pressure load object')
+
+    req = proc.get('load_signatures', [])[0]
+    matches = []
+    for step, header, lines in groups:
+        if (not names_equal(step, req.get('step')) or
+                not header.startswith('*DSLOAD')):
+            continue
+        for line in lines:
+            fields = [item.strip() for item in line.split(',')]
+            if len(fields) < 3 or ci(fields[1]) != 'P':
+                continue
+            value = safe_float(fields[2], None)
+            if (any(names_equal(fields[0], name) for name in pressure_regions) and
+                    value is not None and value > 0.0 and
+                    close_enough(value, req['magnitude'],
+                                 tol=req['tol'], rel=1.0e-3)):
+                matches.append((step, header, line))
+    if len(matches) != 1:
+        return fail('Expected one Step-Load Pressure/DSLOAD P=0.05 linkage')
+    return True
+
+
+def task09_odb_region_coords(region):
+    coords = []
+    try:
+        for node_array in region.nodes:
+            for node in node_array:
+                coords.append(tuple(float(value) for value in node.coordinates))
+    except Exception:
+        return []
+    return coords
+
+
+def task09_odb_element_keys(region):
+    keys = set()
+    try:
+        instance_names = list(region.instanceNames)
+        element_arrays = region.elements
+        for index, element_array in enumerate(element_arrays):
+            instance_name = instance_names[index] if index < len(instance_names) else ''
+            for element in element_array:
+                element_instance = getattr(element, 'instanceName', instance_name)
+                keys.add((ci(element_instance), int(element.label)))
+    except Exception:
+        return set()
+    return keys
+
+
+def task09_odb_face_number(surface):
+    observed = []
+    try:
+        for face_array in surface.faces:
+            for face in face_array:
+                face_name = ci(face)
+                if not face_name.startswith('FACE') or not face_name[4:].isdigit():
+                    return None
+                observed.append(int(face_name[4:]))
+    except Exception:
+        return None
+    if not observed or len(set(observed)) != 1:
+        return None
+    return observed[0]
+
+
+def task09_primary_odb_bbox(odb):
+    best_bbox = None
+    best_count = -1
+    try:
+        for key in odb.rootAssembly.instances.keys():
+            instance = odb.rootAssembly.instances[key]
+            count = len(instance.elements)
+            coords = collect_node_xyz(instance.nodes)
+            bbox = bbox_from_xyz(coords)
+            if bbox is not None and count > best_count:
+                best_bbox = bbox
+                best_count = count
+    except Exception:
+        return None
+    return best_bbox
+
+
+def task09_is_full_top_surface(surface, beam_bbox):
+    coords = task09_odb_region_coords(surface)
+    if len(coords) < 4 or beam_bbox is None:
+        return False
+    return (
+        all(close_enough(point[1], beam_bbox['y_max'],
+                         tol=GEOM_TOL, rel=1.0e-6) for point in coords) and
+        close_enough(min(point[0] for point in coords), beam_bbox['x_min'],
+                     tol=GEOM_TOL, rel=1.0e-6) and
+        close_enough(max(point[0] for point in coords), beam_bbox['x_max'],
+                     tol=GEOM_TOL, rel=1.0e-6) and
+        close_enough(min(point[2] for point in coords), beam_bbox['z_min'],
+                     tol=GEOM_TOL, rel=1.0e-6) and
+        close_enough(max(point[2] for point in coords), beam_bbox['z_max'],
+                     tol=GEOM_TOL, rel=1.0e-6))
+
+
+def check_task09_odb_pressure_surface(odb_path):
+    odb = None
+    try:
+        odb = openOdb(path=odb_path, readOnly=True, readInternalSets=True)
+        beam_bbox = task09_primary_odb_bbox(odb)
+        top_surfaces = []
+        for key in odb.rootAssembly.surfaces.keys():
+            surface = odb.rootAssembly.surfaces[key]
+            if task09_is_full_top_surface(surface, beam_bbox):
+                top_surfaces.append(surface)
+        if len(top_surfaces) != 1:
+            return fail('Expected one geometrically unique full beam top surface')
+
+        surface = top_surfaces[0]
+        surface_keys = task09_odb_element_keys(surface)
+        face_number = task09_odb_face_number(surface)
+        if not surface_keys or face_number is None:
+            return fail('Full top surface has missing/ambiguous element facets')
+
+        backing_name = '_' + str(surface.name) + '_S' + str(face_number)
+        backing_set = get_repo_value_ci(odb.rootAssembly.elementSets, backing_name)
+        if (backing_set is None or
+                symbol_to_bool(getattr(backing_set, 'isInternal', False)) is not True or
+                task09_odb_element_keys(backing_set) != surface_keys):
+            return fail('Full top surface does not match its internal S%s backing set' %
+                        str(face_number))
+
+        dsl_sets = []
+        for key in odb.rootAssembly.elementSets.keys():
+            element_set = odb.rootAssembly.elementSets[key]
+            if ('DSL' in task09_normalized_name(key) and
+                    symbol_to_bool(getattr(element_set, 'isInternal', False)) is True):
+                dsl_sets.append(element_set)
+        if len(dsl_sets) != 1:
+            return fail('Expected one unambiguous solver-internal DSL element set')
+        if task09_odb_element_keys(dsl_sets[0]) != surface_keys:
+            return fail('Solver-internal DSL set does not equal the full top surface')
+
+        ok('Pressure DSLOAD internal set/full top surface footprint check passed')
+        return True
+    except Exception as exc:
+        return fail('Cannot inspect ODB pressure target surface: ' + str(exc))
+    finally:
+        try:
+            if odb is not None:
+                odb.close()
+        except Exception:
+            pass
 
 def check_odb_completion(odb_path):
     solver_spec = PROCESS_SPEC.get('solver', {})
@@ -1108,6 +1352,10 @@ def check_task():
 
     ok_cae, _model = check_cae_process(cae_path)
     if not ok_cae:
+        output_result(False, detail_path=detail_path, result_path=result_path)
+        return False
+
+    if not check_task09_odb_pressure_surface(odb_path):
         output_result(False, detail_path=detail_path, result_path=result_path)
         return False
 

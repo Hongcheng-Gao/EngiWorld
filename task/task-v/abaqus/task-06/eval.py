@@ -937,6 +937,60 @@ def check_keyword_bcs_loads(model, proc):
 
     return True
 
+
+def check_task06_temperature_bcs(model, proc, min_bc=None):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+    except Exception:
+        return fail('Cannot inspect temperature BC keyword blocks')
+
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        elif header.startswith('*BOUNDARY'):
+            groups.append((step_name, lines[1:]))
+
+    used = set()
+    for req in proc.get('bc_signatures', []):
+        match = None
+        for index, (step, lines) in enumerate(groups):
+            if index in used or not names_equal(step, req.get('step')):
+                continue
+            for line in lines:
+                fields = [field.strip() for field in line.split(',')]
+                first = safe_float(fields[1], None) if len(fields) > 1 else None
+                last = safe_float(fields[2], first) if len(fields) > 2 else first
+                value = safe_float(fields[3], None) if len(fields) > 3 else None
+                if (first is not None and last is not None and
+                        int(first) <= 11 <= int(last) and value is not None and
+                        close_enough(value, req['magnitude'],
+                                     tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3)):
+                    match = index
+                    break
+            if match is not None:
+                break
+        if match is None:
+            return fail('Required temperature BC keyword not found: ' + str(req))
+        used.add(match)
+    return True
+
 def check_step(model, step_spec):
     step_name = PROCESS_SPEC['artifact']['step_name']
     step_key = find_key_ci(model.steps, step_name)
@@ -1031,17 +1085,13 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_task06_temperature_bcs(model, proc, min_bc=min_bc):
         return False, model
-    ok('BC check passed')
+    ok('Temperature BC keyword checks passed')
 
     if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
         return False, model
     ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

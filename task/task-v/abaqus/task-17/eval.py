@@ -963,13 +963,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    bc_ok = check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc)
-    if bc_ok:
-        ok('BC check passed')
-    else:
-        if not check_keyword_bcs_fallback_b(model, proc):
-            return False, model
-        ok('Keyword BC fallback passed')
+    if not check_task17_thermal_keywords(model, proc, min_bc=min_bc):
+        return False, model
+    ok('BC/predefined-temperature keyword checks passed')
 
     if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
         return False, model
@@ -984,12 +980,6 @@ def check_cae_process(cae_path):
         return False, model
     if proc.get('contact', None):
         ok('Contact check passed')
-
-    if not check_predefined_temperature(model, proc.get('predefined_temperatures', [])):
-        return False, model
-    if proc.get('predefined_temperatures', []):
-        ok('Predefined temperature check passed')
-
 
     return True, model
 
@@ -1008,6 +998,66 @@ def check_keyword_bcs_fallback_b(model, proc):
     for pat in needed:
         if pat not in text:
             return fail('Keyword BC fallback missing pattern: ' + pat)
+    return True
+
+
+def check_task17_thermal_keywords(model, proc, min_bc=None):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if len(model.predefinedFields.keys()) < len(proc.get('predefined_temperatures', [])):
+            return fail('Predefined temperature field count too low')
+    except Exception:
+        return fail('Cannot inspect thermal-bending keyword blocks')
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+
+    fixed = False
+    initial_temp = False
+    hot_half_temp = False
+    for step, header, lines in groups:
+        if names_equal(step, 'Initial') and header.startswith('*BOUNDARY'):
+            fixed = fixed or any('FIXED_END' in ci(line) and 'ENCASTRE' in ci(line)
+                                 for line in lines)
+        if (names_equal(step, 'Initial') and header.startswith('*INITIAL CONDITIONS') and
+                'TEMPERATURE' in header):
+            for line in lines:
+                fields = [field.strip() for field in line.split(',')]
+                value = safe_float(fields[-1], None) if fields else None
+                if value is not None and close_enough(value, 20.0, tol=GEOM_TOL, rel=1.0e-3):
+                    initial_temp = True
+        if names_equal(step, 'Step-ThermalBend') and header.startswith('*TEMPERATURE'):
+            for line in lines:
+                fields = [field.strip() for field in line.split(',')]
+                value = safe_float(fields[-1], None) if fields else None
+                if ('HOT_HALF' in ci(line) and value is not None and
+                        close_enough(value, 120.0, tol=GEOM_TOL, rel=1.0e-3)):
+                    hot_half_temp = True
+    if not fixed:
+        return fail('FIXED_END initial ENCASTRE keyword not found')
+    if not initial_temp:
+        return fail('Initial whole-model temperature 20 keyword not found')
+    if not hot_half_temp:
+        return fail('Step-ThermalBend HOT_HALF temperature 120 keyword not found')
     return True
 
 def check_odb_completion(odb_path):

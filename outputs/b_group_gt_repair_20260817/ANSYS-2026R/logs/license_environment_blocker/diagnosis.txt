@@ -1,0 +1,29 @@
+ANSYS-2026R MAPDL production-license diagnosis
+
+The snapshot launches MAPDL 26.1 and reports "Ansys Mechanical Enterprise",
+but /STATUS reports BUILD 0.0 and CUSTOMER 00000000. Fresh SOLID185 static
+models were launched serially with license_type values default, ansys, meba,
+mech_solve_level3, struct, and struct3. Every solve emitted:
+
+  *****MAPDL VERIFICATION RUN ONLY*****
+  DO NOT USE RESULTS FOR PRODUCTION
+
+This is independent of the four quantified source databases. Each quantified
+reference DB was then staged separately and opened with an explicit ansys
+checkout. ETLIST immediately emitted the same verification marker, so each run
+was stopped before SOLVE. Source hashes remained unchanged and no submission.db
+or submission.rst was written.
+
+license.py only updates the local license-file host ID and starts/checks FlexNet.
+It does not select a production product mode. Its expected lmutil.exe path is
+absent. A controlled single execution started one extra lmgrd that had no
+listener and no vendor-daemon child. That one-shot process was terminated after
+an atomic identity/child/listener check. The remaining two lmgrd processes are
+the legitimate services.exe wrapper and its TCP-1055-owning child; the latter
+owns the sole ansyslmd vendor daemon.
+
+Required correction: point ANSYS 2026 R1 at a valid production Mechanical/MAPDL
+license server and entitlement, verify a fresh solve has no verification marker,
+then regenerate and formally stage/evaluate q01, q02, q03, and q05.
+
+Final status for those four tasks: environment_blocked

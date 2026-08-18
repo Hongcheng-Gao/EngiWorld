@@ -949,9 +949,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_keyword_bcs_loads_b(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('BC check passed')
+    ok('BC keyword check passed')
 
     if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
         return False, model
@@ -976,13 +976,23 @@ def check_cae_process(cae_path):
 
 
 
-def check_keyword_bcs_loads_b(model, proc):
-    text = ''
+def check_keyword_bcs_loads_b(model, proc, min_bc=None, min_load=None):
     try:
         model.keywordBlock.synchVersions(storeNodesAndElements=False)
         text = '\n'.join([str(x) for x in model.keywordBlock.sieBlocks]).upper()
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
     except Exception:
         return fail('Cannot read keyword block text for B-task fallback')
+
+    initial_text = text.split('*STEP', 1)[0]
+    full_translation_fix = ('ENCASTRE' in initial_text or
+                            all(pattern in initial_text
+                                for pattern in [', 1, 1', ', 2, 2', ', 3, 3']))
+    if '*BOUNDARY' not in initial_text or not full_translation_fix:
+        return fail('Initial-step full translational fixation keyword not found')
 
     # load type pattern
     for req in proc.get('load_signatures', []):

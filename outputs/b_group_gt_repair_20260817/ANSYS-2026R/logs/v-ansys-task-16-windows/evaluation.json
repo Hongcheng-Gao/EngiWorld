@@ -1,0 +1,136 @@
+{
+  "task_id": "v-ansys-task-16-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16",
+  "instruction": "Use ANSYS Fluent to complete a 2D laminar channel-flow analysis. Physical problem: Two-dimensional laminar Poiseuille flow in a straight rectangular channel. Coordinate system and geometry: - Use a 2D planar model. - Use SI units in Fluent. - The channel length is along the global X direction. - The channel height is along the global Y direction. - The channel length is 1000 mm, equivalent to 1.000 m. - The channel height is 2 mm, equivalent to 0.002 m. - The computational domain should occupy: - 0 ≤ X ≤ 1.000 m - 0 ≤ Y ≤ 0.002 m - The inlet is the boundary at X = 0 m. - The outlet is the boundary at X = 1.000 m. - The bottom wall is the boundary at Y = 0 m. - The top wall is the boundary at Y = 0.002 m. Boundary zone names: - Name the inlet boundary: inlet - Name the outlet boundary: outlet - Name the bottom wall boundary: bottom - Name the top wall boundary: top Model parameters: - Fluid: water - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Structured quadrilateral mesh - Use sufficient resolution across the channel height to resolve the laminar velocity profile. Boundary conditions: - Inlet: - Velocity inlet - Uniform X-velocity = 0.1 m/s - Y-velocity = 0 m/s - Outlet: - Pressure outlet - Gauge pressure = 0 Pa - Top wall: - Stationary no-slip wall - Bottom wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialize the solution and iterate until convergence. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\poiseuille_2d.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\poiseuille_2d.dat Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16/task-16.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16/eval.py",
+  "eval_sha256": "e3379973c5a07833f1e4af2112c9ae2d9035f59b6f02a76b5d2924e1fbc723d1",
+  "started_utc": "2026-08-17T13:11:20.227175+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "python",
+        "C:\\Users\\user\\Desktop\\license.py"
+      ],
+      "shell": false,
+      "response": "python C:\\Users\\user\\Desktop\\license.py launched successfully"
+    },
+    {
+      "command": [
+        "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe",
+        "-g"
+      ],
+      "shell": false,
+      "response": "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe -g launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16/ground_truth/poiseuille_2d.cas",
+      "remote_path": "C:\\Users\\user\\Desktop\\poiseuille_2d.cas",
+      "size": 556062,
+      "sha256": "3cddbe51212d9ee492a0fc83bdb0079d4f357643e0f14c200b27d5f0fc248566",
+      "response": "File Uploaded: 556062 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16/ground_truth/poiseuille_2d.dat",
+      "remote_path": "C:\\Users\\user\\Desktop\\poiseuille_2d.dat",
+      "size": 276538,
+      "sha256": "658ef3cea288d267ffabe36aeece27950ea44232f9880406519624d7a7b80a39",
+      "response": "File Uploaded: 276538 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16/ground_truth/poiseuille_2d.msh",
+      "remote_path": "C:\\Users\\user\\Desktop\\poiseuille_2d.msh",
+      "size": 150039,
+      "sha256": "1533caaff99aefebe81964462bd0ba3303ce47ed23dd1c0628e45c5377b24af2",
+      "response": "File Uploaded: 150039 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-16/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 11176,
+      "sha256": "e3379973c5a07833f1e4af2112c9ae2d9035f59b6f02a76b5d2924e1fbc723d1",
+      "response": "File Uploaded: 11176 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "\nReading \"C:\\Users\\user\\AppData\\Local\\Temp\\ansys_fluent_eval_oru0z3g3\\case.cas\"...\n\nBuffering for file scan...\n\n\n\n    1920 quadrilateral cells, zone  2, binary.\n    3736 2D interior faces, zone  8, binary.\n      24 2D velocity-inlet faces, zone  6, binary.\n      24 2D pressure-outlet faces, zone  5, binary.\n      80 2D wall faces, zone  3, binary.\n      80 2D wall faces, zone  4, binary.\n    2025 nodes, binary.\n2025 node flags, binary.\n\nBuilding...\n     mesh\n     materials,\n     interface,\n     domains,\n\tmixture\n     zones,\n\ttop\n\tbottom\n\toutlet\n\tinlet\n\tdefault-interior\n\tfluid\n     parallel,\nDone.\n\nReading \"C:\\Users\\user\\AppData\\Local\\Temp\\ansys_fluent_eval_oru0z3g3\\case.dat\"...\n\n\n\nParallel variables...\nDone.\nFalse\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 0.0,
+  "passed": false,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 11176
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    },
+    {
+      "Name": "poiseuille_2d.cas",
+      "Length": 556062
+    },
+    {
+      "Name": "poiseuille_2d.dat",
+      "Length": 276538
+    },
+    {
+      "Name": "poiseuille_2d.msh",
+      "Length": 150039
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-17T13:12:08.639007+00:00"
+}

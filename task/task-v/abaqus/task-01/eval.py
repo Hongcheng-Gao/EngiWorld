@@ -1023,61 +1023,136 @@ def build_keyword_text(model):
         return ''
 
 
-def section_in_text(text, name):
-    if not text:
-        return False
-    return ci(name) in text
+def build_keyword_blocks(model):
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        raw_blocks = model.keywordBlock.sieBlocks
+    except Exception:
+        return []
 
-
-def check_keyword_bcs_loads(model, proc):
-    text = build_keyword_text(model)
-    if not text:
-        return fail('Cannot read keyword block text from CAE model')
-
-    # BC requirements: verify key sets/keywords appear in imported INP text.
-    bc_specs = proc.get('bc_signatures', [])
-    if bc_specs:
-        set_names = [ci(x) for x in proc.get('required_sets', [])]
-        for req in bc_specs:
-            dofs = req.get('dofs', {})
-            keys_upper = [ci(k) for k in dofs.keys()]
-            if 'U3' in keys_upper and not section_in_text(text, ', 3, 3'):
-                return fail('Keyword BC check failed for U3 constraint pattern')
-            if 'U2' in keys_upper and not section_in_text(text, ', 2, 2'):
-                return fail('Keyword BC check failed for U2 constraint pattern')
-            if 'U1' in keys_upper and not section_in_text(text, ', 1, 1'):
-                return fail('Keyword BC check failed for U1 constraint pattern')
-            if len(keys_upper) == 0 and not section_in_text(text, ', 11, 11'):
-                return fail('Keyword BC check failed for temperature BC pattern')
-
-            matched_set = False
-            for sn in set_names:
-                if sn and section_in_text(text, sn):
-                    matched_set = True
-                    break
-            if set_names and not matched_set:
-                return fail('Keyword BC check failed: none of required sets appear in keyword text')
-
-    # Load requirements: verify requested load keyword families exist.
-    for req in proc.get('load_signatures', []):
-        types = [ci(x) for x in req.get('type_any', [])]
-        if not types:
+    current_step = 'Initial'
+    blocks = []
+    for raw in raw_blocks:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
             continue
-        ok_type = False
-        for t in types:
-            if 'CONCENTRATEDFORCE' in t and section_in_text(text, '*CLOAD'):
-                ok_type = True
-            if 'MOMENT' in t and section_in_text(text, '*CLOAD'):
-                ok_type = True
-            if 'PRESSURE' in t and (section_in_text(text, '*DLOAD') or section_in_text(text, '*DSLOAD')):
-                ok_type = True
-            if 'SURFACETRACTION' in t and (section_in_text(text, '*DSLOAD') or section_in_text(text, '*DLOAD')):
-                ok_type = True
-            if 'SHELLEDGELOAD' in t and (section_in_text(text, '*DSLOAD') or section_in_text(text, '*CLOAD')):
-                ok_type = True
-        if not ok_type:
-            return fail('Keyword load check failed for expected load type: ' + str(types))
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            current_step = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    current_step = pair[1].strip()
+                    break
+            continue
+        if header.startswith('*END STEP'):
+            current_step = 'Initial'
+            continue
+        blocks.append((current_step, header, lines[1:]))
+    return blocks
 
+
+def keyword_fields(line):
+    return [field.strip() for field in line.split(',')]
+
+
+def keyword_boundary_group_matches(group, req):
+    step_name, header, lines = group
+    if not header.startswith('*BOUNDARY') or not names_equal(step_name, req.get('step')):
+        return False
+    dof_numbers = {'u1': 1, 'u2': 2, 'u3': 3}
+    for dof_name, expected in req.get('dofs', {}).items():
+        target_dof = dof_numbers.get(dof_name.lower())
+        matched = False
+        for line in lines:
+            fields = keyword_fields(line)
+            if len(fields) < 2:
+                continue
+            first_dof = safe_float(fields[1], None)
+            last_dof = safe_float(fields[2], first_dof) if len(fields) > 2 else first_dof
+            if first_dof is None or last_dof is None:
+                continue
+            if not (int(first_dof) <= target_dof <= int(last_dof)):
+                continue
+            value = safe_float(fields[3], 0.0) if len(fields) > 3 else 0.0
+            if close_enough(value, expected, tol=ABS_TOL, rel=1.0e-3):
+                matched = True
+                break
+        if not matched:
+            return False
+    return True
+
+
+def keyword_cload_group_matches(group, req):
+    step_name, header, lines = group
+    types = [ci(value) for value in req.get('type_any', [])]
+    if 'CONCENTRATEDFORCE' not in types or not header.startswith('*CLOAD'):
+        return False
+    if not names_equal(step_name, req.get('step')):
+        return False
+    component = ci(req.get('component', ''))
+    if not component.startswith('CF'):
+        return False
+    try:
+        target_dof = int(component[2:])
+    except Exception:
+        return False
+    for line in lines:
+        fields = keyword_fields(line)
+        if len(fields) < 3:
+            continue
+        dof = safe_float(fields[1], None)
+        value = safe_float(fields[2], None)
+        if dof is None or value is None or int(dof) != target_dof:
+            continue
+        if req.get('sign') == 'positive' and value <= 0.0:
+            continue
+        if req.get('sign') == 'negative' and value >= 0.0:
+            continue
+        target = req.get('component_value', None)
+        tolerance = float(req.get('tol', ABS_TOL))
+        if target is None or close_enough(value, target, tol=tolerance, rel=1.0e-3):
+            return True
+    return False
+
+
+def check_keyword_bcs_loads(model, proc, min_bc=None, min_load=None):
+    try:
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
+    except Exception:
+        return fail('Cannot inspect BC/load repositories')
+
+    blocks = build_keyword_blocks(model)
+    if not blocks:
+        return fail('Cannot read keyword blocks from CAE model')
+
+    bc_groups = [block for block in blocks if block[1].startswith('*BOUNDARY')]
+    used = set()
+    for req in proc.get('bc_signatures', []):
+        match = None
+        for index, group in enumerate(bc_groups):
+            if index not in used and keyword_boundary_group_matches(group, req):
+                match = index
+                break
+        if match is None:
+            return fail('Required keyword BC signature not found: ' + str(req))
+        used.add(match)
+
+    load_groups = [block for block in blocks if block[1].startswith('*CLOAD')]
+    used = set()
+    for req in proc.get('load_signatures', []):
+        match = None
+        for index, group in enumerate(load_groups):
+            if index not in used and keyword_cload_group_matches(group, req):
+                match = index
+                break
+        if match is None:
+            return fail('Required keyword load signature not found: ' + str(req))
+        used.add(match)
     return True
 
 def check_step(model, step_spec):
@@ -1174,17 +1249,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_keyword_bcs_loads(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

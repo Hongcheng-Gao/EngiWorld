@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-13-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a modal analysis of a cantilever beam (Variant A). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a 12 mm x 10 mm rectangle in the Y-Z plane and extrude along the global X-axis to a length of 420 mm. This produces a beam with cross-section 12 mm x 10 mm and length 420 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa, Poisson's ratio nu = 0.3, and density = 7.80e-9 tonne/mm^3. Create a Solid Homogeneous section using Steel and assign it to the entire beam. Assembly: Create one dependent instance of the beam. Analysis Step: Create a Linear Perturbation Frequency step named Step-Modal-A. Request 4 eigenvalues. Loads and Boundary Conditions: Apply an Encastre boundary condition to the fixed end face at X = 0. Discretization: Mesh the beam with a global seed size of 12 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-Modal-A, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Review the first four mode shapes. Record the first natural frequency in Hz. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Modal-A.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-Modal-A.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-13/task-13.json",
+  "config_sha256": "e13eec35f6c5fe9e069c3f3510a5e86a1aedbb8a75d4b5ea743327619389422f",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-13/eval.py",
+  "eval_sha256": "bce155846010c96c134b38fdd9d573d62100b6c05d1688a7b800f7e31f994015",
+  "started_utc": "2026-08-18T03:14:39.418613+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-13/ground_truth/Job-Modal-A.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Modal-A.cae",
+      "size": 53248,
+      "sha256": "22264ebc5ca339655fcc6c7701c482757d20b9c898f81b67517fdd14b48f1fb4",
+      "response": "File Uploaded: 53248 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-13/ground_truth/Job-Modal-A.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Modal-A.odb",
+      "size": 194532,
+      "sha256": "4ea7bbbbe8ff9e27d579add64a34950bdb1bc14e2d6a97e7d821cafc3da1ae5d",
+      "response": "File Uploaded: 194532 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-13/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 34681,
+      "sha256": "bce155846010c96c134b38fdd9d573d62100b6c05d1688a7b800f7e31f994015",
+      "response": "File Uploaded: 34681 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC keyword check passed\n[PASS] Load check passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 34681
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 290
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Modal-A.cae",
+      "Length": 57344
+    },
+    {
+      "Name": "Job-Modal-A.odb",
+      "Length": 194532
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T03:14:48.583560+00:00"
+}

@@ -1,0 +1,136 @@
+{
+  "task_id": "v-ansys-task-17-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17",
+  "instruction": "Use ANSYS Fluent to complete a 2D laminar Couette-flow analysis. Physical problem: Two-dimensional shear flow of water between two parallel plates. Coordinate system and geometry: - Use a 2D planar model. - Use SI units in Fluent. - The channel length is along the global X direction. - The channel height is along the global Y direction. - The domain length is 100 mm, equivalent to 0.100 m. - The domain height is 2 mm, equivalent to 0.002 m. - The computational domain should occupy: - 0 ≤ X ≤ 0.100 m - 0 ≤ Y ≤ 0.002 m - The bottom wall is the boundary at Y = 0 m. - The top wall is the boundary at Y = 0.002 m. - The left boundary is at X = 0 m. - The right boundary is at X = 0.100 m. Boundary zone names: - Name the bottom wall boundary: bottom - Name the top wall boundary: top - Name the left boundary: left - Name the right boundary: right Model parameters: - Fluid: water-liquid - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Structured quadrilateral mesh - Use sufficient resolution across the channel height to resolve the linear velocity profile. Boundary conditions: - Bottom wall: - Stationary no-slip wall - Top wall: - Moving wall - X-velocity = 1.0 m/s - Y-velocity = 0 m/s - Left and right boundaries: - Use symmetry boundaries or a periodic pair. - If using a periodic pair, set zero pressure drop between the paired boundaries. Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialize the solution and iterate until convergence. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\couette.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\couette.dat Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17/task-17.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17/eval.py",
+  "eval_sha256": "4c54a3cfd906735046bffbeebc0b9558475003e1d91fd75525b5df40f7189cff",
+  "started_utc": "2026-08-18T03:20:28.745405+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "python",
+        "C:\\Users\\user\\Desktop\\license.py"
+      ],
+      "shell": false,
+      "response": "python C:\\Users\\user\\Desktop\\license.py launched successfully"
+    },
+    {
+      "command": [
+        "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe",
+        "-g"
+      ],
+      "shell": false,
+      "response": "C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe -g launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17/ground_truth/couette.cas",
+      "remote_path": "C:\\Users\\user\\Desktop\\couette.cas",
+      "size": 575524,
+      "sha256": "41221eeaca4fc0fb1ad93e2cb9335e076f2a3f3bdddef6fa968b3fc2d7ea6cf4",
+      "response": "File Uploaded: 575524 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17/ground_truth/couette.dat",
+      "remote_path": "C:\\Users\\user\\Desktop\\couette.dat",
+      "size": 262338,
+      "sha256": "32b53ecf1faec799f4ddff2849c823a31f879458f7cdfa33a16da88879ab2b79",
+      "response": "File Uploaded: 262338 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17/ground_truth/couette.msh",
+      "remote_path": "C:\\Users\\user\\Desktop\\couette.msh",
+      "size": 199119,
+      "sha256": "17d21d9f21a67b7b447b5bf4d1ea29a317e8e9ad5d246d864ede4f065307da5f",
+      "response": "File Uploaded: 199119 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-17/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 11428,
+      "sha256": "4c54a3cfd906735046bffbeebc0b9558475003e1d91fd75525b5df40f7189cff",
+      "response": "File Uploaded: 11428 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "couette.cas",
+      "Length": 575524
+    },
+    {
+      "Name": "couette.dat",
+      "Length": 262338
+    },
+    {
+      "Name": "couette.msh",
+      "Length": 199119
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 11428
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-18T03:21:15.308692+00:00"
+}

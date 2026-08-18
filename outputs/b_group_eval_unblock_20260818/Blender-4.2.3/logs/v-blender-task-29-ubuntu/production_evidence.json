@@ -1,0 +1,100 @@
+{
+  "task_id": "v-blender-task-29-ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "verified_utc": "2026-08-18T02:53:28Z",
+  "software": "Blender 4.2.3 LTS",
+  "build_hash": "0e22e4fcea03",
+  "staging": {
+    "config": [
+      "init_file/dummy.fbx -> /home/user/Desktop/dummy.fbx",
+      "init_file/scene.blend -> /home/user/Desktop/scene.blend",
+      "launch blender /home/user/Desktop/scene.blend"
+    ],
+    "ground_truth": [
+      "ground_truth/part.fbx -> /home/user/Desktop/part.fbx",
+      "ground_truth/answer.blend -> /home/user/Desktop/answer.blend"
+    ],
+    "postconfig": "eval.py -> /home/user/Desktop/eval.py"
+  },
+  "init_probe": {
+    "scene_range": [1, 30],
+    "action_keyframes": [1.0, 30.0],
+    "location_frame_1": [0.0, 0.0, 0.0],
+    "location_frame_30": [0.0, 0.0, 2.0],
+    "dimensions_m": [1.0, 1.0, 1.0],
+    "units": ["METRIC", 1.0, "METERS"]
+  },
+  "generation": {
+    "software_result": ["FINISHED"],
+    "source": "/home/user/Desktop/scene.blend",
+    "output": "/home/user/Desktop/part.fbx",
+    "settings": {
+      "apply_scalings": "FBX Units Scale",
+      "forward": "-Z",
+      "up": "Y",
+      "all_objects": true,
+      "object_types": ["Mesh", "Armature", "Empty"],
+      "bake_animation": true,
+      "nla_strips": false,
+      "all_actions": false,
+      "force_start_end_keying": true,
+      "binary_fbx": true,
+      "temporary_bake_range": [0, 29],
+      "restored_scene_range": [1, 30]
+    },
+    "reason_for_temporary_range": "Blender 4.2.3's FBX exporter/importer pair shifts this baked animation by one frame; using 0..29 produces the instructed imported key range 1..30 without changing the source scene, whose range was restored immediately after export.",
+    "sha256": "55bc7c188fef34970e52ee53fd59b0245331293cd85fd2c7760b8eb897b75d0b",
+    "size_bytes": 14956
+  },
+  "inner_eval": {
+    "score": 1.0,
+    "passed": true,
+    "checks": {
+      "file_exists": true,
+      "fbx_magic_valid": true,
+      "fbx_version_valid": "7400",
+      "fbx_non_empty": "14956 bytes",
+      "up_axis_y": "UpAxis=1",
+      "unit_scale_meters": "UnitScaleFactor=100.000",
+      "has_animation": "AnimationStack=2, anim-curve-tokens=8",
+      "blender_importable": true,
+      "cube_mesh_present": true,
+      "cube_one_meter_dimensions": [1.0, 1.0, 1.0],
+      "cube_animation_1_to_30": {
+        "keyframe_min": 1.0,
+        "keyframe_max": 30.0,
+        "location_frame_1": [0.0, 0.0, 0.0],
+        "location_frame_30": [0.0, 0.0, 1.9930298328399658]
+      }
+    }
+  },
+  "formal_eval_after_repository_writeback": {
+    "command": "python3 /home/user/Desktop/eval.py",
+    "shell": true,
+    "stdout": "True\n",
+    "stderr": "",
+    "returncode": 0,
+    "expected": "True\n",
+    "exact_match": true,
+    "score": 1.0
+  },
+  "remote_sha256": {
+    "dummy.fbx": "3f9a18b36a7b855908b55c811ceb1747764dd06a5a529831d68e4884921a093d",
+    "scene.blend": "03275987dd2923259af8d92d4f4e92dc998a63e0a2652a860dc3618c423badac",
+    "part.fbx": "55bc7c188fef34970e52ee53fd59b0245331293cd85fd2c7760b8eb897b75d0b",
+    "answer.blend": "e0f2576e448b04e607ec23afa7ef375a6dd23be42bbe3f391fcea08b0ab8c50d",
+    "eval.py": "a589ab62eb310661a0a6c8d0c8a9c9bab6ed836f5a4b33c804c35b8630977fb1"
+  },
+  "cleanup": {
+    "removed": [
+      "/home/user/Desktop/dummy.fbx",
+      "/home/user/Desktop/scene.blend",
+      "/home/user/Desktop/part.fbx",
+      "/home/user/Desktop/answer.blend",
+      "/home/user/Desktop/eval.py",
+      "/home/user/Desktop/_runtime"
+    ],
+    "desktop_after": ["__pycache__"],
+    "active_blender_processes_after": 0
+  }
+}

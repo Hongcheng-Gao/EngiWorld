@@ -1,0 +1,130 @@
+{
+  "task_id": "v-ansys-task-19-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19",
+  "instruction": "Use ANSYS Workbench to complete a linear eigenvalue buckling analysis of a pin-ended column. Geometry and material: - Use a line body from (0, 0, 0) mm to (0, 1000, 0) mm. - Assign a 10 mm by 10 mm rectangular beam section and Structural Steel with E = 210000 MPa and Poisson's ratio = 0.3. - Use a consistent N-mm unit system. Workbench workflow: - Create a Static Structural system for the 1 N reference compression state. - Create an Eigenvalue Buckling system and link the Static Structural Solution cell to the Eigenvalue Buckling Setup cell. - Use BEAM188 and 40 equal elements along the line body. Boundary conditions and load: - At Y = 0 mm, constrain UX, UY, and UZ while leaving bending rotations free. - At Y = 1000 mm, constrain UX and UZ, leave UY free, and leave bending rotations free. - Apply FY = -1 N at the top end in the Static Structural system. Analysis: - Solve the Static Structural system. - Solve the linked Eigenvalue Buckling system and extract the first buckling mode. Save requirements: - Save a genuine Workbench project as C:\\Users\\user\\Desktop\\wb_buckling.wbpj. - Save the final MAPDL database as C:\\Users\\user\\Desktop\\wb_buckling.db. - Save the final buckling result as C:\\Users\\user\\Desktop\\wb_buckling.rst. - To preserve these exact solver filenames, you may open the Solver Files Directory from Workbench and use the graphical file manager to copy and rename the final database and result files onto the Desktop.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19/task-19.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19/eval.py",
+  "eval_sha256": "65a1f3570fb2f0adedda1205229552225238fb842582bcecafd9b4bea11b368b",
+  "started_utc": "2026-08-17T13:15:56.273208+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "powershell",
+        "-NoProfile",
+        "-Command",
+        "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe'"
+      ],
+      "shell": false,
+      "response": "powershell -NoProfile -Command $licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe' launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19/ground_truth/wb_buckling.db",
+      "remote_path": "C:\\Users\\user\\Desktop\\wb_buckling.db",
+      "size": 131072,
+      "sha256": "34378fe5ef157605e5d6e597ab83c529e2a4a191f3da6f68fc5908e67eedf1b0",
+      "response": "File Uploaded: 131072 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19/ground_truth/wb_buckling.rst",
+      "remote_path": "C:\\Users\\user\\Desktop\\wb_buckling.rst",
+      "size": 458752,
+      "sha256": "db486f245df179d20b7c15a2520b324ae04fdbea52f42177aebb920d7586bd80",
+      "response": "File Uploaded: 458752 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19/ground_truth/wb_buckling.wbpj",
+      "remote_path": "C:\\Users\\user\\Desktop\\wb_buckling.wbpj",
+      "size": 54077,
+      "sha256": "247048749b48e2300b644918128f53996d7f8adc7573b983e9f15dfe4943c2ad",
+      "response": "File Uploaded: 54077 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/ansys/task-19/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 7794,
+      "sha256": "65a1f3570fb2f0adedda1205229552225238fb842582bcecafd9b4bea11b368b",
+      "response": "File Uploaded: 7794 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 7794
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    },
+    {
+      "Name": "wb_buckling.db",
+      "Length": 131072
+    },
+    {
+      "Name": "wb_buckling.rst",
+      "Length": 458752
+    },
+    {
+      "Name": "wb_buckling.wbpj",
+      "Length": 54077
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-17T13:16:26.464522+00:00"
+}

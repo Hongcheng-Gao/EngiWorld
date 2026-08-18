@@ -1,40 +1,41 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-08-windows",
-  "open_choice_id": "cae-open-choice-008",
-  "source_task": "task/task-c/abaqus/task-08",
-  "original_software": "abaqus",
-  "alternative_software": "ansys",
-  "distractor_software": "autocad",
-  "interface": "cli",
-  "domain": "nonlinear_contact_block_plate",
-  "analysis_kind": "contact",
+  "task_id": "c-open-abaqus-ansys-autocad-task-08-windows",
+  "open_choice_id": "cae-open-choice-008-redesign-20260818",
+  "selected_software": "abaqus",
+  "software_version": "Abaqus Learning Edition 2025",
+  "interface": "cli_noGUI",
+  "domain": "three_dimensional_deformable_block_on_plate_contact",
+  "analysis_kind": "nonlinear_static_contact",
+  "selection_reason": "The user-authorized redesign retains the engineering contact-analysis goal but supplies a native Abaqus init CAE. To avoid a false three-tool promise and verification-only ANSYS dependency, the executable choice is explicitly narrowed to the installed Abaqus 2025 Learning Edition.",
+  "initial_artifact": "init_file/task08_block_plate_init.cae",
+  "initial_state": "Geometry, material, sections, structured meshes, assembly placement, named surfaces, and node sets exist; analysis step, interaction, loads, boundary conditions, job, and result are absent.",
+  "ground_truth_files": [
+    "abaqus/Task08_BlockPlate_GT.cae",
+    "abaqus/Task08_BlockPlate.odb",
+    "abaqus/metrics.json",
+    "abaqus/GT_MANIFEST.json"
+  ],
+  "model": {
+    "plate_bounds": [[0.0, 24.0], [0.0, 24.0], [0.0, 3.0]],
+    "block_assembly_bounds": [[8.0, 16.0], [8.0, 16.0], [3.0, 11.0]],
+    "element_type": "C3D8R",
+    "total_nodes": 287,
+    "total_elements": 128,
+    "material": {"name": "Steel", "youngs_modulus_mpa": 210000.0, "poissons_ratio": 0.3},
+    "pressure_mpa": 2.0,
+    "expected_total_force_n": 128.0,
+    "contact": "finite-sliding, hard normal, frictionless tangential"
+  },
   "metrics": [
     "max_contact_pressure",
     "vertical_displacement",
-    "reaction_force"
+    "reaction_force",
+    "max_mises_stress"
   ],
-  "expected_result_fields": [
-    "U",
-    "S"
-  ],
-  "require_metrics_json": true,
-  "visible_goal": "Build and solve a block-on-plate contact assembly; report contact pressure, displacement, and reaction metrics.",
-  "selection_reason": "Nonlinear contact is supported by both tools and clearly not solvable by a drafting-only package.",
-  "artifact_hint": {
-    "ground_truth_files": [
-      "Job-Contact.cae",
-      "Job-Contact.odb"
-    ],
-    "abaqus_stems": [
-      "Job-Contact"
-    ],
-    "ansys_db_files": [],
-    "ansys_result_files": []
-  },
-  "span_hint": {
-    "x": 100.0,
-    "y": 100.0,
-    "z": 35.0
-  },
-  "bounds_hint": null
+  "required_odb_fields": ["CPRESS", "U", "S", "RF"],
+  "official_sources": [
+    "https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEITNRefMap/simaitn-c-contactconstraints.htm",
+    "https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEOUTRefMap/simaout-c-stdoutputvar.htm",
+    "https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEKERRefMap/simaker-c-ov.htm"
+  ]
 }

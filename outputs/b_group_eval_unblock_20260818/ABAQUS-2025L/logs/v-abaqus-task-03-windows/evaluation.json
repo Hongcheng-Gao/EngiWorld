@@ -1,0 +1,98 @@
+{
+  "task_id": "v-abaqus-task-03-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a tensile analysis of a thin rectangular shell plate with a central circular hole. Use the N-mm-MPa unit system. Model Definition: Build a 3D Deformable Shell part consisting of a 120 mm by 240 mm rectangular plate on the XY plane with a central 12 mm diameter circular hole centered at (60, 120) mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Homogeneous Shell Section with a thickness of 1 mm and 5 through-thickness integration points, and assign it to the entire plate. Assembly: Create one dependent instance of the shell plate. Analysis Step: Define a Static, General step named Step-HoleTension with the Initial step as its predecessor. Loads and Boundary Conditions: Apply opposing tensile shell edge loads of 8 N/mm to the vertical edges: on the left edge at X = 0 in the negative X direction, and on the right edge at X = 120 in the positive X direction. Constrain the plate to prevent rigid-body motion without over-constraining the tensile deformation: - Fix U1 = U2 = U3 = 0 at the bottom-left corner (0, 0). - Fix U2 = U3 = 0 at the bottom-right corner (120, 0). - Fix U3 = 0 at the top-left corner (0, 240). Discretization: Mesh the plate using S4R shell elements. Apply a local seed size of approximately 2.4 mm to the hole edge and a global seed size of 10 mm to the remainder of the plate. Job Execution: Create and submit a job named Job-FlangeHole. Wait for the analysis to complete successfully. Deliverables: Save the model database to C:\\Users\\user\\Desktop\\Job-FlangeHole.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-FlangeHole.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-03/task-03.json",
+  "config_sha256": "346a11adfbd5ec76ea851033f2726204ad5ae76c26a7a2b30689184c3e00ec28",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-03/eval.py",
+  "eval_sha256": "56b0157d2a99977cd84141efd8f62ff87f0341a2bf8f2d2d60b754daa013f324",
+  "started_utc": "2026-08-18T10:58:28.421246+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-03/ground_truth/Job-FlangeHole.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-FlangeHole.cae",
+      "size": 73728,
+      "sha256": "b3209e78acaa1f828fa9e374499f3ecab63badb1c5320de2b574b33bba3e20a8",
+      "response": "File Uploaded: 73728 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-03/ground_truth/Job-FlangeHole.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-FlangeHole.odb",
+      "size": 469484,
+      "sha256": "c7e215dad044076cc837cc13721147e97d3c610f1e183897dc25fca72ade2d6b",
+      "response": "File Uploaded: 469484 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-03/ground_truth/groundtruth_manifest.csv",
+      "remote_path": "C:\\Users\\user\\Desktop\\groundtruth_manifest.csv",
+      "size": 390,
+      "sha256": "e896ab96517155c23c13e6325009424d656e5cbcbaebf8a8c456d54649af083c",
+      "response": "File Uploaded: 390 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-03/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 44564,
+      "sha256": "56b0157d2a99977cd84141efd8f62ff87f0341a2bf8f2d2d60b754daa013f324",
+      "response": "File Uploaded: 44564 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 44564
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 270
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "groundtruth_manifest.csv",
+      "Length": 390
+    },
+    {
+      "Name": "Job-FlangeHole.cae",
+      "Length": 77824
+    },
+    {
+      "Name": "Job-FlangeHole.odb",
+      "Length": 469484
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T10:58:36.914573+00:00"
+}

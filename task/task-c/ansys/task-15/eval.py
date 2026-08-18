@@ -1,6 +1,8 @@
 from pathlib import Path
 from shutil import which
+from contextlib import redirect_stderr, redirect_stdout
 import glob
+import io
 import math
 import os
 import re
@@ -293,7 +295,9 @@ def evaluate() -> bool:
 
 
 def main() -> None:
-    print("True" if evaluate() else "False")
+    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+        result = evaluate()
+    print("True" if result else "False")
 
 
 if __name__ == "__main__":

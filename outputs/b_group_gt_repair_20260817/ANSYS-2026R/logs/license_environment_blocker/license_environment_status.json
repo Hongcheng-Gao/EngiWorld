@@ -1,0 +1,69 @@
+{
+  "snapshot": "ANSYS-2026R",
+  "checked_at_utc": "2026-08-17T16:17:06Z",
+  "mapdl": {
+    "version": "26.1",
+    "executable": "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
+    "pymapdl_version": "0.73.0",
+    "observed_product": "Ansys Mechanical Enterprise",
+    "status_release_line": "RELEASE BUILD 0.0 UPDATE 0 CUSTOMER 00000000"
+  },
+  "license_bootstrap": {
+    "license_py_sha256": "6c5cb7d2e0e3ffd5d9eda0b1d217a0b0430a0c3f4dbd896d0a954680c272d2b6",
+    "license_file_sha256": "0e5aa5aea920372365b34e81c7190b5b18cf8535639ba0fd7a5960c2483fad92",
+    "ansyslmd_license_file": "1055@localhost",
+    "lmutil_expected_path_exists": false,
+    "declared_feature_count": 1321,
+    "relevant_declared_features": [
+      "ansys",
+      "meba",
+      "mech_solve_level3",
+      "struct",
+      "struct3"
+    ],
+    "license_file_verification_text_mentions": 0
+  },
+  "license_process_audit": {
+    "evidence": "license_process_audit.json",
+    "baseline_tree": "services.exe -> lmgrd PID 8176 -> TCP-1055 lmgrd PID 1604 -> ansyslmd PID 7436",
+    "license_py_one_shot_pid": 4784,
+    "one_shot_child_count": 0,
+    "one_shot_listener_count": 0,
+    "cleanup_decision": "terminated",
+    "final_extra_lmgrd_processes": 0
+  },
+  "fresh_model_probes": [
+    {
+      "license_type": "default",
+      "evidence": "probe_default.json",
+      "verification_marker": true
+    },
+    {
+      "license_type": "ansys",
+      "evidence": "probe_ansys.json",
+      "verification_marker": true
+    },
+    {
+      "license_type": "meba",
+      "evidence": "probe_meba.json",
+      "verification_marker": true
+    },
+    {
+      "license_type": "mech_solve_level3",
+      "evidence": "probe_mech_solve_level3.json",
+      "verification_marker": true
+    },
+    {
+      "license_type": "struct",
+      "evidence": "probe_struct.json",
+      "verification_marker": true
+    },
+    {
+      "license_type": "struct3",
+      "evidence": "probe_struct3.json",
+      "verification_marker": true
+    }
+  ],
+  "conclusion": "Every tested product checkout enters MAPDL verification mode even for a fresh SOLID185 static model. This snapshot cannot currently generate production-qualified MAPDL DB/RST artifacts.",
+  "required_environment_fix": "Configure ANSYS 2026 R1 to use a valid production Mechanical/MAPDL license server and product entitlement, then confirm a fresh solve contains no MAPDL VERIFICATION RUN ONLY marker before regenerating the four quantified GTs. Also repair license.py health detection or install the expected lmutil utility: its current health path starts a one-shot non-listening lmgrd even while the services.exe-managed license tree is healthy."
+}

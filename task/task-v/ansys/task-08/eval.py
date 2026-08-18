@@ -236,20 +236,71 @@ def strict_process_check(mapdl, pred):
     element_text = str(mapdl.run("ETLIST,ALL")).upper()
     material_text = str(mapdl.run("MPLIST,ALL")).upper()
     dlist = constraints(str(mapdl.run("DLIST,ALL,ALL")))
+    element_numbers = [int(value) for value in mapdl.mesh.enum]
 
-    if "SOLID185" not in element_text or int(mapdl.get_value("ELEM", 0, "COUNT")) != 80:
+    if (
+        "SOLID185" not in element_text
+        or int(mapdl.get_value("ELEM", 0, "COUNT")) != 80
+        or len(element_numbers) != 80
+        or len(set(element_numbers)) != 80
+    ):
         return False
-    if not all(token in material_text for token in ("210000", "0.300", "1.500")):
+    material = {
+        label: float(match.group(1))
+        for label in ("EX", "NUXY", "ALPX")
+        if (match := re.search(rf"\b{label}\b[^\r\n]*\r?\n\s*({FLOAT})", material_text))
+    }
+    if not (
+        close(material.get("EX"), 210000.0, 210.0)
+        and close(material.get("NUXY"), 0.3, 3.0e-4)
+        and close(material.get("ALPX"), 1.5e-5, 1.5e-8)
+    ):
         return False
     left = {node for node, xyz in by_node.items() if abs(xyz[0]) <= 1.0e-6}
     right = {node for node, xyz in by_node.items() if abs(xyz[0]-100.0) <= 1.0e-6}
     if any((node, "UX") not in dlist for node in left | right):
         return False
-    temp_text = str(mapdl.run("BFLIST,ALL,TEMP")).upper()
-    if "100" not in temp_text:
+    status = str(mapdl.run("/STATUS")).upper()
+    reference = re.search(r"REFERENCE TEMPERATURE[^\r\n]*?\s(" + FLOAT + r")\s*$", status, re.M)
+    if not reference or not close(float(reference.group(1)), 20.0, 1.0e-6):
         return False
+
+    def status_count(label):
+        match = re.search(
+            r"(?m)^[ \t]*" + re.escape(label.upper()) + r"[ .]*?(\d+)[ \t]*$",
+            status,
+        )
+        return int(match.group(1)) if match else None
+
+    if (
+        status_count("Forces on nodes") != 0
+        or status_count("Surface loads on elements") != 0
+        or status_count("Body loads on elements") != 80
+    ):
+        return False
+
+    bfe_text = str(mapdl.run("BFELIST,ALL,TEMP")).upper()
+    blocks = re.findall(
+        r"(?ms)^\s*ELEMENT=\s*(\d+)\s+TEMPERATURES\s*(.*?)(?=^\s*ELEMENT=|\Z)",
+        bfe_text,
+    )
+    listed_elements = [int(element) for element, _ in blocks]
+    if (
+        len(blocks) != 80
+        or len(set(listed_elements)) != 80
+        or set(listed_elements) != set(element_numbers)
+    ):
+        return False
+    for _, body in blocks:
+        temperatures = [float(value) for value in re.findall(FLOAT, body)]
+        if len(temperatures) != 8 or any(
+            not close(value, 100.0, 1.0e-6) for value in temperatures
+        ):
+            return False
+
     stress = abs(float(pred["max_seqv_mpa"]))
-    return 180.0 < stress < 350.0 and abs(float(pred["midpoint_uy_mm"])) < 0.05
+    expected_stress = material["EX"] * material["ALPX"] * (100.0 - 20.0)
+    return close(stress, expected_stress, 0.01 * expected_stress) and abs(float(pred["midpoint_uy_mm"])) < 0.05
 
 
 def passes_process_checks(mapdl, pred: dict, task_name: str) -> bool:

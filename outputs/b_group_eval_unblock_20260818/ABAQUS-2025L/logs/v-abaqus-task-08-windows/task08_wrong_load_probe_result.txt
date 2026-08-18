@@ -1,0 +1,26 @@
+model=Model-Contact
+load=Pressure-Top class=Pressure createStepName=<AttributeError> region=('SURF_BLOCK_TOP', 'Assembly', 1, 9, 0) magnitude=<AttributeError> distributionType=UNIFORM
+bc=BC-Block-Guide-A class=DisplacementBC createStepName=<AttributeError> region=('SET_BLOCK_GUIDE_A', 'Assembly', 1, 1, 0)
+bc=BC-Block-Guide-B class=DisplacementBC createStepName=<AttributeError> region=('SET_BLOCK_GUIDE_B', 'Assembly', 1, 1, 0)
+bc=BC-Plate-Bottom class=TypeBC createStepName=<AttributeError> region=('SET_PLATE_BOTTOM', 'Assembly', 1, 1, 0)
+surfaces=SURF_BLOCK_BOTTOM empty
+surfaces=SURF_BLOCK_TOP empty
+surfaces=SURF_PLATE_TOP empty
+allSurfaces=SURF_BLOCK_BOTTOM empty
+allSurfaces=SURF_BLOCK_TOP empty
+allSurfaces=SURF_PLATE_TOP empty
+instance=BLOCK-1 empty
+instance=PLATE-1 empty
+interaction=Block-on-Plate class=SurfaceToSurfaceStd createStepName=<AttributeError> master=<AttributeError> slave=<AttributeError> interactionProperty=<AttributeError>
+assembly_feature=Datum csys-1 class=Feature master=<AttributeError> slave=<AttributeError>
+assembly_feature=BLOCK-1 class=Feature master=<AttributeError> slave=<AttributeError>
+assembly_feature=PLATE-1 class=Feature master=<AttributeError> slave=<AttributeError>
+keyword_step=Initial | *Boundary | SET_BLOCK_GUIDE_A, 1, 1 | SET_BLOCK_GUIDE_A, 2, 2
+keyword_step=Initial | *Boundary | SET_BLOCK_GUIDE_B, 2, 2
+keyword_step=Initial | *Boundary | SET_PLATE_BOTTOM, ENCASTRE
+keyword_step=Initial | *Contact Pair, interaction=Frictionless-Hard, type=SURFACE TO SURFACE | SURF_BLOCK_BOTTOM, SURF_PLATE_TOP
+keyword_step=Step-Contact | *Dsload | SURF_BLOCK_TOP, P, 2.5
+keyword_step=Step-Contact | *Contact Output | CSTRESS,
+odb_surface=SURF_BLOCK_BOTTOM x=10.0..20.0 y=10.0..20.0 z=4.0..4.0 n=100
+odb_surface=SURF_BLOCK_TOP x=10.0..20.0 y=10.0..20.0 z=16.0..16.0 n=100
+odb_surface=SURF_PLATE_TOP x=0.0..30.0 y=0.0..30.0 z=4.0..4.0 n=400

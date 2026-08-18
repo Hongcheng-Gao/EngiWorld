@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-02-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to build and solve a 2D axisymmetric finite-element model of an internally pressurized thick-walled cylinder. Use the N-mm-MPa unit system. Model Definition: Create a 2D axisymmetric deformable solid part representing the cylinder cross-section. The radial extent is from r = 50 mm to r = 100 mm. The axial extent is from z = 0 mm to z = 10 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Assign this material to the entire cylinder using a homogeneous solid section. Discretization: Mesh the part with CAX4R axisymmetric solid elements using a structured technique. Apply a global seed size of 5.0 mm. Create node sets named ALLNODES (all nodes), INNER (r = 50 mm boundary), OUTER (r = 100 mm boundary), ZMIN (z = 0 mm boundary), and ZMAX (z = 10 mm boundary). Boundary Conditions: Constrain the axial displacement U2 = 0 on the ALLNODES set to enforce the plane-strain condition. Do not apply any additional radial U1 constraint. Loading: Apply an internal pressure of p = 10 N/mm^2 on the INNER boundary (r = 50 mm) by representing it as equivalent axisymmetric concentrated nodal forces. For each INNER node at axial position z_i, calculate the force in the positive U1 direction using: F_i = p x 2pi x r_in x Delta z_i where r_in = 50 mm. For the first and last INNER nodes, use half the adjacent axial interval for Delta z_i. For interior INNER nodes, use half the distance between neighboring INNER nodes. Analysis Step: Create a static analysis step named Step-Pressure. Request field output for displacement U, reaction force RF, and stress S. Job Execution: Create and submit a job named Job-Cylinder. Wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Cylinder.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Cylinder.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-02/task-02.json",
+  "config_sha256": "a2febf62827396c5f5e35b1f1a7500a35b16e6ecb8d64f130e676e61392cdf8d",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-02/eval.py",
+  "eval_sha256": "8ffc805fbab91a01dd58b4f6483d818625975a6abe42aa2450a6b69e41732714",
+  "started_utc": "2026-08-18T02:53:22.232894+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-02/ground_truth/Job-Cylinder.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Cylinder.cae",
+      "size": 40960,
+      "sha256": "bc8727f9fd8bbc01619fbf8f794128dc147d948266b15af8b196b5780299d8d1",
+      "response": "File Uploaded: 40960 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-02/ground_truth/Job-Cylinder.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Cylinder.odb",
+      "size": 187872,
+      "sha256": "7a404e3c12d1089c6aa126e9915e10596d557f515a478f4ed44f6de480c404d3",
+      "response": "File Uploaded: 187872 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-02/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 41925,
+      "sha256": "8ffc805fbab91a01dd58b4f6483d818625975a6abe42aa2450a6b69e41732714",
+      "response": "File Uploaded: 41925 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 41925
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 270
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Cylinder.cae",
+      "Length": 40960
+    },
+    {
+      "Name": "Job-Cylinder.odb",
+      "Length": 187872
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T02:53:31.398772+00:00"
+}

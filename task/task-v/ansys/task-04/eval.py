@@ -232,7 +232,16 @@ def strict_process_check(mapdl, pred):
 
     if "SOLID70" not in element_text or int(mapdl.get_value("ELEM", 0, "COUNT")) != 2500:
         return False
-    if not all(token in material_text for token in ("0.050", "460", "7.850")):
+    material = {
+        label: float(match.group(1))
+        for label in ("KXX", "C", "DENS")
+        if (match := re.search(rf"\b{label}\b[^\r\n]*\r?\n\s*({FLOAT})", material_text))
+    }
+    if not (
+        close(material.get("KXX"), 0.05, 5.0e-5)
+        and close(material.get("C"), 460.0, 0.46)
+        and close(material.get("DENS"), 7.85e-6, 7.85e-9)
+    ):
         return False
     levels = [sorted({round(row[axis], 8) for row in coordinates}) for axis in range(3)]
     if [len(level) for level in levels] != [26, 11, 11] or 4.0 not in levels[0] or 6.0 not in levels[0]:

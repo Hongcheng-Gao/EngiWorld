@@ -225,8 +225,10 @@ def strict_process_check(mapdl, pred):
     material_text = str(mapdl.run("MPLIST,ALL")).upper()
     dlist = constraints(str(mapdl.run("DLIST,ALL,ALL")))
 
-    keyopts = str(mapdl.run("KEYOPT,1,LIST")).upper()
-    if "PLANE183" not in element_text or "AXISYMMETRIC" not in (element_text + keyopts):
+    if not all(
+        token in element_text
+        for token in ("PLANE183", "8-NODE AXISYMMETRIC SOLID", "AXISYMMETRIC MODEL")
+    ):
         return False
     if not all(token in material_text for token in ("210000", "0.300")):
         return False

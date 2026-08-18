@@ -1,0 +1,14 @@
+v-ansys-task-15-windows diagnosis on ANSYS Fluent 2026 R1 (v261)
+
+Native evaluator internal result: True.
+Fluent loaded the native case/data and reported 20000 hexahedral cells, 22491
+nodes, 400 inlet faces, 400 outlet faces, and 4000 wall faces. The near-wall
+layer, velocity-profile, and pressure checks completed successfully.
+
+Blocking evaluator conflict:
+PyFluent writes the case/data loading and mesh-building messages to stdout before
+the final "True\n". The task uses exact_match with expected output exactly
+"True\n", so the production metric scores 0 despite the internal True result.
+GT contents cannot silence evaluator-side output.
+
+Final status: eval_blocked

@@ -1,0 +1,22 @@
+v-quantified-ansys-structural-thermal-optimization-task-04-windows
+ANSYS Mechanical APDL 2026 R1 (v261) evaluator diagnosis
+
+Reference submission staged with the task's current baseline and current eval.
+Normal score output: 0.000000
+EVAL_DEBUG=1 output:
+  debug: *** NOTE *** No entities defined. The RLIST command is ignored.
+  Ignore these messages by setting 'ignore_errors'=True.
+  0.000000
+
+Blocking evaluator conflict:
+read_only_eval.inspect() unconditionally executes checked(mapdl, "RLIST,ALL")
+for kind=thermal_path. It inspects the baseline first. The official baseline
+database contains no real-constant entities, so v261 reports that RLIST is
+ignored and PyMAPDL raises before the submission is inspected. evaluate()
+converts this baseline-side failure to score 0. No submission/GT can change the
+baseline database uploaded from init_file.
+
+Raw production debug response: eval_debug_response.json
+Raw v261 baseline command evidence: rlist_probe.log and rlist_probe_response_v2.json
+
+Final status: eval_blocked

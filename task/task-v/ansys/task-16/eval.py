@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import math
 import shutil
 import subprocess
 import tempfile
 import warnings
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 import ansys.fluent.core as pyfluent
@@ -79,7 +81,12 @@ def report_value(values: object, name: str) -> float:
 
 def mesh_checks(session) -> bool:
     mesh = session.fields.field_data.get_mesh("fluid")
-    if not mesh.nodes or not mesh.elements:
+    if (
+        mesh.nodes is None
+        or mesh.elements is None
+        or len(mesh.nodes) == 0
+        or len(mesh.elements) == 0
+    ):
         return False
     if any(element.element_type != CellElementType.QUADRILATERAL for element in mesh.elements):
         return False
@@ -245,4 +252,6 @@ def evaluate() -> bool:
 
 
 if __name__ == "__main__":
-    print("True" if evaluate() else "False")
+    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+        result = evaluate()
+    print("True" if result else "False")

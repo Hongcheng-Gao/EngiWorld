@@ -1,0 +1,24 @@
+v-ansys-task-09-windows diagnosis on ANSYS Fluent 2026 R1 (v261)
+
+The current native cavity.cas/cavity.dat load successfully. Fluent reports 400
+quadrilateral cells and 441 nodes. Independent direct and evaluator-style
+temporary-copy probes execute every intended native check and end with
+INNER_RESULT=True; the input artifact hashes remain unchanged.
+
+Blocking evaluator conflict:
+The formal evaluator fails first at eval.py:82:
+
+  if not mesh.nodes or not mesh.elements:
+
+In the installed PyFluent/meshio runtime, mesh.nodes and mesh.elements are
+NumPy arrays. Python truth testing therefore raises ValueError: "The truth value
+of an array with more than one element is ambiguous. Use a.any() or a.all()."
+The exception occurs before any GT-dependent downstream checks can determine the
+formal result. Changing a valid mesh cannot make a nonempty NumPy array safely
+truth-testable, so this requires an evaluator fix rather than a GT change.
+
+Evidence: audit_candidates/current_gt_inner_probe.log,
+audit_candidates/current_gt_inner_probe_temp.log, and
+audit_candidates/exact_eval_diagnosis.log.
+
+Final status: eval_blocked

@@ -405,10 +405,10 @@ def check_node_shape_rules(xyz):
         radius = float(hole['radius'])
         tolerance = max(0.25, radius * 0.12)
         distances = [
-            math.sqrt(sum((point[axis] - center[position]) ** 2 for position, axis in enumerate(axes)))
+            math.sqrt(math.fsum((point[axis] - center[position]) ** 2 for position, axis in enumerate(axes)))
             for point in xyz
         ]
-        if sum(abs(value - radius) <= tolerance for value in distances) < int(hole.get('min_nodes', 4)):
+        if len([value for value in distances if abs(value - radius) <= tolerance]) < int(hole.get('min_nodes', 4)):
             log('circular-hole boundary nodes not found')
             return False
         if any(value < radius - tolerance for value in distances):
@@ -422,13 +422,13 @@ def check_node_shape_rules(xyz):
         radius = float(cylinder['radius'])
         tolerance = max(0.2, radius * 0.08)
         distances = [
-            math.sqrt(sum((point[axis] - center[position]) ** 2 for position, axis in enumerate(transverse)))
+            math.sqrt(math.fsum((point[axis] - center[position]) ** 2 for position, axis in enumerate(transverse)))
             for point in xyz
         ]
         if max(distances or [0.0]) > radius + tolerance:
             log('shaft cross-section is not circular')
             return False
-        if sum(abs(value - radius) <= tolerance for value in distances) < int(cylinder.get('min_nodes', 6)):
+        if len([value for value in distances if abs(value - radius) <= tolerance]) < int(cylinder.get('min_nodes', 6)):
             log('circular shaft boundary nodes not found')
             return False
     sphere = RULES.get('sphere_surface')
@@ -436,8 +436,8 @@ def check_node_shape_rules(xyz):
         center = [float(value) for value in sphere['center']]
         radius = float(sphere['radius'])
         tolerance = max(0.25, radius * 0.08)
-        distances = [math.sqrt(sum((point[i] - center[i]) ** 2 for i in range(3))) for point in xyz]
-        if sum(abs(value - radius) <= tolerance for value in distances) < int(sphere.get('min_nodes', 8)):
+        distances = [math.sqrt(math.fsum((point[i] - center[i]) ** 2 for i in range(3))) for point in xyz]
+        if len([value for value in distances if abs(value - radius) <= tolerance]) < int(sphere.get('min_nodes', 8)):
             log('spherical contact body surface nodes not found')
             return False
     return True
@@ -515,7 +515,7 @@ def check_abaqus_boundary_loads(model):
             counts.append(len(getattr(model, repo_name).keys()))
         except Exception:
             counts.append(0)
-    if sum(counts) < 1:
+    if math.fsum(counts) < 1:
         log('no load/predefined/interactions/constraints evidence found')
         return False
     return True

@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-01-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to build and solve a 2D axisymmetric finite-element model of a circular plate. Use the N-mm-MPa unit system. Model Definition: Create a 2D axisymmetric deformable solid part representing the circular plate cross-section. The radial extent is from r = 0 mm to r = 50 mm. The axial/thickness extent is from z = 0 mm to z = 1 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio ν = 0.3. Assign this material to the entire plate using a homogeneous solid section. Discretization: Mesh the part with CAX4R axisymmetric solid elements using a structured technique. Apply a radial seed size of 2.0 mm with one element through the thickness. Create node sets named AXIS (r = 0 boundary), OUTER (r = 50 mm boundary), and TOP (z = 1 mm boundary). Boundary Conditions: Constrain the radial displacement U1 = 0 on the AXIS node set. On the OUTER node set, constrain both U1 = 0 and U2 = 0. Loading: Apply a downward pressure of 0.1 N/mm² on the TOP boundary by representing it as equivalent axisymmetric concentrated nodal forces. For each top node at radius r_i, calculate the force in the U2 direction using: F_i = -p × 2πr_i × Δr_i For the first and last top nodes, use half the adjacent radial interval for Δr_i. For interior top nodes, use half the distance between neighboring top nodes. The node at r = 0 receives zero equivalent force. Analysis Step: Create a static analysis step named Step-Pressure. Request field output for displacement U, reaction force RF, and stress S. Job Execution: Create and submit a job named Job-Plate. Wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Plate.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Plate.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-01/task-01.json",
+  "config_sha256": "d54d09009f02cb646a26dd08013d82327c1013cdc75ccfa6b1655f034d4df2df",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-01/eval.py",
+  "eval_sha256": "921d17d964fb921aaa2c229598441a3bf371e0cb9a1d1622419d1861d5ab4bc4",
+  "started_utc": "2026-08-18T02:51:15.095114+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-01/ground_truth/Job-Plate.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Plate.cae",
+      "size": 49152,
+      "sha256": "d0de730aea141b3a63c1fa015f2f7d85cdc8664f8c61fd114be843ed33452f93",
+      "response": "File Uploaded: 49152 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-01/ground_truth/Job-Plate.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Plate.odb",
+      "size": 240064,
+      "sha256": "725f130d4276dc265bda4a5e069481b1afcfe89030d655cb5084d6b816791ce7",
+      "response": "File Uploaded: 240064 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-01/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 47015,
+      "sha256": "921d17d964fb921aaa2c229598441a3bf371e0cb9a1d1622419d1861d5ab4bc4",
+      "response": "File Uploaded: 47015 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 47015
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 270
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Plate.cae",
+      "Length": 49152
+    },
+    {
+      "Name": "Job-Plate.odb",
+      "Length": 240064
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T02:51:23.985591+00:00"
+}

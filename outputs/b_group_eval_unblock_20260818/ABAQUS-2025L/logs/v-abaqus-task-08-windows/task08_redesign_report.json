@@ -1,0 +1,229 @@
+{
+  "schema_version": 1,
+  "task_id": "v-abaqus-task-08-windows",
+  "snapshot": "ABAQUS-2025L",
+  "scope": "Task 08 only; this redesign does not modify Tasks 03 or 09.",
+  "status": "passed",
+  "redesign_reason": "The original 20 x 20 x 30 mm block and 100 x 100 x 5 mm plate required 1,586 nodes at the instructed 3/5 mm structured HEX seeds, exceeding the Abaqus Learning Edition 1,000-node limit, and the old ground truth used noncompliant 5/10 mm seeds. Task 08 was therefore redesigned as a provided, incomplete 10 x 10 x 12 mm block-on-30 x 30 x 4 mm plate seed that preserves the nonlinear contact learning objective while producing a native 494-node solved model within the licensed limit.",
+  "modified_files": [
+    "task/task-v/abaqus/task-08/task-08.json",
+    "task/task-v/abaqus/task-08/eval.py",
+    "task/task-v/abaqus/task-08/init_file/Contact-Seed.cae",
+    "task/task-v/abaqus/task-08/ground_truth/Job-Contact.cae",
+    "task/task-v/abaqus/task-08/ground_truth/Job-Contact.odb"
+  ],
+  "sha256_before_after": {
+    "task/task-v/abaqus/task-08/task-08.json": {
+      "before": "deddf85049a882c46d1c413b4ccbfeefe2b00475c49d816b0078f3eeb6aa6339",
+      "after": "b0d74ee1b75d6bf3b3351dfd764e91ea63027284b861f7d290d9861d8d086215"
+    },
+    "task/task-v/abaqus/task-08/eval.py": {
+      "before": "afbc0480f5319275108205cd7815a5983703a070026bdb14c7862d3521155e8f",
+      "repository_head": "afbc0480f5319275108205cd7815a5983703a070026bdb14c7862d3521155e8f",
+      "before_redesign": "1bc5467b430b8015a76fb769379842cbc4c3e2fc2e0b7883b349a8f59938c2a4",
+      "after": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801"
+    },
+    "task/task-v/abaqus/task-08/init_file/Contact-Seed.cae": {
+      "before": null,
+      "after": "e51694afc99eba263498a79087f76334202fd8005423de9d3bf054ba4e195e0e"
+    },
+    "task/task-v/abaqus/task-08/ground_truth/Job-Contact.cae": {
+      "before": "15c19611e1a6a3d408b6df40e2c5035c7e834521d18a112f088113280617c39f",
+      "after": "9f19f984cdd31f3601c1ebb09d10fe89b3c29da593db56937d6a64401948ec95"
+    },
+    "task/task-v/abaqus/task-08/ground_truth/Job-Contact.odb": {
+      "before": "9fc4fe69f424edf5f1c6d09739816c881d5511db9c321159d4a85861c4104ab3",
+      "after": "a290742571c5a0343f0ca2e8ba588a947246eb8d0680b88801e41410acfaafd7"
+    }
+  },
+  "seed_provenance": {
+    "software": "Abaqus/CAE Learning Edition 2025",
+    "generation_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\task08_create_init.py",
+    "creator_exit_remote_sha256": "e51694afc99eba263498a79087f76334202fd8005423de9d3bf054ba4e195e0e",
+    "downloaded_repository_sha256": "e51694afc99eba263498a79087f76334202fd8005423de9d3bf054ba4e195e0e",
+    "completion_script_pre_open_sha256": "e51694afc99eba263498a79087f76334202fd8005423de9d3bf054ba4e195e0e",
+    "incomplete_counts": {
+      "analysis_steps": 0,
+      "interactions": 0,
+      "boundary_conditions": 0,
+      "loads": 0,
+      "jobs": 0,
+      "mesh_nodes": 0,
+      "mesh_elements": 0
+    }
+  },
+  "ground_truth_provenance": {
+    "input_seed_sha256": "e51694afc99eba263498a79087f76334202fd8005423de9d3bf054ba4e195e0e",
+    "cae_sha256_after_solve_save": "2c85410f181bfcfc4418410a807b144f3911a011ce67b950d6d0c71fcf408ee8",
+    "cae_sha256_after_close": "02bff75b9db20213f162e5630277e88b02a0371b898117361f587a5d67c895fb",
+    "reopen_counts": {
+      "analysis_steps": 1,
+      "interactions": 1,
+      "boundary_conditions": 3,
+      "loads": 1,
+      "jobs": 1,
+      "block_nodes": 252,
+      "plate_nodes": 242
+    },
+    "cae_sha256_final_closed": "9f19f984cdd31f3601c1ebb09d10fe89b3c29da593db56937d6a64401948ec95",
+    "cae_sha256_downloaded_repository": "9f19f984cdd31f3601c1ebb09d10fe89b3c29da593db56937d6a64401948ec95",
+    "cae_final_log_matches_repository": true,
+    "odb_sha256_logged": "a290742571c5a0343f0ca2e8ba588a947246eb8d0680b88801e41410acfaafd7",
+    "odb_sha256_downloaded_repository": "a290742571c5a0343f0ca2e8ba588a947246eb8d0680b88801e41410acfaafd7",
+    "odb_log_matches_repository": true
+  },
+  "evaluator_semantics": {
+    "eval_sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+    "static_step": "Direct and keyword checks enforce previous=Initial, NLGEOM=ON, initialInc=0.05, maxInc=0.1, minInc=1e-8, and maxNumInc=200.",
+    "contact": "Direct and keyword checks enforce one active SurfaceToSurfaceStd interaction in Initial, FINITE sliding, plate-top main and block-bottom secondary surfaces, Hard normal behavior, allowSeparation=ON/no NO SEPARATION flag, and frictionless tangential behavior.",
+    "mesh": "Every native part cell must report TECHNIQUE=STRUCTURED and ELEM_SHAPE=HEX; all elements must be C3D8R with the exact seeds and counts."
+  },
+  "design": {
+    "geometry_mm": {
+      "block": [10.0, 10.0, 12.0],
+      "plate": [30.0, 30.0, 4.0],
+      "block_assembly_bounds": [10.0, 20.0, 10.0, 20.0, 4.0, 16.0],
+      "plate_assembly_bounds": [0.0, 30.0, 0.0, 30.0, 0.0, 4.0]
+    },
+    "material": {
+      "name": "Steel",
+      "youngs_modulus_mpa": 210000.0,
+      "poissons_ratio": 0.3
+    },
+    "step": "Static, General Step-Contact with NLGEOM=ON",
+    "contact": "Finite-sliding surface-to-surface Standard contact, Hard normal behavior with separation allowed, frictionless tangential behavior",
+    "boundary_conditions": "Plate-bottom ENCASTRE; block Guide A U1=U2=0; Guide B U2=0; no guide U3 restraint",
+    "pressure": {
+      "magnitude_mpa": 5.0,
+      "area_mm2": 100.0,
+      "resultant_n": 500.0
+    },
+    "mesh": {
+      "element_type": "C3D8R",
+      "technique": "structured HEX",
+      "block_seed_mm": 2.0,
+      "plate_seed_mm": 3.0,
+      "block_nodes": 252,
+      "block_elements": 150,
+      "plate_nodes": 242,
+      "plate_elements": 100,
+      "total_nodes": 494,
+      "total_elements": 250
+    }
+  },
+  "real_software_generation": "Abaqus/CAE Learning Edition 2025 created the native incomplete Contact-Seed.cae, reopened that exact SHA-256 input, added only the requested step, finite-sliding Hard/frictionless contact with separation allowed, minimally constrained boundary conditions, 5 MPa pressure, structured HEX C3D8R meshes, output requests, and Job-Contact, then submitted the native Abaqus/Standard solve. The completion process saved and closed the solved CAE, reopened it and verified its object/mesh counts, saved and closed it again, and logged final closed-file SHA-256 9f19f984cdd31f3601c1ebb09d10fe89b3c29da593db56937d6a64401948ec95 before that exact file was downloaded into the repository. The regenerated ODB SHA-256 is a290742571c5a0343f0ca2e8ba588a947246eb8d0680b88801e41410acfaafd7.",
+  "generation_commands": [
+    "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\task08_create_init.py",
+    "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\task08_complete_from_init.py",
+    "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+    "C:\\SIMULIA\\Commands\\abaqus.bat python C:\\Users\\user\\Desktop\\task08_odb_probe.py"
+  ],
+  "native_solve": {
+    "job_status": "COMPLETED_SUCCESSFULLY",
+    "increments": 12,
+    "frames": 13,
+    "cutbacks": 0,
+    "input_warnings": 0,
+    "analysis_warnings": 0,
+    "errors": 0,
+    "contact_converged": true
+  },
+  "native_results": {
+    "max_displacement_mm": 0.0003712939754816201,
+    "max_mises_mpa": 6.109090328216553,
+    "max_cpress_mpa": 6.332294464111328,
+    "total_reaction_n": [
+      0.0000013259167559454,
+      0.0000014418708929042623,
+      500.0071351863444
+    ],
+    "applied_load_n": 500.0
+  },
+  "positive_evaluation": {
+    "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+    "returncode": 0,
+    "stdout": "True\n",
+    "expected": "True\n",
+    "exact_match": true,
+    "score": 1.0,
+    "eval_sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+    "desktop_before": [],
+    "desktop_after_cleanup": []
+  },
+  "negative_evaluations": [
+    {
+      "case": "init_only",
+      "description": "Only the configured Contact-Seed.cae and final evaluator were staged; no completed CAE or ODB was present.",
+      "eval_sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+      "returncode": 0,
+      "stdout": "False\n",
+      "exact_match": true,
+      "desktop_before": [],
+      "desktop_after_cleanup": [],
+      "cleanup_returncode": 0,
+      "cleanup_ok": true,
+      "detail": "[FAIL] Seed CAE, completed CAE, or solved ODB is missing\n\n",
+      "log": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/negative_init_only.json"
+    },
+    {
+      "case": "missing_odb",
+      "eval_sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+      "returncode": 0,
+      "stdout": "False\n",
+      "exact_match": true,
+      "desktop_before": [],
+      "desktop_after_cleanup": [],
+      "cleanup_returncode": 0,
+      "cleanup_ok": true,
+      "detail": "[FAIL] Seed CAE, completed CAE, or solved ODB is missing\n\n",
+      "log": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/negative_missing_odb.json"
+    },
+    {
+      "case": "wrong_load",
+      "eval_sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+      "returncode": 0,
+      "stdout": "False\n",
+      "exact_match": true,
+      "desktop_before": [],
+      "desktop_after_cleanup": [],
+      "cleanup_returncode": 0,
+      "cleanup_ok": true,
+      "detail": "[PASS] Incomplete native seed check passed\n[FAIL] Pressure magnitude mismatch: expected 5.0 MPa, got 2.5 MPa\n[FAIL] Step/contact/load/BC semantics mismatch\n\n",
+      "isolation_evidence": {
+        "source_pressure_mpa": 5.0,
+        "variant_pressure_mpa": 2.5,
+        "geometry_mesh_region_signatures_equal": true,
+        "material_section_signatures_equal": true,
+        "step_contact_bc_output_job_signatures_equal": true,
+        "relevant_keyword_semantics_equal": true,
+        "only_intended_pressure_change": true,
+        "variant_sha256": "c581a5313e7455d997daac1ad9c4f7ba3b99d0c809084a9c2caeee2964fa705b"
+      },
+      "log": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/negative_wrong_load.json"
+    }
+  ],
+  "cleanup": "The formal positive run, every negative run, and the independent ODB probe each ended with an empty remote Desktop. The snapshot tunnel is closed only after all final local validation; affirmative disconnect evidence is stored in outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/disconnect_verification.json.",
+  "logs": {
+    "redesign_report": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_redesign_report.json",
+    "seed_generation_script": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_create_init.py",
+    "seed_generation_result": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_create_init_result.txt",
+    "completion_script": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_complete_from_init.py",
+    "completion_result": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_complete_from_init_result.txt",
+    "instruction_semantics_probe_script": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_instruction_probe.py",
+    "instruction_semantics_probe_result": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_instruction_probe_result.txt",
+    "wrong_load_generation_script": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_make_wrong_load.py",
+    "wrong_load_generation_result": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_make_wrong_load_result.txt",
+    "wrong_load_comparison_script": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_compare_wrong_load.py",
+    "wrong_load_comparison_result": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_compare_wrong_load_result.txt",
+    "job_status": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/Job-Contact.sta",
+    "job_message": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/Job-Contact.msg",
+    "production_eval": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/evaluation.json",
+    "odb_probe_script": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_odb_probe.py",
+    "odb_probe_result": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_odb_probe_result.txt",
+    "odb_probe_run": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/task08_odb_probe_run.json",
+    "negative_init_only": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/negative_init_only.json",
+    "negative_missing_odb": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/negative_missing_odb.json",
+    "negative_wrong_load": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/logs/v-abaqus-task-08-windows/negative_wrong_load.json",
+    "disconnect": "outputs/b_group_eval_unblock_20260818/ABAQUS-2025L/disconnect_verification.json"
+  }
+}

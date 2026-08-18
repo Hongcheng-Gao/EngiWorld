@@ -1,11 +1,13 @@
 from __future__ import annotations
 
 import hashlib
+import io
 import math
 import shutil
 import subprocess
 import tempfile
 import warnings
+from contextlib import redirect_stderr, redirect_stdout
 from pathlib import Path
 
 import ansys.fluent.core as pyfluent
@@ -250,4 +252,6 @@ def evaluate() -> bool:
 
 
 if __name__ == "__main__":
-    print("True" if evaluate() else "False")
+    with redirect_stdout(io.StringIO()), redirect_stderr(io.StringIO()):
+        result = evaluate()
+    print("True" if result else "False")

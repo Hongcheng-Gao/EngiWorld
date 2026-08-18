@@ -1,1198 +1,726 @@
 # -*- coding: utf-8 -*-
-# Process-oriented evaluator
-# Run with:
-#   abaqus cae noGUI=eval.py
-#
-# Final stdout must be exactly one line:
-#   True
-# or
-#   False
-
 from abaqus import *
 from abaqusConstants import *
 from caeModules import *
 from odbAccess import openOdb
 
+import math
 import os
 import sys
-import math
 import traceback
 
-TASK_ID = 'task-08'
-PROCESS_SPEC = {'artifact': {'job_name': 'Job-Contact', 'model_name': 'Model-Contact', 'step_name': 'Step-1'},
- 'process': {'contact': {'frictionless': True,
-                         'hard': True,
-                         'min_interactions': 1,
-                         'min_properties': 1},
-             'load_signatures': [{'magnitude': 10.0,
-                                  'step': 'Step-1',
-                                  'tol': 1.0,
-                                  'type_any': ['PRESSURE']}],
-             'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
-             'min_counts': {'boundary_conditions': 1, 'loads': 1},
-             'section': {'material_names': ['Steel'], 'type': 'SOLID'},
-             'step': {'kind': 'STATIC', 'nlgeom': True},
-             'part_requirements': [{'geometry': {'bbox_spans': {'x': 20.0, 'y': 20.0, 'z': 30.0},
-                                                 'tol': 0.6},
-                                    'mesh': {'main_element_type': 'C3D8R',
-                                             'seed_size': 3.0,
-                                             'seed_tol': 0.8}},
-                                   {'geometry': {'bbox_spans': {'x': 100.0, 'y': 100.0, 'z': 5.0},
-                                                 'tol': 0.6},
-                                    'mesh': {'main_element_type': 'C3D8R',
-                                             'seed_size': 5.0,
-                                             'seed_tol': 0.8}}]},
- 'solver': {'min_frames': 2}}
 
-ABS_TOL = 1.0e-6
-GEOM_TOL = 5.0e-3
-MATERIAL_TOL = 1.0e-6
-SEED_TOL_DEFAULT = 1.0e-3
-
+JOB_NAME = 'Job-Contact'
+MODEL_NAME = 'Model-Contact'
+STEP_NAME = 'Step-Contact'
+SEED_NAME = 'Contact-Seed.cae'
+GEOM_TOL = 1.0e-4
 DETAILS = []
 
 
-def log(msg):
-    DETAILS.append(str(msg))
+def log(message):
+    DETAILS.append(str(message))
 
 
-def _write_text(path, text):
+def write_text(path, text):
     try:
-        f = open(path, 'w')
-        f.write(text)
-        f.close()
+        handle = open(path, 'w')
+        handle.write(text)
+        handle.close()
     except Exception:
         pass
 
 
-def output_result(value, detail_path=None, result_path=None):
-    text = 'True\n' if value else 'False\n'
-    if result_path:
-        _write_text(result_path, text)
-    if detail_path:
-        _write_text(detail_path, ''.join([line + '\n' for line in DETAILS]))
-
+def output_result(value, desktop):
+    result = 'True\n' if value else 'False\n'
+    write_text(os.path.join(desktop, 'eval_result.txt'), result)
+    write_text(os.path.join(desktop, 'eval_detail.txt'),
+               ''.join(line + '\n' for line in DETAILS))
     try:
-        sys.__stdout__.write(text)
+        sys.__stdout__.write(result)
         sys.__stdout__.flush()
     except Exception:
-        try:
-            sys.stdout.write(text)
-            sys.stdout.flush()
-        except Exception:
-            pass
+        sys.stdout.write(result)
+        sys.stdout.flush()
 
 
-def fail(msg):
-    log('[FAIL] ' + str(msg))
+def fail(message):
+    log('[FAIL] ' + str(message))
     return False
 
 
-def ok(msg):
-    log('[PASS] ' + str(msg))
+def passed(message):
+    log('[PASS] ' + str(message))
     return True
 
 
-def safe_float(v, default=None):
+def ci(value):
     try:
-        return float(v)
-    except Exception:
-        return default
-
-
-def close_enough(a, b, tol=ABS_TOL, rel=1.0e-3):
-    fa = safe_float(a, None)
-    fb = safe_float(b, None)
-    if fa is None or fb is None:
-        return False
-    return abs(fa - fb) <= max(float(tol), abs(fb) * float(rel))
-
-
-def ci(s):
-    try:
-        return str(s).strip().upper()
+        return str(value).strip().upper()
     except Exception:
         return ''
 
 
-def names_equal(a, b):
-    return ci(a) == ci(b)
+def compact_name(value):
+    return ''.join(character for character in ci(value)
+                   if character.isalnum())
 
 
-def get_desktop(job_name):
+def close_enough(observed, expected, tol=1.0e-6, rel=1.0e-4):
+    try:
+        observed = float(observed)
+        expected = float(expected)
+    except Exception:
+        return False
+    return abs(observed - expected) <= max(float(tol), abs(expected) * rel)
+
+
+def symbol_is_true(value):
+    if isinstance(value, bool):
+        return value
+    return ci(value) in ('ON', 'TRUE', 'YES', '1')
+
+
+def class_name(value):
+    try:
+        return value.__class__.__name__.upper()
+    except Exception:
+        return ci(type(value))
+
+
+def get_desktop():
     candidates = []
-    up = os.environ.get('USERPROFILE', None)
-    if up:
-        candidates.append(os.path.join(up, 'Desktop'))
-    candidates.append(r'C:\Users\user\Desktop')
-    candidates.append(r'C:\Users\User\Desktop')
-
-    for d in candidates:
-        if os.path.exists(os.path.join(d, job_name + '.cae')) or os.path.exists(os.path.join(d, job_name + '.odb')):
-            return d
-
-    for d in candidates:
-        if os.path.isdir(d):
-            return d
-
+    profile = os.environ.get('USERPROFILE')
+    if profile:
+        candidates.append(os.path.join(profile, 'Desktop'))
+    candidates.extend((r'C:\Users\user\Desktop', r'C:\Users\User\Desktop'))
+    for path in candidates:
+        if os.path.isdir(path):
+            return path
     return r'C:\Users\user\Desktop'
 
 
-def has_forbidden_py_file(desktop_path):
+def has_forbidden_python(desktop):
     try:
-        entries = os.listdir(desktop_path)
+        names = os.listdir(desktop)
     except Exception:
         return True
-
-    for name in entries:
-        try:
-            full_path = os.path.join(desktop_path, name)
-            if not os.path.isfile(full_path):
-                continue
-        except Exception:
+    for name in names:
+        path = os.path.join(desktop, name)
+        if (os.path.isfile(path) and name.lower().endswith('.py') and
+                name.lower() != 'eval.py'):
             return True
-
-        lower_name = name.lower()
-        if lower_name.endswith('.py') and lower_name != 'eval.py':
-            return True
-
     return False
 
 
-def find_key_ci(repo, target):
-    if target is None:
-        return None
-    tu = ci(target)
+def repo_value(repo, target):
+    wanted = ci(target)
     try:
-        for k in repo.keys():
-            ku = ci(k)
-            if ku == tu or ku.endswith('.' + tu):
-                return k
+        for key in repo.keys():
+            if ci(key) == wanted:
+                return repo[key]
     except Exception:
-        return None
+        pass
     return None
 
 
-def get_repo_value_ci(repo, target):
-    k = find_key_ci(repo, target)
-    if k is None:
-        return None
+def region_name(region):
+    if isinstance(region, (list, tuple)):
+        return str(region[0]) if region else None
+    return str(region) if region is not None else None
+
+
+def walk_node_coords(value, output):
     try:
-        return repo[k]
+        coordinates = value.coordinates
+        output.append(tuple(float(component) for component in coordinates))
+        return
     except Exception:
-        return None
-
-
-def symbol_to_bool(v):
-    if isinstance(v, bool):
-        return v
-    vu = ci(v)
-    if vu in ('ON', 'TRUE', '1'):
-        return True
-    if vu in ('OFF', 'FALSE', '0'):
-        return False
-    return None
-
-
-def is_set_value(v):
-    vu = ci(v)
-    if vu in ('', 'NONE', 'UNSET', 'UNCHANGED', 'FREED'):
-        return False
-    return True
-
-
-def class_name(obj):
+        pass
     try:
-        return obj.__class__.__name__.upper()
+        for child in value:
+            walk_node_coords(child, output)
     except Exception:
+        pass
+
+
+def node_coords(nodes):
+    output = []
+    walk_node_coords(nodes, output)
+    return output
+
+
+def vertex_coords(vertices):
+    output = []
+    for vertex in vertices:
         try:
-            return str(type(obj)).upper()
-        except Exception:
-            return ''
-
-
-def step_kind_matches(step_obj, expected_kind):
-    text = ' '.join([
-        class_name(step_obj),
-        ci(getattr(step_obj, 'procedureType', '')),
-        ci(getattr(step_obj, 'analysis', '')),
-    ])
-    ek = ci(expected_kind)
-    if ek == 'STATIC':
-        return ('STATIC' in text) and ('HEAT' not in text)
-    if ek == 'HEAT_TRANSFER':
-        return ('HEAT' in text) or ('HEAT_TRANSFER' in text)
-    if ek == 'BUCKLE':
-        return 'BUCKLE' in text
-    if ek == 'FREQUENCY':
-        return 'FREQUENCY' in text
-    return False
-
-
-def choose_model(mdb_obj, expected_name=None):
-    if expected_name:
-        k = find_key_ci(mdb_obj.models, expected_name)
-        if k is not None:
-            return mdb_obj.models[k]
-
-    best = None
-    best_score = -1
-    try:
-        for mk in mdb_obj.models.keys():
-            m = mdb_obj.models[mk]
-            score = 0
-            try:
-                score += len(m.parts.keys()) * 10
-            except Exception:
-                pass
-            try:
-                for pk in m.parts.keys():
-                    p = m.parts[pk]
-                    score += len(p.elements) * 2 + len(p.nodes)
-            except Exception:
-                pass
-            if score > best_score:
-                best_score = score
-                best = m
-    except Exception:
-        return None
-
-    return best
-
-
-def choose_primary_part(model):
-    best = None
-    best_score = -1
-    try:
-        for pk in model.parts.keys():
-            p = model.parts[pk]
-            score = 0
-            try:
-                score += len(p.elements) * 2 + len(p.nodes)
-            except Exception:
-                pass
-            if score > best_score:
-                best_score = score
-                best = p
-    except Exception:
-        return None
-    return best
-
-
-def collect_node_xyz(nodes):
-    out = []
-    for n in nodes:
-        try:
-            x, y, z = n.coordinates
-            out.append((float(x), float(y), float(z)))
+            point = vertex.pointOn
+            if len(point) == 1 and hasattr(point[0], '__len__'):
+                point = point[0]
+            output.append(tuple(float(component) for component in point))
         except Exception:
             pass
-    return out
+    return output
 
 
-def collect_assembly_xyz(model):
-    out = []
-    try:
-        asm = model.rootAssembly
-        for ik in asm.instances.keys():
-            inst = asm.instances[ik]
-            for n in inst.nodes:
-                try:
-                    x, y, z = n.coordinates
-                    out.append((float(x), float(y), float(z)))
-                except Exception:
-                    pass
-    except Exception:
-        return []
-    return out
-
-
-def collect_all_parts_xyz(model):
-    out = []
-    try:
-        for pk in model.parts.keys():
-            p = model.parts[pk]
-            out.extend(collect_node_xyz(p.nodes))
-    except Exception:
-        return []
-    return out
-
-
-def collect_geometry_xyz(model, part_obj):
-    # Prefer assembly instance nodes so placement transforms are included.
-    xyz = collect_assembly_xyz(model)
-    if xyz:
-        return xyz
-
-    # Fallback: merge all part nodes.
-    xyz = collect_all_parts_xyz(model)
-    if xyz:
-        return xyz
-
-    # Last resort: primary part nodes.
-    return collect_node_xyz(part_obj.nodes)
-
-
-def bbox_from_xyz(xyz):
-    if not xyz:
+def bbox(coords):
+    if not coords:
         return None
-    xs = [p[0] for p in xyz]
-    ys = [p[1] for p in xyz]
-    zs = [p[2] for p in xyz]
     return {
-        'x_min': min(xs), 'x_max': max(xs),
-        'y_min': min(ys), 'y_max': max(ys),
-        'z_min': min(zs), 'z_max': max(zs),
-        'x_span': max(xs) - min(xs),
-        'y_span': max(ys) - min(ys),
-        'z_span': max(zs) - min(zs),
+        'x_min': min(point[0] for point in coords),
+        'x_max': max(point[0] for point in coords),
+        'y_min': min(point[1] for point in coords),
+        'y_max': max(point[1] for point in coords),
+        'z_min': min(point[2] for point in coords),
+        'z_max': max(point[2] for point in coords),
     }
 
 
-def check_bbox(bbox, geom_spec):
-    if bbox is None:
-        return fail('Geometry bbox is empty')
-
-    tol = float(geom_spec.get('tol', GEOM_TOL))
-
-    spans = geom_spec.get('bbox_spans', None)
-    if spans:
-        for axis, exp in spans.items():
-            key = axis.lower() + '_span'
-            obs = bbox.get(key, None)
-            if obs is None or not close_enough(obs, exp, tol=tol, rel=1.0e-3):
-                return fail('bbox span mismatch for %s: obs=%s exp=%s tol=%s' % (axis, str(obs), str(exp), str(tol)))
-
-    mins = geom_spec.get('bbox_mins', None)
-    if mins:
-        for axis, exp in mins.items():
-            key = axis.lower() + '_min'
-            obs = bbox.get(key, None)
-            if obs is None or not close_enough(obs, exp, tol=tol, rel=1.0e-3):
-                return fail('bbox min mismatch for %s: obs=%s exp=%s tol=%s' % (axis, str(obs), str(exp), str(tol)))
-
-    maxs = geom_spec.get('bbox_maxs', None)
-    if maxs:
-        for axis, exp in maxs.items():
-            key = axis.lower() + '_max'
-            obs = bbox.get(key, None)
-            if obs is None or not close_enough(obs, exp, tol=tol, rel=1.0e-3):
-                return fail('bbox max mismatch for %s: obs=%s exp=%s tol=%s' % (axis, str(obs), str(exp), str(tol)))
-
-    return True
-
-
-def check_hole(xyz, hole_spec):
-    if not hole_spec:
-        return True
-
-    cx = float(hole_spec['center'][0])
-    cy = float(hole_spec['center'][1])
-    r0 = float(hole_spec['radius'])
-    tol = float(hole_spec.get('tol', 1.0))
-    min_nodes = int(hole_spec.get('min_nodes', 6))
-
-    hits = []
-    for x, y, z in xyz:
-        rr = math.sqrt((x - cx) ** 2 + (y - cy) ** 2)
-        if abs(rr - r0) <= tol:
-            hits.append(rr)
-
-    if len(hits) < min_nodes:
-        return fail('hole boundary nodes too few: obs=%s min=%s' % (str(len(hits)), str(min_nodes)))
-
-    ravg = sum(hits) / float(len(hits))
-    if not close_enough(ravg, r0, tol=tol, rel=1.0e-3):
-        return fail('hole radius mismatch: obs=%s exp=%s tol=%s' % (str(ravg), str(r0), str(tol)))
-
-    return True
-
-
-def get_element_type_counts(elements):
-    counts = {}
-    for e in elements:
-        t = ci(getattr(e, 'type', 'UNKNOWN'))
-        counts[t] = counts.get(t, 0) + 1
-    return counts
-
-
-def check_mesh(part_obj, mesh_spec):
-    if not mesh_spec:
-        return True
-
-    main_type = ci(mesh_spec.get('main_element_type', ''))
-    tol = float(mesh_spec.get('seed_tol', SEED_TOL_DEFAULT))
-
-    try:
-        counts = get_element_type_counts(part_obj.elements)
-    except Exception:
-        return fail('Cannot inspect element types')
-
-    total = 0
-    for k in counts:
-        total += counts[k]
-
-    if main_type:
-        main_count = counts.get(main_type, 0)
-        if main_count <= 0:
-            return fail('Main element type not found: ' + str(main_type))
-        if total > 0 and float(main_count) / float(total) < 0.5:
-            return fail('Main element type fraction too low for %s: %s/%s' % (main_type, str(main_count), str(total)))
-
-    seed_sizes = mesh_spec.get('seed_sizes', [])
-    if seed_sizes:
-        observed = []
-        try:
-            s = part_obj.getPartSeeds(SIZE)
-            sf = safe_float(s, None)
-            if sf is not None and sf > 0.0:
-                observed.append(sf)
-        except Exception:
-            pass
-
-        if observed:
-            for exp in seed_sizes:
-                expf = float(exp)
-                ok_seed = False
-                for ob in observed:
-                    if close_enough(ob, expf, tol=tol, rel=1.0e-3):
-                        ok_seed = True
-                        break
-                if not ok_seed:
-                    return fail('seed size mismatch: expected one of %s, observed=%s' % (str(seed_sizes), str(observed)))
-
-    return True
-
-
-def check_mesh_all_parts(model, mesh_spec):
-    if not mesh_spec:
-        return True
-
-    main_type = ci(mesh_spec.get('main_element_type', ''))
-    tol = float(mesh_spec.get('seed_tol', SEED_TOL_DEFAULT))
-    seed_sizes = mesh_spec.get('seed_sizes', [])
-
-    counts = {}
-    observed = []
-
-    try:
-        for pk in model.parts.keys():
-            p = model.parts[pk]
-
-            try:
-                pc = get_element_type_counts(p.elements)
-                for k in pc.keys():
-                    counts[k] = counts.get(k, 0) + pc[k]
-            except Exception:
-                pass
-
-            try:
-                s = p.getPartSeeds(SIZE)
-                sf = safe_float(s, None)
-                if sf is not None and sf > 0.0:
-                    observed.append(sf)
-            except Exception:
-                pass
-    except Exception:
-        return fail('Cannot inspect mesh across all parts')
-
-    total = 0
-    for k in counts.keys():
-        total += counts[k]
-
-    if main_type:
-        main_count = counts.get(main_type, 0)
-        if main_count <= 0:
-            return fail('Main element type not found across parts: ' + str(main_type))
-        if total > 0 and float(main_count) / float(total) < 0.5:
-            return fail('Main element type fraction too low for %s: %s/%s' % (main_type, str(main_count), str(total)))
-
-    if seed_sizes:
-        if not observed:
-            return fail('Cannot read any part seed size for expected seeds: %s' % str(seed_sizes))
-        observed_sorted = sorted(observed)
-        observed_min = observed_sorted[0]
-        observed_max = observed_sorted[-1]
-        exp_min = min([float(x) for x in seed_sizes])
-        exp_max = max([float(x) for x in seed_sizes])
-        if not close_enough(observed_min, exp_min, tol=tol, rel=1.0e-3):
-            return fail('seed size min mismatch across parts: obs=%s exp=%s observed=%s' % (
-                str(observed_min), str(exp_min), str(observed)))
-        if not close_enough(observed_max, exp_max, tol=tol, rel=1.0e-3):
-            return fail('seed size max mismatch across parts: obs=%s exp=%s observed=%s' % (
-                str(observed_max), str(exp_max), str(observed)))
-
-    return True
-
-
-def _read_material_value(mat_obj, field_name):
-    obj = getattr(mat_obj, field_name, None)
-    if obj is None:
-        return None
-    tbl = getattr(obj, 'table', None)
-    if tbl is None:
-        return None
-    try:
-        if len(tbl) == 0:
-            return None
-        row0 = tbl[0]
-        if len(row0) == 0:
-            return None
-        return safe_float(row0[0], None)
-    except Exception:
-        return None
-
-
-def check_materials(model, mats_spec):
-    if not mats_spec:
-        return True
-
-    for exp in mats_spec:
-        mobj = get_repo_value_ci(model.materials, exp.get('name'))
-        if mobj is None:
-            return fail('Material not found: ' + str(exp.get('name')))
-
-        if 'E' in exp or 'nu' in exp:
-            try:
-                e_obs, nu_obs = mobj.elastic.table[0]
-            except Exception:
-                return fail('Material elastic data missing: ' + str(exp.get('name')))
-
-            if 'E' in exp and not close_enough(e_obs, exp['E'], tol=MATERIAL_TOL, rel=1.0e-3):
-                return fail('Material E mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(e_obs), str(exp['E'])))
-            if 'nu' in exp and not close_enough(nu_obs, exp['nu'], tol=MATERIAL_TOL, rel=1.0e-3):
-                return fail('Material nu mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(nu_obs), str(exp['nu'])))
-
-        if 'density' in exp:
-            obs = _read_material_value(mobj, 'density')
-            if obs is None or not close_enough(obs, exp['density'], tol=MATERIAL_TOL, rel=5.0e-2):
-                return fail('Material density mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(exp['density'])))
-
-        if 'conductivity' in exp:
-            obs = _read_material_value(mobj, 'conductivity')
-            if obs is None:
-                return fail('Material conductivity missing for ' + str(exp.get('name')))
-            target = exp['conductivity']
-            if isinstance(target, (list, tuple)):
-                matched = False
-                for t in target:
-                    if close_enough(obs, t, tol=MATERIAL_TOL, rel=5.0e-2):
-                        matched = True
-                        break
-                if not matched:
-                    return fail('Material conductivity mismatch for %s: obs=%s exp_any=%s' % (str(exp.get('name')), str(obs), str(target)))
-            else:
-                if not close_enough(obs, target, tol=MATERIAL_TOL, rel=5.0e-2):
-                    return fail('Material conductivity mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(target)))
-
-        if 'specific_heat' in exp:
-            obs = _read_material_value(mobj, 'specificHeat')
-            if obs is None or not close_enough(obs, exp['specific_heat'], tol=MATERIAL_TOL, rel=5.0e-2):
-                return fail('Material specificHeat mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(exp['specific_heat'])))
-
-        if 'expansion' in exp:
-            obs = _read_material_value(mobj, 'expansion')
-            if obs is None or not close_enough(obs, exp['expansion'], tol=MATERIAL_TOL, rel=5.0e-2):
-                return fail('Material expansion mismatch for %s: obs=%s exp=%s' % (str(exp.get('name')), str(obs), str(exp['expansion'])))
-
-    return True
-
-
-def check_section(model, part_obj, section_spec):
-    if not section_spec:
-        return True
-
-    try:
-        assigns = part_obj.sectionAssignments
-        if len(assigns) == 0:
-            return fail('No section assignment found on primary part')
-    except Exception:
-        return fail('Cannot inspect section assignments on primary part')
-
-    expected_type = ci(section_spec.get('type', ''))
-    expected_materials = [ci(x) for x in section_spec.get('material_names', [])]
-    expected_thickness = section_spec.get('thickness', None)
-    expected_int_pts = section_spec.get('num_int_pts', None)
-
-    found_match = False
-    try:
-        for sk in model.sections.keys():
-            sec = model.sections[sk]
-            sname = class_name(sec)
-
-            if expected_type == 'SHELL' and 'SHELL' not in sname:
-                continue
-            if expected_type == 'SOLID' and 'SOLID' not in sname:
-                continue
-
-            mat_name = ci(getattr(sec, 'material', ''))
-            if expected_materials and mat_name not in expected_materials:
-                continue
-
-            if expected_thickness is not None:
-                th = safe_float(getattr(sec, 'thickness', None), None)
-                if th is None or not close_enough(th, expected_thickness, tol=GEOM_TOL, rel=1.0e-3):
-                    continue
-
-            if expected_int_pts is not None:
-                nipt = getattr(sec, 'numIntPts', None)
-                ni = None
-                try:
-                    ni = int(nipt)
-                except Exception:
-                    ni = None
-                if ni is None or ni != int(expected_int_pts):
-                    continue
-
-            found_match = True
-            break
-    except Exception:
-        return fail('Cannot inspect section objects')
-
-    if not found_match:
-        return fail('No matching section found for expected section spec')
-
-    return True
-
-
-def all_set_names(model, part_obj):
-    names = []
-    try:
-        names.extend(list(model.rootAssembly.sets.keys()))
-    except Exception:
-        pass
-    try:
-        names.extend(list(model.rootAssembly.nodeSets.keys()))
-    except Exception:
-        pass
-    try:
-        names.extend(list(part_obj.sets.keys()))
-    except Exception:
-        pass
-    return names
-
-
-def set_name_exists(all_names, target):
-    tu = ci(target)
-    for n in all_names:
-        nu = ci(n)
-        if nu == tu or nu.endswith('.' + tu):
-            return True
-    return False
-
-
-def check_required_sets(model, part_obj, set_names):
-    if not set_names:
-        return True
-    names = all_set_names(model, part_obj)
-    for s in set_names:
-        if not set_name_exists(names, s):
-            return fail('Required set not found: ' + str(s))
-    return True
-
-
-def bc_matches_req(bc_obj, req):
-    step_req = req.get('step', None)
-    if step_req is not None:
-        cstep = getattr(bc_obj, 'createStepName', None)
-        if not names_equal(cstep, step_req):
-            return False
-
-    dofs = req.get('dofs', {})
-    for dof_name in dofs.keys():
-        exp = dofs[dof_name]
-        obs = getattr(bc_obj, dof_name, None)
-        if exp == 'SET':
-            if not is_set_value(obs):
-                return False
-        elif exp == 'UNSET':
-            if is_set_value(obs):
-                return False
-        else:
-            if not is_set_value(obs):
-                return False
-            if not close_enough(obs, exp, tol=ABS_TOL, rel=1.0e-3):
-                return False
-
-    if 'magnitude' in req:
-        obs = getattr(bc_obj, 'magnitude', None)
-        if obs is None:
-            return False
-        tol = float(req.get('tol', ABS_TOL))
-        if not close_enough(obs, req['magnitude'], tol=tol, rel=1.0e-3):
-            return False
-
-    return True
-
-
-
-
-def check_bcs(model, bc_specs, min_count=None):
-    repo = model.boundaryConditions
-
-    if min_count is not None:
-        try:
-            if len(repo.keys()) < int(min_count):
-                return fail('Boundary condition count too low: obs=%s min=%s' % (str(len(repo.keys())), str(min_count)))
-        except Exception:
-            return fail('Cannot inspect boundary condition repository')
-
-    if not bc_specs:
-        return True
-
-    try:
-        bcs = [repo[k] for k in repo.keys()]
-    except Exception:
-        return fail('Cannot iterate boundary conditions')
-
-    used = set()
-    for req in bc_specs:
-        matched_index = None
-        for index, bc in enumerate(bcs):
-            if index in used:
-                continue
-            if bc_matches_req(bc, req):
-                matched_index = index
-                break
-        if matched_index is None:
-            return fail('Required BC signature not found: ' + str(req))
-        used.add(matched_index)
-
-    return True
-
-
-
-
-def type_matches_any(obj, tokens):
-    if not tokens:
-        return True
-    txt = class_name(obj)
-    for t in tokens:
-        if ci(t) in txt:
-            return True
-    return False
-
-
-def load_matches_req(load_obj, req):
-    if not type_matches_any(load_obj, req.get('type_any', [])):
+def bbox_matches(observed, expected, tol=GEOM_TOL):
+    if observed is None:
         return False
+    return all(close_enough(observed[key], value, tol=tol, rel=1.0e-6)
+               for key, value in expected.items())
 
-    step_req = req.get('step', None)
-    if step_req is not None:
-        cstep = getattr(load_obj, 'createStepName', None)
-        if not names_equal(cstep, step_req):
-            return False
 
-    if 'magnitude' in req:
-        mag = getattr(load_obj, 'magnitude', None)
-        if mag is None:
-            return False
-        tol = float(req.get('tol', ABS_TOL))
-        if not close_enough(mag, req['magnitude'], tol=tol, rel=1.0e-2):
-            return False
+def part_bbox(part, meshed):
+    coords = node_coords(part.nodes) if meshed else vertex_coords(part.vertices)
+    return bbox(coords)
 
-    comp = req.get('component', None)
-    if comp:
-        val = getattr(load_obj, comp, None)
-        if val is None or not is_set_value(val):
+
+def instance_bbox(instance, meshed):
+    coords = node_coords(instance.nodes) if meshed else vertex_coords(instance.vertices)
+    return bbox(coords)
+
+
+def model_geometry_ok(model, meshed):
+    block = repo_value(model.parts, 'Block')
+    plate = repo_value(model.parts, 'Plate')
+    if block is None or plate is None or len(model.parts.keys()) != 2:
+        return False
+    if not bbox_matches(part_bbox(block, meshed), {
+            'x_min': 0.0, 'x_max': 10.0,
+            'y_min': 0.0, 'y_max': 10.0,
+            'z_min': 0.0, 'z_max': 12.0}):
+        return False
+    if not bbox_matches(part_bbox(plate, meshed), {
+            'x_min': 0.0, 'x_max': 30.0,
+            'y_min': 0.0, 'y_max': 30.0,
+            'z_min': 0.0, 'z_max': 4.0}):
+        return False
+    assembly = model.rootAssembly
+    block_instance = repo_value(assembly.instances, 'BLOCK-1')
+    plate_instance = repo_value(assembly.instances, 'PLATE-1')
+    if block_instance is None or plate_instance is None:
+        return False
+    if not bbox_matches(instance_bbox(block_instance, meshed), {
+            'x_min': 10.0, 'x_max': 20.0,
+            'y_min': 10.0, 'y_max': 20.0,
+            'z_min': 4.0, 'z_max': 16.0}):
+        return False
+    if not bbox_matches(instance_bbox(plate_instance, meshed), {
+            'x_min': 0.0, 'x_max': 30.0,
+            'y_min': 0.0, 'y_max': 30.0,
+            'z_min': 0.0, 'z_max': 4.0}):
+        return False
+    return True
+
+
+def required_region_names(model):
+    assembly = model.rootAssembly
+    for name in ('SURF_BLOCK_TOP', 'SURF_BLOCK_BOTTOM', 'SURF_PLATE_TOP'):
+        if repo_value(assembly.surfaces, name) is None:
             return False
-        vf = safe_float(val, None)
-        if vf is None:
+    for name in ('SET_PLATE_BOTTOM', 'SET_BLOCK_GUIDE_A',
+                 'SET_BLOCK_GUIDE_B'):
+        if repo_value(assembly.sets, name) is None:
             return False
-        sign = req.get('sign', None)
-        if sign == 'positive' and vf <= 0.0:
+    return True
+
+
+def check_seed(seed_path):
+    try:
+        openMdb(pathName=seed_path)
+        model = repo_value(mdb.models, MODEL_NAME)
+        if model is None:
+            return fail('Seed model is missing')
+        if not model_geometry_ok(model, meshed=False):
+            return fail('Seed geometry/assembly is not the required baseline')
+        if not required_region_names(model):
+            return fail('Seed named regions are incomplete')
+        if (len(model.steps.keys()) != 1 or len(model.interactions.keys()) != 0 or
+                len(model.boundaryConditions.keys()) != 0 or
+                len(model.loads.keys()) != 0 or len(mdb.jobs.keys()) != 0):
+            return fail('Seed is already completed or has analysis objects')
+        for part in model.parts.values():
+            if len(part.nodes) != 0 or len(part.elements) != 0:
+                return fail('Seed must remain unmeshed')
+        return passed('Incomplete native seed check passed')
+    except Exception as exc:
+        log(traceback.format_exc())
+        return fail('Cannot inspect seed CAE: ' + str(exc))
+
+
+def material_section_ok(model):
+    material = repo_value(model.materials, 'Steel')
+    if material is None:
+        return False
+    try:
+        elastic = material.elastic.table[0]
+        if (not close_enough(elastic[0], 210000.0, tol=0.1) or
+                not close_enough(elastic[1], 0.3, tol=1.0e-5)):
             return False
-        if sign == 'negative' and vf >= 0.0:
+    except Exception:
+        return False
+    section = repo_value(model.sections, 'Steel-Solid')
+    if section is None or ci(getattr(section, 'material', '')) != 'STEEL':
+        return False
+    for part_name in ('Block', 'Plate'):
+        part = repo_value(model.parts, part_name)
+        if part is None or not part.sectionAssignments:
             return False
-        if 'component_value' in req:
-            tol = float(req.get('tol', ABS_TOL))
-            if not close_enough(vf, req['component_value'], tol=tol, rel=1.0e-3):
+        if not any(ci(getattr(item, 'sectionName', '')) == 'STEEL-SOLID'
+                   for item in part.sectionAssignments):
+            return False
+    return True
+
+
+def mesh_ok(model):
+    specifications = {
+        'Block': (2.0, 252, 150),
+        'Plate': (3.0, 242, 100),
+    }
+    total_nodes = 0
+    for name, (seed, nodes, elements) in specifications.items():
+        part = repo_value(model.parts, name)
+        if part is None:
+            return False
+        if (len(part.nodes) != nodes or len(part.elements) != elements or
+                not close_enough(part.getPartSeeds(SIZE), seed,
+                                 tol=1.0e-3, rel=1.0e-5)):
+            return False
+        if set(ci(element.type) for element in part.elements) != set(['C3D8R']):
+            return False
+        for cell in part.cells:
+            try:
+                technique = part.getMeshControl(cell, TECHNIQUE)
+                elem_shape = part.getMeshControl(cell, ELEM_SHAPE)
+            except Exception:
                 return False
-
-    return True
-
-
-
-
-def check_loads(model, load_specs, min_count=None):
-    repo = model.loads
-
-    if min_count is not None:
-        try:
-            if len(repo.keys()) < int(min_count):
-                return fail('Load count too low: obs=%s min=%s' % (str(len(repo.keys())), str(min_count)))
-        except Exception:
-            return fail('Cannot inspect load repository')
-
-    if not load_specs:
-        return True
-
-    try:
-        loads = [repo[k] for k in repo.keys()]
-    except Exception:
-        return fail('Cannot iterate loads')
-
-    used = set()
-    for req in load_specs:
-        matched_index = None
-        for index, load_obj in enumerate(loads):
-            if index in used:
-                continue
-            if load_matches_req(load_obj, req):
-                matched_index = index
-                break
-        if matched_index is None:
-            return fail('Required load signature not found: ' + str(req))
-        used.add(matched_index)
-
-    return True
+            if ci(technique) != 'STRUCTURED' or ci(elem_shape) != 'HEX':
+                log('[FAIL] %s mesh must use STRUCTURED HEX controls' % name)
+                return False
+        total_nodes += len(part.nodes)
+    return total_nodes == 494 and total_nodes < 1000
 
 
+def surface_bbox(assembly, name):
+    surface = repo_value(assembly.surfaces, name)
+    return bbox(node_coords(surface.nodes)) if surface is not None else None
 
 
-def check_couplings(model, req):
-    if not req:
-        return True
-
-    min_count = int(req.get('min_count', 0))
-
-    try:
-        repo = model.constraints
-        couplings = []
-        for k in repo.keys():
-            c = repo[k]
-            if 'COUPLING' in class_name(c):
-                ctype = ci(getattr(c, 'couplingType', ''))
-                if 'KINEMATIC' in ctype or req.get('accept_any_coupling', False):
-                    couplings.append(c)
-        if len(couplings) < min_count:
-            return fail('Kinematic coupling count too low: obs=%s min=%s' % (str(len(couplings)), str(min_count)))
-    except Exception:
-        return fail('Cannot inspect coupling constraints')
-
-    return True
+def set_bbox(assembly, name):
+    region = repo_value(assembly.sets, name)
+    return bbox(node_coords(region.nodes)) if region is not None else None
 
 
-def check_contact(model, req):
-    if not req:
-        return True
-
-    min_interactions = int(req.get('min_interactions', 1))
-    min_props = int(req.get('min_properties', 1))
-
-    try:
-        if len(model.interactions.keys()) < min_interactions:
-            return fail('Interaction count too low: obs=%s min=%s' % (str(len(model.interactions.keys())), str(min_interactions)))
-    except Exception:
-        return fail('Cannot inspect interactions')
-
-    try:
-        if len(model.interactionProperties.keys()) < min_props:
-            return fail('Interaction property count too low: obs=%s min=%s' % (str(len(model.interactionProperties.keys())), str(min_props)))
-    except Exception:
-        return fail('Cannot inspect interaction properties')
-
-    if req.get('hard', False) or req.get('frictionless', False):
-        hard_ok = not req.get('hard', False)
-        fric_ok = not req.get('frictionless', False)
-
-        try:
-            for k in model.interactionProperties.keys():
-                ip = model.interactionProperties[k]
-
-                if req.get('hard', False):
-                    nb = getattr(ip, 'normalBehavior', None)
-                    po = ci(getattr(nb, 'pressureOverclosure', '')) if nb is not None else ''
-                    if 'HARD' in po:
-                        hard_ok = True
-
-                if req.get('frictionless', False):
-                    tb = getattr(ip, 'tangentialBehavior', None)
-                    form = ci(getattr(tb, 'formulation', '')) if tb is not None else ''
-                    if 'FRICTIONLESS' in form:
-                        fric_ok = True
-        except Exception:
-            pass
-
-        if not hard_ok:
-            return fail('Hard contact property not confirmed')
-        if not fric_ok:
-            return fail('Frictionless tangential behavior not confirmed')
-
-    return True
+def surface_set_geometry(model):
+    assembly = model.rootAssembly
+    expected_surfaces = {
+        'SURF_BLOCK_TOP': {
+            'x_min': 10.0, 'x_max': 20.0,
+            'y_min': 10.0, 'y_max': 20.0,
+            'z_min': 16.0, 'z_max': 16.0},
+        'SURF_BLOCK_BOTTOM': {
+            'x_min': 10.0, 'x_max': 20.0,
+            'y_min': 10.0, 'y_max': 20.0,
+            'z_min': 4.0, 'z_max': 4.0},
+        'SURF_PLATE_TOP': {
+            'x_min': 0.0, 'x_max': 30.0,
+            'y_min': 0.0, 'y_max': 30.0,
+            'z_min': 4.0, 'z_max': 4.0},
+    }
+    for name, expected in expected_surfaces.items():
+        if not bbox_matches(surface_bbox(assembly, name), expected):
+            return False, None
+    expected_sets = {
+        'SET_PLATE_BOTTOM': {
+            'x_min': 0.0, 'x_max': 30.0,
+            'y_min': 0.0, 'y_max': 30.0,
+            'z_min': 0.0, 'z_max': 0.0},
+        'SET_BLOCK_GUIDE_A': {
+            'x_min': 10.0, 'x_max': 10.0,
+            'y_min': 10.0, 'y_max': 10.0,
+            'z_min': 4.0, 'z_max': 4.0},
+        'SET_BLOCK_GUIDE_B': {
+            'x_min': 20.0, 'x_max': 20.0,
+            'y_min': 10.0, 'y_max': 10.0,
+            'z_min': 4.0, 'z_max': 4.0},
+    }
+    for name, expected in expected_sets.items():
+        if not bbox_matches(set_bbox(assembly, name), expected):
+            return False, None
+    top = expected_surfaces['SURF_BLOCK_TOP']
+    area = (top['x_max'] - top['x_min']) * (top['y_max'] - top['y_min'])
+    return True, area
 
 
-def check_predefined_temperature(model, reqs):
-    if not reqs:
-        return True
+def keyword_groups(model):
+    model.keywordBlock.synchVersions(storeNodesAndElements=False)
+    step_name = 'Initial'
+    groups = []
+    for raw in model.keywordBlock.sieBlocks:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = header_parameter(lines[0], 'NAME') or ''
+            groups.append((step_name, header, lines[1:]))
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+    return groups
 
-    try:
-        fields = [model.predefinedFields[k] for k in model.predefinedFields.keys()]
-    except Exception:
-        return fail('Cannot inspect predefined fields')
 
-    for req in reqs:
-        step_req = req.get('step', None)
-        mag_req = req.get('magnitude', None)
+def header_parameter(header, name):
+    for field in header.split(',')[1:]:
+        pair = field.split('=', 1)
+        if len(pair) == 2 and ci(pair[0]) == ci(name):
+            return pair[1].strip()
+    return None
 
-        matched = False
-        for pf in fields:
-            if 'TEMPERATURE' not in class_name(pf):
-                continue
-            cstep = getattr(pf, 'createStepName', None)
-            if step_req is not None and not names_equal(cstep, step_req):
-                continue
 
-            if mag_req is not None:
-                mags = getattr(pf, 'magnitudes', None)
-                mv = None
+def header_has_flag(header, name):
+    return any(ci(field) == ci(name) for field in header.split(',')[1:])
+
+
+def line_fields(line):
+    return [field.strip() for field in line.split(',')]
+
+
+def keyword_semantics(model):
+    groups = keyword_groups(model)
+    step = repo_value(model.steps, STEP_NAME)
+    if (step is None or 'STATIC' not in class_name(step) or
+            ci(getattr(step, 'previous', '')) != 'INITIAL' or
+            not symbol_is_true(getattr(step, 'nlgeom', False)) or
+            not close_enough(getattr(step, 'initialInc', None), 0.05,
+                             tol=1.0e-10, rel=1.0e-8) or
+            not close_enough(getattr(step, 'maxInc', None), 0.1,
+                             tol=1.0e-10, rel=1.0e-8) or
+            not close_enough(getattr(step, 'minInc', None), 1.0e-8,
+                             tol=1.0e-12, rel=1.0e-8) or
+            int(getattr(step, 'maxNumInc', -1)) != 200):
+        log('[FAIL] StaticStep controls mismatch')
+        return False, None
+    if len(model.steps.keys()) != 2:
+        return False, None
+
+    active_pressures = []
+    for load in model.loads.values():
+        if ('PRESSURE' in class_name(load) and
+                not symbol_is_true(getattr(load, 'suppressed', False)) and
+                ci(getattr(load, 'distributionType', '')) == 'UNIFORM'):
+            active_pressures.append(load)
+    if len(active_pressures) != 1 or len(model.loads.keys()) != 1:
+        return False, None
+    if ci(region_name(active_pressures[0].region)) != 'SURF_BLOCK_TOP':
+        return False, None
+
+    bc_regions = []
+    for bc in model.boundaryConditions.values():
+        if not symbol_is_true(getattr(bc, 'suppressed', False)):
+            bc_regions.append(ci(region_name(getattr(bc, 'region', None))))
+    if (len(model.boundaryConditions.keys()) != 3 or
+            set(bc_regions) != set(['SET_PLATE_BOTTOM', 'SET_BLOCK_GUIDE_A',
+                                    'SET_BLOCK_GUIDE_B'])):
+        return False, None
+    if len(model.interactions.keys()) != 1 or len(model.interactionProperties.keys()) != 1:
+        return False, None
+    interaction = list(model.interactions.values())[0]
+    if ('SURFACETOSURFACESTD' not in compact_name(class_name(interaction)) or
+            symbol_is_true(getattr(interaction, 'suppressed', False)) or
+            ci(getattr(interaction, 'sliding', '')) != 'FINITE' or
+            ci(region_name(getattr(interaction, 'main', None))) != 'SURF_PLATE_TOP' or
+            ci(region_name(getattr(interaction, 'secondary', None))) !=
+            'SURF_BLOCK_BOTTOM'):
+        log('[FAIL] Finite-sliding surface-to-surface contact object mismatch')
+        return False, None
+    interaction_property = list(model.interactionProperties.values())[0]
+    normal_behavior = compact_name(
+        getattr(interaction_property, 'normalBehavior', ''))
+    tangential_behavior = compact_name(
+        getattr(interaction_property, 'tangentialBehavior', ''))
+    if ('PRESSUREOVERCLOSUREHARD' not in normal_behavior or
+            'ALLOWSEPARATIONON' not in normal_behavior or
+            'FORMULATIONFRICTIONLESS' not in tangential_behavior):
+        log('[FAIL] Hard/separation-allowed/frictionless property mismatch')
+        return False, None
+
+    pressure_values = []
+    boundaries = {}
+    step_header_ok = False
+    static_controls_ok = False
+    contact_ok = False
+    hard_ok = False
+    frictionless_ok = False
+    for step_name, header, lines in groups:
+        if step_name == STEP_NAME and header.startswith('*STEP'):
+            try:
+                step_header_ok = (
+                    ci(header_parameter(header, 'NAME')) == ci(STEP_NAME) and
+                    ci(header_parameter(header, 'NLGEOM')) in ('YES', 'ON') and
+                    int(float(header_parameter(header, 'INC'))) == 200)
+            except Exception:
+                step_header_ok = False
+        if step_name == STEP_NAME and header.startswith('*STATIC'):
+            try:
+                values = [float(field) for field in line_fields(lines[0])[:4]]
+                static_controls_ok = (
+                    len(values) == 4 and
+                    close_enough(values[0], 0.05, tol=1.0e-10,
+                                 rel=1.0e-8) and
+                    close_enough(values[1], 1.0, tol=1.0e-10,
+                                 rel=1.0e-8) and
+                    close_enough(values[2], 1.0e-8, tol=1.0e-12,
+                                 rel=1.0e-8) and
+                    close_enough(values[3], 0.1, tol=1.0e-10,
+                                 rel=1.0e-8))
+            except Exception:
+                static_controls_ok = False
+        if step_name == STEP_NAME and header.startswith('*DSLOAD'):
+            for line in lines:
+                fields = line_fields(line)
+                if (len(fields) >= 3 and ci(fields[0]) == 'SURF_BLOCK_TOP' and
+                        ci(fields[1]) == 'P'):
+                    try:
+                        pressure_values.append(float(fields[2]))
+                    except Exception:
+                        pass
+        if step_name == 'Initial' and header.startswith('*BOUNDARY'):
+            for line in lines:
+                fields = line_fields(line)
+                name = ci(fields[0]) if fields else ''
+                if len(fields) >= 2 and ci(fields[1]) == 'ENCASTRE':
+                    boundaries.setdefault(name, set()).add('ENCASTRE')
+                elif len(fields) >= 3:
+                    try:
+                        first = int(float(fields[1]))
+                        last = int(float(fields[2]))
+                        boundaries.setdefault(name, set()).update(range(first, last + 1))
+                    except Exception:
+                        pass
+        if step_name == 'Initial' and header.startswith('*CONTACT PAIR'):
+            prop = header_parameter(header, 'INTERACTION')
+            for line in lines:
+                fields = line_fields(line)
+                if (ci(prop) == 'FRICTIONLESS-HARD' and
+                        ci(header_parameter(header, 'TYPE')) ==
+                        'SURFACE TO SURFACE' and
+                        not header_has_flag(header, 'SMALL SLIDING') and
+                        len(fields) >= 2 and
+                        ci(fields[0]) == 'SURF_BLOCK_BOTTOM' and
+                        ci(fields[1]) == 'SURF_PLATE_TOP'):
+                    contact_ok = True
+        if header.startswith('*SURFACE BEHAVIOR'):
+            hard_ok = (
+                ci(header_parameter(header, 'PRESSURE-OVERCLOSURE')) == 'HARD' and
+                not header_has_flag(header, 'NO SEPARATION'))
+        if header.startswith('*FRICTION'):
+            for line in lines:
+                fields = line_fields(line)
                 try:
-                    if isinstance(mags, (list, tuple)) and len(mags) > 0:
-                        mv = safe_float(mags[0], None)
-                    else:
-                        mv = safe_float(mags, None)
+                    if fields and close_enough(float(fields[0]), 0.0, tol=1.0e-8):
+                        frictionless_ok = True
                 except Exception:
-                    mv = None
+                    pass
 
-                if mv is None:
-                    matched = True
-                    break
-
-                if close_enough(mv, mag_req, tol=GEOM_TOL, rel=1.0e-2):
-                    matched = True
-                    break
-            else:
-                matched = True
-                break
-
-        if not matched:
-            return fail('Required temperature predefined field not found: ' + str(req))
-
-    return True
-
-
-def check_step(model, step_spec):
-    step_name = PROCESS_SPEC['artifact']['step_name']
-    step_key = find_key_ci(model.steps, step_name)
-    if step_key is None:
-        return fail('Step not found in CAE model: ' + str(step_name))
-
-    step_obj = model.steps[step_key]
-
-    kind = step_spec.get('kind', None)
-    if kind is not None and not step_kind_matches(step_obj, kind):
-        return fail('Step kind mismatch: expected %s got class=%s procedure=%s' % (
-            str(kind), class_name(step_obj), str(getattr(step_obj, 'procedureType', None))))
-
-    if 'nlgeom' in step_spec and step_spec['nlgeom'] is not None:
-        exp = bool(step_spec['nlgeom'])
-        obs_raw = getattr(step_obj, 'nlgeom', None)
-        obs = symbol_to_bool(obs_raw)
-        if obs is None or obs != exp:
-            return fail('Step nlgeom mismatch: obs=%s exp=%s' % (str(obs_raw), str(exp)))
-
-    if 'num_eigen' in step_spec and step_spec['num_eigen'] is not None:
-        obs = getattr(step_obj, 'numEigen', None)
-        try:
-            oi = int(obs)
-        except Exception:
-            return fail('Step numEigen unreadable: ' + str(obs))
-        if oi != int(step_spec['num_eigen']):
-            return fail('Step numEigen mismatch: obs=%s exp=%s' % (str(oi), str(step_spec['num_eigen'])))
-
-    if 'response' in step_spec and step_spec['response'] is not None:
-        obs = ci(getattr(step_obj, 'response', ''))
-        if ci(step_spec['response']) not in obs:
-            return fail('Step response mismatch: obs=%s exp=%s' % (str(obs), str(step_spec['response'])))
-
-    for key, attr in [('time_period', 'timePeriod'), ('initial_inc', 'initialInc'), ('max_inc', 'maxInc'), ('deltmx', 'deltmx')]:
-        if key in step_spec and step_spec[key] is not None:
-            obs = getattr(step_obj, attr, None)
-            if not close_enough(obs, step_spec[key], tol=GEOM_TOL, rel=1.0e-2):
-                return fail('Step %s mismatch: obs=%s exp=%s' % (str(attr), str(obs), str(step_spec[key])))
-
-    return True
+    if not step_header_ok or not static_controls_ok:
+        log('[FAIL] Step keyword controls mismatch')
+        return False, None
+    if len(pressure_values) != 1 or pressure_values[0] <= 0.0:
+        return False, None
+    if not close_enough(pressure_values[0], 5.0, tol=1.0e-5):
+        log('[FAIL] Pressure magnitude mismatch: expected 5.0 MPa, got %s MPa' %
+            pressure_values[0])
+        return False, None
+    if boundaries.get('SET_PLATE_BOTTOM') != set(['ENCASTRE']):
+        return False, None
+    if boundaries.get('SET_BLOCK_GUIDE_A') != set([1, 2]):
+        return False, None
+    if boundaries.get('SET_BLOCK_GUIDE_B') != set([2]):
+        return False, None
+    if not (contact_ok and hard_ok and frictionless_ok):
+        return False, None
+    return True, pressure_values[0]
 
 
-def check_part_requirements(model, requirements):
-    try:
-        parts = [model.parts[key] for key in model.parts.keys()]
-    except Exception:
-        return fail('Cannot inspect model parts')
-
-    used = set()
-    for req in requirements:
-        matched = None
-        geom = req.get('geometry', {})
-        mesh = req.get('mesh', {})
-        expected_spans = geom.get('bbox_spans', {})
-        geom_tol = float(geom.get('tol', GEOM_TOL))
-        expected_type = ci(mesh.get('main_element_type', ''))
-        expected_seed = mesh.get('seed_size', None)
-        seed_tol = float(mesh.get('seed_tol', SEED_TOL_DEFAULT))
-
-        for index, part_obj in enumerate(parts):
-            if index in used:
-                continue
-            bbox = bbox_from_xyz(collect_node_xyz(part_obj.nodes))
-            if bbox is None:
-                continue
-            spans = {'x': bbox[3] - bbox[0], 'y': bbox[4] - bbox[1], 'z': bbox[5] - bbox[2]}
-            if any(axis not in spans or not close_enough(spans[axis], value, tol=geom_tol, rel=1.0e-3)
-                   for axis, value in expected_spans.items()):
-                continue
-            counts = get_element_type_counts(part_obj.elements)
-            if expected_type and counts.get(expected_type, 0) <= 0:
-                continue
-            if expected_seed is not None:
-                try:
-                    observed_seed = safe_float(part_obj.getPartSeeds(SIZE), None)
-                except Exception:
-                    observed_seed = None
-                if observed_seed is None or not close_enough(observed_seed, expected_seed, tol=seed_tol, rel=1.0e-3):
-                    continue
-            matched = index
-            break
-
-        if matched is None:
-            return fail('Required part geometry/mesh not found: ' + str(req))
-        used.add(matched)
-
-    return True
-
-
-def check_cae_process(cae_path):
+def check_completed_cae(cae_path):
     try:
         openMdb(pathName=cae_path)
-    except Exception as e:
-        return fail('Cannot open CAE: ' + str(e)), None
-
-    model = choose_model(mdb, PROCESS_SPEC['artifact'].get('model_name', None))
-    if model is None:
-        return fail('Cannot choose model from CAE'), None
-
-    part_obj = choose_primary_part(model)
-    if part_obj is None:
-        return fail('Cannot choose primary part from CAE'), None
-
-    proc = PROCESS_SPEC.get('process', {})
-
-    if not check_step(model, proc.get('step', {})):
-        return False, model
-    ok('Step check passed')
-
-    if not check_materials(model, proc.get('materials', [])):
-        return False, model
-    ok('Material check passed')
-
-    if not check_section(model, part_obj, proc.get('section', {})):
-        return False, model
-    ok('Section check passed')
-
-    if not check_part_requirements(model, proc.get('part_requirements', [])):
-        return False, model
-    ok('Part geometry/mesh checks passed')
-
-    if not check_required_sets(model, part_obj, proc.get('required_sets', [])):
-        return False, model
-    ok('Set check passed')
-
-    min_bc = None
-    min_load = None
-    min_counts = proc.get('min_counts', {})
-    if min_counts:
-        min_bc = min_counts.get('boundary_conditions', None)
-        min_load = min_counts.get('loads', None)
-
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
-        return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
-
-    if not check_couplings(model, proc.get('kinematic_coupling', None)):
-        return False, model
-    if proc.get('kinematic_coupling', None):
-        ok('Coupling check passed')
-
-    if not check_contact(model, proc.get('contact', None)):
-        return False, model
-    if proc.get('contact', None):
-        ok('Contact check passed')
-
-    if not check_predefined_temperature(model, proc.get('predefined_temperatures', [])):
-        return False, model
-    if proc.get('predefined_temperatures', []):
-        ok('Predefined temperature check passed')
-
-    return True, model
+        model = repo_value(mdb.models, MODEL_NAME)
+        if model is None:
+            return fail('Completed model is missing'), None, None
+        if not model_geometry_ok(model, meshed=True):
+            return fail('Completed geometry/assembly mismatch'), None, None
+        if not material_section_ok(model):
+            return fail('Material/section mismatch'), None, None
+        if not mesh_ok(model):
+            return fail('C3D8R mesh/seeds/counts mismatch'), None, None
+        geometry_ok, pressure_area = surface_set_geometry(model)
+        if not geometry_ok:
+            return fail('Load/contact/BC region geometry mismatch'), None, None
+        semantics_ok, pressure = keyword_semantics(model)
+        if not semantics_ok:
+            return fail('Step/contact/load/BC semantics mismatch'), None, None
+        passed('Completed CAE semantic and mesh checks passed')
+        return True, model, pressure * pressure_area
+    except Exception as exc:
+        log(traceback.format_exc())
+        return fail('Cannot inspect completed CAE: ' + str(exc)), None, None
 
 
+def node_signature(nodes):
+    result = []
+    for node in nodes:
+        try:
+            result.append((int(node.label),) + tuple(
+                round(float(component), 6) for component in node.coordinates))
+        except Exception:
+            return None
+    return tuple(sorted(result))
 
-def check_keyword_bcs_loads_b(model, proc):
-    text = ''
+
+def element_signature(instance):
+    result = []
+    node_map = {}
+    for node in instance.nodes:
+        node_map[int(node.label)] = tuple(
+            round(float(component), 6) for component in node.coordinates)
+    for element in instance.elements:
+        try:
+            element_nodes = list(element.getNodes())
+        except Exception:
+            try:
+                element_nodes = [node_map[int(label)]
+                                 for label in element.connectivity]
+            except Exception:
+                return None
+        coordinates = []
+        for node in element_nodes:
+            if hasattr(node, 'coordinates'):
+                coordinates.append(tuple(round(float(component), 6)
+                                         for component in node.coordinates))
+            else:
+                coordinates.append(tuple(node))
+        result.append((int(element.label), ci(element.type),
+                       tuple(sorted(coordinates))))
+    return tuple(sorted(result))
+
+
+def field_by_prefix(frame, prefix):
+    matches = []
+    for key in frame.fieldOutputs.keys():
+        if ci(key).startswith(ci(prefix)):
+            matches.append((key, frame.fieldOutputs[key]))
+    return matches[0] if len(matches) == 1 else (None, None)
+
+
+def vector_magnitude(data):
     try:
-        model.keywordBlock.synchVersions(storeNodesAndElements=False)
-        text = '\n'.join([str(x) for x in model.keywordBlock.sieBlocks]).upper()
+        total = 0.0
+        for component in data:
+            total += float(component) ** 2
+        return math.sqrt(total)
     except Exception:
-        return fail('Cannot read keyword block text for fallback')
+        return abs(float(data))
 
-    for req in proc.get('load_signatures', []):
-        types = [ci(x) for x in req.get('type_any', [])]
-        ok = False
-        for tp in types:
-            if 'PRESSURE' in tp and ('*DLOAD' in text or '*DSLOAD' in text):
-                ok = True
-            if 'MOMENT' in tp and '*CLOAD' in text:
-                ok = True
-        if not ok:
-            return fail('Keyword load fallback not found for %s' % str(types))
-    return True
 
-def check_odb_completion(odb_path):
-    solver_spec = PROCESS_SPEC.get('solver', {})
-    min_frames = int(solver_spec.get('min_frames', 1))
-    require_mode_frames = bool(solver_spec.get('require_mode_frames', False))
-
+def check_odb(odb_path, cae_model, applied_force):
     odb = None
     try:
-        odb = openOdb(path=odb_path, readOnly=True)
+        odb = openOdb(path=odb_path, readOnly=True, readInternalSets=True)
+        status = ci(getattr(odb.diagnosticData, 'jobStatus', ''))
+        if 'COMPLETED_SUCCESSFULLY' not in status:
+            return fail('ODB diagnostic status is not successful')
+        version = ci(str(odb.jobData))
+        if 'LEARNING EDITION 2025' not in version:
+            return fail('ODB was not generated by Abaqus Learning Edition 2025')
+        if len(odb.steps.keys()) != 1 or repo_value(odb.steps, STEP_NAME) is None:
+            return fail('ODB step mismatch')
+        step = repo_value(odb.steps, STEP_NAME)
+        if len(step.frames) < 2 or not close_enough(step.frames[-1].frameValue,
+                                                   1.0, tol=1.0e-6):
+            return fail('ODB completion frame mismatch')
 
-        step_key = find_key_ci(odb.steps, PROCESS_SPEC['artifact']['step_name'])
-        if step_key is None:
-            return fail('Target step not found in ODB: ' + str(PROCESS_SPEC['artifact']['step_name']))
+        for name in ('BLOCK-1', 'PLATE-1'):
+            cae_instance = repo_value(cae_model.rootAssembly.instances, name)
+            odb_instance = repo_value(odb.rootAssembly.instances, name)
+            if cae_instance is None or odb_instance is None:
+                return fail('CAE/ODB instance missing: ' + name)
+            if node_signature(cae_instance.nodes) != node_signature(odb_instance.nodes):
+                return fail('CAE/ODB node signature mismatch: ' + name)
+            if element_signature(cae_instance) != element_signature(odb_instance):
+                return fail('CAE/ODB element signature mismatch: ' + name)
 
-        step = odb.steps[step_key]
-        nf = len(step.frames)
-        if nf < min_frames:
-            return fail('ODB frame count too low: obs=%s min=%s' % (str(nf), str(min_frames)))
+        odb_surfaces = odb.rootAssembly.surfaces
+        for name in ('SURF_BLOCK_TOP', 'SURF_BLOCK_BOTTOM', 'SURF_PLATE_TOP'):
+            if repo_value(odb_surfaces, name) is None:
+                return fail('ODB surface missing: ' + name)
 
-        if require_mode_frames and nf <= 1:
-            return fail('ODB mode frames missing (need >1 frame for perturbation step)')
+        frame = step.frames[-1]
+        u_key, displacement = field_by_prefix(frame, 'U')
+        s_key, stress = field_by_prefix(frame, 'S')
+        rf_key, reaction = field_by_prefix(frame, 'RF')
+        cp_key, contact_pressure = field_by_prefix(frame, 'CPRESS')
+        if None in (u_key, s_key, rf_key, cp_key):
+            return fail('Required U/S/RF/CPRESS result field missing or ambiguous')
+        contact_key = compact_name(cp_key)
+        if ('SURFBLOCKBOTTOM' not in contact_key or
+                'SURFPLATETOP' not in contact_key):
+            return fail('CPRESS field is not for the required contact pair')
 
-        try:
-            status = ci(getattr(odb.diagnosticData, 'jobStatus', ''))
-            if status and ('ABORT' in status or 'TERMINAT' in status):
-                return fail('ODB diagnostic status indicates failure: ' + str(status))
-        except Exception:
-            pass
+        u_values = list(displacement.values)
+        s_values = list(stress.values)
+        rf_values = list(reaction.values)
+        cp_values = list(contact_pressure.values)
+        if (len(u_values) != 494 or len(s_values) != 250 or
+                len(rf_values) != 494 or not cp_values):
+            return fail('Required result field population mismatch')
+        max_u = max(vector_magnitude(value.data) for value in u_values)
+        max_mises = max(float(value.mises) for value in s_values)
+        max_cpress = max(float(value.data) for value in cp_values)
+        min_cpress = min(float(value.data) for value in cp_values)
+        if not (1.0e-8 < max_u < 0.1):
+            return fail('Displacement result is missing or nonphysical')
+        if not (0.1 < max_mises < 1000.0):
+            return fail('Stress result is missing or nonphysical')
+        if max_cpress <= 0.1 or min_cpress < -1.0e-6:
+            return fail('CPRESS result is missing or nonphysical')
 
-        last_frame = step.frames[-1]
-        try:
-            fv = safe_float(last_frame.frameValue, None)
-            if fv is None:
-                return fail('Last frame value is not numeric')
-        except Exception:
-            return fail('Cannot read last frame value')
+        reaction_sum = [0.0, 0.0, 0.0]
+        for value in rf_values:
+            for index in range(min(3, len(value.data))):
+                reaction_sum[index] += float(value.data[index])
+        if abs(reaction_sum[0]) > max(0.05, applied_force * 1.0e-3):
+            return fail('Unexpected total X reaction')
+        if abs(reaction_sum[1]) > max(0.05, applied_force * 1.0e-3):
+            return fail('Unexpected total Y reaction')
+        if (reaction_sum[2] <= 0.0 or
+                abs(reaction_sum[2] - applied_force) > applied_force * 0.02):
+            return fail('Total RF3 does not balance the pressure load')
 
-        ok('ODB completion check passed')
-        return True
-
-    except Exception as e:
+        log('[PASS] ODB fields: maxU=%s maxMises=%s maxCPRESS=%s '
+            'RF=(%s,%s,%s) applied=%s' %
+            (max_u, max_mises, max_cpress, reaction_sum[0],
+             reaction_sum[1], reaction_sum[2], applied_force))
+        return passed('ODB completion, linkage, fields, and equilibrium checks passed')
+    except Exception as exc:
         log(traceback.format_exc())
-        return fail('Cannot open/inspect ODB: ' + str(e))
+        return fail('Cannot inspect ODB: ' + str(exc))
     finally:
         try:
             if odb is not None:
@@ -1201,52 +729,32 @@ def check_odb_completion(odb_path):
             pass
 
 
-def artifact_check(desktop):
-    job_name = PROCESS_SPEC['artifact']['job_name']
-    cae_path = os.path.join(desktop, job_name + '.cae')
-    odb_path = os.path.join(desktop, job_name + '.odb')
-
-    if not os.path.exists(cae_path):
-        return fail('CAE missing: ' + cae_path), None, None
-    if not os.path.exists(odb_path):
-        return fail('ODB missing: ' + odb_path), None, None
-
-    return True, cae_path, odb_path
-
-
 def check_task():
-    job_name = PROCESS_SPEC['artifact']['job_name']
-    desktop = get_desktop(job_name)
-    detail_path = os.path.join(desktop, 'eval_detail.txt')
-    result_path = os.path.join(desktop, 'eval_result.txt')
-
-    if has_forbidden_py_file(desktop):
-        fail('Forbidden .py file detected on desktop')
-        output_result(False, detail_path=detail_path, result_path=result_path)
+    desktop = get_desktop()
+    if has_forbidden_python(desktop):
+        fail('Forbidden Python file found on Desktop')
+        output_result(False, desktop)
         return False
-
-    ok_art, cae_path, odb_path = artifact_check(desktop)
-    if not ok_art:
-        output_result(False, detail_path=detail_path, result_path=result_path)
+    seed_path = os.path.join(desktop, SEED_NAME)
+    cae_path = os.path.join(desktop, JOB_NAME + '.cae')
+    odb_path = os.path.join(desktop, JOB_NAME + '.odb')
+    if not all(os.path.isfile(path) for path in (seed_path, cae_path, odb_path)):
+        fail('Seed CAE, completed CAE, or solved ODB is missing')
+        output_result(False, desktop)
         return False
-    ok('Artifact check passed')
-
-    ok_cae, _model = check_cae_process(cae_path)
-    if not ok_cae:
-        output_result(False, detail_path=detail_path, result_path=result_path)
+    if not check_seed(seed_path):
+        output_result(False, desktop)
         return False
-
-    if not check_odb_completion(odb_path):
-        output_result(False, detail_path=detail_path, result_path=result_path)
+    cae_ok, model, applied_force = check_completed_cae(cae_path)
+    if not cae_ok:
+        output_result(False, desktop)
         return False
-
-    output_result(True, detail_path=detail_path, result_path=result_path)
+    if not check_odb(odb_path, model, applied_force):
+        output_result(False, desktop)
+        return False
+    output_result(True, desktop)
     return True
 
 
-def main():
-    check_task()
-
-
 if __name__ == '__main__':
-    main()
+    check_task()

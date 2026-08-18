@@ -957,13 +957,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_keyword_bcs_loads_b(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model
@@ -984,27 +980,67 @@ def check_cae_process(cae_path):
 
 
 
-def check_keyword_bcs_loads_b(model, proc):
-    text = ''
+def check_keyword_bcs_loads_b(model, proc, min_bc=None, min_load=None):
     try:
         model.keywordBlock.synchVersions(storeNodesAndElements=False)
-        text = '\n'.join([str(x) for x in model.keywordBlock.sieBlocks]).upper()
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
     except Exception:
         return fail('Cannot read keyword block text for B-task load check')
 
-    # load type presence check from keywords (imported objects may hide attrs)
-    for req in proc.get('load_signatures', []):
-        types = [ci(x) for x in req.get('type_any', [])]
-        matched = False
-        for tp in types:
-            if 'SURFACETRACTION' in tp and ('*DSLOAD' in text or 'TRVEC' in text):
-                matched = True
-            if 'PRESSURE' in tp and ('*DLOAD' in text or '*DSLOAD' in text):
-                matched = True
-            if 'MOMENT' in tp and '*CLOAD' in text:
-                matched = True
-        if not matched:
-            return fail('Keyword load signature not found for any of %s' % str(types))
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+
+    fixed = False
+    for step, header, lines in groups:
+        if names_equal(step, 'Initial') and header.startswith('*BOUNDARY'):
+            if any('ENCASTRE' in ci(line) for line in lines):
+                fixed = True
+                break
+    if not fixed:
+        return fail('Initial-step ENCASTRE keyword not found')
+
+    req = proc.get('load_signatures', [])[0]
+    found = False
+    for step, header, lines in groups:
+        if not names_equal(step, req.get('step')):
+            continue
+        if not (header.startswith('*DSLOAD') or header.startswith('*DLOAD')):
+            continue
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            if not any('TRVEC' in ci(field) for field in fields):
+                continue
+            for field in fields[1:]:
+                value = safe_float(field, None)
+                if value is not None and close_enough(
+                        abs(value), req['magnitude'], tol=req['tol'], rel=1.0e-3):
+                    found = True
+                    break
+            if found:
+                break
+    if not found:
+        return fail('Step-Load surface traction magnitude/direction keyword not found')
 
     return True
 

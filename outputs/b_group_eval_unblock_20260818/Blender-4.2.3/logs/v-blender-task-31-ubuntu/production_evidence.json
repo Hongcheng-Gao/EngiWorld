@@ -1,0 +1,67 @@
+{
+  "task_id": "v-blender-task-31-ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "verified_utc": "2026-08-18T02:53:28Z",
+  "software": "Blender 4.2.3 LTS",
+  "build_hash": "0e22e4fcea03",
+  "staging": {
+    "config": [
+      "init_file/scene.blend -> /home/user/Desktop/scene.blend",
+      "init_file/stub.abc -> /home/user/Desktop/stub.abc",
+      "launch blender /home/user/Desktop/scene.blend"
+    ],
+    "ground_truth": [
+      "ground_truth/animated.abc -> /home/user/Desktop/animated.abc",
+      "ground_truth/answer.blend -> /home/user/Desktop/answer.blend"
+    ],
+    "postconfig": "eval.py -> /home/user/Desktop/eval.py"
+  },
+  "remote_sha256": {
+    "scene.blend": "295968e7eca904b4382dcb88354eb67087ce00cb1b96f848a1cbebe19ea2724b",
+    "stub.abc": "9c04ff3fbe8e89fa9c5ca040141bdca079ee913fb2a1d6d487f6dc95806bd352",
+    "animated.abc": "bb2a1b12c8240b7384637b9f4a2b9c796650de2b7e36d205b770029edfcb3c93",
+    "answer.blend": "6a4826609e17f879fac20e2fb09bb6bccbead3eaf4c521364d87058d0e656f40",
+    "eval.py": "10a02567a4037bd3e2f1ff4f8f2084303979aa7ce39b503115a028530a972421"
+  },
+  "inner_eval": {
+    "score": 1.0,
+    "passed": true,
+    "checks": {
+      "file_exists": true,
+      "non_empty": "1594858 bytes",
+      "alembic_magic": "Ogawa 4f67617761ff0001b255180000000000",
+      "has_geom_data": "PolyMesh=3, .geom=2, AbcGeom=8",
+      "has_animation_samples": true,
+      "blender_importable": true,
+      "animated_polymesh_blob": true,
+      "polymesh_topology": {
+        "frame_1": [642, 1280],
+        "frame_15": [642, 1280],
+        "frame_30": [642, 1280]
+      },
+      "deformation_samples_1_15_30": [2.0, 3.0, 2.0]
+    }
+  },
+  "formal_eval": {
+    "command": "python3 /home/user/Desktop/eval.py",
+    "shell": true,
+    "stdout": "True\n",
+    "stderr": "",
+    "returncode": 0,
+    "expected": "True\n",
+    "exact_match": true,
+    "score": 1.0
+  },
+  "cleanup": {
+    "removed": [
+      "/home/user/Desktop/scene.blend",
+      "/home/user/Desktop/stub.abc",
+      "/home/user/Desktop/animated.abc",
+      "/home/user/Desktop/answer.blend",
+      "/home/user/Desktop/eval.py",
+      "/home/user/Desktop/_runtime"
+    ],
+    "desktop_after": ["__pycache__"],
+    "active_blender_processes_after": 0
+  }
+}

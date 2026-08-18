@@ -1,0 +1,38 @@
+{
+  "schema_version": 1,
+  "snapshot": "ANSYS-2026R",
+  "disconnected": true,
+  "disconnect_command": "./disconnect_team_instance.sh --snapshot 'ANSYS-2026R'",
+  "disconnect_started_at": "2026-08-18T19:24:30+08:00",
+  "disconnect_returncode": 0,
+  "disconnect_observed_output": "Disconnected: ANSYS-2026R\n",
+  "post_checks_completed_at": "2026-08-18T19:24:58+08:00",
+  "reconnected_for_verification": false,
+  "checks": {
+    "api_port_15046_listening": false,
+    "api_port_check_returncode": 1,
+    "rdp_port_13046_listening": false,
+    "rdp_port_check_returncode": 1,
+    "tunnel_pid": 39301,
+    "tunnel_pid_running": false,
+    "tunnel_pid_check_returncode": 1,
+    "pid_file": {
+      "path": "/tmp/engiworld-ANSYS-2026R.pid",
+      "exists": false,
+      "existence_check_returncode": 1
+    },
+    "control_socket": {
+      "path": "/tmp/engiworld-ANSYS-2026R.ctl",
+      "exists": false,
+      "existence_check_returncode": 1
+    }
+  },
+  "verification_methods": [
+    "lsof -nP -iTCP:15046 -sTCP:LISTEN",
+    "lsof -nP -iTCP:13046 -sTCP:LISTEN",
+    "ps -p 39301 -o pid=,state=,command=",
+    "test -e /tmp/engiworld-ANSYS-2026R.pid",
+    "test -e /tmp/engiworld-ANSYS-2026R.ctl"
+  ],
+  "conclusion": "The ANSYS-2026R API and RDP forwards are closed, tunnel PID 39301 is absent, and the PID file and SSH control socket are absent. Verification did not reconnect to the instance."
+}

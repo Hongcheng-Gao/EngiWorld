@@ -1,0 +1,100 @@
+{
+  "task_id": "v-abaqus-task-08-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus/CAE to complete the provided block-on-plate nonlinear contact seed model in the N-mm-MPa unit system. Start from C:\\Users\\user\\Desktop\\Contact-Seed.cae; do not rebuild or replace its preloaded geometry, material, section, assembly, named surfaces, or named sets. The seed contains an unmeshed 10 mm x 10 mm x 12 mm 3D deformable Block, an unmeshed 30 mm x 30 mm x 4 mm 3D deformable Plate, Steel with E = 210000 MPa and nu = 0.3, the Steel-Solid homogeneous solid section assigned to both parts, and dependent instances with BLOCK-1 centered on PLATE-1: block X/Y = 10..20 mm and Z = 4..16 mm, plate X/Y = 0..30 mm and Z = 0..4 mm. Preserve the named regions SURF_BLOCK_TOP, SURF_BLOCK_BOTTOM, SURF_PLATE_TOP, SET_PLATE_BOTTOM, SET_BLOCK_GUIDE_A, and SET_BLOCK_GUIDE_B. Analysis: create a Static, General step named Step-Contact after Initial with Nlgeom = ON, initial increment 0.05, maximum increment 0.1, minimum increment 1e-8, and at most 200 increments. Contact: create one finite-sliding Surface-to-Surface Contact (Standard) interaction active in Initial, using SURF_PLATE_TOP as the main surface and SURF_BLOCK_BOTTOM as the secondary surface; use one interaction property with Hard normal contact, separation allowed, and frictionless tangential behavior. Boundary conditions: apply ENCASTRE to SET_PLATE_BOTTOM; to remove only the block's frictionless in-plane rigid-body modes, set U1 = U2 = 0 on SET_BLOCK_GUIDE_A and U2 = 0 on SET_BLOCK_GUIDE_B, leaving U3 unconstrained on both guide sets. Load: in Step-Contact apply a uniform positive pressure of 5 MPa to SURF_BLOCK_TOP, acting inward/downward; the 100 mm2 loaded area gives a 500 N resultant. Mesh: use structured HEX C3D8R elements, a 2 mm global seed on Block, and a 3 mm global seed on Plate; generate both meshes. Output: request U, S, RF, and contact stress output so the solved ODB contains CPRESS for the required contact pair. Job and deliverables: create and submit Job-Contact, wait for successful completion, verify nonzero displacement, Mises stress, and CPRESS results and pressure/reaction equilibrium, then save the completed database as C:\\Users\\user\\Desktop\\Job-Contact.cae with the solved output database at C:\\Users\\user\\Desktop\\Job-Contact.odb.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-08/task-08.json",
+  "config_sha256": "b0d74ee1b75d6bf3b3351dfd764e91ea63027284b861f7d290d9861d8d086215",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-08/eval.py",
+  "eval_sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+  "started_utc": "2026-08-18T13:37:45.606260+00:00",
+  "desktop_before": [],
+  "config_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-08/init_file/Contact-Seed.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Contact-Seed.cae",
+      "size": 49152,
+      "sha256": "e51694afc99eba263498a79087f76334202fd8005423de9d3bf054ba4e195e0e",
+      "response": "File Uploaded: 49152 bytes"
+    }
+  ],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae",
+        "database=C:\\Users\\user\\Desktop\\Contact-Seed.cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae database=C:\\Users\\user\\Desktop\\Contact-Seed.cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-08/ground_truth/Job-Contact.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Contact.cae",
+      "size": 90112,
+      "sha256": "9f19f984cdd31f3601c1ebb09d10fe89b3c29da593db56937d6a64401948ec95",
+      "response": "File Uploaded: 90112 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-08/ground_truth/Job-Contact.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Contact.odb",
+      "size": 831488,
+      "sha256": "a290742571c5a0343f0ca2e8ba588a947246eb8d0680b88801e41410acfaafd7",
+      "response": "File Uploaded: 831488 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-08/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 28478,
+      "sha256": "6829bc5015a6a91fb26dc1a20a2a2da4d84797bdd761987582e04f945deec801",
+      "response": "File Uploaded: 28478 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Incomplete native seed check passed\n[PASS] Completed CAE semantic and mesh checks passed\n[PASS] ODB fields: maxU=0.00037129397548162 maxMises=6.10909032821655 maxCPRESS=6.33229446411133 RF=(1.3259167559454e-06,1.44187089290426e-06,500.007135186344) applied=500.0\n[PASS] ODB completion, linkage, fields, and equilibrium checks passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "Contact-Seed.cae",
+      "Length": 53248
+    },
+    {
+      "Name": "eval.py",
+      "Length": 28478
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 344
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Contact.cae",
+      "Length": 90112
+    },
+    {
+      "Name": "Job-Contact.odb",
+      "Length": 831488
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T13:37:54.227646+00:00"
+}

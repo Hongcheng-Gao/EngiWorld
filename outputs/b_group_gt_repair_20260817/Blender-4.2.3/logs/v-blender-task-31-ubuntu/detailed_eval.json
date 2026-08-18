@@ -1,0 +1,51 @@
+{
+  "outer_eval": {
+    "command": "blender --background --python /home/user/Desktop/eval.py",
+    "expected_stdout": "True\n",
+    "stdout": "True\nBlender 4.2.3 LTS (hash 0e22e4fcea03 built 2024-10-14 23:31:34)\n\nBlender quit\n",
+    "returncode": 0,
+    "exact_match": false
+  },
+  "inner_eval": {
+    "score": 1.0,
+    "passed": true,
+    "checks": {
+      "file_exists": {
+        "passed": true,
+        "msg": "abc = /home/user/Desktop/animated.abc"
+      },
+      "non_empty": {
+        "passed": true,
+        "msg": "file size = 1594858 bytes (need > 10240)"
+      },
+      "alembic_magic": {
+        "passed": true,
+        "msg": "Ogawa magic OK (first 16 bytes hex=4f67617761ff0001b255180000000000)"
+      },
+      "has_geom_data": {
+        "passed": true,
+        "msg": "schema-string hits: PolyMesh=3, .geom=2, AbcGeom=8"
+      },
+      "has_animation_samples": {
+        "passed": true,
+        "msg": "file_size=1594858; 8 distinct schema strings (need >= 4)"
+      },
+      "blender_importable": {
+        "passed": true,
+        "msg": "Alembic imported through Blender 4.2.3"
+      },
+      "animated_polymesh_blob": {
+        "passed": true,
+        "msg": "Blob is a mesh with a Mesh Sequence Cache modifier"
+      },
+      "polymesh_topology": {
+        "passed": true,
+        "msg": "frames 1, 15, and 30 each contain 642 vertices and 1280 faces"
+      },
+      "deformation_samples_1_15_30": {
+        "passed": true,
+        "msg": "maximum bounding-box extents are 2.0, 3.0, and 2.0"
+      }
+    }
+  }
+}

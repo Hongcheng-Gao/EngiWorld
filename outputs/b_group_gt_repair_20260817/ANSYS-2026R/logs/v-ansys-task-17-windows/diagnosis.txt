@@ -1,0 +1,25 @@
+v-ansys-task-17-windows diagnosis on ANSYS Fluent 2026 R1 (v261)
+
+A replacement Couette case/data pair was generated and solved in real Fluent
+2026 R1 with conformal periodic left/right boundaries. The 2560-cell,
+2673-node solution reports top/bottom wall shear of 0.5377798/0.4958034 Pa.
+Direct and evaluator-style temporary-copy probes execute all intended checks and
+end with INNER_RESULT=True. Candidate SHA-256 values are:
+
+  CAS 41221eeaca4fc0fb1ad93e2cb9335e076f2a3f3bdddef6fa968b3fc2d7ea6cf4
+  DAT 32b53ecf1faec799f4ddff2849c823a31f879458f7cdfa33a16da88879ab2b79
+
+Blocking evaluator conflict:
+The formal evaluator fails first at eval.py:82 on
+"if not mesh.nodes or not mesh.elements". Both values are nonempty NumPy arrays,
+whose Python truth value is undefined, so the runtime raises ValueError before
+the downstream checks. A valid nonempty GT mesh cannot avoid this evaluator
+error. The candidate was retained only as audit evidence and was not written
+back over the formal GT.
+
+Evidence: audit_candidates/candidate_generation.log,
+audit_candidates/candidate_inner_probe.log,
+audit_candidates/candidate_inner_probe_temp.log, and
+audit_candidates/exact_eval_diagnosis.log.
+
+Final status: eval_blocked

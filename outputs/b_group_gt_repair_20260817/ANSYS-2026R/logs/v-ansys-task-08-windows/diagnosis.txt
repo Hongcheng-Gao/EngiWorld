@@ -1,0 +1,24 @@
+v-ansys-task-08-windows diagnosis on ANSYS Mechanical APDL 2026 R1 (v261)
+
+Current evaluator result: False (return code 0).
+
+Native database/result inspection:
+- Element type/count: SOLID185 / 80
+- EX: 210000.0 MPa
+- NUXY: 0.3000000
+- Thermal expansion ALPX: 0.1500000E-04 /C = 1.5e-5 /C
+- Both X-end faces carry UX constraints, with minimum extra constraints
+- Uniform temperature was applied as a body-uniform condition; BFLIST therefore
+  reports no explicit nodal temperatures
+- Maximum equivalent stress: 252.0 MPa
+
+Blocking evaluator conflict:
+strict_process_check searches raw MPLIST output for the literal token "1.500".
+ANSYS v261 prints the correct 1.5e-5 coefficient as "0.1500000E-04". An
+explicit nodal-temperature rewrite could satisfy the separate BFLIST check, but
+cannot change this fixed material-output formatting. Changing ALPX to 1.5 would
+violate the instruction and invalidate the solution.
+
+Raw v261 command evidence: raw_probe.log (full MPLIST/BFLIST and strict check result)
+
+Final status: eval_blocked

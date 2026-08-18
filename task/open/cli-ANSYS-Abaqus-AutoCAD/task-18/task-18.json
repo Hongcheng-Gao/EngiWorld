@@ -1,31 +1,23 @@
 {
   "id": "c-open-abaqus-ansys-autocad-task-18-windows",
   "snapshot": "ANSYS-ABAQUS-AUTOCAD",
-  "instruction": "Choose a suitable tool from ANSYS, Abaqus, and AutoCAD to complete the task. Use a command-line or scripting workflow. Use the selected tool to complete a nonlinear Static Structural contact analysis. Physical problem: An elastic steel sphere presses against an elastic steel plate through frictionless contact. Coordinate system and geometry: - Use the global Cartesian coordinate system. - Use a full 3D model. - The vertical loading direction is the negative global Y direction. - The plate is centered about the global origin in the X-Z plane. - The plate dimensions are: - X direction: 100 mm - Z direction: 100 mm - Y direction thickness: 10 mm - Place the plate so that: - The top surface is at Y = 0 mm - The bottom surface is at Y = -10 mm - The sphere radius is 10 mm. - Place the sphere above the plate with its center on the global Y axis. - The lower point of the sphere should initially contact the center of the plate top surface. Model parameters: - Sphere material: Structural Steel - Plate material: Structural Steel - Use the following linear elastic properties for both bodies: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Mesh: - Use local refinement in the contact region. - Local element size in the contact region: 0.3 mm - Element size away from the contact region: 2 mm Contact setup: - Contact pair: sphere surface against the top surface of the plate. - Contact type: Frictionless. - Contact formulation: Augmented Lagrange or Pure Penalty. - Use appropriate normal contact stiffness settings to obtain a converged nonlinear contact solution. Boundary conditions and load: - Fix the bottom face of the plate. - Apply a vertical compressive force of 500 N to the sphere in the negative global Y direction. - Prevent only the unnecessary rigid-body lateral motion of the sphere, while allowing the sphere to move vertically into contact with the plate. - Do not fully fix the sphere. Analysis type: - Nonlinear Static Structural analysis. - Enable large deflection. - Use automatic time stepping or sufficient load substeps to obtain a converged contact solution. Deliverables: save the native model artifact and native solver result artifact on the Desktop, and write `C:/Users/user/Desktop/metrics.json` with numeric fields for the requested metrics. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
-  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data ; generated open-choice variant from task/task-c/ansys/task-11",
+  "instruction": "Use Abaqus 2025 Learning Edition through C:\\SIMULIA\\Commands\\abaqus.bat with a command-line or cae noGUI scripting workflow. This task intentionally requires Abaqus because the provided native starting model is an Abaqus CAE database. Start by opening C:\\Users\\user\\Desktop\\task18_punch_plate_init.cae; do not create a new model or replace the supplied starting database. Complete a 2D plane-strain, nonlinear static indentation demonstration in the N-mm-MPa system. The init already contains a 40 mm wide by 12 mm deep deformable plate spanning X=-20..20 mm and Y=-12..0 mm; it is assigned a deliberately linear-elastic engineering polymer with E=2100 MPa and nu=0.35 and a 1 mm structured CPE4R mesh. It also contains an analytical rigid semicircular punch of radius 5 mm, centered at (0,5) in the assembly so its lowest point initially touches the plate at (0,0), plus the required contact surfaces, bottom node set, and punch reference-point set. The init intentionally has no analysis step, contact interaction, boundary condition, job, or result-extraction assembly set. Add a Static, General step named IndentationStep with NLGEOM=ON, initial increment 0.01, minimum increment 1e-6, maximum increment 0.05, and at most 300 increments. Define one finite-sliding surface-to-surface interaction named PunchPlateContact, with the rigid punch as main and the plate top as secondary. Use a property named FrictionlessHard with hard normal contact, separation allowed, and frictionless tangential behavior. Encastre the plate bottom. In IndentationStep constrain punch reference-point U1=0 and UR3=0, prescribe U2=-0.1 mm, and do not apply any force or pressure load. From the supplied instance regions, create assembly node sets named PLATE_BOTTOM_NODES and PUNCH_RP_NODE for ODB result extraction. Request S, U, RF, and contact output sufficient to obtain CPRESS and COPEN. Create and run a one-CPU job named Task18_PunchPlate to successful completion. Save the completed model as C:\\Users\\user\\Desktop\\Task18_PunchPlate_GT.cae and its result as C:\\Users\\user\\Desktop\\Task18_PunchPlate.odb. Derive all metrics from the final ODB frame: max_contact_pressure is the maximum positive CPRESS in MPa; punch_vertical_displacement is U2 at PUNCH_RP_NODE in mm; punch_reaction_force is the absolute summed RF2 at PUNCH_RP_NODE in N/mm; max_mises_stress is the maximum S Mises in MPa. Write these four finite numeric fields to C:\\Users\\user\\Desktop\\metrics.json. Because this is a 2D plane-strain model, reaction and contact resultant forces are per unit out-of-plane thickness (N/mm); the plate-bottom RF2 sum must oppose and balance the punch RF2 within normal solver tolerance. The engineering polymer is intentionally modeled as linear elastic for this demonstration, and the requested 0.1 mm indentation must remain in a numerically stable stress range for that model.",
+  "source": "Abaqus 2025 official documentation: https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEELMRefMap/simaelm-c-2delem.htm ; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEITNRefMap/simaitn-c-contactconstraints.htm ; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAEOUTRefMap/simaout-c-stdoutputvar.htm",
   "config": [
     {
       "type": "upload_file",
       "parameters": {
-        "files": []
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "python",
-          "C:\\Users\\user\\Desktop\\license.py"
+        "files": [
+          {
+            "local_path": "task-18/init_file/task18_punch_plate_init.cae",
+            "path": "C:\\Users\\user\\Desktop\\task18_punch_plate_init.cae"
+          }
         ]
       }
     }
   ],
   "trajectory": "trajectories/",
-  "related_apps": [
-    "abaqus",
-    "ansys",
-    "autocad"
-  ],
+  "related_apps": ["abaqus"],
   "evaluator": {
     "postconfig": [
       {
@@ -48,9 +40,7 @@
     },
     "expected": {
       "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
+      "rules": {"expected": "True\n"}
     }
   },
   "proxy": false,

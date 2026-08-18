@@ -1,0 +1,145 @@
+{
+  "task_id": "c-ansys-task-08-windows",
+  "snapshot": "ANSYS-2026R",
+  "task_dir": "/Users/leiyu/workspace/Engiworld/task/task-c/ansys/task-08",
+  "instruction": "Use ANSYS Mechanical APDL to build and solve a coupled thermal-structural analysis model. Physical problem: A straight steel bar is axially restrained and subjected to a uniform temperature increase. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The bar length is along the X direction. - The bar occupies: - 0 ≤ X ≤ 100 mm - 0 ≤ Y ≤ 10 mm - 0 ≤ Z ≤ 10 mm - The left end face is X = 0. - The right end face is X = 100 mm. Model parameters: - Block size: 100 mm × 10 mm × 10 mm - Material: linear elastic steel with thermal expansion properties: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Coefficient of thermal expansion α = 1.5e-5 /°C - Element type: SOLID185 - Mesh: global element size 5 mm Thermal condition: - Set the reference temperature for thermal strain to 20 °C. - Apply a uniform body temperature of 100 °C to the entire bar. Structural boundary conditions: - Restrain axial expansion by applying UX = 0 on both end faces: - X = 0 - X = 100 mm - Add only the minimum additional constraints required to prevent rigid-body motion in 3D space. For a solid model, this requires fixing translational degrees of freedom at strategically selected nodes on the same end face, for example: - At node (0, 0, 0): fix UY = 0 and UZ = 0. - At node (0, 10, 0): fix UZ = 0. - Do not fully constrain the lateral surfaces. Analysis type: - Static structural analysis with thermal strain. - The temperature field is applied as a uniform body load for thermal strain calculation. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as: C:\\Users\\user\\Desktop\\apdl_thermal_stress.db - Save the structural result file as: C:\\Users\\user\\Desktop\\apdl_thermal_stress.rst [Software] To start ANSYS Workbench, run `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe -g` (version/path may differ on your machine).",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-c/ansys/task-08/task-08.json",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-c/ansys/task-08/eval.py",
+  "eval_sha256": "00469230ad83a6aadc709861e65c555906ceb7e7f633e3daaad028d625186c7e",
+  "started_utc": "2026-08-17T11:56:25.552729+00:00",
+  "gt_subdir": "ground_truth",
+  "desktop_before": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "python",
+        "C:\\Users\\user\\Desktop\\license.py"
+      ],
+      "shell": false,
+      "response": "python C:\\Users\\user\\Desktop\\license.py launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-c/ansys/task-08/ground_truth/apdl_thermal_stress.db",
+      "remote_path": "C:\\Users\\user\\Desktop\\apdl_thermal_stress.db",
+      "size": 196608,
+      "sha256": "6905d8a33f2d5650ccd78f993b222cbd6d8f84e73283cc98fd42a1ec7bec6ff8",
+      "response": "File Uploaded: 196608 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-c/ansys/task-08/ground_truth/apdl_thermal_stress.rst",
+      "remote_path": "C:\\Users\\user\\Desktop\\apdl_thermal_stress.rst",
+      "size": 393216,
+      "sha256": "5181eb78e72be73b30e426f0fb3bd245706db67f35fcdd4500e2cb84475ee409",
+      "response": "File Uploaded: 393216 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-c/ansys/task-08/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 7279,
+      "sha256": "00469230ad83a6aadc709861e65c555906ceb7e7f633e3daaad028d625186c7e",
+      "response": "File Uploaded: 7279 bytes"
+    }
+  ],
+  "eval_command": "python C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": ".__tmp__.inp",
+      "Length": 9
+    },
+    {
+      "Name": ".__tmp__.out",
+      "Length": 38
+    },
+    {
+      "Name": "apdl_thermal_stress.db",
+      "Length": 196608
+    },
+    {
+      "Name": "apdl_thermal_stress.rst",
+      "Length": 393216
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "eval.py",
+      "Length": 7279
+    },
+    {
+      "Name": "eval_apdl_thermal_stress.bat",
+      "Length": 10
+    },
+    {
+      "Name": "eval_apdl_thermal_stress.err",
+      "Length": 481
+    },
+    {
+      "Name": "eval_apdl_thermal_stress.lock",
+      "Length": 0
+    },
+    {
+      "Name": "eval_apdl_thermal_stress.log",
+      "Length": 0
+    },
+    {
+      "Name": "eval_apdl_thermal_stress.page",
+      "Length": 0
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "[{\"Name\":\"__pycache__\",\"Length\":null},{\"Name\":\"desktop.ini\",\"Length\":282},{\"Name\":\"license.py\",\"Length\":6853}]\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [
+    {
+      "Name": "__pycache__",
+      "Length": null
+    },
+    {
+      "Name": "desktop.ini",
+      "Length": 282
+    },
+    {
+      "Name": "license.py",
+      "Length": 6853
+    }
+  ],
+  "finished_utc": "2026-08-17T11:56:34.517067+00:00"
+}

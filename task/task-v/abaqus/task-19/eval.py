@@ -29,27 +29,14 @@ PROCESS_SPEC = {'artifact': {'job_name': 'Job-Buckle-B',
              'load_signatures': [{'type_any': ['CONCENTRATEDFORCE'],
                                   'step': 'Step-Buckle-B',
                                   'component': 'cf1',
-                                  'component_value': 7.2,
                                   'sign': 'positive',
                                   'tol': 0.05},
                                  {'type_any': ['CONCENTRATEDFORCE'],
                                   'step': 'Step-Buckle-B',
                                   'component': 'cf1',
-                                  'component_value': 3.6,
-                                  'sign': 'positive',
-                                  'tol': 0.05},
-                                 {'type_any': ['CONCENTRATEDFORCE'],
-                                  'step': 'Step-Buckle-B',
-                                  'component': 'cf1',
-                                  'component_value': -7.2,
-                                  'sign': 'negative',
-                                  'tol': 0.05},
-                                 {'type_any': ['CONCENTRATEDFORCE'],
-                                  'step': 'Step-Buckle-B',
-                                  'component': 'cf1',
-                                  'component_value': -3.6,
                                   'sign': 'negative',
                                   'tol': 0.05}],
+             'tributary_edge_load': {'line_load': 0.9, 'tol': 0.05},
              'materials': [{'E': 210000.0, 'name': 'Steel', 'nu': 0.3}],
              'mesh': {'main_element_type': 'S4R', 'seed_sizes': [8.0], 'seed_tol': 0.9},
              'min_counts': {'boundary_conditions': 3, 'loads': 4},
@@ -951,6 +938,147 @@ def check_keyword_bcs_loads(model, proc):
 
     return True
 
+
+def boundary_tributary_forces(part_obj, line_load):
+    xyz = collect_node_xyz(part_obj.nodes)
+    if not xyz:
+        return None, None
+    xmin = min(point[0] for point in xyz)
+    xmax = max(point[0] for point in xyz)
+    edge_tol = max(GEOM_TOL, (xmax - xmin) * 1.0e-6)
+
+    def unique_sorted(values):
+        result = []
+        for value in sorted(values):
+            if not result or abs(value - result[-1]) > GEOM_TOL:
+                result.append(value)
+        return result
+
+    left_y = unique_sorted([point[1] for point in xyz if abs(point[0] - xmin) <= edge_tol])
+    right_y = unique_sorted([point[1] for point in xyz if abs(point[0] - xmax) <= edge_tol])
+
+    def forces(coords):
+        if len(coords) < 2:
+            return []
+        result = []
+        for index, value in enumerate(coords):
+            if index == 0:
+                tributary = 0.5 * (coords[1] - value)
+            elif index == len(coords) - 1:
+                tributary = 0.5 * (value - coords[index - 1])
+            else:
+                tributary = 0.5 * (coords[index + 1] - coords[index - 1])
+            result.append(float(line_load) * tributary)
+        return result
+
+    return forces(left_y), forces(right_y)
+
+
+def check_task19_keyword_signatures(model, part_obj, proc, min_bc=None):
+    rule = proc.get('tributary_edge_load', {})
+    expected_left, expected_right = boundary_tributary_forces(
+        part_obj, float(rule.get('line_load', 0.0)))
+    if not expected_left or not expected_right:
+        return fail('Cannot derive tributary forces from plate edge nodes')
+    expected_load_count = len(expected_left) + len(expected_right)
+    try:
+        model.keywordBlock.synchVersions(storeNodesAndElements=False)
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if len(model.loads.keys()) < expected_load_count:
+            return fail('Edge nodal load count too low: obs=%s expected=%s' %
+                        (str(len(model.loads.keys())), str(expected_load_count)))
+    except Exception:
+        return fail('Cannot inspect BC/load keyword blocks')
+
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
+                    break
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+
+    bc_groups = [group for group in groups if group[1].startswith('*BOUNDARY')]
+    numbers = {'u1': 1, 'u2': 2, 'u3': 3}
+    used = set()
+    for req in proc.get('bc_signatures', []):
+        match = None
+        for index, (step, header, lines) in enumerate(bc_groups):
+            if index in used or not names_equal(step, req.get('step')):
+                continue
+            good = True
+            for name, expected in req.get('dofs', {}).items():
+                target = numbers[name.lower()]
+                found = False
+                for line in lines:
+                    fields = [field.strip() for field in line.split(',')]
+                    first = safe_float(fields[1], None) if len(fields) > 1 else None
+                    last = safe_float(fields[2], first) if len(fields) > 2 else first
+                    value = safe_float(fields[3], 0.0) if len(fields) > 3 else 0.0
+                    if (first is not None and last is not None and
+                            int(first) <= target <= int(last) and
+                            close_enough(value, expected, tol=ABS_TOL, rel=1.0e-3)):
+                        found = True
+                        break
+                if not found:
+                    good = False
+                    break
+            if good:
+                match = index
+                break
+        if match is None:
+            return fail('Required buckle BC keyword not found: ' + str(req))
+        used.add(match)
+
+    positives = []
+    negatives = []
+    for step, header, lines in groups:
+        if not names_equal(step, 'Step-Buckle-B') or not header.startswith('*CLOAD'):
+            continue
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            dof = safe_float(fields[1], None) if len(fields) > 1 else None
+            value = safe_float(fields[2], None) if len(fields) > 2 else None
+            if dof is None or value is None or int(dof) != 1:
+                continue
+            if value > 0.0:
+                positives.append(value)
+            elif value < 0.0:
+                negatives.append(-value)
+
+    tolerance = float(rule.get('tol', ABS_TOL))
+    positives.sort()
+    negatives.sort()
+    expected_left.sort()
+    expected_right.sort()
+    if len(positives) != len(expected_left) or len(negatives) != len(expected_right):
+        return fail('Loaded edge-node count mismatch: positive=%s/%s negative=%s/%s' %
+                    (str(len(positives)), str(len(expected_left)),
+                     str(len(negatives)), str(len(expected_right))))
+    for observed, expected in zip(positives, expected_left):
+        if not close_enough(observed, expected, tol=tolerance, rel=1.0e-3):
+            return fail('Positive tributary nodal load mismatch: obs=%s exp=%s' %
+                        (str(observed), str(expected)))
+    for observed, expected in zip(negatives, expected_right):
+        if not close_enough(observed, expected, tol=tolerance, rel=1.0e-3):
+            return fail('Negative tributary nodal load mismatch: obs=%s exp=%s' %
+                        (str(observed), str(expected)))
+    return True
+
 def check_step(model, step_spec):
     step_name = PROCESS_SPEC['artifact']['step_name']
     step_key = find_key_ci(model.steps, step_name)
@@ -1045,17 +1173,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    if not check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc):
+    if not check_task19_keyword_signatures(model, part_obj, proc, min_bc=min_bc):
         return False, model
-    ok('BC check passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
-        return False, model
-    ok('Load check passed')
-
-    if not check_keyword_bcs_loads(model, proc):
-        return False, model
-    ok('Keyword BC/Load check passed')
+    ok('BC and tributary edge-load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model

@@ -1,0 +1,87 @@
+{
+  "task_id": "v-abaqus-task-12-windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Use Abaqus to perform a linear buckling analysis of a thin plate (Variant A). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Shell planar part. Sketch a square plate from (0, 0) to (96, 96) in the X-Y plane. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Homogeneous Shell Section with a thickness of 1.2 mm and 5 through-thickness integration points, and assign it to the entire plate. Assembly: Create one dependent instance of the plate. Analysis Step: Create a Linear Perturbation Buckle step named Step-Buckle-A. Request 3 eigenvalues. Discretization: Mesh the plate with a global seed size of 6 mm. Assign S4R shell elements and generate the mesh. Loads and Boundary Conditions: Apply the compressive edge load of 1.2 N/mm on the two vertical edges as equivalent nodal forces after meshing. On the X = 0 edge, apply nodal forces in the positive X direction. On the X = 96 edge, apply nodal forces in the negative X direction. With an edge length of 96 mm and mesh spacing of 6 mm, apply 7.2 N to each interior edge node and 3.6 N to each corner edge node on each loaded vertical edge. Apply U3 = 0 on all four plate edges (X = 0, X = 96, Y = 0, and Y = 96) to represent simply supported transverse conditions. At the center mesh node approximately located at (48, 48, 0), constrain U1 = U2 = 0 to suppress in-plane translational rigid-body motion. At the bottom-edge midpoint mesh node approximately located at (48, 0, 0), constrain U1 = 0 only to suppress the remaining in-plane rotational rigid-body mode. Job Execution: Create a job named Job-Buckle-A, submit it for analysis, and wait for the analysis to complete successfully. Post-Processing: Review the first buckling mode and record the first eigenvalue. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Buckle-A.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-Buckle-A.odb. Run the solver to completion and ensure a result file is generated.",
+  "config_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-12/task-12.json",
+  "config_sha256": "cf2264f68a036f2c864dd7f6de0fa3fdd59bda9f3063856a63aba77f67fe1ae0",
+  "eval_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-12/eval.py",
+  "eval_sha256": "328d7629e68055276b40449fa48e19dc9ceddde929a658f6ad4328b4fce9a3b8",
+  "started_utc": "2026-08-18T03:13:23.213302+00:00",
+  "desktop_before": [],
+  "config_uploads": [],
+  "config_launches": [
+    {
+      "command": [
+        "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+        "cae"
+      ],
+      "shell": false,
+      "response": "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae launched successfully"
+    }
+  ],
+  "gt_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-12/ground_truth/Job-Buckle-A.cae",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Buckle-A.cae",
+      "size": 65536,
+      "sha256": "18465a96ca3b3c696a66d5d76c2622701bc8914183711cfa92fd01c7760876dc",
+      "response": "File Uploaded: 65536 bytes"
+    },
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-12/ground_truth/Job-Buckle-A.odb",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-Buckle-A.odb",
+      "size": 257336,
+      "sha256": "dd58cd9a7383afd110aa7be97cc89e33246ed5d8fc0579e426d04eff01a9c403",
+      "response": "File Uploaded: 257336 bytes"
+    }
+  ],
+  "postconfig_uploads": [
+    {
+      "local_path": "/Users/leiyu/workspace/Engiworld/task/task-v/abaqus/task-12/eval.py",
+      "remote_path": "C:\\Users\\user\\Desktop\\eval.py",
+      "size": 41418,
+      "sha256": "328d7629e68055276b40449fa48e19dc9ceddde929a658f6ad4328b4fce9a3b8",
+      "response": "File Uploaded: 41418 bytes"
+    }
+  ],
+  "eval_command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+  "evaluation": {
+    "error": "",
+    "output": "True\n",
+    "returncode": 0,
+    "status": "success"
+  },
+  "eval_detail": "[PASS] Artifact check passed\n[PASS] Step check passed\n[PASS] Material check passed\n[PASS] Section check passed\n[PASS] Geometry check passed\n[PASS] Mesh check passed\n[PASS] Set check passed\n[PASS] BC/load keyword checks passed\n[PASS] ODB completion check passed\n\n",
+  "score": 1.0,
+  "passed": true,
+  "desktop_after_eval": [
+    {
+      "Name": "eval.py",
+      "Length": 41418
+    },
+    {
+      "Name": "eval_detail.txt",
+      "Length": 270
+    },
+    {
+      "Name": "eval_result.txt",
+      "Length": 6
+    },
+    {
+      "Name": "Job-Buckle-A.cae",
+      "Length": 65536
+    },
+    {
+      "Name": "Job-Buckle-A.odb",
+      "Length": 257336
+    }
+  ],
+  "cleanup": {
+    "error": "",
+    "output": "",
+    "returncode": 0,
+    "status": "success"
+  },
+  "desktop_after_cleanup": [],
+  "finished_utc": "2026-08-18T03:13:32.278395+00:00"
+}

@@ -1,0 +1,29 @@
+v-ansys-task-04-windows diagnosis on ANSYS Mechanical APDL 2026 R1 (v261)
+
+Current evaluator result: False (return code 0).
+
+Native database/result inspection:
+- Element type: SOLID70
+- Element count: 2500
+- Node count: 3146
+- Coordinate-level counts: 26 x 11 x 11
+- KXX: 0.5000000E-01 W/(mm K) = 0.05 W/(mm K)
+- Specific heat: 460.0000
+- Density: 0.7850000E-05 kg/mm^3 = 7.85e-6 kg/mm^3
+- Only the X=0 face has TEMP=100 constraints
+- Last result time: 9.99999999999998 s
+- Temperature at X=4 mm: 84.73999072205697 C
+- Temperature at X=6 mm: 77.38573277153104 C
+- Maximum temperature: 100.0 C
+- Minimum temperature: 20.476805994130366 C
+
+Blocking evaluator conflict:
+strict_process_check searches the raw MPLIST text for literal tokens
+"0.050", "460", and "7.850". ANSYS v261 formats the two correctly scaled
+properties as "0.5000000E-01" and "0.7850000E-05", so the valid native model
+is rejected before the time/temperature checks. Changing physical properties or
+units to force those substrings would violate the instruction and is not a GT fix.
+
+Raw v261 command evidence: raw_probe.log (full MPLIST/DLIST and strict check result)
+
+Final status: eval_blocked

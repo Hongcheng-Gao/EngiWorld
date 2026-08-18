@@ -954,17 +954,9 @@ def check_cae_process(cae_path):
         min_bc = min_counts.get('boundary_conditions', None)
         min_load = min_counts.get('loads', None)
 
-    bc_ok = check_bcs(model, proc.get('bc_signatures', []), min_count=min_bc)
-    if bc_ok:
-        ok('BC check passed')
-    else:
-        if not check_keyword_bcs_fallback_b(model, proc):
-            return False, model
-        ok('Keyword BC fallback passed')
-
-    if not check_loads(model, proc.get('load_signatures', []), min_count=min_load):
+    if not check_keyword_bcs_loads_b(model, proc, min_bc=min_bc, min_load=min_load):
         return False, model
-    ok('Load check passed')
+    ok('BC/load keyword checks passed')
 
     if not check_couplings(model, proc.get('kinematic_coupling', None)):
         return False, model
@@ -985,41 +977,53 @@ def check_cae_process(cae_path):
 
 
 
-def check_keyword_bcs_loads_b(model, proc):
-    text = ''
+def check_keyword_bcs_loads_b(model, proc, min_bc=None, min_load=None):
     try:
         model.keywordBlock.synchVersions(storeNodesAndElements=False)
-        text = '\n'.join([str(x) for x in model.keywordBlock.sieBlocks]).upper()
+        source = model.keywordBlock.sieBlocks
+        if min_bc is not None and len(model.boundaryConditions.keys()) < int(min_bc):
+            return fail('Boundary condition count too low')
+        if min_load is not None and len(model.loads.keys()) < int(min_load):
+            return fail('Load count too low')
     except Exception:
         return fail('Cannot read keyword block text for B-task fallback')
 
-    # load type pattern
-    for req in proc.get('load_signatures', []):
-        types = [ci(x) for x in req.get('type_any', [])]
-        ok = False
-        for tp in types:
-            if 'PRESSURE' in tp and ('*DLOAD' in text or '*DSLOAD' in text):
-                ok = True
-            if 'MOMENT' in tp and '*CLOAD' in text:
-                ok = True
-            if 'SURFACETRACTION' in tp and ('*DSLOAD' in text or 'TRVEC' in text):
-                ok = True
-        component_code = {'CF1': '1', 'CF2': '2', 'CF3': '3', 'CM1': '4', 'CM2': '5', 'CM3': '6'}.get(ci(req.get('component', '')))
-        component_value = safe_float(req.get('component_value', None), None)
-        if ok and component_code and component_value is not None:
-            ok = False
-            for line in text.splitlines():
-                fields = [field.strip() for field in line.split(',')]
-                if len(fields) < 3 or fields[1] != component_code:
-                    continue
-                observed = safe_float(fields[2], None)
-                if observed is not None and close_enough(observed, component_value, tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3):
-                    ok = True
+    step_name = 'Initial'
+    groups = []
+    for raw in source:
+        lines = [line.strip() for line in str(raw).splitlines()
+                 if line.strip() and not line.lstrip().startswith('**')]
+        if not lines:
+            continue
+        header = ci(lines[0])
+        if header.startswith('*STEP'):
+            step_name = ''
+            for field in lines[0].split(',')[1:]:
+                pair = field.split('=', 1)
+                if len(pair) == 2 and ci(pair[0]) == 'NAME':
+                    step_name = pair[1].strip()
                     break
-        if not ok:
-            return fail('Keyword load fallback not found for %s' % str(types))
-
-    return True
+        elif header.startswith('*END STEP'):
+            step_name = 'Initial'
+        else:
+            groups.append((step_name, header, lines[1:]))
+    if not any(names_equal(step, 'Initial') and header.startswith('*BOUNDARY') and
+               any('ENCASTRE' in ci(line) for line in lines)
+               for step, header, lines in groups):
+        return fail('Initial-step ENCASTRE keyword not found')
+    req = proc.get('load_signatures', [])[0]
+    for step, header, lines in groups:
+        if not names_equal(step, req.get('step')) or not header.startswith('*CLOAD'):
+            continue
+        for line in lines:
+            fields = [field.strip() for field in line.split(',')]
+            dof = safe_float(fields[1], None) if len(fields) > 1 else None
+            value = safe_float(fields[2], None) if len(fields) > 2 else None
+            if (dof is not None and int(dof) == 4 and value is not None and value > 0.0 and
+                    close_enough(value, req['component_value'],
+                                 tol=float(req.get('tol', ABS_TOL)), rel=1.0e-3)):
+                return True
+    return fail('Step-Twist CM1=5000 keyword not found')
 
 
 def check_keyword_bcs_fallback_b(model, proc):
