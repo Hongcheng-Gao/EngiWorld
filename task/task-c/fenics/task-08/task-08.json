@@ -1,7 +1,7 @@
 {
   "id": "c-fenics-task-08-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a legacy FEniCS/DOLFIN Stokes-flow template `/home/user/Desktop/stokes_base.py` for a 2D pipe. Complete the following: 1. Modify and generate `/home/user/Desktop/stokes.py`: - Use `MixedElement([VectorElement(\"P\", mesh.ufl_cell(), 2), FiniteElement(\"P\", mesh.ufl_cell(), 1)])` - Inlet velocity: `u = (4*0.3*x[1]*(0.41-x[1])/(0.41**2), 0)` - No-slip on walls and the natural do-nothing (zero-traction) condition at the outlet, which fixes the outlet pressure reference for this fully developed profile - Viscosity `nu=0.001` - Solve 2. Extract and save to `/home/user/Desktop/summary.txt`: - Outlet (`x=2.2`) boundary-average pressure - Global maximum velocity magnitude Format: `outlet_pressure, max_velocity` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx.",
+  "instruction": "You are given a legacy FEniCS/DOLFIN Stokes-flow template `/home/user/Desktop/stokes_base.py` for a 2D pipe. Complete the following: 1. Modify and generate `/home/user/Desktop/stokes.py`: - Use `MixedElement([VectorElement(\"P\", mesh.ufl_cell(), 2), FiniteElement(\"P\", mesh.ufl_cell(), 1)])` - Inlet velocity: `u = (4*0.3*x[1]*(0.41-x[1])/(0.41**2), 0)` - No-slip on walls and the natural do-nothing (zero-traction) condition at the outlet, which fixes the outlet pressure reference for this fully developed profile - Viscosity `nu=0.001` - Solve 2. Extract and save to `/home/user/Desktop/summary.txt`: - Outlet (`x=2.2`) boundary-average pressure - Global maximum velocity magnitude Format: `outlet_pressure, max_velocity` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx. At the start of the task, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `stokes_base.py`.",
   "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
@@ -37,7 +37,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

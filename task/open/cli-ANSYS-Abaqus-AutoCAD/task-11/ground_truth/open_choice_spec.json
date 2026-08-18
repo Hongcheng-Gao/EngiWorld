@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-11-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-11-windows",
   "open_choice_id": "cae-open-choice-021",
   "source_task": "task/task-c/ansys/task-01",
   "original_software": "ansys",
@@ -14,22 +14,59 @@
   ],
   "expected_result_fields": [
     "U",
-    "S"
+    "S",
+    "RF"
+  ],
+  "ansys_result_items": [
+    "NSOL",
+    "RF",
+    "STRS"
   ],
   "require_metrics_json": true,
-  "visible_goal": "Build and solve a 3D solid cantilever beam under an end concentrated force; report tip displacement and maximum stress.",
+  "visible_goal": "Build and solve the specified 10 x 10 x 100 mm isotropic steel solid cantilever under a single -100 N point force; report signed tip UY/U2 and the solver-branch-defined final maximum von Mises stress.",
   "selection_reason": "3D cantilever statics is a direct equivalent in the alternate commercial FEA tool.",
+  "metric_contract": {
+    "tip_displacement": {
+      "unit": "mm",
+      "definition": "Signed final global Y displacement at the unique loaded point (5,10,100)",
+      "abaqus_extraction": "U2 at the loaded node in the final static ODB frame",
+      "ansys_extraction": "UY at the loaded node in SET,LAST"
+    },
+    "max_mises": {
+      "unit": "MPa",
+      "definition": "Final-result maximum equivalent von Mises stress over the beam structural-solid elements",
+      "abaqus_extraction": "maximum integration-point S.Mises in the final ODB frame",
+      "ansys_extraction": "maximum saved nodally averaged S,EQV over beam solid corner nodes in SET,LAST"
+    },
+    "extra_fields_allowed": false,
+    "reported_values_must_match_native_result": true
+  },
+  "equivalent_modeling": {
+    "geometry_bounds_mm": {
+      "x": [0.0, 10.0],
+      "y": [0.0, 10.0],
+      "z": [0.0, 100.0]
+    },
+    "fixed_boundary": "all three translations on exactly the complete Z=0 face",
+    "load": "exactly one FY=-100 N concentrated load at (5,10,100)",
+    "material": "isotropic linear elastic E=210000 MPa, nu=0.3",
+    "mesh": "approximately 5 mm global target with a connected 3D structural-solid mesh"
+  },
   "artifact_hint": {
     "ground_truth_files": [
-      "apdl_solid_beam.db",
-      "apdl_solid_beam.rst"
+      "Task11-Cantilever.cae",
+      "Task11-Cantilever.odb",
+      "Task11-Cantilever.db",
+      "Task11-Cantilever.rst"
     ],
-    "abaqus_stems": [],
+    "abaqus_stems": [
+      "Task11-Cantilever"
+    ],
     "ansys_db_files": [
-      "apdl_solid_beam.db"
+      "Task11-Cantilever.db"
     ],
     "ansys_result_files": [
-      "apdl_solid_beam.rst"
+      "Task11-Cantilever.rst"
     ]
   },
   "span_hint": {

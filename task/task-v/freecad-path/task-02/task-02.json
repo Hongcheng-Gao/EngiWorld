@@ -1,8 +1,8 @@
 {
   "id": "v-freecad-path-task-02-ubuntu",
   "snapshot": "freecad-path0.21.2",
-  "instruction": "Look at outer_plate.step. Create a FreeCAD Path/CAM Job. Set the Job origin to the part top-face center. Use T1 to create a Profile operation on the outside contour, cutting along the outer boundary down to bottom Z=0.000 mm. Leave 0.2 mm radial stock and add one finish pass. Tool definition: T1 is a 6 mm flat end mill for outside Profile milling, S9000 rpm, F650 mm/min. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-2.nc.",
-  "source": "https://wiki.freecad.org/CAM_Profile；https://wiki.freecad.org/CAM_Post；https://linuxcnc.org/docs/html/gcode/g-code.html https://wiki.freecad.org/CAM_Profile%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Post%EF%BC%9Bhttps:/linuxcnc.org/docs/html/gcode/g-code.html",
+  "instruction": "Open /home/user/Desktop/outer_plate.step in FreeCAD 0.21.2. For this task, open the part in FreeCAD from `/usr/bin/freecad`, then carry out the Path workbench edits. Use the actual supplied 120 x 80 x 12 mm solid, whose source STEP bounds are X=-60..60 mm, Y=-40..40 mm, and Z=0..12 mm. Create one native Path/CAM Job and set G54 at the part top-face center. Keep the stock top and bottom coincident with the part in Z and choose reasonable nonnegative X/Y side stock. In this work coordinate system the part top is Z=0 and the source bottom Z=0.000 mm is WCS Z=-12.000 mm. Use T1, a native 6 mm flat end mill, at S9000 rpm and horizontal cutting feed F650 mm/min; choose a safe positive vertical feed and positive safe/clearance heights. First create an active native outside rough Profile with cutter compensation and 0.2 mm OffsetExtra, using any reasonable positive stepdown to reach WCS Z=-12.000 mm. Then create a separate active native outside finish Profile with cutter compensation and 0.0 mm OffsetExtra; this second operation must make one final full-depth contour at WCS Z=-12.000 mm. Verify both toolpaths, then post the Job with FreeCAD's native linuxcnc or grbl postprocessor. Save the editable native Job and its matching posted program at exactly /home/user/Desktop/task-2.FCStd and /home/user/Desktop/task-2.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Profile.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Area.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Gui/Job.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Tool/Controller.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Base/Generator/toolchange.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/grbl_post.py; https://linuxcnc.org/docs/html/gcode/m-code.html#mcode:m2-m30; https://github.com/gnea/grbl/blob/master/doc/markdown/commands.md",
   "config": [
     {
       "type": "upload_file",
@@ -46,7 +46,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/usr/bin/python3 -I /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

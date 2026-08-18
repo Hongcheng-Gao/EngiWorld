@@ -1,8 +1,8 @@
 {
   "id": "v-open-altium-designer-cadence-orcad-openscad-task-16-windows",
   "snapshot": "OrCAD-Altium-openscad",
-  "instruction": "Choose a suitable application from Altium Designer, OrCAD Capture, or OpenSCAD. Open `wifi_board.ipc2581` and create the requested panel. Requirements: - Write `wifi_panel.ipc2581`, `wifi_panel.pcb.json`, and `panel_summary.json`. - The panel must be 4 rows by 3 columns with the specified spacing, mirror flag, and origin mode. [Software] Altium Designer is available at `D:\\Altium\\AD26\\X2.EXE`. OrCAD Capture is available at `D:\\orcad\\tools\\bin\\Capture.exe`. OpenSCAD is available as `openscad`.",
-  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "instruction": "Use Altium Designer 17.0.6 to open the supplied native `wifi_board.PcbDoc` and create a separate manufacturing panel document. At the start of the task, Altium Designer can be opened from its desktop shortcut; OrCAD Capture is at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, and OpenSCAD is at `C:\\Program Files\\OpenSCAD\\openscad.exe`. Write `wifi_panel.PcbDoc`, `wifi_panel.ipc2581`, `wifi_panel.pcb.json`, and `panel_summary.json` to the Desktop. The panel must contain one Embedded Board Array linked to `wifi_board.PcbDoc`, configured as 4 rows by 3 columns, row spacing 1133.8583 mil, column spacing 1338.5827 mil, mirror enabled, and origin mode 1. Export IPC-2581 Revision B from the panel; Altium Designer 17 names this native XML output `wifi_panel.cvg`, so submit the same unmodified bytes under the required name `wifi_panel.ipc2581`. The two JSON files must summarize the native panel object and IPC-2581 step-repeat values.",
+  "source": "https://www.altium.com/documentation/altium-designer/ipc-2581-support?version=17.1; https://files.resources.altium.com/sites/default/files/uberflip_docs/file_1179.pdf; https://www.altium.com/documentation/altium-designer/scripting/running-scripts",
   "config": [
     {
       "type": "upload_file",
@@ -11,6 +11,10 @@
           {
             "local_path": "task-16/init_file/panel_spec.json",
             "path": "C:\\Users\\user\\Desktop\\panel_spec.json"
+          },
+          {
+            "local_path": "task-16/init_file/wifi_board.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\wifi_board.PcbDoc"
           },
           {
             "local_path": "task-16/init_file/wifi_board.ipc2581",
@@ -27,24 +31,15 @@
       "type": "launch",
       "parameters": {
         "command": [
-          "D:\\Altium\\AD26\\X2.EXE"
-        ]
-      }
-    },
-    {
-      "type": "launch",
-      "parameters": {
-        "command": [
-          "openscad"
+          "C:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\wifi_board.PcbDoc"
         ]
       }
     }
   ],
   "trajectory": "trajectories/",
   "related_apps": [
-    "altium-designer",
-    "cadence-orcad",
-    "openscad"
+    "altium-designer"
   ],
   "evaluator": {
     "postconfig": [
@@ -55,6 +50,10 @@
             {
               "local_path": "task-16/eval.py",
               "path": "C:\\Users\\user\\Desktop\\eval.py"
+            },
+            {
+              "local_path": "task-16/olefile.py",
+              "path": "C:\\Users\\user\\Desktop\\olefile.py"
             }
           ]
         }

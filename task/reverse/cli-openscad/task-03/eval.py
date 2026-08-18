@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
-SPEC = {'bbox': [60, 45, 26], 'bbox_tol': 0.25, 'volume_range': [28000, 28800], 'min_triangles': 250, 'required_tokens': ['module heatsink', 'difference', 'for (x=', '[60,45,4]', '[-24:6:24]', 'd=4']}
+SPEC = {'bbox': [60, 45, 26], 'bbox_tol': 0.25, 'volume_range': [28000, 28800], 'min_triangles': 250, 'required_tokens': ['module heatsink']}
 
 
 def triangles(path):

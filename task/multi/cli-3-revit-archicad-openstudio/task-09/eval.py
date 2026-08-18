@@ -60,11 +60,11 @@ IMMUTABLE = {
     "workflow_spec.json": "31ee3ffce87b7fcb3d4ccafa81cc7c3769f979d8253b9c65580ab97bea22cce6",
     "weather.epw": "369531a54a55856f411e63a80cb9e91a4b4dc2e9ee8e3623d24a809eb0becfc1",
     "archicad_ifc4_translator.json": "e1698beeeb82d9387f8576b660790be2a737e28da91220fc01a2a06a3a8153ce",
-    "run_revit_stage.ps1": "ca873ed98468c87bd11923544d94d3b409b30c970bc58a2c852324cebe0711cf",
-    "EngiWorld.BimBridge.dll": "c23442230124426d866f0ce254b9951a0912714fe2444e5da8fac80bd80a25b6",
+    "run_revit_stage.ps1": "d644b2be3ad58e6aedb69d0a40fac929e1d135a46d1066e6c7ad2550fa1119a8",
+    "EngiWorld.BimBridge.dll": "c6a2dd54cf131396905daeeb3d3544c991947df7fa7ead477d591b4802b3b5cb",
     "EngiWorld.BimBridge.addin": "c7ce2f9ac04f860e8ef67506fc83d53dffa7cd9938ec8a4b339eb3fda861a24e",
-    "run_archicad_stage.ps1": "9c58db3768be3fce59f68a20b20d5b20866cdee76ba655b6c87a46db0e51047c",
-    "openstudio_ifc_to_energy.rb": "0affadf2909b431071b888096ba2b25a7c33d0e7a5354c7d8bcad028182337a0",
+    "run_archicad_stage.ps1": "2071527b69f5725b30c50da4c09d9341e74ce47254acaf09e6416c1f64c51057",
+    "openstudio_ifc_to_energy.rb": "b4213db45d4a792cbdfe7471c62c8c52cdbef931cd60d38f15d8e22751c5d292",
     "extract_ifc_space_geometry.py": "2d128d0731f1aeb1752fbd44fa93f3fb64e330aaaacfaded78faa091da805ba2",
     "run_openstudio_stage.ps1": "111576b9d5b7d2734bf447370eeaa2fae9c2e3b854348b7310c9d224f1d23091",
 }
@@ -571,9 +571,9 @@ def check_archicad_report(path: Path, stage1: Any, stage2: Any, paths: dict[str,
     add(errors, "IFCCommandServerApp.exe" in str(provenance.get("exe")) and "--m EW3B09-RUN" in str(provenance.get("command_line")) and provenance.get("model_name") == "EW3B09-RUN", "archicad_report:provenance")
     if len(transcript) == 30:
         load, validate, save = transcript[0], transcript[1], transcript[-1]
-        add(errors, str(load.get("request", {}).get("params", {}).get("Location", "")).lower().endswith(r"engiworld-task-09-work\stage1.ifc") and load.get("response", {}).get("result") == "stage1.ifc", "archicad_report:load_rpc")
+        add(errors, str(load.get("request", {}).get("params", {}).get("Location", "")).lower().endswith(r"desktop\stage1.ifc") and load.get("response", {}).get("result") == "stage1.ifc", "archicad_report:load_rpc")
         add(errors, validate.get("request", {}).get("params") == {} and validate.get("response", {}).get("result") is None, "archicad_report:validate_rpc")
-        add(errors, str(save.get("request", {}).get("params", {}).get("Location", "")).lower().endswith(r"engiworld-task-09-work\stage2.ifc") and save.get("response", {}).get("result") is None, "archicad_report:save_rpc")
+        add(errors, str(save.get("request", {}).get("params", {}).get("Location", "")).lower().endswith(r"desktop\stage2.ifc") and save.get("response", {}).get("result") is None, "archicad_report:save_rpc")
         get_rows = transcript[2:17]
         classes = [next(iter(row.get("request", {}).get("params", {}).get("Select", {})), "") for row in get_rows]
         add(errors, classes == expected_get_classes, "archicad_report:get_class_sequence")

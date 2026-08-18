@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-10-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-10-windows",
   "open_choice_id": "cae-open-choice-010",
   "source_task": "task/task-c/abaqus/task-10",
   "original_software": "abaqus",
@@ -14,26 +14,73 @@
   ],
   "expected_result_fields": [
     "U",
+    "UR",
+    "RF",
+    "RM",
     "S"
   ],
+  "ansys_result_items": [
+    "NSOL",
+    "RSOL",
+    "STRS",
+    "NAR"
+  ],
   "require_metrics_json": true,
-  "visible_goal": "Analyze a second circular-shaft torsion variant with different dimensions and torque; report twist and peak stress.",
-  "selection_reason": "This is a useful geometry/load variant without becoming software-specific.",
+  "visible_goal": "Analyze circular-shaft torsion Variant B; report the magnitude of final RP/pilot ROTY in radians and the solver-branch-defined shaft-solid maximum von Mises stress in MPa.",
+  "selection_reason": "The physical model and result metrics are solver-neutral; native remote-point, coupling, and solid-element constructs may differ between Abaqus and ANSYS.",
+  "metric_contract": {
+    "twist_angle": {
+      "unit": "rad",
+      "definition": "Magnitude of final rotation about global Y at the unique free-end reference/pilot point",
+      "abaqus_extraction": "abs(RP-1 UR2) in the final Step-Torque-B frame",
+      "ansys_extraction": "abs(ROTY) at the unique (0,72,0) pilot in SET,LAST"
+    },
+    "max_stress": {
+      "unit": "MPa",
+      "definition": "Final-result shaft-solid maximum equivalent von Mises stress",
+      "abaqus_extraction": "maximum integration-point S.Mises over shaft solid elements",
+      "ansys_extraction": "maximum saved S,EQV,NAR over structural-solid corner nodes only"
+    },
+    "extra_fields_allowed": false,
+    "reported_values_must_match_native_result": true
+  },
+  "equivalent_modeling": {
+    "required_resultants": {
+      "moment_y_nmm": 920.0
+    },
+    "abaqus": "RP-1 plus kinematic coupling and Moment MY",
+    "ansys": "Unique six-DOF pilot at (0,72,0), complete free-face rigid/MPC coupling, and exactly one pilot-node MY=920 load"
+  },
   "artifact_hint": {
     "ground_truth_files": [
       "Job-Torsion-B.cae",
-      "Job-Torsion-B.odb"
+      "Job-Torsion-B.odb",
+      "Job-Torsion-B.db",
+      "Job-Torsion-B.rst"
     ],
     "abaqus_stems": [
       "Job-Torsion-B"
     ],
-    "ansys_db_files": [],
-    "ansys_result_files": []
+    "ansys_db_files": [
+      "Job-Torsion-B.db"
+    ],
+    "ansys_result_files": [
+      "Job-Torsion-B.rst"
+    ]
   },
   "span_hint": {
     "x": 12.0,
     "y": 72.0,
     "z": 12.0
   },
-  "bounds_hint": null
+  "bounds_hint": {
+    "twist_angle": [
+      0.00032,
+      0.0006
+    ],
+    "max_stress": [
+      2.5,
+      8.0
+    ]
+  }
 }

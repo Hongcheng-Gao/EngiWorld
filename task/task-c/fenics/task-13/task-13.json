@@ -1,7 +1,7 @@
 {
   "id": "c-fenics-task-13-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a placeholder-containing template `/home/user/Desktop/re_scan_base.py`. Complete parameterized batch scanning: 1. Use Python or shell script to generate 3 files from the template: - `/home/user/Desktop/re_100.py` (`Re=100`) - `/home/user/Desktop/re_400.py` (`Re=400`) - `/home/user/Desktop/re_1000.py` (`Re=1000`) 2. Run all 3 independent solves. 3. In each script, extract X-direction velocity at geometric center `(0.5, 0.5)` and write `Re, center_ux` to its corresponding result file: `/home/user/Desktop/re_100.result`, `/home/user/Desktop/re_400.result`, or `/home/user/Desktop/re_1000.result`. 4. Write summary script `/home/user/Desktop/summarize.py` to read all 3 result files: - Output `/home/user/Desktop/summary.txt` in this format: `Re, center_ux` [Software] Run your scripts with Python in a legacy FEniCS/DOLFIN environment (e.g. `from dolfin import *`).",
+  "instruction": "You are given a placeholder-containing template `/home/user/Desktop/re_scan_base.py`. Complete parameterized batch scanning: 1. Use Python or shell script to generate 3 files from the template: - `/home/user/Desktop/re_100.py` (`Re=100`) - `/home/user/Desktop/re_400.py` (`Re=400`) - `/home/user/Desktop/re_1000.py` (`Re=1000`) 2. Run all 3 independent solves. 3. In each script, extract X-direction velocity at geometric center `(0.5, 0.5)` and write `Re, center_ux` to its corresponding result file: `/home/user/Desktop/re_100.result`, `/home/user/Desktop/re_400.result`, or `/home/user/Desktop/re_1000.result`. 4. Write summary script `/home/user/Desktop/summarize.py` to read all 3 result files: - Output `/home/user/Desktop/summary.txt` in this format: `Re, center_ux` [Software] Run your scripts with Python in a legacy FEniCS/DOLFIN environment (e.g. `from dolfin import *`). For the steps below, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `re_scan_base.py`.",
   "source": "https://fenicsproject.org/olddocs/dolfin/2019.1.0/python/demos/navier-stokes/demo_navier-stokes.py.html",
   "config": [
     {
@@ -37,7 +37,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

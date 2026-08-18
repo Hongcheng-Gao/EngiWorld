@@ -1,8 +1,8 @@
 {
   "id": "c-open-altium-designer-cadence-orcad-openscad-task-12-windows",
   "snapshot": "OrCAD-Altium-openscad",
-  "instruction": "Complete the task using command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD. The neutral PCB package `demo.ipc2581`, `nc_param.json`, and `components.json` are on the desktop. Generate NC drill output. Requirements: - Write `demo.drl`, `ncdrill.log`, and `collision_report.json`. - The drill file must use the requested 1-4 span and tool settings, and encode that span/plating with the XNC attribute `TF.FileFunction,Plated,1,4,PTH`. - Use all vias and their referenced padstack holes as drill hits/tools. - Treat board component x/y locations as points when checking circular keepouts. `collision_report.json` must contain `checked_components`, source-ordered `collisions` entries with `component` and `keepout`, and `status` equal to `clear` or `collision`. - The log must state the 1-4 span and actual tool count. [Software] Altium Designer is available at `D:\\Altium\\AD26\\X2.EXE`. OrCAD Capture is available at `D:\\orcad\\tools\\bin\\Capture.exe`. OpenSCAD is available as `openscad`.",
-  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "instruction": "Complete the task using the batch-capable scripting and fabrication-output interfaces of Altium Designer 17.0.6. The native four-layer PCB `demo.PcbDoc`, `demo.pcb.json`, `nc_param.json`, and `components.json` are on the desktop. Generate NC drill output. Requirements: - Write `demo.drl`, `ncdrill.log`, and `collision_report.json`. - `demo.drl` must contain the unmodified bytes of Altium Designer 17's native ASCII Excellon NC Drill output (normally generated as `demo.TXT`) in the units requested by `nc_param.json`, identify the holes as plated, and use every via and its referenced padstack hole as drill hits/tools. - `ncdrill.log` must be the unedited native Altium drill report. It may identify the generated drill file by its native name `demo.TXT`; submit that report under the required name `ncdrill.log`. The report must confirm a Top Layer to Bottom Layer through span, PTH output, the actual tool sizes, and the hole count. - Treat board component x/y locations as points when checking circular keepouts. `collision_report.json` must contain `checked_components`, source-ordered `collisions` entries with `component` and `keepout`, and `status` equal to `clear` or `collision`. [Software] Before starting the work, the available entry points are OrCAD Capture at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, Altium Designer at `C:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`, and OpenSCAD at `C:\\Program Files\\OpenSCAD\\openscad.exe`.",
+  "source": "https://www.altium.com/cn/documentation/altium-designer/tutorial-complete-design-walkthrough?version=17.0; https://www.altium.com/documentation/altium-designer/scripting/running-scripts",
   "config": [
     {
       "type": "upload_file",
@@ -13,8 +13,8 @@
             "path": "C:\\Users\\user\\Desktop\\components.json"
           },
           {
-            "local_path": "task-12/init_file/demo.ipc2581",
-            "path": "C:\\Users\\user\\Desktop\\demo.ipc2581"
+            "local_path": "task-12/init_file/demo.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\demo.PcbDoc"
           },
           {
             "local_path": "task-12/init_file/demo.pcb.json",
@@ -30,9 +30,7 @@
   ],
   "trajectory": "trajectories/",
   "related_apps": [
-    "altium-designer",
-    "cadence-orcad",
-    "openscad"
+    "altium-designer"
   ],
   "evaluator": {
     "postconfig": [

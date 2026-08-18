@@ -1,34 +1,211 @@
 {
-  "status": "bootstrapped_from_source_original",
-  "task": "task-05",
-  "task_id": "c-cae-commercial-open-choice-task-05-windows",
-  "solver": "abaqus",
-  "analysis_kind": "static_structural",
-  "domain": "solid_block_tension",
-  "metrics": [
-    "end_displacement",
-    "max_stress"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "39e5579bbce50726799a8e2758c083f7d9afe5db8cd041fe54c95f6c94f2287a",
-  "generated_at_epoch": 1783138443.426486,
-  "remote_host": null,
-  "note": "Original solver artifacts copied from source_original; metrics fields are present for eval field checks.",
+  "analysis": "3D solid linear static tension",
+  "evaluator_sha256": "36b041bdb97b122c33e6afac565a593c46db56a3f837d3d48059b86821eb06a7",
   "files": [
     {
       "file": "Job-BlockTension.cae",
-      "size": 61440,
-      "sha256": "067fe3a360288ea0746a3de833da70ab83e22b0095f781462632e70ebc0a6eb3"
+      "sha256": "d53f740b85c0091b6bf9a671ffada577840aa74f0084c9fe490d1311951f1669",
+      "size": 53248
     },
     {
       "file": "Job-BlockTension.odb",
-      "size": 268288,
-      "sha256": "f0fc6ff3b0ef068e595817537c8c5ce46db5b1ced840c1e96568589d4427bd2e"
+      "sha256": "50d4eae3c3b01768d55f7b08be1db440fc419363a63e6a0e7fc751d47d11bbd4",
+      "size": 261192
     },
     {
       "file": "metrics.json",
-      "size": 51,
-      "sha256": "4b7cb5dfbe73c29abaf26bc641ca6741590c49831a17032c8190ba60e11fac15"
+      "sha256": "1d6d9e1a66944d8f23b7049d41091b4388592539ad3836ed6c7da666701de8e4",
+      "size": 84
     }
-  ]
+  ],
+  "final_instance_cleanup": {
+    "evidence": "../validation/final_cleanup.json",
+    "required_baseline_process": "ANSYS.exe -v PID 7200"
+  },
+  "generated_on": "2026-08-12",
+  "job": "Job-BlockTension",
+  "metric_definitions": {
+    "end_displacement": "mm; arithmetic mean final global U1 over every node on the complete undeformed X=120 face",
+    "max_stress": "MPa; complete final native Mises field: all Abaqus integration-point S values or ANSYS native nodal-extrapolated equivalent stress"
+  },
+  "metrics": {
+    "end_displacement": 0.014251372621705135,
+    "max_stress": 9.349181175231934
+  },
+  "model": "Model-BlockTension",
+  "model_audit": {
+    "assembly_rotation": {
+      "angle_degrees": 120.0,
+      "axis": [
+        1.0,
+        1.0,
+        1.0
+      ]
+    },
+    "boundary_condition": {
+      "dofs": [
+        "U1",
+        "U2",
+        "U3"
+      ],
+      "face_x_mm": 0.0,
+      "type": "Encastre"
+    },
+    "completed_by_sta": true,
+    "completed_by_status": false,
+    "dependent_instance": true,
+    "frames": 2,
+    "geometry_mm": {
+      "x": [
+        0.0,
+        120.0
+      ],
+      "y": [
+        0.0,
+        12.0
+      ],
+      "z": [
+        0.0,
+        8.0
+      ]
+    },
+    "instance_name": "BLOCK-1",
+    "job_name": "Job-BlockTension",
+    "job_status": "None",
+    "load": {
+      "direction": [
+        1.0,
+        0.0,
+        0.0
+      ],
+      "face_x_mm": 120.0,
+      "magnitude_mpa": 8.333333333333334,
+      "resultant_n": 800.0,
+      "type": "SurfaceTraction GENERAL"
+    },
+    "material": {
+      "name": "Aluminum",
+      "poissons_ratio": 0.33,
+      "youngs_modulus_mpa": 70000.0
+    },
+    "mesh": {
+      "element_types": [
+        "C3D8R"
+      ],
+      "elements": 180,
+      "fixed_face_nodes": 12,
+      "global_seed_mm": 4.0,
+      "loaded_face_nodes": 12,
+      "nodes": 372
+    },
+    "metrics": {
+      "end_displacement": 0.014251372621705135,
+      "max_stress": 9.349181175231934
+    },
+    "model_name": "Model-BlockTension",
+    "odb_job_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "outputs": {
+      "max_mises_mpa": 9.349181175231934,
+      "stress_element_count": 180,
+      "stress_value_count": 180,
+      "variables": [
+        "U",
+        "RF",
+        "S"
+      ]
+    },
+    "part_name": "AluminumBlock",
+    "result": {
+      "fixed_node_labels": [
+        91,
+        92,
+        93,
+        184,
+        185,
+        186,
+        277,
+        278,
+        279,
+        370,
+        371,
+        372
+      ],
+      "fixed_rf1_n": -799.9996948242188,
+      "loaded_node_labels": [
+        1,
+        2,
+        3,
+        94,
+        95,
+        96,
+        187,
+        188,
+        189,
+        280,
+        281,
+        282
+      ]
+    },
+    "section": {
+      "material": "Aluminum",
+      "name": "Solid-Aluminum",
+      "type": "HomogeneousSolidSection"
+    },
+    "signatures": {
+      "elements_sha256": "bf267a7fdab49011884424a1d0c99d9a882d9020df9785d8009bf6e24cfffbcd",
+      "nodes_sha256": "6ec9e5041769771cf32e5a37dfbc5d9072fdc6ee80574b7f8040a41227c2699d"
+    },
+    "software": "Abaqus/Standard Learning Edition 2025",
+    "step_name": "Step-Load",
+    "task_id": "c-open-abaqus-ansys-autocad-task-05-windows"
+  },
+  "official_sources": [
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEELMRefMap/simaelm-r-3delem.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-elasticpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-homogeneoussolidsectionpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-partinstancepyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-staticsteppyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-surfacetractionpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-fieldoutputrequestpyc.htm"
+  ],
+  "open_choice_spec_sha256": "f64fee5054ad3af152732391ee333e541a7036a3e9396290031e5e53fe708990",
+  "provenance": {
+    "access": "OSWorld REST through supplied SSH tunnel http://127.0.0.1:15047",
+    "completion_evidence": [
+      "../validation/generation/Job-BlockTension_abaqus.log",
+      "../validation/generation/Job-BlockTension_abaqus.sta"
+    ],
+    "generation_evidence": "../validation/generation/abaqus_gt_generation.json",
+    "generator": "../validation/generation/repair_cli_task05_abaqus.py",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "native_audit": "../validation/generation/abaqus_native_audit.json",
+    "private_ip_from_mapping": "10.0.6.47",
+    "public_ip_from_mapping": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "reasonable_equivalents_verified": [
+    "Abaqus outward negative pressure on the complete X=120 face",
+    "Abaqus conforming partitioned C3D8R mesh",
+    "Abaqus C3D8 full-integration mesh",
+    "Abaqus global-aligned local traction coordinate system",
+    "ANSYS SOLID186 mesh",
+    "ANSYS multiple equivalent type or material IDs with identical assigned behavior",
+    "ANSYS fixed-face rotated nodal systems with all three translations constrained",
+    "ANSYS constant positive density without inertia loading"
+  ],
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "solver": "abaqus",
+  "source_instruction_sha256": "9913c73ba98908ae2e9282c02ca90718c359572dc6a8745a0dd5db9c65cc0be8",
+  "status": "verified_real_snapshot",
+  "step": "Step-Load",
+  "synthetic_or_offline_solver_data": false,
+  "task": "task-05",
+  "task_definition_sha256": "3ea5287cd93152da4d063ee1e08d7949b56a2dc6a3c348c88b23e0760aa644c3",
+  "task_id": "c-open-abaqus-ansys-autocad-task-05-windows",
+  "validation": {
+    "all_remote_cases_use_independent_snapshot_state": true,
+    "local_audit": "../validation/local_audit.json",
+    "matrix": "../validation/validation_matrix.json"
+  }
 }

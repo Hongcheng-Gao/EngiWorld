@@ -13,6 +13,7 @@ BUNDLE = {'eval_inner.py': 'eNqVWG1v2zYQ/q5fwXEfIm2JkngbMBh1irXNhmBbV/RlGJBkAm3R
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('audit.brd', '/home/user/Desktop/audit.brd'), ('silk_audit.ulp', '/home/user/Desktop/silk_audit.ulp')]
+REQUIRED_OUTPUTS = ('silk_audit.txt',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +105,8 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

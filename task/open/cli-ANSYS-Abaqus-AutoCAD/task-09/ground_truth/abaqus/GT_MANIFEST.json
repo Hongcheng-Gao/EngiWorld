@@ -1,34 +1,68 @@
 {
-  "status": "bootstrapped_from_source_original",
+  "schema_version": 1,
+  "status": "verified_real_snapshot",
   "task": "task-09",
-  "task_id": "c-cae-commercial-open-choice-task-09-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-09-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
   "solver": "abaqus",
-  "analysis_kind": "static_structural",
-  "domain": "simply_supported_beam_udl",
-  "metrics": [
-    "midspan_deflection",
-    "max_mises"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "d04a68bdf2bc1be5d04dd1dbdb9b3509fca516c7d6f88397108fd47f2a5fe819",
-  "generated_at_epoch": 1783138443.431874,
-  "remote_host": null,
-  "note": "Original solver artifacts copied from source_original; metrics fields are present for eval field checks.",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "analysis": "small-displacement 3D static solid beam under uniform pressure",
+  "job": "Job-UDL",
+  "step": "Step-Load",
+  "generated_on": "2026-08-14",
+  "source_instruction_sha256": "0b65313301583ba19c6b438d471fe41d33d87c906cfe94cb9445ca0c6046623e",
+  "task_definition_sha256": "628a40dca4b27cb4eb89c09f62f3afdb9c8b0dcec000b322fe05aefac266bee5",
+  "open_choice_spec_sha256": "77e2c565561dede881ddedfa082b9fcf075038d2a68c8273aea7d77adc7a408a",
+  "evaluator_sha256": "fa5511901b66015f2c1e906e4c8bf6260ba334bbe2860870bb17e1c547ea7184",
   "files": [
-    {
-      "file": "Job-UDL.cae",
-      "size": 61440,
-      "sha256": "03362a08563a064d355fe314eaea9dfade88e307b4c276abb04e8c791b04adf3"
-    },
-    {
-      "file": "Job-UDL.odb",
-      "size": 317480,
-      "sha256": "a2b66a3e28bc6baafbc0be67863f34f46c04cc340b13c58fd7143ad93823063f"
-    },
-    {
-      "file": "metrics.json",
-      "size": 52,
-      "sha256": "42910abb1bddb55d5f6b06935174b2f56700e1bb31afa412e90ce40005b207ba"
-    }
-  ]
+    {"file": "Job-UDL.cae", "size": 65536, "sha256": "53de1a4c997763e6b633b8c61c75b50bf4f23958f4d486eb45681bce3ad3248b"},
+    {"file": "Job-UDL.odb", "size": 315548, "sha256": "8d069fd973981590f9e5c4b88ff7addd21e31c5e8bec29700342ba13a793b50a"},
+    {"file": "metrics.json", "size": 87, "sha256": "cf5a8a918715a7d6e8533ea289c69fa20e37bd064501c8c324b6d331c9d826fd"}
+  ],
+  "metrics": {
+    "midspan_deflection": -0.07924731075763702,
+    "max_mises": 9.952288627624512
+  },
+  "metric_definitions": {
+    "midspan_deflection": "mm; signed global U2 at the unique (100,5,5) node in the final Step-Load frame",
+    "max_mises": "MPa; maximum S.mises over all beam-solid integration-point values in the final Step-Load frame"
+  },
+  "model_audit": {
+    "geometry_mm": [200.0, 10.0, 10.0],
+    "volume_mm3": 20000.0,
+    "material": {"youngs_modulus_mpa": 210000.0, "poissons_ratio": 0.3},
+    "mesh": {"element_type": "C3D8R", "elements": 160, "solid_nodes": 369, "seed_mm": 5.0},
+    "pressure": {"magnitude_mpa": 0.05, "area_mm2": 2000.0, "resultant_y_n": -100.0},
+    "supports": {"left_fixed": ["U1", "U2", "U3", "UR1"], "right_fixed": ["U2", "U3"], "reaction_y_n": [50.0, 50.0]},
+    "odb_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY"
+  },
+  "generation_evidence": {
+    "script": "../generation/abaqus/generate_task09_abaqus.py",
+    "script_sha256": "021cf6414e679f26c9ae657f7fddfbbb9f9f5e708386833ee7de5d42f7125b8c",
+    "runner": "../generation/abaqus/run_generate_task09_abaqus.py",
+    "runner_sha256": "755932270450b0097eb413df0ef1796babd32f46758e2cf2a6196d015b40d3f2",
+    "run_report": "../generation/abaqus/generation_result.json",
+    "native_audit": "../generation/abaqus/native_audit.json",
+    "input_deck": "../generation/abaqus/Job-UDL.inp",
+    "solver_log": "../generation/abaqus/Job-UDL.log",
+    "status_file": "../generation/abaqus/Job-UDL.sta"
+  },
+  "validation_matrix": "../validation/validation_matrix.json",
+  "validation_matrix_sha256": "689bdc981d7ac2bb72820e68072dd10d5dbfbe88d3a4e5d64b22e78d55d70411",
+  "formal_regression": "../validation/formal_regression.json",
+  "formal_regression_sha256": "5c5b8fd913f9fc6192b6b025748678f51d4bc8b4cf4c2167da45c7b354af8b68",
+  "local_audit": "../validation/local_audit.json",
+  "local_audit_sha256": "979fa9a48c7e4ff1b9d4c4be338acb1db18182810430ee6c967bc00d5b85bc15",
+  "final_instance_cleanup": "../validation/final_cleanup.json",
+  "final_instance_cleanup_sha256": "c1c9fc4de0f93faaaebb3087c39212c420a5104c4da0c259c55741bd945a1e34",
+  "official_sources": "../validation/official_sources.md",
+  "official_sources_sha256": "a73c7d93664233a9f4388b42a2dc9ef3c12d6888c743fcea93473ae8186619bc",
+  "archive_manifest": "../../audit_archive/ARCHIVE_MANIFEST.json",
+  "archive_manifest_sha256": "719d824af2a6cf5f473740b907cc2079cb71c8b9e8409852f35fdc60dce44745",
+  "provenance": {
+    "public_ip": "115.190.150.137",
+    "access": "OSWorld REST through the supplied SSH tunnel at http://127.0.0.1:15047",
+    "synthetic_or_offline_solver_data": false
+  },
+  "synthetic_or_offline_solver_data": false
 }

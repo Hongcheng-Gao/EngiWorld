@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-16.nc': {'terms': [['ENGRAVE'], ['FREECAD-CAM']], 'min_tools': 1, 'min_motion': 30, 'min_cut_groups': 8, 'engrave': {'min_x_span': 30.0, 'min_y_span': 7.0, 'max_y_center_abs': 1.5}}}}
+RULE = {'files': {'task-16.nc': {'min_tools': 1, 'exact_tools': [1], 'min_motion': 40, 'min_cut_groups': 11, 'engrave': {'min_x_span': 40.0, 'max_x_span': 90.0, 'min_y_span': 5.0, 'max_y_span': 8.5, 'max_x_center_abs': 1.0, 'max_y_center_abs': 1.0, 'depth': 17.7, 'depth_tolerance': 0.12, 'min_character_clusters': 11, 'max_character_clusters': 11, 'cluster_gap': 0.1, 'text_pattern': 'FREECAD-CAM'}}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -121,6 +121,92 @@ def cut_groups(records, z=None):
     return groups
 
 
+def group_points(group):
+    points = []
+    if group:
+        start = group[0]["start"]
+        if start["x"] is not None and start["y"] is not None:
+            points.append((start["x"], start["y"]))
+    points.extend((record["end"]["x"], record["end"]["y"]) for record in group)
+    return points
+
+
+def character_clusters(records, gap):
+    pieces = []
+    for group in cut_groups(records):
+        points = group_points(group)
+        if points:
+            xs = [point[0] for point in points]
+            pieces.append({"lo": min(xs), "hi": max(xs), "groups": [group], "points": points})
+    merged = []
+    for piece in sorted(pieces, key=lambda item: item["lo"]):
+        if not merged or piece["lo"] > merged[-1]["hi"] + gap:
+            merged.append(piece)
+        else:
+            merged[-1]["hi"] = max(merged[-1]["hi"], piece["hi"])
+            merged[-1]["groups"].extend(piece["groups"])
+            merged[-1]["points"].extend(piece["points"])
+    for cluster in merged:
+        xs = [point[0] for point in cluster["points"]]
+        ys = [point[1] for point in cluster["points"]]
+        cluster["xmin"], cluster["xmax"] = min(xs), max(xs)
+        cluster["ymin"], cluster["ymax"] = min(ys), max(ys)
+    return merged
+
+
+def normalized_cluster_points(cluster, scale):
+    return [
+        ((x - cluster["xmin"]) / scale, (y - cluster["ymin"]) / scale)
+        for x, y in cluster["points"]
+    ]
+
+
+def cluster_shape_distance(first, second, scale):
+    if scale <= 0:
+        return float("inf")
+    width_gap = abs(
+        (first["xmax"] - first["xmin"]) - (second["xmax"] - second["xmin"])
+    ) / scale
+    height_gap = abs(
+        (first["ymax"] - first["ymin"]) - (second["ymax"] - second["ymin"])
+    ) / scale
+    first_points = normalized_cluster_points(first, scale)
+    second_points = normalized_cluster_points(second, scale)
+    if not first_points or not second_points:
+        return float("inf")
+
+    def directed(points, targets):
+        return max(
+            min(math.hypot(px - tx, py - ty) for tx, ty in targets)
+            for px, py in points
+        )
+
+    return max(width_gap, height_gap, directed(first_points, second_points), directed(second_points, first_points))
+
+
+def matches_text_pattern(clusters, pattern, text_height):
+    if pattern != "FREECAD-CAM" or len(clusters) != len(pattern) or text_height <= 0:
+        return False
+    dash = clusters[7]
+    dash_height = dash["ymax"] - dash["ymin"]
+    if dash_height > 0.35 * text_height:
+        return False
+    if any(
+        cluster["ymax"] - cluster["ymin"] < 0.78 * text_height
+        for index, cluster in enumerate(clusters)
+        if index != 7
+    ):
+        return False
+    repeat_pairs = ((2, 3), (4, 8), (5, 9))
+    if any(cluster_shape_distance(clusters[a], clusters[b], text_height) > 0.12 for a, b in repeat_pairs):
+        return False
+    prototypes = []
+    for cluster in clusters:
+        if not any(cluster_shape_distance(cluster, other, text_height) <= 0.12 for other in prototypes):
+            prototypes.append(cluster)
+    return len(prototypes) >= 6
+
+
 def group_closed(group):
     if len(group) < 3:
         return False
@@ -194,11 +280,13 @@ def validate_file(path: Path, rule: dict) -> bool:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
+        return False
+    if "exact_tools" in rule and tool_order(tools) != [int(tool) for tool in rule["exact_tools"]]:
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
         return False
@@ -294,8 +382,24 @@ def validate_file(path: Path, rule: dict) -> bool:
         ys = [r["end"]["y"] for r in cuts]
         if not xs or max(xs) - min(xs) < float(item["min_x_span"]) or max(ys) - min(ys) < float(item["min_y_span"]):
             return False
+        if max(xs) - min(xs) > float(item.get("max_x_span", 1e9)) or max(ys) - min(ys) > float(item.get("max_y_span", 1e9)):
+            return False
+        if "max_x_center_abs" in item and abs((min(xs) + max(xs)) / 2) > float(item["max_x_center_abs"]):
+            return False
         if "max_y_center_abs" in item and abs((min(ys) + max(ys)) / 2) > float(item["max_y_center_abs"]):
             return False
+        if "depth" in item:
+            depth_tol = float(item.get("depth_tolerance", TOL))
+            if any(record_z(record) is None or not close(record_z(record), item["depth"], depth_tol) for record in cuts):
+                return False
+        if "min_character_clusters" in item:
+            clusters = character_clusters(records, float(item.get("cluster_gap", 0.0)))
+            if len(clusters) < int(item["min_character_clusters"]) or len(clusters) > int(item.get("max_character_clusters", 1e9)):
+                return False
+            if "text_pattern" in item and not matches_text_pattern(
+                clusters, str(item["text_pattern"]), max(ys) - min(ys)
+            ):
+                return False
     if "tags" in rule:
         item = rule["tags"]
         tag_z = float(item["bottom"]) + float(item["height"])

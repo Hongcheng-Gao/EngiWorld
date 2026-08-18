@@ -3,10 +3,10 @@ from __future__ import annotations
 
 import json
 import os
+import struct
 from pathlib import Path
 
 import numpy as np
-import trimesh
 
 CASE_SPEC = {'case_id': 'quant-gui-freecad-lightweight-task-04-ubuntu', 'token': 'EWQFCAD04', 'title': 'cable clamp saddle bridge', 'objective': 'Maximize clamp bridge support per volume while preserving two saddle supports and a center cable load zone.', 'metric_kind': 'clamp_bridge_load_per_volume', 'metric_description': 'clamp bridge support proxy / volume; transverse saddle span and cable load-zone coverage drive the score', 'envelope_mm': [92.0, 58.0, 34.0], 'min_bbox_mm': [86.0, 52.0, 18.0], 'min_volume_mm3': 12500.0, 'max_volume_mm3': 66000.0, 'baseline_height_mm': 17.0, 'base_thickness_mm': 3.5, 'zone_height_mm': 13.0, 'load_pad_height_mm': 18.0, 'nominal_load_n': 500.0, 'min_zone_points': 8, 'required_zones': [{'name': 'CLAMP_LEFT', 'role': 'support', 'x_range_mm': [0.0, 18.0], 'y_range_mm': [8.0, 23.0]}, {'name': 'CLAMP_RIGHT', 'role': 'support', 'x_range_mm': [0.0, 18.0], 'y_range_mm': [35.0, 50.0]}, {'name': 'CABLE_LOAD', 'role': 'load', 'x_range_mm': [72.0, 92.0], 'y_range_mm': [20.0, 38.0]}], 'ribs': [{'size': [84.0, 4.0, 27.0], 'center': [46.0, 15.0, 15.25]}, {'size': [84.0, 4.0, 27.0], 'center': [46.0, 43.0, 15.25]}, {'size': [8.0, 46.0, 18.0], 'center': [50.0, 29.0, 12.0]}], 'hard_constraints': ['Produce the required open geometry output file rather than only reporting metrics.', 'Stay inside the stated bounding envelope and above the minimum useful spans.', 'Stay within the stated material-volume range.', 'Do not read ground_truth, edit eval.py, or fabricate score/metric files.'], 'invalid_conditions': ['Missing, unparsable, empty, or implausibly small STL geometry.', 'Bounding-box or volume hard-constraint violation.', 'Self-reported metrics without valid geometry.', 'Native project files used as the only deliverable.'], 'baseline_metrics': {'bbox_mm': [92.0, 58.0, 17.0], 'volume_mm3': 90712.0, 'surface_area_mm2': 15772.0, 'surface_per_volume': 0.17386895, 'metric_kind': 'clamp_bridge_load_per_volume', 'metric_value': 0.0002411478, 'zone_point_counts': {'CLAMP_LEFT': 1, 'CLAMP_RIGHT': 1, 'CABLE_LOAD': 2}, 'zone_factor': 0.125, 'height_factor': 0.0, 'span_factor': 1.0, 'load_capacity_proxy_n': 21.875, 'load_capacity_per_volume': 0.0002411478}, 'reference_metrics': {'bbox_mm': [92.0, 58.0, 28.75], 'volume_mm3': 56944.0, 'surface_area_mm2': 30134.0, 'surface_per_volume': 0.52918657, 'metric_kind': 'clamp_bridge_load_per_volume', 'metric_value': 0.0069078283, 'zone_point_counts': {'CLAMP_LEFT': 27, 'CLAMP_RIGHT': 27, 'CABLE_LOAD': 22}, 'zone_factor': 1.0, 'height_factor': 0.671875, 'span_factor': 1.0, 'load_capacity_proxy_n': 393.359375, 'load_capacity_per_volume': 0.0069078283, 'score': 1.0}}
 CASE_SPEC["reference_metrics"] = {'bbox_mm': [92.0, 58.0, 28.75], 'height_factor': 0.671875, 'load_capacity_per_volume': 0.0078280473, 'load_capacity_proxy_n': 393.359375, 'metric_kind': 'clamp_bridge_load_per_volume', 'metric_value': 0.0078280473, 'score': 1.0, 'span_factor': 1.0, 'surface_area_mm2': 23332.0, 'surface_per_volume': 0.46431841, 'volume_mm3': 50250.0, 'zone_factor': 1.0, 'zone_point_counts': {'CABLE_LOAD': 64, 'CLAMP_LEFT': 64, 'CLAMP_RIGHT': 64}, 'zone_volume_coverage': {'CABLE_LOAD': 1.0, 'CLAMP_LEFT': 1.0, 'CLAMP_RIGHT': 1.0}}
@@ -19,27 +19,91 @@ def clamp(value, low=0.0, high=1.0):
     return max(low, min(high, float(value)))
 
 
-def as_mesh(obj):
-    if isinstance(obj, trimesh.Scene):
-        meshes = [g for g in obj.geometry.values() if isinstance(g, trimesh.Trimesh)]
-        if not meshes:
-            raise ValueError("scene has no mesh geometry")
-        return trimesh.util.concatenate(meshes)
-    return obj
+class StlMesh:
+    def __init__(self, triangles):
+        triangles = np.asarray(triangles, dtype=float)
+        if triangles.ndim != 3 or triangles.shape[1:] != (3, 3):
+            raise ValueError("optimized.stl has invalid triangle data")
+        if not np.isfinite(triangles).all():
+            raise ValueError("optimized.stl contains NaN or infinite coordinates")
+        flat = triangles.reshape((-1, 3))
+        scale = max(float(np.ptp(flat, axis=0).max()), 1.0)
+        tolerance = max(scale * 1e-9, 1e-8)
+        keys = np.rint(flat / tolerance).astype(np.int64)
+        _, unique_indices, inverse = np.unique(keys, axis=0, return_index=True, return_inverse=True)
+        self.vertices = flat[unique_indices]
+        self.faces = inverse.reshape((-1, 3))
+        self.triangles = self.vertices[self.faces]
+        cross = np.cross(self.triangles[:, 1] - self.triangles[:, 0], self.triangles[:, 2] - self.triangles[:, 0])
+        twice_area = np.linalg.norm(cross, axis=1)
+        if np.any(twice_area <= tolerance * tolerance):
+            raise ValueError("optimized.stl contains degenerate triangles")
+        self.area = float(0.5 * twice_area.sum())
+        self.volume = abs(float(np.einsum("ij,ij->i", self.triangles[:, 0], np.cross(self.triangles[:, 1], self.triangles[:, 2])).sum() / 6.0))
+        self.bounds = np.asarray((self.vertices.min(axis=0), self.vertices.max(axis=0)), dtype=float)
+        self._check_topology()
+
+    def _check_topology(self):
+        edges = {}
+        for face_index, face in enumerate(self.faces):
+            if len(set(int(value) for value in face)) != 3:
+                raise ValueError("optimized.stl contains collapsed triangles")
+            for start, end in ((face[0], face[1]), (face[1], face[2]), (face[2], face[0])):
+                start, end = int(start), int(end)
+                key = (start, end) if start < end else (end, start)
+                direction = 1 if (start, end) == key else -1
+                edges.setdefault(key, []).append((face_index, direction))
+        adjacency = [set() for _ in range(len(self.faces))]
+        for uses in edges.values():
+            if len(uses) != 2:
+                raise ValueError("optimized.stl must be a watertight solid")
+            if uses[0][1] + uses[1][1] != 0:
+                raise ValueError("optimized.stl must be consistently oriented")
+            left, right = uses[0][0], uses[1][0]
+            adjacency[left].add(right)
+            adjacency[right].add(left)
+        visited = {0}
+        pending = [0]
+        while pending:
+            current = pending.pop()
+            for neighbor in adjacency[current] - visited:
+                visited.add(neighbor)
+                pending.append(neighbor)
+        if len(visited) != len(self.faces):
+            raise ValueError("optimized.stl must contain one connected solid")
+
+
+def parse_stl(path: Path):
+    data = path.read_bytes()
+    triangles = []
+    if len(data) >= 84:
+        count = struct.unpack_from("<I", data, 80)[0]
+        if 84 + 50 * count == len(data):
+            for index in range(count):
+                values = struct.unpack_from("<12fH", data, 84 + 50 * index)
+                triangles.append((values[3:6], values[6:9], values[9:12]))
+    if not triangles:
+        vertices = []
+        try:
+            lines = data.decode("utf-8").splitlines()
+        except UnicodeDecodeError as exc:
+            raise ValueError("optimized.stl is neither binary nor ASCII STL") from exc
+        for line in lines:
+            fields = line.strip().split()
+            if fields and fields[0].lower() == "vertex" and len(fields) == 4:
+                vertices.append(tuple(float(value) for value in fields[1:]))
+        if not vertices or len(vertices) % 3:
+            raise ValueError("optimized.stl has malformed ASCII triangles")
+        triangles = [vertices[index:index + 3] for index in range(0, len(vertices), 3)]
+    return StlMesh(triangles)
 
 
 def load_stl(path: Path):
     if not path.is_file() or path.stat().st_size < 500:
         raise ValueError("optimized.stl missing or too small")
-    mesh = as_mesh(trimesh.load_mesh(str(path), file_type="stl", process=True))
+    mesh = parse_stl(path)
     if mesh.vertices is None or len(mesh.vertices) < 8 or len(mesh.faces) < 12:
         raise ValueError("optimized.stl has too little mesh geometry")
-    if not np.isfinite(np.asarray(mesh.vertices, dtype=float)).all():
-        raise ValueError("optimized.stl contains NaN or infinite coordinates")
-    if not mesh.is_watertight or not mesh.is_winding_consistent:
-        raise ValueError("optimized.stl must be a watertight consistently oriented solid")
-    if len(mesh.split(only_watertight=False)) != 1:
-        raise ValueError("optimized.stl must contain one connected solid")
     return mesh
 
 

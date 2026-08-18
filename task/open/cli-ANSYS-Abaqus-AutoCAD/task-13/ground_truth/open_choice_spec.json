@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-13-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-13-windows",
   "open_choice_id": "cae-open-choice-023",
   "source_task": "task/task-c/ansys/task-03",
   "original_software": "ansys",
@@ -16,20 +16,34 @@
     "S"
   ],
   "require_metrics_json": true,
-  "visible_goal": "Build and solve a plane-stress plate with a central circular hole under uniaxial tension; report stress concentration and displacement.",
+  "submission_contract": {
+    "primary_native_pair": "Submit exactly one primary native model/result pair from one solver: one ANSYS MAPDL .db plus one .rst, or one Abaqus .cae plus one .odb.",
+    "auxiliary_artifacts": "Auxiliary solver files may be present but are not used in place of the required primary pair."
+  },
+  "visible_goal": "Build and solve a plane-stress plate with a central circular hole under uniaxial tension; report maximum longitudinal normal stress Sxx and its gross-nominal stress concentration proxy.",
   "selection_reason": "Plane-stress plate-with-hole is a canonical FEA benchmark available in both tools.",
   "artifact_hint": {
     "ground_truth_files": [
-      "apdl_hole_plate.db",
-      "apdl_hole_plate.rst"
+      "Task13-Plate-With-Hole.db",
+      "Task13-Plate-With-Hole.rst",
+      "Task13-Plate-With-Hole.cae",
+      "Task13-Plate-With-Hole.odb"
     ],
-    "abaqus_stems": [],
+    "abaqus_stems": [
+      "Task13-Plate-With-Hole"
+    ],
     "ansys_db_files": [
-      "apdl_hole_plate.db"
+      "Task13-Plate-With-Hole.db"
     ],
     "ansys_result_files": [
-      "apdl_hole_plate.rst"
+      "Task13-Plate-With-Hole.rst"
     ]
+  },
+  "metric_contract": {
+    "max_stress": "MPa; maximum longitudinal normal stress Sxx from the native nodally averaged or nodally extrapolated field at the final static result",
+    "stress_concentration_proxy": "dimensionless; max_stress divided by the 10 MPa gross nominal tensile stress",
+    "cross_solver_peak_equality_required": false,
+    "reported_values_must_match_native_result": true
   },
   "span_hint": {
     "x": 100.0,

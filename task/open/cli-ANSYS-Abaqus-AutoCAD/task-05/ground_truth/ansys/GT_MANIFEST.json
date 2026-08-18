@@ -1,48 +1,118 @@
 {
-  "status": "generated_generic_remote",
-  "task": "task-05",
-  "task_id": "c-cae-commercial-open-choice-task-05-windows",
-  "solver": "ansys",
-  "analysis_kind": "static_structural",
-  "domain": "solid_block_tension",
-  "metrics": [
-    "end_displacement",
-    "max_stress"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "39e5579bbce50726799a8e2758c083f7d9afe5db8cd041fe54c95f6c94f2287a",
-  "generated_at_epoch": 1783166057.25985,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "analysis": "3D solid linear static tension",
+  "evaluator_sha256": "36b041bdb97b122c33e6afac565a593c46db56a3f837d3d48059b86821eb06a7",
   "files": [
     {
-      "file": "gt_task_05_ansys.db",
-      "size": 196608,
-      "sha256": "1bcf7cdadaa8196f3260b97c9c9c575743b845bd8c382e2bd0d433660e24dac4"
+      "file": "Job-BlockTension.db",
+      "sha256": "8576c29c5b1856092b577c509892fdfd1b4efdd158c23fe6700c00d617afdc63",
+      "size": 327680
     },
     {
-      "file": "gt_task_05_ansys.rst",
-      "size": 327680,
-      "sha256": "054632503e3c61df73046fd9d41ba32e6c0c0c583bb05d3acd051af9e67c3bb7"
+      "file": "Job-BlockTension.rst",
+      "sha256": "ff58229860e78ad5ea3d7cdd876e53b2b0deb8bf74699cd3597fc502c683078e",
+      "size": 524288
     },
     {
       "file": "metrics.json",
-      "size": 53,
-      "sha256": "bdc6cdf1b0069b352f17f68dffe96fda8294a929bc07db6b6744caeffcd01d69"
+      "sha256": "54cd818b4d8810b174ca2b2d3c20bc28d5365469cfe539b4121c2bd051a43600",
+      "size": 90
     }
   ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "final_instance_cleanup": {
+    "evidence": "../validation/final_cleanup.json",
+    "required_baseline_process": "ANSYS.exe -v PID 7200"
   },
-  "license_precheck": {
-    "license_status": "license_ok",
-    "license_stdout_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-05/ground_truth/generation/ansys/license_generate_task_05_ansys_stdout.txt",
-    "license_exitcode_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-05/ground_truth/generation/ansys/license_generate_task_05_ansys_exitcode.txt",
-    "license_stdout_last_line": "==================================================",
-    "license_exitcode_raw": "exitcode=0",
-    "license_exitcode": 0
+  "generated_on": "2026-08-12",
+  "job": "Job-BlockTension",
+  "metric_definitions": {
+    "end_displacement": "mm; arithmetic mean final global U1 over every node on the complete undeformed X=120 face",
+    "max_stress": "MPa; complete final native Mises field: all Abaqus integration-point S values or ANSYS native nodal-extrapolated equivalent stress"
+  },
+  "metrics": {
+    "end_displacement": 0.01423147214685777,
+    "max_stress": 8.711034423392206
+  },
+  "model_audit": {
+    "boundary_condition": "UX=UY=UZ=0 on all 12 X=0 face nodes, no other constraints",
+    "fixed_rf1_n": -800.00000000004,
+    "geometry_mm": {
+      "volume": 11520.0,
+      "x": [
+        0.0,
+        120.0
+      ],
+      "y": [
+        0.0,
+        12.0
+      ],
+      "z": [
+        0.0,
+        8.0
+      ]
+    },
+    "independent_db_resolve_required_by_evaluator": true,
+    "load": "SFA PRES=-8.333333333333334 MPa on complete X=120 area; outward global +X; 800 N resultant",
+    "material": {
+      "poissons_ratio": 0.33,
+      "youngs_modulus_mpa": 70000.0
+    },
+    "mesh": {
+      "element_type": "SOLID185",
+      "elements": 180,
+      "global_size_mm": 4.0,
+      "nodes": 372
+    },
+    "outputs": [
+      "U",
+      "RF",
+      "S"
+    ],
+    "solver_error_count": 0,
+    "solver_warning_count": 1
+  },
+  "official_sources": [
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID185.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID186.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID187.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_MP.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_SFA.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_RESUME.html"
+  ],
+  "open_choice_spec_sha256": "f64fee5054ad3af152732391ee333e541a7036a3e9396290031e5e53fe708990",
+  "provenance": {
+    "access": "OSWorld REST through supplied SSH tunnel http://127.0.0.1:15047",
+    "generation_evidence": "../validation/generation/ansys_gt_generation.json",
+    "generator_input": "../validation/generation/repair_cli_task05_ansys.inp",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "native_audit": "../validation/generation/ansys_native_audit.txt",
+    "native_solver_log": "../validation/generation/Job-BlockTension_ansys_run.out",
+    "private_ip_from_mapping": "10.0.6.47",
+    "public_ip_from_mapping": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "reasonable_equivalents_verified": [
+    "Abaqus outward negative pressure on the complete X=120 face",
+    "Abaqus conforming partitioned C3D8R mesh",
+    "Abaqus C3D8 full-integration mesh",
+    "Abaqus global-aligned local traction coordinate system",
+    "ANSYS SOLID186 mesh",
+    "ANSYS multiple equivalent type or material IDs with identical assigned behavior",
+    "ANSYS fixed-face rotated nodal systems with all three translations constrained",
+    "ANSYS constant positive density without inertia loading"
+  ],
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software": "ANSYS Mechanical APDL 2026 R1, release 26.1",
+  "solver": "ansys",
+  "source_instruction_sha256": "9913c73ba98908ae2e9282c02ca90718c359572dc6a8745a0dd5db9c65cc0be8",
+  "status": "verified_real_snapshot",
+  "step": "load step 1, final result set",
+  "synthetic_or_offline_solver_data": false,
+  "task": "task-05",
+  "task_definition_sha256": "3ea5287cd93152da4d063ee1e08d7949b56a2dc6a3c348c88b23e0760aa644c3",
+  "task_id": "c-open-abaqus-ansys-autocad-task-05-windows",
+  "validation": {
+    "all_remote_cases_use_independent_snapshot_state": true,
+    "local_audit": "../validation/local_audit.json",
+    "matrix": "../validation/validation_matrix.json"
   }
 }

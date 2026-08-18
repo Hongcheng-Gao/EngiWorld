@@ -3,6 +3,7 @@ from __future__ import annotations
 import base64
 import importlib.util
 import os
+import re
 import shutil
 import zlib
 from pathlib import Path
@@ -106,6 +107,74 @@ def _resolve_arg(spec: str):
     return spec
 
 
+def _balanced_blocks(text: str, kind: str) -> list[str]:
+    blocks: list[str] = []
+    position = 0
+    marker = "(" + kind
+    while True:
+        start = text.find(marker, position)
+        if start < 0:
+            return blocks
+        depth = 0
+        quoted = False
+        escaped = False
+        for index in range(start, len(text)):
+            char = text[index]
+            if quoted:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == '"':
+                    quoted = False
+            elif char == '"':
+                quoted = True
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(text[start:index + 1])
+                    position = index + 1
+                    break
+        else:
+            return blocks
+
+
+def _edgecuts_is_one_closed_loop() -> bool:
+    try:
+        text = (DESKTOP / "board.kicad_pcb").read_text(encoding="utf-8")
+    except OSError:
+        return False
+    adjacency: dict[tuple[float, float], set[tuple[float, float]]] = {}
+    edge_count = 0
+    for block in _balanced_blocks(text, "gr_line"):
+        if not re.search(r'\(layer\s+"?Edge\.Cuts"?\)', block):
+            continue
+        start = re.search(r'\(start\s+([-0-9.]+)\s+([-0-9.]+)\)', block)
+        end = re.search(r'\(end\s+([-0-9.]+)\s+([-0-9.]+)\)', block)
+        if start is None or end is None:
+            return False
+        a = tuple(round(float(value), 6) for value in start.groups())
+        b = tuple(round(float(value), 6) for value in end.groups())
+        if a == b:
+            return False
+        adjacency.setdefault(a, set()).add(b)
+        adjacency.setdefault(b, set()).add(a)
+        edge_count += 1
+    if edge_count < 4 or any(len(neighbors) != 2 for neighbors in adjacency.values()):
+        return False
+    pending = [next(iter(adjacency))]
+    visited = set()
+    while pending:
+        current = pending.pop()
+        if current in visited:
+            continue
+        visited.add(current)
+        pending.extend(adjacency[current] - visited)
+    return visited == set(adjacency)
+
+
 def _call_inner(root: Path):
     module = _load_module(root)
     func = getattr(module, CALL_FUNC)
@@ -118,6 +187,8 @@ def _apply_runtime_env() -> None:
 
 
 def _run() -> bool:
+    if not _edgecuts_is_one_closed_loop():
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

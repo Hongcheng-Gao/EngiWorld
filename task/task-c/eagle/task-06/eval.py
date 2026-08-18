@@ -5,6 +5,7 @@ import importlib.util
 import shutil
 import tempfile
 import zlib
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -13,6 +14,7 @@ BUNDLE = {'eval_inner.py': 'eNrNWOtu28gV/s+nOGV+LAlItKUkTaGuUqSONjBqOwvb2RZIA2ZM
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('legacy.sch', '/home/user/Desktop/legacy.sch')]
+REQUIRED_OUTPUTS = ('replaced.sch',)
 
 
 def _decode(payload: str) -> bytes:
@@ -73,6 +75,31 @@ def _load_module(root: Path):
             except ValueError:
                 pass
     return module
+
+
+def _replacement_connectivity_ok() -> bool:
+    try:
+        root = ET.parse(DESKTOP / "replaced.sch").getroot()
+    except (OSError, ET.ParseError):
+        return False
+    nets: dict[str, set[tuple[str, str]]] = {}
+    for net in root.findall(".//nets/net"):
+        name = (net.get("name") or "").upper()
+        nets[name] = {
+            ((ref.get("part") or "").upper(), (ref.get("pin") or "").upper())
+            for ref in net.findall(".//pinref")
+        }
+    return (
+        any(part == "U1" and pin in {"IN", "VIN"} for part, pin in nets.get("VIN", set()))
+        and any(part == "U1" and pin in {"OUT", "VOUT"} for part, pin in nets.get("VOUT", set()))
+        and ("U1", "GND") in nets.get("GND", set())
+        and ("C1", "1") in nets.get("VIN", set())
+        and ("C1", "2") in nets.get("GND", set())
+        and ("C2", "1") in nets.get("VOUT", set())
+        and ("C2", "2") in nets.get("GND", set())
+    )
+
+
 def _is_pass(result) -> bool:
     if isinstance(result, bool):
         return result
@@ -104,6 +131,10 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
+    if not _replacement_connectivity_ok():
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

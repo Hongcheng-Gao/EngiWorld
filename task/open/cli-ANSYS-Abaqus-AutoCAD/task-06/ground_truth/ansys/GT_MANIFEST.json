@@ -1,48 +1,135 @@
 {
-  "status": "generated_generic_remote",
-  "task": "task-06",
-  "task_id": "c-cae-commercial-open-choice-task-06-windows",
-  "solver": "ansys",
-  "analysis_kind": "thermal",
-  "domain": "steady_heat_conduction",
-  "metrics": [
-    "probe_temperature",
-    "heat_flux_optional"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "6b32908c6a4b59614d5f7c42a3539ed22bf17d5ebe93f1716ab1edfc634b257e",
-  "generated_at_epoch": 1783166091.965836,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "analysis": "3D steady-state heat conduction",
+  "evaluator_sha256": "ec0425d209aee1ff4dfde919e5f103dc795d632fbc94c3f05d5048661652617d",
   "files": [
     {
-      "file": "gt_task_06_ansys.db",
-      "size": 196608,
-      "sha256": "4411c4e7a7b6c8ec4d323821cfcfd967f68b195355361ce1acaeb1fc69ebff7c"
+      "file": "Job-Thermal.db",
+      "sha256": "b1d5c6c39dfff560e0a859de0e134cb1b3eaf3dfd071d10852d6cd32eb9275d4",
+      "size": 458752
     },
     {
-      "file": "gt_task_06_ansys.rth",
-      "size": 327680,
-      "sha256": "8ed5e30fea33cb2cc4703a9488c0a77dd261fa9c0a3fc9c57288bf0558b936f2"
+      "file": "Job-Thermal.rth",
+      "sha256": "4ea3e3342cad09864893bbd3099518c4f6cacdbc55c52c98902f3ed86ce6fff5",
+      "size": 524288
     },
     {
       "file": "metrics.json",
-      "size": 62,
-      "sha256": "ad48bb21d836e53fcacfd21e82761067bbddb43b58ffbed04b4ac92da3c07248"
+      "sha256": "bbf6e558b8c937d47352ba80d55c6277580c9cc3896252840fe28b71567a4bc6",
+      "size": 102
     }
   ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
+  "final_instance_cleanup": {
+    "evidence": "../validation/final_cleanup.json",
+    "evidence_sha256": "8706424bcf2cbcfccabd6e64f98100bea40542e41c59b776bebad0f6e035dac5",
+    "required_baseline_process": "the unique pre-existing ANSYS.exe -v process, matched by PID, creation time, name, and command line"
   },
-  "license_precheck": {
-    "license_status": "license_ok",
-    "license_stdout_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-06/ground_truth/generation/ansys/license_generate_task_06_ansys_stdout.txt",
-    "license_exitcode_file": "/Users/weiyipeng/Documents/GitHub/Engiworld/task/task-c/cae-commercial-open-choice/task-06/ground_truth/generation/ansys/license_generate_task_06_ansys_exitcode.txt",
-    "license_stdout_last_line": "==================================================",
-    "license_exitcode_raw": "exitcode=0",
-    "license_exitcode": 0
+  "generated_on": "2026-08-13",
+  "job": "Job-Thermal",
+  "metric_definitions": {
+    "heat_flux_x_w_per_mm2": "W/mm^2; complete X=0 reaction heat-flow sum divided by 500 mm^2 and cross-checked against final global +X TF",
+    "midplane_temperature_c": "degC; arithmetic mean final TEMP over every node on X=50 mm"
+  },
+  "metrics": {
+    "heat_flux_x_w_per_mm2": 0.3200000000379368,
+    "midplane_temperature_c": 59.99999999787644
+  },
+  "model_audit": {
+    "analysis_type": "STATIC steady thermal",
+    "boundary_condition": "TEMP=100 degC on all 33 X=0 nodes and TEMP=20 degC on all 33 X=100 nodes; no other constraint or thermal load",
+    "geometry_mm": {
+      "x": [
+        0.0,
+        100.0
+      ],
+      "y": [
+        0.0,
+        50.0
+      ],
+      "z": [
+        0.0,
+        10.0
+      ]
+    },
+    "independent_db_resolve_required_by_evaluator": true,
+    "material": {
+      "conductivity_w_per_mm_k": {
+        "kxx": 0.4,
+        "kyy": 0.4,
+        "kzz": 0.4
+      },
+      "name": "Copper"
+    },
+    "mesh": {
+      "center_nodes": 1,
+      "element_type": "SOLID70",
+      "elements": 400,
+      "global_size_mm": 5.0,
+      "keyopt_7": 0,
+      "keyopt_8": 0,
+      "nodes": 693
+    },
+    "outputs": [
+      "TEMP",
+      "TF:X/Y/Z",
+      "RF,HEAT"
+    ],
+    "result": {
+      "heat_flux_x_max_w_per_mm2": 0.3199999928474426,
+      "heat_flux_x_min_w_per_mm2": 0.3199999928474426,
+      "x0_reaction_heat_flow_w": 160.0000000189684,
+      "x100_reaction_heat_flow_w": -159.9999999871604
+    },
+    "solver_error_count": 0,
+    "solver_warning_count": 0
+  },
+  "official_sources": [
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SOLID70.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_ESIZE.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_OUTRES.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_PRRSOL.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_SET.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/pdf/Ansys_Mechanical_APDL_Programmers_Reference.pdf"
+  ],
+  "official_source_status": {
+    "all_final_http_200": true,
+    "evidence": "../validation/official_source_status.json",
+    "evidence_sha256": "e130c30c2978b1f2a5f9e28c03e6fe3ec4524aee8954480edc88cf483cd972a5",
+    "source_count": 38
+  },
+  "open_choice_spec_sha256": "59546f8799cb7639f5f9702fe13dcad7f1da30a85e7c91069ffb84b81d012acd",
+  "provenance": {
+    "access": "OSWorld REST through the supplied SSH tunnel at http://127.0.0.1:15047",
+    "generation_evidence": "../validation/generation/ansys_gt_generation.json",
+    "generator_input": "../validation/generation/repair_cli_task06_ansys.inp",
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "native_audit": "../validation/generation/ansys_native_audit.txt",
+    "native_solver_log": "../validation/generation/Job-Thermal_ansys_run.out",
+    "private_ip_from_mapping": "10.0.6.47",
+    "public_ip_from_mapping": "115.190.150.137",
+    "synthetic_or_offline_solver_data": false
+  },
+  "reasonable_equivalents_verified": [
+    "Abaqus constant amplitude on the prescribed temperatures",
+    "Abaqus positive density and specific heat unused by a steady-state step",
+    "Abaqus passive NODE FILE, EL FILE, FILE FORMAT, and ENERGY output requests",
+    "Abaqus region-scoped RFL output request",
+    "ANSYS consistent SI-unit geometry and conductivity"
+  ],
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "software": "ANSYS Mechanical APDL 2026 R1, release 26.1",
+  "solver": "ansys",
+  "source_instruction_sha256": "59b105439130d5ce46d0988f116a2fe4f018dc91230adbf0a51dfc8f8b299a6e",
+  "status": "verified_real_snapshot",
+  "step": "load step 1, final result set",
+  "synthetic_or_offline_solver_data": false,
+  "task": "task-06",
+  "task_definition_sha256": "a319ab3ecd0bb4969654e6e970097ae2693f1fd31108255c3ad6212b5d4df933",
+  "task_id": "c-open-abaqus-ansys-autocad-task-06-windows",
+  "validation": {
+    "all_remote_cases_use_independent_snapshot_state": true,
+    "formal_regression": "../validation/formal_regression.json",
+    "formal_regression_sha256": "ad191f67e2a976baab9a1fe86367b2f0f2d6d7accfe24dffe134458cea3f0651",
+    "matrix": "../validation/validation_matrix.json",
+    "matrix_sha256": "45add431c2f91b4297806ef74626de6e58e82935730de8183b75c86ad9e897ce"
   }
 }

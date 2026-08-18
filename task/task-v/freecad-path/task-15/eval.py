@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-15.nc': {'terms': [['POCKET', 'ROUGH'], ['SURFACE', 'FINISH']], 'min_tools': 2, 'min_motion': 40, 'tool_min_cut': {'1': 12, '2': 20}, 'tool_z_levels': {'2': 6}}}}
+RULE = {'files': {'task-15.nc': {'min_tools': 2, 'min_motion': 40, 'tool_number_min_cut': {'1': 12, '2': 20}, 'spherical_surface': {'center': [0.0, 0.0, 35.0], 'radius': 25.0, 'max_xy_radius': 18.35, 'rough_tool': 1, 'finish_tool': 2, 'rough_tool_radius': 5.0, 'rough_stock': 0.3, 'rough_tolerance': 0.15, 'min_rough_near_stock': 8, 'ball_radius_min': 0.5, 'ball_radius_max': 6.0, 'ball_radius_step': 0.05, 'finish_tolerance': 0.08, 'min_finish_on_surface': 20, 'min_finish_xy_radius': 14.0, 'min_finish_z_span': 5.0}}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,18 +189,76 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def validate_spherical_surface(cuts, item):
+    cx, cy, cz = map(float, item["center"])
+    radius = float(item["radius"])
+    max_xy_radius = float(item["max_xy_radius"])
+    rough_tool = int(item["rough_tool"])
+    finish_tool = int(item["finish_tool"])
+    rough_radius = float(item["rough_tool_radius"])
+    rough_stock = float(item["rough_stock"])
+    rough_tolerance = float(item.get("rough_tolerance", 0.15))
+    rough_near_stock = 0
+    finish_points = []
+
+    for record in cuts:
+        x, y, z = record["end"]["x"], record["end"]["y"], record_z(record)
+        if z is None:
+            continue
+        radial = math.hypot(x - cx, y - cy)
+        if record["tool"] == rough_tool:
+            swept_radial = radial + rough_radius
+            if swept_radial > max_xy_radius + 0.2:
+                return False
+            target = cz - math.sqrt(max(0.0, radius * radius - swept_radial * swept_radial))
+            allowance = z - target
+            if allowance < rough_stock - rough_tolerance:
+                return False
+            if abs(allowance - rough_stock) <= 0.25:
+                rough_near_stock += 1
+        elif record["tool"] == finish_tool:
+            finish_points.append((x - cx, y - cy, z))
+
+    if rough_near_stock < int(item["min_rough_near_stock"]) or len(finish_points) < int(item["min_finish_on_surface"]):
+        return False
+    if max(math.hypot(x, y) for x, y, _ in finish_points) < float(item["min_finish_xy_radius"]):
+        return False
+    if max(z for _, _, z in finish_points) - min(z for _, _, z in finish_points) < float(item["min_finish_z_span"]):
+        return False
+
+    best_error = float("inf")
+    ball_radius = float(item["ball_radius_min"])
+    while ball_radius <= float(item["ball_radius_max"]) + 1e-9:
+        offset_radius = radius - ball_radius
+        errors = []
+        valid = True
+        for x, y, z in finish_points:
+            radial2 = x * x + y * y
+            if radial2 >= offset_radius * offset_radius:
+                valid = False
+                break
+            expected = cz - math.sqrt(offset_radius * offset_radius - radial2) - ball_radius
+            errors.append(abs(z - expected))
+        if valid:
+            best_error = min(best_error, max(errors))
+        ball_radius += float(item["ball_radius_step"])
+    return best_error <= float(item["finish_tolerance"])
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
+        return False
+    if "spherical_surface" in rule and not validate_spherical_surface(cuts, rule["spherical_surface"]):
         return False
     for group in rule.get("terms", []):
         if not any(str(term).upper() in src for term in group):
@@ -270,6 +328,9 @@ def validate_file(path: Path, rule: dict) -> bool:
         tool = tool_for_ordinal(tools, int(ordinal))
         levels = {round(record_z(record), 3) for record in cuts if record["tool"] == tool and record_z(record) is not None}
         if len(levels) < int(minimum):
+            return False
+    for tool, minimum in rule.get("tool_number_min_cut", {}).items():
+        if sum(record["tool"] == int(tool) for record in cuts) < int(minimum):
             return False
     if "z_levels" in rule:
         item = rule["z_levels"]

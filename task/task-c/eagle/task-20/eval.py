@@ -46,7 +46,7 @@ def _target_names(elements: list[ET.Element]) -> set[str]:
 def evaluate(submission_dir: str) -> bool:
     sub = Path(submission_dir).resolve()
     target = None
-    for name in ("labeled.brd", "answer.brd"):
+    for name in ("labeled.brd",):
         p = sub / name
         if p.exists():
             target = p

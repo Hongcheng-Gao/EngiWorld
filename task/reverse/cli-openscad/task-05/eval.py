@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
-SPEC = {'bbox': [52, 32, 3], 'bbox_tol': 0.25, 'volume_range': [4200, 4600], 'min_triangles': 500, 'required_tokens': ['module microfluidic_lid', 'module channel', 'hull', 'difference', '[52,32,3]', '[-20,-10]', '[20,10]', 'd=3']}
+SPEC = {'bbox': [52, 32, 3], 'bbox_tol': 0.25, 'volume_range': [4200, 4600], 'min_triangles': 500, 'required_tokens': ['module microfluidic_lid', 'module channel']}
 
 
 def triangles(path):

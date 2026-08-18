@@ -5,6 +5,7 @@ import importlib.util
 import shutil
 import tempfile
 import zlib
+import xml.etree.ElementTree as ET
 from pathlib import Path
 
 
@@ -13,6 +14,7 @@ BUNDLE = {'eval_inner.py': 'eNqVWG1v2zYQ/q5fcWM/TAIcJU7dbvDqAs2aDcHWbkhSYEBRqLR9
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('partA.sch', '/home/user/Desktop/partA.sch'), ('partB.sch', '/home/user/Desktop/partB.sch')]
+REQUIRED_OUTPUTS = ('merged.sch',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +106,14 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
+    try:
+        sheet_count = len(ET.parse(DESKTOP / "merged.sch").getroot().findall(".//sheets/sheet"))
+    except (OSError, ET.ParseError):
+        return False
+    if sheet_count != 1:
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

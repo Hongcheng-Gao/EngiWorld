@@ -1,40 +1,50 @@
 {
-  "status": "generated_generic_remote",
+  "schema_version": 1,
+  "status": "generated_on_snapshot_and_native_validated",
   "task": "task-17",
-  "task_id": "c-cae-commercial-open-choice-task-17-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-17-windows",
   "solver": "abaqus",
-  "analysis_kind": "thermal_structural",
-  "domain": "coupled_thermal_structural_bar",
-  "metrics": [
-    "thermal_stress",
-    "reaction_force_optional"
-  ],
-  "metric_note": "metrics.json contains numeric fields required by eval; generated solver artifacts are the evidence source.",
-  "source_instruction_sha256": "aeb234c2a896ee8b69ab3f5e94535c8d031114f158e33337e2f1636ada8db31d",
-  "generated_at_epoch": 1783166896.423628,
-  "remote_host": "http://124.174.2.207:5000",
-  "note": "Generic no-GUI solver model generated from open_choice_spec geometry and analysis kind.",
+  "software_version": "Abaqus/Standard Learning Edition 2025",
+  "analysis_kind": "static_thermal_stress",
+  "domain": "restrained_thermal_expansion_bar",
+  "native_generation_host": "ANSYS-ABAQUS-AUTOCAD Snapshot",
+  "remote_service": "http://115.190.150.137:5000 via the documented jump-host SSH tunnel to 10.0.6.47:5000 (local validation endpoint http://127.0.0.1:15050)",
+  "source_instruction_sha256": "7feea1a5b3ec3269f8f9995e92a375a0986f3fe8c6faeb6802487b5dfb780a4f",
+  "validated_evaluator_sha256": "3cb3b4794f32c130a9866d1ce2b1d3a40f37ed45cfc49efba0fed15158fdf676",
+  "manifest_generated_at": "2026-08-16T18:20:21Z",
+  "metrics_schema": {
+    "exact_keys": [
+      "thermal_stress",
+      "reaction_force"
+    ],
+    "thermal_stress": "maximum absolute final integration-point S11 over the active bar, MPa",
+    "reaction_force": "absolute resultant final RF1 on one complete UX-restrained end face, N"
+  },
+  "native_metrics": {
+    "thermal_stress": 252.0,
+    "reaction_force": 25200.0
+  },
+  "note": "Fresh C3D8R CAE/ODB generated and solved in Abaqus 2025 LE on the real Snapshot. The evaluator independently opens both native artifacts, audits the generated INP and native result, and performs an isolated native re-solve. The Windows-generated metrics.json bytes are preserved exactly.",
   "files": [
     {
       "file": "gt_task_17_abaqus.cae",
       "size": 53248,
-      "sha256": "4387189aa4292255959bc9cb6e7b8bf104a95b8df5d9253c3a70d595fc487251"
+      "sha256": "9c9f7404d30fdb7dc60e913a0e4fb71395779d03b541a88e73c25db41b129754"
     },
     {
       "file": "gt_task_17_abaqus.odb",
-      "size": 225556,
-      "sha256": "71c6bd05f3a7ba88d9843c6c2a8cea27c0164464c13a66ba83687206e2aba43c"
+      "size": 244744,
+      "sha256": "199f8c21e3938f665f24a60a38fea0a9447ae809a36655a490363b3996dca6a9"
     },
     {
       "file": "metrics.json",
-      "size": 96,
-      "sha256": "1db275b29b1cf2bab18e05b22b9c1eb696d5ba0b66465c58969e62d1509086f2"
+      "size": 63,
+      "sha256": "bbf8eda5a13b1971b4f773eb591c29020c2222d3744eefee507d5fc156465ab7"
+    },
+    {
+      "file": "gt_task_17_abaqus.py",
+      "size": 18094,
+      "sha256": "27039ce644ec84b08cba22b704d18d9a6c1021532dc599417404b1cfb598eeed"
     }
-  ],
-  "cleanup_before": {
-    "ok": true,
-    "residuals": [],
-    "stopped": [],
-    "returncode": 0
-  }
+  ]
 }

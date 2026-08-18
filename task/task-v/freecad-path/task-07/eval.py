@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-7.nc': {'terms': [['ADAPTIVE', 'POCKET'], ['PROFILE'], ['FINISH']], 'min_tools': 2, 'min_motion': 30, 'tool_min_cut': {'1': 10, '2': 10}, 'regions': [{'rect': [-50, -30, -1, 30], 'min': 5}, {'rect': [1, -30, 50, 30], 'min': 5}], 'closed': {'z': 0.0, 'min': 1}}}}
+RULE = {'files': {'task-7.nc': {'min_tools': 2, 'min_motion': 30, 'tool_number_min_cut': {'1': 10, '2': 10}, 'pocket_floor': {'z': 6.0, 'tol': 0.15, 'tool_radii': {'1': 5.0, '2': 3.0}, 'regions': [[-50, -25, -10, 25], [10, -25, 50, 25]], 'sample_step': 2.5, 'corner_margin': 3.0}, 'outer_profile': {'tool': 2, 'z': 0.0, 'part_rect': [-60, -40, 60, 40], 'max_offset': 5.0}}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,18 +189,108 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def point_segment_distance(point, start, end):
+    px, py = point
+    ax, ay = start
+    bx, by = end
+    dx, dy = bx - ax, by - ay
+    if abs(dx) + abs(dy) <= 1e-12:
+        return math.hypot(px - ax, py - ay)
+    ratio = ((px - ax) * dx + (py - ay) * dy) / (dx * dx + dy * dy)
+    ratio = max(0.0, min(1.0, ratio))
+    return math.hypot(px - (ax + ratio * dx), py - (ay + ratio * dy))
+
+
+def segment_intersects_rect(record, rect):
+    s, e = record["start"], record["end"]
+    if None in (s["x"], s["y"], e["x"], e["y"]):
+        return False
+    x1, y1, x2, y2 = rect
+    return not (
+        max(s["x"], e["x"]) < min(x1, x2)
+        or min(s["x"], e["x"]) > max(x1, x2)
+        or max(s["y"], e["y"]) < min(y1, y2)
+        or min(s["y"], e["y"]) > max(y1, y2)
+    )
+
+
+def validate_pocket_floor(records, rule):
+    floor = float(rule["z"])
+    tol = float(rule.get("tol", 0.15))
+    radii = {int(tool): float(radius) for tool, radius in rule["tool_radii"].items()}
+    step = float(rule.get("sample_step", 2.5))
+    corner_margin = float(rule.get("corner_margin", min(radii.values())))
+    cuts = cut_records(records)
+    for rect in rule["regions"]:
+        region_motions = [
+            record for record in records
+            if record["code"] in {1, 2, 3}
+            and record["tool"] in radii
+            and record["end"]["x"] is not None
+            and record["end"]["y"] is not None
+            and (rect_contains((record["end"]["x"], record["end"]["y"]), rect) or segment_intersects_rect(record, rect))
+        ]
+        if any(record_z(record) is not None and record_z(record) < floor - tol for record in region_motions):
+            return False
+        region_cuts = [record for record in cuts if record["tool"] in radii and segment_intersects_rect(record, rect)]
+        floor_segments = [record for record in region_cuts if at_z(record, floor, tol)]
+        if not floor_segments:
+            return False
+        x1, y1, x2, y2 = rect
+        x, xmax = min(x1, x2) + corner_margin, max(x1, x2) - corner_margin
+        while x <= xmax + 1e-9:
+            y, ymax = min(y1, y2) + corner_margin, max(y1, y2) - corner_margin
+            while y <= ymax + 1e-9:
+                covered = any(
+                    point_segment_distance(
+                        (x, y),
+                        (record["start"]["x"], record["start"]["y"]),
+                        (record["end"]["x"], record["end"]["y"]),
+                    ) <= radii[record["tool"]] + 0.35
+                    for record in floor_segments
+                )
+                if not covered:
+                    return False
+                y += step
+            x += step
+    return True
+
+
+def validate_outer_profile(records, rule):
+    tool = int(rule["tool"])
+    part_x1, part_y1, part_x2, part_y2 = rule["part_rect"]
+    max_offset = float(rule.get("max_offset", 5.0))
+    for group in cut_groups(records, float(rule["z"])):
+        if not group_closed(group) or any(record["tool"] != tool for record in group):
+            continue
+        xs = [record["end"]["x"] for record in group]
+        ys = [record["end"]["y"] for record in group]
+        if (
+            min(part_x1, part_x2) - max_offset <= min(xs) <= min(part_x1, part_x2)
+            and max(part_x1, part_x2) <= max(xs) <= max(part_x1, part_x2) + max_offset
+            and min(part_y1, part_y2) - max_offset <= min(ys) <= min(part_y1, part_y2)
+            and max(part_y1, part_y2) <= max(ys) <= max(part_y1, part_y2) + max_offset
+        ):
+            return True
+    return False
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
+        return False
+    if "pocket_floor" in rule and not validate_pocket_floor(records, rule["pocket_floor"]):
+        return False
+    if "outer_profile" in rule and not validate_outer_profile(records, rule["outer_profile"]):
         return False
     for group in rule.get("terms", []):
         if not any(str(term).upper() in src for term in group):
@@ -265,6 +355,9 @@ def validate_file(path: Path, rule: dict) -> bool:
     for ordinal, minimum in rule.get("tool_min_cut", {}).items():
         tool = tool_for_ordinal(tools, int(ordinal))
         if tool is None or sum(record["tool"] == tool for record in cuts) < int(minimum):
+            return False
+    for tool, minimum in rule.get("tool_number_min_cut", {}).items():
+        if sum(record["tool"] == int(tool) for record in cuts) < int(minimum):
             return False
     for ordinal, minimum in rule.get("tool_z_levels", {}).items():
         tool = tool_for_ordinal(tools, int(ordinal))

@@ -13,6 +13,7 @@ BUNDLE = {'eval_inner.py': 'eNqlWP1u47gR/19PMcv9IxKQKHFus+269QF7Wfca9HzbcxygwGKh
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('drifted.brd', '/home/user/Desktop/drifted.brd')]
+REQUIRED_OUTPUTS = ('orthogonal.brd',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +105,8 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-9.nc': {'terms': [['POCKET'], ['REST']], 'min_tools': 2, 'min_motion': 24, 'tool_min_cut': {'1': 8, '2': 8}, 'z_values': [8.0], 'min_cut_groups': 4}}}
+RULE = {'files': {'task-9.nc': {'min_tools': 2, 'min_motion': 24, 'tool_number_min_cut': {'1': 8, '2': 8}, 'cross_semantics': {'floor': 8.0, 'top': 18.0, 'tol': 0.2, 'tool_radii': {'1': 6.0, '2': 2.0}, 'horizontal': [-45, -10, 45, 10], 'vertical': [-10, -30, 10, 30], 'rest_points': [[-30, -8], [-30, 8], [30, -8], [30, 8], [-8, -20], [8, -20], [-8, 20], [8, 20], [-8, -8], [8, -8], [-8, 8], [8, 8]]}}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,18 +189,116 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def point_in_cross(point, rule, expand=0.0):
+    return rect_contains(point, rule["horizontal"], expand) or rect_contains(point, rule["vertical"], expand)
+
+
+def motion_samples(record, spacing=1.0):
+    start, end = record["start"], record["end"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return []
+    if record["code"] not in {2, 3} or "i" not in record["explicit"] or "j" not in record["explicit"]:
+        length = math.hypot(end["x"] - start["x"], end["y"] - start["y"])
+        count = max(1, int(math.ceil(length / spacing)))
+        return [
+            (start["x"] + (end["x"] - start["x"]) * index / count,
+             start["y"] + (end["y"] - start["y"]) * index / count)
+            for index in range(count + 1)
+        ]
+    cx = start["x"] + record["explicit"]["i"]
+    cy = start["y"] + record["explicit"]["j"]
+    radius = math.hypot(start["x"] - cx, start["y"] - cy)
+    begin = math.atan2(start["y"] - cy, start["x"] - cx)
+    finish = math.atan2(end["y"] - cy, end["x"] - cx)
+    sweep = finish - begin
+    if record["code"] == 2:
+        if sweep >= 0:
+            sweep -= 2 * math.pi
+    elif sweep <= 0:
+        sweep += 2 * math.pi
+    if close(start["x"], end["x"], 1e-6) and close(start["y"], end["y"], 1e-6):
+        sweep = -2 * math.pi if record["code"] == 2 else 2 * math.pi
+    count = max(4, int(math.ceil(abs(sweep) * radius / spacing)))
+    return [(cx + radius * math.cos(begin + sweep * index / count), cy + radius * math.sin(begin + sweep * index / count)) for index in range(count + 1)]
+
+
+def grid_points(rect, margin, step):
+    x1, y1, x2, y2 = rect
+    points = []
+    x = min(x1, x2) + margin
+    while x <= max(x1, x2) - margin + 1e-9:
+        y = min(y1, y2) + margin
+        while y <= max(y1, y2) - margin + 1e-9:
+            points.append((x, y))
+            y += step
+        x += step
+    return points
+
+
+def validate_cross_semantics(records, rule):
+    floor = float(rule["floor"])
+    top = float(rule["top"])
+    tol = float(rule.get("tol", 0.2))
+    radii = {int(tool): float(radius) for tool, radius in rule["tool_radii"].items()}
+    main_tool, rest_tool = 1, 2
+    cuts = cut_records(records)
+    main_cuts = [record for record in cuts if record["tool"] == main_tool]
+    rest_cuts = [record for record in cuts if record["tool"] == rest_tool]
+    if not main_cuts or not rest_cuts or max(record["index"] for record in main_cuts) >= min(record["index"] for record in rest_cuts):
+        return False
+
+    cutting = [record for record in records if record["code"] in {1, 2, 3} and record["tool"] in radii and record_z(record) is not None and record_z(record) < top - tol]
+    for record in cutting:
+        if record_z(record) < floor - tol:
+            return False
+        for center in motion_samples(record):
+            for index in range(24):
+                angle = 2 * math.pi * index / 24
+                swept = (center[0] + radii[record["tool"]] * math.cos(angle), center[1] + radii[record["tool"]] * math.sin(angle))
+                if not point_in_cross(swept, rule, 0.25):
+                    return False
+
+    floor_centers = []
+    main_floor_centers = []
+    rest_floor_centers = []
+    for record in cuts:
+        if record["tool"] not in radii or not at_z(record, floor, tol):
+            continue
+        centers = [(record["tool"], point) for point in motion_samples(record)]
+        floor_centers.extend(centers)
+        if record["tool"] == main_tool:
+            main_floor_centers.extend(point for _, point in centers)
+        if record["tool"] == rest_tool:
+            rest_floor_centers.extend(point for _, point in centers)
+
+    def covered(point, centers):
+        return any(math.hypot(point[0] - center[0], point[1] - center[1]) <= radii[tool] + 0.35 for tool, center in centers)
+
+    overall_points = grid_points(rule["horizontal"], 2.0, 4.0) + grid_points(rule["vertical"], 2.0, 4.0)
+    if not all(covered(point, floor_centers) for point in overall_points):
+        return False
+    main_points = grid_points(rule["horizontal"], 6.0, 4.0) + grid_points(rule["vertical"], 6.0, 4.0)
+    if not all(any(math.hypot(point[0] - center[0], point[1] - center[1]) <= radii[main_tool] + 0.35 for center in main_floor_centers) for point in main_points):
+        return False
+    if not all(any(math.hypot(point[0] - center[0], point[1] - center[1]) <= radii[rest_tool] + 0.35 for center in rest_floor_centers) for point in rule["rest_points"]):
+        return False
+    return True
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
     if len(tool_order(tools)) < int(rule.get("min_tools", 1)) or len(records) < int(rule.get("min_motion", 1)):
         return False
     if sum(1 for record in records if record["code"] == 0) < int(rule.get("min_rapid", 0)):
+        return False
+    if "cross_semantics" in rule and not validate_cross_semantics(records, rule["cross_semantics"]):
         return False
     for group in rule.get("terms", []):
         if not any(str(term).upper() in src for term in group):
@@ -265,6 +363,9 @@ def validate_file(path: Path, rule: dict) -> bool:
     for ordinal, minimum in rule.get("tool_min_cut", {}).items():
         tool = tool_for_ordinal(tools, int(ordinal))
         if tool is None or sum(record["tool"] == tool for record in cuts) < int(minimum):
+            return False
+    for tool, minimum in rule.get("tool_number_min_cut", {}).items():
+        if sum(record["tool"] == int(tool) for record in cuts) < int(minimum):
             return False
     for ordinal, minimum in rule.get("tool_z_levels", {}).items():
         tool = tool_for_ordinal(tools, int(ordinal))

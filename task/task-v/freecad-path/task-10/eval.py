@@ -5,7 +5,22 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-10.gcode': {'terms': [['PROFILE']], 'min_tools': 1, 'min_motion': 40, 'closed': {'min': 5}, 'min_cut_groups': 5, 'outer_last': True}}}
+RULE = {
+    "files": {
+        "task-10.gcode": {
+            "min_tools": 1,
+            "min_motion": 40,
+            "sheet_profile": {
+                "kerf": 0.15,
+                "outer_size": [180.0, 100.0],
+                "windows": [[-60.0, 0.0], [-26.0, 0.0], [26.0, 0.0], [60.0, 0.0]],
+                "window_size": [24.0, 24.0],
+                "holes": [[-55.0, 30.0], [-20.0, 30.0], [20.0, 30.0], [55.0, 30.0]],
+                "hole_radius": 6.0,
+            },
+        }
+    }
+}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,12 +204,220 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def _arc_geometry(record):
+    start, end, explicit = record["start"], record["end"], record["explicit"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return None
+    sx, sy, ex, ey = start["x"], start["y"], end["x"], end["y"]
+    if "i" in explicit or "j" in explicit:
+        cx = sx + explicit.get("i", 0.0)
+        cy = sy + explicit.get("j", 0.0)
+    elif "r" in explicit:
+        radius = abs(explicit["r"])
+        dx, dy = ex - sx, ey - sy
+        chord = math.hypot(dx, dy)
+        if chord <= 1e-9 or chord > 2.0 * radius + 1e-6:
+            return None
+        mx, my = (sx + ex) / 2.0, (sy + ey) / 2.0
+        height = math.sqrt(max(0.0, radius * radius - chord * chord / 4.0))
+        candidates = [
+            (mx - dy * height / chord, my + dx * height / chord),
+            (mx + dy * height / chord, my - dx * height / chord),
+        ]
+
+        def candidate_sweep(center):
+            a0 = math.atan2(sy - center[1], sx - center[0])
+            a1 = math.atan2(ey - center[1], ex - center[0])
+            return (a1 - a0) % (2.0 * math.pi) if record["code"] == 3 else (a0 - a1) % (2.0 * math.pi)
+
+        want_major = explicit["r"] < 0.0
+        cx, cy = min(candidates, key=lambda c: (candidate_sweep(c) > math.pi) != want_major)
+    else:
+        return None
+    r0, r1 = math.hypot(sx - cx, sy - cy), math.hypot(ex - cx, ey - cy)
+    if r0 <= 1e-9 or abs(r0 - r1) > 0.05:
+        return None
+    a0, a1 = math.atan2(sy - cy, sx - cx), math.atan2(ey - cy, ex - cx)
+    if math.hypot(ex - sx, ey - sy) <= 1e-7:
+        sweep = 2.0 * math.pi
+    elif record["code"] == 3:
+        sweep = (a1 - a0) % (2.0 * math.pi)
+    else:
+        sweep = (a0 - a1) % (2.0 * math.pi)
+    return cx, cy, (r0 + r1) / 2.0, a0, sweep
+
+
+def sample_xy_record(record, max_step=0.5):
+    start, end = record["start"], record["end"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return None
+    if record["code"] == 1:
+        length = math.hypot(end["x"] - start["x"], end["y"] - start["y"])
+        count = max(1, int(math.ceil(length / max_step)))
+        return [
+            (
+                start["x"] + (end["x"] - start["x"]) * i / count,
+                start["y"] + (end["y"] - start["y"]) * i / count,
+            )
+            for i in range(count + 1)
+        ]
+    if record["code"] not in {2, 3}:
+        return None
+    arc = _arc_geometry(record)
+    if arc is None:
+        return None
+    cx, cy, radius, a0, sweep = arc
+    count = max(4, int(math.ceil(radius * sweep / max_step)))
+    direction = 1.0 if record["code"] == 3 else -1.0
+    return [
+        (cx + radius * math.cos(a0 + direction * sweep * i / count),
+         cy + radius * math.sin(a0 + direction * sweep * i / count))
+        for i in range(count + 1)
+    ]
+
+
+def connected_cut_groups(records):
+    groups, current = [], []
+    for record in records:
+        qualifies = record["code"] in {1, 2, 3} and xy_changed(record)
+        if qualifies:
+            if current:
+                previous = current[-1]
+                connected = (
+                    close(previous["end"]["x"], record["start"]["x"], 0.02)
+                    and close(previous["end"]["y"], record["start"]["y"], 0.02)
+                    and previous["tool"] == record["tool"]
+                    and previous["wcs"] == record["wcs"]
+                )
+                if not connected:
+                    groups.append(current)
+                    current = []
+            current.append(record)
+        elif current:
+            groups.append(current)
+            current = []
+    if current:
+        groups.append(current)
+    return groups
+
+
+def sampled_group(group):
+    start, end = group[0]["start"], group[-1]["end"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return None
+    if not close(start["x"], end["x"], 0.05) or not close(start["y"], end["y"], 0.05):
+        return None
+    points = []
+    for record in group:
+        sampled = sample_xy_record(record)
+        if not sampled:
+            return None
+        points.extend(sampled if not points else sampled[1:])
+    return points
+
+
+def point_bbox(points):
+    xs, ys = [point[0] for point in points], [point[1] for point in points]
+    return min(xs), min(ys), max(xs), max(ys)
+
+
+def rectangular_path(points, tolerance=0.06):
+    xmin, ymin, xmax, ymax = point_bbox(points)
+    if xmax - xmin <= 0.0 or ymax - ymin <= 0.0:
+        return False
+    return all(min(abs(x - xmin), abs(x - xmax), abs(y - ymin), abs(y - ymax)) <= tolerance for x, y in points)
+
+
+def circular_path(points, center, radius, tolerance=0.06):
+    if radius <= 0.0:
+        return False
+    angles = []
+    for x, y in points:
+        actual = math.hypot(x - center[0], y - center[1])
+        if abs(actual - radius) > tolerance:
+            return False
+        angles.append(math.atan2(y - center[1], x - center[0]) % (2.0 * math.pi))
+    ordered = sorted(set(round(angle, 6) for angle in angles))
+    if len(ordered) < 12:
+        return False
+    gaps = [b - a for a, b in zip(ordered, ordered[1:])]
+    gaps.append(ordered[0] + 2.0 * math.pi - ordered[-1])
+    return max(gaps) <= 0.35
+
+
+def validate_sheet_profile(records, src, item):
+    groups = connected_cut_groups(records)
+    if len(groups) < 9 or any(sampled_group(group) is None for group in groups):
+        return False
+    if any(record["tool"] != 1 for group in groups for record in group):
+        return False
+
+    kerf = float(item["kerf"])
+    offset = kerf / 2.0
+    offset_tolerance = 0.02
+    center_tolerance = 0.12
+    size_tolerance = 0.04
+    sampled = [sampled_group(group) for group in groups]
+
+    # The last contour fixes the coordinate translation and must be the outside profile.
+    last_box = point_bbox(sampled[-1])
+    last_width, last_height = last_box[2] - last_box[0], last_box[3] - last_box[1]
+    outer_width, outer_height = map(float, item["outer_size"])
+    if not rectangular_path(sampled[-1]):
+        return False
+    if abs((last_width - outer_width) / 2.0 - offset) > offset_tolerance:
+        return False
+    if abs((last_height - outer_height) / 2.0 - offset) > offset_tolerance:
+        return False
+    translation = ((last_box[0] + last_box[2]) / 2.0, (last_box[1] + last_box[3]) / 2.0)
+
+    windows = [(float(x) + translation[0], float(y) + translation[1]) for x, y in item["windows"]]
+    holes = [(float(x) + translation[0], float(y) + translation[1]) for x, y in item["holes"]]
+    window_seen, hole_seen = set(), set()
+    outside_started = False
+    for points in sampled:
+        xmin, ymin, xmax, ymax = point_bbox(points)
+        width, height = xmax - xmin, ymax - ymin
+        center = ((xmin + xmax) / 2.0, (ymin + ymax) / 2.0)
+        if rectangular_path(points) and abs(width - (outer_width + 2.0 * offset)) <= size_tolerance and abs(height - (outer_height + 2.0 * offset)) <= size_tolerance:
+            if math.hypot(center[0] - translation[0], center[1] - translation[1]) > center_tolerance:
+                return False
+            outside_started = True
+            continue
+        if outside_started:
+            return False
+
+        expected_width, expected_height = map(float, item["window_size"])
+        if rectangular_path(points) and abs((expected_width - width) / 2.0 - offset) <= offset_tolerance and abs((expected_height - height) / 2.0 - offset) <= offset_tolerance:
+            matches = [index for index, expected in enumerate(windows) if math.hypot(center[0] - expected[0], center[1] - expected[1]) <= center_tolerance]
+            if len(matches) != 1:
+                return False
+            window_seen.add(matches[0])
+            continue
+
+        radius = (width + height) / 4.0
+        expected_radius = float(item["hole_radius"]) - offset
+        matches = [index for index, expected in enumerate(holes) if math.hypot(center[0] - expected[0], center[1] - expected[1]) <= center_tolerance]
+        if len(matches) != 1 or abs(radius - expected_radius) > offset_tolerance or abs(width - height) > size_tolerance:
+            return False
+        if not circular_path(points, center, radius):
+            return False
+        hole_seen.add(matches[0])
+
+    if window_seen != set(range(len(windows))) or hole_seen != set(range(len(holes))):
+        return False
+
+    number = r"[+-]?(?:\d+(?:\.\d*)?|\.\d+)(?:E[+-]?\d+)?"
+    declarations = re.findall(rf"\bKERF\s*(?:=|:)?\s*({number})\s*MM\b", src)
+    return not declarations or all(abs(float(value) - kerf) <= 0.005 for value in declarations)
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
@@ -232,6 +455,8 @@ def validate_file(path: Path, rule: dict) -> bool:
         if sum(group_closed(group) for group in groups) < int(item["min"]):
             return False
     if len(cut_groups(records)) < int(rule.get("min_cut_groups", 0)):
+        return False
+    if "sheet_profile" in rule and not validate_sheet_profile(records, src, rule["sheet_profile"]):
         return False
     for item in rule.get("hole_sets", []):
         if not has_all_points(hole_visits(records, tools, item), item["points"]):

@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-14.nc': {'terms': [['DRILL']], 'min_tools': 1, 'min_motion': 10, 'hole_sets': [{'tool': 1, 'points': [(-30, -20), (-30, 0), (-30, 20), (0, -20), (0, 0), (0, 20), (0, 30), (30, -20), (30, 0), (30, 20)], 'z_max': 17.0}], 'forbidden_holes': [(-30, 30), (30, 30)]}}}
+RULE = {'files': {'task-14.nc': {'terms': [['DRILL']], 'min_tools': 1, 'min_motion': 10, 'hole_sets': [{'tool_number': 1, 'points': [(-30, -20), (-30, 0), (-30, 20), (0, -20), (0, 0), (0, 20), (0, 30), (30, -20), (30, 0), (30, 20)], 'z_max': -1.0, 'z_tolerance': 0.1}], 'forbidden_holes': [(-30, 30), (30, 30)], 'forbidden_z_max': 17.0, 'forbidden_tolerance': 0.75}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -132,14 +132,18 @@ def group_closed(group):
 
 
 def hole_visits(records, tools, rule):
-    tool = tool_for_ordinal(tools, rule.get("tool", 1)) if rule.get("tool") else None
+    if rule.get("tool_number") is not None:
+        tool = int(rule["tool_number"])
+    else:
+        tool = tool_for_ordinal(tools, rule.get("tool", 1)) if rule.get("tool") else None
     cycle_codes = set(rule.get("cycle", []))
+    z_tolerance = float(rule.get("z_tolerance", TOL))
     visits = []
     for record in records:
         if tool is not None and record["tool"] != tool:
             continue
         e, s = record["end"], record["start"]
-        if e["x"] is None or e["y"] is None or e["z"] is None or e["z"] > float(rule.get("z_max", 1e9)) + TOL:
+        if e["x"] is None or e["y"] is None or e["z"] is None or e["z"] > float(rule.get("z_max", 1e9)) + z_tolerance:
             continue
         if cycle_codes:
             if record["code"] in cycle_codes:
@@ -148,6 +152,8 @@ def hole_visits(records, tools, rule):
             visits.append((e["x"], e["y"]))
         elif record["code"] == 1 and s["x"] is not None and s["y"] is not None and s["z"] is not None and close(s["x"], e["x"]) and close(s["y"], e["y"]) and s["z"] - e["z"] > 0.2:
             visits.append((e["x"], e["y"]))
+        elif record["code"] in {2, 3}:
+            visits.extend(arc_centers_for_record(record))
     return visits
 
 
@@ -165,6 +171,95 @@ def arc_centers(records):
         if s["x"] is not None and s["y"] is not None and "i" in ex and "j" in ex:
             centers.append((s["x"] + ex["i"], s["y"] + ex["j"]))
     return centers
+
+
+def arc_centers_for_record(record):
+    if record["code"] not in {2, 3}:
+        return []
+    start, end, explicit = record["start"], record["end"], record["explicit"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return []
+    if "i" in explicit or "j" in explicit:
+        return [(start["x"] + explicit.get("i", 0.0), start["y"] + explicit.get("j", 0.0))]
+    if "r" not in explicit:
+        return []
+    radius = abs(explicit["r"])
+    dx, dy = end["x"] - start["x"], end["y"] - start["y"]
+    chord = math.hypot(dx, dy)
+    if chord <= 1e-9 or chord > 2.0 * radius + 1e-9:
+        return []
+    midpoint = ((start["x"] + end["x"]) / 2.0, (start["y"] + end["y"]) / 2.0)
+    offset = math.sqrt(max(0.0, radius * radius - (chord / 2.0) ** 2))
+    nx, ny = -dy / chord, dx / chord
+    candidates = [
+        (midpoint[0] + nx * offset, midpoint[1] + ny * offset),
+        (midpoint[0] - nx * offset, midpoint[1] - ny * offset),
+    ]
+    selected = []
+    for center in candidates:
+        sweep = arc_sweep(record, center)
+        if explicit["r"] >= 0 and sweep <= math.pi + 1e-7:
+            selected.append(center)
+        if explicit["r"] < 0 and sweep >= math.pi - 1e-7:
+            selected.append(center)
+    return selected or candidates
+
+
+def arc_sweep(record, center):
+    start, end = record["start"], record["end"]
+    start_angle = math.atan2(start["y"] - center[1], start["x"] - center[0])
+    end_angle = math.atan2(end["y"] - center[1], end["x"] - center[0])
+    if close(start["x"], end["x"], 1e-9) and close(start["y"], end["y"], 1e-9):
+        return 2.0 * math.pi
+    if record["code"] == 2:
+        return (start_angle - end_angle) % (2.0 * math.pi)
+    return (end_angle - start_angle) % (2.0 * math.pi)
+
+
+def point_segment_distance(point, start, end):
+    dx, dy = end[0] - start[0], end[1] - start[1]
+    if abs(dx) <= 1e-12 and abs(dy) <= 1e-12:
+        return math.hypot(point[0] - start[0], point[1] - start[1])
+    t = ((point[0] - start[0]) * dx + (point[1] - start[1]) * dy) / (dx * dx + dy * dy)
+    t = max(0.0, min(1.0, t))
+    closest = (start[0] + t * dx, start[1] + t * dy)
+    return math.hypot(point[0] - closest[0], point[1] - closest[1])
+
+
+def angle_on_arc(record, center, point, tolerance):
+    radius = math.hypot(record["start"]["x"] - center[0], record["start"]["y"] - center[1])
+    if radius <= 1e-9:
+        return False
+    target_angle = math.atan2(point[1] - center[1], point[0] - center[0])
+    start_angle = math.atan2(record["start"]["y"] - center[1], record["start"]["x"] - center[0])
+    if record["code"] == 2:
+        target_sweep = (start_angle - target_angle) % (2.0 * math.pi)
+    else:
+        target_sweep = (target_angle - start_angle) % (2.0 * math.pi)
+    return target_sweep <= arc_sweep(record, center) + tolerance / radius
+
+
+def motion_hits_forbidden(record, point, z_max, tolerance):
+    if record["code"] not in {1, 2, 3, 81, 82, 83, 84}:
+        return False
+    z_values = [value for value in (record["start"]["z"], record["end"]["z"]) if value is not None]
+    if not z_values or min(z_values) > float(z_max) + 0.1:
+        return False
+    end = record["end"]
+    if record["code"] in {81, 82, 83, 84}:
+        return end["x"] is not None and end["y"] is not None and math.hypot(end["x"] - point[0], end["y"] - point[1]) <= tolerance
+    start = record["start"]
+    if None in (start["x"], start["y"], end["x"], end["y"]):
+        return False
+    if record["code"] == 1:
+        return point_segment_distance(point, (start["x"], start["y"]), (end["x"], end["y"])) <= tolerance
+    for center in arc_centers_for_record(record):
+        if math.hypot(center[0] - point[0], center[1] - point[1]) <= tolerance:
+            return True
+        radius = math.hypot(start["x"] - center[0], start["y"] - center[1])
+        if abs(math.hypot(point[0] - center[0], point[1] - center[1]) - radius) <= tolerance and angle_on_arc(record, center, point, tolerance):
+            return True
+    return False
 
 
 def circular_centers(records):
@@ -194,7 +289,7 @@ def validate_file(path: Path, rule: dict) -> bool:
         return False
     src = path.read_text(encoding="utf-8", errors="ignore").upper()
     code_src = "\n".join(strip_code(line) for line in src.splitlines())
-    if "G21" not in code_src or "G90" not in code_src or "M30" not in code_src:
+    if "G21" not in code_src or "G90" not in code_src or not re.search(r"\bM(?:2|30)\b", code_src):
         return False
     records, tools, axes_seen = parse_nc(src)
     cuts = cut_records(records)
@@ -245,9 +340,11 @@ def validate_file(path: Path, rule: dict) -> bool:
                 unique.append(point)
         if len(unique) < int(item["min"]):
             return False
-    all_visits = hole_visits(records, tools, {"z_max": 1e9})
-    if any(any(close(x, fx) and close(y, fy) for x, y in all_visits) for fx, fy in rule.get("forbidden_holes", [])):
-        return False
+    for forbidden in rule.get("forbidden_holes", []):
+        if any(motion_hits_forbidden(record, forbidden, rule.get("forbidden_z_max", 1e9),
+                                     float(rule.get("forbidden_tolerance", TOL)))
+               for record in records):
+            return False
     if "circle_centers" in rule:
         item = rule["circle_centers"]
         centers = circular_centers(records)

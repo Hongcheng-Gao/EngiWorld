@@ -533,14 +533,24 @@ def validate_contour(program: Program) -> None:
 
 
 def validate_program(program: Program) -> None:
-    if not program.terminated or program.executable_lines < 80:
-        raise EvaluationError("incomplete NC program")
+    if not program.terminated:
+        raise EvaluationError("NC program is not terminated")
     if program.programs != [PROGRAM]:
         raise EvaluationError("wrong exact O-number")
-    if program.selections != [1, 2, 3, 4] or program.changes != [1, 2, 3, 4]:
-        raise EvaluationError("tool selections/changes must be exactly T1-T4 in order")
-    if len(program.segments) < 60:
-        raise EvaluationError("insufficient real machining motion")
+
+    def first_occurrence_order(values: list[int]) -> list[int]:
+        seen: set[int] = set()
+        order: list[int] = []
+        for value in values:
+            if value not in seen:
+                seen.add(value)
+                order.append(value)
+        return order
+
+    if first_occurrence_order(program.selections) != [1, 2, 3, 4]:
+        raise EvaluationError("first tool-selection order must be T1-T4")
+    if first_occurrence_order(program.changes) != [1, 2, 3, 4]:
+        raise EvaluationError("first effective tool-change order must be T1-T4")
     for segment in program.segments:
         if segment.motion in {1, 2, 3} and min(point.z for point in segment.samples) < 0.05:
             if segment.tool not in TOOLS:

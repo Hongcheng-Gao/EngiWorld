@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-02-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-02-windows",
   "open_choice_id": "cae-open-choice-002",
   "source_task": "task/task-c/abaqus/task-02",
   "original_software": "abaqus",
@@ -10,29 +10,45 @@
   "analysis_kind": "static_structural",
   "metrics": [
     "radial_displacement",
-    "max_stress"
+    "max_mises"
   ],
   "expected_result_fields": [
     "U",
+    "RF",
     "S"
   ],
   "require_metrics_json": true,
-  "visible_goal": "Build and solve a thick-walled cylinder under internal pressure; report radial displacement and hoop or equivalent stress.",
-  "selection_reason": "Pressure-vessel axisymmetric structural analysis maps cleanly between the two FEA tools.",
+  "visible_goal": "Build and solve a thick-walled cylinder under internal pressure; report the signed inner-midpoint radial displacement and final maximum von Mises stress.",
+  "selection_reason": "Pressure-vessel axisymmetric structural analysis maps cleanly between Abaqus and ANSYS MAPDL.",
   "artifact_hint": {
     "ground_truth_files": [
       "Job-Cylinder.cae",
-      "Job-Cylinder.odb"
+      "Job-Cylinder.odb",
+      "Job-Cylinder.db",
+      "Job-Cylinder.rst"
     ],
     "abaqus_stems": [
       "Job-Cylinder"
     ],
-    "ansys_db_files": [],
-    "ansys_result_files": []
+    "ansys_db_files": [
+      "Job-Cylinder.db"
+    ],
+    "ansys_result_files": [
+      "Job-Cylinder.rst"
+    ]
   },
   "span_hint": {
     "x": 50.0,
     "y": 10.0
   },
-  "bounds_hint": null
+  "bounds_hint": {
+    "x": [
+      50.0,
+      100.0
+    ],
+    "y": [
+      0.0,
+      10.0
+    ]
+  }
 }

@@ -5,6 +5,8 @@ import importlib.util
 import shutil
 import tempfile
 import zlib
+import xml.etree.ElementTree as ET
+from collections import Counter
 from pathlib import Path
 
 
@@ -13,6 +15,7 @@ BUNDLE = {'eval_inner.py': 'eNrlGdly28jxHV/RgR8ErEmI1NrKGmUopay0LlZs7ZalJE7JXHhI
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('poured.brd', '/home/user/Desktop/poured.brd')]
+REQUIRED_OUTPUTS = ('stitched.brd',)
 
 
 def _decode(payload: str) -> bytes:
@@ -73,6 +76,34 @@ def _load_module(root: Path):
             except ValueError:
                 pass
     return module
+
+
+def _via_signatures(path: Path) -> Counter[tuple[str, str, str, str, str]]:
+    root = ET.parse(path).getroot()
+    signal = root.find(".//signal[@name='GND']")
+    if signal is None:
+        return Counter()
+    return Counter(
+        (
+            via.get("x", ""),
+            via.get("y", ""),
+            via.get("drill", ""),
+            via.get("diameter", ""),
+            via.get("extent", ""),
+        )
+        for via in signal.findall("via")
+    )
+
+
+def _has_required_new_via_count() -> bool:
+    try:
+        before = _via_signatures(DESKTOP / "poured.brd")
+        after = _via_signatures(DESKTOP / "stitched.brd")
+    except (OSError, ET.ParseError):
+        return False
+    return 6 <= sum((after - before).values()) <= 8
+
+
 def _is_pass(result) -> bool:
     if isinstance(result, bool):
         return result
@@ -104,6 +135,10 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
+    if not _has_required_new_via_count():
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

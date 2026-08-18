@@ -13,6 +13,7 @@ BUNDLE = {'eval_inner.py': 'eNqdWNtu4zYQfddXTLkPkYCEjrOXByMysNtNi6DZbZF4gQKLhZa2
 CALL_FUNC = 'evaluate'
 CALL_ARGS = ['__DESKTOP_DIR__']
 INIT_MAP = [('board.brd', '/home/user/Desktop/board.brd')]
+REQUIRED_OUTPUTS = ('annotated.brd',)
 
 
 def _decode(payload: str) -> bytes:
@@ -104,6 +105,8 @@ def _resolve_arg(spec: str):
 
 
 def _run() -> bool:
+    if not all((DESKTOP / rel).is_file() for rel in REQUIRED_OUTPUTS):
+        return False
     import uuid
 
     runtime_base = Path(__file__).resolve().parent / "_runtime"

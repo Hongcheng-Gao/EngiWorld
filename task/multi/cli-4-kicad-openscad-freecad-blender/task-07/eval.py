@@ -814,43 +814,116 @@ def run_kicad_export(answer_board: Path, output_step: Path, runtime: Path) -> No
 def load_mesh_metrics(path: Path) -> dict[str, Any]:
     try:
         import numpy as np
-        import trimesh
     except Exception as exc:
         fail(f"evaluator mesh dependencies unavailable: {exc}")
     try:
-        loaded = trimesh.load_mesh(str(path), file_type="stl", process=True)
-        if isinstance(loaded, trimesh.Scene):
-            meshes = [mesh for mesh in loaded.geometry.values() if isinstance(mesh, trimesh.Trimesh)]
-            if not meshes:
-                fail(f"{path.name} contains no mesh geometry")
-            mesh = trimesh.util.concatenate(meshes)
-        else:
-            mesh = loaded
-        if not isinstance(mesh, trimesh.Trimesh) or len(mesh.vertices) < 20 or len(mesh.faces) < 30:
-            fail(f"{path.name} has implausibly little triangle geometry")
-        bounds = np.asarray(mesh.bounds, dtype=float)
-        volume = abs(float(mesh.volume))
-        if not bool(mesh.is_watertight) or not bool(mesh.is_winding_consistent) or volume <= 0:
-            fail(f"{path.name} must be a watertight, consistently wound positive-volume mesh")
-        components = []
-        for component in mesh.split(only_watertight=False):
-            if len(component.faces) < 4:
+        data = path.read_bytes()
+        triangles = None
+        if len(data) >= 84:
+            facet_count = struct.unpack_from("<I", data, 80)[0]
+            if facet_count > 0 and 84 + facet_count * 50 == len(data):
+                dtype = np.dtype([("normal", "<f4", (3,)), ("vertices", "<f4", (3, 3)), ("attribute", "<u2")])
+                triangles = np.asarray(np.frombuffer(data, dtype=dtype, count=facet_count, offset=84)["vertices"], dtype=float)
+        if triangles is None:
+            values = []
+            for line in data.decode("utf-8", errors="strict").splitlines():
+                fields = line.strip().split()
+                if fields and fields[0].lower() == "vertex" and len(fields) == 4:
+                    values.append([float(value) for value in fields[1:]])
+            if not values or len(values) % 3:
+                fail(f"{path.name} is not a valid binary or ASCII STL triangle mesh")
+            triangles = np.asarray(values, dtype=float).reshape((-1, 3, 3))
+        if not np.isfinite(triangles).all():
+            fail(f"{path.name} contains non-finite coordinates")
+
+        vertex_ids = {}
+        vertices = []
+        faces = []
+        seen_faces = set()
+        for triangle in triangles:
+            ids = []
+            for raw in triangle:
+                key = tuple(round(float(value), 8) for value in raw)
+                if key not in vertex_ids:
+                    vertex_ids[key] = len(vertices)
+                    vertices.append(key)
+                ids.append(vertex_ids[key])
+            if len(set(ids)) != 3:
                 continue
-            cbounds = np.asarray(component.bounds, dtype=float)
+            points = np.asarray([vertices[index] for index in ids], dtype=float)
+            if float(np.linalg.norm(np.cross(points[1] - points[0], points[2] - points[0]))) <= 1e-12:
+                continue
+            canonical = tuple(sorted(ids))
+            if canonical not in seen_faces:
+                seen_faces.add(canonical)
+                faces.append(tuple(ids))
+        if len(vertices) < 20 or len(faces) < 30:
+            fail(f"{path.name} has implausibly little triangle geometry")
+
+        edge_uses = {}
+        for face_index, (a, b, c) in enumerate(faces):
+            for start, end in ((a, b), (b, c), (c, a)):
+                edge = (min(start, end), max(start, end))
+                edge_uses.setdefault(edge, []).append((face_index, 1 if start < end else -1))
+        if any(len(uses) != 2 for uses in edge_uses.values()):
+            fail(f"{path.name} must be a watertight mesh")
+        if any(uses[0][1] + uses[1][1] != 0 for uses in edge_uses.values()):
+            fail(f"{path.name} must be consistently wound")
+
+        vertex_array = np.asarray(vertices, dtype=float)
+        face_array = np.asarray(faces, dtype=int)
+
+        def calculate(face_indices):
+            points = vertex_array[face_array[np.asarray(face_indices, dtype=int)]]
+            cross = np.cross(points[:, 1] - points[:, 0], points[:, 2] - points[:, 0])
+            signed = np.einsum("ij,ij->i", points[:, 0], np.cross(points[:, 1], points[:, 2])) / 6.0
+            signed_volume = float(signed.sum())
+            used = np.unique(face_array[np.asarray(face_indices, dtype=int)].reshape(-1))
+            local_vertices = vertex_array[used]
+            local_bounds = np.asarray([local_vertices.min(axis=0), local_vertices.max(axis=0)], dtype=float)
+            center = ((points.sum(axis=1) / 4.0) * signed[:, None]).sum(axis=0) / signed_volume
+            return local_bounds, abs(signed_volume), float((np.linalg.norm(cross, axis=1) * 0.5).sum()), center
+
+        neighbors = [set() for _ in faces]
+        for uses in edge_uses.values():
+            first, second = uses[0][0], uses[1][0]
+            neighbors[first].add(second)
+            neighbors[second].add(first)
+        groups = []
+        unseen = set(range(len(faces)))
+        while unseen:
+            seed = unseen.pop()
+            group = {seed}
+            stack = [seed]
+            while stack:
+                adjacent = neighbors[stack.pop()] & unseen
+                unseen.difference_update(adjacent)
+                group.update(adjacent)
+                stack.extend(adjacent)
+            groups.append(sorted(group))
+
+        bounds, volume, area, center = calculate(range(len(faces)))
+        if volume <= 0 or area <= 0:
+            fail(f"{path.name} must be a positive-volume mesh")
+        components = []
+        for group in groups:
+            if len(group) < 4:
+                continue
+            cbounds, component_volume, _component_area, _component_center = calculate(group)
             components.append({
                 "bounds": [float(value) for value in cbounds.reshape(-1)],
                 "bbox": [float(value) for value in cbounds[1] - cbounds[0]],
-                "volume": abs(float(component.volume)),
-                "faces": int(len(component.faces)),
+                "volume": component_volume,
+                "faces": len(group),
             })
         return {
             "bounds": [float(value) for value in bounds.reshape(-1)],
             "bbox": [float(value) for value in bounds[1] - bounds[0]],
             "volume": volume,
-            "area": float(mesh.area),
-            "center": [float(value) for value in np.asarray(mesh.center_mass, dtype=float)],
-            "vertices": int(len(mesh.vertices)),
-            "faces": int(len(mesh.faces)),
+            "area": area,
+            "center": [float(value) for value in center],
+            "vertices": len(vertices),
+            "faces": len(faces),
             "components": components,
         }
     except EvaluationError:
@@ -1022,7 +1095,7 @@ def cylinder_shape(volume):
 
 
 def overlap(first, second):
-    common = float(first.common(second).Volume)
+    common = float(first.common((second,), 1e-6).Volume)
     return {
         "common_volume_mm3": common,
         "first_only_volume_mm3": max(0.0, float(first.Volume) - common),
@@ -1340,14 +1413,15 @@ def enclosure_coverage(tray, lid):
         Part.makeBox(enclosure[0] - 2.0 * wall, wall, wall_height, App.Vector(-enclosure[0] / 2.0 + wall, -enclosure[1] / 2.0, base)),
         Part.makeBox(enclosure[0] - 2.0 * wall, wall, wall_height, App.Vector(-enclosure[0] / 2.0 + wall, enclosure[1] / 2.0 - wall, base)),
     ]
-    expected_walls = walls[0].fuse(walls[1]).fuse(walls[2]).fuse(walls[3])
     for access in config["accesses"]:
-        expected_walls = expected_walls.cut(box_shape(access["bounds_mm"]))
+        window = box_shape(access["bounds_mm"])
+        walls = [shape.cut(window) for shape in walls]
     expected_lid = box_shape(config["lid_bounds_mm"])
     return {
-        "base_slab_coverage": float(tray.common(base_shape).Volume) / max(float(base_shape.Volume), 1e-9),
-        "side_wall_coverage": float(tray.common(expected_walls).Volume) / max(float(expected_walls.Volume), 1e-9),
-        "lid_slab_coverage": float(lid.common(expected_lid).Volume) / max(float(expected_lid.Volume), 1e-9),
+        "base_slab_coverage": float(tray.common((base_shape,), 1e-6).Volume) / max(float(base_shape.Volume), 1e-9),
+        "side_wall_coverage": sum(float(tray.common((shape,), 1e-6).Volume) for shape in walls)
+        / max(sum(float(shape.Volume) for shape in walls), 1e-9),
+        "lid_slab_coverage": float(lid.common((expected_lid,), 1e-6).Volume) / max(float(expected_lid.Volume), 1e-9),
     }
 
 
@@ -1505,6 +1579,9 @@ except Exception as exc:
     payload = {"ok": False, "error": str(exc), "traceback": traceback.format_exc()}
 with open(result_path, "w") as handle:
     json.dump(payload, handle, indent=2, sort_keys=True)
+    handle.flush()
+    os.fsync(handle.fileno())
+os._exit(0)
 '''
 
 
@@ -1515,7 +1592,10 @@ def run_freecad_checker(
     rerendered_board_step: Path,
     rerendered_stl: Path,
 ) -> dict[str, Any]:
-    freecad = resolve_executable("freecadcmd", ["/usr/bin/freecadcmd", "/usr/bin/FreeCADCmd"])
+    freecad = resolve_executable(
+        "freecadcmd",
+        ["/home/user/.local/bin/freecadcmd", "/usr/bin/freecadcmd", "/usr/bin/FreeCADCmd"],
+    )
     req = spec["requirements"]
     board = spec["board"]
     board_bottom = number(req["board_bottom_z_mm"], "board bottom")

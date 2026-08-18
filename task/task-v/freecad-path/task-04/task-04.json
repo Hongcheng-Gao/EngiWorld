@@ -1,8 +1,8 @@
 {
   "id": "v-freecad-path-task-04-ubuntu",
   "snapshot": "freecad-path0.21.2",
-  "instruction": "Look at rect_pocket_block.step. Create a FreeCAD Path/CAM Job. Use T1 to create a Pocket Shape operation for the centered 50 x 30 mm pocket. The pocket floor must be Z=8.000 mm, maximum stepdown must be 2 mm, floor stock must be 0.1 mm, and a floor finish pass must be added. Tool definition: T1 is an 8 mm flat end mill for Pocket Shape machining, S8000 rpm, F600 mm/min. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-4.nc.",
-  "source": "https://wiki.freecad.org/CAM_Pocket_Shape；https://wiki.freecad.org/CAM_Workbench https://wiki.freecad.org/CAM_Pocket_Shape%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Workbench",
+  "instruction": "Open rect_pocket_block.step. Before starting the work, open the part in FreeCAD from `/usr/bin/freecad`, then carry out the Path workbench edits when working on `rect_pocket_block.step`. It is a 120 x 80 x 18 mm block in source coordinates X=-60..60 mm, Y=-40..40 mm, Z=0..18 mm, with one centered 50 x 30 mm pocket whose floor is Z=8.000 mm. Create an editable native FreeCAD 0.21.2 Path/CAM Job. Use G54 matching the source CAD coordinates: X0 Y0 at the block center and Z0 at the block bottom. Configure the stock as the complete 120 x 80 x 18 mm outer block. Use exactly one active native Pocket Shape cutting operation and no other cutting operations. Its ToolController must use T1, an 8 mm flat end mill, tool number 1, Forward spindle at S8000 rpm, and horizontal cutting feed F600 mm/min; use a positive safe vertical feed no greater than the horizontal feed. Set StartDepth to 18 mm, FinalDepth to 8.000 mm, maximum StepDown to 2 mm, and FinishDepth to 0.100 mm, so the penultimate fully cleared floor is Z=8.100 mm and the final fully cleared floor finish pass reaches Z=8.000 mm. Safe stepover, pattern, cut direction, approach, retract, and heights may be chosen as appropriate, but the complete 50 x 30 mm pocket must be cleared without gouging below Z=8.000 mm or outside the pocket. Use the native LinuxCNC postprocessor. Save the editable FreeCAD document and its matching postprocessed output using exactly these absolute paths: /home/user/Desktop/task-4.FCStd and /home/user/Desktop/task-4.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketShape.py; https://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketBase.py; https://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Area.py; https://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Base.py; https://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/PathScripts/PathUtils.py; https://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py; https://linuxcnc.org/docs/html/gcode/m-code.html#mcode:m2-m30",
   "config": [
     {
       "type": "upload_file",
@@ -46,7 +46,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/usr/bin/python3 -I /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

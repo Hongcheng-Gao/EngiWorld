@@ -1,52 +1,12 @@
 {
   "id": "c-freecad-path-task-17-ubuntu",
   "snapshot": "freecad-path0.21.2",
-  "instruction": "Open /home/user/Desktop/two_sided_part.step in FreeCAD Path/CAM. Use FreeCAD with the Path/CAM modules. Create A-side and B-side FreeCAD Path/CAM Jobs or independent machining coordinate systems. Use a Side A Pocket operation to machine the open pocket; use a Side B Counterbore operation to machine the four counterbores. Tool definitions: use T1 as an end mill, T2 as a drill, and T3 as a counterbore tool for side A and side B; use S7000 rpm and F500 mm/min for these tools. Write the required output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-17_A.nc, /home/user/Desktop/task-17_B.nc. [Software] To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH).",
-  "source": "https://wiki.freecad.org/CAM_Job；https://wiki.freecad.org/CAM_Profile；https://wiki.freecad.org/CAM_Drilling https://wiki.freecad.org/CAM_Job%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Profile%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Drilling",
-  "config": [
-    {
-      "type": "upload_file",
-      "parameters": {
-        "files": [
-          {
-            "local_path": "task-17/init_file/two_sided_part.step",
-            "path": "/home/user/Desktop/two_sided_part.step"
-          }
-        ]
-      }
-    }
-  ],
+  "instruction": "Open /home/user/Desktop/two_sided_part.step in FreeCAD 0.21.2 Path/CAM. Use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `two_sided_part.step`. The source is a centered 120 x 80 x 18 mm plate. Create two independent native FreeCAD Path Jobs: Side A uses G54 and a T1 D8 flat end mill to cut a centered 60 x 36 mm through pocket from Z18 to Z0; Side B uses G55 and a flipped-side coordinate system, T2 D6 drill for four through pilot holes at (-45,-25), (45,-25), (-45,25), (45,25), and T3 D8 flat end mill as the counterbore cutter for four D12 counterbores, 4 mm deep from the B side. Use S7000 rpm and F500 mm/min for all tools. Generate the native linuxcnc-posted files exactly /home/user/Desktop/task-17_A.nc and /home/user/Desktop/task-17_B.nc, and save the editable native document as /home/user/Desktop/task-17_real.fcstd. Both jobs must be recomputable and their native operations must be Up-to-date.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Main/Job.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketShape.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Drilling.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Helix.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Bit.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Controller.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/PathScripts/PathUtils.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py\nhttps://wiki.freecad.org/index.php?title=CAM_Pocket_Shape&oldid=1262258\nhttps://linuxcnc.org/docs/2.8/html/gcode/g-code.html#gcode:g81\nhttps://linuxcnc.org/docs/2.8/html/gcode/g-code.html#gcode:g2-g3\nhttps://linuxcnc.org/docs/2.8/html/gcode/g-code.html#gcode:g98-g99\nhttps://linuxcnc.org/docs/2.9/html/gcode/g-code.html#gcode:g54-g59.3\nhttps://linuxcnc.org/docs/2.8/html/gcode/m-code.html#mcode:m2-m30",
+  "config": [{"type":"upload_file","parameters":{"files":[{"local_path":"task-17/init_file/two_sided_part.step","path":"/home/user/Desktop/two_sided_part.step"}]}}],
   "trajectory": "trajectories/",
-  "related_apps": [
-    "freecad-path"
-  ],
-  "evaluator": {
-    "postconfig": [
-      {
-        "type": "upload_file",
-        "parameters": {
-          "files": [
-            {
-              "local_path": "task-17/eval.py",
-              "path": "/home/user/Desktop/eval.py"
-            }
-          ]
-        }
-      }
-    ],
-    "func": "exact_match",
-    "result": {
-      "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true"
-    },
-    "expected": {
-      "type": "rule",
-      "rules": {
-        "expected": "True\n"
-      }
-    }
-  },
+  "related_apps": ["freecad-path"],
+  "evaluator": {"postconfig":[{"type":"upload_file","parameters":{"files":[{"local_path":"task-17/eval.py","path":"/home/user/Desktop/eval.py"}]}}],"func":"exact_match","result":{"type":"vm_command_line","command":["/usr/bin/python3","-I","/home/user/Desktop/eval.py"],"shell":false},"expected":{"type":"rule","rules":{"expected":"True\n"}}},
   "proxy": false,
   "fixed_ip": false,
   "possibility_of_env_change": "low"

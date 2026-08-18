@@ -103,17 +103,46 @@ def evaluate() -> bool:
         s for s in segments
         if s["layer"] == "F.Cu" and s["net_name"].startswith("HDMI_TMDS")
     ]
-    if len(hdmi_segments) != 2:
+    hdmi_nets = {s["net_name"] for s in hdmi_segments}
+    if len(hdmi_nets) != 2 or any(not name for name in hdmi_nets):
         return False
     if any(abs(s["width"] - 0.10) > 0.01 for s in hdmi_segments):
         return False
 
+    def point(x, y):
+        return round(x, 6), round(y, 6)
+
+    def connected_endpoints(net_segments):
+        adjacency = {}
+        degrees = {}
+        for segment in net_segments:
+            start = point(segment["x1"], segment["y1"])
+            end = point(segment["x2"], segment["y2"])
+            adjacency.setdefault(start, set()).add(end)
+            adjacency.setdefault(end, set()).add(start)
+            degrees[start] = degrees.get(start, 0) + 1
+            degrees[end] = degrees.get(end, 0) + 1
+        pending = [next(iter(adjacency))]
+        visited = set()
+        while pending:
+            current = pending.pop()
+            if current in visited:
+                continue
+            visited.add(current)
+            pending.extend(adjacency[current] - visited)
+        if visited != set(adjacency):
+            return None
+        return [value for value, degree in degrees.items() if degree % 2 == 1]
+
+    endpoints = []
+    for name in sorted(hdmi_nets):
+        values = connected_endpoints([s for s in hdmi_segments if s["net_name"] == name])
+        if values is None or len(values) != 2:
+            return False
+        endpoints.append(values)
+
     # Either end may be the source. Require one corresponding endpoint pair to
     # have the requested approximately 0.25 mm center-to-center spacing.
-    endpoints = [
-        [(s["x1"], s["y1"]), (s["x2"], s["y2"])]
-        for s in hdmi_segments
-    ]
     endpoint_gaps = [
         math.hypot(a[0] - b[0], a[1] - b[1])
         for a in endpoints[0]

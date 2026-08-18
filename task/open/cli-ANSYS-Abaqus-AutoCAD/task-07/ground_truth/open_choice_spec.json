@@ -1,5 +1,5 @@
 {
-  "task_id": "c-cae-commercial-open-choice-task-07-windows",
+  "task_id": "c-open-abaqus-ansys-autocad-task-07-windows",
   "open_choice_id": "cae-open-choice-007",
   "source_task": "task/task-c/abaqus/task-07",
   "original_software": "abaqus",
@@ -9,12 +9,14 @@
   "domain": "shaft_torsion_a",
   "analysis_kind": "static_structural",
   "metrics": [
-    "twist_angle",
-    "max_stress"
+    "twist_angle_rad",
+    "max_mises_mpa"
   ],
   "expected_result_fields": [
     "U",
-    "S"
+    "S",
+    "RF",
+    "ROT"
   ],
   "require_metrics_json": true,
   "visible_goal": "Analyze a circular shaft under applied torque; report twist angle and maximum shear or equivalent stress.",
@@ -22,18 +24,23 @@
   "artifact_hint": {
     "ground_truth_files": [
       "Job-Torsion-A.cae",
-      "Job-Torsion-A.odb"
+      "Job-Torsion-A.odb",
+      "Job-Torsion-A.db",
+      "Job-Torsion-A.rst"
     ],
     "abaqus_stems": [
       "Job-Torsion-A"
     ],
-    "ansys_db_files": [],
-    "ansys_result_files": []
+    "ansys_db_files": ["Job-Torsion-A.db"],
+    "ansys_result_files": ["Job-Torsion-A.rst"]
   },
   "span_hint": {
     "x": 10.0,
     "y": 80.0,
     "z": 10.0
   },
-  "bounds_hint": null
+  "bounds_hint": {
+    "twist_angle_rad": [0.0003, 0.002],
+    "max_mises_mpa": [2.0, 50.0]
+  }
 }

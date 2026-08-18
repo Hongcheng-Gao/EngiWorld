@@ -2,6 +2,7 @@ from __future__ import annotations
 
 import os
 import re
+import math
 from pathlib import Path
 
 
@@ -132,6 +133,77 @@ def xy_changed(record) -> bool:
     )
 
 
+def _unique_points(records) -> list[tuple[float, float]]:
+    points: list[tuple[float, float]] = []
+    for record in records:
+        end = record["end"]
+        if end["x"] is None or end["y"] is None:
+            continue
+        point = (float(end["x"]), float(end["y"]))
+        if not any(close(point[0], old[0]) and close(point[1], old[1]) for old in points):
+            points.append(point)
+    return points
+
+
+def _drill_frame(points: list[tuple[float, float]]):
+    """Return the center and local long/short axes of a 50 x 30 hole rectangle."""
+    if len(points) != 4:
+        return None
+    center = (
+        sum(point[0] for point in points) / 4.0,
+        sum(point[1] for point in points) / 4.0,
+    )
+    if any(
+        not any(
+            close(other[0], 2 * center[0] - point[0])
+            and close(other[1], 2 * center[1] - point[1])
+            for other in points
+        )
+        for point in points
+    ):
+        return None
+
+    origin = points[0]
+    vectors = []
+    for point in points[1:]:
+        dx, dy = point[0] - origin[0], point[1] - origin[1]
+        vectors.append((math.hypot(dx, dy), dx, dy))
+    vectors.sort()
+    short, long, diagonal = vectors
+    if not (
+        close(short[0], 30.0)
+        and close(long[0], 50.0)
+        and close(diagonal[0], math.hypot(30.0, 50.0))
+    ):
+        return None
+    dot = short[1] * long[1] + short[2] * long[2]
+    if abs(dot) > 30.0 * 50.0 * 0.02:
+        return None
+    long_axis = (long[1] / long[0], long[2] / long[0])
+    short_axis = (short[1] / short[0], short[2] / short[0])
+    return center, long_axis, short_axis
+
+
+def _project(point, center, long_axis, short_axis):
+    dx, dy = point[0] - center[0], point[1] - center[1]
+    return (
+        dx * long_axis[0] + dy * long_axis[1],
+        dx * short_axis[0] + dy * short_axis[1],
+    )
+
+
+def _vertical_plunge(record) -> bool:
+    if record["code"] != 1:
+        return False
+    start, end = record["start"], record["end"]
+    return (
+        None not in (start["x"], start["y"], start["z"], end["x"], end["y"], end["z"])
+        and close(start["x"], end["x"])
+        and close(start["y"], end["y"])
+        and float(end["z"]) < float(start["z"]) - 0.5
+    )
+
+
 def validate(path: Path) -> bool:
     if not path.is_file() or path.stat().st_size < 500:
         return False
@@ -140,8 +212,28 @@ def validate(path: Path) -> bool:
     if len(tools) < 2 or not all(flags.values()):
         return False
 
+    drill_candidates = []
+    for tool in tools:
+        visits = [
+            record
+            for record in records
+            if record["tool"] == tool
+            and record["end"]["z"] is not None
+            and (record["code"] in {81, 83} or _vertical_plunge(record))
+        ]
+        points = _unique_points(visits)
+        frame = _drill_frame(points)
+        if frame is not None:
+            drill_candidates.append((min(float(record["end"]["z"]) for record in visits), tool, visits, frame))
+    if not drill_candidates:
+        return False
+    drill_z, drill_tool, drill_records, frame = min(drill_candidates)
+    center, long_axis, short_axis = frame
+
     pocket_tools = []
     for tool in tools:
+        if tool == drill_tool:
+            continue
         pocket_cuts = [
             record
             for record in records
@@ -150,48 +242,51 @@ def validate(path: Path) -> bool:
             and xy_changed(record)
             and record["end"]["z"] is not None
         ]
-        deep = [record for record in pocket_cuts if record["end"]["z"] <= -8.25]
+        if not pocket_cuts:
+            continue
+        pocket_z = min(float(record["end"]["z"]) for record in pocket_cuts)
+        deep = [record for record in pocket_cuts if close(record["end"]["z"], pocket_z)]
         if len(deep) < 10:
             continue
-        xs = [record["end"]["x"] for record in deep]
-        ys = [record["end"]["y"] for record in deep]
-        if max(xs) - min(xs) < 30.0 or max(ys) - min(ys) < 12.0:
+        projected = [
+            _project(
+                (float(record["end"]["x"]), float(record["end"]["y"])),
+                center,
+                long_axis,
+                short_axis,
+            )
+            for record in deep
+        ]
+        longs = [point[0] for point in projected]
+        shorts = [point[1] for point in projected]
+        if max(longs) - min(longs) < 30.0 or max(shorts) - min(shorts) < 12.0:
             continue
-        if any(abs(x) > 21.5 or abs(y) > 12.5 for x, y in zip(xs, ys)):
+        long_tracks = {round(value, 1) for value in longs}
+        short_tracks = {round(value, 1) for value in shorts}
+        if max(len(long_tracks), len(short_tracks)) < 4:
+            continue
+        if any(abs(long) > 21.5 or abs(short) > 12.5 for long, short in projected):
             continue
         if not all(
-            any((x >= 0) == x_positive and (y >= 0) == y_positive for x, y in zip(xs, ys))
-            for x_positive in (False, True)
-            for y_positive in (False, True)
+            any(
+                (long >= 0) == long_positive and (short >= 0) == short_positive
+                for long, short in projected
+            )
+            for long_positive in (False, True)
+            for short_positive in (False, True)
         ):
             continue
-        minimum_z = min(record["end"]["z"] for record in pocket_cuts)
-        if minimum_z < -9.75:
+        if not 6.0 <= pocket_z - drill_z <= 11.0:
             continue
         pocket_tools.append(tool)
     if not pocket_tools:
         return False
-
-    drill_records = []
-    for record in records:
-        if record["tool"] in pocket_tools or record["code"] not in {81, 83}:
-            continue
-        end = record["end"]
-        if None in (end["x"], end["y"], end["z"]):
-            continue
-        if record["code"] == 83 and "q" in record["explicit"] and record["explicit"]["q"] <= 0:
-            return False
-        if end["z"] <= -16.25:
-            drill_records.append(record)
-    expected = [(-25.0, -15.0), (-25.0, 15.0), (25.0, -15.0), (25.0, 15.0)]
-    actual = [(record["end"]["x"], record["end"]["y"]) for record in drill_records]
-    if not all(any(close(x, ex) and close(y, ey) for x, y in actual) for ex, ey in expected):
-        return False
-    unique = []
-    for point in actual:
-        if not any(close(point[0], old[0]) and close(point[1], old[1]) for old in unique):
-            unique.append(point)
-    if len(unique) != 4:
+    if any(
+        record["code"] == 83
+        and "q" in record["explicit"]
+        and record["explicit"]["q"] <= 0
+        for record in drill_records
+    ):
         return False
     return True
 
