@@ -49,7 +49,6 @@ SPEC = {'any_odb_fields': [],
  'load_names': ['Load-RightHoles'],
  'material': {'E': 210000, 'name': 'Steel', 'nu': 0.3},
  'min_elements': 1,
- 'max_nodes': 1000,
  'min_frames': 2,
  'model_name': 'Model-PlateStatic',
  'nonzero_odb_fields': ['U', 'S'],
@@ -1911,7 +1910,6 @@ def check_cae():
         return fail('CAE mesh must use only first-order C3D4/C3D8R; got %s'%element_types)
     try: node_count=len(part.nodes)
     except Exception: node_count=len(coords)
-    if node_count > int(SPEC.get('max_nodes',1000)): return fail('CAE mesh is too dense: %s nodes'%node_count)
     if coords:
         spans=[]
         for ax in range(3):

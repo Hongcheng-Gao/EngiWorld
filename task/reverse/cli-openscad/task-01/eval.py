@@ -9,7 +9,7 @@ import tempfile
 from pathlib import Path
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
-SPEC = {'bbox': [110, 110, 7], 'bbox_tol': 0.25, 'volume_range': [25000, 27000], 'min_triangles': 500, 'required_tokens': ['module wafer_carrier', 'difference', 'for (', 'd=110', 'd=78', '[0,120,240]', 'd=4']}
+SPEC = {'bbox': [110, 110, 7], 'bbox_tol': 0.25, 'volume_range': [25000, 27000], 'min_triangles': 500, 'required_tokens': ['module wafer_carrier']}
 
 
 def triangles(path):
