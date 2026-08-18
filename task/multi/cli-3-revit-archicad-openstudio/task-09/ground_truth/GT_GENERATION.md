@@ -1,16 +1,16 @@
 # Task-09 ground-truth generation and validation
 
-This GT was regenerated on 2026-08-12 in the assigned Windows snapshot, independently of other tasks. The reference review workbook was directional context only: the required spreadsheet runtime was unavailable in this agent environment, so no workbook conclusion was treated as evidence.
+This GT was rebuilt on 2026-08-18 in the assigned `cli3-revit2025-archicad27-openstudio310-win` image (`10.0.8.246`). The three supplied stages ran in the required order from `C:\Users\user\Desktop`.
 
 ## Native generation
 
-- Revit `25.1.0.44`, build `20240516_1515(x64)`, loaded the task-local bridge. The unsigned add-in `Load Once` and IFC4 warning `OK` dialogs were confirmed. Revit produced `stage1.ifc` and `revit_handoff.json`. During the repair audit, the bridge was revised to consume each filling's geometry, storey, host-wall index, sill/base height, and dimensions from `workflow_spec.json`; it was rebuilt against the installed Revit 2025 APIs as a 56,832-byte DLL (SHA-256 `c23442230124426d866f0ce254b9951a0912714fe2444e5da8fac80bd80a25b6`, zero compile errors).
-- Archicad 27 build 6000 ran `IFCCommandServerApp.exe` on task-local model `EW3B09-RUN`. Its 30-entry JEMI transcript records `Model.LoadFile`, `Macro.ValidateIfcModel`, typed `Entity.Get` / `Entity.GetAttribute` inspection, and `Model.SaveFile`. It produced a real EDM-reserialized `stage2.ifc` and keyed handoff/report.
-- OpenStudio `3.10.0+86d7e215a1` consumed the IFC geometry and Archicad handoff, forward-translated `result.osm` to `in.idf`, and invoked EnergyPlus `25.1.0-1c11a3d85f` for an annual run.
+- Revit `25.1.0.44`, build `20240516_1515(x64)`, loaded the task-local `EngiWorld.BimBridge` add-in. The bridge compiled against the installed Revit 2025 API with zero errors; the resulting DLL is 69,120 bytes with SHA-256 `c6a2dd54cf131396905daeeb3d3544c991947df7fa7ead477d591b4802b3b5cb`. Revit produced `stage1.ifc` and `revit_handoff.json` with exit code 0.
+- Archicad 27 build 6000 ran `IFCCommandServerApp.exe` on model `EW3B09-RUN`. Its 30-entry JEMI transcript records `Model.LoadFile`, `Macro.ValidateIfcModel`, typed `Entity.Get` / `Entity.GetAttribute` inspection, and `Model.SaveFile`. It produced `stage2.ifc`, `archicad_handoff.json`, and `archicad_validation_report.json` with exit code 0.
+- OpenStudio `3.10.0+86d7e215a1` consumed the Archicad IFC and handoff, created four separate thermal zones, forward-translated `result.osm` to `in.idf`, and invoked EnergyPlus `25.1.0-1c11a3d85f` for an annual run. EnergyPlus completed successfully with 7 warnings and 0 severe errors.
 
-The four real IFC spaces are `LOBBY` (23.40 m2), `CLASSROOM-A` (46.02 m2), `CLASSROOM-B` (46.02 m2), and `STORAGE` (37.44 m2), totaling 152.88 m2. The files contain five retained walls, one retained slab, one closed pitched roof, four doors, three windows, seven geometric openings, seven void relations, and seven fill relations. All 258 `IfcRoot` GlobalIds are unique and preserved through Archicad.
+The four IFC spaces are `LOBBY` (23.40 m2), `CLASSROOM-A` (46.02 m2), `CLASSROOM-B` (46.02 m2), and `STORAGE` (37.44 m2), totaling 152.88 m2. The delivered IFCs contain five retained walls, one retained slab, one closed pitched roof, four doors, three windows, seven geometric openings, seven void relations, and seven fill relations. `stage1.ifc` and `stage2.ifc` each contain 280 unique `IfcRoot` GlobalIds, all preserved across the Archicad stage.
 
-Run the supplied stages in order on the Windows task image:
+Run the supplied stages in order on the task image:
 
 ```powershell
 powershell -ExecutionPolicy Bypass -File C:\Users\user\Desktop\run_revit_stage.ps1
@@ -18,22 +18,12 @@ powershell -ExecutionPolicy Bypass -File C:\Users\user\Desktop\run_archicad_stag
 powershell -ExecutionPolicy Bypass -File C:\Users\user\Desktop\run_openstudio_stage.ps1
 ```
 
-## Results and evaluator closure
+## Evaluator closure
 
-EnergyPlus completed successfully with 7 warnings, 0 severe errors, 8,760 hourly meter rows, 24,444.444 kWh total site energy, 1.737 kW peak, and 159.893 kWh/m2 EUI. The standalone evaluator parses IFC topology and semantics, reconciles native provenance, parses the OSM handle graph and loads, opens standard EnergyPlus SQLite tables, independently forward-translates the OSM, and independently reruns EnergyPlus.
+The annual simulation contains 8,760 hourly meter rows, 24,444.444 kWh total site energy, a 1.737 kW peak, and a 159.893 kWh/m2 EUI. The evaluator parses IFC geometry and topology, verifies retained identities and hosted-opening relationships, reconciles Archicad live entity counts and RPC provenance, checks the four OpenStudio schedules and loads, opens standard EnergyPlus SQLite tables, independently forward-translates the OSM, and independently reruns EnergyPlus.
 
-Both local and Windows validation passed after repair. The Windows formal run independently forward-translated the OSM with OpenStudio 3.10 and reran the annual model with EnergyPlus 25.1. The targeted matrix passed 22/22 on both platforms: native delivery, OSM object reorder, and coplanar IFC retriangulation were accepted; 19 independent corruptions covering retained GUID, space geometry, space and non-space product containment, representation, roof closure, filling geometry/host graph, Archicad RPC provenance, schedule, load, outdoor air, shared zone, ordinary and non-`Name` OSM handles, edited IDF, truncated SQL, nonannual/zero SQL, and forged Revit log were rejected.
-
-The repair removed unstable runtime GUIDs from the door/window input contract, records the observed native zero-boundary export state instead of claiming level-2 boundaries, checks every required product's effective building-storey assignment, resolves every OSM handle-valued field, validates each door/window opening against its own geometry, dimensions, class and seed-wall host, and accepts Archicad 27 builds at or above 6000 with a compatible native EDM header rather than one exact build/header string. Existing stage outputs remain the real native artifacts generated by the versions above; the repaired runtime recreates their specified geometry semantics without depending on their run-specific GUIDs.
-
-## Official sources
-
-- Revit 2025 API Developers Guide: https://help.autodesk.com/view/RVT/2025/ENU/?guid=Revit_API_Revit_API_Developers_Guide_html
-- Archicad 27 IFC documentation: https://help.graphisoft.com/AC/27/INT/_AC27_Help/121_IFC/121_IFC-3.htm
-- OpenStudio 3.10 CLI: https://openstudio-sdk-documentation.s3.amazonaws.com/cpp/OpenStudio-3.10.0-doc/cli/html/index.html
-- OpenStudio 3.10 release: https://github.com/NatLabRockies/OpenStudio/releases/tag/v3.10.0
-- EnergyPlus 25.1 SQL output: https://bigladdersoftware.com/epx/docs/25-1/output-details-and-examples/eplusout-sql.html
+The original evaluator returned `True` in the target image after the final rebuild. The 18 collected GT files were downloaded through the environment API and matched their remote SHA-256 values 18/18 before being copied into `ground_truth`.
 
 ## Cleanup
 
-After collection and Windows validation, the task work directory, task-local Archicad database, validation directory/archive, temporary Revit add-in manifest/directory, repair build directories, repair validation directories, and task-specific generated logs/caches were removed. A post-cleanup read-only check at `2026-08-12T16:41:23Z` confirmed zero Revit, Archicad/IFCCommandServer, OpenStudio, EnergyPlus, or task validation processes, port 19740 closed, no matching TEMP entries, and all nine enumerated task paths absent.
+After collection and validation, task-specific files staged on the Desktop and task-specific runtime directories are removed. The base image files and installed applications are left unchanged.
