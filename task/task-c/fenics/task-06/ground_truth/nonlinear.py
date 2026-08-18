@@ -8,7 +8,9 @@ v = TestFunction(V)
 f = Constant(1.0)
 F = (1 + u**2)*inner(grad(u), grad(v))*dx - f*v*dx
 
-problem = NonlinearVariationalProblem(F, u, bc)
+du = TrialFunction(V)
+J = derivative(F, u, du)
+problem = NonlinearVariationalProblem(F, u, bc, J)
 solver = NonlinearVariationalSolver(problem)
 solver.parameters["newton_solver"]["relative_tolerance"] = 1e-6
 solver.solve()

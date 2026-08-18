@@ -1,7 +1,7 @@
 {
   "id": "c-fenics-task-09-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a legacy FEniCS/DOLFIN coarse-mesh template `/home/user/Desktop/plate_hole_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/plate_hole.py`: - Generate geometry with `mshr`: `domain = Rectangle(Point(0,0), Point(100,200)) - Circle(Point(50,100), 5)` and `mesh = generate_mesh(domain, 30)`, or generate a geometrically equivalent `.msh` with command-line Gmsh and import it - Use plane-stress linear elasticity with `E=210000 MPa` and `nu=0.3`; constrain rigid motion and prescribe X displacement on the left/right edges equivalent to a 10 MPa far-field X tension - Solve linear elasticity 2. Extract and save to `/home/user/Desktop/summary.txt`: - Maximum Mises stress near the hole boundary in the `theta=90 degrees` region measured from the +X axis - Far-field average Mises stress away from the hole and constrained edges Format: `hole_mises, far_mises` [Software] Use a legacy `dolfin`-compatible implementation when using `mshr`; a command-line Gmsh mesh may be imported by an equivalent supported route.",
+  "instruction": "You are given a legacy FEniCS/DOLFIN coarse-mesh template `/home/user/Desktop/plate_hole_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/plate_hole.py`: - Generate geometry with `mshr`: `domain = Rectangle(Point(0,0), Point(100,200)) - Circle(Point(50,100), 5)` and `mesh = generate_mesh(domain, 30)`, or generate a geometrically equivalent `.msh` with command-line Gmsh and import it - Use plane-stress linear elasticity with `E=210000 MPa` and `nu=0.3`; constrain rigid motion and prescribe X displacement on the left/right edges equivalent to a 10 MPa far-field X tension - Solve linear elasticity 2. Extract and save to `/home/user/Desktop/summary.txt`: - Maximum Mises stress near the hole boundary in the `theta=90 degrees` region measured from the +X axis - Far-field average Mises stress away from the hole and constrained edges Format: `hole_mises, far_mises` [Software] Use a legacy `dolfin`-compatible implementation when using `mshr`; a command-line Gmsh mesh may be imported by an equivalent supported route. Run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `plate_hole_base.py`.",
   "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
@@ -37,7 +37,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {

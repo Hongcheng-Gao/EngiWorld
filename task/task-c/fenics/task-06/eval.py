@@ -58,7 +58,7 @@ def check_task(root: Path) -> bool:
     except SyntaxError:
         return False
     normalized = re.sub(r"\s+", "", source)
-    required_code = ("fromdolfinimport", "(1+u**2)*inner(grad(u),grad(v))*dx", "Constant(1.0)", "NonlinearVariationalProblem(", "relative_tolerance", "1e-6")
+    required_code = ("fromdolfinimport", "(1+u**2)*inner(grad(u),grad(v))*dx", "Constant(1.0)", "derivative(", "NonlinearVariationalProblem(", "relative_tolerance", "1e-6")
     if any(fragment not in normalized for fragment in required_code):
         return False
 

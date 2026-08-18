@@ -3,8 +3,8 @@ from slepc4py import SLEPc
 from petsc4py import PETSc
 from math import pi, sqrt
 
-mesh = RectangleMesh(Point(0, 0), Point(500, 10), 50, 1)
-V = VectorFunctionSpace(mesh, "P", 1)
+mesh = RectangleMesh(Point(0, 0), Point(500, 10), 100, 2)
+V = VectorFunctionSpace(mesh, "P", 2)
 E = 210000.0
 nu = 0.3
 rho = 7.85e-9
@@ -37,7 +37,9 @@ M_free = M.createSubMatrix(index_set, index_set)
 solver = SLEPc.EPS().create()
 solver.setOperators(A_free, M_free)
 solver.setProblemType(SLEPc.EPS.ProblemType.GHEP)
-solver.setWhichEigenpairs(SLEPc.EPS.Which.SMALLEST_REAL)
+solver.setTarget(0.0)
+solver.setWhichEigenpairs(SLEPc.EPS.Which.TARGET_MAGNITUDE)
+solver.getST().setType(SLEPc.ST.Type.SINVERT)
 solver.setDimensions(nev=6)
 solver.setTolerances(tol=1.0e-10, max_it=1000)
 solver.solve()

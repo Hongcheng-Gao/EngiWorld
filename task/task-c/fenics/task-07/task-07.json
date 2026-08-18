@@ -1,7 +1,7 @@
 {
   "id": "c-fenics-task-07-ubuntu",
   "snapshot": "FEniCS",
-  "instruction": "You are given a legacy FEniCS/DOLFIN transient heat-conduction template `/home/user/Desktop/transient_heat_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/transient.py`: - Complete the backward-Euler variational form - Implement `for n in range(100)` with `dt=0.1 s`, using the template's `alpha=50 mm^2/s`, initial temperature 20°C, left surface temperature 100°C, and natural insulated conditions on the other boundaries - Update each step with `u_n.assign(u)` - At `t=10 s`, extract the left-surface temperature and the temperature at `(5 mm, 25 mm)` 2. Run and save to `/home/user/Desktop/summary.txt`: Format: `surface_temp, temp_at_5mm` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx.",
+  "instruction": "You are given a legacy FEniCS/DOLFIN transient heat-conduction template `/home/user/Desktop/transient_heat_base.py`. Complete the following: 1. Modify and generate `/home/user/Desktop/transient.py`: - Complete the backward-Euler variational form - Implement `for n in range(100)` with `dt=0.1 s`, using the template's `alpha=50 mm^2/s`, initial temperature 20°C, left surface temperature 100°C, and natural insulated conditions on the other boundaries - Update each step with `u_n.assign(u)` - At `t=10 s`, extract the left-surface temperature and the temperature at `(5 mm, 25 mm)` 2. Run and save to `/home/user/Desktop/summary.txt`: Format: `surface_temp, temp_at_5mm` [Software] Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx. For this workflow, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `transient_heat_base.py`.",
   "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
   "config": [
     {
@@ -37,7 +37,7 @@
     "func": "exact_match",
     "result": {
       "type": "vm_command_line",
-      "command": "python3 /home/user/Desktop/eval.py",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
       "shell": "true"
     },
     "expected": {
