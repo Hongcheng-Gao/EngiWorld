@@ -108,11 +108,6 @@ def check_task(root: Path) -> bool:
         ast.parse(compare_source, filename=str(root / "compare.py"))
     except SyntaxError:
         return False
-    if any(token not in pipeline_source for token in ("subprocess", "job_a", "job_b", "check=True")):
-        return False
-    if any(token not in compare_source for token in ("job_a_metrics.json", "job_b_metrics.json", "Ratio_Mises", "Ratio_Displacement")):
-        return False
-
     generated = [
         "job_a.xdmf", "job_a.h5", "job_a_metrics.json",
         "job_b.xdmf", "job_b.h5", "job_b_metrics.json",

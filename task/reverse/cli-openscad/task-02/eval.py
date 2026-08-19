@@ -9,7 +9,8 @@ import tempfile
 from pathlib import Path
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
-SPEC = {'bbox': [88, 64, 4], 'bbox_tol': 0.25, 'volume_range': [19000, 20000], 'min_triangles': 300, 'required_tokens': ['module qfn_tray']}
+SPEC = {'bbox': [88, 64, 4], 'bbox_tol': 0.25, 'volume_range': [20400, 20700], 'min_triangles': 300, 'required_tokens': ['module qfn_tray']}
+SOLID_SAMPLES = [(-28, -18, 2.5, False), (-28, -18, 3.6, False), (-10, -18, 2.5, False), (-10, -18, 3.6, False), (8, -18, 2.5, False), (8, -18, 3.6, False), (26, -18, 2.5, False), (26, -18, 3.6, False), (-28, 0, 2.5, False), (-28, 0, 3.6, False), (-10, 0, 2.5, False), (-10, 0, 3.6, False), (8, 0, 2.5, False), (8, 0, 3.6, False), (26, 0, 2.5, False), (26, 0, 3.6, False), (-28, 18, 2.5, False), (-28, 18, 3.6, False), (-10, 18, 2.5, False), (-10, 18, 3.6, False), (8, 18, 2.5, False), (8, 18, 3.6, False), (26, 18, 2.5, False), (26, 18, 3.6, False), (-28, -18, 1.0, True), (-10, -18, 1.0, True), (8, -18, 1.0, True), (26, -18, 1.0, True), (-28, 0, 1.0, True), (-10, 0, 1.0, True), (8, 0, 1.0, True), (26, 0, 1.0, True), (-28, 18, 1.0, True), (-10, 18, 1.0, True), (8, 18, 1.0, True), (26, 18, 1.0, True), (-23.8, -18, 3.0, False), (-5.8, -18, 3.0, False), (12.2, -18, 3.0, False), (30.2, -18, 3.0, False), (-23.8, 0, 3.0, False), (-5.8, 0, 3.0, False), (12.2, 0, 3.0, False), (30.2, 0, 3.0, False), (-23.8, 18, 3.0, False), (-5.8, 18, 3.0, False), (12.2, 18, 3.0, False), (30.2, 18, 3.0, False), (-22.4, -18, 3.0, True), (-4.4, -18, 3.0, True), (13.6, -18, 3.0, True), (31.6, -18, 3.0, True), (-22.4, 0, 3.0, True), (-4.4, 0, 3.0, True), (13.6, 0, 3.0, True), (31.6, 0, 3.0, True), (-22.4, 18, 3.0, True), (-4.4, 18, 3.0, True), (13.6, 18, 3.0, True), (31.6, 18, 3.0, True), (-38, 26, 0.8, False), (-38, 26, 3.0, False), (38, 26, 0.8, False), (38, 26, 3.0, False), (-35.8, 26, 1.0, True), (40.2, 26, 1.0, True)]
 
 
 def triangles(path):
@@ -45,6 +46,55 @@ def mesh_volume(faces):
     return abs(signed)
 
 
+def _sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    )
+
+
+def _ray_triangle_distance(origin, face):
+    direction = (1.0, 0.371390676, 0.217186234)
+    edge1 = _sub(face[1], face[0])
+    edge2 = _sub(face[2], face[0])
+    h = _cross(direction, edge2)
+    determinant = _dot(edge1, h)
+    if abs(determinant) < 1e-10:
+        return None
+    inverse = 1.0 / determinant
+    s = _sub(origin, face[0])
+    u = inverse * _dot(s, h)
+    if u < -1e-9 or u > 1.0 + 1e-9:
+        return None
+    q = _cross(s, edge1)
+    v = inverse * _dot(direction, q)
+    if v < -1e-9 or u + v > 1.0 + 1e-9:
+        return None
+    distance = inverse * _dot(edge2, q)
+    return distance if distance > 1e-8 else None
+
+
+def point_inside_mesh(point, faces):
+    hits = sorted(
+        distance
+        for face in faces
+        if (distance := _ray_triangle_distance(point, face)) is not None
+    )
+    unique_hits = []
+    for distance in hits:
+        if not unique_hits or abs(distance - unique_hits[-1]) > 1e-6:
+            unique_hits.append(distance)
+    return len(unique_hits) % 2 == 1
+
 def run():
     answer = OUTPUT_ROOT / "answer.scad"
     openscad = shutil.which("openscad") or "/usr/bin/openscad"
@@ -71,6 +121,9 @@ def run():
     lo, hi = SPEC["volume_range"]
     if not (lo <= volume <= hi):
         return False
+    for x, y, z, expected_solid in SOLID_SAMPLES:
+        if point_inside_mesh((x, y, z), faces) != expected_solid:
+            return False
     return True
 
 

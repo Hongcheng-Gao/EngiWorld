@@ -443,6 +443,77 @@ def get_handoff_area(data: Dict[str, Any]) -> float | None:
     return total if found else None
 
 
+def parse_osm_objects(text: str) -> List[Dict[str, Any]]:
+    objects: List[Dict[str, Any]] = []
+    current_type: str | None = None
+    fields: List[str] = []
+    for raw_line in text.splitlines():
+        line = raw_line.strip()
+        if current_type is None:
+            match = re.match(r"^(OS:[A-Za-z0-9:]+)\s*,\s*$", line, flags=re.IGNORECASE)
+            if match:
+                current_type = match.group(1).upper()
+                fields = []
+            continue
+        value = raw_line.split("!-", 1)[0].strip()
+        if not value:
+            continue
+        terminal = value.endswith(";")
+        if value.endswith((",", ";")):
+            value = value[:-1].strip()
+        fields.append(value)
+        if terminal:
+            objects.append({"type": current_type, "fields": fields})
+            current_type = None
+            fields = []
+    return objects
+
+
+def check_osm_relationships(text: str, required_spaces: List[str], required_zones: List[str], errors: List[str]) -> None:
+    objects = parse_osm_objects(text)
+    by_type: Dict[str, List[List[str]]] = {}
+    for obj in objects:
+        by_type.setdefault(str(obj["type"]), []).append(list(obj["fields"]))
+
+    zones = {fields[1]: fields[0] for fields in by_type.get("OS:THERMALZONE", []) if len(fields) > 1}
+    if set(required_zones) - set(zones):
+        errors.append("result.osm:missing_required_thermal_zone_objects")
+    spaces = {fields[1]: fields for fields in by_type.get("OS:SPACE", []) if len(fields) > 10}
+    for space_name, zone_name in zip(required_spaces, required_zones):
+        fields = spaces.get(space_name)
+        if fields is None or fields[10] != zones.get(zone_name):
+            errors.append(f"result.osm:space_zone_link_mismatch:{space_name}:{zone_name}")
+
+    surfaces = {fields[0] for fields in by_type.get("OS:SURFACE", []) if fields}
+    hosted_types: List[str] = []
+    for fields in by_type.get("OS:SUBSURFACE", []):
+        if len(fields) > 4 and fields[4] in surfaces:
+            hosted_types.append(fields[2].upper())
+    if not any("DOOR" in value for value in hosted_types):
+        errors.append("result.osm:missing_hosted_door")
+    if not any("WINDOW" in value for value in hosted_types):
+        errors.append("result.osm:missing_hosted_window")
+
+    days = {fields[0]: fields for fields in by_type.get("OS:SCHEDULE:DAY", []) if fields}
+    schedules = {
+        fields[1]: fields
+        for fields in by_type.get("OS:SCHEDULE:RULESET", [])
+        if len(fields) > 3
+    }
+    equipment_schedule = schedules.get("LowOfficeEquipmentSchedule")
+    if equipment_schedule is None or equipment_schedule[3] not in days:
+        errors.append("result.osm:invalid_low_office_equipment_schedule_link")
+    else:
+        values = []
+        for token in days[equipment_schedule[3]][4:]:
+            try:
+                values.append(float(token))
+            except ValueError:
+                continue
+        if not values or any(not math.isfinite(value) for value in values):
+            errors.append("result.osm:invalid_low_office_equipment_schedule_values")
+
+
 def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], required_zones: List[str], required_tokens: List[str], flow_tokens: List[str], errors: List[str]) -> Dict[str, int]:
     if path.stat().st_size < 1000:
         errors.append("result.osm:too_small")
@@ -458,6 +529,7 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
     require_tokens(text, flow_tokens, errors, "result.osm:flow_tokens")
     if handoff_hash[:12].upper() not in up:
         errors.append("result.osm:missing_handoff_hash_prefix")
+    check_osm_relationships(text, required_spaces, required_zones, errors)
     counts = {
         "space_count": len(re.findall(r"\bOS:SPACE\s*,", up)),
         "zone_count": len(re.findall(r"\bOS:THERMALZONE\s*,", up)),

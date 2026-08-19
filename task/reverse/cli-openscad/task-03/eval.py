@@ -10,6 +10,7 @@ from pathlib import Path
 
 OUTPUT_ROOT = Path(os.environ.get("EVAL_OUTPUT_ROOT", "/home/user/Desktop"))
 SPEC = {'bbox': [60, 45, 26], 'bbox_tol': 0.25, 'volume_range': [28000, 28800], 'min_triangles': 250, 'required_tokens': ['module heatsink']}
+SOLID_SAMPLES = [(0, 0, 2.0, True), (-24, 0, 15.0, True), (-18, 0, 15.0, True), (-12, 0, 15.0, True), (-6, 0, 15.0, True), (0, 0, 15.0, True), (6, 0, 15.0, True), (12, 0, 15.0, True), (18, 0, 15.0, True), (24, 0, 15.0, True), (-23.2, 0, 15.0, True), (-17.2, 0, 15.0, True), (-11.2, 0, 15.0, True), (-5.2, 0, 15.0, True), (0.8, 0, 15.0, True), (6.8, 0, 15.0, True), (12.8, 0, 15.0, True), (18.8, 0, 15.0, True), (24.8, 0, 15.0, True), (-22.7, 0, 15.0, False), (-16.7, 0, 15.0, False), (-10.7, 0, 15.0, False), (-4.7, 0, 15.0, False), (1.3, 0, 15.0, False), (7.3, 0, 15.0, False), (13.3, 0, 15.0, False), (19.3, 0, 15.0, False), (25.3, 0, 15.0, False), (-21, 0, 15.0, False), (-15, 0, 15.0, False), (-9, 0, 15.0, False), (-3, 0, 15.0, False), (3, 0, 15.0, False), (9, 0, 15.0, False), (15, 0, 15.0, False), (21, 0, 15.0, False), (-25, -17.5, 2.0, False), (-25, 17.5, 2.0, False), (25, -17.5, 2.0, False), (25, 17.5, 2.0, False), (-22.5, -17.5, 2.0, True), (-22.5, 17.5, 2.0, True), (27.5, -17.5, 2.0, True), (27.5, 17.5, 2.0, True)]
 
 
 def triangles(path):
@@ -45,6 +46,55 @@ def mesh_volume(faces):
     return abs(signed)
 
 
+def _sub(a, b):
+    return (a[0] - b[0], a[1] - b[1], a[2] - b[2])
+
+
+def _dot(a, b):
+    return a[0] * b[0] + a[1] * b[1] + a[2] * b[2]
+
+
+def _cross(a, b):
+    return (
+        a[1] * b[2] - a[2] * b[1],
+        a[2] * b[0] - a[0] * b[2],
+        a[0] * b[1] - a[1] * b[0],
+    )
+
+
+def _ray_triangle_distance(origin, face):
+    direction = (1.0, 0.371390676, 0.217186234)
+    edge1 = _sub(face[1], face[0])
+    edge2 = _sub(face[2], face[0])
+    h = _cross(direction, edge2)
+    determinant = _dot(edge1, h)
+    if abs(determinant) < 1e-10:
+        return None
+    inverse = 1.0 / determinant
+    s = _sub(origin, face[0])
+    u = inverse * _dot(s, h)
+    if u < -1e-9 or u > 1.0 + 1e-9:
+        return None
+    q = _cross(s, edge1)
+    v = inverse * _dot(direction, q)
+    if v < -1e-9 or u + v > 1.0 + 1e-9:
+        return None
+    distance = inverse * _dot(edge2, q)
+    return distance if distance > 1e-8 else None
+
+
+def point_inside_mesh(point, faces):
+    hits = sorted(
+        distance
+        for face in faces
+        if (distance := _ray_triangle_distance(point, face)) is not None
+    )
+    unique_hits = []
+    for distance in hits:
+        if not unique_hits or abs(distance - unique_hits[-1]) > 1e-6:
+            unique_hits.append(distance)
+    return len(unique_hits) % 2 == 1
+
 def run():
     answer = OUTPUT_ROOT / "answer.scad"
     openscad = shutil.which("openscad") or "/usr/bin/openscad"
@@ -71,6 +121,9 @@ def run():
     lo, hi = SPEC["volume_range"]
     if not (lo <= volume <= hi):
         return False
+    for x, y, z, expected_solid in SOLID_SAMPLES:
+        if point_inside_mesh((x, y, z), faces) != expected_solid:
+            return False
     return True
 
 

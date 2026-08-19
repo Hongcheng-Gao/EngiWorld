@@ -6,7 +6,7 @@ import math
 from eval_utils import (
     desktop_root,
     print_result,
-    require_calls,
+    read_numeric_csv,
     run_submission,
 )
 
@@ -25,15 +25,13 @@ def check() -> bool:
         if actual_hash != expected_hash:
             return False
 
-    pipeline_tree = run_submission(
+    run_submission(
         root,
         "run_pipeline.py",
         ["baseline.csv", "yaw.csv"],
         timeout=300,
     )
-    require_calls(pipeline_tree, {"run": 2})
-    compare_tree = run_submission(root, "compare.py", ["comparison_report.txt"])
-    require_calls(compare_tree, {"read_text": 2, "write_text": 1})
+    run_submission(root, "compare.py", ["comparison_report.txt"])
 
     with (root / "comparison_report.txt").open("r", encoding="utf-8", newline="") as handle:
         rows = list(csv.reader(handle))
@@ -52,6 +50,13 @@ def check() -> bool:
         float(rows[2][1]),
         float(rows[3][1]),
     ]
+    baseline_values = read_numeric_csv(root / "baseline.csv", 1, 2)[0]
+    yaw_values = read_numeric_csv(root / "yaw.csv", 1, 2)[0]
+    if not all(
+        math.isclose(actual, source, rel_tol=1e-6, abs_tol=1e-6)
+        for actual, source in zip(values[:4], baseline_values + yaw_values)
+    ):
+        return False
     if not all(math.isclose(a, e, rel_tol=1e-4, abs_tol=1e-3) for a, e in zip(values, EXPECTED)):
         return False
     total_gain = (values[2] - values[0]) / values[0] * 100.0

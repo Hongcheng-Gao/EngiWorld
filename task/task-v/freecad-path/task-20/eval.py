@@ -5,7 +5,7 @@ import os
 import re
 from pathlib import Path
 
-RULE = {'files': {'task-20.nc': {'terms': [['FACE'], ['POCKET'], ['DRILL'], ['PROFILE'], ['ENGRAVE']], 'min_tools': 4, 'min_motion': 80, 'face_grid': {'min_tracks': 4, 'span': 50.0}, 'any_holes': {'min': 8}, 'closed': {'min': 3}, 'min_cut_groups': 12, 'min_z_levels': 3}}}
+RULE = {'files': {'task-20.nc': {'terms': [['FACE'], ['POCKET'], ['DRILL'], ['PROFILE'], ['ENGRAVE']], 'min_tools': 4, 'min_motion': 80, 'min_cut_groups': 12, 'min_z_levels': 3, 'task20_contract': True}}}
 DEFAULT_TARGET = '/home/user/Desktop'
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", os.environ.get("OUTPUT_ROOT", DEFAULT_TARGET)))
 TOL = 0.75
@@ -189,6 +189,72 @@ def rect_contains(point, rect, margin=0.0):
     return min(x1, x2) - margin <= x <= max(x1, x2) + margin and min(y1, y2) - margin <= y <= max(y1, y2) + margin
 
 
+def unique_points(points):
+    result = []
+    for point in points:
+        if not any(close(point[0], other[0]) and close(point[1], other[1]) for other in result):
+            result.append(point)
+    return result
+
+
+def validate_task20_contract(records, tools):
+    ordered = tool_order(tools)
+    if ordered != [1, 2, 3, 4]:
+        return False
+    tool_1, tool_2, tool_3, tool_4 = ordered
+    cuts = cut_records(records)
+    for record in records:
+        if record["code"] == 0 and record["tool"] != tool_3 and xy_changed(record):
+            z_values = [value for value in (record["start"]["z"], record["end"]["z"]) if value is not None]
+            if not z_values or min(z_values) < 22.0 - TOL:
+                return False
+
+    face_tracks = set()
+    for record in cuts:
+        if record["tool"] != tool_1 or not at_z(record, 18.0):
+            continue
+        start, end = record["start"], record["end"]
+        if abs(end["x"] - start["x"]) >= 120.0 and close(end["y"], start["y"], 0.2):
+            face_tracks.add(round((end["y"] + start["y"]) / 2, 1))
+    if len(face_tracks) < 4:
+        return False
+
+    tool_2_cuts = [record for record in cuts if record["tool"] == tool_2]
+    left = sum(rect_contains((record["end"]["x"], record["end"]["y"]), [-58.0, -12.0, -22.0, 12.0]) for record in tool_2_cuts)
+    right = sum(rect_contains((record["end"]["x"], record["end"]["y"]), [22.0, -12.0, 58.0, 12.0]) for record in tool_2_cuts)
+    if left < 12 or right < 12:
+        return False
+    profile_groups = []
+    for group in cut_groups(records, 18.0):
+        if not group or any(record["tool"] != tool_2 for record in group) or not group_closed(group):
+            continue
+        xs = [record["end"]["x"] for record in group]
+        ys = [record["end"]["y"] for record in group]
+        if max(xs) - min(xs) >= 180.0 and max(ys) - min(ys) >= 100.0:
+            profile_groups.append(group)
+    if not profile_groups:
+        return False
+
+    expected_holes = [
+        (-70.0, -30.0), (-50.0, -30.0), (-30.0, -30.0), (-10.0, -30.0),
+        (10.0, -30.0), (30.0, -30.0), (50.0, -30.0), (70.0, -30.0),
+    ]
+    holes = unique_points(hole_visits(records, tools, {"tool": tool_3, "z_max": 16.75}))
+    if len(holes) != len(expected_holes) or not has_all_points(holes, expected_holes):
+        return False
+
+    engraving = [record for record in cuts if record["tool"] == tool_4]
+    if len(engraving) < 30:
+        return False
+    xs = [record["end"]["x"] for record in engraving]
+    ys = [record["end"]["y"] for record in engraving]
+    if max(xs) - min(xs) < 45.0 or max(ys) - min(ys) < 9.0:
+        return False
+    if min(ys) < 31.0 or max(ys) > 43.0:
+        return False
+    return True
+
+
 def validate_file(path: Path, rule: dict) -> bool:
     if not path.exists() or path.stat().st_size <= 0:
         return False
@@ -232,6 +298,8 @@ def validate_file(path: Path, rule: dict) -> bool:
         if sum(group_closed(group) for group in groups) < int(item["min"]):
             return False
     if len(cut_groups(records)) < int(rule.get("min_cut_groups", 0)):
+        return False
+    if rule.get("task20_contract") and not validate_task20_contract(records, tools):
         return False
     for item in rule.get("hole_sets", []):
         if not has_all_points(hole_visits(records, tools, item), item["points"]):
