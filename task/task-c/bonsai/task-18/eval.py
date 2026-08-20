@@ -137,10 +137,23 @@ def baseline_preserved(result_model):
             return False
     return True
 
+def schema_serialization_valid(model, path):
+    if str(model.schema).upper()!='IFC4': return False
+    header=path.read_text(encoding='utf-8',errors='ignore')[:1000].upper()
+    if "FILE_SCHEMA(('IFC4'))" not in header: return False
+    try:
+        for entity in model:
+            for index in range(len(entity)):
+                entity[index]
+    except Exception:
+        return False
+    return all(len(layer)==7 for layer in model.by_type('IfcMaterialLayer'))
+
 def evaluate():
     p=DESKTOP/'result.ifc'
     if not p.is_file() or p.stat().st_size<1000: return False
     m=ifcopenshell.open(str(p))
+    if not schema_serialization_valid(m,p): return False
     if SPEC.get('schema') and not str(m.schema).upper().startswith(SPEC['schema']): return False
     for cls,n in SPEC.get('counts',{}).items():
         try: actual=len(m.by_type(cls))

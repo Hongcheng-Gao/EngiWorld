@@ -44,6 +44,15 @@ def desktop_dir():
     return DESKTOP_CANDIDATES[1]
 
 
+def delivery_roots(desktop):
+    roots = [desktop]
+    for name in ("ansys", "abaqus"):
+        candidate = desktop / name
+        if candidate.is_dir():
+            roots.append(candidate)
+    return roots
+
+
 def is_nonempty(path):
     try:
         return path.is_file() and path.stat().st_size > 0
@@ -2381,21 +2390,27 @@ def run_ansys_checker(model_path, result_path, submitted_metrics):
 
 
 def evaluate():
-    root = desktop_dir()
-    metrics = read_metrics(root)
-    if metrics is None:
-        return False, root
-    branch = discover_branch(root)
-    if branch is None:
-        return False, root
-    if branch[0] == "abaqus":
-        log(
-            "Abaqus Learning Edition 2025 cannot satisfy the required complete "
-            "3146-node 2 mm mesh within its 1000-node limit; use ANSYS v261"
-        )
-        return False, root
-    log("evaluating ANSYS MAPDL 2026 R1 native thermal branch")
-    return run_ansys_checker(branch[1], branch[2], metrics), root
+    desktop = desktop_dir()
+    for root in delivery_roots(desktop):
+        log("checking solver delivery root: %s" % root)
+        branch = discover_branch(root)
+        if branch is None:
+            continue
+        metrics = read_metrics(root)
+        if metrics is None:
+            continue
+        if branch[0] == "abaqus":
+            log(
+                "Abaqus Learning Edition 2025 cannot satisfy the required complete "
+                "3146-node 2 mm mesh within its 1000-node limit; use ANSYS v261"
+            )
+            continue
+        log("evaluating ANSYS MAPDL 2026 R1 native thermal branch")
+        if run_ansys_checker(branch[1], branch[2], metrics):
+            return True, desktop
+        log("ANSYS-compatible branch did not pass")
+    log("no acceptable solver branch passed")
+    return False, desktop
 
 
 def main():

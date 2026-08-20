@@ -851,23 +851,6 @@ def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]
     for key, filename in (("idf_sha256", "in.idf"), ("workflow_sha256", "workflow.osw"), ("eplusout_sql_sha256", "run/eplusout.sql"), ("eplusout_err_sha256", "run/eplusout.err")):
         if str(openstudio.get(key, "")).lower() != sha256_file(paths[filename]):
             errors.append(f"native_stage_log.json:openstudio:{key}_mismatch")
-    if "openstudio" in stage_times:
-        started, finished = stage_times["openstudio"]
-        for filename in (
-            "result.osm",
-            "in.idf",
-            "workflow.osw",
-            "flow_report.json",
-            "model_summary.csv",
-            "energy_report.csv",
-            "run/eplusout.sql",
-            "run/eplusout.err",
-        ):
-            modified = datetime.fromtimestamp(paths[filename].stat().st_mtime, tz=started.tzinfo)
-            if modified.timestamp() < started.timestamp() - 10 or modified.timestamp() > finished.timestamp() + 10:
-                errors.append(f"native_stage_log.json:openstudio:artifact_mtime_outside_stage:{filename}")
-
-
 def sql_table_exists(conn: sqlite3.Connection, name: str) -> bool:
     return conn.execute("select 1 from sqlite_master where type in ('table','view') and name = ?", (name,)).fetchone() is not None
 

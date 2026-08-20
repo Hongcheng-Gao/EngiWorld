@@ -128,7 +128,8 @@ def baseline_preserved(result_model):
                 return False
             target = candidates[0]
             source_geometry = _geometry_signature(settings, source)
-            if source_geometry is not None and source_geometry != _geometry_signature(settings, target):
+            remodelled = class_name == 'IfcSpace' and (eq(getattr(source,'Name',''),'Open Plate') or eq(getattr(target,'Name',''),'A Living'))
+            if not remodelled and source_geometry is not None and source_geometry != _geometry_signature(settings, target):
                 return False
             if _container_key(source) != _container_key(target):
                 return False
@@ -136,6 +137,44 @@ def baseline_preserved(result_model):
         if not _relation_keys(baseline, class_name).issubset(_relation_keys(result_model, class_name)):
             return False
     return True
+
+def _bbox(settings, entity):
+    if not getattr(entity,'ObjectPlacement',None) or not getattr(entity,'Representation',None): return None
+    try: shape=ifcopenshell.geom.create_shape(settings,entity)
+    except Exception: return None
+    coords=shape.geometry.verts
+    if len(coords)<9: return None
+    return (min(coords[0::3]),min(coords[1::3]),min(coords[2::3]),max(coords[0::3]),max(coords[1::3]),max(coords[2::3]))
+
+def authored_geometry_valid(model):
+    settings=ifcopenshell.geom.settings(); settings.set(settings.USE_WORLD_COORDS,True)
+    space_names=('A Living','A Bed','B Living','B Bed','C Living','C Bed','D Living','D Bed','South Corridor','North Corridor')
+    spaces=[]
+    for name in space_names:
+        matches=[obj for obj in model.by_type('IfcSpace') if eq(obj.Name,name)]
+        if len(matches)!=1: return False
+        obj=matches[0]; bounds=_bbox(settings,obj)
+        if bounds is None or not any(rel.RelatingObject.is_a('IfcBuildingStorey') for rel in getattr(obj,'Decomposes',None) or []): return False
+        if bounds[0]<0.19 or bounds[1]<0.19 or bounds[3]>19.61 or bounds[4]>13.61: return False
+        spaces.append(bounds)
+    for index,a in enumerate(spaces):
+        for b in spaces[index+1:]:
+            overlap=[min(a[i+3],b[i+3])-max(a[i],b[i]) for i in range(3)]
+            if all(value>1e-5 for value in overlap): return False
+    internal_walls=('Corridor-Split-S','Corridor-Split-N','Middle-Band','West-South-Div','East-South-Div','West-North-Div','East-North-Div','Center-Split')
+    for name in internal_walls:
+        matches=[obj for obj in model.by_type('IfcWall') if eq(obj.Name,name)]
+        if len(matches)!=1 or _bbox(settings,matches[0]) is None or len(getattr(matches[0],'ContainedInStructure',None) or [])!=1: return False
+    hosts={'A Entry':'Shell-S','B Entry':'Corridor-Split-S','C Entry':'Corridor-Split-N','D Entry':'Corridor-Split-N','A Bed Door':'West-South-Div','B Bed Door':'East-South-Div','C Bed Door':'West-North-Div','D Bed Door':'East-North-Div'}
+    for name,host_name in hosts.items():
+        matches=[obj for obj in model.by_type('IfcDoor') if eq(obj.Name,name)]
+        if len(matches)!=1: return False
+        door=matches[0]
+        if _bbox(settings,door) is None or len(getattr(door,'FillsVoids',None) or [])!=1: return False
+        opening=door.FillsVoids[0].RelatingOpeningElement
+        if _bbox(settings,opening) is None or len(getattr(opening,'VoidsElements',None) or [])!=1: return False
+        if not eq(opening.VoidsElements[0].RelatingBuildingElement.Name,host_name): return False
+    return len(model.by_type('IfcRelVoidsElement'))==8 and len(model.by_type('IfcRelFillsElement'))==8
 
 def evaluate():
     p=DESKTOP/'result.ifc'
@@ -185,6 +224,7 @@ def evaluate():
             ports=nested_ports(objs[0])
             exp=data['products'][name]
             if len(ports)!=exp['ports'] or sum(connected_count(p) for p in ports)!=exp['connections']: return False
+    if not authored_geometry_valid(m): return False
     if not baseline_preserved(m): return False
     return True
 def main():

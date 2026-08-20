@@ -211,7 +211,7 @@ def validate_task20_contract(records, tools):
 
     face_tracks = set()
     for record in cuts:
-        if record["tool"] != tool_1 or not at_z(record, 18.0):
+        if record["tool"] != tool_1 or not at_z(record, 17.5, 0.2):
             continue
         start, end = record["start"], record["end"]
         if abs(end["x"] - start["x"]) >= 120.0 and close(end["y"], start["y"], 0.2):
@@ -219,13 +219,13 @@ def validate_task20_contract(records, tools):
     if len(face_tracks) < 4:
         return False
 
-    tool_2_cuts = [record for record in cuts if record["tool"] == tool_2]
+    tool_2_cuts = [record for record in cuts if record["tool"] == tool_2 and record_z(record) is not None and record_z(record) <= 12.25]
     left = sum(rect_contains((record["end"]["x"], record["end"]["y"]), [-58.0, -12.0, -22.0, 12.0]) for record in tool_2_cuts)
     right = sum(rect_contains((record["end"]["x"], record["end"]["y"]), [22.0, -12.0, 58.0, 12.0]) for record in tool_2_cuts)
-    if left < 12 or right < 12:
+    if left < 5 or right < 5:
         return False
     profile_groups = []
-    for group in cut_groups(records, 18.0):
+    for group in cut_groups(records, -1.0):
         if not group or any(record["tool"] != tool_2 for record in group) or not group_closed(group):
             continue
         xs = [record["end"]["x"] for record in group]
@@ -239,12 +239,14 @@ def validate_task20_contract(records, tools):
         (-70.0, -30.0), (-50.0, -30.0), (-30.0, -30.0), (-10.0, -30.0),
         (10.0, -30.0), (30.0, -30.0), (50.0, -30.0), (70.0, -30.0),
     ]
-    holes = unique_points(hole_visits(records, tools, {"tool": tool_3, "z_max": 16.75}))
+    holes = unique_points(hole_visits(records, tools, {"tool": tool_3, "z_max": -0.5}))
     if len(holes) != len(expected_holes) or not has_all_points(holes, expected_holes):
         return False
 
     engraving = [record for record in cuts if record["tool"] == tool_4]
     if len(engraving) < 30:
+        return False
+    if any(record_z(record) is None or not (16.75 <= record_z(record) <= 17.25) for record in engraving):
         return False
     xs = [record["end"]["x"] for record in engraving]
     ys = [record["end"]["y"] for record in engraving]

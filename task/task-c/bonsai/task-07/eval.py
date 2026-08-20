@@ -120,11 +120,42 @@ def baseline_preserved(result_model):
             return False
     return True
 
+def network_valid(model):
+    products=model.by_type('IfcDuctSegment')+model.by_type('IfcDuctFitting')+model.by_type('IfcAirTerminal')
+    owner={}
+    for product in products:
+        ports=[]
+        for rel in getattr(product,'IsNestedBy',None) or []:
+            ports.extend(port for port in rel.RelatedObjects if port.is_a('IfcDistributionPort'))
+        expected=1 if product.is_a('IfcAirTerminal') else 2
+        if len(ports)!=expected: return False
+        for port in ports:
+            if port.id() in owner or not str(getattr(port,'Name','') or '').strip(): return False
+            owner[port.id()]=product
+    if len(owner)!=12: return False
+    port_pairs=set(); product_edges=set(); degree={port_id:0 for port_id in owner}
+    for rel in model.by_type('IfcRelConnectsPorts'):
+        a,b=rel.RelatingPort.id(),rel.RelatedPort.id()
+        if a not in owner or b not in owner or a==b or owner[a].id()==owner[b].id(): return False
+        pair=tuple(sorted((a,b)))
+        if pair in port_pairs: return False
+        port_pairs.add(pair); degree[a]+=1; degree[b]+=1
+        product_edges.add(tuple(sorted((owner[a].id(),owner[b].id()))))
+    if len(port_pairs)!=6 or any(value!=1 for value in degree.values()): return False
+    graph={product.id():set() for product in products}
+    for a,b in product_edges: graph[a].add(b); graph[b].add(a)
+    seen=set(); stack=[products[0].id()]
+    while stack:
+        current=stack.pop()
+        if current in seen: continue
+        seen.add(current); stack.extend(graph[current]-seen)
+    return len(seen)==len(products)
+
 def evaluate():
     p=DESKTOP/'result.ifc'
     if not p.is_file() or p.stat().st_size<1000: return False
     m=ifcopenshell.open(str(p))
-    if len(m.by_type('IfcDistributionSystem'))!=1 or len(m.by_type('IfcDistributionPort'))!=12 or len(m.by_type('IfcRelConnectsPorts'))!=12: return False
+    if len(m.by_type('IfcDistributionSystem'))!=1 or len(m.by_type('IfcDistributionPort'))!=12 or len(m.by_type('IfcRelConnectsPorts'))!=6: return False
     if len(m.by_type('IfcDuctSegment'))!=3 or len(m.by_type('IfcDuctFitting'))!=2 or len(m.by_type('IfcAirTerminal'))!=2: return False
     s=m.by_type('IfcDistributionSystem')[0]
     if not eq(s.Name,'Supply Air Verified') or not marker(s): return False
@@ -134,6 +165,7 @@ def evaluate():
     if assigned!=set(PRODUCTS): return False
     for o in m.by_type('IfcDuctSegment')+m.by_type('IfcDuctFitting')+m.by_type('IfcAirTerminal'):
         if not marker(o): return False
+    if not network_valid(m): return False
     if not baseline_preserved(m): return False
     return True
 def main():

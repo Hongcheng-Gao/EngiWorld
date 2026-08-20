@@ -252,6 +252,301 @@ def parse_ifc(path: Path, label: str, errors: List[str]) -> Dict[str, Any]:
     return info
 
 
+def split_step_args(value: str) -> List[str]:
+    args: List[str] = []
+    start = 0
+    depth = 0
+    in_string = False
+    index = 0
+    while index < len(value):
+        char = value[index]
+        if char == "'":
+            if in_string and index + 1 < len(value) and value[index + 1] == "'":
+                index += 2
+                continue
+            in_string = not in_string
+        elif not in_string:
+            if char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+            elif char == "," and depth == 0:
+                args.append(value[start:index].strip())
+                start = index + 1
+        index += 1
+    args.append(value[start:].strip())
+    return args
+
+
+def parse_step_graph(text: str) -> Dict[int, Dict[str, Any]]:
+    graph: Dict[int, Dict[str, Any]] = {}
+    pattern = re.compile(r"#(\d+)\s*=\s*([A-Z0-9_]+)\s*\((.*?)\)\s*;", re.IGNORECASE | re.DOTALL)
+    for match in pattern.finditer(text):
+        ref = int(match.group(1))
+        graph[ref] = {
+            "type": match.group(2).upper(),
+            "args": split_step_args(match.group(3)),
+        }
+    return graph
+
+
+def step_ref(value: str) -> int | None:
+    match = re.fullmatch(r"\s*#(\d+)\s*", value)
+    return int(match.group(1)) if match else None
+
+
+def step_refs(value: str) -> List[int]:
+    return [int(item) for item in re.findall(r"#(\d+)", value)]
+
+
+def step_string(value: str) -> str:
+    value = value.strip()
+    if len(value) >= 2 and value[0] == "'" and value[-1] == "'":
+        return value[1:-1].replace("''", "'")
+    return ""
+
+
+def step_numbers(value: str) -> List[float]:
+    pattern = r"[-+]?(?:\d+\.\d*|\.\d+|\d+)(?:[Ee][-+]?\d+)?"
+    return [float(item) for item in re.findall(pattern, value)]
+
+
+def step_entities_of_type(graph: Dict[int, Dict[str, Any]], ifc_type: str) -> List[int]:
+    wanted = ifc_type.upper()
+    return [ref for ref, entity in graph.items() if entity["type"] == wanted]
+
+
+def step_entity_name(graph: Dict[int, Dict[str, Any]], ref: int) -> str:
+    entity = graph.get(ref)
+    if not entity or len(entity["args"]) < 3:
+        return ""
+    return step_string(entity["args"][2])
+
+
+def step_placement_origin(
+    graph: Dict[int, Dict[str, Any]],
+    placement_ref: int | None,
+    visited: Set[int] | None = None,
+) -> Tuple[float, float, float] | None:
+    if placement_ref is None:
+        return (0.0, 0.0, 0.0)
+    if visited is None:
+        visited = set()
+    if placement_ref in visited:
+        return None
+    visited.add(placement_ref)
+    placement = graph.get(placement_ref)
+    if not placement or placement["type"] != "IFCLOCALPLACEMENT" or len(placement["args"]) < 2:
+        return None
+    parent = step_placement_origin(graph, step_ref(placement["args"][0]), visited)
+    axis_ref = step_ref(placement["args"][1])
+    axis = graph.get(axis_ref or -1)
+    if parent is None or not axis or axis["type"] != "IFCAXIS2PLACEMENT3D" or not axis["args"]:
+        return None
+    point = graph.get(step_ref(axis["args"][0]) or -1)
+    if not point or point["type"] != "IFCCARTESIANPOINT" or not point["args"]:
+        return None
+    values = step_numbers(point["args"][0])
+    if len(values) < 2:
+        return None
+    while len(values) < 3:
+        values.append(0.0)
+    return (parent[0] + values[0], parent[1] + values[1], parent[2] + values[2])
+
+
+def step_product_geometry(graph: Dict[int, Dict[str, Any]], product_ref: int) -> Dict[str, Any] | None:
+    product = graph.get(product_ref)
+    if not product or len(product["args"]) < 7:
+        return None
+    placement_ref = step_ref(product["args"][5])
+    representation_ref = step_ref(product["args"][6])
+    origin = step_placement_origin(graph, placement_ref)
+    representation = graph.get(representation_ref or -1)
+    if origin is None or not representation or representation["type"] != "IFCPRODUCTDEFINITIONSHAPE":
+        return None
+    if len(representation["args"]) < 3:
+        return None
+    shape_refs = step_refs(representation["args"][2])
+    if not shape_refs:
+        return None
+    shape = graph.get(shape_refs[0])
+    if not shape or shape["type"] != "IFCSHAPEREPRESENTATION" or len(shape["args"]) < 4:
+        return None
+    solid_refs = step_refs(shape["args"][3])
+    if not solid_refs:
+        return None
+    solid = graph.get(solid_refs[0])
+    if not solid or solid["type"] != "IFCEXTRUDEDAREASOLID" or len(solid["args"]) < 4:
+        return None
+    profile = graph.get(step_ref(solid["args"][0]) or -1)
+    solid_axis = graph.get(step_ref(solid["args"][1]) or -1)
+    if not profile or profile["type"] != "IFCARBITRARYCLOSEDPROFILEDEF" or len(profile["args"]) < 3:
+        return None
+    curve = graph.get(step_ref(profile["args"][2]) or -1)
+    if not curve or curve["type"] != "IFCPOLYLINE" or not curve["args"]:
+        return None
+    points: List[Tuple[float, float]] = []
+    for point_ref in step_refs(curve["args"][0]):
+        point = graph.get(point_ref)
+        if not point or point["type"] != "IFCCARTESIANPOINT" or not point["args"]:
+            return None
+        values = step_numbers(point["args"][0])
+        if len(values) < 2:
+            return None
+        points.append((values[0], values[1]))
+    if len(points) < 4:
+        return None
+    solid_offset = (0.0, 0.0, 0.0)
+    if solid_axis and solid_axis["type"] == "IFCAXIS2PLACEMENT3D" and solid_axis["args"]:
+        solid_point = graph.get(step_ref(solid_axis["args"][0]) or -1)
+        if solid_point and solid_point["type"] == "IFCCARTESIANPOINT" and solid_point["args"]:
+            values = step_numbers(solid_point["args"][0])
+            while len(values) < 3:
+                values.append(0.0)
+            solid_offset = (values[0], values[1], values[2])
+    try:
+        depth = float(solid["args"][3])
+    except ValueError:
+        return None
+    area = 0.0
+    for index, point in enumerate(points):
+        next_point = points[(index + 1) % len(points)]
+        area += point[0] * next_point[1] - next_point[0] * point[1]
+    area = abs(area) / 2.0
+    x_values = [point[0] + origin[0] + solid_offset[0] for point in points]
+    y_values = [point[1] + origin[1] + solid_offset[1] for point in points]
+    z_min = origin[2] + solid_offset[2]
+    return {
+        "placement_ref": placement_ref,
+        "representation_ref": representation_ref,
+        "area_m2": area,
+        "bbox_m": [min(x_values), min(y_values), z_min, max(x_values), max(y_values), z_min + depth],
+    }
+
+
+def bbox_overlap_area(first: List[float], second: List[float]) -> float:
+    overlap_x = max(0.0, min(first[3], second[3]) - max(first[0], second[0]))
+    overlap_y = max(0.0, min(first[4], second[4]) - max(first[1], second[1]))
+    return overlap_x * overlap_y
+
+
+def check_ifc_geometry_topology(stage1_info: Dict[str, Any], errors: List[str]) -> None:
+    graph = parse_step_graph(str(stage1_info["text"]))
+    stage1_info["step_graph"] = graph
+    expected_counts = {
+        "IFCSPACE": 2,
+        "IFCDOOR": 1,
+        "IFCWINDOW": 1,
+        "IFCOPENINGELEMENT": 2,
+        "IFCRELVOIDSELEMENT": 2,
+        "IFCRELFILLSELEMENT": 2,
+    }
+    for ifc_type, expected in expected_counts.items():
+        actual = len(step_entities_of_type(graph, ifc_type))
+        if actual != expected:
+            errors.append(f"stage1.ifc:strict_count_mismatch:{ifc_type}:{actual}!={expected}")
+
+    product_refs = (
+        step_entities_of_type(graph, "IFCSPACE")
+        + step_entities_of_type(graph, "IFCDOOR")
+        + step_entities_of_type(graph, "IFCWINDOW")
+        + step_entities_of_type(graph, "IFCOPENINGELEMENT")
+    )
+    products: Dict[int, Dict[str, Any]] = {}
+    placement_refs: List[int] = []
+    representation_refs: List[int] = []
+    for ref in product_refs:
+        geometry = step_product_geometry(graph, ref)
+        if geometry is None or geometry["area_m2"] <= 0:
+            errors.append(f"stage1.ifc:missing_or_invalid_product_geometry:{step_entity_name(graph, ref) or ref}")
+            continue
+        products[ref] = geometry
+        if geometry["placement_ref"] is not None:
+            placement_refs.append(int(geometry["placement_ref"]))
+        if geometry["representation_ref"] is not None:
+            representation_refs.append(int(geometry["representation_ref"]))
+    if len(placement_refs) != len(set(placement_refs)):
+        errors.append("stage1.ifc:products_share_object_placement")
+    if len(representation_refs) != len(set(representation_refs)):
+        errors.append("stage1.ifc:products_share_representation")
+
+    spaces: Dict[str, Dict[str, Any]] = {}
+    for ref in step_entities_of_type(graph, "IFCSPACE"):
+        entity = graph[ref]
+        name = step_entity_name(graph, ref)
+        geometry = products.get(ref)
+        if geometry is not None:
+            spaces[name] = {
+                **geometry,
+                "ref": ref,
+                "ifc_global_id": step_string(entity["args"][0]),
+            }
+    if set(spaces) != set(CASE_SPEC["required_spaces"]):
+        errors.append(f"stage1.ifc:space_name_set_mismatch:{sorted(spaces)}")
+    if all(name in spaces for name in CASE_SPEC["required_spaces"]):
+        first = spaces[CASE_SPEC["required_spaces"][0]]
+        second = spaces[CASE_SPEC["required_spaces"][1]]
+        overlap = bbox_overlap_area(first["bbox_m"], second["bbox_m"])
+        if overlap > 1e-6:
+            errors.append(f"stage1.ifc:spaces_overlap:{overlap:.6f}")
+        if abs(sum(item["area_m2"] for item in spaces.values()) - 20.16) > 0.01:
+            errors.append("stage1.ifc:space_area_total_mismatch")
+
+    storey_refs = set(step_entities_of_type(graph, "IFCBUILDINGSTOREY"))
+    owned_spaces: Set[int] = set()
+    for relation_ref in step_entities_of_type(graph, "IFCRELAGGREGATES"):
+        args = graph[relation_ref]["args"]
+        if len(args) > 5 and step_ref(args[4]) in storey_refs:
+            owned_spaces.update(step_refs(args[5]))
+    expected_space_refs = set(step_entities_of_type(graph, "IFCSPACE"))
+    if not expected_space_refs.issubset(owned_spaces):
+        errors.append("stage1.ifc:spaces_not_owned_by_storey")
+
+    door_window_refs = set(step_entities_of_type(graph, "IFCDOOR") + step_entities_of_type(graph, "IFCWINDOW"))
+    contained: Set[int] = set()
+    for relation_ref in step_entities_of_type(graph, "IFCRELCONTAINEDINSPATIALSTRUCTURE"):
+        args = graph[relation_ref]["args"]
+        if len(args) > 5 and step_ref(args[5]) in storey_refs:
+            contained.update(step_refs(args[4]))
+    if not door_window_refs.issubset(contained):
+        errors.append("stage1.ifc:door_or_window_not_storey_contained")
+
+    void_pairs: List[Tuple[int, int]] = []
+    for ref in step_entities_of_type(graph, "IFCRELVOIDSELEMENT"):
+        args = graph[ref]["args"]
+        if len(args) > 5 and step_ref(args[4]) is not None and step_ref(args[5]) is not None:
+            void_pairs.append((int(step_ref(args[4]) or 0), int(step_ref(args[5]) or 0)))
+    fill_pairs: List[Tuple[int, int]] = []
+    for ref in step_entities_of_type(graph, "IFCRELFILLSELEMENT"):
+        args = graph[ref]["args"]
+        if len(args) > 5 and step_ref(args[4]) is not None and step_ref(args[5]) is not None:
+            fill_pairs.append((int(step_ref(args[4]) or 0), int(step_ref(args[5]) or 0)))
+    south_walls = {
+        ref for ref in step_entities_of_type(graph, "IFCWALL") if step_entity_name(graph, ref).upper() == "SOUTH WALL"
+    }
+    opening_refs = set(step_entities_of_type(graph, "IFCOPENINGELEMENT"))
+    if len(void_pairs) != 2 or any(host not in south_walls or opening not in opening_refs for host, opening in void_pairs):
+        errors.append("stage1.ifc:invalid_south_wall_void_relationships")
+    if len(fill_pairs) != 2 or {opening for opening, _ in fill_pairs} != opening_refs:
+        errors.append("stage1.ifc:invalid_opening_fill_relationships")
+    if {filling for _, filling in fill_pairs} != door_window_refs:
+        errors.append("stage1.ifc:door_window_fill_set_mismatch")
+
+    site_office = spaces.get("SITE-OFFICE")
+    if site_office is not None:
+        site_bbox = site_office["bbox_m"]
+        for ref in door_window_refs:
+            geometry = products.get(ref)
+            if geometry is None:
+                continue
+            bbox = geometry["bbox_m"]
+            if bbox[0] < site_bbox[0] - 1e-6 or bbox[3] > site_bbox[3] + 1e-6:
+                errors.append(f"stage1.ifc:filling_outside_site_office_x:{step_entity_name(graph, ref)}")
+            if bbox[1] < -0.02 or bbox[4] > 0.22 or bbox[2] < -1e-6 or bbox[5] > 3.01:
+                errors.append(f"stage1.ifc:filling_outside_south_wall:{step_entity_name(graph, ref)}")
+    stage1_info["geometry"] = {"spaces": spaces, "products": products}
+
+
 def check_ifc_basic(
     path: Path,
     required_tokens: List[str],
@@ -424,6 +719,68 @@ def check_handoff(
             actual = int(stage1_info["counts"].get(cls, 0))
             if reported != actual:
                 errors.append(f"{label}:bim_count_mismatch:{cls}:{reported}!={actual}")
+        graph = stage1_info.get("step_graph") or {}
+        for key, ifc_type in (
+            ("IfcOpeningElement", "IFCOPENINGELEMENT"),
+            ("IfcRelVoidsElement", "IFCRELVOIDSELEMENT"),
+            ("IfcRelFillsElement", "IFCRELFILLSELEMENT"),
+        ):
+            actual = len(step_entities_of_type(graph, ifc_type))
+            try:
+                reported = int(normalized_counts[norm(key)])
+            except (KeyError, TypeError, ValueError):
+                errors.append(f"{label}:missing_or_invalid_bim_count:{key}")
+                continue
+            if reported != actual:
+                errors.append(f"{label}:bim_count_mismatch:{key}:{reported}!={actual}")
+
+    stage_spaces = (stage1_info.get("geometry") or {}).get("spaces") or {}
+    records_by_name = {
+        norm(record.get("name") or record.get("space_name")): record
+        for record in records
+    }
+    for name, geometry in stage_spaces.items():
+        record = records_by_name.get(norm(name))
+        if record is None:
+            continue
+        try:
+            reported_area = float(
+                record.get("floor_area_m2")
+                or record.get("area_m2")
+                or record.get("net_floor_area_m2")
+            )
+            if abs(reported_area - float(geometry["area_m2"])) > 0.01:
+                errors.append(f"{label}:space_area_mismatch_ifc:{name}")
+        except (TypeError, ValueError):
+            pass
+        if str(record.get("ifc_global_id") or "") != str(geometry.get("ifc_global_id") or ""):
+            errors.append(f"{label}:space_global_id_mismatch_ifc:{name}")
+        reported_bbox = record.get("bbox_m")
+        if isinstance(reported_bbox, list) and len(reported_bbox) == 6:
+            try:
+                if any(
+                    abs(float(reported) - float(actual)) > 0.01
+                    for reported, actual in zip(reported_bbox, geometry["bbox_m"])
+                ):
+                    errors.append(f"{label}:space_bbox_mismatch_ifc:{name}")
+            except (TypeError, ValueError):
+                errors.append(f"{label}:space_bbox_invalid:{name}")
+        else:
+            errors.append(f"{label}:space_bbox_missing:{name}")
+    if stage_spaces:
+        stage_area = sum(float(item["area_m2"]) for item in stage_spaces.values())
+        reported_total = first_number(data, "building_area_m2")
+        if reported_total is None or abs(reported_total - stage_area) > 0.01:
+            errors.append(f"{label}:building_area_mismatch_ifc")
+    overlap_values = find_values(data, "space_overlap_area_m2")
+    if not overlap_values:
+        errors.append(f"{label}:missing_space_overlap_area")
+    else:
+        try:
+            if abs(float(overlap_values[0])) > 1e-8:
+                errors.append(f"{label}:space_overlap_area_nonzero")
+        except (TypeError, ValueError):
+            errors.append(f"{label}:space_overlap_area_invalid")
     return data
 
 
@@ -734,6 +1091,7 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     if "IFCOPENSHELL" in stage1_header or not is_archicad_27:
         errors.append("stage1.ifc:archicad_version_not_27")
     check_stage_derives_from_init(init_path, stage1, init_info, stage1_info, errors)
+    check_ifc_geometry_topology(stage1_info, errors)
 
     handoff = paths["handoff.json"]
     handoff_data = check_handoff(

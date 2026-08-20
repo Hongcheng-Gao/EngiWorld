@@ -3,7 +3,7 @@ from pathlib import Path
 import re, ifcopenshell, ifcopenshell.util.element
 import ifcopenshell.geom
 DESKTOP=Path("/home/user/Desktop")
-SPEC={'task': 'BONSAI-CLI-17', 'schema': 'IFC4', 'counts': {'IfcDuctSegment': 3, 'IfcDuctFitting': 2, 'IfcAirTerminal': 2, 'IfcDistributionSystem': 1, 'IfcDistributionPort': 13, 'IfcRelConnectsPorts': 12}, 'markers': {'IfcDuctSegment': ['Main Segment 1', 'Main Segment 2', 'Branch Segment'], 'IfcDuctFitting': ['Bend Fitting', 'Transition Fitting'], 'IfcAirTerminal': ['Terminal East', 'Terminal North']}, 'systems': {'Supply Air': {'members': ['Bend Fitting', 'Branch Segment', 'Main Segment 1', 'Main Segment 2', 'Terminal East', 'Terminal North', 'Transition Fitting'], 'products': {'Bend Fitting': {'ports': 2, 'connections': 4}, 'Branch Segment': {'ports': 2, 'connections': 4}, 'Main Segment 1': {'ports': 2, 'connections': 2}, 'Main Segment 2': {'ports': 2, 'connections': 4}, 'Terminal East': {'ports': 1, 'connections': 2}, 'Terminal North': {'ports': 1, 'connections': 2}, 'Transition Fitting': {'ports': 3, 'connections': 6}}}}, 'props': {'IfcDuctSegment': {'Main Segment 1': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Main Segment 2': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Branch Segment': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}}, 'IfcDuctFitting': {'Bend Fitting': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Transition Fitting': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}}, 'IfcAirTerminal': {'Terminal East': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Terminal North': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}}}}
+SPEC={'task': 'BONSAI-CLI-17', 'schema': 'IFC4', 'counts': {'IfcDuctSegment': 3, 'IfcDuctFitting': 2, 'IfcAirTerminal': 2, 'IfcDistributionSystem': 1, 'IfcDistributionPort': 13, 'IfcRelConnectsPorts': 6}, 'markers': {'IfcDuctSegment': ['Main Segment 1', 'Main Segment 2', 'Branch Segment'], 'IfcDuctFitting': ['Bend Fitting', 'Transition Fitting'], 'IfcAirTerminal': ['Terminal East', 'Terminal North']}, 'systems': {'Supply Air': {'members': ['Bend Fitting', 'Branch Segment', 'Main Segment 1', 'Main Segment 2', 'Terminal East', 'Terminal North', 'Transition Fitting'], 'products': {'Bend Fitting': {'ports': 2, 'connections': 2}, 'Branch Segment': {'ports': 2, 'connections': 2}, 'Main Segment 1': {'ports': 2, 'connections': 1}, 'Main Segment 2': {'ports': 2, 'connections': 2}, 'Terminal East': {'ports': 1, 'connections': 1}, 'Terminal North': {'ports': 1, 'connections': 1}, 'Transition Fitting': {'ports': 3, 'connections': 3}}}}, 'props': {'IfcDuctSegment': {'Main Segment 1': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Main Segment 2': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Branch Segment': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}}, 'IfcDuctFitting': {'Bend Fitting': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Transition Fitting': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}}, 'IfcAirTerminal': {'Terminal East': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}, 'Terminal North': {'AirflowZone': 'SA-17', 'CommissioningStatus': 'BALANCED'}}}}
 def finish(ok): print("True" if ok else "False"); raise SystemExit(0)
 def norm(v): return re.sub(r"\s+"," ",str(v or "").strip()).lower()
 def eq(a,b): return norm(a)==norm(b)
@@ -31,7 +31,32 @@ def nested_ports(entity):
             if obj.is_a('IfcDistributionPort'): ports.append(obj)
     return ports
 def connected_count(port):
-    return len({rel.id() for rel in (getattr(port,'ConnectedTo',None) or []) + (getattr(port,'ConnectedFrom',None) or [])})
+    return len({rel.id() for rel in list(getattr(port,'ConnectedTo',None) or ()) + list(getattr(port,'ConnectedFrom',None) or ())})
+def network_valid(model):
+    products=model.by_type('IfcDuctSegment')+model.by_type('IfcDuctFitting')+model.by_type('IfcAirTerminal')
+    owner={}
+    for product in products:
+        for port in nested_ports(product):
+            if port.id() in owner or not str(getattr(port,'Name','') or '').strip(): return False
+            owner[port.id()]=product
+    if len(owner)!=13: return False
+    pairs=set(); graph={product.id():set() for product in products}; degree={port_id:0 for port_id in owner}
+    for rel in model.by_type('IfcRelConnectsPorts'):
+        a,b=rel.RelatingPort.id(),rel.RelatedPort.id()
+        if a not in owner or b not in owner or a==b or owner[a].id()==owner[b].id(): return False
+        pair=tuple(sorted((a,b)))
+        if pair in pairs: return False
+        pairs.add(pair); degree[a]+=1; degree[b]+=1
+        graph[owner[a].id()].add(owner[b].id()); graph[owner[b].id()].add(owner[a].id())
+    if len(pairs)!=6 or sorted(degree.values())!=[0]+[1]*12: return False
+    spare=[model.by_id(port_id) for port_id,value in degree.items() if value==0]
+    if len(spare)!=1 or 'spare' not in norm(spare[0].Name): return False
+    seen=set(); stack=[products[0].id()]
+    while stack:
+        current=stack.pop()
+        if current in seen: continue
+        seen.add(current); stack.extend(graph[current]-seen)
+    return len(seen)==len(products)
 # ENGIWORLD_BASELINE_PRESERVATION_V1
 PRESERVED_CLASSES = (
     'IfcSpace', 'IfcWall', 'IfcSlab', 'IfcRoof', 'IfcDoor', 'IfcWindow',
@@ -185,6 +210,7 @@ def evaluate():
             ports=nested_ports(objs[0])
             exp=data['products'][name]
             if len(ports)!=exp['ports'] or sum(connected_count(p) for p in ports)!=exp['connections']: return False
+    if not network_valid(m): return False
     if not baseline_preserved(m): return False
     return True
 def main():

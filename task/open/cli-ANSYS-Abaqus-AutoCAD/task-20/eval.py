@@ -33,6 +33,15 @@ def desktop_dir():
     return DESKTOP_CANDIDATES[1]
 
 
+def delivery_roots(desktop):
+    roots = [desktop]
+    for name in ('ansys', 'abaqus'):
+        candidate = desktop / name
+        if candidate.is_dir():
+            roots.append(candidate)
+    return roots
+
+
 def is_nonempty(path):
     try:
         return path.exists() and path.is_file() and path.stat().st_size > 0
@@ -1018,26 +1027,27 @@ def check_ansys_with_mapdl(root, model_path, result_path):
 
 
 def evaluate():
-    root = desktop_dir()
-    if not has_solver_artifact(root):
-        log('no solver result artifact found')
-        return False, root
-    if not check_cli_metrics_json(root):
-        return False, root
-    abaqus_pair = find_abaqus_pair(root)
-    if abaqus_pair:
-        log('trying Abaqus-compatible branch')
-        if run_abaqus_checker(root, abaqus_pair[0], abaqus_pair[1]):
-            return True, root
-        log('Abaqus-compatible branch did not pass')
-    ansys_artifacts = find_ansys_artifacts(root)
-    if ansys_artifacts:
-        log('trying ANSYS-compatible branch')
-        if check_ansys_with_mapdl(root, ansys_artifacts[0], ansys_artifacts[1]):
-            return True, root
-        log('ANSYS-compatible branch did not pass')
+    desktop = desktop_dir()
+    for root in delivery_roots(desktop):
+        log('checking solver delivery root: %s' % root)
+        if not has_solver_artifact(root):
+            continue
+        if not check_cli_metrics_json(root):
+            continue
+        ansys_artifacts = find_ansys_artifacts(root)
+        if ansys_artifacts:
+            log('trying ANSYS-compatible branch')
+            if check_ansys_with_mapdl(root, ansys_artifacts[0], ansys_artifacts[1]):
+                return True, desktop
+            log('ANSYS-compatible branch did not pass')
+        abaqus_pair = find_abaqus_pair(root)
+        if abaqus_pair:
+            log('trying Abaqus-compatible branch')
+            if run_abaqus_checker(root, abaqus_pair[0], abaqus_pair[1]):
+                return True, desktop
+            log('Abaqus-compatible branch did not pass')
     log('no acceptable solver branch passed')
-    return False, root
+    return False, desktop
 
 
 def main():
