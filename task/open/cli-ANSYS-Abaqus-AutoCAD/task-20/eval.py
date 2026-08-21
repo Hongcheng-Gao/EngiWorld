@@ -11,7 +11,7 @@ from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
 TASK_SPEC = {'task_id': 'c-cae-commercial-open-choice-task-20-windows', 'open_choice_id': 'cae-open-choice-030', 'source_task': 'task/task-c/ansys/task-20', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'cli', 'domain': 'steady_state_thermal_block', 'analysis_kind': 'thermal', 'metrics': ['mid_temperature', 'heat_flow_optional'], 'expected_result_fields': ['NT11'], 'require_metrics_json': True, 'visible_goal': 'Solve a steady one-dimensional thermal conduction block; report mid-length temperature and heat-flow consistency.', 'selection_reason': 'Steady thermal analysis is a common non-structural FEA capability in both tools.', 'artifact_hint': {'ground_truth_files': ['wb_conduction.db', 'wb_conduction.rst', 'wb_conduction.rth', 'wb_conduction.wbpj'], 'abaqus_stems': [], 'ansys_db_files': ['wb_conduction.db', 'wb_conduction.wbpj'], 'ansys_result_files': ['wb_conduction.rst', 'wb_conduction.rth']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}}
-MODEL_RULES = {'metrics': {'mid_temperature': ('value', 55.0, 65.0), 'heat_flow_optional': ('abs', 0.0, 1e9)}, 'bounds': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}, 'geometry_scales': [1.0, 0.001], 'unit_variants': [{'geometry_scale': 1.0, 'abaqus_material': {'conductivity': [[0.05]]}, 'ansys_material_numbers': [0.05]}, {'geometry_scale': 0.001, 'abaqus_material': {'conductivity': [[50.0]]}, 'ansys_material_numbers': [50.0]}], 'abaqus_elements_any': ['DC3D'], 'abaqus_repo_types': {'boundaryConditions': ['TEMPERATUREBC']}, 'abaqus_repo_min': {'boundaryConditions': 2}, 'abaqus_step_types': ['HEATTRANSFERSTEP'], 'abaqus_step_response': ['STEADY_STATE'], 'ansys_elements_any': ['SOLID70', 'SOLID278', 'SOLID279'], 'ansys_load_tokens_any': ['TEMP']}
+MODEL_RULES = {'metrics': {'mid_temperature': ('value', 59.5, 60.5), 'heat_flow_optional': ('abs', 3.8, 4.2)}, 'bounds': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}, 'geometry_scales': [1.0, 0.001], 'unit_variants': [{'geometry_scale': 1.0, 'abaqus_material': {'conductivity': [[0.05]]}, 'ansys_material_numbers': [0.05]}, {'geometry_scale': 0.001, 'abaqus_material': {'conductivity': [[50.0]]}, 'ansys_material_numbers': [50.0]}], 'abaqus_elements_any': ['DC3D'], 'abaqus_repo_types': {'boundaryConditions': ['TEMPERATUREBC']}, 'abaqus_repo_min': {'boundaryConditions': 2}, 'abaqus_step_types': ['HEATTRANSFERSTEP'], 'abaqus_step_response': ['STEADY_STATE'], 'abaqus_result_prefixes': ['HFL'], 'ansys_elements_any': ['SOLID70', 'SOLID278', 'SOLID279'], 'ansys_load_tokens_any': ['TEMP']}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -153,6 +153,11 @@ def find_ansys_artifacts(root):
 def run_abaqus_checker(root, cae_path, odb_path):
     checker = root / '__open_choice_abaqus_checker.py'
     result = root / '__open_choice_abaqus_result.txt'
+    try:
+        cli_metrics = json.loads((root / 'metrics.json').read_text(encoding='utf-8'))
+    except Exception as exc:
+        log('cannot load metrics.json for Abaqus binding: %s' % exc)
+        return False
     checker_source = r'''
 # -*- coding: utf-8 -*-
 from __future__ import annotations
@@ -166,6 +171,7 @@ from odbAccess import openOdb
 
 SPEC = __SPEC__
 RULES = __RULES__
+METRICS = __METRICS__
 CAE_PATH = __CAE_PATH__
 ODB_PATH = __ODB_PATH__
 RESULT_PATH = __RESULT_PATH__
@@ -564,6 +570,41 @@ def check_abaqus_metrics(frame):
         if not field_has_numeric_data(field):
             log('field has no numeric data: ' + field_name)
             return False
+    try:
+        temperatures = []
+        for value in frame.fieldOutputs['NT11'].values:
+            temperatures.extend(flatten_numbers(value.data))
+        temperatures = [float(value) for value in temperatures if math.isfinite(float(value))]
+        metric_temperature = float(METRICS['mid_temperature'])
+    except Exception:
+        log('cannot bind mid_temperature to the ODB temperature field')
+        return False
+    if not temperatures or min(temperatures) > 20.5 or max(temperatures) < 99.5:
+        log('ODB temperature field does not contain the prescribed end temperatures')
+        return False
+    if not any(math.isclose(value, metric_temperature, rel_tol=0.0, abs_tol=0.05) for value in temperatures):
+        log('metrics.json mid_temperature does not match an ODB nodal temperature')
+        return False
+    try:
+        flux_magnitudes = []
+        for value in frame.fieldOutputs['HFL'].values:
+            components = flatten_numbers(value.data)
+            if components:
+                squared_magnitude = 0.0
+                for component in components:
+                    squared_magnitude += component * component
+                flux_magnitudes.append(math.sqrt(squared_magnitude))
+        odb_heat_flow = max(flux_magnitudes) * 100.0
+        metric_heat_flow = abs(float(METRICS['heat_flow_optional']))
+    except Exception:
+        log('cannot bind heat_flow_optional to the ODB heat-flux field')
+        return False
+    if not (3.8 <= odb_heat_flow <= 4.2):
+        log('ODB heat-flow magnitude is physically implausible: %s' % odb_heat_flow)
+        return False
+    if not math.isclose(metric_heat_flow, odb_heat_flow, rel_tol=0.02, abs_tol=0.02):
+        log('metrics.json heat_flow_optional does not match the ODB heat flux')
+        return False
     return True
 
 def check_cae():
@@ -665,6 +706,7 @@ if __name__ == '__main__':
 '''
     checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
     checker_source = checker_source.replace('__RULES__', repr(MODEL_RULES))
+    checker_source = checker_source.replace('__METRICS__', repr(cli_metrics))
     checker_source = checker_source.replace('__CAE_PATH__', repr(str(cae_path)))
     checker_source = checker_source.replace('__ODB_PATH__', repr(str(odb_path)))
     checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))

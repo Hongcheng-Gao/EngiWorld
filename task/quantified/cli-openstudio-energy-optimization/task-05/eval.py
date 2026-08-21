@@ -639,11 +639,12 @@ def validate_native_idf_bindings(text: str, variables: dict, quantities: dict) -
             close(number(oa, 2, prefix+".oa_per_person"), float(variables["ventilation_lps_per_person"])/1000.0, "ventilation_lps_per_person:"+prefix, rel=0.000001)
             if oa[6].casefold() != "occupancy-schedule": failures.append("optimized_idf:outdoor_air_schedule:"+prefix)
         vent = next((fields for fields in zone_ventilation if fields and fields[0].casefold() == (prefix+"-ECONOMIZER-VENTILATION").casefold()), None)
-        if not vent or len(vent) < 6:
+        if not vent or len(vent) < 7:
             failures.append("optimized_idf:missing_economizer_ventilation:"+prefix)
         else:
             if vent[1].casefold() != prefix.casefold() or vent[2].casefold() != "economizer-schedule" or vent[3].casefold() != "flow/person": failures.append("optimized_idf:economizer_ventilation_binding:"+prefix)
-            close(number(vent, 5, prefix+".economizer_flow"), float(variables["ventilation_lps_per_person"])/1000.0, "economizer_ventilation_flow:"+prefix, rel=0.000001)
+            if vent[5].strip(): failures.append("optimized_idf:economizer_per_area_flow_must_be_blank:"+prefix)
+            close(number(vent, 6, prefix+".economizer_flow_per_person"), float(variables["ventilation_lps_per_person"])/1000.0, "economizer_ventilation_flow_per_person:"+prefix, rel=0.000001)
 
     for prefix in prefixes:
         people = named("People", prefix+"-PEOPLE")

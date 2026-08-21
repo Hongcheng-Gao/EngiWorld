@@ -11,7 +11,7 @@ from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
 TASK_SPEC = {'task_id': 'c-cae-commercial-open-choice-task-19-windows', 'open_choice_id': 'cae-open-choice-029', 'source_task': 'task/task-c/ansys/task-19', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'cli', 'domain': 'column_eigen_buckling', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': True, 'visible_goal': 'Run a linear eigenvalue buckling analysis of a pin-ended column under axial compression; report the first load factor.', 'selection_reason': 'Column buckling gives a distinct structural stability domain while staying cross-solver.', 'artifact_hint': {'ground_truth_files': ['wb_buckling.db', 'wb_buckling.rst', 'wb_buckling.wbpj'], 'abaqus_stems': [], 'ansys_db_files': ['wb_buckling.db', 'wb_buckling.wbpj'], 'ansys_result_files': ['wb_buckling.rst']}, 'span_hint': {'y': 1000.0}, 'bounds_hint': {'y': [0.0, 1000.0]}}
-MODEL_RULES = {'metrics': {'first_buckling_factor': ('abs', 100.0, 1e7)}, 'bounds': {'y': [0.0, 1000.0]}, 'abaqus_elements_any': ['B31', 'B32'], 'abaqus_repo_types': {'loads': ['CONCENTRATEDFORCE']}, 'abaqus_material': {'elastic': [[210000.0, 0.3]]}, 'abaqus_step_types': ['BUCKLESTEP'], 'abaqus_num_eigen_min': 1, 'ansys_elements_any': ['BEAM188', 'BEAM189'], 'ansys_material_numbers': [210000.0, 0.3], 'ansys_load_tokens_any': ['FY']}
+MODEL_RULES = {'metrics': {'first_buckling_factor': ('abs', 1600.0, 1850.0)}, 'bounds': {'y': [0.0, 1000.0]}, 'abaqus_elements_any': ['B31', 'B32'], 'abaqus_repo_types': {'loads': ['CONCENTRATEDFORCE']}, 'abaqus_material': {'elastic': [[210000.0, 0.3]]}, 'abaqus_step_types': ['BUCKLESTEP'], 'abaqus_num_eigen_min': 1, 'ansys_elements_any': ['BEAM188', 'BEAM189'], 'ansys_material_numbers': [210000.0, 0.3], 'ansys_load_tokens_any': ['FY']}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -153,6 +153,11 @@ def find_ansys_artifacts(root):
 def run_abaqus_checker(root, cae_path, odb_path):
     checker = root / '__open_choice_abaqus_checker.py'
     result = root / '__open_choice_abaqus_result.txt'
+    try:
+        cli_metrics = json.loads((root / 'metrics.json').read_text(encoding='utf-8'))
+    except Exception as exc:
+        log('cannot load metrics.json for Abaqus binding: %s' % exc)
+        return False
     checker_source = r'''
 # -*- coding: utf-8 -*-
 from __future__ import annotations
@@ -166,6 +171,7 @@ from odbAccess import openOdb
 
 SPEC = __SPEC__
 RULES = __RULES__
+METRICS = __METRICS__
 CAE_PATH = __CAE_PATH__
 ODB_PATH = __ODB_PATH__
 RESULT_PATH = __RESULT_PATH__
@@ -564,6 +570,23 @@ def check_abaqus_metrics(frame):
         if not field_has_numeric_data(field):
             log('field has no numeric data: ' + field_name)
             return False
+    try:
+        description = str(getattr(frame, 'description', ''))
+        match = re.search(r'eigen\s*value\s*=\s*([-+0-9.eEdD]+)', description, re.I)
+        if match:
+            odb_value = abs(float(match.group(1).replace('D', 'E').replace('d', 'e')))
+        else:
+            odb_value = abs(float(frame.frameValue))
+        metric_value = abs(float(METRICS['first_buckling_factor']))
+    except Exception:
+        log('cannot bind first_buckling_factor to the ODB eigenvalue')
+        return False
+    if not (1600.0 <= odb_value <= 1850.0):
+        log('ODB first buckling factor is physically implausible: %s' % odb_value)
+        return False
+    if not math.isclose(metric_value, odb_value, rel_tol=2.0e-3, abs_tol=0.1):
+        log('metrics.json first_buckling_factor does not match the ODB eigenvalue')
+        return False
     return True
 
 def check_cae():
@@ -665,6 +688,7 @@ if __name__ == '__main__':
 '''
     checker_source = checker_source.replace('__SPEC__', repr(TASK_SPEC))
     checker_source = checker_source.replace('__RULES__', repr(MODEL_RULES))
+    checker_source = checker_source.replace('__METRICS__', repr(cli_metrics))
     checker_source = checker_source.replace('__CAE_PATH__', repr(str(cae_path)))
     checker_source = checker_source.replace('__ODB_PATH__', repr(str(odb_path)))
     checker_source = checker_source.replace('__RESULT_PATH__', repr(str(result)))
