@@ -91,6 +91,12 @@ def sha(path: Path) -> str:
     return h.hexdigest()
 
 
+def parse_iso_datetime(value: Any) -> datetime:
+    text = str(value).replace("Z", "+00:00")
+    text = re.sub(r"(\.\d{6})\d+(?=(?:[+-]\d{2}:\d{2})?$)", r"\1", text)
+    return datetime.fromisoformat(text)
+
+
 def load_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8-sig"))
     if not isinstance(value, dict):
@@ -840,9 +846,9 @@ def check_reports(paths: dict[str, Path], metrics: dict[str, Any], errors: list[
         add(errors, revit.get("exit_code") == 0 and revit.get("input_file") == "init.ifc" and revit.get("output_file") == "stage1.ifc" and revit.get("handoff_file") == "revit_handoff.json", "native_stage_log.json:revit_completion")
         add(errors, revit.get("output_sha256") == sha(paths["stage1.ifc"]) and revit.get("handoff_sha256") == sha(paths["revit_handoff.json"]), "native_stage_log.json:revit_hashes")
         try:
-            times = [(datetime.fromisoformat(s["started_utc"].replace("Z", "+00:00")), datetime.fromisoformat(s["finished_utc"].replace("Z", "+00:00"))) for s in stages]
+            times = [(parse_iso_datetime(s["started_utc"]), parse_iso_datetime(s["finished_utc"])) for s in stages]
             add(errors, all(a <= b for a, b in times) and times[0][1] <= times[1][0] <= times[1][1] <= times[2][0] <= times[2][1], "native_stage_log.json:timestamps")
-            completed = datetime.fromisoformat(load_json(paths["revit_handoff.json"])["native_provenance"]["completed_utc"].replace("Z", "+00:00"))
+            completed = parse_iso_datetime(load_json(paths["revit_handoff.json"])["native_provenance"]["completed_utc"])
             add(errors, times[0][0] <= completed <= times[0][1], "native_stage_log.json:revit_completion_time")
         except Exception:
             errors.append("native_stage_log.json:timestamps")

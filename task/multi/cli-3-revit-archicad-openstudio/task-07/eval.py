@@ -81,6 +81,12 @@ def sha(path: Path) -> str:
     return h.hexdigest()
 
 
+def parse_iso_datetime(value: Any) -> datetime:
+    text = str(value).replace("Z", "+00:00")
+    text = re.sub(r"(\.\d{6})\d+(?=(?:[+-]\d{2}:\d{2})?$)", r"\1", text)
+    return datetime.fromisoformat(text)
+
+
 def load_json(path: Path) -> dict[str, Any]:
     value = json.loads(path.read_text(encoding="utf-8-sig"))
     if not isinstance(value, dict):
@@ -677,7 +683,7 @@ def check_reports(paths: dict[str, Path], metrics: dict[str, Any], errors: list[
         add(errors, str(stages[2].get("product_version", "")).startswith("3.10.0") and "25.1.0-1c11a3d85f" in str(stages[2].get("energyplus_version")) and stages[2].get("output_sha256") == sha(paths["result.osm"]), "native_stage_log.json:openstudio")
         add(errors, stages[0].get("input_sha256") == sha(paths["init.ifc"]) and stages[1].get("input_sha256") == sha(paths["stage1.ifc"]) and stages[1].get("input_handoff_sha256") == sha(paths["revit_handoff.json"]) and stages[2].get("input_sha256") == sha(paths["stage2.ifc"]) and stages[2].get("input_handoff_sha256") == sha(paths["archicad_handoff.json"]), "native_stage_log.json:input_chain")
         try:
-            times = [(datetime.fromisoformat(s["started_utc"].replace("Z", "+00:00")), datetime.fromisoformat(s["finished_utc"].replace("Z", "+00:00"))) for s in stages]
+            times = [(parse_iso_datetime(s["started_utc"]), parse_iso_datetime(s["finished_utc"])) for s in stages]
             add(errors, all(a <= b for a, b in times) and times[0][1] <= times[1][0] <= times[1][1] <= times[2][0] <= times[2][1], "native_stage_log.json:timestamps")
         except Exception:
             errors.append("native_stage_log.json:timestamps")
