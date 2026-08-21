@@ -356,7 +356,7 @@ def _component_report_valid(path: Path) -> bool:
 def evaluate() -> bool:
     desktop = _desktop()
     designs = ["oscillator_tolerance.edif", "oscillator_tolerance.schematic.json"]
-    report = desktop / "component_properties.csv"
+    report = desktop / "result" / "component_properties.csv"
     try:
         return (
             report.is_file() and report.stat().st_size > 0 and

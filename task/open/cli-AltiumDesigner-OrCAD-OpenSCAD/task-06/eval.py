@@ -10,6 +10,7 @@ from xml.etree import ElementTree as ET
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
+RESULT_DIR = DESKTOP / "result"
 
 
 def _xml_rows(root: ET.Element, path: str, key: str) -> dict[str, dict[str, str]]:
@@ -76,8 +77,8 @@ def _same_static_board(source: ET.Element, placed: ET.Element) -> bool:
 
 def evaluate() -> bool:
     source_path = DESKTOP / "fulladd.ipc2581"
-    output_path = DESKTOP / "fulladd_placed.ipc2581"
-    csv_path = DESKTOP / "placement.csv"
+    output_path = DESKTOP / "result" / "fulladd_placed.ipc2581"
+    csv_path = DESKTOP / "result" / "placement.csv"
     rules_path = DESKTOP / "placement_rules.json"
     if not all(path.is_file() for path in (source_path, output_path, csv_path, rules_path)):
         return False

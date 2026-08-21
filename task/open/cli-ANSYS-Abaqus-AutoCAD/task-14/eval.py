@@ -45,12 +45,8 @@ def desktop_dir():
 
 
 def delivery_roots(desktop):
-    roots = [desktop]
-    for name in ("ansys", "abaqus"):
-        candidate = desktop / name
-        if candidate.is_dir():
-            roots.append(candidate)
-    return roots
+    result = desktop / "result"
+    return [result] if result.is_dir() else []
 
 
 def is_nonempty(path):

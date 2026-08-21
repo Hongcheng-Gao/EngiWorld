@@ -141,7 +141,7 @@ def _csv_rows(path: Path) -> list[tuple[str, str]]:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    required = [desktop / "bcd_install.edif", desktop / "bcd_install.schematic.json", desktop / "install_properties.csv"]
+    required = [desktop / "result" / "bcd_install.edif", desktop / "result" / "bcd_install.schematic.json", desktop / "result" / "install_properties.csv"]
     if not all(path.is_file() and path.stat().st_size for path in required):
         return False
     try:

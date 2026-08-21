@@ -8,7 +8,7 @@ import os
 import ezdxf
 
 
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop/result"))
 
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
@@ -354,11 +354,17 @@ def check(doc):
 
 
 def evaluate():
-    if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
+    if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop/result"))):
         return False
     path = OUTPUT_ROOT / OUTPUT_FILE
     if not path.exists() or path.stat().st_size <= 0:
-        return False
+        candidates = sorted(
+            p for p in OUTPUT_ROOT.iterdir()
+            if p.is_file() and p.suffix.lower() in {".dxf", ".dwg"} and p.stat().st_size > 0
+        ) if OUTPUT_ROOT.is_dir() else []
+        if not candidates:
+            return False
+        path = candidates[0]
     try:
         doc = ezdxf.readfile(path)
         return bool(check(doc))

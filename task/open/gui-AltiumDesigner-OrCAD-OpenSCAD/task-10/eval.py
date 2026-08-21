@@ -359,7 +359,7 @@ def _attr(element, *names):
 
 def _placed_json_valid(desktop: Path):
     source = json.loads((desktop / "fulladd.pcb.json").read_text(encoding="utf-8-sig"))
-    actual = json.loads((desktop / "fulladd_placed.pcb.json").read_text(encoding="utf-8-sig"))
+    actual = json.loads((desktop / "result" / "fulladd_placed.pcb.json").read_text(encoding="utf-8-sig"))
     source_components = _component_map(source.get("components"))
     actual_components = _component_map(actual.get("components"))
     if not source_components or not actual_components or set(actual_components) != set(source_components):
@@ -393,7 +393,7 @@ def _placed_json_valid(desktop: Path):
 
 def _placed_xml_valid(desktop: Path, placements) -> bool:
     source = ET.parse(desktop / "fulladd.ipc2581").getroot()
-    actual = ET.parse(desktop / "fulladd_placed.ipc2581").getroot()
+    actual = ET.parse(desktop / "result" / "fulladd_placed.ipc2581").getroot()
     if _local_name(source.tag) != _local_name(actual.tag):
         return False
     source_sections = {_local_name(child.tag): child for child in source}
@@ -428,7 +428,7 @@ def _placed_xml_valid(desktop: Path, placements) -> bool:
 
 
 def _placement_csv_valid(desktop: Path, placements) -> bool:
-    with (desktop / "placement.csv").open("r", encoding="utf-8-sig", newline="") as handle:
+    with (desktop / "result" / "placement.csv").open("r", encoding="utf-8-sig", newline="") as handle:
         reader = csv.DictReader(handle)
         headers = {_key(name): name for name in (reader.fieldnames or [])}
         aliases = {

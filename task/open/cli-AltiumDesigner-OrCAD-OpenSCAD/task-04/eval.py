@@ -25,7 +25,7 @@ def _integer(value: object) -> int | None:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    output = desktop / "pin_map.json"
+    output = desktop / "result" / "pin_map.json"
     if not output.is_file():
         return False
     try:

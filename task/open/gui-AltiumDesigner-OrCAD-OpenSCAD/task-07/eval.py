@@ -360,7 +360,7 @@ def _renumber_report_valid(path: Path) -> bool:
 def evaluate() -> bool:
     desktop = _desktop()
     design_files = ["tutor2_renumbered.edif", "tutor2_renumbered.schematic.json"]
-    report = desktop / "renumber_report.csv"
+    report = desktop / "result" / "renumber_report.csv"
     try:
         return (
             report.is_file() and report.stat().st_size > 0 and

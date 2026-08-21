@@ -364,7 +364,7 @@ def _manifest_valid(path: Path, spec_path: Path) -> bool:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    manifest = desktop / "variant_manifest.json"
+    manifest = desktop / "result" / "variant_manifest.json"
     try:
         return bool(
             manifest.is_file() and manifest.stat().st_size > 0 and

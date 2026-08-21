@@ -2093,7 +2093,11 @@ def run_ansys(work, db_path, rst_path, metrics):
 
 
 def evaluate():
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     work = None
     passed = False
     try:

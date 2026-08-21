@@ -295,7 +295,7 @@ def evaluate(root):
 
 def main():
     try:
-        finish(evaluate(DESKTOP))
+        finish(evaluate(DESKTOP / "result"))
     except SystemExit:
         raise
     except Exception:

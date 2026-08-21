@@ -499,7 +499,7 @@ def _bytes_equal(path: Path, expected: bytes) -> bool:
 def evaluate() -> bool:
     desktop = _desktop()
     for rel in EXPECTED:
-        path = desktop / rel
+        path = desktop / "result" / rel
         if not path.is_file():
             return False
         if not _bytes_equal(path, _decode(rel)):

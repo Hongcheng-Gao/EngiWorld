@@ -8,9 +8,9 @@ from pathlib import Path
 DESKTOP = Path(r"C:\Users\user\Desktop")
 ABAQUS = Path(r"C:\SIMULIA\Commands\abaqus.bat")
 INIT_CAE = DESKTOP / "task18_punch_plate_init.cae"
-GT_CAE = DESKTOP / "Task18_PunchPlate_GT.cae"
-ODB = DESKTOP / "Task18_PunchPlate.odb"
-METRICS = DESKTOP / "metrics.json"
+GT_CAE = DESKTOP / "result" / "Task18_PunchPlate_GT.cae"
+ODB = DESKTOP / "result" / "Task18_PunchPlate.odb"
+METRICS = DESKTOP / "result" / "metrics.json"
 CHECKER = DESKTOP / "__task18_abaqus_checker.py"
 RESULT = DESKTOP / "__task18_abaqus_result.txt"
 DETAIL = DESKTOP / "__task18_abaqus_detail.txt"
@@ -34,9 +34,9 @@ from odbAccess import openOdb
 
 DESKTOP = r"C:\Users\user\Desktop"
 INIT_CAE = os.path.join(DESKTOP, "task18_punch_plate_init.cae")
-GT_CAE = os.path.join(DESKTOP, "Task18_PunchPlate_GT.cae")
-ODB_PATH = os.path.join(DESKTOP, "Task18_PunchPlate.odb")
-METRICS_PATH = os.path.join(DESKTOP, "metrics.json")
+GT_CAE = os.path.join(DESKTOP, "result", "Task18_PunchPlate_GT.cae")
+ODB_PATH = os.path.join(DESKTOP, "result", "Task18_PunchPlate.odb")
+METRICS_PATH = os.path.join(DESKTOP, "result", "metrics.json")
 RESULT_PATH = os.path.join(DESKTOP, "__task18_abaqus_result.txt")
 DETAIL_PATH = os.path.join(DESKTOP, "__task18_abaqus_detail.txt")
 EVIDENCE_PATH = os.path.join(DESKTOP, "__task18_abaqus_evidence.json")
@@ -631,8 +631,25 @@ def is_nonempty(path: Path) -> bool:
     return path.is_file() and path.stat().st_size > 0
 
 
+def discover_result_pair():
+    root = DESKTOP / "result"
+    if not root.is_dir():
+        return None
+    caes = sorted(path for path in root.glob("*.cae") if is_nonempty(path))
+    odbs = sorted(path for path in root.glob("*.odb") if is_nonempty(path))
+    if len(caes) != 1 or len(odbs) != 1:
+        return None
+    if caes[0].stem.lower() != odbs[0].stem.lower():
+        return None
+    return caes[0], odbs[0]
+
+
 def evaluate() -> bool:
-    required = (INIT_CAE, GT_CAE, ODB, METRICS)
+    pair = discover_result_pair()
+    if pair is None:
+        return False
+    gt_cae, odb = pair
+    required = (INIT_CAE, gt_cae, odb, METRICS)
     if not ABAQUS.is_file() or any(not is_nonempty(path) for path in required):
         return False
     for stale in (RESULT, DETAIL, EVIDENCE):
@@ -641,7 +658,12 @@ def evaluate() -> bool:
         except FileNotFoundError:
             pass
     try:
-        CHECKER.write_text(CHECKER_SOURCE, encoding="utf-8")
+        checker_source = (
+            CHECKER_SOURCE
+            .replace("Task18_PunchPlate_GT.cae", gt_cae.name)
+            .replace("Task18_PunchPlate.odb", odb.name)
+        )
+        CHECKER.write_text(checker_source, encoding="utf-8")
         completed = subprocess.run(
             [str(ABAQUS), "cae", "noGUI=" + str(CHECKER)],
             cwd=str(DESKTOP),

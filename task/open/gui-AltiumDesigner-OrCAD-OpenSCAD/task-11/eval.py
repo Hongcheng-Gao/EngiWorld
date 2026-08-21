@@ -363,12 +363,14 @@ def _project_structure_valid(path: Path) -> bool:
 
 def evaluate() -> bool:
     desktop = _desktop()
+    result = desktop / "result"
     designs = ["spiritlevel_fixed.edif", "spiritlevel_fixed.schematic.json"]
-    structure = desktop / "project_structure.json"
+    structure = result / "project_structure.json"
     try:
         return (
+            result.is_dir() and
             structure.is_file() and structure.stat().st_size > 0 and
-            all((desktop / name).is_file() and _bytes_equal(desktop / name, _decode(name)) for name in designs) and
+            all((result / name).is_file() and _bytes_equal(result / name, _decode(name)) for name in designs) and
             _project_structure_valid(structure)
         )
     except Exception:

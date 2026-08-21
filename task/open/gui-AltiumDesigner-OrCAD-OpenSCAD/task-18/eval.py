@@ -372,7 +372,7 @@ def _expected_nets(source, rename):
 def _pcb_valid(desktop: Path) -> bool:
     source = json.loads((desktop / "wifi_board.pcb.json").read_text(encoding="utf-8-sig"))
     spec = json.loads((desktop / "eco_spec.json").read_text(encoding="utf-8-sig"))
-    actual = json.loads((desktop / "wifi_usb_eco.pcb.json").read_text(encoding="utf-8-sig"))
+    actual = json.loads((desktop / "result" / "wifi_usb_eco.pcb.json").read_text(encoding="utf-8-sig"))
     source_components = _component_map(source.get("components"))
     actual_components = _component_map(actual.get("components"))
     if not source_components or not actual_components or set(source_components) != set(actual_components):
@@ -403,7 +403,7 @@ def _xml_attr(element, name):
 
 def _ipc_valid(desktop: Path) -> bool:
     source = ET.parse(desktop / "wifi_board.ipc2581").getroot()
-    actual = ET.parse(desktop / "wifi_usb_eco.ipc2581").getroot()
+    actual = ET.parse(desktop / "result" / "wifi_usb_eco.ipc2581").getroot()
     spec = json.loads((desktop / "eco_spec.json").read_text(encoding="utf-8-sig"))
     source_sections = {_local_name(child.tag): child for child in source}
     actual_sections = {_local_name(child.tag): child for child in actual}
@@ -439,7 +439,7 @@ def _ipc_valid(desktop: Path) -> bool:
 
 def _report_valid(desktop: Path) -> bool:
     spec = json.loads((desktop / "eco_spec.json").read_text(encoding="utf-8-sig"))
-    report = json.loads((desktop / "eco_report.json").read_text(encoding="utf-8-sig"))
+    report = json.loads((desktop / "result" / "eco_report.json").read_text(encoding="utf-8-sig"))
     if isinstance(report, dict) and isinstance(report.get("changes"), dict):
         report = report["changes"]
     return isinstance(report, dict) and all(

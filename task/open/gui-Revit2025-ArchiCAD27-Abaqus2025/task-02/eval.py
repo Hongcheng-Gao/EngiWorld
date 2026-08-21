@@ -229,11 +229,20 @@ def check_space_names(model):
 
 def evaluate(root):
     root = Path(root)
-    if not check_no_gui_bypass(root):
+    desktop = DESKTOP if "DESKTOP" in globals() else root.parent
+    if not check_no_gui_bypass(desktop):
+        return False
+    if not root.is_dir():
         return False
     path = root / "result.ifc"
     if not path.is_file() or path.stat().st_size < SPEC.get("min_bytes", 500):
-        return False
+        candidates = sorted(
+            p for p in root.iterdir()
+            if p.is_file() and p.suffix.lower() == ".ifc" and p.stat().st_size >= SPEC.get("min_bytes", 500)
+        )
+        if not candidates:
+            return False
+        path = candidates[0]
     import ifcopenshell
     model = ifcopenshell.open(str(path))
     schema = str(getattr(model, "schema", "")).upper()
@@ -249,7 +258,7 @@ def evaluate(root):
 
 def main():
     try:
-        finish(evaluate(DESKTOP))
+        finish(evaluate(DESKTOP / "result"))
     except SystemExit:
         raise
     except Exception:

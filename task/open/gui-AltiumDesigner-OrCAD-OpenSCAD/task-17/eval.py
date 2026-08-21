@@ -411,8 +411,8 @@ def _bom_preview_valid(path: Path, source_path: Path, spec_path: Path) -> bool:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    manifest = desktop / "variant_manifest.json"
-    preview = desktop / "variant_bom_preview.csv"
+    manifest = desktop / "result" / "variant_manifest.json"
+    preview = desktop / "result" / "variant_bom_preview.csv"
     try:
         return (
             manifest.is_file() and manifest.stat().st_size > 0 and

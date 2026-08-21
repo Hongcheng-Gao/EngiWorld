@@ -1723,7 +1723,11 @@ def write_outputs(root: Path, passed: bool) -> None:
 
 
 def evaluate() -> tuple[bool, Path]:
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     reported = read_metrics(root)
     if reported is None:
         return False, root

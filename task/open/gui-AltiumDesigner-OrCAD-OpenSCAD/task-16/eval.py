@@ -248,10 +248,10 @@ def evaluate() -> bool:
     if not all((desktop / name).is_file() and (desktop / name).stat().st_size > 0 for name in required):
         return False
     return (
-        _native_panel_valid(desktop / "wifi_panel.PcbDoc")
-        and _ipc_panel_valid(desktop / "wifi_panel.ipc2581")
-        and _panel_json_valid(desktop / "wifi_panel.pcb.json")
-        and _panel_summary_valid(desktop / "panel_summary.json")
+        _native_panel_valid(desktop / "result" / "wifi_panel.PcbDoc")
+        and _ipc_panel_valid(desktop / "result" / "wifi_panel.ipc2581")
+        and _panel_json_valid(desktop / "result" / "wifi_panel.pcb.json")
+        and _panel_summary_valid(desktop / "result" / "panel_summary.json")
     )
 
 

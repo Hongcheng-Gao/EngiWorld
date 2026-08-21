@@ -351,7 +351,7 @@ def _mapping_report_valid(path: Path) -> bool:
 def evaluate() -> bool:
     desktop = _desktop()
     designs = ["oscillator_reannotated.edif", "oscillator_reannotated.schematic.json"]
-    report = desktop / "annotation_report.csv"
+    report = desktop / "result" / "annotation_report.csv"
     try:
         return (
             report.is_file() and report.stat().st_size > 0 and

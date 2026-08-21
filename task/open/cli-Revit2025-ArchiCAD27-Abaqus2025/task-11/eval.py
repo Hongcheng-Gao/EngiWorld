@@ -8,7 +8,7 @@ DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", "C:/Users/user/Desktop"))
 SPEC = {'products': [], 'annotations': [{'class': 'IfcSpace', 'tokens': ['PRINT COPY']}]}
 
 DIRECT_IFC_TOOLS = ("ifcopenshell", "xbim", "bcfier", "ifcpatch", "ifcconvert", "ifccsv", "ifcclash")
-DIRECT_WRITE_TOKENS = ("result.ifc", "desktop\\result.ifc", "desktop/result.ifc")
+DIRECT_WRITE_TOKENS = ("result.ifc", "desktop\\result\\", "desktop/result/", "desktop\\result.ifc", "desktop/result.ifc")
 ALLOWED_TOOL_TOKENS = (
     "ifccommandserverapp", "ifccommandserver", "graphisoft", "archicad", "/jemi",
     "model.loadfile", "model.savefile", "model.mergefile", "entity.create",
@@ -279,6 +279,8 @@ def check_model(init_path, result_path):
 
 def evaluate(root):
     root = Path(root)
+    if not root.is_dir():
+        return False
     result = root / "result.ifc"
     init = root / "init.ifc"
     if not result.is_file() or result.stat().st_size < 6000:
@@ -292,6 +294,6 @@ def evaluate(root):
 
 if __name__ == "__main__":
     try:
-        finish(evaluate(DESKTOP))
+        finish(evaluate(DESKTOP / "result"))
     except Exception:
         finish(False)

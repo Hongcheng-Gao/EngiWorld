@@ -63,7 +63,7 @@ def _source_semantics(path: Path) -> tuple[str, int, Counter[tuple[str, str, str
 
 def evaluate() -> bool:
     desktop = _desktop()
-    output = desktop / "flat.json"
+    output = desktop / "result" / "flat.json"
     if not output.is_file():
         return False
     try:

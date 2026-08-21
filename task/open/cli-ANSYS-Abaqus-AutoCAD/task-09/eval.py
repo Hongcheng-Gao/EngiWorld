@@ -1871,7 +1871,11 @@ def write_details(root, passed):
 
 
 def evaluate():
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     metrics = read_metrics(root)
     branch = discover_branch(root)
     log("selected native branch: %s" % branch[0])

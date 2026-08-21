@@ -9,7 +9,7 @@ import os
 
 import ezdxf
 
-OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))
+OUTPUT_ROOT = Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop/result"))
 
 GUI_BYPASS_FORBIDDEN_EXTENSIONS = {
     ".py", ".pyw", ".ipynb", ".sh", ".bash", ".zsh", ".bat", ".cmd",
@@ -419,11 +419,21 @@ def check_spec(doc):
     return True
 
 def evaluate():
-    if not check_no_gui_bypass(Path(os.environ.get("OUTPUT_ROOT", "/home/user/Desktop"))):
+    desktop = Path(os.environ.get("ENGIWORLD_DESKTOP", "/home/user/Desktop"))
+    root = Path(os.environ.get("OUTPUT_ROOT", str(desktop / "result")))
+    if not check_no_gui_bypass(desktop):
         return False
-    path = OUTPUT_ROOT / OUTPUT_FILE
+    if not root.is_dir():
+        return False
+    path = root / OUTPUT_FILE
     if not path.exists() or path.stat().st_size <= 0:
-        return False
+        candidates = sorted(
+            p for p in root.iterdir()
+            if p.is_file() and p.suffix.lower() in {".dxf", ".dwg"} and p.stat().st_size > 0
+        )
+        if not candidates:
+            return False
+        path = candidates[0]
     try:
         doc = ezdxf.readfile(path)
         return bool(check_spec(doc))

@@ -8,6 +8,7 @@ from pathlib import Path
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
+RESULT_DIR = DESKTOP / "result"
 
 
 def _load_json(name: str):

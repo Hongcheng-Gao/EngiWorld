@@ -368,7 +368,7 @@ def _layer_set_valid(items, expected) -> bool:
 
 def _pcb_valid(desktop: Path) -> bool:
     source, expected = _expected_layers(desktop)
-    actual = json.loads((desktop / "wifi_stackup.pcb.json").read_text(encoding="utf-8-sig"))
+    actual = json.loads((desktop / "result" / "wifi_stackup.pcb.json").read_text(encoding="utf-8-sig"))
     if not _layer_set_valid(actual.get("layers"), expected):
         return False
     return all(
@@ -379,7 +379,7 @@ def _pcb_valid(desktop: Path) -> bool:
 
 def _stackup_report_valid(desktop: Path) -> bool:
     _, expected = _expected_layers(desktop)
-    report = json.loads((desktop / "stackup.json").read_text(encoding="utf-8-sig"))
+    report = json.loads((desktop / "result" / "stackup.json").read_text(encoding="utf-8-sig"))
     if isinstance(report, dict):
         report = next((value for key, value in report.items() if _key(key) in {"layers", "stackup"} and isinstance(value, list)), None)
     return _layer_set_valid(report, expected)
@@ -398,7 +398,7 @@ def _xml_layer(element):
 
 def _ipc_valid(desktop: Path) -> bool:
     source = ET.parse(desktop / "wifi_board.ipc2581").getroot()
-    actual = ET.parse(desktop / "wifi_stackup.ipc2581").getroot()
+    actual = ET.parse(desktop / "result" / "wifi_stackup.ipc2581").getroot()
     source_sections = {_local_name(child.tag): child for child in source}
     actual_sections = {_local_name(child.tag): child for child in actual}
     for name, source_section in source_sections.items():

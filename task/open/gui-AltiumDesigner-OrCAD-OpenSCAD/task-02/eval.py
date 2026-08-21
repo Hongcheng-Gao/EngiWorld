@@ -138,7 +138,7 @@ def _valid_generated_refs(refs: set[str], placeholders: list[dict[str, object]])
 
 def evaluate() -> bool:
     desktop = _desktop()
-    required = [desktop / "tutor2_reannotated.edif", desktop / "tutor2_reannotated.schematic.json", desktop / "annotation_report.csv"]
+    required = [desktop / "result" / "tutor2_reannotated.edif", desktop / "result" / "tutor2_reannotated.schematic.json", desktop / "result" / "annotation_report.csv"]
     if not all(path.is_file() and path.stat().st_size for path in required):
         return False
     try:

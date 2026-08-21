@@ -171,7 +171,7 @@ def _csv_tolerances(path: Path) -> dict[str, str]:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    required = [desktop / "tutor2_tolerance.edif", desktop / "tutor2_tolerance.schematic.json", desktop / "tolerance_report.csv"]
+    required = [desktop / "result" / "tutor2_tolerance.edif", desktop / "result" / "tutor2_tolerance.schematic.json", desktop / "result" / "tolerance_report.csv"]
     if not all(path.is_file() and path.stat().st_size for path in required):
         return False
     try:

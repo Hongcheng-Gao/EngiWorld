@@ -9,11 +9,12 @@ from xml.etree import ElementTree as ET
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
+RESULT_DIR = DESKTOP / "result"
 
 
 def evaluate() -> bool:
     source_path = DESKTOP / "hsd_fpga.ipc2581"
-    report_path = DESKTOP / "stackup_report.json"
+    report_path = DESKTOP / "result" / "stackup_report.json"
     if not source_path.is_file() or not report_path.is_file():
         return False
     try:

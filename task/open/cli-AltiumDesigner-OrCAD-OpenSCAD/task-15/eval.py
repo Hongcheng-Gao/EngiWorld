@@ -9,6 +9,7 @@ from pathlib import Path
 
 
 DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path(__file__).resolve().parent))
+RESULT_DIR = DESKTOP / "result"
 
 
 def _csv_rows(path: Path, header: list[str]) -> list[dict[str, str]]:
@@ -30,8 +31,8 @@ def _numbers_equal(actual: str, expected: float) -> bool:
 def evaluate() -> bool:
     source_path = DESKTOP / "routed_board.pcb.json"
     locked_path = DESKTOP / "locked_release.pcb.json"
-    etch_path = DESKTOP / "etch_lengths.csv"
-    pair_path = DESKTOP / "diffpair_lengths.csv"
+    etch_path = DESKTOP / "result" / "etch_lengths.csv"
+    pair_path = DESKTOP / "result" / "diffpair_lengths.csv"
     if not source_path.is_file() or not locked_path.is_file() or not etch_path.is_file() or not pair_path.is_file():
         return False
     try:

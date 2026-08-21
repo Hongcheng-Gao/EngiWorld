@@ -148,7 +148,7 @@ def _csv_records(path: Path) -> dict[str, tuple[str, str, str]]:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    required = [desktop / "tutor2_mfr.edif", desktop / "tutor2_mfr.schematic.json", desktop / "mfr_properties.csv"]
+    required = [desktop / "result" / "tutor2_mfr.edif", desktop / "result" / "tutor2_mfr.schematic.json", desktop / "result" / "mfr_properties.csv"]
     if not all(path.is_file() and path.stat().st_size for path in required):
         return False
     try:

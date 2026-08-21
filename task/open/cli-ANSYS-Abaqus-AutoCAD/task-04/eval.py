@@ -101,19 +101,21 @@ def discover_branch(root):
         log("deliver exactly one solver branch, not both Abaqus and ANSYS artifacts")
         return None
     if has_abaqus:
-        expected_cae = [path for path in caes if path.name.lower() == "job-tension.cae"]
-        expected_odb = [path for path in odbs if path.name.lower() == "job-tension.odb"]
-        if len(caes) != 1 or len(odbs) != 1 or len(expected_cae) != 1 or len(expected_odb) != 1:
-            log("Abaqus delivery requires exactly Job-Tension.cae and Job-Tension.odb")
+        if len(caes) != 1 or len(odbs) != 1:
+            log("Abaqus delivery requires exactly one CAE and one ODB")
             return None
-        return "abaqus", expected_cae[0], expected_odb[0]
+        if caes[0].stem.lower() != odbs[0].stem.lower():
+            log("Abaqus model and result stems do not match")
+            return None
+        return "abaqus", caes[0], odbs[0]
     if has_ansys:
-        expected_db = [path for path in dbs if path.name.lower() == "job-tension.db"]
-        expected_rst = [path for path in rsts if path.name.lower() == "job-tension.rst"]
-        if len(dbs) != 1 or len(rsts) != 1 or len(expected_db) != 1 or len(expected_rst) != 1:
-            log("ANSYS delivery requires exactly Job-Tension.db and Job-Tension.rst")
+        if len(dbs) != 1 or len(rsts) != 1:
+            log("ANSYS delivery requires exactly one DB and one RST")
             return None
-        return "ansys", expected_db[0], expected_rst[0]
+        if dbs[0].stem.lower() != rsts[0].stem.lower():
+            log("ANSYS model and result stems do not match")
+            return None
+        return "ansys", dbs[0], rsts[0]
     log("no supported native model/result pair found")
     return None
 
@@ -1792,7 +1794,11 @@ def run_ansys_checker(model_path, result_path, submitted_metrics):
 
 
 def evaluate():
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     metrics = read_metrics(root)
     if metrics is None:
         return False, root

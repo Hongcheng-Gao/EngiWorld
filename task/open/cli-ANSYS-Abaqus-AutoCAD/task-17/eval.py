@@ -2429,7 +2429,11 @@ def write_detail(root: Path, passed: bool) -> None:
 
 
 def evaluate() -> tuple[bool, Path]:
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     work: Path | None = None
     passed = False
     try:

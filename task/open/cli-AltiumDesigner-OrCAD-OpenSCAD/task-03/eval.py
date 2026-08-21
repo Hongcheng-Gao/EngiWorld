@@ -35,7 +35,7 @@ def _normalized_value(value: object) -> str:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    output = desktop / "diff.json"
+    output = desktop / "result" / "diff.json"
     if not output.is_file():
         return False
     try:

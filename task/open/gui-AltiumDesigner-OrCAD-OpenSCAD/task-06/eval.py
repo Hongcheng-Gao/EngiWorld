@@ -367,7 +367,7 @@ def _change_report_valid(path: Path) -> bool:
 def evaluate() -> bool:
     desktop = _desktop()
     design_files = ["tutor2_value_tolerance.edif", "tutor2_value_tolerance.schematic.json"]
-    report = desktop / "change_report.json"
+    report = desktop / "result" / "change_report.json"
     if not report.is_file() or report.stat().st_size <= 0:
         return False
     try:

@@ -335,7 +335,7 @@ def evaluate(result_dir):
 
 def main():
     try:
-        result_dir = Path(os.environ.get("RESULT_DIR", str(DESKTOP)))
+        result_dir = Path(os.environ.get("RESULT_DIR", str(DESKTOP / "result")))
         finish(evaluate(result_dir))
     except Exception:
         finish(False)

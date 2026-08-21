@@ -1492,26 +1492,30 @@ def check_ansys_with_mapdl(root, model_path, result_path):
 
 
 def evaluate():
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     if not has_solver_artifact(root):
         log('no solver result artifact found')
-        return False, root
+        return False, desktop
     if not check_cli_metrics_json(root):
-        return False, root
+        return False, desktop
     abaqus_pair = find_abaqus_pair(root)
     if abaqus_pair:
         log('trying Abaqus-compatible branch')
-        if run_abaqus_checker(root, abaqus_pair[0], abaqus_pair[1]):
-            return True, root
+        if run_abaqus_checker(desktop, abaqus_pair[0], abaqus_pair[1]):
+            return True, desktop
         log('Abaqus-compatible branch did not pass')
     ansys_artifacts = find_ansys_artifacts(root)
     if ansys_artifacts:
         log('trying ANSYS-compatible branch')
-        if check_ansys_with_mapdl(root, ansys_artifacts[0], ansys_artifacts[1]):
-            return True, root
+        if check_ansys_with_mapdl(desktop, ansys_artifacts[0], ansys_artifacts[1]):
+            return True, desktop
         log('ANSYS-compatible branch did not pass')
     log('no acceptable solver branch passed')
-    return False, root
+    return False, desktop
 
 
 def main():

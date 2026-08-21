@@ -130,27 +130,21 @@ def discover_branch(root):
         log("deliver exactly one solver branch, not both Abaqus and ANSYS artifacts")
         return None
     if has_abaqus:
-        expected_cae = [path for path in caes if path.name.lower() == "job-thermal.cae"]
-        expected_odb = [path for path in odbs if path.name.lower() == "job-thermal.odb"]
-        if (
-            len(caes) != 1 or len(odbs) != 1
-            or len(expected_cae) != 1 or len(expected_odb) != 1
-            or not is_nonempty(expected_cae[0]) or not is_nonempty(expected_odb[0])
-        ):
-            log("Abaqus delivery requires exactly Job-Thermal.cae and Job-Thermal.odb")
+        if len(caes) != 1 or len(odbs) != 1 or not is_nonempty(caes[0]) or not is_nonempty(odbs[0]):
+            log("Abaqus delivery requires exactly one CAE and one ODB")
             return None
-        return "abaqus", expected_cae[0], expected_odb[0]
+        if caes[0].stem.lower() != odbs[0].stem.lower():
+            log("Abaqus model and result stems do not match")
+            return None
+        return "abaqus", caes[0], odbs[0]
     if has_ansys:
-        expected_db = [path for path in dbs if path.name.lower() == "job-thermal.db"]
-        expected_rth = [path for path in rths if path.name.lower() == "job-thermal.rth"]
-        if (
-            len(dbs) != 1 or len(rths) != 1
-            or len(expected_db) != 1 or len(expected_rth) != 1
-            or not is_nonempty(expected_db[0]) or not is_nonempty(expected_rth[0])
-        ):
-            log("ANSYS delivery requires exactly Job-Thermal.db and Job-Thermal.rth")
+        if len(dbs) != 1 or len(rths) != 1 or not is_nonempty(dbs[0]) or not is_nonempty(rths[0]):
+            log("ANSYS delivery requires exactly one DB and one RTH")
             return None
-        return "ansys", expected_db[0], expected_rth[0]
+        if dbs[0].stem.lower() != rths[0].stem.lower():
+            log("ANSYS model and result stems do not match")
+            return None
+        return "ansys", dbs[0], rths[0]
     log("no supported native model/result pair found")
     return None
 
@@ -2220,7 +2214,11 @@ def run_ansys_checker(model_path, result_path, submitted_metrics):
 
 
 def evaluate():
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     metrics = read_metrics(root)
     if metrics is None:
         return False, root

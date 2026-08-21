@@ -2212,7 +2212,11 @@ def run_ansys_checker(model_path, result_path, metrics):
 
 
 def evaluate():
-    root = desktop_dir()
+    desktop = desktop_dir()
+    root = desktop / 'result'
+    if not root.is_dir():
+        log('result directory missing')
+        return False, desktop
     metrics = read_metrics(root)
     if metrics is None:
         return False, root

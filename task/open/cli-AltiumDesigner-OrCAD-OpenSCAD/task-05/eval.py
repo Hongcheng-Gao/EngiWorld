@@ -48,7 +48,7 @@ def _expected(path: Path) -> tuple[str, dict[str, tuple[int, int, Counter[str]]]
 
 def evaluate() -> bool:
     desktop = _desktop()
-    output = desktop / "hierarchy.json"
+    output = desktop / "result" / "hierarchy.json"
     if not output.is_file():
         return False
     try:

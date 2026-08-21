@@ -24,7 +24,7 @@ def _references(path: Path) -> list[str]:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    output = desktop / "merged_refdes.txt"
+    output = desktop / "result" / "merged_refdes.txt"
     if not output.is_file():
         return False
     try:

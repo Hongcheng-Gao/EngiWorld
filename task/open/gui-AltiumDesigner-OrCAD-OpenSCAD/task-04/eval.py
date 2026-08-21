@@ -155,7 +155,7 @@ def _csv_values(path: Path) -> dict[str, str]:
 
 def evaluate() -> bool:
     desktop = _desktop()
-    required = [desktop / "tutor2_values.edif", desktop / "tutor2_values.schematic.json", desktop / "value_report.csv"]
+    required = [desktop / "result" / "tutor2_values.edif", desktop / "result" / "tutor2_values.schematic.json", desktop / "result" / "value_report.csv"]
     if not all(path.is_file() and path.stat().st_size for path in required):
         return False
     try:
