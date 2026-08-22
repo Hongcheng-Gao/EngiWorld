@@ -516,12 +516,27 @@ def check_handoff(
         errors.append(f"{label}:required_space_set_mismatch")
     try:
         import ifcopenshell  # type: ignore
+        from ifcopenshell.util.element import get_psets  # type: ignore
         stage_model = ifcopenshell.open(str(source_file))
-        stage_spaces = {str(space.Name or ""): str(space.GlobalId) for space in stage_model.by_type("IfcSpace")}
+        stage_space_objects = {str(space.Name or ""): space for space in stage_model.by_type("IfcSpace")}
+        stage_spaces = {name: str(space.GlobalId) for name, space in stage_space_objects.items()}
         for name, spec in CASE_SPEC["target_spaces"].items():
             rec = records_by_name.get(name, {})
             if rec.get("ifc_global_id") != stage_spaces.get(name) or norm(rec.get("thermal_zone")) != norm(spec["zone"]):
                 errors.append(f"{label}:space_identity_mismatch:{name}")
+            quantities = get_psets(stage_space_objects[name], qtos_only=True)
+            net_floor_areas = [
+                float(value)
+                for quantity_set in quantities.values()
+                for key, value in quantity_set.items()
+                if norm(key) == norm("NetFloorArea")
+            ]
+            if len(net_floor_areas) != 1:
+                errors.append(f"{label}:stage1_net_floor_area_missing_or_ambiguous:{name}")
+            else:
+                reported_area = float(rec.get("floor_area_m2"))
+                if abs(reported_area - net_floor_areas[0]) > 0.01:
+                    errors.append(f"{label}:stage1_net_floor_area_mismatch:{name}")
         for cls, opening_name in (("IfcDoor", "BOOTH-DOOR"), ("IfcWindow", "HIGH-VENT-WINDOW")):
             matches = [item for item in stage_model.by_type(cls) if norm(item.Name) == norm(opening_name)]
             if len(matches) != 1:
@@ -624,7 +639,7 @@ def positive_design_value(definition: List[str], area: float, people: float | No
     return None
 
 
-def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], required_zones: List[str], required_tokens: List[str], flow_tokens: List[str], errors: List[str]) -> Dict[str, Any]:
+def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], required_zones: List[str], required_tokens: List[str], flow_tokens: List[str], errors: List[str], handoff_data: Dict[str, Any] | None = None) -> Dict[str, Any]:
     if path.stat().st_size < 1000:
         errors.append("result.osm:too_small")
     text = read_text(path)
@@ -664,6 +679,10 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
     if set(spaces) != set(required_spaces) or set(zones) != set(required_zones):
         errors.append("result.osm:exact_space_or_zone_set_mismatch")
     space_floor_areas: Dict[str, float] = {}
+    handoff_records = {
+        str(record.get("name") or record.get("space_name")): record
+        for record in extract_space_records(handoff_data, [], "handoff.json")
+    } if handoff_data is not None else {}
     for name, spec in CASE_SPEC["target_spaces"].items():
         rec = spaces.get(name, [])
         if len(rec) <= 10:
@@ -685,6 +704,9 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
                 errors.append(f"result.osm:space_floor_area_mismatch:{name}")
             else:
                 space_floor_areas[name] = sum(areas)
+                expected_area = handoff_records.get(name, {}).get("floor_area_m2")
+                if expected_area is not None and abs(space_floor_areas[name] - float(expected_area)) > 0.01:
+                    errors.append(f"result.osm:handoff_floor_area_mismatch:{name}")
         except Exception:
             errors.append(f"result.osm:space_floor_geometry_parse_failed:{name}")
     subs = [x for x in by_type.get("OS:SUBSURFACE", []) if len(x) > 4 and x[1] == "BOOTH-DOOR"]
@@ -1380,7 +1402,7 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     except Exception as exc:
         errors.append(f"weather.epw:parse_failed:{type(exc).__name__}")
     flow_tokens = ["weather_file", "schedule_set", "construction_set"]
-    osm_counts = check_osm(paths["result.osm"], handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], CASE_SPEC["osm_tokens"], flow_tokens, errors)
+    osm_counts = check_osm(paths["result.osm"], handoff_hash, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], CASE_SPEC["osm_tokens"], flow_tokens, errors, handoff_data)
     flow_data = check_flow_report(paths["flow_report.json"], handoff, paths["result.osm"], handoff_data, osm_counts, stage1_info, CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"], errors)
     weather_source = flow_data.get("weather_source")
     if isinstance(weather_source, dict) and weather_source.get("sha256") not in (None, sha256_file(paths["weather.epw"])):

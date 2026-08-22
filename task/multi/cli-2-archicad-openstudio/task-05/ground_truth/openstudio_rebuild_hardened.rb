@@ -14,7 +14,10 @@ EXPECTED_ENERGYPLUS_SHA256 = '3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d
 EXPECTED_HANDOFF_SHA256 = '44f980d4aaed1bcb8487ac83f6caeb34d5ba77c0c1c2082923962a793833bed0'.freeze
 EXPECTED_STAGE1_SHA256 = 'd86146fa75a1b93b1568a5990400d362d3e29f06edbc4f69bb45e1a3547ab710'.freeze
 EXPECTED_NATIVE_LOG_SHA256 = '7fb4b5016c9ca303b872fd5874667f37121c87fe3c070f224a4d16ac58b9c8e8'.freeze
-EXPECTED_EVAL_SHA256 = '5f9726ae717326acba8d483b812ae187afc1923d91815040b82271cd3087b53e'.freeze
+EXPECTED_EVAL_SHA256 = 'e0a3ee68b776042af08fc37d525c5975e95cc39d9f2b3720f0501c685fcda0b9'.freeze
+EXPECTED_INIT_SHA256 = '6ea42757b6dfc875df89ab031f470e12c9511e8f412f00ddf742d3aa87f07b46'.freeze
+EXPECTED_BASE_OSM_SHA256 = 'de1b7c49a50ce066f5940e8690a45c392bf2f32eabab25a57fe3bee0c5c48914'.freeze
+EXPECTED_WEATHER_SHA256 = 'c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f'.freeze
 
 def sha256(path)
   Digest::SHA256.file(path).hexdigest
@@ -55,13 +58,14 @@ paths = {
   stage1: File.join(ROOT, 'stage1.ifc'),
   handoff: File.join(ROOT, 'handoff.json'),
   native_log: File.join(ROOT, 'native_stage_log.json'),
+  base_osm: File.join(ROOT, 'openstudio_base_result.osm'),
   osm: File.join(ROOT, 'result.osm'),
   workflow: File.join(ROOT, 'workflow.osw'),
   weather: File.join(ROOT, 'weather.epw'),
   run: File.join(ROOT, 'run'),
   eval: File.join(ROOT, 'eval.py')
 }
-paths.values_at(:init, :stage1, :handoff, :native_log, :osm, :weather, :eval).each { |path| require_file(path) }
+paths.values_at(:init, :stage1, :handoff, :native_log, :base_osm, :weather, :eval).each { |path| require_file(path) }
 require_file(OPENSTUDIO_CLI)
 require_file(ENERGYPLUS_EXE)
 
@@ -71,6 +75,9 @@ raise 'Task-05 handoff SHA-256 mismatch' unless sha256(paths[:handoff]) == EXPEC
 raise 'Task-05 stage1.ifc SHA-256 mismatch' unless sha256(paths[:stage1]) == EXPECTED_STAGE1_SHA256
 raise 'Task-05 native_stage_log.json SHA-256 mismatch' unless sha256(paths[:native_log]) == EXPECTED_NATIVE_LOG_SHA256
 raise 'Task-05 eval.py is not the current strengthened evaluator' unless sha256(paths[:eval]) == EXPECTED_EVAL_SHA256
+raise 'Task-05 init.ifc SHA-256 mismatch' unless sha256(paths[:init]) == EXPECTED_INIT_SHA256
+raise 'Task-05 base result.osm is not the current same-task native model' unless sha256(paths[:base_osm]) == EXPECTED_BASE_OSM_SHA256
+raise 'Task-05 weather.epw SHA-256 mismatch' unless sha256(paths[:weather]) == EXPECTED_WEATHER_SHA256
 raise "OpenStudio 3.10.0 is required, found #{OpenStudio.openStudioVersion}" unless OpenStudio.openStudioVersion == '3.10.0'
 
 handoff = JSON.parse(File.read(paths[:handoff], encoding: 'UTF-8'))
@@ -82,8 +89,8 @@ raise "Unexpected handoff areas: #{handoff_areas}" unless handoff_areas == expec
 raise 'Task-05 handoff target-space total must be 124.0 m2' unless (Float(handoff['building_area_m2']) - 124.0).abs < 1.0e-9
 
 translator = OpenStudio::OSVersion::VersionTranslator.new
-model_optional = translator.loadModel(OpenStudio::Path.new(paths[:osm]))
-raise 'Unable to load Desktop result.osm through OpenStudio VersionTranslator' if model_optional.empty?
+model_optional = translator.loadModel(OpenStudio::Path.new(paths[:base_osm]))
+raise 'Unable to load Desktop openstudio_base_result.osm through OpenStudio VersionTranslator' if model_optional.empty?
 model = model_optional.get
 
 spaces = expected_areas.keys.to_h { |name| [name, model_object_by_name(model.getSpaces, name)] }

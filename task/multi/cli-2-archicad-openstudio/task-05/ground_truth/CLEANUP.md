@@ -1,11 +1,15 @@
 # Task 05 instance cleanup record
 
-Cleanup was restricted to `EW_AUDIT_TASK05_*` paths created by this audit on snapshot `cli2-archicad27-openstudio310-win`. No task-06-or-later path or generic Desktop content was targeted.
+Cleanup was performed immediately after all formal artifacts and the native generation receipt were downloaded and hash-compared. It targeted only files created for `multi/cli-2-archicad-openstudio/task-05` in `C:\Users\user\Desktop`, the dedicated `run` directory, and task-local `C:\EW05-CODEX-*` databases.
 
-The pre-run probe at `2026-08-12T19:14:21.962421+00:00` found zero matching paths. Cleanup ran from `2026-08-12T19:16:18.013177+00:00` through `2026-08-12T19:16:18.044426+00:00` and removed exactly the run directory `C:\Users\user\Desktop\EW_AUDIT_TASK05_RUN_20260812T191542989170Z` and input directory `C:\Users\user\Desktop\EW_AUDIT_TASK05_INPUT`. Failure count was zero and no matching path remained.
+The first cleanup pass removed the uploaded seed, all Stage-1/Stage-2 outputs, both audit inputs, the Archicad/OpenStudio/evaluator scripts, `multi_metrics.json`, the native receipt, `run/`, and `__pycache__/eval.cpython-311.pyc`. The post-cleanup comparison found one additional Archicad-generated file, `stage1.ifc.log`. A second explicit pass removed that file.
 
-An independently launched read-only probe at `2026-08-12T19:16:18.845144+00:00` found zero matching paths, zero matching processes, and zero listening ports owned by such processes; `zero_residual=true`.
+Final verification confirmed:
 
-The 2026-08-14 candidate-boundary revalidation used two independently created local `/tmp/ew05-boundary.*` copies only; it did not reconnect to or modify the Windows instance. After recording `BOUNDARY_REVALIDATION.json`, the resolved temporary root was moved to macOS Trash. No `multi_metrics.json`, Python bytecode/cache, or SQLite sidecar remains under task-05.
+- Desktop names exactly matched the pre-run baseline: `__pycache__`, `Archicad 27.lnk`, `desktop.ini`, `generated_files`, `Microsoft Edge.lnk`, `OpenStudioApp.lnk`, `OpenStudioApplication-1.11.1`, `out.osw`, and `reports`;
+- no extra or missing Desktop item remained;
+- no `C:\EW05-CODEX-*` database remained;
+- TCP port 12343 was not listening;
+- no `IFCCommandServerApp`, OpenStudio, or EnergyPlus process remained.
 
-The downloaded Windows receipt SHA-256 is `79d208f6834ae3d33de7c32a5daca988708c29a02cf4131c7b24fa9255d63ea0`. Receipt and runner were inside the removed input directory, so neither remained on the instance.
+After this verification, the CLI2 tunnel, the stale OpenStudio script tunnel, and the separate OpenStudio public SSH forward were closed. Other unrelated instance tunnels were not changed.

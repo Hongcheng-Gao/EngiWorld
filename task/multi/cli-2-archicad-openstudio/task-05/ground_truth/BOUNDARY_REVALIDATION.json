@@ -1,30 +1,30 @@
 {
-  "schema": "engiworld.task05.boundary-revalidation.v1",
+  "schema": "engiworld.task05.boundary-revalidation.v2",
   "case_id": "multi-cli-2-archicad-openstudio-task-05-windows",
-  "run_at_utc": "2026-08-14T09:43:57Z",
-  "scope": "Candidate-boundary-only evaluator correction; native GT artifacts were not regenerated or modified.",
-  "evaluator_sha256": "27266c58ca7e1751d666332584cd911a37173a8ff8ccefe4130ce9740d1b0da6",
-  "task_json_sha256": "c4c13420992e3337cb2b6a4a4dd6efba4ec3465de77609443f4a7db37bc6905c",
-  "isolation": "Each case was copied independently from formal GT; no mutation state was reused.",
-  "cases": [
+  "scope": "IFC handoff area and handoff-to-OSM floor geometry enforcement",
+  "positive_boundary": {
+    "change": "Reverse only the top-level key order of flow_report.json",
+    "actual_ok": true,
+    "errors": []
+  },
+  "negative_boundaries": [
     {
-      "id": "helper_free",
-      "class": "positive",
-      "change": "Omit openstudio_postprocess_transaction.json, openstudio_postprocess.py, openstudio_postprocess.rb, and repository audit documents.",
-      "expected_ok": true,
-      "actual_ok": true,
-      "errors": []
+      "change": "Restore the old handoff areas 31.78, 15.44, and 27.0 m2",
+      "actual_ok": false,
+      "required_errors": [
+        "handoff.json:stage1_net_floor_area_mismatch:MAIN-STUDIO",
+        "handoff.json:stage1_net_floor_area_mismatch:STORAGE",
+        "handoff.json:stage1_net_floor_area_mismatch:FINISHING-BOOTH"
+      ]
     },
     {
-      "id": "missing_native_simulation_evidence",
-      "class": "negative",
-      "change": "Remove openstudio_cli_transactions and final_delivery from flow_report.json while retaining claimed simulation outputs.",
-      "expected_ok": false,
+      "change": "Reduce only the MAIN-STUDIO OSM floor polygon and update the declared OSM hashes",
       "actual_ok": false,
-      "errors": [
-        "flow_report:final_delivery_transaction_mismatch"
+      "required_errors": [
+        "result.osm:handoff_floor_area_mismatch:MAIN-STUDIO"
       ]
     }
   ],
-  "all_cases_matched_expectation": true
+  "all_cases_matched_expectation": true,
+  "full_matrix": "EVAL_MATRIX.json"
 }
