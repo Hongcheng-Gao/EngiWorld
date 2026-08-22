@@ -3,7 +3,41 @@
   "snapshot": "Autocad-Solidworks-Abaqus",
   "instruction": "Three-software CAE flow: AutoCAD -> SolidWorks -> Abaqus/CAE. Use the AutoCAD 2024, SOLIDWORKS 2025, and Abaqus CAE shortcuts on the desktop as the three stages of this workflow. No init files are provided; start from blank files.\n\nChain evidence requirement: use the design token EW_ACAD_SW_ABQ_09. In AutoCAD, add a readable label containing EW_ACAD_SW_ABQ_09 and AUTOCAD_TO_SOLIDWORKS on a CHAIN layer in stage1_profile.dxf. In SolidWorks, keep EW_ACAD_SW_ABQ_09, FROM_stage1_profile.dxf, and SOLIDWORKS_TO_ABAQUS encoded in the part/custom properties or STEP export metadata so the text of stage2_geometry.step contains them. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_ACAD_SW_ABQ_09 and IMPORTED_FROM_stage2_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n1. In AutoCAD, draw a 140 x 70 mm rounded rectangle on OUTLINE with R10 corners. Draw six D6 holes on HOLE at (15,15), (70,10), (125,15), (15,55), (70,60), and (125,55) mm. On CUTOUT draw a centered 50 x 16 mm obround opening with 8 mm end radii and arc centers (53,35) and (87,35) mm. On PRESSURE draw the 90 x 36 mm rectangle from (25,17) to (115,53) mm. Save stage1_profile.dxf.\n2. In SolidWorks, import the DXF in millimeters, extrude the rounded cover to 10 mm, cut all six holes and the obround opening through, and recess the PRESSURE rectangle 2 mm from the top so its loaded face is at Z=8 mm. Keep one solid and export stage2_geometry.step.\n3. In Abaqus/CAE, import the STEP into Model-DxfManifoldPressure. Define and assign Steel with E=210000 MPa and nu=0.3. Create Static General step Step-Pressure, set BOLT_HOLES from all six bores, and surface PRESSURE_FACE on the recessed Z=8 mm face. Use first-order C3D4 or C3D8R elements and no more than 1000 nodes. Constrain BOLT_HOLES with BC-BoltHoles and apply Pressure-0p8MPa = 0.8 MPa to PRESSURE_FACE. Submit Job-DxfManifoldPressure and wait for completion.\n\n4. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_profile.dxf, C:\\Users\\user\\Desktop\\stage2_geometry.step, C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.cae, and C:\\Users\\user\\Desktop\\Job-DxfManifoldPressure.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\nFirst use AutoCAD to create the DXF profile, then use SolidWorks to import the DXF and export the STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables. Software launch locations: SOLIDWORKS 2025: `C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk`; Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; AutoCAD 2024 (English): `C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk`.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/; https://help.autodesk.com/view/ACD/2025/ENU/",
-  "config": [],
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
   "trajectory": "trajectories/",
   "related_apps": [
     "autocad",

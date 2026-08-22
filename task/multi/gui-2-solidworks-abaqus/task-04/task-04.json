@@ -3,7 +3,30 @@
   "snapshot": "Solidworks-Abaqus",
   "instruction": "Two-software CAE flow: SolidWorks -> Abaqus/CAE. Before starting the work, use the SOLIDWORKS 2025 and Abaqus CAE shortcuts on the desktop for the two stages of this workflow. Start from a new blank SolidWorks part and use N-mm-MPa units.\n\nChain evidence requirement: preserve EW_SW_ABQ_04 and SOLIDWORKS_TO_ABAQUS in the SolidWorks STEP text, and preserve EW_SW_ABQ_04 and IMPORTED_FROM_stage1_geometry.step in a native Abaqus name or job description.\n\n1. In SolidWorks, create one connected 8 mm thick lug plate. In XY, union the rectangle 0<=X<=77.5 mm, 0<=Y<=45 mm with a R22.5 mm circular lug end centered at (77.5,22.5) mm; the finished outline spans X=0 to 100 mm. Cut the D18 pin bore at (77.5,22.5) mm and two D6 root mounting holes at (15,12) and (15,33) mm, all through Z=0 to 8 mm. Export C:\\Users\\user\\Desktop\\stage1_geometry.step.\n2. Import the STEP into Model-LugBearing. Define Steel with E=210000 MPa and nu=0.3, assign a homogeneous solid section, and use a coarse first-order C3D4/C3D8R mesh with no quadratic elements and no more than 1000 nodes. Create ROOT_HOLES from both D6 cylindrical faces, PIN_BORE from the D18 cylindrical face, and PIN_BORE_SURFACE from that face. Create Static, General step Step-Bearing. Apply BC-RootHoles with U1=U2=U3=0. Create a reference point at (77.5,22.5,4) mm, connect it to PIN_BORE_SURFACE with distributing coupling Coupling-PinBore, and apply Load-PinBearing as CF1=+2000 N at the reference point. Submit Job-LugBearing and wait for completion.\n3. Required Desktop deliverables: stage1_geometry.step, Job-LugBearing.cae, and Job-LugBearing.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/",
-  "config": [],
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
   "trajectory": "trajectories/",
   "related_apps": [
     "solidworks",

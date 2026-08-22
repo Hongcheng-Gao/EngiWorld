@@ -3,7 +3,41 @@
   "snapshot": "Autocad-Solidworks-Abaqus",
   "instruction": "Three-software CAE flow: AutoCAD -> SolidWorks -> Abaqus/CAE. In this image, use the AutoCAD 2024, SOLIDWORKS 2025, and Abaqus CAE shortcuts on the desktop as the three stages of this workflow. No init files are provided; start from blank files.\n\nChain evidence requirement: use the design token EW_ACAD_SW_ABQ_06. In AutoCAD, add a readable label containing EW_ACAD_SW_ABQ_06 and AUTOCAD_TO_SOLIDWORKS on a CHAIN layer in stage1_profile.dxf. In SolidWorks, keep EW_ACAD_SW_ABQ_06, FROM_stage1_profile.dxf, and SOLIDWORKS_TO_ABAQUS encoded in the part/custom properties or STEP export metadata so the text of stage2_geometry.step contains them. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_ACAD_SW_ABQ_06 and IMPORTED_FROM_stage2_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n1. This task uses a flat planar L-shaped mounting plate, not a bent bracket. In AutoCAD, draw one closed OUTLINE through (0,0), (100,0), (100,35), (60,35), (60,60), and (0,60) mm. Draw four D6 holes on HOLE at (15,15), (45,15), (15,45), and (45,45) mm. On LOAD mark the vertical loading edge from (60,40) to (60,55) mm. Save stage1_profile.dxf.\n2. In SolidWorks, import the DXF in millimeters, extrude the L outline to 8 mm, cut all four D6 holes through, keep one solid, and export stage2_geometry.step.\n3. In Abaqus/CAE, import the STEP into Model-DxfLBracketLoad. Define and assign Steel with E=210000 MPa and nu=0.3, create Static General step Step-Load, and use first-order C3D4 or C3D8R elements with no more than 1000 nodes. Create FIXED_HOLES from all four bores and LOAD_EDGE from the marked X=60 mm edge. Apply BC-FixedHoles to FIXED_HOLES. Couple LOAD_EDGE with Coupling-LoadEdge and apply Load-Edge900N with CF2=-900 N. Submit Job-DxfLBracketLoad and wait for completion.\n\n4. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_profile.dxf, C:\\Users\\user\\Desktop\\stage2_geometry.step, C:\\Users\\user\\Desktop\\Job-DxfLBracketLoad.cae, and C:\\Users\\user\\Desktop\\Job-DxfLBracketLoad.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\nFirst use AutoCAD to create the DXF profile, then use SolidWorks to import the DXF and export the STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables. Software launch locations: SOLIDWORKS 2025: `C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk`; Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; AutoCAD 2024 (English): `C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk`.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/; https://help.autodesk.com/view/ACD/2025/ENU/",
-  "config": [],
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
   "trajectory": "trajectories/",
   "related_apps": [
     "autocad",

@@ -3,7 +3,41 @@
   "snapshot": "Autocad-Solidworks-Abaqus",
   "instruction": "Three-software CAE flow: AutoCAD -> SolidWorks -> Abaqus/CAE. For the steps below, use the AutoCAD 2024, SOLIDWORKS 2025, and Abaqus CAE shortcuts on the desktop as the three stages of this workflow. No init files are provided; start from blank files.\n\nChain evidence requirement: use the design token EW_ACAD_SW_ABQ_05. In AutoCAD, add a readable label containing EW_ACAD_SW_ABQ_05 and AUTOCAD_TO_SOLIDWORKS on a CHAIN layer in stage1_profile.dxf. In SolidWorks, keep EW_ACAD_SW_ABQ_05, FROM_stage1_profile.dxf, and SOLIDWORKS_TO_ABAQUS encoded in the part/custom properties or STEP export metadata so the text of stage2_geometry.step contains them. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_ACAD_SW_ABQ_05 and IMPORTED_FROM_stage2_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n1. In AutoCAD, draw a closed 180 x 70 mm base outline on OUTLINE. On REFERENCE draw two longitudinal rib centerlines from X=10 to X=170 mm at Y=23 and Y=47 mm. On LOAD draw full edge markers at X=0 and X=180 mm. Save stage1_profile.dxf.\n2. In SolidWorks, import the DXF in millimeters and create one solid idealization: a 180 x 70 x 2 mm plate plus two full-length longitudinal rectangular ribs, each 4 mm wide and 3 mm high above the plate, centered at Y=23 and Y=47 mm. The overall height is 5 mm. Export stage2_geometry.step.\n3. In Abaqus/CAE, import the 3D solid into Model-RibPlateBuckle. Define and assign Steel with E=210000 MPa and nu=0.3. Use the imported 3D solid idealization, first-order C3D4 or C3D8R elements, and no more than 1000 nodes. Create FIXED_EDGE and LOAD_EDGE, fix FIXED_EDGE with BC-FixedEdge, and create linear buckle step Step-Buckle requesting exactly 5 eigenvalues. Couple LOAD_EDGE with Coupling-LoadEdge and apply Load-Compression400N with CF1=-400 N. Submit Job-RibPlateBuckle and wait for completion.\n\n4. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_profile.dxf, C:\\Users\\user\\Desktop\\stage2_geometry.step, C:\\Users\\user\\Desktop\\Job-RibPlateBuckle.cae, and C:\\Users\\user\\Desktop\\Job-RibPlateBuckle.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\nFirst use AutoCAD to create the DXF profile, then use SolidWorks to import the DXF and export the STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables. Software launch locations: SOLIDWORKS 2025: `C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk`; Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; AutoCAD 2024 (English): `C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk`.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/; https://help.autodesk.com/view/ACD/2025/ENU/",
-  "config": [],
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
   "trajectory": "trajectories/",
   "related_apps": [
     "autocad",

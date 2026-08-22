@@ -3,7 +3,30 @@
   "snapshot": "Solidworks-Abaqus",
   "instruction": "Two-software CAE flow: SolidWorks -> Abaqus/CAE. For this task, use the SOLIDWORKS 2025 and Abaqus CAE shortcuts on the desktop for the two stages of this workflow. Start from a blank SolidWorks part and use N-mm-MPa units.\n\nChain evidence requirement: preserve EW_SW_ABQ_10 and SOLIDWORKS_TO_ABAQUS in the STEP text, and preserve EW_SW_ABQ_10 and IMPORTED_FROM_stage1_geometry.step in a native Abaqus name or job description.\n\n1. In SolidWorks, create one connected clamp plate occupying 0<=X<=100 mm, 0<=Y<=60 mm, 0<=Z<=12 mm. Cut a centered D36 pipe bore normal to Z at (50,30) mm. Cut two D8 through bolt holes at (15,30) and (85,30) mm. Form the specified shallow edge flat by removing the 40 by 4 mm through-thickness rectangular notch 30<=X<=70 mm, 56<=Y<=60 mm. Export C:\\Users\\user\\Desktop\\stage1_geometry.step.\n2. Import the STEP into Model-PipeClampLoad. Define Steel with E=210000 MPa and nu=0.3, assign a homogeneous solid section, and mesh with first-order C3D4/C3D8R elements, no quadratic elements, at no more than 1000 nodes. Create BOLT_HOLES from both D8 cylindrical faces, CLAMP_BORE from the D36 cylindrical face, and CLAMP_BORE_SURFACE from that face. Create Static, General step Step-ClampLoad. Apply BC-BoltHoles with U1=U2=U3=0. Create a reference point at (50,30,6) mm, connect it to CLAMP_BORE_SURFACE with distributing coupling Coupling-ClampBore, and apply Load-Clamp1000N as CF2=-1000 N. Submit Job-PipeClampLoad and wait for completion.\n3. Required Desktop deliverables: stage1_geometry.step, Job-PipeClampLoad.cae, and Job-PipeClampLoad.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/",
-  "config": [],
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
   "trajectory": "trajectories/",
   "related_apps": [
     "solidworks",

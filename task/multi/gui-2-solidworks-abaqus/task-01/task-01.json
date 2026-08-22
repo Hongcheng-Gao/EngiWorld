@@ -3,7 +3,30 @@
   "snapshot": "Solidworks-Abaqus",
   "instruction": "Two-software CAE flow: SolidWorks -> Abaqus/CAE. Use the SOLIDWORKS 2025 and Abaqus CAE shortcuts on the desktop for the two stages of this workflow. No init file is provided; start from a new blank SolidWorks part. Use a consistent N-mm-MPa unit system and the global axes defined below.\n\nChain evidence requirement: use the design token EW_SW_ABQ_01. Keep this token encoded in the SolidWorks part/custom properties or STEP export metadata so the text of stage1_geometry.step contains EW_SW_ABQ_01 and SOLIDWORKS_TO_ABAQUS. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_SW_ABQ_01 and IMPORTED_FROM_stage1_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n1. In SolidWorks, create one connected cantilever mounting bracket solid with these exact coordinates. The base plate occupies 0 <= X <= 100 mm, 0 <= Y <= 40 mm, and 0 <= Z <= 8 mm. The upright plate occupies 0 <= X <= 8 mm, 0 <= Y <= 40 mm, and 8 <= Z <= 58 mm. Add two triangular ribs: their Y spans are 6 to 10 mm and 30 to 34 mm, and each rib uses the X-Z triangle with vertices (0, 6), (30, 6), and (0, 38) mm; the 2 mm overlap into the base is intentional. Cut four D6 through holes normal to Z through the base, with center coordinates (X,Y) = (20,10), (20,30), (80,10), and (80,30) mm. Cut one D10 through load hole normal to X through the upright, with its axis at Y=20 mm and Z=40 mm. Export the completed one-solid CAD geometry to C:\\Users\\user\\Desktop\\stage1_geometry.step.\n2. In Abaqus/CAE, import stage1_geometry.step and create model Model-Bracket. Define material Steel with E=210000 MPa and nu=0.3, create a homogeneous solid section, and assign it to the whole bracket. Create a Static, General step named Step-Load. Create FIXED_HOLES from all cylindrical faces of the four D6 base holes. Create LOAD_HOLE from all cylindrical faces of the D10 upright hole and create a surface named LOAD_HOLE_SURFACE from those faces. Mesh the one-cell bracket with first-order linear solid elements, using C3D8R where practical or C3D4 for a free tetrahedral mesh; do not use quadratic elements and keep the solved model at or below the Abaqus Learning Edition limit of 1,000 nodes.\n3. Create BC-FixedHoles on FIXED_HOLES with U1=U2=U3=0. Create a reference point at (4,20,40) mm, couple it to LOAD_HOLE_SURFACE with a distributing coupling named Coupling-LoadHole, and apply Load-Vertical500N as CF3=-500 N at that reference point in Step-Load. Request at least U, S, CF, and RF field output. Submit Job-Bracket and wait for successful completion.\n4. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_geometry.step, C:\\Users\\user\\Desktop\\Job-Bracket.cae, and C:\\Users\\user\\Desktop\\Job-Bracket.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\nFirst use SolidWorks to create and export the CAD STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables. Software launch locations: SOLIDWORKS 2025: `C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk`; Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`.",
   "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/",
-  "config": [],
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
   "trajectory": "trajectories/",
   "related_apps": [
     "solidworks",
