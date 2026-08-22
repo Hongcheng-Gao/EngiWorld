@@ -2117,8 +2117,8 @@ def run_blender_checker(
     scene_report: dict[str, Any],
 ) -> dict[str, Any]:
     blender = resolve_executable(
-        "blender",
-        ["/home/user/Applications/blender-*/blender"],
+        "/snap/bin/blender",
+        ["/home/user/Applications/blender-*/blender", "/usr/bin/blender"],
     )
     req = spec["requirements"]
     board = spec["board"]

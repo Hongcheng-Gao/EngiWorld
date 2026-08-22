@@ -1806,7 +1806,10 @@ def run_blender_checker(
     spec: dict[str, Any],
     geometry: dict[str, Any],
 ) -> dict[str, Any]:
-    blender = resolve_executable("blender", ["/home/user/Applications/blender-*/blender"])
+    blender = resolve_executable(
+        "/snap/bin/blender",
+        ["/home/user/Applications/blender-*/blender", "/usr/bin/blender"],
+    )
     req = spec["requirements"]
     board = spec["board"]
     board_bottom = number(req["board_bottom_z_mm"], "board bottom")
@@ -2058,7 +2061,10 @@ def installed_tool_versions() -> dict[str, str]:
         "KiCad": resolve_executable("kicad-cli", ["/home/user/Applications/kicad-*/kicad-*-x86_64.AppImage"]),
         "OpenSCAD": resolve_executable("openscad", ["/usr/bin/openscad"]),
         "FreeCAD": resolve_executable("freecadcmd", ["/home/user/.local/bin/freecadcmd", "/usr/bin/freecadcmd"]),
-        "Blender": resolve_executable("blender", ["/home/user/Applications/blender-*/blender"]),
+        "Blender": resolve_executable(
+            "/snap/bin/blender",
+            ["/home/user/Applications/blender-*/blender", "/usr/bin/blender"],
+        ),
     }
     kicad_version_command = (
         [executables["KiCad"], "--appimage-extract-and-run", "kicad-cli", "--version"]
