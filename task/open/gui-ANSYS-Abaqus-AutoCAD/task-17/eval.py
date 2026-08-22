@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-17-windows', 'open_choice_id': 'cae-open-choice-037', 'source_task': 'task/task-v/ansys/task-08', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'coupled_thermal_structural_bar_gui', 'analysis_kind': 'thermal_structural', 'metrics': ['thermal_stress', 'reaction_force_optional'], 'expected_result_fields': ['S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a restrained bar subjected to uniform temperature increase; report thermal stress and reaction or displacement metrics.', 'selection_reason': 'Thermal-structural coupling is supported by both tools and has clear numeric outputs.', 'artifact_hint': {'ground_truth_files': ['apdl_thermal_stress.db', 'apdl_thermal_stress.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_thermal_stress.db'], 'ansys_result_files': ['apdl_thermal_stress.rst']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-17-windows', 'open_choice_id': 'cae-open-choice-037', 'source_task': 'task/task-v/ansys/task-08', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'coupled_thermal_structural_bar_gui', 'analysis_kind': 'thermal_structural', 'metrics': ['thermal_stress', 'reaction_force_optional'], 'expected_result_fields': ['S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a restrained bar subjected to uniform temperature increase; report thermal stress and reaction or displacement metrics.', 'selection_reason': 'Thermal-structural coupling is supported by both tools and has clear numeric outputs.', 'artifact_hint': {'ground_truth_files': ['apdl_thermal_stress.db', 'apdl_thermal_stress.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_thermal_stress.db'], 'ansys_result_files': ['apdl_thermal_stress.rst']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}, 'material_hint': {'youngs_modulus_mpa': 210000.0, 'poissons_ratio': 0.3, 'thermal_expansion_per_c': 1.5e-05, 'reference_temperature_c': 20.0}, 'mesh_hint': {'maximum_global_size_mm': 5.0}, 'temperature_hint': {'uniform_body_temperature_c': 100.0}, 'boundary_hint': {'ux_faces_mm': [0.0, 100.0], 'minimum_lateral_scalar_constraints': 3, 'maximum_lateral_scalar_constraints': 3, 'mechanical_loads_allowed': False}, 'result_window': {'thermal_stress_mpa': [235.0, 275.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +97,7 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -110,7 +111,7 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -641,6 +642,29 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _node_key(node):
+    try:
+        return tuple(round(float(v), 6) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _maximum_nearest_node_spacing(nodes):
+    coords = [key for key in (_node_key(node) for node in nodes) if key is not None]
+    if len(coords) < 2:
+        return None
+    largest = 0.0
+    for index, point in enumerate(coords):
+        nearest = None
+        for other_index, other in enumerate(coords):
+            if index == other_index:
+                continue
+            distance = sum((a - b) ** 2 for a, b in zip(point, other)) ** 0.5
+            if distance > 1.0e-9 and (nearest is None or distance < nearest):
+                nearest = distance
+        if nearest is not None:
+            largest = max(largest, nearest)
+    return largest
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -731,10 +755,53 @@ def check_abaqus_task_specific(model, part):
         except Exception:
             pass
         temps = []
+        temperature_nodes = set()
         for field in _repo_values(model.predefinedFields):
-            temps.extend(_numbers(getattr(field, 'magnitudes', None)))
+            values = _numbers(getattr(field, 'magnitudes', None))
+            temps.extend(values)
+            if any(_near(value, 100.0, 0.01) for value in values):
+                temperature_nodes.update(_node_key(node) for node in _load_region_nodes(model, field))
+                temperature_nodes.discard(None)
         if not (_near(zero, 20.0) or (any(_near(v, 20.0) for v in temps) and any(_near(v, 100.0) for v in temps))):
             log('strict check: 20 C thermal reference/initial field is missing')
+            return False
+        if not any(_near(v, 100.0) for v in temps):
+            log('strict check: uniform 100 C predefined temperature is missing')
+            return False
+        if _repo_values(model.loads):
+            log('strict check: mechanical loads are not allowed for the restrained thermal bar')
+            return False
+        spacing = _maximum_nearest_node_spacing(part.nodes)
+        if spacing is None or spacing > 5.25:
+            log('strict check: thermal-bar mesh is coarser than the requested 5 mm size')
+            return False
+        all_nodes = {_node_key(node) for node in part.nodes}
+        all_nodes.discard(None)
+        if temperature_nodes and not all_nodes.issubset(temperature_nodes):
+            log('strict check: 100 C predefined temperature does not cover the complete bar')
+            return False
+        ux_nodes = set()
+        lateral = set()
+        for bc in _repo_values(model.boundaryConditions):
+            scoped = {_node_key(node) for node in _load_region_nodes(model, bc)}
+            scoped.discard(None)
+            if _near(getattr(bc, 'u1', None), 0.0, 0.0):
+                ux_nodes.update(scoped)
+            for component, code in (('u2', 2), ('u3', 3)):
+                if _near(getattr(bc, component, None), 0.0, 0.0):
+                    lateral.update((code, point) for point in scoped)
+        required_ux = {point for point in all_nodes if abs(point[0]) <= 0.1 or abs(point[0] - 100.0) <= 0.1}
+        if not required_ux or not required_ux.issubset(ux_nodes):
+            log('strict check: UX=0 is not applied to both complete end faces')
+            return False
+        if ux_nodes - required_ux:
+            log('strict check: UX is constrained away from the two end faces')
+            return False
+        lateral_nodes = {point for code, point in lateral}
+        lateral_codes = {code for code, point in lateral}
+        lateral_ends = {0 if abs(point[0]) <= 0.1 else 100 if abs(point[0] - 100.0) <= 0.1 else None for point in lateral_nodes}
+        if len(lateral) != 3 or lateral_codes != {2, 3} or len(lateral_nodes) < 2 or len(lateral_ends) != 1 or None in lateral_ends:
+            log('strict check: expected exactly three minimum UY/UZ scalar constraints on one end face')
             return False
     if domain == 'hertz_contact_static_gui':
         if len(_repo_values(model.parts)) < 2 or len(_repo_values(model.interactions)) < 1:
@@ -874,6 +941,9 @@ def check_abaqus_odb_specific(odb):
     if domain == 'coupled_thermal_structural_bar_gui':
         if not stress or not (235.0 <= max(stress) <= 275.0):
             log('strict ODB check: stress does not reflect an 80 C restrained temperature rise')
+            return False
+        if temp and not (all(_near(value, 100.0, 0.01) for value in temp)):
+            log('strict ODB check: available nodal temperature field is not uniformly 100 C')
             return False
     if domain == 'hertz_contact_static_gui':
         field_names = set()
@@ -1057,6 +1127,37 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _ansys_material_values(mapdl, label):
+    values = []
+    materials = set()
+    listing = _safe_run(mapdl, 'ELIST,ALL')
+    for line in listing.splitlines():
+        match = re.match(r'^\s*\d+\s+(\d+)\s+\d+\s+', line)
+        if match:
+            materials.add(int(match.group(1)))
+    if not materials:
+        maximum = _try_get(mapdl, 'MAT', 0, 'NUM', 'MAX')
+        if maximum is not None:
+            materials.update(range(1, int(maximum) + 1))
+    for material in sorted(materials):
+        value = _try_get(mapdl, label, material)
+        if value is not None:
+            values.append(value)
+    return values
+
+
+def _listing_has_value(text, token, target, rel=0.01):
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if token not in line.upper():
+            continue
+        context = ' '.join(lines[max(0, index - 1):index + 3])
+        numbers = re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', context)
+        if any(_close(float(value), target, rel) for value in numbers):
+            return True
+    return False
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1104,14 +1205,27 @@ def check_ansys_geometry(mapdl):
 
 
 def check_ansys_materials(mapdl):
-    text = _safe_run(mapdl, 'MPLIST,ALL')
-    if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
-        return True
-    try:
-        count = _try_get(mapdl, 'MAT', 0, 'COUNT')
-        return count is not None and count >= 1
-    except Exception:
+    youngs = _ansys_material_values(mapdl, 'EX')
+    poissons = _ansys_material_values(mapdl, 'PRXY') or _ansys_material_values(mapdl, 'NUXY')
+    expansion = _ansys_material_values(mapdl, 'ALPX')
+    if not youngs or not all(_close(value, 210000.0, 0.01) for value in youngs):
+        log('Young\'s modulus is not 210000 MPa for every active material')
         return False
+    if not poissons or not all(_close(value, 0.3, 0.02) for value in poissons):
+        log('Poisson\'s ratio is not 0.3 for every active material')
+        return False
+    if not expansion or not all(_close(value, 1.5e-5, 0.02) for value in expansion):
+        log('thermal expansion coefficient is not 1.5e-5 /C for every active material')
+        return False
+    reference = _try_get(mapdl, 'ACTIVE', 0, 'SOLU', 'TREF')
+    status = _safe_run(mapdl, '/STATUS,SOLU')
+    if reference is not None and not _close(reference, 20.0, 0.01):
+        log('thermal strain reference temperature is not 20 C')
+        return False
+    if reference is None and status.strip() and 'TREF' in status.upper() and not _listing_has_value(status, 'TREF', 20.0, 0.01):
+        log('thermal strain reference temperature listing is not 20 C')
+        return False
+    return True
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1134,6 +1248,11 @@ def check_ansys_boundary_loads(mapdl):
     if not load_text.strip() or ('NO ' in load_text.upper() and not any(ch.isdigit() for ch in load_text)):
         log('no load/predefined evidence found')
         return False
+    if TASK_SPEC.get('domain') == 'coupled_thermal_structural_bar_gui':
+        surface_text = '\n'.join([_safe_run(mapdl, 'SFLIST,ALL'), _safe_run(mapdl, 'SFELIST,ALL')])
+        if 'PRES' in surface_text.upper():
+            log('mechanical surface pressure is not allowed for the restrained thermal bar')
+            return False
     return True
 
 
@@ -1233,6 +1352,19 @@ def _force_sum(records, dof, axis=None, target=None, tol=0.1):
         total += value
     return total
 
+def _maximum_nearest_spacing(nodes):
+    import numpy as np
+    nodes = np.asarray(nodes, dtype=float)
+    if len(nodes) < 2:
+        return None
+    largest = 0.0
+    for index, point in enumerate(nodes):
+        distances = np.linalg.norm(nodes - point, axis=1)
+        distances = distances[distances > 1.0e-9]
+        if distances.size:
+            largest = max(largest, float(distances.min()))
+    return largest
+
 def _binary_stress_max(result, set_index):
     try:
         import numpy as np
@@ -1304,7 +1436,8 @@ def check_ansys_result_binary(result_path):
         'coupled_thermal_structural_bar_gui': 185, 'column_eigen_buckling_gui': 188,
         'steady_state_thermal_block_gui': 70,
     }.get(domain)
-    if required_type is not None and required_type not in element_types:
+    accepted_types = {185, 186, 187} if domain == 'coupled_thermal_structural_bar_gui' else ({required_type} if required_type is not None else set())
+    if accepted_types and not accepted_types.intersection(element_types):
         log('strict binary check: element type mismatch %s expected %s' % (sorted(element_types), required_type))
         return False
 
@@ -1394,8 +1527,24 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: cylinder radial freedom/stress mismatch')
             return False
     elif domain == 'coupled_thermal_structural_bar_gui':
-        if temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01)) or stress_max is None or not (235.0 <= stress_max <= 275.0):
-            log('strict binary check: 80 C restrained thermal stress mismatch')
+        node_keys = {tuple(np.round(row[:3], 6)) for row in nodes}
+        required_ux = {point for point in node_keys if abs(point[0]) <= 0.1 or abs(point[0] - 100.0) <= 0.1}
+        ux_nodes = {tuple(np.round(xyz, 6)) for code, value, xyz in bcs if code == 1 and xyz is not None and abs(value) <= 1.0e-10}
+        lateral = {(code, tuple(np.round(xyz, 6))) for code, value, xyz in bcs if code in (2, 3) and xyz is not None and abs(value) <= 1.0e-10}
+        lateral_nodes = {point for code, point in lateral}
+        lateral_codes = {code for code, point in lateral}
+        lateral_ends = {0 if abs(point[0]) <= 0.1 else 100 if abs(point[0] - 100.0) <= 0.1 else None for point in lateral_nodes}
+        nonzero_bcs = [(code, value) for code, value, xyz in bcs if code in (1, 2, 3) and abs(value) > 1.0e-10]
+        mechanical_forces = [(code, value) for code, value, xyz in forces if abs(value) > 1.0e-10]
+        spacing = _maximum_nearest_spacing(nodes)
+        stress_window = TASK_SPEC['result_window']['thermal_stress_mpa']
+        if (temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01))
+                or stress_max is None or not (stress_window[0] <= stress_max <= stress_window[1])
+                or not required_ux or not required_ux.issubset(ux_nodes) or ux_nodes - required_ux
+                or len(lateral) != 3 or lateral_codes != {2, 3} or len(lateral_nodes) < 2
+                or len(lateral_ends) != 1 or None in lateral_ends or nonzero_bcs or mechanical_forces
+                or spacing is None or spacing > 5.25):
+            log('strict binary check: material response, uniform temperature, end restraints, load-free state, or 5 mm mesh mismatch')
             return False
     elif domain == 'hertz_contact_static_gui':
         if not (any(t in element_types for t in (170,171,172,173,174,175,176,177)) and len(element_types) >= 2):

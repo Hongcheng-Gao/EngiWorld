@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-01-windows', 'open_choice_id': 'cae-open-choice-011', 'source_task': 'task/task-v/abaqus/task-11', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'simply_supported_beam_udl_gui', 'analysis_kind': 'static_structural', 'metrics': ['midspan_deflection', 'max_mises'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a simply supported beam under uniformly distributed load; report midspan deflection and stress.', 'selection_reason': 'GUI beam setup tests visual model creation while remaining replaceable by the alternate commercial FEA GUI.', 'artifact_hint': {'ground_truth_files': ['Job-Beam.cae', 'Job-Beam.odb'], 'abaqus_stems': ['Job-Beam'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 200.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-01-windows', 'open_choice_id': 'cae-open-choice-011', 'source_task': 'task/task-v/abaqus/task-11', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'simply_supported_beam_udl_gui', 'analysis_kind': 'static_structural', 'metrics': ['midspan_deflection', 'max_mises'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a simply supported beam under uniformly distributed load; report midspan deflection and stress.', 'selection_reason': 'GUI beam setup tests visual model creation while remaining replaceable by the alternate commercial FEA GUI.', 'artifact_hint': {'ground_truth_files': ['Job-Beam.cae', 'Job-Beam.odb'], 'abaqus_stems': ['Job-Beam'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 200.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -673,6 +673,374 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _entity_xyz(entity):
+    for attr in ('coordinates', 'point'):
+        try:
+            values = tuple(float(v) for v in getattr(entity, attr))
+            if len(values) >= 3:
+                return values[:3]
+        except Exception:
+            pass
+    try:
+        point_on = getattr(entity, 'pointOn')
+        if point_on:
+            raw = point_on[0] if isinstance(point_on[0], (tuple, list)) else point_on
+            values = tuple(float(v) for v in raw)
+            if len(values) >= 3:
+                return values[:3]
+    except Exception:
+        pass
+    try:
+        point = getattr(entity, 'point')
+        point_on = getattr(point, 'pointOn')
+        raw = point_on[0] if point_on and isinstance(point_on[0], (tuple, list)) else point_on
+        values = tuple(float(v) for v in raw)
+        if len(values) >= 3:
+            return values[:3]
+    except Exception:
+        pass
+    try:
+        point = getattr(entity, 'point')
+        if point is not entity:
+            return _entity_xyz(point)
+    except Exception:
+        pass
+    return None
+
+def _flatten_entities(value):
+    out = []
+    if value is None:
+        return out
+    if _entity_xyz(value) is not None or hasattr(value, 'pointOn'):
+        return [value]
+    try:
+        for item in value:
+            out.extend(_flatten_entities(item))
+    except Exception:
+        pass
+    return out
+
+def _region_entities(model, region, attr):
+    try:
+        values = _flatten_entities(getattr(region, attr))
+        if values:
+            return values
+    except Exception:
+        pass
+    label = ci(region)
+    if not label:
+        return []
+    for repo_name in ('sets', 'surfaces'):
+        try:
+            repo = getattr(model.rootAssembly, repo_name)
+            for key in repo.keys():
+                if ci(key) in label or label in ci(key):
+                    values = _flatten_entities(getattr(repo[key], attr))
+                    if values:
+                        return values
+        except Exception:
+            pass
+    return []
+
+def _region_face_points(model, region):
+    points = []
+    faces = _region_entities(model, region, 'faces')
+    for face in faces:
+        try:
+            for point in face.pointOn:
+                xyz = tuple(float(v) for v in point)
+                if len(xyz) >= 3:
+                    points.append(xyz[:3])
+        except Exception:
+            xyz = _entity_xyz(face)
+            if xyz is not None:
+                points.append(xyz)
+    return points
+
+def _zero_bc_dofs(bc):
+    out = set()
+    for dof, attr in enumerate(('u1', 'u2', 'u3', 'ur1', 'ur2', 'ur3'), 1):
+        value = getattr(bc, attr, None)
+        try:
+            if abs(float(value)) <= 1.0e-12:
+                out.add(dof)
+                continue
+        except Exception:
+            pass
+        if ci(value) in ('SET', 'FIXED'):
+            out.add(dof)
+    return out
+
+def _parse_inp_keyword(line):
+    values = {}
+    bits = [item.strip() for item in line.split(',')]
+    for item in bits[1:]:
+        if '=' in item:
+            key, value = item.split('=', 1)
+            values[ci(key.strip())] = value.strip()
+    return ci(bits[0]), values
+
+def _inp_ints(text):
+    values = []
+    for item in text.split(','):
+        try:
+            values.append(int(item.strip()))
+        except Exception:
+            pass
+    return values
+
+def _expand_nset_rows(rows, generated):
+    labels = []
+    for row in rows:
+        values = _inp_ints(row)
+        if generated and len(values) >= 2:
+            step = values[2] if len(values) >= 3 and values[2] != 0 else 1
+            labels.extend(range(values[0], values[1] + (1 if step > 0 else -1), step))
+        else:
+            labels.extend(values)
+    return labels
+
+def _beam_inp_support_and_load_ok(path):
+    try:
+        with open(path, 'r') as stream:
+            raw_lines = [line.strip() for line in stream]
+    except Exception as exc:
+        log('strict check: cannot read exported beam inp: %s' % exc)
+        return False
+
+    part_nodes = {}
+    assembly_nodes = {}
+    nsets = {}
+    surfaces = {}
+    couplings = []
+    boundaries = {}
+    cloads = []
+    in_assembly = False
+    index = 0
+    while index < len(raw_lines):
+        line = raw_lines[index]
+        if not line or line.startswith('**'):
+            index += 1
+            continue
+        if not line.startswith('*'):
+            index += 1
+            continue
+        keyword, options = _parse_inp_keyword(line)
+        if keyword == '*ASSEMBLY':
+            in_assembly = True
+        elif keyword == '*END ASSEMBLY':
+            in_assembly = False
+
+        rows = []
+        cursor = index + 1
+        while cursor < len(raw_lines) and not raw_lines[cursor].startswith('*'):
+            if raw_lines[cursor] and not raw_lines[cursor].startswith('**'):
+                rows.append(raw_lines[cursor])
+            cursor += 1
+
+        if keyword == '*NODE':
+            target = assembly_nodes if in_assembly else part_nodes
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    if len(values) >= 4:
+                        target[int(values[0])] = tuple(float(value) for value in values[1:4])
+                except Exception:
+                    pass
+        elif keyword == '*NSET':
+            name = ci(options.get('NSET', ''))
+            if name:
+                nsets[name] = {
+                    'labels': _expand_nset_rows(rows, 'GENERATE' in options or ', GENERATE' in ci(line)),
+                    'instance': ci(options.get('INSTANCE', '')),
+                    'assembly': in_assembly,
+                }
+        elif keyword == '*SURFACE':
+            name = ci(options.get('NAME', ''))
+            if name:
+                surfaces[name] = [row.split(',', 1)[0].strip() for row in rows]
+        elif keyword == '*COUPLING':
+            couplings.append((ci(options.get('REF NODE', '')), ci(options.get('SURFACE', ''))))
+        elif keyword == '*BOUNDARY':
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                if len(values) < 2:
+                    continue
+                name = ci(values[0])
+                try:
+                    first = int(values[1])
+                    last = int(values[2]) if len(values) >= 3 and values[2] else first
+                    boundaries.setdefault(name, set()).update(range(first, last + 1))
+                except Exception:
+                    pass
+        elif keyword == '*CLOAD':
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    if len(values) >= 3:
+                        cloads.append((ci(values[0]), int(values[1]), float(values[2])))
+                except Exception:
+                    pass
+        index = cursor
+
+    rp_targets = {'RP-1': (0.0, 5.0, 5.0), 'RP-2': (200.0, 5.0, 5.0)}
+    for name, target in rp_targets.items():
+        entry = nsets.get(name)
+        points = [assembly_nodes.get(label) for label in entry.get('labels', [])] if entry else []
+        if not any(point is not None and all(_near(a, b, 0.0, 0.1) for a, b in zip(point, target))
+                   for point in points):
+            log('strict check: exported inp reference point missing at %s' % (target,))
+            return False
+
+    coupled = set()
+    for ref_name, surface_name in couplings:
+        refs = surfaces.get(surface_name, [])
+        for token in refs:
+            set_name = ci(token.split('.')[-1])
+            entry = nsets.get(set_name)
+            points = [part_nodes.get(label) for label in entry.get('labels', [])] if entry else []
+            if ref_name in rp_targets and points:
+                expected_x = rp_targets[ref_name][0]
+                if all(point is not None and abs(point[0] - expected_x) <= 0.1 for point in points):
+                    coupled.add(ref_name)
+    if coupled != set(('RP-1', 'RP-2')):
+        log('strict check: exported inp does not couple both end faces to the required reference points')
+        return False
+
+    if not set((1, 2, 3)).issubset(boundaries.get('RP-1', set())):
+        log('strict check: exported inp RP-1 translational pin constraints are incomplete')
+        return False
+    right_dofs = boundaries.get('RP-2', set())
+    if not set((2, 3)).issubset(right_dofs) or 1 in right_dofs:
+        log('strict check: exported inp RP-2 must restrain U2/U3 and release U1')
+        return False
+    if any(dof in boundaries.get('RP-1', set()) or dof in right_dofs for dof in (4, 5, 6)):
+        log('strict check: exported inp support rotations must remain free')
+        return False
+
+    total_force = 0.0
+    force_count = 0
+    for set_name, dof, value in cloads:
+        if dof != 2:
+            if abs(value) > 1.0e-12:
+                log('strict check: exported inp equivalent pressure contains nonvertical force')
+                return False
+            continue
+        entry = nsets.get(set_name)
+        points = [part_nodes.get(label) for label in entry.get('labels', [])] if entry else []
+        if not points or any(point is None or abs(point[1] - 10.0) > 0.1 for point in points):
+            log('strict check: exported inp equivalent pressure is not confined to Y=10')
+            return False
+        total_force += value * len(points)
+        force_count += len(points)
+    if force_count and _near(total_force, -200.0, 0.01, 0.1):
+        log('strict check: beam support and equivalent pressure verified from exported inp')
+        return True
+    log('strict check: exported inp equivalent top load is %s N, expected -200 N' % total_force)
+    return False
+
+def _export_beam_inp(model):
+    root_dir = os.path.dirname(RESULT_PATH) or os.getcwd()
+    model_name = model_name_for_job(model)
+    if model_name:
+        try:
+            for job_name in mdb.jobs.keys():
+                if ci(getattr(mdb.jobs[job_name], 'model', '')) == ci(model_name):
+                    path = write_job_input(job_name, root_dir)
+                    if path:
+                        return path
+        except Exception:
+            pass
+    return None
+
+def _beam_support_and_load_ok(model):
+    inp_path = _export_beam_inp(model)
+    if inp_path:
+        return _beam_inp_support_and_load_ok(inp_path)
+    expected = ((0.0, 5.0, 5.0), (200.0, 5.0, 5.0))
+    assembly_points = []
+    try:
+        assembly_points = [_entity_xyz(model.rootAssembly.referencePoints[key])
+                           for key in model.rootAssembly.referencePoints.keys()]
+    except Exception:
+        pass
+    for target in expected:
+        if not any(xyz is not None and all(_near(a, b, 0.0, 0.1) for a, b in zip(xyz, target))
+                   for xyz in assembly_points):
+            log('strict check: reference point missing at %s' % (target,))
+            return False
+
+    coupling_ends = set()
+    for constraint in _repo_values(model.constraints):
+        if 'COUPLING' not in ci(constraint.__class__.__name__):
+            continue
+        control_points = _region_entities(model, getattr(constraint, 'controlPoint', None), 'referencePoints')
+        control_xyz = [_entity_xyz(point) for point in control_points]
+        surface_points = _region_face_points(model, getattr(constraint, 'surface', None))
+        for end_x, target in ((0.0, expected[0]), (200.0, expected[1])):
+            has_control = any(xyz is not None and all(_near(a, b, 0.0, 0.1) for a, b in zip(xyz, target))
+                              for xyz in control_xyz)
+            has_surface = any(abs(point[0] - end_x) <= 0.1 for point in surface_points)
+            if has_control and has_surface:
+                coupling_ends.add(end_x)
+    if coupling_ends != set((0.0, 200.0)):
+        log('strict check: both end faces are not coupled to their reference points')
+        return False
+
+    support_dofs = {0.0: set(), 200.0: set()}
+    for bc in _repo_values(model.boundaryConditions):
+        points = _region_entities(model, getattr(bc, 'region', None), 'referencePoints')
+        dofs = _zero_bc_dofs(bc)
+        for point in points:
+            xyz = _entity_xyz(point)
+            if xyz is None:
+                continue
+            for end_x, target in ((0.0, expected[0]), (200.0, expected[1])):
+                if all(_near(a, b, 0.0, 0.1) for a, b in zip(xyz, target)):
+                    support_dofs[end_x].update(dofs)
+    if not set((1, 2, 3)).issubset(support_dofs[0.0]):
+        log('strict check: RP-1 translational pin constraints are incomplete')
+        return False
+    if not set((2, 3)).issubset(support_dofs[200.0]) or 1 in support_dofs[200.0]:
+        log('strict check: RP-2 must restrain U2/U3 and release U1')
+        return False
+    if any(dof in support_dofs[0.0] or dof in support_dofs[200.0] for dof in (4, 5, 6)):
+        log('strict check: pinned and roller support rotations must remain free')
+        return False
+
+    for load in _repo_values(model.loads):
+        if 'PRESSURE' not in ci(load.__class__.__name__) or not _near(getattr(load, 'magnitude', None), 0.1, 0.01):
+            continue
+        points = _region_face_points(model, getattr(load, 'region', None))
+        if points and all(abs(point[1] - 10.0) <= 0.1 for point in points):
+            return True
+    force_total = 0.0
+    force_count = 0
+    for load in _repo_values(model.loads):
+        cf2 = _numbers(getattr(load, 'cf2', None))
+        cf1 = _numbers(getattr(load, 'cf1', None))
+        cf3 = _numbers(getattr(load, 'cf3', None))
+        if any(abs(value) > 1.0e-12 for value in cf1 + cf3):
+            log('strict check: equivalent pressure loads contain horizontal force')
+            return False
+        if not cf2 or not any(abs(value) > 1.0e-12 for value in cf2):
+            continue
+        nodes = _load_region_nodes(model, load)
+        if not nodes:
+            log('strict check: equivalent pressure force has no resolvable node')
+            return False
+        for node in nodes:
+            xyz = _entity_xyz(node)
+            if xyz is None or abs(xyz[1] - 10.0) > 0.1:
+                log('strict check: equivalent pressure force is not on the Y=10 top face')
+                return False
+        force_total += sum(cf2)
+        force_count += len(nodes)
+    if force_count > 0 and _near(force_total, -200.0, 0.01, 0.1):
+        return True
+    log('strict check: neither a 0.1 MPa top pressure nor an equivalent -200 N top load was found')
+    return False
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -751,6 +1119,15 @@ def check_abaqus_task_specific(model, part):
     if domain == 'column_eigen_buckling_gui':
         if not _task_load_at_single_node(model, 'cf2', -1.0, (0.0, 1000.0, 0.0)):
             log('strict check: -1 N reference load is not applied at the column top node')
+            return False
+    if domain == 'simply_supported_beam_udl_gui':
+        if find_key(model.steps, 'Step-Load') is None:
+            log('strict check: Step-Load is missing')
+            return False
+        if element_count < 120:
+            log('strict check: mesh is too coarse for the requested 5 mm seed')
+            return False
+        if not _beam_support_and_load_ok(model):
             return False
     if domain == 'coupled_thermal_structural_bar_gui':
         expansion = _material_numbers(_repo_values(model.materials)[0], 'expansion')
@@ -1031,6 +1408,11 @@ if __name__ == '__main__':
             log('abaqus stdout tail=' + completed.stdout[-1000:])
         if completed.stderr:
             log('abaqus stderr tail=' + completed.stderr[-1000:])
+        detail_path = root / '__open_choice_abaqus_detail.txt'
+        if detail_path.exists():
+            detail = detail_path.read_text(encoding='utf-8', errors='ignore').strip()
+            if detail:
+                log('abaqus checker detail=' + detail[-4000:])
     except Exception as exc:
         log('abaqus checker failed to run: %s' % exc)
         return False

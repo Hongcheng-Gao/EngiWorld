@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -10,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-18-windows', 'open_choice_id': 'cae-open-choice-038', 'source_task': 'task/task-v/ansys/task-11', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'hertz_contact_static_gui', 'analysis_kind': 'contact', 'metrics': ['max_contact_pressure', 'vertical_displacement'], 'expected_result_fields': ['U', 'S', 'CPRESS'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a nonlinear frictionless sphere-on-plate contact case; report maximum contact pressure and displacement.', 'selection_reason': 'Contact is a strong open-choice test because the distractor can draw geometry but cannot solve contact mechanics.', 'artifact_hint': {'ground_truth_files': ['wb_hertz.db', 'wb_hertz.rst'], 'abaqus_stems': [], 'ansys_db_files': ['wb_hertz.db'], 'ansys_result_files': ['wb_hertz.rst']}, 'span_hint': {'min_span': 10.0}, 'bounds_hint': {'min_span': 10.0}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-18-windows', 'open_choice_id': 'cae-open-choice-038', 'source_task': 'task/task-v/ansys/task-11', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'hertz_contact_static_gui', 'analysis_kind': 'contact', 'metrics': ['max_contact_pressure', 'vertical_displacement'], 'expected_result_fields': ['U', 'S', 'CPRESS'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a nonlinear frictionless sphere-on-plate contact case; report maximum contact pressure and displacement.', 'selection_reason': 'Contact is a strong open-choice test because the distractor can draw geometry but cannot solve contact mechanics.', 'artifact_hint': {'ground_truth_files': ['wb_hertz.db', 'wb_hertz.rst'], 'abaqus_stems': [], 'ansys_db_files': ['wb_hertz.db'], 'ansys_result_files': ['wb_hertz.rst']}, 'span_hint': {'min_span': 10.0}, 'bounds_hint': {'min_span': 10.0}, 'geometry_hint': {'plate_bounds_mm': {'x': [-50.0, 50.0], 'y': [-10.0, 0.0], 'z': [-50.0, 50.0]}, 'sphere_center_mm': [0.0, 10.0, 0.0], 'sphere_radius_mm': 10.0}, 'material_hint': {'youngs_modulus_mpa': 210000.0, 'poissons_ratio': 0.3, 'applies_to_both_bodies': True}, 'mesh_hint': {'contact_region_size_mm': 0.3, 'far_field_size_mm': 2.0}, 'contact_hint': {'frictionless': True, 'accepted_ansys_pair': ['TARGE170', 'CONTA174'], 'accepted_formulations': ['augmented_lagrange', 'pure_penalty']}, 'load_hint': {'sphere_force_y_n': -500.0}, 'boundary_hint': {'fully_fixed_plate_bottom_y_mm': -10.0, 'sphere_vertical_motion_free': True}, 'analysis_hint': {'large_deflection': True, 'nonlinear_substeps_required': True}, 'result_requirement': {'positive_contact_pressure_field': True, 'cpress_numeric_window_deferred': True}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -95,7 +96,7 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -109,7 +110,7 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -640,6 +641,51 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _node_key(node):
+    try:
+        return tuple(round(float(v), 6) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _assembly_nodes(model):
+    out = []
+    try:
+        for key in model.rootAssembly.instances.keys():
+            out.extend(_all_region_nodes(model.rootAssembly.instances[key].nodes))
+    except Exception:
+        pass
+    return out
+
+def _bc_is_zero(bc, component):
+    if 'ENCASTRE' in ci(bc.__class__.__name__):
+        return True
+    value = getattr(bc, component, None)
+    return _near(value, 0.0, 0.0) or ci(value) == 'SET'
+
+def _frictionless_contact_ok(model):
+    interactions = [item for item in _repo_values(model.interactions) if 'CONTACT' in ci(item.__class__.__name__)]
+    if not interactions:
+        log('strict check: no contact interaction object')
+        return False
+    properties = getattr(model, 'interactionProperties', None)
+    checked = 0
+    for interaction in interactions:
+        name = getattr(interaction, 'interactionProperty', None)
+        try:
+            prop = properties[name]
+        except Exception:
+            continue
+        checked += 1
+        tangential = getattr(prop, 'tangentialBehavior', None)
+        coefficients = _numbers(getattr(tangential, 'table', None))
+        if any(abs(value) > 1.0e-12 for value in coefficients):
+            log('strict check: nonzero friction coefficient is present')
+            return False
+    if checked < 1:
+        log('strict check: contact interaction property cannot be resolved')
+        return False
+    return True
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -739,14 +785,50 @@ def check_abaqus_task_specific(model, part):
         if len(_repo_values(model.parts)) < 2 or len(_repo_values(model.interactions)) < 1:
             log('strict check: sphere/plate parts or contact interaction missing')
             return False
+        for material in _repo_values(model.materials):
+            elastic = _material_numbers(material, 'elastic')
+            if len(elastic) < 2 or not _near(elastic[0], 210000.0, 0.01) or not _near(elastic[1], 0.3, 0.02):
+                log('strict check: both bodies must use E=210000 MPa and nu=0.3')
+                return False
+        if not _frictionless_contact_ok(model):
+            return False
         if not any('ON' in ci(getattr(step, 'nlgeom', '')) for step in steps):
             log('strict check: large deflection is not enabled')
             return False
+        if not any(float(getattr(step, 'maxNumInc', 0) or 0) > 1 for step in steps):
+            log('strict check: nonlinear contact substepping is not enabled')
+            return False
         vertical_forces = []
+        horizontal_forces = []
+        vertical_force_nodes = []
         for load in _repo_values(model.loads):
-            vertical_forces.extend(_numbers(getattr(load, 'cf2', None)))
-        if not any(_near(value, -500.0, 0.03) for value in vertical_forces):
-            log('strict check: -500 N vertical sphere force is missing')
+            load_vertical = _numbers(getattr(load, 'cf2', None))
+            vertical_forces.extend(load_vertical)
+            if any(abs(value) > 1.0e-10 for value in load_vertical):
+                vertical_force_nodes.extend(_load_region_nodes(model, load))
+            horizontal_forces.extend(_numbers(getattr(load, 'cf1', None)))
+            horizontal_forces.extend(_numbers(getattr(load, 'cf3', None)))
+        if not _near(sum(vertical_forces), -500.0, 0.03) or any(abs(value) > 1.0e-10 for value in horizontal_forces):
+            log('strict check: the only applied resultant must be FY=-500 N')
+            return False
+        if vertical_force_nodes and any((_node_key(node) is None or _node_key(node)[1] <= 0.1) for node in vertical_force_nodes):
+            log('strict check: FY=-500 N is not applied to the sphere')
+            return False
+        all_nodes = {_node_key(node) for node in _assembly_nodes(model)}
+        all_nodes.discard(None)
+        bottom_nodes = {point for point in all_nodes if abs(point[1] + 10.0) <= 0.1}
+        fixed = {1: set(), 2: set(), 3: set()}
+        for bc in _repo_values(model.boundaryConditions):
+            scoped = {_node_key(node) for node in _load_region_nodes(model, bc)}
+            scoped.discard(None)
+            for component, code in (('u1', 1), ('u2', 2), ('u3', 3)):
+                if _bc_is_zero(bc, component):
+                    fixed[code].update(scoped)
+        if not bottom_nodes or any(not bottom_nodes.issubset(fixed[code]) for code in (1, 2, 3)):
+            log('strict check: the complete plate bottom face is not fixed in UX/UY/UZ')
+            return False
+        if any(point[1] > 0.1 for point in fixed[2]):
+            log('strict check: sphere vertical motion is constrained')
             return False
     return True
 
@@ -762,6 +844,21 @@ def _odb_nodes(odb):
     except Exception:
         pass
     return xyz
+
+def _odb_local_refinement_count(xyz):
+    local = [point for point in xyz if abs(point[1]) <= 0.5 and (point[0] ** 2 + point[2] ** 2) ** 0.5 <= 5.0]
+    refined = 0
+    for index, point in enumerate(local):
+        nearest = None
+        for other_index, other in enumerate(local):
+            if index == other_index:
+                continue
+            distance = sum((a - b) ** 2 for a, b in zip(point, other)) ** 0.5
+            if distance > 1.0e-9 and (nearest is None or distance < nearest):
+                nearest = distance
+        if nearest is not None and nearest <= 0.36:
+            refined += 1
+    return refined
 
 def _odb_element_types(odb):
     out = set()
@@ -898,6 +995,9 @@ def check_abaqus_odb_specific(odb):
                     spherical += 1
             if spherical < 12:
                 log('strict ODB check: spherical surface evidence missing')
+                return False
+            if _odb_local_refinement_count(xyz) < 12:
+                log('strict ODB check: 0.3 mm local contact refinement evidence missing')
                 return False
     if domain == 'column_eigen_buckling_gui' and not any(t.startswith('B') for t in types):
         return False
@@ -1041,6 +1141,42 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _ansys_material_values(mapdl, label):
+    values = []
+    materials = set()
+    listing = _safe_run(mapdl, 'ELIST,ALL')
+    for line in listing.splitlines():
+        match = re.match(r'^\s*\d+\s+(\d+)\s+\d+\s+', line)
+        if match:
+            materials.add(int(match.group(1)))
+    if not materials:
+        maximum = _try_get(mapdl, 'MAT', 0, 'NUM', 'MAX')
+        if maximum is not None:
+            materials.update(range(1, int(maximum) + 1))
+    for material in sorted(materials):
+        value = _try_get(mapdl, label, material)
+        if value is not None:
+            values.append(value)
+    return values
+
+
+def _friction_table_has_nonzero(text):
+    if 'FRIC' not in text.upper():
+        return False
+    in_friction_table = False
+    for line in text.splitlines():
+        upper = line.upper()
+        if 'FRIC' in upper:
+            in_friction_table = True
+            continue
+        if not in_friction_table or not line.strip() or line.lstrip()[0] not in '+-.0123456789':
+            continue
+        values = [float(value) for value in re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', line)]
+        if len(values) >= 2 and any(abs(value) > 1.0e-12 for value in values[1:]):
+            return True
+    return False
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1088,14 +1224,23 @@ def check_ansys_geometry(mapdl):
 
 
 def check_ansys_materials(mapdl):
-    text = _safe_run(mapdl, 'MPLIST,ALL')
-    if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
-        return True
-    try:
-        count = _try_get(mapdl, 'MAT', 0, 'COUNT')
-        return count is not None and count >= 1
-    except Exception:
+    youngs = _ansys_material_values(mapdl, 'EX')
+    poissons = _ansys_material_values(mapdl, 'PRXY') or _ansys_material_values(mapdl, 'NUXY')
+    friction = _ansys_material_values(mapdl, 'MU')
+    if not youngs or not all(_close(value, 210000.0, 0.01) for value in youngs):
+        log('Young\'s modulus is not 210000 MPa for every structural material')
         return False
+    if not poissons or not all(_close(value, 0.3, 0.02) for value in poissons):
+        log('Poisson\'s ratio is not 0.3 for every structural material')
+        return False
+    if any(abs(value) > 1.0e-12 for value in friction):
+        log('nonzero friction coefficient is present')
+        return False
+    friction_tables = _safe_run(mapdl, 'TBLIST,ALL')
+    if _friction_table_has_nonzero(friction_tables):
+        log('nonzero FRIC table is present')
+        return False
+    return True
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1118,6 +1263,11 @@ def check_ansys_boundary_loads(mapdl):
     if not load_text.strip() or ('NO ' in load_text.upper() and not any(ch.isdigit() for ch in load_text)):
         log('no load/predefined evidence found')
         return False
+    if TASK_SPEC.get('domain') == 'hertz_contact_static_gui':
+        nlgeom = _try_get(mapdl, 'ACTIVE', 0, 'SOLU', 'NLGEOM')
+        if nlgeom is not None and nlgeom < 0.5:
+            log('large deflection is not enabled')
+            return False
     return True
 
 
@@ -1216,6 +1366,18 @@ def _force_sum(records, dof, axis=None, target=None, tol=0.1):
             continue
         total += value
     return total
+
+def _local_contact_refinement_count(nodes):
+    import numpy as np
+    nodes = np.asarray(nodes, dtype=float)
+    local = nodes[(np.abs(nodes[:, 1]) <= 0.5) & (np.linalg.norm(nodes[:, [0, 2]], axis=1) <= 5.0)]
+    refined = 0
+    for point in local:
+        distances = np.linalg.norm(local - point, axis=1)
+        distances = distances[distances > 1.0e-9]
+        if distances.size and float(distances.min()) <= 0.36:
+            refined += 1
+    return refined
 
 def _binary_stress_max(result, set_index):
     try:
@@ -1419,8 +1581,8 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: 80 C restrained thermal stress mismatch')
             return False
     elif domain == 'hertz_contact_static_gui':
-        if not (any(t in element_types for t in (170,171,172,173,174,175,176,177)) and len(element_types) >= 2):
-            log('strict binary check: contact elements missing')
+        if not {170, 174}.issubset(element_types):
+            log('strict binary check: TARGE170/CONTA174 pair is missing')
             return False
         expected_bounds = ((-50.0, 50.0), (-10.0, 20.0), (-50.0, 50.0))
         if any(not (_close(observed[0], expected[0], 0.0, 0.15) and _close(observed[1], expected[1], 0.0, 0.15)) for observed, expected in zip(bbox_values, expected_bounds)):
@@ -1428,16 +1590,28 @@ def check_ansys_result_binary(result_path):
             return False
         sphere_radius = np.sqrt(nodes[:, 0] ** 2 + (nodes[:, 1] - 10.0) ** 2 + nodes[:, 2] ** 2)
         sphere_surface_count = int(np.count_nonzero((nodes[:, 1] >= -0.1) & np.isclose(sphere_radius, 10.0, atol=0.08)))
-        if sphere_surface_count < 12 or element_count < 10000 or node_count < 10000:
+        if sphere_surface_count < 12 or element_count < 10000 or node_count < 10000 or _local_contact_refinement_count(nodes) < 12:
             log('strict binary check: true sphere surface or refined solid mesh missing')
             return False
-        if not _close(_force_sum(forces, 2), -500.0, 0.03):
-            log('strict binary check: total sphere load is not -500 N')
+        active_forces = [(code, value, xyz) for code, value, xyz in forces if abs(value) > 1.0e-10]
+        if (not _close(_force_sum(forces, 2), -500.0, 0.03)
+                or any(code != 2 for code, value, xyz in active_forces)
+                or any(xyz is None or xyz[1] <= 0.1 for code, value, xyz in active_forces)):
+            log('strict binary check: the only applied resultant must be sphere FY=-500 N')
             return False
-        bottom_codes = {code for code, value, xyz in bcs if xyz is not None and abs(xyz[1] + 10.0) <= 0.1 and abs(value) <= 1.0e-10}
+        bottom_nodes = {tuple(np.round(row[:3], 6)) for row in nodes if abs(row[1] + 10.0) <= 0.1}
+        fixed_by_code = {
+            code: {tuple(np.round(xyz, 6)) for bc_code, value, xyz in bcs if bc_code == code and xyz is not None and abs(value) <= 1.0e-10}
+            for code in (1, 2, 3)
+        }
         top_codes = {code for code, value, xyz in bcs if xyz is not None and xyz[1] >= 19.4 and abs(value) <= 1.0e-10}
-        if not set((1, 2, 3)).issubset(bottom_codes) or not set((1, 3)).issubset(top_codes) or 2 in top_codes:
+        sphere_uy = [xyz for code, value, xyz in bcs if code == 2 and xyz is not None and xyz[1] > 0.1 and abs(value) <= 1.0e-10]
+        if (not bottom_nodes or any(not bottom_nodes.issubset(fixed_by_code[code]) for code in (1, 2, 3))
+                or not set((1, 3)).issubset(top_codes) or 2 in top_codes or sphere_uy):
             log('strict binary check: fixed plate bottom or laterally restrained/free-Y sphere top missing')
+            return False
+        if int(result.nsets) < 2:
+            log('strict binary check: nonlinear contact substep history is missing')
             return False
         pressure_max = _binary_contact_pressure_max(result, last, element_type_by_number)
         uy_min, uy_max = _binary_solution_component_range(result, last, 1)

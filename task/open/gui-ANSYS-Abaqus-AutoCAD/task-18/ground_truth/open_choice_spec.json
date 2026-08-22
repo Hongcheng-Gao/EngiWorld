@@ -1,5 +1,5 @@
 {
-  "task_id": "v-cae-commercial-open-choice-task-18-windows",
+  "task_id": "v-open-abaqus-ansys-autocad-task-18-windows",
   "open_choice_id": "cae-open-choice-038",
   "source_task": "task/task-v/ansys/task-11",
   "original_software": "ansys",
@@ -38,5 +38,62 @@
   },
   "bounds_hint": {
     "min_span": 10.0
+  },
+  "geometry_hint": {
+    "plate_bounds_mm": {
+      "x": [
+        -50.0,
+        50.0
+      ],
+      "y": [
+        -10.0,
+        0.0
+      ],
+      "z": [
+        -50.0,
+        50.0
+      ]
+    },
+    "sphere_center_mm": [
+      0.0,
+      10.0,
+      0.0
+    ],
+    "sphere_radius_mm": 10.0
+  },
+  "material_hint": {
+    "youngs_modulus_mpa": 210000.0,
+    "poissons_ratio": 0.3,
+    "applies_to_both_bodies": true
+  },
+  "mesh_hint": {
+    "contact_region_size_mm": 0.3,
+    "far_field_size_mm": 2.0
+  },
+  "contact_hint": {
+    "frictionless": true,
+    "accepted_ansys_pair": [
+      "TARGE170",
+      "CONTA174"
+    ],
+    "accepted_formulations": [
+      "augmented_lagrange",
+      "pure_penalty"
+    ]
+  },
+  "load_hint": {
+    "sphere_force_y_n": -500.0
+  },
+  "boundary_hint": {
+    "fully_fixed_plate_bottom_y_mm": -10.0,
+    "sphere_vertical_motion_free": true
+  },
+  "analysis_hint": {
+    "large_deflection": true,
+    "nonlinear_substeps_required": true
+  },
+  "result_requirement": {
+    "positive_contact_pressure_field": true,
+    "cpress_numeric_window_deferred": true
   }
 }

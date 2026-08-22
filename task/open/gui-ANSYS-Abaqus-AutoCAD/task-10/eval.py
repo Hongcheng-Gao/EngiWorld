@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-10-windows', 'open_choice_id': 'cae-open-choice-020', 'source_task': 'task/task-v/abaqus/task-20', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'plate_hole_tension_gui_only', 'analysis_kind': 'static_structural', 'metrics': ['max_mises', 'edge_displacement'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a shell plate with a central hole under tensile loading; report displacement and stress-concentration metrics.', 'selection_reason': 'The source task is GUI-only and the physics is standard linear structural FEA.', 'artifact_hint': {'ground_truth_files': ['Job-Hole-A.cae', 'Job-Hole-A.odb'], 'abaqus_stems': ['Job-Hole-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 160.0, 'y': 80.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-10-windows', 'open_choice_id': 'cae-open-choice-020', 'source_task': 'task/task-v/abaqus/task-20', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'plate_hole_tension_gui_only', 'analysis_kind': 'static_structural', 'metrics': ['max_mises', 'edge_displacement'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve the small-displacement 160 mm by 80 mm shell plate with a 16 mm central hole under tributary nodal edge tension and verify the stress peak is near the hole.', 'selection_reason': 'The source task is GUI-only and the physics is standard linear structural FEA.', 'artifact_hint': {'ground_truth_files': ['Job-Hole-A.cae', 'Job-Hole-A.odb'], 'abaqus_stems': ['Job-Hole-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 160.0, 'y': 80.0}, 'bounds_hint': {'x': [0.0, 160.0], 'y': [0.0, 80.0], 'z': [0.0, 0.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -575,10 +576,14 @@ def _inp_header(line):
     return values
 
 def _parse_semantic_input(path):
-    data = {'nsets': {}, 'cloads': [], 'boundaries': [], 'shell_thicknesses': []}
+    data = {'nsets': {}, 'elsets': {}, 'elements': set(), 'cloads': [], 'boundaries': [],
+            'shell_thicknesses': [], 'shell_sections': [], 'shell_section_elsets': []}
     mode = None
+    mode_header = {}
     nset_name = None
     nset_generate = False
+    elset_name = None
+    elset_generate = False
     try:
         stream = open(path, 'r')
         try:
@@ -588,13 +593,23 @@ def _parse_semantic_input(path):
                     continue
                 if line.startswith('*'):
                     mode = ci(line.split(',', 1)[0])
+                    mode_header = _inp_header(line)
                     nset_name = None
                     nset_generate = False
+                    elset_name = None
+                    elset_generate = False
                     if mode == '*NSET':
                         header = _inp_header(line)
                         nset_name = ci(header.get('NSET', ''))
                         nset_generate = bool(header.get('GENERATE'))
                         data['nsets'].setdefault(nset_name, [])
+                    elif mode == '*ELSET':
+                        header = _inp_header(line)
+                        elset_name = ci(header.get('ELSET', ''))
+                        elset_generate = bool(header.get('GENERATE'))
+                        data['elsets'].setdefault(elset_name, [])
+                    elif mode == '*SHELL SECTION':
+                        data['shell_section_elsets'].append(ci(mode_header.get('ELSET', '')))
                     continue
                 fields = [value.strip() for value in line.split(',')]
                 if mode == '*NSET' and nset_name:
@@ -614,6 +629,25 @@ def _parse_semantic_input(path):
                                 data['nsets'][nset_name].append(int(token))
                             except Exception:
                                 data['nsets'][nset_name].append(ci(token))
+                elif mode == '*ELSET' and elset_name:
+                    tokens = [value for value in fields if value]
+                    if elset_generate and len(tokens) >= 2:
+                        try:
+                            step = int(tokens[2]) if len(tokens) >= 3 else 1
+                            data['elsets'][elset_name].extend(range(int(tokens[0]), int(tokens[1]) + 1, step))
+                        except Exception:
+                            pass
+                    else:
+                        for token in tokens:
+                            try:
+                                data['elsets'][elset_name].append(int(token))
+                            except Exception:
+                                data['elsets'][elset_name].append(ci(token))
+                elif mode == '*ELEMENT' and fields:
+                    try:
+                        data['elements'].add(int(fields[0]))
+                    except Exception:
+                        pass
                 elif mode == '*CLOAD' and len(fields) >= 3:
                     try:
                         data['cloads'].append((ci(fields[0]), int(fields[1]), float(fields[2])))
@@ -629,7 +663,11 @@ def _parse_semantic_input(path):
                         pass
                 elif mode == '*SHELL SECTION' and fields:
                     try:
-                        data['shell_thicknesses'].append(float(fields[0]))
+                        thickness = float(fields[0])
+                        integration_points = int(float(fields[1])) if len(fields) > 1 and fields[1] else None
+                        material = ci(mode_header.get('MATERIAL', ''))
+                        data['shell_thicknesses'].append(thickness)
+                        data['shell_sections'].append((thickness, integration_points, material))
                     except Exception:
                         pass
         finally:
@@ -655,6 +693,20 @@ def _resolve_inp_target(data, target, trail=None):
             labels.add(value)
         else:
             labels.update(_resolve_inp_target(data, value, trail))
+    return labels
+
+def _resolve_inp_elset(data, target, trail=None):
+    target = ci(target)
+    trail = set() if trail is None else set(trail)
+    if target in trail:
+        return set()
+    trail.add(target)
+    labels = set()
+    for value in data['elsets'].get(target, []):
+        if isinstance(value, int):
+            labels.add(value)
+        else:
+            labels.update(_resolve_inp_elset(data, value, trail))
     return labels
 
 def _inp_force_by_node(data, dof):
@@ -735,8 +787,15 @@ def _check_hole_a_input(model, part):
     coordinates = _part_coordinates(part)
     if data is None or not coordinates:
         return False
-    if not any(_near(value, 1.2, 0.01, 1.0e-6) for value in data['shell_thicknesses']):
-        log('strict check: 1.2 mm shell thickness missing')
+    if not any(_near(thickness, 1.2, 0.01, 1.0e-6) and points == 5 and material == 'STEEL'
+               for thickness, points, material in data['shell_sections']):
+        log('strict check: Steel shell section must use 1.2 mm thickness and 5 integration points')
+        return False
+    section_elements = set()
+    for elset_name in data['shell_section_elsets']:
+        section_elements.update(_resolve_inp_elset(data, elset_name))
+    if not data['elements'] or section_elements != data['elements']:
+        log('strict check: Steel shell section does not cover every plate element')
         return False
     if any(dof != 1 and abs(value) > 1.0e-12 for _, dof, value in data['cloads']):
         log('strict check: unexpected non-X concentrated load')
@@ -744,6 +803,11 @@ def _check_hole_a_input(model, part):
     if not (_check_tributary_edge(data, coordinates, 0.0, -12.0, 80.0) and
             _check_tributary_edge(data, coordinates, 160.0, 12.0, 80.0)):
         log('strict check: 12 N/mm tributary edge loads are incomplete or have wrong direction/resultant')
+        return False
+    loaded_nodes = set(_inp_force_by_node(data, 1).keys())
+    edge_nodes = _nodes_at(coordinates, x=0.0) | _nodes_at(coordinates, x=160.0)
+    if loaded_nodes != edge_nodes:
+        log('strict check: nonzero X loads are not confined to the two vertical edges')
         return False
     if not (_edge_spacing_matches(coordinates, 0.0, 10.0) and
             _edge_spacing_matches(coordinates, 160.0, 10.0)):
@@ -756,19 +820,19 @@ def _check_hole_a_input(model, part):
         radii.append(radius)
         if abs(radius - 8.0) <= 0.4:
             hole_count += 1
-    if not radii or not (7.6 <= min(radii) <= 8.4) or hole_count < 10:
+    if not radii or not (7.6 <= min(radii) <= 8.4) or hole_count < 12:
         log('strict check: 16 mm hole or approximately 4 mm hole-edge mesh is missing')
         return False
     all_nodes = set(coordinates.keys())
-    if not all_nodes.issubset(_inp_constrained_nodes(data, 3)):
+    if _inp_constrained_nodes(data, 3) != all_nodes:
         log('strict check: U3 is not constrained on every shell node')
         return False
     left_bottom = _nodes_at(coordinates, x=0.0, y=0.0)
-    if not left_bottom or not left_bottom.issubset(_inp_constrained_nodes(data, 1)) or not left_bottom.issubset(_inp_constrained_nodes(data, 2)):
+    if not left_bottom or _inp_constrained_nodes(data, 1) != left_bottom:
         log('strict check: left-bottom U1/U2 rigid-body constraint missing')
         return False
     right_bottom = _nodes_at(coordinates, x=160.0, y=0.0)
-    if not right_bottom or not right_bottom.issubset(_inp_constrained_nodes(data, 2)):
+    if not right_bottom or _inp_constrained_nodes(data, 2) != (left_bottom | right_bottom):
         log('strict check: right-bottom U2 rigid-body constraint missing')
         return False
     return True
@@ -827,6 +891,12 @@ def _material_ok(model, domain):
         log('strict check: no material')
         return False
     material = materials[0]
+    if domain == 'plate_hole_tension_gui_only':
+        steel_key = find_key(model.materials, 'Steel')
+        if steel_key is None:
+            log('strict check: material Steel is missing')
+            return False
+        material = model.materials[steel_key]
     elastic = _material_numbers(material, 'elastic')
     if domain not in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
         expected = {
@@ -928,8 +998,31 @@ def check_abaqus_task_specific(model, part):
             log('strict check: three buckling eigenvalues not requested')
             return False
     if domain == 'plate_hole_tension_gui_only':
-        if any('ON' in ci(getattr(step, 'nlgeom', '')) for step in steps):
+        step_key = find_key(model.steps, 'Step-Tension-A')
+        if step_key is None or 'STATIC' not in step_text(model.steps[step_key]):
+            log('strict check: Step-Tension-A is missing or is not Static, General')
+            return False
+        tension_step = model.steps[step_key]
+        if 'ON' in ci(getattr(tension_step, 'nlgeom', '')):
             log('strict check: small-displacement static step must have nlgeom off')
+            return False
+        try:
+            seed_size = float(part.getPartSeeds(attribute=SIZE))
+        except Exception:
+            seed_size = None
+        if seed_size is None or not _near(seed_size, 10.0, 0.10, 0.5):
+            log('strict check: global seed size is not approximately 10 mm: %s' % seed_size)
+            return False
+        instances = _repo_values(model.rootAssembly.instances)
+        if len(instances) != 1:
+            log('strict check: expected one plate instance, got %s' % len(instances))
+            return False
+        dependent = getattr(instances[0], 'dependent', None)
+        if dependent != ON and ci(dependent) not in ('ON', '1', 'TRUE'):
+            log('strict check: plate instance is not dependent')
+            return False
+        if find_key(mdb.jobs, 'Job-Hole-A') is None:
+            log('strict check: Job-Hole-A is missing from the CAE database')
             return False
         if not _check_hole_a_input(model, part):
             return False
@@ -1389,6 +1482,24 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _mplist_value(text, label):
+    lines = str(text).splitlines()
+    wanted = str(label).upper()
+    number_pattern = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?'
+    for index, line in enumerate(lines):
+        tokens = line.upper().split()
+        if not tokens or tokens[0] != 'TEMP' or wanted not in tokens[1:]:
+            continue
+        for following in lines[index + 1:index + 4]:
+            numbers = re.findall(number_pattern, following)
+            if numbers:
+                try:
+                    return float(numbers[-1])
+                except Exception:
+                    pass
+    return None
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1437,6 +1548,16 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'plate_hole_tension_gui_only':
+        elastic = _mplist_value(text, 'EX')
+        poisson = _mplist_value(text, 'PRXY')
+        if elastic is None or not _close(elastic, 210000.0, 0.01):
+            log('strict material check: ANSYS Young modulus mismatch %s' % elastic)
+            return False
+        if poisson is None or not _close(poisson, 0.3, 0.02):
+            log('strict material check: ANSYS Poisson ratio mismatch %s' % poisson)
+            return False
+        return True
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1444,6 +1565,17 @@ def check_ansys_materials(mapdl):
         return count is not None and count >= 1
     except Exception:
         return False
+
+
+def check_ansys_shell_section(mapdl):
+    for section_id in range(1, 101):
+        thickness = _try_get(mapdl, 'SHEL', section_id, 'PROP', 'TTHK')
+        points = _try_get(mapdl, 'SHEL', section_id, 'NSP')
+        if thickness is not None and points is not None:
+            if _close(thickness, 1.2, 0.01, 1.0e-6) and _close(points, 5.0, 0.0, 0.0):
+                return True
+    log('strict section check: ANSYS shell section must use 1.2 mm thickness and 5 integration points')
+    return False
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1727,17 +1859,25 @@ def check_ansys_result_binary(result_path):
         if not (_close(_force_sum(forces, 1, 0, 0.0), -960.0, 0.03) and _close(_force_sum(forces, 1, 0, 160.0), 960.0, 0.03)):
             log('strict binary check: 12 N/mm tributary edge loads missing')
             return False
+        for code, value, xyz in forces:
+            if abs(value) <= 1.0e-12:
+                continue
+            if code != 1 or xyz is None or (abs(xyz[0]) > 0.1 and abs(xyz[0] - 160.0) > 0.1):
+                log('strict binary check: nonzero loads are not confined to X direction on the vertical edges')
+                return False
         radii = np.sqrt((nodes[:, 0] - 80.0) ** 2 + (nodes[:, 1] - 40.0) ** 2)
         radius = float(np.min(radii))
         hole_nodes = int(np.sum(np.abs(radii - 8.0) <= 0.4))
-        if not (7.6 <= radius <= 8.4) or hole_nodes < 10:
+        if not (7.6 <= radius <= 8.4) or hole_nodes < 12:
             log('strict binary check: central 16 mm hole missing')
             return False
         all_points = set(_coordinate_key(tuple(float(value) for value in row[:3])) for row in nodes)
-        if not all_points.issubset(_bc_points(bcs, 3)):
+        if _bc_points(bcs, 3) != all_points:
             log('strict binary check: UZ is not constrained on all shell nodes')
             return False
-        if not _point_has_dofs(bcs, (0.0, 0.0, 0.0), (1, 2)) or not _point_has_dofs(bcs, (160.0, 0.0, 0.0), (2,)):
+        left_bottom = set((_coordinate_key((0.0, 0.0, 0.0)),))
+        right_bottom = set((_coordinate_key((160.0, 0.0, 0.0)),))
+        if _bc_points(bcs, 1) != left_bottom or _bc_points(bcs, 2) != (left_bottom | right_bottom):
             log('strict binary check: minimum corner rigid-body constraints missing')
             return False
         if not (_binary_edge_spacing(nodes, 0.0, 10.0) and _binary_edge_spacing(nodes, 160.0, 10.0)):
@@ -1828,6 +1968,8 @@ def check_ansys_with_mapdl(root, model_path, result_path):
             return False
         if not check_ansys_materials(mapdl):
             log('material check failed')
+            return False
+        if TASK_SPEC.get('domain') == 'plate_hole_tension_gui_only' and not check_ansys_shell_section(mapdl):
             return False
         if not check_ansys_boundary_loads(mapdl):
             return False

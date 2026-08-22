@@ -13,7 +13,7 @@ import traceback
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-13-windows', 'open_choice_id': 'cae-open-choice-033', 'source_task': 'task/task-v/ansys/task-03', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'plane_stress_plate_hole_gui', 'analysis_kind': 'static_structural', 'metrics': ['stress_concentration_proxy', 'max_stress'], 'expected_result_fields': ['S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a plane-stress plate with a central circular hole under uniaxial tension; report stress concentration and displacement.', 'selection_reason': 'Plane-stress plate-with-hole is a canonical FEA benchmark available in both tools.', 'artifact_hint': {'ground_truth_files': ['apdl_hole_plate.db', 'apdl_hole_plate.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_hole_plate.db'], 'ansys_result_files': ['apdl_hole_plate.rst']}, 'span_hint': {'x': 100.0, 'y': 200.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 200.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-13-windows', 'open_choice_id': 'cae-open-choice-033', 'source_task': 'task/task-v/ansys/task-03', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'plane_stress_plate_hole_gui', 'analysis_kind': 'static_structural', 'metrics': ['stress_concentration_proxy', 'max_stress'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a plane-stress plate with a central circular hole under uniaxial tension; report stress concentration and displacement.', 'selection_reason': 'Plane-stress plate-with-hole is a canonical FEA benchmark available in both tools.', 'artifact_hint': {'ground_truth_files': ['apdl_hole_plate.db', 'apdl_hole_plate.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_hole_plate.db'], 'ansys_result_files': ['apdl_hole_plate.rst']}, 'span_hint': {'x': 100.0, 'y': 200.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 200.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -98,7 +98,8 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    log('Abaqus CAE/ODB files do not share a stem')
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -112,7 +113,8 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    log('ANSYS model/result files do not share a stem')
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -577,6 +579,179 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _region_nodes(model, owner):
+    region = getattr(owner, 'region', owner)
+    out = []
+    try:
+        out.extend(_all_region_nodes(region.nodes))
+    except Exception:
+        pass
+    entity_attrs = ('faces', 'edges', 'vertices', 'side1Faces', 'side2Faces',
+                    'side1Edges', 'side2Edges', 'end1Edges', 'end2Edges')
+    for attr in entity_attrs:
+        try:
+            entities = list(getattr(region, attr))
+        except Exception:
+            continue
+        for entity in entities:
+            try:
+                out.extend(_all_region_nodes(entity.getNodes()))
+            except Exception:
+                pass
+    label = ci(region)
+    try:
+        assembly = model.rootAssembly
+    except Exception:
+        assembly = None
+    if assembly is not None:
+        for repo_name in ('sets', 'surfaces'):
+            try:
+                repo = getattr(assembly, repo_name)
+                for key in repo.keys():
+                    if ci(key) not in label and label not in ci(key):
+                        continue
+                    item = repo[key]
+                    out.extend(_all_region_nodes(getattr(item, 'nodes', None)))
+                    for attr in entity_attrs:
+                        try:
+                            for entity in getattr(item, attr):
+                                out.extend(_all_region_nodes(entity.getNodes()))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+    unique = []
+    seen = set()
+    for node in out:
+        try:
+            xyz = tuple(round(float(v), 8) for v in node.coordinates)
+        except Exception:
+            continue
+        key = (getattr(node, 'label', None), xyz)
+        if key not in seen:
+            seen.add(key)
+            unique.append(node)
+    return unique
+
+def _node_xyz(node):
+    try:
+        return tuple(float(value) for value in node.coordinates)
+    except Exception:
+        return None
+
+def _same_xyz(a, b, tol=0.08):
+    return a is not None and b is not None and len(a) == len(b) and all(abs(x-y) <= tol for x, y in zip(a, b))
+
+def _is_fixed_component(value):
+    text = ci(value)
+    if text in ('SET', 'FIXED'):
+        return True
+    if text in ('UNSET', 'FREED', 'NONE', ''):
+        return False
+    try:
+        return abs(float(value)) <= 1.0e-12
+    except Exception:
+        return False
+
+def _plane_stress_thickness_is_one(model):
+    for section in _repo_values(model.sections):
+        values = _numbers(getattr(section, 'thickness', None))
+        if any(_near(value, 1.0, 0.01, 1.0e-4) for value in values):
+            return True
+    return False
+
+def _traction_direction_ok(load, side):
+    class_text = ci(getattr(load, '__class__', type(load)).__name__)
+    magnitudes = []
+    for attr in ('magnitude', 'pressure'):
+        magnitudes.extend(_numbers(getattr(load, attr, None)))
+    if 'PRESS' in class_text or ('EDGELOAD' in class_text and 'NORMAL' in ci(getattr(load, 'traction', ''))):
+        return any(_near(value, -10.0, 0.02, 0.01) for value in magnitudes)
+    if 'TRACTION' not in class_text:
+        return False
+    direction = _numbers(getattr(load, 'directionVector', None))
+    if len(direction) < 4:
+        return False
+    half = len(direction) // 2
+    dx = direction[half] - direction[0]
+    if abs(dx) <= 1.0e-12:
+        return False
+    effective = [value * dx / abs(dx) for value in magnitudes]
+    target = -10.0 if side == 'left' else 10.0
+    return any(_near(value, target, 0.02, 0.01) for value in effective)
+
+def _complete_tensile_edge_loads(model, part):
+    side_nodes = {'left': [], 'right': []}
+    try:
+        for node in part.nodes:
+            xyz = _node_xyz(node)
+            if xyz is None:
+                continue
+            if abs(xyz[0]) <= 0.08:
+                side_nodes['left'].append(xyz)
+            elif abs(xyz[0] - 100.0) <= 0.08:
+                side_nodes['right'].append(xyz)
+    except Exception:
+        pass
+    if not side_nodes['left'] or not side_nodes['right']:
+        return False
+    covered = {'left': [], 'right': []}
+    for load in _repo_values(model.loads):
+        class_text = ci(getattr(load, '__class__', type(load)).__name__)
+        if not any(token in class_text for token in ('PRESS', 'TRACTION', 'EDGELOAD')):
+            continue
+        load_values = []
+        for attr in ('magnitude', 'pressure'):
+            load_values.extend(_numbers(getattr(load, attr, None)))
+        if load_values and not any(abs(value) > 1.0e-12 for value in load_values):
+            continue
+        region_nodes = [_node_xyz(node) for node in _region_nodes(model, load)]
+        region_nodes = [xyz for xyz in region_nodes if xyz is not None]
+        if not region_nodes:
+            continue
+        if any(abs(xyz[0]) > 0.08 and abs(xyz[0] - 100.0) > 0.08 for xyz in region_nodes):
+            log('strict check: a nonzero edge traction is applied away from X=0/X=100')
+            return False
+        for side, target in (('left', 0.0), ('right', 100.0)):
+            on_side = [xyz for xyz in region_nodes if abs(xyz[0] - target) <= 0.08]
+            if on_side and _traction_direction_ok(load, side):
+                covered[side].extend(on_side)
+    for side in ('left', 'right'):
+        if not all(any(_same_xyz(node, candidate) for candidate in covered[side]) for node in side_nodes[side]):
+            return False
+    return True
+
+def _has_minimum_rigid_body_constraints(model):
+    fixed = {'u1': [], 'u2': []}
+    for bc in _repo_values(model.boundaryConditions):
+        nodes = [_node_xyz(node) for node in _region_nodes(model, bc)]
+        nodes = [xyz for xyz in nodes if xyz is not None]
+        class_text = ci(getattr(bc, '__class__', type(bc)).__name__)
+        for component in fixed:
+            symmetry = (component == 'u1' and 'XSYMM' in class_text) or (component == 'u2' and 'YSYMM' in class_text)
+            if 'ENCASTRE' in class_text or symmetry or _is_fixed_component(getattr(bc, component, None)):
+                fixed[component].extend(nodes)
+    for component in fixed:
+        unique = []
+        for xyz in fixed[component]:
+            if not any(_same_xyz(xyz, item) for item in unique):
+                unique.append(xyz)
+        fixed[component] = unique
+    all_nodes = []
+    for component in ('u1', 'u2'):
+        for xyz in fixed[component]:
+            if not any(_same_xyz(xyz, item) for item in all_nodes):
+                all_nodes.append(xyz)
+    if len(fixed['u1']) + len(fixed['u2']) != 3 or len(all_nodes) != 2:
+        return False
+    anchors = [xyz for xyz in all_nodes if any(_same_xyz(xyz, item) for item in fixed['u1']) and any(_same_xyz(xyz, item) for item in fixed['u2'])]
+    if len(anchors) != 1:
+        return False
+    guide = next(xyz for xyz in all_nodes if not _same_xyz(xyz, anchors[0]))
+    guide_u2 = any(_same_xyz(guide, item) for item in fixed['u2']) and abs(guide[0] - anchors[0][0]) > 1.0
+    guide_u1 = any(_same_xyz(guide, item) for item in fixed['u1']) and abs(guide[1] - anchors[0][1]) > 1.0
+    return guide_u2 or guide_u1
+
 def _part_element_types(part):
     out = set()
     try:
@@ -711,6 +886,25 @@ def check_abaqus_task_specific(model, part):
     if domain == 'plane_stress_plate_hole_gui' and element_count < 700:
         log('strict check: 5 mm/1 mm locally refined mesh evidence missing elements=%s' % element_count)
         return False
+    if domain == 'plane_stress_plate_hole_gui':
+        hole_nodes = 0
+        try:
+            hole_nodes = sum(1 for node in part.nodes
+                if abs(((float(node.coordinates[0]) - 50.0) ** 2 + (float(node.coordinates[1]) - 100.0) ** 2) ** 0.5 - 5.0) <= 0.2)
+        except Exception:
+            pass
+        if hole_nodes < 20:
+            log('strict check: 1 mm local hole mesh evidence is missing')
+            return False
+        if not _plane_stress_thickness_is_one(model):
+            log('strict check: 1 mm plane-stress thickness is missing')
+            return False
+        if not _complete_tensile_edge_loads(model, part):
+            log('strict check: complete outward 10 MPa loads are missing on one or both vertical edges')
+            return False
+        if not _has_minimum_rigid_body_constraints(model):
+            log('strict check: exactly three scalar constraints on two separated nodes are required')
+            return False
     if domain == 'fixed_fixed_beam_modal_gui' and not (18 <= element_count <= 24 and 19 <= node_count <= 30):
         log('strict check: expected about 20 beam divisions')
         return False
@@ -770,6 +964,15 @@ def _odb_element_types(odb):
         pass
     return out
 
+def _odb_element_count(odb):
+    count = 0
+    try:
+        for key in odb.rootAssembly.instances.keys():
+            count += len(odb.rootAssembly.instances[key].elements)
+    except Exception:
+        pass
+    return count
+
 def _odb_frames(odb):
     out = []
     try:
@@ -818,6 +1021,7 @@ def check_abaqus_odb_specific(odb):
         return False
     final = frames[-1]
     types = _odb_element_types(odb)
+    element_count = _odb_element_count(odb)
     xyz = _odb_nodes(odb)
     times = [float(getattr(frame, 'frameValue', 0.0)) for frame in frames]
     stress = _frame_field(final, ('S',), invariant=True)
@@ -851,13 +1055,23 @@ def check_abaqus_odb_specific(odb):
             log('strict ODB check: cantilever response is inconsistent with 100 N')
             return False
     if domain == 'plane_stress_plate_hole_gui':
+        if element_count < 700:
+            log('strict ODB check: locally refined mesh has too few elements')
+            return False
         if not stress or not (20.0 <= max(stress) <= 60.0):
             log('strict ODB check: plate-hole stress concentration is implausible')
+            return False
+        if not disp or not (1.0e-4 <= max(abs(value) for value in disp) <= 0.05):
+            log('strict ODB check: displacement result is missing or implausible')
             return False
         if xyz:
             radius = min(((p[0] - 50.0) ** 2 + (p[1] - 100.0) ** 2) ** 0.5 for p in xyz)
             if not (4.5 <= radius <= 5.5):
                 log('strict ODB check: 10 mm central hole is not represented')
+                return False
+            hole_nodes = sum(1 for p in xyz if abs(((p[0] - 50.0) ** 2 + (p[1] - 100.0) ** 2) ** 0.5 - 5.0) <= 0.2)
+            if hole_nodes < 20:
+                log('strict ODB check: hole boundary is not locally refined to about 1 mm')
                 return False
     if domain in ('transient_heat_block_gui', 'transient_thermal_conduction_gui'):
         target_time = 300.0 if domain == 'transient_heat_block_gui' else 10.0
@@ -1453,6 +1667,9 @@ def check_ansys_result_binary(result_path):
         hole_nodes = int(np.sum(np.abs(np.sqrt((nodes[:, 0] - 50.0) ** 2 + (nodes[:, 1] - 100.0) ** 2) - 5.0) <= 0.2))
         if element_count < 700 or hole_nodes < 20 or not (4.5 <= radius <= 5.5) or stress_max is None or not (20.0 <= stress_max <= 60.0):
             log('strict binary check: locally refined 10 mm hole/stress evidence missing')
+            return False
+        if solution_max is None or not (1.0e-4 <= solution_max <= 0.05):
+            log('strict binary check: displacement response is missing or implausible')
             return False
         if stress_peak is None or stress_peak_xyz is None or ((stress_peak_xyz[0] - 50.0) ** 2 + (stress_peak_xyz[1] - 100.0) ** 2) ** 0.5 > 15.0:
             log('strict binary check: maximum Mises stress is not located near the hole')

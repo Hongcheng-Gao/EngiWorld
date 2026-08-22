@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-14-windows', 'open_choice_id': 'cae-open-choice-034', 'source_task': 'task/task-v/ansys/task-04', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'transient_thermal_conduction_gui', 'analysis_kind': 'thermal', 'metrics': ['probe_temperature', 'time_value'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a transient one-dimensional heat-conduction block; report temperatures at the specified probes and time.', 'selection_reason': 'Transient thermal conduction is solver-agnostic and not dependent on fluid modules.', 'artifact_hint': {'ground_truth_files': ['apdl_transient_thermal.db', 'apdl_transient_thermal.rth'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_transient_thermal.db'], 'ansys_result_files': ['apdl_transient_thermal.rth']}, 'span_hint': {'x': 50.0, 'y': 20.0, 'z': 20.0}, 'bounds_hint': {'x': [0.0, 50.0], 'y': [0.0, 20.0], 'z': [0.0, 20.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-14-windows', 'open_choice_id': 'cae-open-choice-034', 'source_task': 'task/task-v/ansys/task-04', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'transient_thermal_conduction_gui', 'analysis_kind': 'thermal', 'metrics': ['probe_temperature', 'time_value'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a transient one-dimensional heat-conduction block; report temperatures at the specified probes and time.', 'selection_reason': 'Transient thermal conduction is solver-agnostic and not dependent on fluid modules.', 'artifact_hint': {'ground_truth_files': ['apdl_transient_thermal.db', 'apdl_transient_thermal.rth'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_transient_thermal.db'], 'ansys_result_files': ['apdl_transient_thermal.rth']}, 'span_hint': {'x': 50.0, 'y': 20.0, 'z': 20.0}, 'bounds_hint': {'x': [0.0, 50.0], 'y': [0.0, 20.0], 'z': [0.0, 20.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +96,8 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    log('Abaqus CAE/ODB files do not share a stem')
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -586,6 +587,142 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _region_nodes(model, owner):
+    region = getattr(owner, 'region', owner)
+    out = []
+    try:
+        out.extend(_all_region_nodes(region.nodes))
+    except Exception:
+        pass
+    entity_attrs = ('cells', 'faces', 'edges', 'vertices', 'side1Faces', 'side2Faces',
+                    'side1Edges', 'side2Edges', 'end1Edges', 'end2Edges')
+    for attr in entity_attrs:
+        try:
+            entities = list(getattr(region, attr))
+        except Exception:
+            continue
+        for entity in entities:
+            try:
+                out.extend(_all_region_nodes(entity.getNodes()))
+            except Exception:
+                pass
+    label = ci(region)
+    try:
+        assembly = model.rootAssembly
+    except Exception:
+        assembly = None
+    if assembly is not None:
+        for repo_name in ('sets', 'surfaces'):
+            try:
+                repo = getattr(assembly, repo_name)
+                for key in repo.keys():
+                    if ci(key) not in label and label not in ci(key):
+                        continue
+                    item = repo[key]
+                    out.extend(_all_region_nodes(getattr(item, 'nodes', None)))
+                    for attr in entity_attrs:
+                        try:
+                            for entity in getattr(item, attr):
+                                out.extend(_all_region_nodes(entity.getNodes()))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+    unique = []
+    seen = set()
+    for node in out:
+        try:
+            xyz = tuple(round(float(value), 8) for value in node.coordinates)
+        except Exception:
+            continue
+        key = (getattr(node, 'label', None), xyz)
+        if key not in seen:
+            seen.add(key)
+            unique.append(node)
+    return unique
+
+def _node_xyz(node):
+    try:
+        return tuple(float(value) for value in node.coordinates)
+    except Exception:
+        return None
+
+def _same_xyz(a, b, tol=0.08):
+    return a is not None and b is not None and len(a) == len(b) and all(abs(x-y) <= tol for x, y in zip(a, b))
+
+def _temperature_values(owner):
+    values = []
+    for attr in ('magnitude', 'magnitudes'):
+        values.extend(_numbers(getattr(owner, attr, None)))
+    return values
+
+def _thermal_conditions_match_instruction(model, part):
+    all_nodes = []
+    left_nodes = []
+    try:
+        for node in part.nodes:
+            xyz = _node_xyz(node)
+            if xyz is None:
+                continue
+            all_nodes.append(xyz)
+            if abs(xyz[0]) <= 0.08:
+                left_nodes.append(xyz)
+    except Exception:
+        pass
+    if not all_nodes or not left_nodes:
+        return False
+
+    initial_covered = []
+    for field in _repo_values(model.predefinedFields):
+        class_text = ci(getattr(field, '__class__', type(field)).__name__)
+        if 'TEMP' not in class_text:
+            continue
+        values = _temperature_values(field)
+        if values and all(_near(value, 20.0, 0.01, 0.05) for value in values):
+            initial_covered.extend(_node_xyz(node) for node in _region_nodes(model, field))
+    initial_covered = [xyz for xyz in initial_covered if xyz is not None]
+    if not all(any(_same_xyz(node, candidate) for candidate in initial_covered) for node in all_nodes):
+        log('strict check: 20 C initial temperature does not cover the whole model')
+        return False
+
+    boundary_covered = []
+    temperature_bc_count = 0
+    for bc in _repo_values(model.boundaryConditions):
+        class_text = ci(getattr(bc, '__class__', type(bc)).__name__)
+        if 'TEMP' not in class_text:
+            continue
+        temperature_bc_count += 1
+        values = _temperature_values(bc)
+        nodes = [_node_xyz(node) for node in _region_nodes(model, bc)]
+        nodes = [xyz for xyz in nodes if xyz is not None]
+        if not values or any(not _near(value, 100.0, 0.01, 0.05) for value in values):
+            log('strict check: prescribed temperature is not 100 C')
+            return False
+        if not nodes or any(abs(xyz[0]) > 0.08 for xyz in nodes):
+            log('strict check: prescribed temperature exists away from X=0')
+            return False
+        boundary_covered.extend(nodes)
+    if temperature_bc_count < 1 or not all(any(_same_xyz(node, candidate) for candidate in boundary_covered) for node in left_nodes):
+        log('strict check: 100 C boundary does not cover the complete X=0 face')
+        return False
+
+    forbidden_tokens = ('FLUX', 'FILM', 'RADIAT', 'CONVECTION', 'HEATGENERATION')
+    for repo_name in ('loads', 'interactions'):
+        try:
+            owners = _repo_values(getattr(model, repo_name))
+        except Exception:
+            owners = []
+        for owner in owners:
+            class_text = ci(getattr(owner, '__class__', type(owner)).__name__)
+            if any(token in class_text for token in forbidden_tokens):
+                action_values = []
+                for attr in ('magnitude', 'magnitudes', 'filmCoeff', 'coefficient', 'emissivity'):
+                    action_values.extend(_numbers(getattr(owner, attr, None)))
+                if any(abs(value) > 1.0e-12 for value in action_values):
+                    log('strict check: non-adiabatic heat action found on an external surface')
+                    return False
+    return True
+
 def _part_element_types(part):
     out = set()
     try:
@@ -726,6 +863,8 @@ def check_abaqus_task_specific(model, part):
             initial_temperatures.extend(_numbers(getattr(field, 'magnitudes', None)))
         if not any(_near(value, 20.0, 0.01) for value in initial_temperatures):
             log('strict check: 20 C initial temperature is missing')
+            return False
+        if not _thermal_conditions_match_instruction(model, part):
             return False
     if domain == 'steady_state_thermal_block_gui':
         responses = ' '.join(ci(getattr(step, 'response', '')) for step in steps)

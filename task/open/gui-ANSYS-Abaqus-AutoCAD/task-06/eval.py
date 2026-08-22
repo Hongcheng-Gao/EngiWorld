@@ -12,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-06-windows', 'open_choice_id': 'cae-open-choice-016', 'source_task': 'task/task-v/abaqus/task-16', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'transient_heat_block_gui', 'analysis_kind': 'thermal', 'metrics': ['final_probe_temperature', 'time_value'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a transient heat-transfer block; report final or probe temperatures at the requested time.', 'selection_reason': 'Transient thermal analysis is supported in both tools and has solver-result evidence.', 'artifact_hint': {'ground_truth_files': ['Job-TransientHeat-A.cae', 'Job-TransientHeat-A.odb', 'gt_task_06_ansys.db', 'gt_task_06_ansys.rth'], 'abaqus_stems': ['Job-TransientHeat-A'], 'ansys_db_files': ['gt_task_06_ansys.db'], 'ansys_result_files': ['gt_task_06_ansys.rth']}, 'span_hint': {'x': 60.0, 'y': 18.0, 'z': 12.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-06-windows', 'open_choice_id': 'cae-open-choice-016', 'source_task': 'task/task-v/abaqus/task-16', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'transient_heat_block_gui', 'analysis_kind': 'thermal', 'metrics': ['heated_face_average_temperature', 'x_approximately_5mm_band_average_temperature', 'time_value'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve the transient heat-transfer block and report the final average temperatures near X = 0 and X approximately 5 mm together with the final analysis time.', 'selection_reason': 'Transient thermal analysis is supported in both tools and has solver-result evidence.', 'artifact_hint': {'ground_truth_files': ['Job-TransientHeat-A.cae', 'Job-TransientHeat-A.odb', 'gt_task_06_ansys.db', 'gt_task_06_ansys.rth'], 'abaqus_stems': ['Job-TransientHeat-A'], 'ansys_db_files': ['gt_task_06_ansys.db'], 'ansys_result_files': ['gt_task_06_ansys.rth']}, 'span_hint': {'x': 60.0, 'y': 18.0, 'z': 12.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -705,10 +705,15 @@ def check_abaqus_task_specific(model, part):
             log('strict check: three buckling eigenvalues not requested')
             return False
     if domain == 'transient_heat_block_gui':
-        if not (_step_attr_matches(steps, 'timePeriod', 300.0) and
-                _step_attr_matches(steps, 'initialInc', 2.0) and
-                _step_attr_matches(steps, 'maxInc', 15.0) and
-                _step_attr_matches(steps, 'deltmx', 10.0)):
+        step_key = find_key(model.steps, 'Step-Heat-A')
+        if step_key is None:
+            log('strict check: Step-Heat-A is missing')
+            return False
+        heat_step = model.steps[step_key]
+        if not (_step_attr_matches([heat_step], 'timePeriod', 300.0) and
+                _step_attr_matches([heat_step], 'initialInc', 2.0) and
+                _step_attr_matches([heat_step], 'maxInc', 15.0) and
+                _step_attr_matches([heat_step], 'deltmx', 10.0)):
             log('strict check: transient step parameters do not match 300/2/15/DELTMX=10')
             return False
         if types != set(('DC3D8',)):

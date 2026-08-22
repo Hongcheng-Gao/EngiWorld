@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-09-windows', 'open_choice_id': 'cae-open-choice-019', 'source_task': 'task/task-v/abaqus/task-19', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'thin_plate_buckling_b_gui_only', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a thin-plate eigenvalue buckling variant; report the first buckling factor and save solver evidence.', 'selection_reason': 'The source task already has a GUI-only requirement and remains replaceable by the alternate GUI solver.', 'artifact_hint': {'ground_truth_files': ['Job-Buckle-B.cae', 'Job-Buckle-B.odb'], 'abaqus_stems': ['Job-Buckle-B'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 120.0, 'y': 120.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-09-windows', 'open_choice_id': 'cae-open-choice-019', 'source_task': 'task/task-v/abaqus/task-19', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'thin_plate_buckling_b_gui_only', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve three buckling modes of the partitioned 120 mm square shell under tributary nodal edge compression and save native solver evidence.', 'selection_reason': 'The source task already has a GUI-only requirement and remains replaceable by the alternate GUI solver.', 'artifact_hint': {'ground_truth_files': ['Job-Buckle-B.cae', 'Job-Buckle-B.odb'], 'abaqus_stems': ['Job-Buckle-B'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 120.0, 'y': 120.0}, 'bounds_hint': {'x': [0.0, 120.0], 'y': [0.0, 120.0], 'z': [0.0, 0.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -575,10 +576,14 @@ def _inp_header(line):
     return values
 
 def _parse_semantic_input(path):
-    data = {'nsets': {}, 'cloads': [], 'boundaries': [], 'shell_thicknesses': []}
+    data = {'nsets': {}, 'elsets': {}, 'elements': set(), 'cloads': [], 'boundaries': [],
+            'shell_thicknesses': [], 'shell_sections': [], 'shell_section_elsets': []}
     mode = None
+    mode_header = {}
     nset_name = None
     nset_generate = False
+    elset_name = None
+    elset_generate = False
     try:
         stream = open(path, 'r')
         try:
@@ -588,13 +593,23 @@ def _parse_semantic_input(path):
                     continue
                 if line.startswith('*'):
                     mode = ci(line.split(',', 1)[0])
+                    mode_header = _inp_header(line)
                     nset_name = None
                     nset_generate = False
+                    elset_name = None
+                    elset_generate = False
                     if mode == '*NSET':
                         header = _inp_header(line)
                         nset_name = ci(header.get('NSET', ''))
                         nset_generate = bool(header.get('GENERATE'))
                         data['nsets'].setdefault(nset_name, [])
+                    elif mode == '*ELSET':
+                        header = _inp_header(line)
+                        elset_name = ci(header.get('ELSET', ''))
+                        elset_generate = bool(header.get('GENERATE'))
+                        data['elsets'].setdefault(elset_name, [])
+                    elif mode == '*SHELL SECTION':
+                        data['shell_section_elsets'].append(ci(mode_header.get('ELSET', '')))
                     continue
                 fields = [value.strip() for value in line.split(',')]
                 if mode == '*NSET' and nset_name:
@@ -614,6 +629,25 @@ def _parse_semantic_input(path):
                                 data['nsets'][nset_name].append(int(token))
                             except Exception:
                                 data['nsets'][nset_name].append(ci(token))
+                elif mode == '*ELSET' and elset_name:
+                    tokens = [value for value in fields if value]
+                    if elset_generate and len(tokens) >= 2:
+                        try:
+                            step = int(tokens[2]) if len(tokens) >= 3 else 1
+                            data['elsets'][elset_name].extend(range(int(tokens[0]), int(tokens[1]) + 1, step))
+                        except Exception:
+                            pass
+                    else:
+                        for token in tokens:
+                            try:
+                                data['elsets'][elset_name].append(int(token))
+                            except Exception:
+                                data['elsets'][elset_name].append(ci(token))
+                elif mode == '*ELEMENT' and fields:
+                    try:
+                        data['elements'].add(int(fields[0]))
+                    except Exception:
+                        pass
                 elif mode == '*CLOAD' and len(fields) >= 3:
                     try:
                         data['cloads'].append((ci(fields[0]), int(fields[1]), float(fields[2])))
@@ -629,7 +663,11 @@ def _parse_semantic_input(path):
                         pass
                 elif mode == '*SHELL SECTION' and fields:
                     try:
-                        data['shell_thicknesses'].append(float(fields[0]))
+                        thickness = float(fields[0])
+                        integration_points = int(float(fields[1])) if len(fields) > 1 and fields[1] else None
+                        material = ci(mode_header.get('MATERIAL', ''))
+                        data['shell_thicknesses'].append(thickness)
+                        data['shell_sections'].append((thickness, integration_points, material))
                     except Exception:
                         pass
         finally:
@@ -655,6 +693,20 @@ def _resolve_inp_target(data, target, trail=None):
             labels.add(value)
         else:
             labels.update(_resolve_inp_target(data, value, trail))
+    return labels
+
+def _resolve_inp_elset(data, target, trail=None):
+    target = ci(target)
+    trail = set() if trail is None else set(trail)
+    if target in trail:
+        return set()
+    trail.add(target)
+    labels = set()
+    for value in data['elsets'].get(target, []):
+        if isinstance(value, int):
+            labels.add(value)
+        else:
+            labels.update(_resolve_inp_elset(data, value, trail))
     return labels
 
 def _inp_force_by_node(data, dof):
@@ -742,8 +794,15 @@ def _check_buckling_b_input(model, part):
     except Exception:
         log('strict check: cannot inspect centerline face partitions')
         return False
-    if not any(_near(value, 0.8, 0.01, 1.0e-6) for value in data['shell_thicknesses']):
-        log('strict check: 0.8 mm shell thickness missing')
+    if not any(_near(thickness, 0.8, 0.01, 1.0e-6) and points == 5 and material == 'STEEL'
+               for thickness, points, material in data['shell_sections']):
+        log('strict check: Steel shell section must use 0.8 mm thickness and 5 integration points')
+        return False
+    section_elements = set()
+    for elset_name in data['shell_section_elsets']:
+        section_elements.update(_resolve_inp_elset(data, elset_name))
+    if not data['elements'] or section_elements != data['elements']:
+        log('strict check: Steel shell section does not cover every plate element')
         return False
     if any(dof != 1 and abs(value) > 1.0e-12 for _, dof, value in data['cloads']):
         log('strict check: unexpected non-X concentrated load')
@@ -752,21 +811,29 @@ def _check_buckling_b_input(model, part):
             _check_tributary_edge(data, coordinates, 120.0, -0.9, 120.0)):
         log('strict check: 0.9 N/mm tributary edge loads are incomplete or have wrong direction/resultant')
         return False
+    loaded_nodes = set(_inp_force_by_node(data, 1).keys())
+    edge_nodes = _nodes_at(coordinates, x=0.0) | _nodes_at(coordinates, x=120.0)
+    if loaded_nodes != edge_nodes:
+        log('strict check: nonzero X loads are not confined to the two vertical edges')
+        return False
     if not (_edge_spacing_matches(coordinates, 0.0, 8.0) and
             _edge_spacing_matches(coordinates, 120.0, 8.0)):
         log('strict check: edge mesh spacing is inconsistent with 8 mm global seed')
         return False
     boundary = (_nodes_at(coordinates, x=0.0) | _nodes_at(coordinates, x=120.0) |
                 _nodes_at(coordinates, y=0.0) | _nodes_at(coordinates, y=120.0))
-    if not boundary.issubset(_inp_constrained_nodes(data, 3)):
-        log('strict check: U3 is not constrained on all four edges')
+    if _inp_constrained_nodes(data, 3) != boundary:
+        log('strict check: U3 constraints must cover exactly the four plate edges')
         return False
     center = _nodes_at(coordinates, x=60.0, y=60.0)
-    if not center or not center.issubset(_inp_constrained_nodes(data, 1)) or not center.issubset(_inp_constrained_nodes(data, 2)):
+    if not center:
+        log('strict check: center mesh node is missing')
+        return False
+    if _inp_constrained_nodes(data, 2) != center:
         log('strict check: center U1/U2 rigid-body constraint missing')
         return False
     bottom_mid = _nodes_at(coordinates, x=60.0, y=0.0)
-    if not bottom_mid or not bottom_mid.issubset(_inp_constrained_nodes(data, 1)):
+    if not bottom_mid or _inp_constrained_nodes(data, 1) != (center | bottom_mid):
         log('strict check: bottom midpoint U1 rigid-body constraint missing')
         return False
     return True
@@ -825,6 +892,12 @@ def _material_ok(model, domain):
         log('strict check: no material')
         return False
     material = materials[0]
+    if domain == 'thin_plate_buckling_b_gui_only':
+        steel_key = find_key(model.materials, 'Steel')
+        if steel_key is None:
+            log('strict check: material Steel is missing')
+            return False
+        material = model.materials[steel_key]
     elastic = _material_numbers(material, 'elastic')
     if domain not in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
         expected = {
@@ -922,8 +995,34 @@ def check_abaqus_task_specific(model, part):
         if not any(float(getattr(step, 'numEigen', 0) or 0) >= 3 for step in steps):
             log('strict check: three buckling eigenvalues not requested')
             return False
-    if domain == 'thin_plate_buckling_b_gui_only' and not _check_buckling_b_input(model, part):
-        return False
+    if domain == 'thin_plate_buckling_b_gui_only':
+        step_key = find_key(model.steps, 'Step-Buckle-B')
+        if step_key is None or 'BUCKLE' not in step_text(model.steps[step_key]):
+            log('strict check: Step-Buckle-B is missing or is not a Buckle step')
+            return False
+        if not _near(getattr(model.steps[step_key], 'numEigen', None), 3.0, 0.0, 0.0):
+            log('strict check: Step-Buckle-B must request exactly three eigenvalues')
+            return False
+        try:
+            seed_size = float(part.getPartSeeds(attribute=SIZE))
+        except Exception:
+            seed_size = None
+        if seed_size is None or not _near(seed_size, 8.0, 0.10, 0.4):
+            log('strict check: global seed size is not approximately 8 mm: %s' % seed_size)
+            return False
+        instances = _repo_values(model.rootAssembly.instances)
+        if len(instances) != 1:
+            log('strict check: expected one plate instance, got %s' % len(instances))
+            return False
+        dependent = getattr(instances[0], 'dependent', None)
+        if dependent != ON and ci(dependent) not in ('ON', '1', 'TRUE'):
+            log('strict check: plate instance is not dependent')
+            return False
+        if find_key(mdb.jobs, 'Job-Buckle-B') is None:
+            log('strict check: Job-Buckle-B is missing from the CAE database')
+            return False
+        if not _check_buckling_b_input(model, part):
+            return False
     if domain == 'transient_heat_block_gui':
         if not (_step_attr_matches(steps, 'timePeriod', 300.0) and
                 _step_attr_matches(steps, 'initialInc', 2.0) and
@@ -1299,6 +1398,24 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _mplist_value(text, label):
+    lines = str(text).splitlines()
+    wanted = str(label).upper()
+    number_pattern = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?'
+    for index, line in enumerate(lines):
+        tokens = line.upper().split()
+        if not tokens or tokens[0] != 'TEMP' or wanted not in tokens[1:]:
+            continue
+        for following in lines[index + 1:index + 4]:
+            numbers = re.findall(number_pattern, following)
+            if numbers:
+                try:
+                    return float(numbers[-1])
+                except Exception:
+                    pass
+    return None
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1347,6 +1464,16 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'thin_plate_buckling_b_gui_only':
+        elastic = _mplist_value(text, 'EX')
+        poisson = _mplist_value(text, 'PRXY')
+        if elastic is None or not _close(elastic, 210000.0, 0.01):
+            log('strict material check: ANSYS Young modulus mismatch %s' % elastic)
+            return False
+        if poisson is None or not _close(poisson, 0.3, 0.02):
+            log('strict material check: ANSYS Poisson ratio mismatch %s' % poisson)
+            return False
+        return True
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1354,6 +1481,17 @@ def check_ansys_materials(mapdl):
         return count is not None and count >= 1
     except Exception:
         return False
+
+
+def check_ansys_shell_section(mapdl):
+    for section_id in range(1, 101):
+        thickness = _try_get(mapdl, 'SHEL', section_id, 'PROP', 'TTHK')
+        points = _try_get(mapdl, 'SHEL', section_id, 'NSP')
+        if thickness is not None and points is not None:
+            if _close(thickness, 0.8, 0.01, 1.0e-6) and _close(points, 5.0, 0.0, 0.0):
+                return True
+    log('strict section check: ANSYS shell section must use 0.8 mm thickness and 5 integration points')
+    return False
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1622,12 +1760,23 @@ def check_ansys_result_binary(result_path):
         if not (_close(_force_sum(forces, 1, 0, 0.0), 108.0, 0.03) and _close(_force_sum(forces, 1, 0, 120.0), -108.0, 0.03)):
             log('strict binary check: 0.9 N/mm tributary edge loads missing')
             return False
+        for code, value, xyz in forces:
+            if abs(value) <= 1.0e-12:
+                continue
+            if code != 1 or xyz is None or (abs(xyz[0]) > 0.1 and abs(xyz[0] - 120.0) > 0.1):
+                log('strict binary check: nonzero loads are not confined to X direction on the vertical edges')
+                return False
+        if len([value for value in times if value > 0.0]) < 3:
+            log('strict binary check: fewer than three solved buckling modes')
+            return False
         edge_points = (_mesh_points_at(nodes, 0, 0.0) | _mesh_points_at(nodes, 0, 120.0) |
                        _mesh_points_at(nodes, 1, 0.0) | _mesh_points_at(nodes, 1, 120.0))
-        if not edge_points.issubset(_bc_points(bcs, 3)):
-            log('strict binary check: UZ is not constrained on all four edges')
+        if _bc_points(bcs, 3) != edge_points:
+            log('strict binary check: UZ constraints must cover exactly the four plate edges')
             return False
-        if not _point_has_dofs(bcs, (60.0, 60.0, 0.0), (1, 2)) or not _point_has_dofs(bcs, (60.0, 0.0, 0.0), (1,)):
+        center = set((_coordinate_key((60.0, 60.0, 0.0)),))
+        bottom_mid = set((_coordinate_key((60.0, 0.0, 0.0)),))
+        if _bc_points(bcs, 1) != (center | bottom_mid) or _bc_points(bcs, 2) != center:
             log('strict binary check: center/bottom-midpoint in-plane rigid-body constraints missing')
             return False
         if not (_binary_edge_spacing(nodes, 0.0, 8.0) and _binary_edge_spacing(nodes, 120.0, 8.0)):
@@ -1723,6 +1872,8 @@ def check_ansys_with_mapdl(root, model_path, result_path):
             return False
         if not check_ansys_materials(mapdl):
             log('material check failed')
+            return False
+        if TASK_SPEC.get('domain') == 'thin_plate_buckling_b_gui_only' and not check_ansys_shell_section(mapdl):
             return False
         if not check_ansys_boundary_loads(mapdl):
             return False

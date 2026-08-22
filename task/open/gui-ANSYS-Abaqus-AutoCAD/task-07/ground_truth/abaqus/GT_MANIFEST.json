@@ -1,34 +1,39 @@
 {
   "status": "verified_in_native_snapshot",
   "task": "task-07",
-  "task_id": "v-cae-commercial-open-choice-task-07-windows",
+  "task_id": "v-open-abaqus-ansys-autocad-task-07-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
   "solver": "abaqus",
+  "software_version": "Abaqus 2025",
   "analysis_kind": "thermal_structural",
   "domain": "thermal_stress_bar_gui",
   "metrics": [
-    "max_mises",
-    "max_displacement"
+    "max_mises_mpa",
+    "reaction_force_abs_sum_n",
+    "temperature_initial_c",
+    "temperature_final_c"
   ],
-  "metric_note": "metrics.json was extracted from native Abaqus stress and displacement fields on the assigned snapshot.",
-  "source_instruction_sha256": "0e9e7aa61c4aa48b2386bd992ec323d05fd171bd6de4284ec5d0a8e5cc0f8a2a",
-  "generated_at_epoch": 1786682660,
+  "metric_note": "metrics.json records values extracted by the main-thread native rebuild, including the 20 C initial field, 120 C final field, maximum Mises stress, and absolute reaction-force sum.",
+  "source_instruction_sha256": "a18d378206f60df8b437dc883c276cb2710588b2d11a4dcf8d3992d26e4777ea",
+  "init_artifact": null,
+  "generated_at_epoch": 1787416764,
   "remote_host": "i-yessy2qzgg5i3z2sr3z2 / 10.0.6.66",
-  "note": "The existing restrained thermal-stress model passed the repaired evaluator; zero sidecar values were replaced with ODB-derived maximum Mises stress and displacement.",
+  "note": "The main-thread native rebuild replaced the previously invalid CAE/ODB pair and supplied explicit 20 C and 120 C metric evidence. This local-only repair synchronized metadata but did not launch Abaqus to rerun the strengthened evaluator.",
   "files": [
     {
       "file": "Job-ThermalStress.cae",
       "size": 53248,
-      "sha256": "e9a28bc52d4486a157a058ecbe4f8ba40f267bc8eab7e860a83eedf04c2d25bc"
+      "sha256": "1382eb7097fd7f39ce990507e8b981c69649d33d6563b61a37a461cdaec00040"
     },
     {
       "file": "Job-ThermalStress.odb",
-      "size": 243192,
-      "sha256": "df9310e2f70f6e89fd9975f3586ad0602d57a8f7871125e2b090e9d554b411b2"
+      "size": 245168,
+      "sha256": "d5047478b62d861ff6b2341319052e834e05eaa7a057fba9aad4d1a1add18c97"
     },
     {
       "file": "metrics.json",
-      "size": 82,
-      "sha256": "55ecc6afde1cd904ce64285b18d5d76d711bdea653d8d1cbaee83f6a80c44542"
+      "size": 159,
+      "sha256": "2e2b8cf321550e115f84307055e84d074c95372345864933e5b9e6ec19ab2ae7"
     }
   ]
 }

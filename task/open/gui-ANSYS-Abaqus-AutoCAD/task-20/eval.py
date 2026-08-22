@@ -11,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-20-windows', 'open_choice_id': 'cae-open-choice-040', 'source_task': 'task/task-v/ansys/task-20', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'steady_state_thermal_block_gui', 'analysis_kind': 'thermal', 'metrics': ['mid_temperature', 'heat_flow_optional'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a steady one-dimensional thermal conduction block; report mid-length temperature and heat-flow consistency.', 'selection_reason': 'Steady thermal analysis is a common non-structural FEA capability in both tools.', 'artifact_hint': {'ground_truth_files': ['wb_conduction.db', 'wb_conduction.rth'], 'abaqus_stems': [], 'ansys_db_files': ['wb_conduction.db'], 'ansys_result_files': ['wb_conduction.rth']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-20-windows', 'open_choice_id': 'cae-open-choice-040', 'source_task': 'task/task-v/ansys/task-20', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'steady_state_thermal_block_gui', 'analysis_kind': 'thermal', 'metrics': ['mid_temperature', 'heat_flow_optional'], 'expected_result_fields': ['NT11'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve a steady one-dimensional thermal conduction block; report mid-length temperature and heat-flow consistency.', 'selection_reason': 'Steady thermal analysis is a common non-structural FEA capability in both tools.', 'artifact_hint': {'ground_truth_files': ['wb_conduction.db', 'wb_conduction.rth'], 'abaqus_stems': [], 'ansys_db_files': ['wb_conduction.db'], 'ansys_result_files': ['wb_conduction.rth']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}, 'material_hint': {'conductivity_w_per_mm_k': 0.05, 'conductivity_w_per_m_k': 50.0}, 'element_hint': {'accepted_ansys_types': [70, 87, 90, 278, 279], 'abaqus_family': 'DC3D'}, 'mesh_hint': {'required_x_section_mm': 50.0}, 'temperature_hint': {'left_face_x_mm': 0.0, 'left_temperature_c': 100.0, 'right_face_x_mm': 100.0, 'right_temperature_c': 20.0}, 'side_boundary_hint': {'adiabatic': True, 'nonzero_heat_flux_film_radiation_allowed': False}, 'result_window': {'mid_temperature_c': [57.0, 63.0], 'left_heat_flow_w': [3.88, 4.12], 'right_heat_flow_w': [-4.12, -3.88]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +96,7 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -649,6 +649,27 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _node_key(node):
+    try:
+        return tuple(round(float(v), 6) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _thermal_load_is_nonzero(load):
+    name = ci(load.__class__.__name__)
+    if 'FILM' in name:
+        attrs = ('filmCoeff', 'filmCoefficient')
+    elif 'RADIAT' in name:
+        attrs = ('emissivity',)
+    elif 'FLUX' in name or 'HEAT' in name:
+        attrs = ('magnitude',)
+    else:
+        return False
+    observed = []
+    for attr in attrs:
+        observed.extend(_numbers(getattr(load, attr, None)))
+    return not observed or any(abs(value) > 1.0e-12 for value in observed)
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -713,6 +734,33 @@ def check_abaqus_task_specific(model, part):
         responses = ' '.join(ci(getattr(step, 'response', '')) for step in steps)
         if 'STEADY' not in responses:
             log('strict check: heat-transfer step is not steady state')
+            return False
+        all_nodes = {_node_key(node) for node in part.nodes}
+        all_nodes.discard(None)
+        left_nodes = {point for point in all_nodes if abs(point[0]) <= 0.1}
+        right_nodes = {point for point in all_nodes if abs(point[0] - 100.0) <= 0.1}
+        midpoint_nodes = {point for point in all_nodes if abs(point[0] - 50.0) <= 0.1}
+        left_bcs = set()
+        right_bcs = set()
+        invalid_temperature_bc = False
+        for bc in _repo_values(model.boundaryConditions):
+            if 'TEMPERATURE' not in ci(bc.__class__.__name__):
+                continue
+            magnitude = getattr(bc, 'magnitude', None)
+            scoped = {_node_key(node) for node in _load_region_nodes(model, bc)}
+            scoped.discard(None)
+            if _near(magnitude, 100.0, 0.01):
+                left_bcs.update(scoped)
+            elif _near(magnitude, 20.0, 0.01):
+                right_bcs.update(scoped)
+            else:
+                invalid_temperature_bc = True
+        if (invalid_temperature_bc or not left_nodes or not right_nodes or not midpoint_nodes
+                or left_bcs != left_nodes or right_bcs != right_nodes):
+            log('strict check: complete 100 C/20 C end-face constraints or X=50 mesh section are missing')
+            return False
+        if any(_thermal_load_is_nonzero(load) for load in _repo_values(model.loads)):
+            log('strict check: nonzero heat flux, film, or radiation load violates adiabatic side faces')
             return False
     if domain == 'plane_stress_plate_hole_gui' and element_count < 700:
         log('strict check: 5 mm/1 mm locally refined mesh evidence missing elements=%s' % element_count)
@@ -826,6 +874,7 @@ def check_abaqus_odb_specific(odb):
     stress = _frame_field(final, ('S',), invariant=True)
     disp = _frame_field(final, ('U',))
     temp = _frame_field(final, ('NT11', 'NT'))
+    reaction_flux = _frame_field(final, ('RFL',))
 
     if domain in ('cantilever_modal_a_gui', 'cantilever_modal_b_gui', 'fixed_fixed_beam_modal_gui'):
         target = {'cantilever_modal_a_gui': 4, 'cantilever_modal_b_gui': 5, 'fixed_fixed_beam_modal_gui': 3}[domain]
@@ -902,10 +951,22 @@ def check_abaqus_odb_specific(odb):
         if not temp or min(temp) < 19.0 or max(temp) > 101.0 or min(temp) > 21.0 or max(temp) < 99.0:
             log('strict ODB check: 20-100 C steady field missing')
             return False
-        if xyz:
-            midpoint = [temp[i] for i, p in enumerate(xyz[:len(temp)]) if abs(p[0] - 50.0) <= 0.1]
-            if not midpoint or not (57.0 <= _sum_values(midpoint) / len(midpoint) <= 63.0):
-                log('strict ODB check: midpoint temperature is not approximately 60 C')
+        if not xyz or len(temp) != len(xyz):
+            log('strict ODB check: complete nodal temperature field is unavailable')
+            return False
+        left = [temp[i] for i, point in enumerate(xyz) if abs(point[0]) <= 0.1]
+        right = [temp[i] for i, point in enumerate(xyz) if abs(point[0] - 100.0) <= 0.1]
+        midpoint = [temp[i] for i, point in enumerate(xyz) if abs(point[0] - 50.0) <= 0.1]
+        if (not left or not all(_near(value, 100.0, 0.01) for value in left)
+                or not right or not all(_near(value, 20.0, 0.01) for value in right)
+                or not midpoint or not (57.0 <= _sum_values(midpoint) / len(midpoint) <= 63.0)):
+            log('strict ODB check: end-face or midpoint steady temperatures are incorrect')
+            return False
+        if reaction_flux and len(reaction_flux) == len(xyz):
+            left_heat = _sum_values(reaction_flux[i] for i, point in enumerate(xyz) if abs(point[0]) <= 0.1)
+            right_heat = _sum_values(reaction_flux[i] for i, point in enumerate(xyz) if abs(point[0] - 100.0) <= 0.1)
+            if not (_near(abs(left_heat), 4.0, 0.03) and _near(abs(right_heat), 4.0, 0.03) and _near(left_heat + right_heat, 0.0, 0.0, 0.12)):
+                log('strict ODB check: available end reaction fluxes do not balance at 4 W')
                 return False
     return True
 
@@ -1038,6 +1099,20 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _ansys_material_values(mapdl, label):
+    values = []
+    current = _try_get(mapdl, 'MAT', 0, 'NUM', 'MIN')
+    visited = set()
+    while current is not None and current > 0 and int(current) not in visited:
+        material = int(current)
+        visited.add(material)
+        value = _try_get(mapdl, label, material)
+        if value is not None:
+            values.append(value)
+        current = _try_get(mapdl, 'MAT', material, 'NUM', 'NXTH')
+    return values
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1087,19 +1162,20 @@ def check_ansys_geometry(mapdl):
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
     if TASK_SPEC.get('domain') == 'steady_state_thermal_block_gui':
-        conductivity = None
-        lines = text.splitlines()
-        for index, line in enumerate(lines):
-            if 'KXX' not in line.upper():
-                continue
-            for candidate in lines[index + 1:index + 4]:
-                values = re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', candidate)
-                if values:
-                    conductivity = float(values[-1])
+        conductivities = _ansys_material_values(mapdl, 'KXX')
+        if not conductivities:
+            lines = text.splitlines()
+            for index, line in enumerate(lines):
+                if 'KXX' not in line.upper():
+                    continue
+                for candidate in lines[index + 1:index + 4]:
+                    values = re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', candidate)
+                    if values:
+                        conductivities.append(float(values[-1]))
+                        break
+                if conductivities:
                     break
-            if conductivity is not None:
-                break
-        if conductivity is None or not _close(conductivity, 0.05, 0.02):
+        if not conductivities or not all(_close(value, 0.05, 0.02) for value in conductivities):
             log('thermal conductivity is not 0.05 W/(mm K)')
             return False
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
@@ -1143,7 +1219,7 @@ def check_ansys_analysis_step(mapdl, result_path):
     if TASK_SPEC.get('domain') == 'steady_state_thermal_block_gui':
         try:
             mapdl.slashsolu()
-            status = str(mapdl.run('STATUS,SOLU')).upper()
+            status = str(mapdl.run('/STATUS,SOLU')).upper()
         except Exception as exc:
             log('cannot inspect thermal solution type: %s' % exc)
             return False
@@ -1439,6 +1515,9 @@ def check_ansys_result_binary(result_path):
         if len(active) != 1 or not _close(active[0][0], -1.0, 0.01) or active[0][1] is None or abs(active[0][1][1]-1000.0) > 0.1 or not times or times[-1] <= 0.0:
             return False
     elif domain == 'steady_state_thermal_block_gui':
+        if any(abs(value) > 1.0e-10 for code, value, xyz in forces):
+            log('strict binary check: applied heat loads violate the prescribed-temperature/adiabatic model')
+            return False
         if temp_min is None or not _close(temp_min, 20.0, 0.02) or not _close(temp_max, 100.0, 0.02):
             return False
         mid = temperatures[np.isclose(nodes[:, 0], 50.0, atol=0.1)] if temperatures is not None and len(temperatures) == len(nodes) else []

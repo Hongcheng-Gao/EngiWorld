@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-16-windows', 'open_choice_id': 'cae-open-choice-036', 'source_task': 'task/task-v/ansys/task-06', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'axisymmetric_thick_cylinder_pressure_gui', 'analysis_kind': 'static_structural', 'metrics': ['radial_displacement', 'max_stress'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve an axisymmetric thick-walled cylinder under internal pressure; report radial displacement and stress.', 'selection_reason': 'Pressure-cylinder structural analysis is equivalent across the two commercial FEA tools.', 'artifact_hint': {'ground_truth_files': ['apdl_cylinder.db', 'apdl_cylinder.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_cylinder.db'], 'ansys_result_files': ['apdl_cylinder.rst']}, 'span_hint': {'x': 25.0, 'y': 10.0}, 'bounds_hint': {'x': [25.0, 50.0], 'y': [0.0, 10.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-16-windows', 'open_choice_id': 'cae-open-choice-036', 'source_task': 'task/task-v/ansys/task-06', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'axisymmetric_thick_cylinder_pressure_gui', 'analysis_kind': 'static_structural', 'metrics': ['radial_displacement', 'max_stress'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve an axisymmetric thick-walled cylinder under internal pressure; report radial displacement and stress.', 'selection_reason': 'Pressure-cylinder structural analysis is equivalent across the two commercial FEA tools.', 'artifact_hint': {'ground_truth_files': ['apdl_cylinder.db', 'apdl_cylinder.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_cylinder.db'], 'ansys_result_files': ['apdl_cylinder.rst']}, 'span_hint': {'x': 25.0, 'y': 10.0}, 'bounds_hint': {'x': [25.0, 50.0], 'y': [0.0, 10.0]}, 'material_hint': {'youngs_modulus_mpa': 210000.0, 'poissons_ratio': 0.3}, 'mesh_hint': {'maximum_global_size_mm': 5.0}, 'load_hint': {'inner_pressure_mpa': 10.0}, 'boundary_hint': {'fully_constrained_uy_edges_mm': [0.0, 10.0], 'radially_free_surfaces_mm': [25.0, 50.0]}, 'result_window': {'displacement_mm': [0.0018, 0.0028], 'equivalent_stress_mpa': [18.0, 30.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +97,7 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -110,7 +111,7 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -641,6 +642,29 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _node_key(node):
+    try:
+        return tuple(round(float(v), 6) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _maximum_nearest_node_spacing(nodes):
+    coords = [key for key in (_node_key(node) for node in nodes) if key is not None]
+    if len(coords) < 2:
+        return None
+    largest = 0.0
+    for index, point in enumerate(coords):
+        nearest = None
+        for other_index, other in enumerate(coords):
+            if index == other_index:
+                continue
+            distance = sum((a - b) ** 2 for a, b in zip(point, other)) ** 0.5
+            if distance > 1.0e-9 and (nearest is None or distance < nearest):
+                nearest = distance
+        if nearest is not None:
+            largest = max(largest, nearest)
+    return largest
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -715,6 +739,46 @@ def check_abaqus_task_specific(model, part):
     if domain == 'solid_cantilever_static_gui':
         if not _task_load_at_single_node(model, 'cf2', -100.0, (5.0, 10.0, 100.0)):
             log('strict check: -100 N load is not applied to the single specified node')
+            return False
+    if domain == 'axisymmetric_thick_cylinder_pressure_gui':
+        spacing = _maximum_nearest_node_spacing(part.nodes)
+        if spacing is None or spacing > 5.25:
+            log('strict check: axisymmetric mesh is coarser than the requested 5 mm size')
+            return False
+        pressure_values = []
+        pressure_nodes = set()
+        for load in _repo_values(model.loads):
+            if 'PRESSURE' in ci(load.__class__.__name__):
+                values = _numbers(getattr(load, 'magnitude', None))
+                pressure_values.extend(values)
+                if any(_near(abs(value), 10.0, 0.01) for value in values):
+                    pressure_nodes.update(_node_key(node) for node in _load_region_nodes(model, load))
+                    pressure_nodes.discard(None)
+        if not any(_near(abs(value), 10.0, 0.01) for value in pressure_values):
+            log('strict check: 10 MPa inner-wall pressure is missing')
+            return False
+        all_nodes = {_node_key(node) for node in part.nodes}
+        all_nodes.discard(None)
+        required_inner = {point for point in all_nodes if abs(point[0] - 25.0) <= 0.1}
+        if pressure_nodes and pressure_nodes != required_inner:
+            log('strict check: 10 MPa pressure is not confined to the complete inner wall')
+            return False
+        uy_nodes = set()
+        ux_nodes = set()
+        for bc in _repo_values(model.boundaryConditions):
+            scoped = {_node_key(node) for node in _load_region_nodes(model, bc)}
+            scoped.discard(None)
+            if _near(getattr(bc, 'u2', None), 0.0, 0.0):
+                uy_nodes.update(scoped)
+            if _near(getattr(bc, 'u1', None), 0.0, 0.0):
+                ux_nodes.update(scoped)
+        required_uy = {point for point in all_nodes if abs(point[1]) <= 0.1 or abs(point[1] - 10.0) <= 0.1}
+        if uy_nodes and not required_uy.issubset(uy_nodes):
+            log('strict check: UY is not applied to both complete axial edges')
+            return False
+        radial_surface_nodes = {point for point in all_nodes if abs(point[0] - 25.0) <= 0.1 or abs(point[0] - 50.0) <= 0.1}
+        if ux_nodes.intersection(radial_surface_nodes):
+            log('strict check: inner or outer cylindrical surface has a radial constraint')
             return False
     if domain == 'column_eigen_buckling_gui':
         if not _task_load_at_single_node(model, 'cf2', -1.0, (0.0, 1000.0, 0.0)):
@@ -1064,6 +1128,37 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _ansys_material_values(mapdl, label):
+    values = []
+    materials = set()
+    listing = _safe_run(mapdl, 'ELIST,ALL')
+    for line in listing.splitlines():
+        match = re.match(r'^\s*\d+\s+(\d+)\s+\d+\s+', line)
+        if match:
+            materials.add(int(match.group(1)))
+    if not materials:
+        maximum = _try_get(mapdl, 'MAT', 0, 'NUM', 'MAX')
+        if maximum is not None:
+            materials.update(range(1, int(maximum) + 1))
+    for material in sorted(materials):
+        value = _try_get(mapdl, label, material)
+        if value is not None:
+            values.append(value)
+    return values
+
+
+def _listing_has_value(text, token, target, rel=0.01):
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if token not in line.upper():
+            continue
+        context = ' '.join(lines[max(0, index - 1):index + 3])
+        numbers = re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', context)
+        if any(_close(abs(float(value)), target, rel) for value in numbers):
+            return True
+    return False
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1111,14 +1206,15 @@ def check_ansys_geometry(mapdl):
 
 
 def check_ansys_materials(mapdl):
-    text = _safe_run(mapdl, 'MPLIST,ALL')
-    if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
-        return True
-    try:
-        count = _try_get(mapdl, 'MAT', 0, 'COUNT')
-        return count is not None and count >= 1
-    except Exception:
+    youngs = _ansys_material_values(mapdl, 'EX')
+    poissons = _ansys_material_values(mapdl, 'PRXY') or _ansys_material_values(mapdl, 'NUXY')
+    if not youngs or not all(_close(value, 210000.0, 0.01) for value in youngs):
+        log('Young\'s modulus is not 210000 MPa for every active material')
         return False
+    if not poissons or not all(_close(value, 0.3, 0.02) for value in poissons):
+        log('Poisson\'s ratio is not 0.3 for every active material')
+        return False
+    return True
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1141,6 +1237,11 @@ def check_ansys_boundary_loads(mapdl):
     if not load_text.strip() or ('NO ' in load_text.upper() and not any(ch.isdigit() for ch in load_text)):
         log('no load/predefined evidence found')
         return False
+    if TASK_SPEC.get('domain') == 'axisymmetric_thick_cylinder_pressure_gui':
+        pressure_text = '\n'.join([_safe_run(mapdl, 'SFLIST,ALL'), _safe_run(mapdl, 'SFELIST,ALL')])
+        if not _listing_has_value(pressure_text, 'PRES', 10.0, 0.01):
+            log('10 MPa pressure load is not present in the native model')
+            return False
     return True
 
 
@@ -1240,6 +1341,19 @@ def _force_sum(records, dof, axis=None, target=None, tol=0.1):
         total += value
     return total
 
+def _maximum_nearest_spacing(nodes):
+    import numpy as np
+    nodes = np.asarray(nodes, dtype=float)
+    if len(nodes) < 2:
+        return None
+    largest = 0.0
+    for index, point in enumerate(nodes):
+        distances = np.linalg.norm(nodes - point, axis=1)
+        distances = distances[distances > 1.0e-9]
+        if distances.size:
+            largest = max(largest, float(distances.min()))
+    return largest
+
 def _binary_stress_max(result, set_index):
     try:
         import numpy as np
@@ -1311,7 +1425,8 @@ def check_ansys_result_binary(result_path):
         'coupled_thermal_structural_bar_gui': 185, 'column_eigen_buckling_gui': 188,
         'steady_state_thermal_block_gui': 70,
     }.get(domain)
-    if required_type is not None and required_type not in element_types:
+    accepted_types = {182, 183} if domain == 'axisymmetric_thick_cylinder_pressure_gui' else ({required_type} if required_type is not None else set())
+    if accepted_types and not accepted_types.intersection(element_types):
         log('strict binary check: element type mismatch %s expected %s' % (sorted(element_types), required_type))
         return False
 
@@ -1396,12 +1511,17 @@ def check_ansys_result_binary(result_path):
                 log('strict binary check: all six beam DOFs are not fixed at both ends')
                 return False
     elif domain == 'axisymmetric_thick_cylinder_pressure_gui':
+        node_keys = {tuple(np.round(row[:3], 6)) for row in nodes}
+        constrained_uy = {tuple(np.round(xyz, 6)) for code, value, xyz in bcs if code == 2 and xyz is not None and abs(value) <= 1.0e-10}
+        required_uy = {point for point in node_keys if abs(point[1]) <= 0.1 or abs(point[1] - 10.0) <= 0.1}
         forbidden = [(code, xyz) for code, value, xyz in bcs if code == 1 and xyz is not None and (abs(xyz[0]-25.0) < 0.1 or abs(xyz[0]-50.0) < 0.1)]
-        axial_edges_ok = all(any(code == 2 and xyz is not None and abs(xyz[1] - y) < 0.1
-                                 for code, value, xyz in bcs) for y in (0.0, 10.0))
-        if (forbidden or not axial_edges_ok or solution_max is None or not (0.001 <= solution_max <= 0.004)
-                or stress_max is None or not (10.0 <= stress_max <= 50.0)):
-            log('strict binary check: cylinder radial freedom/stress mismatch')
+        spacing = _maximum_nearest_spacing(nodes)
+        displacement_window = TASK_SPEC['result_window']['displacement_mm']
+        stress_window = TASK_SPEC['result_window']['equivalent_stress_mpa']
+        if (forbidden or not required_uy.issubset(constrained_uy) or spacing is None or spacing > 5.25
+                or solution_max is None or not (displacement_window[0] <= solution_max <= displacement_window[1])
+                or stress_max is None or not (stress_window[0] <= stress_max <= stress_window[1])):
+            log('strict binary check: cylinder mesh, complete axial restraint, radial freedom, or response mismatch')
             return False
     elif domain == 'coupled_thermal_structural_bar_gui':
         if temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01)) or stress_max is None or not (235.0 <= stress_max <= 275.0):

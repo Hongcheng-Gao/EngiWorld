@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-11-windows', 'open_choice_id': 'cae-open-choice-031', 'source_task': 'task/task-v/ansys/task-01', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'solid_cantilever_static_gui', 'analysis_kind': 'static_structural', 'metrics': ['tip_displacement', 'max_mises'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a 3D solid cantilever beam under an end concentrated force; report tip displacement and maximum stress.', 'selection_reason': '3D cantilever statics is a direct equivalent in the alternate commercial FEA tool.', 'artifact_hint': {'ground_truth_files': ['apdl_solid_beam.db', 'apdl_solid_beam.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_solid_beam.db'], 'ansys_result_files': ['apdl_solid_beam.rst']}, 'span_hint': {'x': 10.0, 'y': 10.0, 'z': 100.0}, 'bounds_hint': {'x': [0.0, 10.0], 'y': [0.0, 10.0], 'z': [0.0, 100.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-11-windows', 'open_choice_id': 'cae-open-choice-031', 'source_task': 'task/task-v/ansys/task-01', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'solid_cantilever_static_gui', 'analysis_kind': 'static_structural', 'metrics': ['tip_displacement', 'max_mises'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve a 3D solid cantilever beam under an end concentrated force; report tip displacement and maximum stress.', 'selection_reason': '3D cantilever statics is a direct equivalent in the alternate commercial FEA tool.', 'artifact_hint': {'ground_truth_files': ['apdl_solid_beam.db', 'apdl_solid_beam.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_solid_beam.db'], 'ansys_result_files': ['apdl_solid_beam.rst']}, 'span_hint': {'x': 10.0, 'y': 10.0, 'z': 100.0}, 'bounds_hint': {'x': [0.0, 10.0], 'y': [0.0, 10.0], 'z': [0.0, 100.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +96,8 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    log('Abaqus CAE/ODB files do not share a stem')
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -110,7 +111,8 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    log('ANSYS model/result files do not share a stem')
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -575,6 +577,137 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _region_nodes(model, owner):
+    region = getattr(owner, 'region', owner)
+    out = []
+    try:
+        out.extend(_all_region_nodes(region.nodes))
+    except Exception:
+        pass
+    for attr in ('faces', 'edges', 'vertices', 'side1Faces', 'side2Faces'):
+        try:
+            entities = getattr(region, attr)
+        except Exception:
+            continue
+        try:
+            iterator = list(entities)
+        except Exception:
+            iterator = [entities]
+        for entity in iterator:
+            try:
+                out.extend(_all_region_nodes(entity.getNodes()))
+            except Exception:
+                pass
+    label = ci(region)
+    try:
+        assembly = model.rootAssembly
+    except Exception:
+        assembly = None
+    if assembly is not None:
+        for repo_name in ('sets', 'surfaces'):
+            try:
+                repo = getattr(assembly, repo_name)
+                for key in repo.keys():
+                    if ci(key) in label or label in ci(key):
+                        item = repo[key]
+                        out.extend(_all_region_nodes(getattr(item, 'nodes', None)))
+                        for attr in ('faces', 'edges', 'vertices', 'side1Faces', 'side2Faces'):
+                            try:
+                                for entity in getattr(item, attr):
+                                    out.extend(_all_region_nodes(entity.getNodes()))
+                            except Exception:
+                                pass
+            except Exception:
+                pass
+    unique = []
+    seen = set()
+    for node in out:
+        try:
+            xyz = tuple(round(float(v), 8) for v in node.coordinates)
+        except Exception:
+            continue
+        key = (getattr(node, 'label', None), xyz)
+        if key not in seen:
+            seen.add(key)
+            unique.append(node)
+    return unique
+
+def _is_fixed_component(value):
+    text = ci(value)
+    if text in ('SET', 'FIXED'):
+        return True
+    if text in ('UNSET', 'FREED', 'NONE', ''):
+        return False
+    try:
+        return abs(float(value)) <= 1.0e-12
+    except Exception:
+        return False
+
+def _node_xyz(node):
+    try:
+        return tuple(float(v) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _same_xyz(a, b, tol=0.05):
+    return a is not None and b is not None and len(a) == len(b) and all(abs(x - y) <= tol for x, y in zip(a, b))
+
+def _fixed_face_has_all_translations(model, part, axis, target):
+    face_nodes = []
+    try:
+        for node in part.nodes:
+            xyz = _node_xyz(node)
+            if xyz is not None and len(xyz) > axis and abs(xyz[axis] - target) <= 0.05:
+                face_nodes.append(xyz)
+    except Exception:
+        pass
+    if not face_nodes:
+        log('strict check: fixed-face mesh nodes are unavailable')
+        return False
+    covered = {'u1': [], 'u2': [], 'u3': []}
+    for bc in _repo_values(model.boundaryConditions):
+        bc_nodes = [_node_xyz(node) for node in _region_nodes(model, bc)]
+        bc_nodes = [xyz for xyz in bc_nodes if xyz is not None]
+        class_text = ci(getattr(bc, '__class__', type(bc)).__name__)
+        encastre = 'ENCASTRE' in class_text
+        for component in covered:
+            if encastre or _is_fixed_component(getattr(bc, component, None)):
+                covered[component].extend(bc_nodes)
+    for xyz in face_nodes:
+        for component in covered:
+            if not any(_same_xyz(xyz, candidate) for candidate in covered[component]):
+                log('strict check: fixed face is not fully constrained in %s' % component.upper())
+                return False
+    return True
+
+def _has_five_mm_mesh_evidence(part, element_count, node_count):
+    try:
+        seed = part.getPartSeeds(region=part, attribute=SIZE)
+        values = [v for v in _numbers(seed) if v > 0.0]
+        if values:
+            if any(_near(v, 5.0, 0.05, 0.1) for v in values):
+                return True
+            log('strict check: global part seed is not 5 mm: %s' % values)
+            return False
+    except Exception:
+        pass
+    xyz = []
+    try:
+        xyz = [_node_xyz(node) for node in part.nodes]
+        xyz = [point for point in xyz if point is not None and len(point) >= 3]
+    except Exception:
+        pass
+    if element_count < 60 or node_count < 100 or not xyz:
+        log('strict check: 5 mm mesh density evidence is missing')
+        return False
+    unique_x = set(round(point[0], 3) for point in xyz)
+    unique_y = set(round(point[1], 3) for point in xyz)
+    unique_z = set(round(point[2], 3) for point in xyz)
+    if len(unique_x) < 3 or len(unique_y) < 3 or len(unique_z) < 19:
+        log('strict check: mesh divisions are too coarse for a 5 mm global size')
+        return False
+    return True
+
 def _part_element_types(part):
     out = set()
     try:
@@ -713,6 +846,10 @@ def check_abaqus_task_specific(model, part):
         log('strict check: expected about 20 beam divisions')
         return False
     if domain == 'solid_cantilever_static_gui':
+        if not _fixed_face_has_all_translations(model, part, 2, 0.0):
+            return False
+        if not _has_five_mm_mesh_evidence(part, element_count, node_count):
+            return False
         if not _task_load_at_single_node(model, 'cf2', -100.0, (5.0, 10.0, 100.0)):
             log('strict check: -100 N load is not applied to the single specified node')
             return False
@@ -1358,6 +1495,22 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: central 16 mm hole missing')
             return False
     elif domain == 'solid_cantilever_static_gui':
+        fixed_nodes = [tuple(float(v) for v in point[:3]) for point in nodes if abs(float(point[2])) <= 0.1]
+        if not fixed_nodes:
+            log('strict binary check: no nodes found on the fixed face')
+            return False
+        for point in fixed_nodes:
+            codes = set(code for code, value, xyz in bcs
+                        if xyz is not None and abs(value) <= 1.0e-9 and all(abs(a-b) <= 0.1 for a, b in zip(xyz, point)))
+            if not set((1, 2, 3)).issubset(codes):
+                log('strict binary check: Z=0 face is not fully fixed in UX/UY/UZ')
+                return False
+        x_divisions = len(set(round(float(v), 3) for v in nodes[:, 0]))
+        y_divisions = len(set(round(float(v), 3) for v in nodes[:, 1]))
+        z_divisions = len(set(round(float(v), 3) for v in nodes[:, 2]))
+        if element_count < 60 or node_count < 100 or x_divisions < 3 or y_divisions < 3 or z_divisions < 19:
+            log('strict binary check: mesh is too coarse for the requested 5 mm global size')
+            return False
         active = [(value, xyz) for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-9]
         if len(active) != 1 or not _close(active[0][0], -100.0, 0.01) or active[0][1] is None or any(abs(a-b) > 0.1 for a,b in zip(active[0][1], (5.0, 10.0, 100.0))):
             log('strict binary check: single -100 N load at (5,10,100) missing')

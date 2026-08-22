@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-15-windows', 'open_choice_id': 'cae-open-choice-035', 'source_task': 'task/task-v/ansys/task-05', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'fixed_fixed_beam_modal_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'frequency_list'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a modal analysis of a fixed-fixed beam; report the requested natural frequencies.', 'selection_reason': 'Modal beam analysis is a shared finite-element capability.', 'artifact_hint': {'ground_truth_files': ['apdl_fixed_beam_modal.db', 'apdl_fixed_beam_modal.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_fixed_beam_modal.db'], 'ansys_result_files': ['apdl_fixed_beam_modal.rst']}, 'span_hint': {'x': 500.0}, 'bounds_hint': {'x': [0.0, 500.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-15-windows', 'open_choice_id': 'cae-open-choice-035', 'source_task': 'task/task-v/ansys/task-05', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'fixed_fixed_beam_modal_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'frequency_list'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a modal analysis of a fixed-fixed beam; report the requested natural frequencies.', 'selection_reason': 'Modal beam analysis is a shared finite-element capability.', 'artifact_hint': {'ground_truth_files': ['apdl_fixed_beam_modal.db', 'apdl_fixed_beam_modal.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_fixed_beam_modal.db'], 'ansys_result_files': ['apdl_fixed_beam_modal.rst']}, 'span_hint': {'x': 500.0}, 'bounds_hint': {'x': [0.0, 500.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +96,8 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    log('Abaqus CAE/ODB files do not share a stem')
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -110,7 +111,8 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    log('ANSYS model/result files do not share a stem')
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -575,6 +577,163 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _region_nodes(model, owner):
+    region = getattr(owner, 'region', owner)
+    out = []
+    try:
+        out.extend(_all_region_nodes(region.nodes))
+    except Exception:
+        pass
+    for attr in ('edges', 'vertices'):
+        try:
+            entities = list(getattr(region, attr))
+        except Exception:
+            continue
+        for entity in entities:
+            try:
+                out.extend(_all_region_nodes(entity.getNodes()))
+            except Exception:
+                pass
+    label = ci(region)
+    try:
+        sets = model.rootAssembly.sets
+        for key in sets.keys():
+            if ci(key) in label or label in ci(key):
+                item = sets[key]
+                out.extend(_all_region_nodes(getattr(item, 'nodes', None)))
+                for attr in ('edges', 'vertices'):
+                    try:
+                        for entity in getattr(item, attr):
+                            out.extend(_all_region_nodes(entity.getNodes()))
+                    except Exception:
+                        pass
+    except Exception:
+        pass
+    unique = []
+    seen = set()
+    for node in out:
+        try:
+            xyz = tuple(round(float(value), 8) for value in node.coordinates)
+        except Exception:
+            continue
+        key = (getattr(node, 'label', None), xyz)
+        if key not in seen:
+            seen.add(key)
+            unique.append(node)
+    return unique
+
+def _node_xyz(node):
+    try:
+        return tuple(float(value) for value in node.coordinates)
+    except Exception:
+        return None
+
+def _same_xyz(a, b, tol=0.08):
+    return a is not None and b is not None and len(a) == len(b) and all(abs(x-y) <= tol for x, y in zip(a, b))
+
+def _is_fixed_component(value):
+    text = ci(value)
+    if text in ('SET', 'FIXED'):
+        return True
+    if text in ('UNSET', 'FREED', 'NONE', ''):
+        return False
+    try:
+        return abs(float(value)) <= 1.0e-12
+    except Exception:
+        return False
+
+def _beam_ends_have_six_dofs(model, part):
+    endpoint_nodes = {0.0: [], 500.0: []}
+    try:
+        for node in part.nodes:
+            xyz = _node_xyz(node)
+            if xyz is None:
+                continue
+            for target in endpoint_nodes:
+                if abs(xyz[0] - target) <= 0.08:
+                    endpoint_nodes[target].append(xyz)
+    except Exception:
+        pass
+    if not endpoint_nodes[0.0] or not endpoint_nodes[500.0]:
+        return False
+    components = ('u1', 'u2', 'u3', 'ur1', 'ur2', 'ur3')
+    covered = dict((component, []) for component in components)
+    for bc in _repo_values(model.boundaryConditions):
+        nodes = [_node_xyz(node) for node in _region_nodes(model, bc)]
+        nodes = [xyz for xyz in nodes if xyz is not None]
+        class_text = ci(getattr(bc, '__class__', type(bc)).__name__)
+        for component in components:
+            if 'ENCASTRE' in class_text or _is_fixed_component(getattr(bc, component, None)):
+                covered[component].extend(nodes)
+    for target in endpoint_nodes:
+        for node in endpoint_nodes[target]:
+            for component in components:
+                if not any(_same_xyz(node, candidate) for candidate in covered[component]):
+                    return False
+    return True
+
+def _assigned_rectangular_profile_is_10(model, part):
+    assigned = []
+    try:
+        for assignment in part.sectionAssignments:
+            assigned.append(ci(getattr(assignment, 'sectionName', '')))
+    except Exception:
+        pass
+    if not assigned:
+        return False
+    for section_key in model.sections.keys():
+        if ci(section_key) not in assigned:
+            continue
+        section = model.sections[section_key]
+        if 'BEAMSECTION' not in ci(getattr(section, '__class__', type(section)).__name__):
+            continue
+        profile_name = getattr(section, 'profile', '')
+        profile_key = find_key(model.profiles, profile_name)
+        if profile_key is None:
+            continue
+        profile = model.profiles[profile_key]
+        if 'RECTANGULARPROFILE' not in ci(getattr(profile, '__class__', type(profile)).__name__):
+            continue
+        if _near(getattr(profile, 'a', None), 10.0, 0.01, 0.01) and _near(getattr(profile, 'b', None), 10.0, 0.01, 0.01):
+            return True
+    return False
+
+def _beam_has_twenty_equal_elements(part, element_count, node_count):
+    if element_count != 20 or node_count < 21:
+        return False
+    node_by_label = {}
+    nodes = []
+    try:
+        nodes = list(part.nodes)
+        for node in nodes:
+            xyz = _node_xyz(node)
+            if xyz is not None:
+                node_by_label[int(node.label)] = xyz
+    except Exception:
+        return False
+    spans = []
+    try:
+        elements = list(part.elements)
+        identifiers = [int(value) for element in elements for value in element.connectivity]
+        uses_indices = 0 in identifiers and all(0 <= value < len(nodes) for value in identifiers)
+        for element in elements:
+            points = []
+            for identifier in element.connectivity:
+                try:
+                    key = int(identifier)
+                    xyz = _node_xyz(nodes[key]) if uses_indices else node_by_label.get(key)
+                    if xyz is None and not uses_indices and 0 <= key < len(nodes):
+                        xyz = _node_xyz(nodes[key])
+                    if xyz is not None:
+                        points.append(xyz)
+                except Exception:
+                    pass
+            if len(points) >= 2:
+                spans.append(max(point[0] for point in points) - min(point[0] for point in points))
+    except Exception:
+        pass
+    return len(spans) == 20 and all(_near(span, 25.0, 0.02, 0.1) for span in spans)
+
 def _part_element_types(part):
     out = set()
     try:
@@ -709,9 +868,16 @@ def check_abaqus_task_specific(model, part):
     if domain == 'plane_stress_plate_hole_gui' and element_count < 700:
         log('strict check: 5 mm/1 mm locally refined mesh evidence missing elements=%s' % element_count)
         return False
-    if domain == 'fixed_fixed_beam_modal_gui' and not (18 <= element_count <= 24 and 19 <= node_count <= 30):
-        log('strict check: expected about 20 beam divisions')
-        return False
+    if domain == 'fixed_fixed_beam_modal_gui':
+        if not _beam_has_twenty_equal_elements(part, element_count, node_count):
+            log('strict check: exactly 20 equal beam divisions are required')
+            return False
+        if not _assigned_rectangular_profile_is_10(model, part):
+            log('strict check: assigned 10 x 10 mm RectangularProfile is missing')
+            return False
+        if not _beam_ends_have_six_dofs(model, part):
+            log('strict check: both beam ends must constrain U1/U2/U3/UR1/UR2/UR3')
+            return False
     if domain == 'solid_cantilever_static_gui':
         if not _task_load_at_single_node(model, 'cf2', -100.0, (5.0, 10.0, 100.0)):
             log('strict check: -100 N load is not applied to the single specified node')
@@ -768,6 +934,15 @@ def _odb_element_types(odb):
         pass
     return out
 
+def _odb_element_count(odb):
+    count = 0
+    try:
+        for key in odb.rootAssembly.instances.keys():
+            count += len(odb.rootAssembly.instances[key].elements)
+    except Exception:
+        pass
+    return count
+
 def _odb_frames(odb):
     out = []
     try:
@@ -816,6 +991,7 @@ def check_abaqus_odb_specific(odb):
         return False
     final = frames[-1]
     types = _odb_element_types(odb)
+    element_count = _odb_element_count(odb)
     xyz = _odb_nodes(odb)
     times = [float(getattr(frame, 'frameValue', 0.0)) for frame in frames]
     stress = _frame_field(final, ('S',), invariant=True)
@@ -828,6 +1004,16 @@ def check_abaqus_odb_specific(odb):
         if len(positive) < target:
             log('strict ODB check: insufficient solved modal frames')
             return False
+        if domain == 'fixed_fixed_beam_modal_gui':
+            frequencies = sorted(positive)
+            if element_count != 20 or not any(value.startswith('B') for value in types):
+                log('strict ODB check: exactly 20 solved beam elements are required')
+                return False
+            if not (180.0 <= frequencies[0] <= 260.0 and
+                    180.0 <= frequencies[1] <= 260.0 and
+                    500.0 <= frequencies[2] <= 700.0):
+                log('strict ODB check: first three frequencies do not match the fixed-fixed 10 x 10 mm beam')
+                return False
     if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
         if len([t for t in times if t != 0.0]) < 3:
             log('strict ODB check: insufficient buckling frames')
@@ -1379,7 +1565,7 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: 2 mm mesh/final transient field mismatch')
             return False
     elif domain == 'fixed_fixed_beam_modal_gui':
-        if not (18 <= element_count <= 22 and int(result.nsets) >= 3):
+        if not (element_count == 20 and int(result.nsets) >= 3):
             log('strict binary check: 20 beam elements/three modes missing')
             return False
         end_bcs = [(code, xyz) for code, value, xyz in bcs if xyz is not None and (abs(xyz[0]) < 0.1 or abs(xyz[0]-500.0) < 0.1)]

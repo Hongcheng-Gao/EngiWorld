@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-04-windows', 'open_choice_id': 'cae-open-choice-014', 'source_task': 'task/task-v/abaqus/task-14', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'constrained_thermal_stress_a_gui', 'analysis_kind': 'thermal_structural', 'metrics': ['axial_stress', 'reaction_force_optional'], 'expected_result_fields': ['S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a constrained bar with a uniform temperature increase; report axial stress and displacement checks.', 'selection_reason': 'Thermal strain plus structural restraint is a shared commercial FEA capability.', 'artifact_hint': {'ground_truth_files': ['Job-ThermalStress-A.cae', 'Job-ThermalStress-A.odb'], 'abaqus_stems': ['Job-ThermalStress-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-04-windows', 'open_choice_id': 'cae-open-choice-014', 'source_task': 'task/task-v/abaqus/task-14', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'constrained_thermal_stress_a_gui', 'analysis_kind': 'thermal_structural', 'metrics': ['axial_stress', 'reaction_force_optional'], 'expected_result_fields': ['S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, analyze a constrained bar with a uniform temperature increase; report axial stress and displacement checks.', 'selection_reason': 'Thermal strain plus structural restraint is a shared commercial FEA capability.', 'artifact_hint': {'ground_truth_files': ['Job-ThermalStress-A.cae', 'Job-ThermalStress-A.odb', 'gt_task_04_ansys.db', 'gt_task_04_ansys.rst'], 'abaqus_stems': ['Job-ThermalStress-A'], 'ansys_db_files': ['gt_task_04_ansys.db'], 'ansys_result_files': ['gt_task_04_ansys.rst']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -639,6 +640,197 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _zero_bc_dofs(bc):
+    if 'ENCASTRE' in ci(bc.__class__.__name__):
+        return set((1, 2, 3, 4, 5, 6))
+    out = set()
+    for dof, attr in enumerate(('u1', 'u2', 'u3', 'ur1', 'ur2', 'ur3'), 1):
+        value = getattr(bc, attr, None)
+        try:
+            if abs(float(value)) <= 1.0e-12:
+                out.add(dof)
+                continue
+        except Exception:
+            pass
+        if ci(value) in ('SET', 'FIXED'):
+            out.add(dof)
+    return out
+
+def _thermal_export_path(model):
+    root_dir = os.path.dirname(RESULT_PATH) or os.getcwd()
+    model_name = model_name_for_job(model)
+    if not model_name:
+        return None
+    try:
+        for job_name in mdb.jobs.keys():
+            job = mdb.jobs[job_name]
+            if ci(getattr(job, 'model', '')) == ci(model_name):
+                path = write_job_input(job_name, root_dir)
+                if path:
+                    return path
+    except Exception:
+        pass
+    return None
+
+def _thermal_inp_end_constraints_ok(path, end_x):
+    try:
+        with open(path, 'r') as handle:
+            lines = [line.strip() for line in handle]
+    except Exception as exc:
+        log('strict check: cannot read exported thermal input: %s' % exc)
+        return False
+    nodes = {}
+    nsets = {}
+    constrained = {}
+    in_part = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        upper = ci(line)
+        if upper.startswith('*PART'):
+            in_part = True
+        elif upper.startswith('*END PART'):
+            in_part = False
+        rows = []
+        cursor = index + 1
+        while cursor < len(lines) and not lines[cursor].startswith('*'):
+            if lines[cursor] and not lines[cursor].startswith('**'):
+                rows.append(lines[cursor])
+            cursor += 1
+        if upper.startswith('*NODE') and in_part:
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    nodes[int(values[0])] = tuple(float(value) for value in values[1:4])
+                except Exception:
+                    pass
+        elif upper.startswith('*NSET') and 'INSTANCE=' in upper:
+            match = re.search(r'NSET\s*=\s*([^,]+)', line, re.I)
+            if match:
+                name = ci(match.group(1).strip())
+                labels = []
+                for row in rows:
+                    values = []
+                    for item in row.split(','):
+                        try:
+                            values.append(int(item.strip()))
+                        except Exception:
+                            pass
+                    if 'GENERATE' in upper and len(values) >= 2:
+                        step = values[2] if len(values) >= 3 and values[2] else 1
+                        labels.extend(range(values[0], values[1] + 1, step))
+                    else:
+                        labels.extend(values)
+                nsets[name] = labels
+        elif upper.startswith('*BOUNDARY'):
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                if len(values) < 2:
+                    continue
+                name = ci(values[0])
+                try:
+                    first = int(values[1])
+                    last = int(values[2]) if len(values) >= 3 and values[2] else first
+                    for label in nsets.get(name, []):
+                        constrained.setdefault(label, set()).update(range(first, last + 1))
+                except Exception:
+                    pass
+        index = cursor
+    face_labels = {
+        target: set(label for label, point in nodes.items() if abs(point[0] - target) <= 0.08)
+        for target in (0.0, end_x)
+    }
+    for target, labels in face_labels.items():
+        if not labels or not all(set((1, 2, 3)).issubset(constrained.get(label, set())) for label in labels):
+            log('strict check: exported input end face X=%s is not fully constrained' % target)
+            return False
+    end_labels = face_labels[0.0] | face_labels[end_x]
+    if any(label not in end_labels and set((1, 2, 3)).intersection(dofs)
+           for label, dofs in constrained.items()):
+        log('strict check: exported input contains unintended interior displacement constraints')
+        return False
+    return True
+
+def _thermal_end_constraints_ok(model, part, end_x):
+    input_path = _thermal_export_path(model)
+    if input_path:
+        return _thermal_inp_end_constraints_ok(input_path, end_x)
+    face_labels = {0.0: set(), end_x: set()}
+    try:
+        for node in part.nodes:
+            x = float(node.coordinates[0])
+            for target in face_labels:
+                if abs(x - target) <= 0.08:
+                    face_labels[target].add(int(node.label))
+    except Exception:
+        pass
+    constrained = {}
+    for bc in _repo_values(model.boundaryConditions):
+        dofs = _zero_bc_dofs(bc)
+        for node in _load_region_nodes(model, bc):
+            try:
+                label = int(node.label)
+            except Exception:
+                continue
+            constrained.setdefault(label, set()).update(dofs)
+    for target, labels in face_labels.items():
+        if not labels or not all(set((1, 2, 3)).issubset(constrained.get(label, set())) for label in labels):
+            log('strict check: end face X=%s is not fully constrained in U1/U2/U3' % target)
+            return False
+    return True
+
+def _thermal_input_evidence(model, initial_temperature, step_temperature):
+    input_path = _thermal_export_path(model)
+    if not input_path:
+        log('strict check: cannot export thermal model input')
+        return False
+    initial_values = []
+    step_values = []
+    has_static = False
+    mode = None
+    try:
+        with open(input_path, 'r') as handle:
+            for raw in handle:
+                line = raw.strip()
+                upper = ci(line)
+                if upper.startswith('*INITIAL CONDITIONS') and 'TEMPERATURE' in upper:
+                    mode = 'initial'
+                    continue
+                if upper.startswith('*TEMPERATURE'):
+                    mode = 'step'
+                    continue
+                if upper.startswith('*STATIC'):
+                    has_static = True
+                if upper.startswith('*'):
+                    mode = None
+                    continue
+                if not line or line.startswith('**') or mode is None:
+                    continue
+                fields = [field.strip() for field in line.split(',') if field.strip()]
+                if not fields:
+                    continue
+                try:
+                    number = float(fields[-1])
+                except Exception:
+                    continue
+                if mode == 'initial':
+                    initial_values.append(number)
+                else:
+                    step_values.append(number)
+    except Exception as exc:
+        log('strict check: cannot parse thermal input: %s' % exc)
+        return False
+    if not any(_near(number, initial_temperature, 0.0, 0.01) for number in initial_values):
+        log('strict check: initial temperature is missing from exported input')
+        return False
+    if not any(_near(number, step_temperature, 0.0, 0.01) for number in step_values):
+        log('strict check: step temperature is missing from exported input')
+        return False
+    if not has_static:
+        log('strict check: Static, General procedure is missing from exported input')
+        return False
+    return True
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -717,6 +909,19 @@ def check_abaqus_task_specific(model, part):
     if domain == 'column_eigen_buckling_gui':
         if not _task_load_at_single_node(model, 'cf2', -1.0, (0.0, 1000.0, 0.0)):
             log('strict check: -1 N reference load is not applied at the column top node')
+            return False
+    if domain == 'constrained_thermal_stress_a_gui':
+        materials = _repo_values(model.materials)
+        expansion = _material_numbers(materials[0], 'expansion') if materials else []
+        if not expansion or not _near(expansion[0], 1.2e-5, 0.02, 1.0e-8):
+            log('strict check: thermal expansion coefficient is not 1.2e-5/K')
+            return False
+        if element_count < 80:
+            log('strict check: mesh is too coarse for the requested 5 mm seed')
+            return False
+        if not _thermal_end_constraints_ok(model, part, 100.0):
+            return False
+        if not _thermal_input_evidence(model, 20.0, 120.0):
             return False
     if domain == 'coupled_thermal_structural_bar_gui':
         expansion = _material_numbers(_repo_values(model.materials)[0], 'expansion')
@@ -835,8 +1040,8 @@ def check_abaqus_odb_specific(odb):
             log('strict ODB check: beam deflection is inconsistent with 0.1 MPa pressure')
             return False
     if domain in ('constrained_thermal_stress_a_gui', 'thermal_stress_bar_gui'):
-        if not stress or max(stress) < 180.0:
-            log('strict ODB check: expected restrained thermal stress is absent')
+        if not stress or not (220.0 <= max(stress) <= 380.0):
+            log('strict ODB check: restrained steel thermal stress is outside 220-380 MPa')
             return False
     if domain == 'constrained_thermal_stress_b_gui':
         if not stress or not (100.0 <= max(stress) <= 300.0):
@@ -1004,6 +1209,11 @@ if __name__ == '__main__':
                 log('abaqus stdout tail=' + completed.stdout[-1000:])
             if completed.stderr:
                 log('abaqus stderr tail=' + completed.stderr[-1000:])
+            detail_path = scratch / '__open_choice_abaqus_detail.txt'
+            if detail_path.exists():
+                detail = detail_path.read_text(encoding='utf-8', errors='ignore').strip()
+                if detail:
+                    log('abaqus checker detail=' + detail[-4000:])
         except Exception as exc:
             log('abaqus checker failed to run: %s' % exc)
             return False
@@ -1113,6 +1323,20 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'constrained_thermal_stress_a_gui':
+        upper = text.upper()
+        values = []
+        for token in re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[ED][-+]?\d+)?', upper):
+            try:
+                values.append(float(token.replace('D', 'E')))
+            except Exception:
+                pass
+        targets = (210000.0, 0.3, 1.2e-5)
+        if not all(label in upper for label in ('EX', 'PRXY', 'ALPX')) or not all(
+                any(abs(value - target) <= max(1.0e-8, abs(target) * 0.02) for value in values)
+                for target in targets):
+            log('material values do not match E=210000, nu=0.3, alpha=1.2e-5')
+            return False
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1120,6 +1344,30 @@ def check_ansys_materials(mapdl):
         return count is not None and count >= 1
     except Exception:
         return False
+
+def check_ansys_reference_temperature(mapdl, scratch, target):
+    _safe_run(mapdl, 'CDWRITE,DB,__open_choice_eval_model,cdb')
+    candidates = list(Path(scratch).glob('__open_choice_eval_model.*'))
+    if not candidates:
+        log('cannot export ANSYS database commands for reference-temperature check')
+        return False
+    try:
+        text = '\n'.join(path.read_text(encoding='utf-8', errors='ignore') for path in candidates)
+    except Exception as exc:
+        log('cannot read ANSYS database command export: %s' % exc)
+        return False
+    for raw in text.splitlines():
+        line = raw.strip().upper()
+        if not (line.startswith('TREF') or (line.startswith('MPDATA') and 'REFT' in line)):
+            continue
+        for token in re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[ED][-+]?\d+)?', line):
+            try:
+                if abs(float(token.replace('D', 'E')) - target) <= 0.01:
+                    return True
+            except Exception:
+                pass
+    log('ANSYS reference temperature is not %s C' % target)
+    return False
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1241,6 +1489,26 @@ def _force_sum(records, dof, axis=None, target=None, tol=0.1):
         total += value
     return total
 
+def _axis_spacing_matches(nodes, axis, target, rel=0.25):
+    coordinates = sorted(set(round(float(row[axis]), 6) for row in nodes))
+    if len(coordinates) < 3:
+        return False
+    low = target * (1.0 - rel)
+    high = target * (1.0 + rel)
+    return all(low <= coordinates[index] - coordinates[index - 1] <= high
+               for index in range(1, len(coordinates)))
+
+def _face_has_dofs(nodes, records, axis, target, dofs, tol=0.1):
+    expected = set(tuple(round(float(v), 6) for v in row[:3]) for row in nodes
+                   if abs(float(row[axis]) - target) <= tol)
+    observed = {}
+    for code, value, xyz in records:
+        if xyz is None or abs(float(xyz[axis]) - target) > tol or abs(value) > 1.0e-9:
+            continue
+        key = tuple(round(float(v), 6) for v in xyz[:3])
+        observed.setdefault(key, set()).add(code)
+    return bool(expected) and all(set(dofs).issubset(observed.get(key, set())) for key in expected)
+
 def _binary_stress_max(result, set_index):
     try:
         import numpy as np
@@ -1252,6 +1520,18 @@ def _binary_stress_max(result, set_index):
         sx, sy, sz, sxy, syz, sxz = stress[:, :6].T
         mises = np.sqrt(0.5 * ((sx - sy) ** 2 + (sy - sz) ** 2 + (sz - sx) ** 2) + 3.0 * (sxy ** 2 + syz ** 2 + sxz ** 2))
         return float(mises.max())
+    except Exception:
+        return None
+
+def _binary_axial_stress_median(result, set_index):
+    try:
+        import numpy as np
+        _, stress = result.nodal_stress(set_index)
+        stress = np.asarray(stress, dtype=float)
+        stress = stress[np.isfinite(stress).all(axis=1)]
+        if not stress.size:
+            return None
+        return float(np.nanmedian(np.abs(stress[:, 0])))
     except Exception:
         return None
 
@@ -1297,6 +1577,7 @@ def check_ansys_result_binary(result_path):
     bcs = _binary_records(result, 'nodal_boundary_conditions', last)
     times = [float(v) for v in result.time_values]
     stress_max = _binary_stress_max(result, last)
+    axial_stress_median = _binary_axial_stress_median(result, last)
     solution_max = _binary_solution_max(result, last)
     temperatures, temp_min, temp_max = _binary_temperature(result, last)
 
@@ -1337,8 +1618,15 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: four solved modes missing')
             return False
     elif domain in ('constrained_thermal_stress_a_gui', 'thermal_stress_bar_gui'):
-        if temp_min is None or not (_close(temp_min, 120.0, 0.01) and _close(temp_max, 120.0, 0.01)) or stress_max is None or stress_max < 180.0:
+        if temp_min is None or not (_close(temp_min, 120.0, 0.01) and _close(temp_max, 120.0, 0.01)) or axial_stress_median is None or not (225.0 <= axial_stress_median <= 290.0):
             log('strict binary check: 120 C restrained thermal response missing')
+            return False
+        if element_count < 80 or not _axis_spacing_matches(nodes, 0, 5.0):
+            log('strict binary check: 5 mm axial mesh evidence is missing')
+            return False
+        if not (_face_has_dofs(nodes, bcs, 0, 0.0, (1, 2, 3)) and
+                _face_has_dofs(nodes, bcs, 0, 100.0, (1, 2, 3))):
+            log('strict binary check: both end faces are not fixed in U1/U2/U3')
             return False
     elif domain == 'constrained_thermal_stress_b_gui':
         if temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01)) or stress_max is None or not (100.0 <= stress_max <= 300.0):
@@ -1448,6 +1736,8 @@ def check_ansys_with_mapdl(root, model_path, result_path):
         if not check_ansys_materials(mapdl):
             log('material check failed')
             return False
+        if TASK_SPEC.get('domain') == 'constrained_thermal_stress_a_gui' and not check_ansys_reference_temperature(mapdl, scratch, 20.0):
+            return False
         if not check_ansys_boundary_loads(mapdl):
             return False
         if not check_ansys_analysis_step(mapdl, result_path):
@@ -1501,6 +1791,17 @@ def evaluate():
 def main():
     passed, root = evaluate()
     write_detail(root, passed)
+    for name in (
+        '__open_choice_abaqus_checker.py',
+        '__open_choice_abaqus_detail.txt',
+        '__open_choice_abaqus_result.txt',
+    ):
+        try:
+            (desktop_dir() / name).unlink()
+        except FileNotFoundError:
+            pass
+        except Exception:
+            pass
     sys.stdout.write('True\n' if passed else 'False\n')
 
 

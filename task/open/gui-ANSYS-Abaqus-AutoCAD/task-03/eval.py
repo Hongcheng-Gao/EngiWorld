@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-03-windows', 'open_choice_id': 'cae-open-choice-013', 'source_task': 'task/task-v/abaqus/task-13', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'cantilever_modal_a_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'mode_count'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a modal analysis of a cantilever beam; report the first natural frequency and mode count.', 'selection_reason': 'Modal extraction has direct equivalents in both tools.', 'artifact_hint': {'ground_truth_files': ['gt_task_03_ansys.db', 'gt_task_03_ansys.rst'], 'abaqus_stems': [], 'ansys_db_files': ['gt_task_03_ansys.db'], 'ansys_result_files': ['gt_task_03_ansys.rst']}, 'span_hint': {'x': 420.0, 'y': 12.0, 'z': 10.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-03-windows', 'open_choice_id': 'cae-open-choice-013', 'source_task': 'task/task-v/abaqus/task-13', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'cantilever_modal_a_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'mode_count'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a modal analysis of a cantilever beam; report the first natural frequency and mode count.', 'selection_reason': 'Modal extraction has direct equivalents in both tools.', 'artifact_hint': {'ground_truth_files': ['gt_task_03_ansys.db', 'gt_task_03_ansys.rst'], 'abaqus_stems': [], 'ansys_db_files': ['gt_task_03_ansys.db'], 'ansys_result_files': ['gt_task_03_ansys.rst']}, 'span_hint': {'x': 420.0, 'y': 12.0, 'z': 10.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -642,6 +643,42 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _zero_bc_dofs(bc):
+    if 'ENCASTRE' in ci(bc.__class__.__name__):
+        return set((1, 2, 3, 4, 5, 6))
+    out = set()
+    for dof, attr in enumerate(('u1', 'u2', 'u3', 'ur1', 'ur2', 'ur3'), 1):
+        value = getattr(bc, attr, None)
+        try:
+            if abs(float(value)) <= 1.0e-12:
+                out.add(dof)
+                continue
+        except Exception:
+            pass
+        if ci(value) in ('SET', 'FIXED'):
+            out.add(dof)
+    return out
+
+def _cantilever_fixed_face_ok(model, part):
+    face_labels = set()
+    try:
+        for node in part.nodes:
+            if abs(float(node.coordinates[0])) <= 0.08:
+                face_labels.add(int(node.label))
+    except Exception:
+        pass
+    constrained = {}
+    for bc in _repo_values(model.boundaryConditions):
+        dofs = _zero_bc_dofs(bc)
+        for node in _load_region_nodes(model, bc):
+            try:
+                label = int(node.label)
+            except Exception:
+                continue
+            constrained.setdefault(label, set()).update(dofs)
+    return bool(face_labels) and all(set((1, 2, 3)).issubset(constrained.get(label, set()))
+                                     for label in face_labels)
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -720,6 +757,16 @@ def check_abaqus_task_specific(model, part):
     if domain == 'column_eigen_buckling_gui':
         if not _task_load_at_single_node(model, 'cf2', -1.0, (0.0, 1000.0, 0.0)):
             log('strict check: -1 N reference load is not applied at the column top node')
+            return False
+    if domain == 'cantilever_modal_a_gui':
+        if find_key(model.steps, 'Step-Modal-A') is None:
+            log('strict check: Step-Modal-A is missing')
+            return False
+        if element_count < 28:
+            log('strict check: mesh is too coarse for the requested 12 mm seed')
+            return False
+        if not _cantilever_fixed_face_ok(model, part):
+            log('strict check: X=0 face is not fully encastre')
             return False
     if domain == 'coupled_thermal_structural_bar_gui':
         expansion = _material_numbers(_repo_values(model.materials)[0], 'expansion')
@@ -839,8 +886,8 @@ def check_abaqus_odb_specific(odb):
         if len(frequencies) < target:
             log('strict ODB check: insufficient positive modal frequencies in frame descriptions')
             return False
-        if domain == 'cantilever_modal_a_gui' and not (35.0 <= frequencies[0] <= 65.0):
-            log('strict ODB check: first modal frequency is outside 35-65 Hz')
+        if domain == 'cantilever_modal_a_gui' and not (42.0 <= frequencies[0] <= 54.0):
+            log('strict ODB check: first modal frequency is outside 42-54 Hz')
             return False
     if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
         if len([t for t in times if t != 0.0]) < 3:
@@ -1012,6 +1059,11 @@ if __name__ == '__main__':
             log('abaqus stdout tail=' + completed.stdout[-1000:])
         if completed.stderr:
             log('abaqus stderr tail=' + completed.stderr[-1000:])
+        detail_path = root / '__open_choice_abaqus_detail.txt'
+        if detail_path.exists():
+            detail = detail_path.read_text(encoding='utf-8', errors='ignore').strip()
+            if detail:
+                log('abaqus checker detail=' + detail[-4000:])
     except Exception as exc:
         log('abaqus checker failed to run: %s' % exc)
         return False
@@ -1112,6 +1164,20 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'cantilever_modal_a_gui':
+        upper = text.upper()
+        values = []
+        for token in re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[ED][-+]?\d+)?', upper):
+            try:
+                values.append(float(token.replace('D', 'E')))
+            except Exception:
+                pass
+        targets = (210000.0, 0.3, 7.8e-9)
+        if not all(label in upper for label in ('EX', 'PRXY', 'DENS')) or not all(
+                any(abs(value - target) <= max(1.0e-12, abs(target) * 0.02) for value in values)
+                for target in targets):
+            log('material values do not match E=210000, nu=0.3, density=7.8e-9')
+            return False
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1240,6 +1306,28 @@ def _force_sum(records, dof, axis=None, target=None, tol=0.1):
         total += value
     return total
 
+def _axis_spacing_matches(nodes, axis, target, rel=0.25):
+    coordinates = sorted(set(round(float(row[axis]), 6) for row in nodes))
+    if len(coordinates) < 3:
+        return False
+    low = target * (1.0 - rel)
+    high = target * (1.0 + rel)
+    return all(low <= coordinates[index] - coordinates[index - 1] <= high
+               for index in range(1, len(coordinates)))
+
+def _face_has_dofs(nodes, records, axis, target, dofs, tol=0.1):
+    expected = set(tuple(round(float(v), 6) for v in row[:3]) for row in nodes
+                   if abs(float(row[axis]) - target) <= tol)
+    observed = {}
+    for code, value, xyz in records:
+        # MAPDL modal RST files can expose undefined/NaN values for prescribed
+        # zero DOFs.  The record itself is the reliable constraint evidence.
+        if xyz is None or abs(float(xyz[axis]) - target) > tol:
+            continue
+        key = tuple(round(float(v), 6) for v in xyz[:3])
+        observed.setdefault(key, set()).add(code)
+    return bool(expected) and all(set(dofs).issubset(observed.get(key, set())) for key in expected)
+
 def _binary_stress_max(result, set_index):
     try:
         import numpy as np
@@ -1335,8 +1423,14 @@ def check_ansys_result_binary(result_path):
         if int(result.nsets) < 4 or len(times) < 4 or min(times) <= 0.0:
             log('strict binary check: four positive solved modes missing')
             return False
-        if not (35.0 <= times[0] <= 65.0):
-            log('strict binary check: first modal frequency is outside 35-65 Hz')
+        if not (42.0 <= times[0] <= 54.0):
+            log('strict binary check: first modal frequency is outside 42-54 Hz')
+            return False
+        if element_count < 28 or not _axis_spacing_matches(nodes, 0, 12.0):
+            log('strict binary check: 12 mm axial mesh evidence is missing')
+            return False
+        if not _face_has_dofs(nodes, bcs, 0, 0.0, (1, 2, 3)):
+            log('strict binary check: X=0 face is not fully fixed')
             return False
     elif domain in ('constrained_thermal_stress_a_gui', 'thermal_stress_bar_gui'):
         if temp_min is None or not (_close(temp_min, 120.0, 0.01) and _close(temp_max, 120.0, 0.01)) or stress_max is None or stress_max < 180.0:
@@ -1503,6 +1597,17 @@ def evaluate():
 def main():
     passed, root = evaluate()
     write_detail(root, passed)
+    for name in (
+        '__open_choice_abaqus_checker.py',
+        '__open_choice_abaqus_detail.txt',
+        '__open_choice_abaqus_result.txt',
+    ):
+        try:
+            (desktop_dir() / name).unlink()
+        except FileNotFoundError:
+            pass
+        except Exception as exc:
+            log('checker residual cleanup failed for %s: %s' % (name, exc))
     sys.stdout.write('True\n' if passed else 'False\n')
 
 

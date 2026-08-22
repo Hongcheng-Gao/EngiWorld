@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-07-windows', 'open_choice_id': 'cae-open-choice-017', 'source_task': 'task/task-v/abaqus/task-17', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'thermal_stress_bar_gui', 'analysis_kind': 'thermal_structural', 'metrics': ['max_mises', 'max_displacement'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, complete a thermal-stress analysis of a restrained bar; report equivalent stress and displacement.', 'selection_reason': 'Coupled thermal-stress response is cross-solver feasible.', 'artifact_hint': {'ground_truth_files': ['Job-ThermalStress.cae', 'Job-ThermalStress.odb'], 'abaqus_stems': ['Job-ThermalStress'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-07-windows', 'open_choice_id': 'cae-open-choice-017', 'source_task': 'task/task-v/abaqus/task-17', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'thermal_stress_bar_gui', 'analysis_kind': 'thermal_structural', 'metrics': ['max_mises', 'max_displacement'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve the fully restrained 100 mm steel bar for a uniform temperature increase from 20 C to 120 C and save native model and result evidence.', 'selection_reason': 'Coupled thermal-stress response is cross-solver feasible.', 'artifact_hint': {'ground_truth_files': ['Job-ThermalStress.cae', 'Job-ThermalStress.odb', 'gt_task_07_ansys.db', 'gt_task_07_ansys.rst'], 'abaqus_stems': ['Job-ThermalStress'], 'ansys_db_files': ['gt_task_07_ansys.db'], 'ansys_result_files': ['gt_task_07_ansys.rst']}, 'span_hint': {'x': 100.0, 'y': 10.0, 'z': 10.0}, 'bounds_hint': {'x': [0.0, 100.0], 'y': [0.0, 10.0], 'z': [0.0, 10.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -250,7 +251,7 @@ def check_abaqus_analysis_step(model):
     if kind == 'buckling' and 'BUCKLE' not in texts:
         log('buckling step not found')
         return False
-    if kind in ('static_structural', 'contact', 'thermal_structural') and ('STATIC' not in texts and kind != 'thermal_structural'):
+    if kind in ('static_structural', 'contact', 'thermal_structural') and 'STATIC' not in texts:
         log('static step not found')
         return False
     if kind == 'thermal' and ('HEAT' not in texts and 'TRANSFER' not in texts):
@@ -388,9 +389,6 @@ def check_abaqus_boundary_loads(model):
     if action_count < 1:
         log('action repositories empty; trying inp fallback')
         if not abaqus_inp_has_action_evidence(model):
-            if kind == 'thermal_structural':
-                log('thermal_structural action accepted through boundary conditions plus ODB stress checks')
-                return True
             log('no load/predefined/interactions/constraints evidence found')
             return False
     return True
@@ -573,6 +571,200 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _inp_card_has_value(lines, card, target, header_token=None):
+    wanted_card = ci(card)
+    wanted_token = ci(header_token) if header_token is not None else ''
+    for index, raw in enumerate(lines):
+        header = ci(raw).replace(' ', '')
+        if not header.startswith(wanted_card.replace(' ', '')):
+            continue
+        if wanted_token and wanted_token.replace(' ', '') not in header:
+            continue
+        for data_line in lines[index + 1:]:
+            stripped = data_line.strip()
+            if not stripped or stripped.startswith('**'):
+                continue
+            if stripped.startswith('*'):
+                break
+            for token in stripped.replace(',', ' ').split():
+                try:
+                    if _near(float(token), target, 0.0, 0.01):
+                        return True
+                except Exception:
+                    pass
+    return False
+
+def _thermal_bar_inp_ok(model):
+    job_key = find_key(mdb.jobs, 'Job-ThermalStress')
+    if job_key is None:
+        log('strict check: Job-ThermalStress is missing from the CAE database')
+        return False
+    model_name = model_name_for_job(model)
+    if model_name and ci(getattr(mdb.jobs[job_key], 'model', '')) != ci(model_name):
+        log('strict check: Job-ThermalStress does not reference the inspected model')
+        return False
+    root_dir = os.path.dirname(RESULT_PATH) or os.getcwd()
+    path = write_job_input(job_key, root_dir)
+    if not path:
+        return False
+    try:
+        with open(path, 'r') as stream:
+            lines = stream.readlines()
+    except Exception as exc:
+        log('strict check: cannot read Job-ThermalStress input: %s' % exc)
+        return False
+    compact = ''.join(ci(line).replace(' ', '') for line in lines)
+    if '*STEP' not in compact or 'NAME=STEP-THERMALSTRESS' not in compact:
+        log('strict check: Step-ThermalStress is absent from the exported input')
+        return False
+    if not _inp_card_has_value(lines, '*INITIAL CONDITIONS', 20.0, 'TYPE=TEMPERATURE'):
+        log('strict check: uniform 20 C initial temperature is missing')
+        return False
+    if not _inp_card_has_value(lines, '*TEMPERATURE', 120.0):
+        temperature_rows = []
+        for index, raw in enumerate(lines):
+            if ci(raw).replace(' ', '').startswith('*TEMPERATURE'):
+                temperature_rows.extend(line.strip() for line in lines[index:index + 3])
+        log('strict check: 120 C step temperature is missing; cards=%s' % temperature_rows)
+        return False
+    return True
+
+def _thermal_bar_inp_end_constraints_ok(model, end_x):
+    job_key = find_key(mdb.jobs, 'Job-ThermalStress')
+    if job_key is None:
+        return False
+    root_dir = os.path.dirname(RESULT_PATH) or os.getcwd()
+    path = write_job_input(job_key, root_dir)
+    if not path:
+        return False
+    try:
+        with open(path, 'r') as handle:
+            lines = [line.strip() for line in handle]
+    except Exception:
+        return False
+    nodes = {}
+    nsets = {}
+    constrained = {}
+    in_part = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        upper = ci(line)
+        if upper.startswith('*PART'):
+            in_part = True
+        elif upper.startswith('*END PART'):
+            in_part = False
+        rows = []
+        cursor = index + 1
+        while cursor < len(lines) and not lines[cursor].startswith('*'):
+            if lines[cursor] and not lines[cursor].startswith('**'):
+                rows.append(lines[cursor])
+            cursor += 1
+        if upper.startswith('*NODE') and in_part:
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    nodes[int(values[0])] = tuple(float(value) for value in values[1:4])
+                except Exception:
+                    pass
+        elif upper.startswith('*NSET') and 'INSTANCE=' in upper:
+            match = re.search(r'NSET\s*=\s*([^,]+)', line, re.I)
+            if match:
+                name = ci(match.group(1).strip())
+                labels = []
+                for row in rows:
+                    values = []
+                    for item in row.split(','):
+                        try:
+                            values.append(int(item.strip()))
+                        except Exception:
+                            pass
+                    if 'GENERATE' in upper and len(values) >= 2:
+                        step = values[2] if len(values) >= 3 and values[2] else 1
+                        labels.extend(range(values[0], values[1] + 1, step))
+                    else:
+                        labels.extend(values)
+                nsets[name] = labels
+        elif upper.startswith('*BOUNDARY'):
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                if len(values) < 2:
+                    continue
+                try:
+                    first = int(values[1])
+                    last = int(values[2]) if len(values) >= 3 and values[2] else first
+                    for label in nsets.get(ci(values[0]), []):
+                        constrained.setdefault(label, set()).update(range(first, last + 1))
+                except Exception:
+                    pass
+        index = cursor
+    faces = {
+        target: set(label for label, point in nodes.items() if abs(point[0] - target) <= 0.05)
+        for target in (0.0, end_x)
+    }
+    for target, labels in faces.items():
+        if not labels or not all(set((1, 2, 3)).issubset(constrained.get(label, set())) for label in labels):
+            log('strict check: exported input does not fully fix X=%s' % target)
+            return False
+    end_labels = faces[0.0] | faces[end_x]
+    if any(label not in end_labels and set((1, 2, 3)).intersection(dofs)
+           for label, dofs in constrained.items()):
+        log('strict check: exported input fixes an interior bar node')
+        return False
+    return True
+
+def _fully_fixed_bar_ends(model, part):
+    if _thermal_bar_inp_end_constraints_ok(model, 100.0):
+        return True
+    expected = {'left': set(), 'right': set()}
+    for node in part.nodes:
+        xyz = tuple(float(v) for v in node.coordinates)
+        key = tuple(round(v, 6) for v in xyz)
+        if abs(xyz[0]) <= 0.05:
+            expected['left'].add(key)
+        elif abs(xyz[0] - 100.0) <= 0.05:
+            expected['right'].add(key)
+    covered = {'left': set(), 'right': set()}
+    for bc in _repo_values(model.boundaryConditions):
+        bc_type = ci(bc.__class__.__name__)
+        fixed = 'ENCASTRE' in bc_type or all(
+            _near(getattr(bc, component, None), 0.0, 0.0, 1.0e-12)
+            for component in ('u1', 'u2', 'u3')
+        )
+        if not fixed:
+            continue
+        nodes = _load_region_nodes(model, bc)
+        for node in nodes:
+            xyz = tuple(float(v) for v in node.coordinates)
+            key = tuple(round(v, 6) for v in xyz)
+            if abs(xyz[0]) <= 0.05:
+                covered['left'].add(key)
+            elif abs(xyz[0] - 100.0) <= 0.05:
+                covered['right'].add(key)
+            else:
+                log('strict check: a fully fixed BC includes an interior bar node')
+                return False
+    if not expected['left'] or not expected['right']:
+        return False
+    if not expected['left'].issubset(covered['left']) or not expected['right'].issubset(covered['right']):
+        log('strict check: U1/U2/U3 are not fixed on every node of both end faces')
+        return False
+    return True
+
+def _temperature_field_covers_bar(model, part):
+    expected = set(tuple(round(float(v), 6) for v in node.coordinates) for node in part.nodes)
+    for field in _repo_values(model.predefinedFields):
+        if 'TEMPERATURE' not in ci(field.__class__.__name__):
+            continue
+        covered = set(
+            tuple(round(float(v), 6) for v in node.coordinates)
+            for node in _load_region_nodes(model, field)
+        )
+        if expected and expected.issubset(covered):
+            return True
+    log('strict check: temperature predefined field does not cover the whole bar')
+    return False
+
 def _part_element_types(part):
     out = set()
     try:
@@ -588,6 +780,12 @@ def _material_ok(model, domain):
         log('strict check: no material')
         return False
     material = materials[0]
+    if domain == 'thermal_stress_bar_gui':
+        steel_key = find_key(model.materials, 'Steel')
+        if steel_key is None:
+            log('strict check: material Steel is missing')
+            return False
+        material = model.materials[steel_key]
     elastic = _material_numbers(material, 'elastic')
     if domain not in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
         expected = {
@@ -595,6 +793,11 @@ def _material_ok(model, domain):
         }.get(domain, (210000.0, 0.3))
         if len(elastic) < 2 or not _near(elastic[0], expected[0], 0.01) or not _near(elastic[1], expected[1], 0.02):
             log('strict check: elastic constants mismatch %s expected=%s' % (elastic, expected))
+            return False
+    if domain == 'thermal_stress_bar_gui':
+        expansion = _material_numbers(material, 'expansion')
+        if not expansion or not _near(expansion[0], 1.2e-5, 0.02, 1.0e-8):
+            log('strict check: Steel thermal expansion coefficient mismatch %s' % expansion)
             return False
     if domain in ('cantilever_modal_a_gui', 'cantilever_modal_b_gui', 'fixed_fixed_beam_modal_gui'):
         density = _material_numbers(material, 'density')
@@ -691,6 +894,53 @@ def check_abaqus_task_specific(model, part):
                 _step_attr_matches(steps, 'maxInc', 15.0) and
                 _step_attr_matches(steps, 'deltmx', 10.0)):
             log('strict check: transient step parameters do not match 300/2/15/DELTMX=10')
+            return False
+    if domain == 'thermal_stress_bar_gui':
+        step_key = find_key(model.steps, 'Step-ThermalStress')
+        if step_key is None or 'STATIC' not in step_text(model.steps[step_key]):
+            log('strict check: Step-ThermalStress is missing or is not Static, General')
+            return False
+        try:
+            seed_size = float(part.getPartSeeds(attribute=SIZE))
+        except Exception:
+            seed_size = None
+        if seed_size is None or not _near(seed_size, 5.0, 0.10, 0.25):
+            log('strict check: global seed size is not approximately 5 mm: %s' % seed_size)
+            return False
+        has_steel_section = False
+        for section in _repo_values(model.sections):
+            if (ci(getattr(section, 'material', '')) == 'STEEL' and
+                    'HOMOGENEOUSSOLID' in ci(section.__class__.__name__)):
+                has_steel_section = True
+                break
+        if not has_steel_section:
+            log('strict check: no homogeneous solid section uses Steel')
+            return False
+        steel_assignments = 0
+        try:
+            for assignment in part.sectionAssignments:
+                section_name = getattr(assignment, 'sectionName', '')
+                section_key = find_key(model.sections, section_name)
+                if section_key is not None and ci(getattr(model.sections[section_key], 'material', '')) == 'STEEL':
+                    steel_assignments += 1
+        except Exception:
+            steel_assignments = 0
+        if len(part.cells) != 1 or steel_assignments < 1:
+            log('strict check: Steel section is not assigned to the whole bar')
+            return False
+        instances = _repo_values(model.rootAssembly.instances)
+        if len(instances) != 1:
+            log('strict check: expected one bar instance, got %s' % len(instances))
+            return False
+        dependent = getattr(instances[0], 'dependent', None)
+        if dependent != ON and ci(dependent) not in ('ON', '1', 'TRUE'):
+            log('strict check: bar instance is not dependent')
+            return False
+        if not _fully_fixed_bar_ends(model, part):
+            return False
+        if not _temperature_field_covers_bar(model, part):
+            return False
+        if not _thermal_bar_inp_ok(model):
             return False
     if domain == 'transient_thermal_conduction_gui':
         if not (_step_attr_matches(steps, 'timePeriod', 10.0) and _step_attr_matches(steps, 'initialInc', 0.1)):
@@ -1007,6 +1257,13 @@ if __name__ == '__main__':
         except Exception as exc:
             log('abaqus checker failed to run: %s' % exc)
             return False
+        detail = scratch / '__open_choice_abaqus_detail.txt'
+        try:
+            detail_text = detail.read_text(encoding='utf-8', errors='ignore').strip()
+            if detail_text:
+                log('abaqus checker detail=' + detail_text[-4000:])
+        except Exception:
+            pass
         try:
             return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
         except Exception:
@@ -1065,6 +1322,24 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _mplist_value(text, label):
+    lines = str(text).splitlines()
+    wanted = str(label).upper()
+    number_pattern = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?'
+    for index, line in enumerate(lines):
+        tokens = line.upper().split()
+        if not tokens or tokens[0] != 'TEMP' or wanted not in tokens[1:]:
+            continue
+        for following in lines[index + 1:index + 4]:
+            numbers = re.findall(number_pattern, following)
+            if numbers:
+                try:
+                    return float(numbers[-1])
+                except Exception:
+                    pass
+    return None
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1113,6 +1388,20 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'thermal_stress_bar_gui':
+        elastic = _mplist_value(text, 'EX')
+        poisson = _mplist_value(text, 'PRXY')
+        expansion = _mplist_value(text, 'ALPX')
+        if elastic is None or not _close(elastic, 210000.0, 0.01):
+            log('strict material check: ANSYS Young modulus mismatch %s' % elastic)
+            return False
+        if poisson is None or not _close(poisson, 0.3, 0.02):
+            log('strict material check: ANSYS Poisson ratio mismatch %s' % poisson)
+            return False
+        if expansion is None or not _close(expansion, 1.2e-5, 0.02, 1.0e-8):
+            log('strict material check: ANSYS thermal expansion mismatch %s' % expansion)
+            return False
+        return True
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1150,6 +1439,9 @@ def check_ansys_analysis_step(mapdl, result_path):
     suffix = result_path.suffix.lower()
     if kind == 'thermal' and suffix != '.rth':
         log('thermal task expected thermal result artifact')
+        return False
+    if kind == 'thermal_structural' and suffix != '.rst':
+        log('thermal-stress task expected structural result artifact')
         return False
     return True
 
@@ -1275,6 +1567,51 @@ def _binary_temperature(result, set_index):
     except Exception:
         return None, None, None
 
+def _thermal_bar_mesh_ok(nodes, element_count, node_count):
+    import numpy as np
+    if element_count < 64 or node_count < 150:
+        return False
+    for axis in range(3):
+        positions = sorted(set(round(float(value), 6) for value in nodes[:, axis]))
+        gaps = [right - left for left, right in zip(positions, positions[1:]) if right - left > 1.0e-6]
+        if not gaps or max(gaps) > 5.5:
+            return False
+    return True
+
+def _thermal_bar_end_bcs_ok(nodes, bcs):
+    def key(xyz):
+        return tuple(round(float(value), 6) for value in xyz[:3])
+    expected = {'left': set(), 'right': set()}
+    for xyz in nodes:
+        if abs(float(xyz[0])) <= 0.1:
+            expected['left'].add(key(xyz))
+        elif abs(float(xyz[0]) - 100.0) <= 0.1:
+            expected['right'].add(key(xyz))
+    covered = {1: {'left': set(), 'right': set()},
+               2: {'left': set(), 'right': set()},
+               3: {'left': set(), 'right': set()}}
+    for code, value, xyz in bcs:
+        if code not in covered or xyz is None:
+            continue
+        if not _close(value, 0.0, 0.0, 1.0e-9):
+            return False
+        side = None
+        if abs(xyz[0]) <= 0.1:
+            side = 'left'
+        elif abs(xyz[0] - 100.0) <= 0.1:
+            side = 'right'
+        else:
+            return False
+        covered[code][side].add(key(xyz))
+    if not expected['left'] or not expected['right']:
+        return False
+    for code in (1, 2, 3):
+        if not expected['left'].issubset(covered[code]['left']):
+            return False
+        if not expected['right'].issubset(covered[code]['right']):
+            return False
+    return True
+
 def check_ansys_result_binary(result_path):
     try:
         import numpy as np
@@ -1340,6 +1677,13 @@ def check_ansys_result_binary(result_path):
         if temp_min is None or not (_close(temp_min, 120.0, 0.01) and _close(temp_max, 120.0, 0.01)) or stress_max is None or stress_max < 180.0:
             log('strict binary check: 120 C restrained thermal response missing')
             return False
+        if domain == 'thermal_stress_bar_gui':
+            if not _thermal_bar_end_bcs_ok(nodes, bcs):
+                log('strict binary check: U1/U2/U3 are not fixed on both complete end faces')
+                return False
+            if not _thermal_bar_mesh_ok(nodes, element_count, node_count):
+                log('strict binary check: mesh does not reflect the 5 mm global size')
+                return False
     elif domain == 'constrained_thermal_stress_b_gui':
         if temp_min is None or not (_close(temp_min, 100.0, 0.01) and _close(temp_max, 100.0, 0.01)) or stress_max is None or not (100.0 <= stress_max <= 300.0):
             log('strict binary check: aluminum thermal response mismatch')

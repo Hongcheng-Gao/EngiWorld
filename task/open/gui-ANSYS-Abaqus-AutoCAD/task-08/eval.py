@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -11,7 +12,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-08-windows', 'open_choice_id': 'cae-open-choice-018', 'source_task': 'task/task-v/abaqus/task-18', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'cantilever_modal_b_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'frequency_list'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a second cantilever-beam modal variant; report the requested low-order natural frequencies.', 'selection_reason': 'Modal variant adds coverage without requiring a unique solver.', 'artifact_hint': {'ground_truth_files': ['gt_task_08_ansys.db', 'gt_task_08_ansys.rst'], 'abaqus_stems': [], 'ansys_db_files': ['gt_task_08_ansys.db'], 'ansys_result_files': ['gt_task_08_ansys.rst']}, 'span_hint': {'x': 360.0, 'y': 14.0, 'z': 8.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-08-windows', 'open_choice_id': 'cae-open-choice-018', 'source_task': 'task/task-v/abaqus/task-18', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'cantilever_modal_b_gui', 'analysis_kind': 'modal', 'metrics': ['first_frequency', 'frequency_list'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, solve the five lowest modes of the 360 mm steel cantilever fixed at X = 0 and save native model and result evidence.', 'selection_reason': 'Modal variant adds coverage without requiring a unique solver.', 'artifact_hint': {'ground_truth_files': ['gt_task_08_ansys.db', 'gt_task_08_ansys.rst'], 'abaqus_stems': [], 'ansys_db_files': ['gt_task_08_ansys.db'], 'ansys_result_files': ['gt_task_08_ansys.rst']}, 'span_hint': {'x': 360.0, 'y': 14.0, 'z': 8.0}, 'bounds_hint': {'x': [0.0, 360.0], 'y': [0.0, 14.0], 'z': [0.0, 8.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -576,6 +577,32 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _cantilever_fixed_at_x0(model, part):
+    expected = set()
+    for node in part.nodes:
+        xyz = tuple(float(v) for v in node.coordinates)
+        if abs(xyz[0]) <= 0.05:
+            expected.add(tuple(round(v, 6) for v in xyz))
+    covered = set()
+    for bc in _repo_values(model.boundaryConditions):
+        bc_type = ci(bc.__class__.__name__)
+        fixed = 'ENCASTRE' in bc_type or all(
+            _near(getattr(bc, component, None), 0.0, 0.0, 1.0e-12)
+            for component in ('u1', 'u2', 'u3')
+        )
+        if not fixed:
+            continue
+        for node in _load_region_nodes(model, bc):
+            xyz = tuple(float(v) for v in node.coordinates)
+            if abs(xyz[0]) > 0.05:
+                log('strict check: cantilever fixity is not confined to X=0')
+                return False
+            covered.add(tuple(round(v, 6) for v in xyz))
+    if not expected or not expected.issubset(covered):
+        log('strict check: X=0 end face is not fully fixed')
+        return False
+    return True
+
 def _part_element_types(part):
     out = set()
     try:
@@ -591,6 +618,12 @@ def _material_ok(model, domain):
         log('strict check: no material')
         return False
     material = materials[0]
+    if domain == 'cantilever_modal_b_gui':
+        steel_key = find_key(model.materials, 'Steel')
+        if steel_key is None:
+            log('strict check: material Steel is missing')
+            return False
+        material = model.materials[steel_key]
     elastic = _material_numbers(material, 'elastic')
     if domain not in ('transient_heat_block_gui', 'transient_thermal_conduction_gui', 'steady_state_thermal_block_gui'):
         expected = {
@@ -683,6 +716,56 @@ def check_abaqus_task_specific(model, part):
     if domain in mode_targets:
         if not any(float(getattr(step, 'numEigen', 0) or 0) >= mode_targets[domain] for step in steps):
             log('strict check: insufficient requested modes')
+            return False
+    if domain == 'cantilever_modal_b_gui':
+        step_key = find_key(model.steps, 'Step-Modal-B')
+        if step_key is None or 'FREQUENCY' not in step_text(model.steps[step_key]):
+            log('strict check: Step-Modal-B is missing or is not a Frequency step')
+            return False
+        if float(getattr(model.steps[step_key], 'numEigen', 0) or 0) < 5:
+            log('strict check: Step-Modal-B requests fewer than five eigenvalues')
+            return False
+        try:
+            seed_size = float(part.getPartSeeds(attribute=SIZE))
+        except Exception:
+            seed_size = None
+        if seed_size is None or not _near(seed_size, 10.0, 0.10, 0.5):
+            log('strict check: global seed size is not approximately 10 mm: %s' % seed_size)
+            return False
+        has_steel_section = False
+        for section in _repo_values(model.sections):
+            if (ci(getattr(section, 'material', '')) == 'STEEL' and
+                    'HOMOGENEOUSSOLID' in ci(section.__class__.__name__)):
+                has_steel_section = True
+                break
+        if not has_steel_section:
+            log('strict check: no homogeneous solid section uses Steel')
+            return False
+        steel_assignments = 0
+        try:
+            for assignment in part.sectionAssignments:
+                section_name = getattr(assignment, 'sectionName', '')
+                section_key = find_key(model.sections, section_name)
+                if section_key is not None and ci(getattr(model.sections[section_key], 'material', '')) == 'STEEL':
+                    steel_assignments += 1
+        except Exception:
+            steel_assignments = 0
+        if len(part.cells) != 1 or steel_assignments < 1:
+            log('strict check: Steel section is not assigned to the whole beam')
+            return False
+        instances = _repo_values(model.rootAssembly.instances)
+        if len(instances) != 1:
+            log('strict check: expected one beam instance, got %s' % len(instances))
+            return False
+        dependent = getattr(instances[0], 'dependent', None)
+        if dependent != ON and ci(dependent) not in ('ON', '1', 'TRUE'):
+            log('strict check: beam instance is not dependent')
+            return False
+        if not _cantilever_fixed_at_x0(model, part):
+            return False
+        job_key = find_key(mdb.jobs, 'Job-Modal-B')
+        if job_key is None:
+            log('strict check: Job-Modal-B is missing from the CAE database')
             return False
     if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
         if not any(float(getattr(step, 'numEigen', 0) or 0) >= 3 for step in steps):
@@ -1080,6 +1163,24 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _mplist_value(text, label):
+    lines = str(text).splitlines()
+    wanted = str(label).upper()
+    number_pattern = r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][-+]?\d+)?'
+    for index, line in enumerate(lines):
+        tokens = line.upper().split()
+        if not tokens or tokens[0] != 'TEMP' or wanted not in tokens[1:]:
+            continue
+        for following in lines[index + 1:index + 4]:
+            numbers = re.findall(number_pattern, following)
+            if numbers:
+                try:
+                    return float(numbers[-1])
+                except Exception:
+                    pass
+    return None
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1128,6 +1229,20 @@ def check_ansys_geometry(mapdl):
 
 def check_ansys_materials(mapdl):
     text = _safe_run(mapdl, 'MPLIST,ALL')
+    if TASK_SPEC.get('domain') == 'cantilever_modal_b_gui':
+        elastic = _mplist_value(text, 'EX')
+        poisson = _mplist_value(text, 'PRXY')
+        density = _mplist_value(text, 'DENS')
+        if elastic is None or not _close(elastic, 210000.0, 0.01):
+            log('strict material check: ANSYS Young modulus mismatch %s' % elastic)
+            return False
+        if poisson is None or not _close(poisson, 0.3, 0.02):
+            log('strict material check: ANSYS Poisson ratio mismatch %s' % poisson)
+            return False
+        if density is None or not _close(density, 7.95e-9, 0.03, 1.0e-12):
+            log('strict material check: ANSYS density mismatch %s' % density)
+            return False
+        return True
     if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
         return True
     try:
@@ -1290,6 +1405,33 @@ def _binary_temperature(result, set_index):
     except Exception:
         return None, None, None
 
+def _modal_b_mesh_ok(nodes):
+    positions = [sorted(set(round(float(value), 6) for value in nodes[:, axis])) for axis in range(3)]
+    gaps = [
+        [right - left for left, right in zip(values, values[1:]) if right - left > 1.0e-6]
+        for values in positions
+    ]
+    if any(not axis_gaps for axis_gaps in gaps):
+        return False
+    if not (9.0 <= max(gaps[0]) <= 11.0):
+        return False
+    return max(gaps[1]) <= 10.5 and max(gaps[2]) <= 10.5
+
+def _modal_b_fixed_end_ok(nodes, bcs):
+    def key(xyz):
+        return tuple(round(float(value), 6) for value in xyz[:3])
+    expected = set(key(xyz) for xyz in nodes if abs(float(xyz[0])) <= 0.1)
+    covered = {1: set(), 2: set(), 3: set()}
+    for code, value, xyz in bcs:
+        if code not in covered or xyz is None:
+            continue
+        # Modal RST files may not preserve a meaningful numeric value for a
+        # prescribed zero DOF; node/DOF presence is the reliable evidence.
+        if abs(xyz[0]) > 0.1:
+            return False
+        covered[code].add(key(xyz))
+    return bool(expected) and all(expected.issubset(covered[code]) for code in (1, 2, 3))
+
 def check_ansys_result_binary(result_path):
     try:
         import numpy as np
@@ -1372,6 +1514,12 @@ def check_ansys_result_binary(result_path):
             return False
         if not (40.0 <= frequencies[0] <= 70.0):
             log('strict binary check: first modal frequency is outside 40-70 Hz: %s' % frequencies[0])
+            return False
+        if not _modal_b_fixed_end_ok(nodes, bcs):
+            log('strict binary check: X=0 end face is not fully fixed in U1/U2/U3')
+            return False
+        if not _modal_b_mesh_ok(nodes):
+            log('strict binary check: mesh does not reflect the 10 mm global size')
             return False
     elif domain == 'thin_plate_buckling_b_gui_only':
         if not (_close(_force_sum(forces, 1, 0, 0.0), 108.0, 0.03) and _close(_force_sum(forces, 1, 0, 120.0), -108.0, 0.03)):

@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-12-windows', 'open_choice_id': 'cae-open-choice-032', 'source_task': 'task/task-v/ansys/task-02', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'axisymmetric_circular_plate_static_gui', 'analysis_kind': 'static_structural', 'metrics': ['center_deflection', 'max_stress'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve an axisymmetric circular plate with a clamped outer edge and uniform pressure; report center deflection and stress.', 'selection_reason': 'Axisymmetric plate statics matches the Abaqus-origin family and is cross-solver feasible.', 'artifact_hint': {'ground_truth_files': ['apdl_plate.db', 'apdl_plate.rst'], 'abaqus_stems': [], 'ansys_db_files': ['apdl_plate.db'], 'ansys_result_files': ['apdl_plate.rst']}, 'span_hint': {'x': 50.0, 'y': 1.0}, 'bounds_hint': {'x': [0.0, 50.0], 'y': [0.0, 1.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-12-windows', 'open_choice_id': 'cae-open-choice-032', 'source_task': 'task/task-v/ansys/task-02', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'axisymmetric_circular_plate_static_gui', 'analysis_kind': 'static_structural', 'metrics': ['center_deflection', 'max_stress'], 'expected_result_fields': ['U', 'S'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, build and solve an axisymmetric circular plate with a clamped outer edge and uniform pressure; report center deflection and stress.', 'selection_reason': 'Axisymmetric plate statics matches the Abaqus-origin family and is cross-solver feasible.', 'artifact_hint': {'ground_truth_files': ['plate_v12_fixed.cae', 'plate_v12_fixed.odb'], 'abaqus_stems': ['plate_v12_fixed'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 50.0, 'y': 1.0}, 'bounds_hint': {'x': [0.0, 50.0], 'y': [0.0, 1.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -96,7 +96,8 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    log('Abaqus CAE/ODB files do not share a stem')
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -110,7 +111,8 @@ def find_ansys_artifacts(root):
         for result in result_files:
             if model.stem.lower() == result.stem.lower():
                 return model, result
-    return model_files[0], result_files[0]
+    log('ANSYS model/result files do not share a stem')
+    return None
 
 
 def run_abaqus_checker(root, cae_path, odb_path):
@@ -575,6 +577,312 @@ def _load_region_nodes(model, load):
         pass
     return []
 
+def _region_nodes(model, owner):
+    region = getattr(owner, 'region', owner)
+    out = []
+    try:
+        out.extend(_all_region_nodes(region.nodes))
+    except Exception:
+        pass
+    region_entity_attrs = ('faces', 'edges', 'vertices', 'side1Faces', 'side2Faces',
+                           'side1Edges', 'side2Edges', 'end1Edges', 'end2Edges')
+    for attr in region_entity_attrs:
+        try:
+            entities = list(getattr(region, attr))
+        except Exception:
+            continue
+        for entity in entities:
+            try:
+                out.extend(_all_region_nodes(entity.getNodes()))
+            except Exception:
+                pass
+    label = ci(region)
+    try:
+        assembly = model.rootAssembly
+    except Exception:
+        assembly = None
+    if assembly is not None:
+        for repo_name in ('sets', 'surfaces'):
+            try:
+                repo = getattr(assembly, repo_name)
+                for key in repo.keys():
+                    if ci(key) not in label and label not in ci(key):
+                        continue
+                    item = repo[key]
+                    out.extend(_all_region_nodes(getattr(item, 'nodes', None)))
+                    for attr in region_entity_attrs:
+                        try:
+                            for entity in getattr(item, attr):
+                                out.extend(_all_region_nodes(entity.getNodes()))
+                        except Exception:
+                            pass
+            except Exception:
+                pass
+    unique = []
+    seen = set()
+    for node in out:
+        try:
+            xyz = tuple(round(float(v), 8) for v in node.coordinates)
+        except Exception:
+            continue
+        key = (getattr(node, 'label', None), xyz)
+        if key not in seen:
+            seen.add(key)
+            unique.append(node)
+    return unique
+
+def _node_xyz(node):
+    try:
+        return tuple(float(v) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _same_xyz(a, b, tol=0.05):
+    return a is not None and b is not None and len(a) == len(b) and all(abs(x-y) <= tol for x, y in zip(a, b))
+
+def _is_fixed_component(value):
+    text = ci(value)
+    if text in ('SET', 'FIXED'):
+        return True
+    if text in ('UNSET', 'FREED', 'NONE', ''):
+        return False
+    try:
+        return abs(float(value)) <= 1.0e-12
+    except Exception:
+        return False
+
+def _boundary_component_coverage(model, part, axis, target, components):
+    target_nodes = []
+    try:
+        for node in part.nodes:
+            xyz = _node_xyz(node)
+            if xyz is not None and len(xyz) > axis and abs(xyz[axis] - target) <= 0.05:
+                target_nodes.append(xyz)
+    except Exception:
+        pass
+    if not target_nodes:
+        return False
+    covered = dict((component, []) for component in components)
+    for bc in _repo_values(model.boundaryConditions):
+        nodes = [_node_xyz(node) for node in _region_nodes(model, bc)]
+        nodes = [xyz for xyz in nodes if xyz is not None]
+        class_text = ci(getattr(bc, '__class__', type(bc)).__name__)
+        for component in components:
+            symmetry = component == 'u1' and 'XSYMM' in class_text
+            if 'ENCASTRE' in class_text or symmetry or _is_fixed_component(getattr(bc, component, None)):
+                covered[component].extend(nodes)
+    return all(any(_same_xyz(node, candidate) for candidate in covered[component])
+               for node in target_nodes for component in components)
+
+def _pressure_load_covers_top(model, part):
+    top_nodes = []
+    try:
+        top_nodes = [_node_xyz(node) for node in part.nodes if abs(_node_xyz(node)[1] - 1.0) <= 0.05]
+    except Exception:
+        pass
+    top_nodes = [xyz for xyz in top_nodes if xyz is not None]
+    if not top_nodes:
+        return False
+    for load in _repo_values(model.loads):
+        class_text = ci(getattr(load, '__class__', type(load)).__name__)
+        if not any(token in class_text for token in ('PRESS', 'TRACTION', 'EDGELOAD')):
+            continue
+        magnitudes = []
+        for attr in ('magnitude', 'pressure'):
+            magnitudes.extend(_numbers(getattr(load, attr, None)))
+        if not any(_near(abs(value), 0.1, 0.02, 1.0e-4) for value in magnitudes):
+            continue
+        if 'PRESS' in class_text and not any(_near(value, 0.1, 0.02, 1.0e-4) for value in magnitudes):
+            continue
+        if 'TRACTION' in class_text:
+            direction = _numbers(getattr(load, 'directionVector', None))
+            if len(direction) >= 4:
+                half = len(direction) // 2
+                if half < 2 or direction[half + 1] - direction[1] >= 0.0:
+                    continue
+            else:
+                continue
+        loaded_nodes = [_node_xyz(node) for node in _region_nodes(model, load)]
+        loaded_nodes = [xyz for xyz in loaded_nodes if xyz is not None and len(xyz) >= 2 and abs(xyz[1] - 1.0) <= 0.05]
+        if all(any(_same_xyz(node, candidate) for candidate in loaded_nodes) for node in top_nodes):
+            return True
+    return False
+
+def _inp_header_options(line):
+    options = {}
+    for item in line.split(',')[1:]:
+        item = item.strip()
+        if '=' in item:
+            key, value = item.split('=', 1)
+            options[ci(key)] = value.strip()
+        elif item:
+            options[ci(item)] = True
+    return options
+
+def _inp_label_rows(rows, generated):
+    labels = []
+    for row in rows:
+        values = []
+        for item in row.split(','):
+            try:
+                values.append(int(item.strip()))
+            except Exception:
+                pass
+        if generated and len(values) >= 2:
+            step = values[2] if len(values) >= 3 and values[2] else 1
+            labels.extend(range(values[0], values[1] + 1, step))
+        else:
+            labels.extend(values)
+    return labels
+
+def _axisymmetric_plate_input_ok(model):
+    root_dir = os.path.dirname(RESULT_PATH) or os.getcwd()
+    model_name = model_name_for_job(model)
+    path = None
+    if model_name:
+        try:
+            for job_name in mdb.jobs.keys():
+                if ci(getattr(mdb.jobs[job_name], 'model', '')) == ci(model_name):
+                    path = write_job_input(job_name, root_dir)
+                    if path:
+                        break
+        except Exception:
+            pass
+    if not path:
+        log('strict check: cannot export axisymmetric plate input')
+        return False
+    try:
+        with open(path, 'r') as handle:
+            lines = [line.strip() for line in handle]
+    except Exception as exc:
+        log('strict check: cannot read axisymmetric plate input: %s' % exc)
+        return False
+
+    nodes = {}
+    elements = {}
+    nsets = {}
+    elsets = {}
+    surfaces = {}
+    boundaries = []
+    pressures = []
+    in_part = False
+    index = 0
+    while index < len(lines):
+        line = lines[index]
+        upper = ci(line)
+        if upper.startswith('*PART'):
+            in_part = True
+        elif upper.startswith('*END PART'):
+            in_part = False
+        rows = []
+        cursor = index + 1
+        while cursor < len(lines) and not lines[cursor].startswith('*'):
+            if lines[cursor] and not lines[cursor].startswith('**'):
+                rows.append(lines[cursor])
+            cursor += 1
+        options = _inp_header_options(line) if line.startswith('*') else {}
+        if upper.startswith('*NODE') and in_part:
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    nodes[int(values[0])] = tuple(float(value) for value in values[1:3])
+                except Exception:
+                    pass
+        elif upper.startswith('*ELEMENT') and in_part:
+            element_type = ci(options.get('TYPE', ''))
+            for row in rows:
+                values = _inp_label_rows((row,), False)
+                if len(values) >= 2:
+                    elements[values[0]] = (element_type, values[1:])
+        elif upper.startswith('*NSET') and 'INSTANCE' in options:
+            nsets[ci(options.get('NSET', ''))] = _inp_label_rows(rows, 'GENERATE' in options)
+        elif upper.startswith('*ELSET') and 'INSTANCE' in options:
+            elsets[ci(options.get('ELSET', ''))] = _inp_label_rows(rows, 'GENERATE' in options)
+        elif upper.startswith('*SURFACE'):
+            name = ci(options.get('NAME', ''))
+            surfaces[name] = []
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                if len(values) >= 2:
+                    surfaces[name].append((ci(values[0]), ci(values[1])))
+        elif upper.startswith('*BOUNDARY'):
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    first = int(values[1])
+                    last = int(values[2]) if len(values) >= 3 and values[2] else first
+                    value = float(values[3]) if len(values) >= 4 and values[3] else 0.0
+                    boundaries.append((ci(values[0]), first, last, value))
+                except Exception:
+                    pass
+        elif upper.startswith('*DSLOAD') or upper.startswith('*DLOAD'):
+            for row in rows:
+                values = [item.strip() for item in row.split(',')]
+                try:
+                    if len(values) >= 3:
+                        pressures.append((ci(values[0]), ci(values[1]), float(values[2])))
+                except Exception:
+                    pass
+        index = cursor
+
+    constrained = {}
+    for set_name, first, last, value in boundaries:
+        if abs(value) > 1.0e-12:
+            continue
+        for label in nsets.get(set_name, []):
+            constrained.setdefault(label, set()).update(range(first, last + 1))
+    axis_nodes = set(label for label, point in nodes.items() if abs(point[0]) <= 0.05)
+    outer_nodes = set(label for label, point in nodes.items() if abs(point[0] - 50.0) <= 0.05)
+    if (not axis_nodes or not outer_nodes or
+            any(1 not in constrained.get(label, set()) for label in axis_nodes) or
+            any(not set((1, 2)).issubset(constrained.get(label, set())) for label in outer_nodes)):
+        log('strict check: exported input axis/outer-edge constraints are incomplete')
+        return False
+    permitted = axis_nodes | outer_nodes
+    if any(label not in permitted and set((1, 2)).intersection(dofs)
+           for label, dofs in constrained.items()):
+        log('strict check: exported input has unintended interior constraints')
+        return False
+
+    side_nodes = {
+        'CAX4': {'S1': (0, 1), 'S2': (1, 2), 'S3': (2, 3), 'S4': (3, 0)},
+        'CAX8': {'S1': (0, 1, 4), 'S2': (1, 2, 5), 'S3': (2, 3, 6), 'S4': (3, 0, 7)},
+    }
+    top_nodes = set(label for label, point in nodes.items() if abs(point[1] - 1.0) <= 0.05)
+    covered_top = set()
+    for surface_name, load_type, magnitude in pressures:
+        if load_type != 'P' or not _near(magnitude, 0.1, 0.02, 1.0e-4):
+            continue
+        for elset_name, side in surfaces.get(surface_name, []):
+            for element_label in elsets.get(elset_name, []):
+                element_type, connectivity = elements.get(element_label, ('', []))
+                family = 'CAX8' if element_type.startswith('CAX8') else 'CAX4' if element_type.startswith('CAX4') else ''
+                for local_index in side_nodes.get(family, {}).get(side, ()):
+                    if local_index < len(connectivity):
+                        covered_top.add(connectivity[local_index])
+    if not top_nodes or covered_top != top_nodes:
+        log('strict check: 0.1 MPa pressure does not cover the complete Y=1 top edge')
+        return False
+    return True
+
+def _has_two_mm_mesh_evidence(part, element_count):
+    try:
+        seed = part.getPartSeeds(region=part, attribute=SIZE)
+        values = [value for value in _numbers(seed) if value > 0.0]
+        if values:
+            return any(_near(value, 2.0, 0.05, 0.05) for value in values)
+    except Exception:
+        pass
+    xyz = []
+    try:
+        xyz = [_node_xyz(node) for node in part.nodes]
+        xyz = [point for point in xyz if point is not None and len(point) >= 2]
+    except Exception:
+        pass
+    radial = set(round(point[0], 3) for point in xyz)
+    thickness = set(round(point[1], 3) for point in xyz)
+    return element_count >= 20 and len(radial) >= 24 and len(thickness) >= 2
+
 def _part_element_types(part):
     out = set()
     try:
@@ -712,6 +1020,12 @@ def check_abaqus_task_specific(model, part):
     if domain == 'fixed_fixed_beam_modal_gui' and not (18 <= element_count <= 24 and 19 <= node_count <= 30):
         log('strict check: expected about 20 beam divisions')
         return False
+    if domain == 'axisymmetric_circular_plate_static_gui':
+        if not _axisymmetric_plate_input_ok(model):
+            return False
+        if not _has_two_mm_mesh_evidence(part, element_count):
+            log('strict check: 2 mm global mesh evidence is missing')
+            return False
     if domain == 'solid_cantilever_static_gui':
         if not _task_load_at_single_node(model, 'cf2', -100.0, (5.0, 10.0, 100.0)):
             log('strict check: -100 N load is not applied to the single specified node')
@@ -768,6 +1082,15 @@ def _odb_element_types(odb):
         pass
     return out
 
+def _odb_element_count(odb):
+    count = 0
+    try:
+        for key in odb.rootAssembly.instances.keys():
+            count += len(odb.rootAssembly.instances[key].elements)
+    except Exception:
+        pass
+    return count
+
 def _odb_frames(odb):
     out = []
     try:
@@ -816,6 +1139,7 @@ def check_abaqus_odb_specific(odb):
         return False
     final = frames[-1]
     types = _odb_element_types(odb)
+    element_count = _odb_element_count(odb)
     xyz = _odb_nodes(odb)
     times = [float(getattr(frame, 'frameValue', 0.0)) for frame in frames]
     stress = _frame_field(final, ('S',), invariant=True)
@@ -867,8 +1191,16 @@ def check_abaqus_odb_specific(odb):
         if not temp or min(temp) < low_target - 2.0 or max(temp) < high_target - 1.0 or max(temp) > high_target + 2.0:
             log('strict ODB check: thermal field range mismatch')
             return False
-    if domain == 'axisymmetric_circular_plate_static_gui' and not any(t.startswith('CAX') for t in types):
-        return False
+    if domain == 'axisymmetric_circular_plate_static_gui':
+        if not any(t.startswith('CAX') for t in types) or element_count < 20:
+            log('strict ODB check: axisymmetric 2 mm mesh evidence is missing')
+            return False
+        if not disp or not (0.10 <= max(abs(value) for value in disp) <= 2.0):
+            log('strict ODB check: center-deflection response is implausible')
+            return False
+        if not stress or not (30.0 <= max(stress) <= 300.0):
+            log('strict ODB check: plate stress response is implausible')
+            return False
     if domain == 'axisymmetric_thick_cylinder_pressure_gui' and not any(t.startswith('CAX') for t in types):
         return False
     if domain == 'coupled_thermal_structural_bar_gui':
@@ -1001,6 +1333,13 @@ if __name__ == '__main__':
     except Exception as exc:
         log('abaqus checker failed to run: %s' % exc)
         return False
+    detail = root / '__open_choice_abaqus_detail.txt'
+    try:
+        detail_text = detail.read_text(encoding='utf-8', errors='ignore').strip()
+        if detail_text:
+            log('abaqus checker detail=' + detail_text[-4000:])
+    except Exception:
+        pass
     try:
         return result.read_text(encoding='utf-8', errors='ignore').strip() == 'True'
     except Exception:

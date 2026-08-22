@@ -3,6 +3,7 @@ from __future__ import annotations
 
 import json
 import os
+import re
 import shutil
 import subprocess
 import sys
@@ -10,7 +11,7 @@ import tempfile
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-19-windows', 'open_choice_id': 'cae-open-choice-039', 'source_task': 'task/task-v/ansys/task-19', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'column_eigen_buckling_gui', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a linear eigenvalue buckling analysis of a pin-ended column under axial compression; constrain only the bottom axial spin in addition to the pin translations and report the first load factor.', 'selection_reason': 'Column buckling gives a distinct structural stability domain while staying cross-solver.', 'artifact_hint': {'ground_truth_files': ['wb_buckling.db', 'wb_buckling.rst'], 'abaqus_stems': [], 'ansys_db_files': ['wb_buckling.db'], 'ansys_result_files': ['wb_buckling.rst']}, 'span_hint': {'y': 1000.0}, 'bounds_hint': {'y': [0.0, 1000.0]}}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-19-windows', 'open_choice_id': 'cae-open-choice-039', 'source_task': 'task/task-v/ansys/task-19', 'original_software': 'ansys', 'alternative_software': 'abaqus', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'column_eigen_buckling_gui', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a linear eigenvalue buckling analysis of a pin-ended column under axial compression; constrain only the bottom axial spin in addition to the pin translations and report the first load factor.', 'selection_reason': 'Column buckling gives a distinct structural stability domain while staying cross-solver.', 'artifact_hint': {'ground_truth_files': ['wb_buckling.db', 'wb_buckling.rst'], 'abaqus_stems': [], 'ansys_db_files': ['wb_buckling.db'], 'ansys_result_files': ['wb_buckling.rst']}, 'span_hint': {'y': 1000.0}, 'bounds_hint': {'y': [0.0, 1000.0]}, 'material_hint': {'youngs_modulus_mpa': 210000.0, 'poissons_ratio': 0.3}, 'section_hint': {'shape': 'rectangular', 'width_mm': 10.0, 'height_mm': 10.0}, 'element_hint': {'ansys_types': ['BEAM188', 'BEAM189'], 'abaqus_family': 'B'}, 'load_hint': {'top_force_y_n': -1.0, 'load_node_mm': [0.0, 1000.0, 0.0]}, 'boundary_hint': {'bottom_fixed_dofs': ['UX', 'UY', 'UZ', 'ROTY'], 'bottom_free_dofs': ['ROTX', 'ROTZ'], 'top_fixed_dofs': ['UX', 'UZ'], 'top_free_dofs': ['UY', 'ROTX', 'ROTY', 'ROTZ']}, 'buckling_hint': {'requested_modes': 1, 'first_factor_window': [1500.0, 1950.0]}}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -95,7 +96,7 @@ def find_abaqus_pair(root):
         for odb in odbs:
             if cae.stem.lower() == odb.stem.lower():
                 return cae, odb
-    return caes[0], odbs[0]
+    return None
 
 
 def find_ansys_artifacts(root):
@@ -642,6 +643,36 @@ def _task_load_at_single_node(model, component, magnitude, target):
             return True
     return False
 
+def _node_key(node):
+    try:
+        return tuple(round(float(v), 6) for v in node.coordinates)
+    except Exception:
+        return None
+
+def _bc_is_zero(bc, component):
+    value = getattr(bc, component, None)
+    return _near(value, 0.0, 0.0) or ci(value) == 'SET'
+
+def _rectangular_beam_section_ok(model, part):
+    assigned = set()
+    try:
+        assigned = {ci(item.sectionName) for item in part.sectionAssignments}
+    except Exception:
+        pass
+    for name in getattr(model, 'sections', {}).keys():
+        if assigned and ci(name) not in assigned:
+            continue
+        try:
+            section = model.sections[name]
+            profile = model.profiles[section.profile]
+        except Exception:
+            continue
+        if 'RECT' not in ci(profile.__class__.__name__):
+            continue
+        if _near(getattr(profile, 'a', None), 10.0, 0.01) and _near(getattr(profile, 'b', None), 10.0, 0.01):
+            return True
+    return False
+
 def check_abaqus_task_specific(model, part):
     domain = SPEC.get('domain', '')
     if not _material_ok(model, domain):
@@ -718,8 +749,40 @@ def check_abaqus_task_specific(model, part):
             log('strict check: -100 N load is not applied to the single specified node')
             return False
     if domain == 'column_eigen_buckling_gui':
-        if not _task_load_at_single_node(model, 'cf2', -1.0, (0.0, 1000.0, 0.0)):
+        if not _rectangular_beam_section_ok(model, part):
+            log('strict check: assigned 10 x 10 mm rectangular beam section is missing')
+            return False
+        buckle_steps = [step for step in steps if 'BUCKLE' in ci(step.__class__.__name__)]
+        if len(buckle_steps) != 1 or not _near(getattr(buckle_steps[0], 'numEigen', None), 1.0, 0.0):
+            log('strict check: exactly one buckling mode must be requested')
+            return False
+        active_forces = []
+        for load in _repo_values(model.loads):
+            nodes = _load_region_nodes(model, load)
+            for component, code in (('cf1', 1), ('cf2', 2), ('cf3', 3)):
+                for value in _numbers(getattr(load, component, None)):
+                    if abs(value) > 1.0e-10:
+                        active_forces.append((code, value, nodes))
+        if (len(active_forces) != 1 or active_forces[0][0] != 2 or not _near(active_forces[0][1], -1.0, 0.01)
+                or len(active_forces[0][2]) != 1):
+            log('strict check: exactly one FY=-1 N reference load is required')
+            return False
+        load_point = _node_key(active_forces[0][2][0])
+        if load_point is None or any(abs(a - b) > 0.05 for a, b in zip(load_point, (0.0, 1000.0, 0.0))):
             log('strict check: -1 N reference load is not applied at the column top node')
+            return False
+        fixed = {code: set() for code in range(1, 7)}
+        for bc in _repo_values(model.boundaryConditions):
+            scoped = {_node_key(node) for node in _load_region_nodes(model, bc)}
+            scoped.discard(None)
+            for component, code in (('u1', 1), ('u2', 2), ('u3', 3), ('ur1', 4), ('ur2', 5), ('ur3', 6)):
+                if _bc_is_zero(bc, component):
+                    fixed[code].update(scoped)
+        bottom_codes = {code for code, points in fixed.items() if any(abs(point[1]) <= 0.1 for point in points)}
+        top_codes = {code for code, points in fixed.items() if any(abs(point[1] - 1000.0) <= 0.1 for point in points)}
+        interior = {point for points in fixed.values() for point in points if abs(point[1]) > 0.1 and abs(point[1] - 1000.0) > 0.1}
+        if bottom_codes != {1, 2, 3, 5} or top_codes != {1, 3} or interior:
+            log('strict check: pin-end DOFs do not match the instruction exactly')
             return False
     if domain == 'coupled_thermal_structural_bar_gui':
         expansion = _material_numbers(_repo_values(model.materials)[0], 'expansion')
@@ -889,8 +952,18 @@ def check_abaqus_odb_specific(odb):
             if spherical < 12:
                 log('strict ODB check: spherical surface evidence missing')
                 return False
-    if domain == 'column_eigen_buckling_gui' and not any(t.startswith('B') for t in types):
-        return False
+    if domain == 'column_eigen_buckling_gui':
+        if not any(t.startswith('B') for t in types):
+            return False
+        positive = [value for value in times if value > 0.0]
+        window = SPEC['buckling_hint']['first_factor_window']
+        if len(positive) != 1 or not (window[0] <= positive[0] <= window[1]):
+            log('strict ODB check: exactly one plausible first buckling factor is required')
+            return False
+        if xyz:
+            if max(abs(point[0]) for point in xyz) > 0.1 or max(abs(point[2]) for point in xyz) > 0.1:
+                log('strict ODB check: model is not a line column on the global Y axis')
+                return False
     if domain == 'steady_state_thermal_block_gui':
         if not temp or min(temp) < 19.0 or max(temp) > 101.0 or min(temp) > 21.0 or max(temp) < 99.0:
             log('strict ODB check: 20-100 C steady field missing')
@@ -1031,6 +1104,40 @@ def _safe_run(mapdl, command):
         return ''
 
 
+def _ansys_material_values(mapdl, label):
+    values = []
+    materials = set()
+    listing = _safe_run(mapdl, 'ELIST,ALL')
+    for line in listing.splitlines():
+        match = re.match(r'^\s*\d+\s+(\d+)\s+\d+\s+', line)
+        if match:
+            materials.add(int(match.group(1)))
+    if not materials:
+        maximum = _try_get(mapdl, 'MAT', 0, 'NUM', 'MAX')
+        if maximum is not None:
+            materials.update(range(1, int(maximum) + 1))
+    for material in sorted(materials):
+        value = _try_get(mapdl, label, material)
+        if value is not None:
+            values.append(value)
+    return values
+
+
+def _beam_section_listing_ok(text):
+    lines = text.splitlines()
+    for index, line in enumerate(lines):
+        if 'RECT' not in line.upper():
+            continue
+        context = ' '.join(lines[index:index + 12])
+        numbers = [float(value) for value in re.findall(r'[-+]?(?:\d+(?:\.\d*)?|\.\d+)(?:[Ee][+-]?\d+)?', context)]
+        dimensions = sum(1 for value in numbers if _close(value, 10.0, 0.01))
+        area_ok = any(_close(value, 100.0, 0.01) for value in numbers)
+        inertia_ok = any(_close(value, 833.333333, 0.02) for value in numbers)
+        if dimensions >= 2 or (area_ok and inertia_ok):
+            return True
+    return False
+
+
 def check_geometry_values(bb):
     if not bb:
         return False
@@ -1078,14 +1185,19 @@ def check_ansys_geometry(mapdl):
 
 
 def check_ansys_materials(mapdl):
-    text = _safe_run(mapdl, 'MPLIST,ALL')
-    if text.strip() and 'NO MATERIAL' not in text.upper() and 'ERROR' not in text.upper():
-        return True
-    try:
-        count = _try_get(mapdl, 'MAT', 0, 'COUNT')
-        return count is not None and count >= 1
-    except Exception:
+    youngs = _ansys_material_values(mapdl, 'EX')
+    poissons = _ansys_material_values(mapdl, 'PRXY') or _ansys_material_values(mapdl, 'NUXY')
+    if not youngs or not all(_close(value, 210000.0, 0.01) for value in youngs):
+        log('Young\'s modulus is not 210000 MPa for every active material')
         return False
+    if not poissons or not all(_close(value, 0.3, 0.02) for value in poissons):
+        log('Poisson\'s ratio is not 0.3 for every active material')
+        return False
+    section_text = _safe_run(mapdl, 'SLIST')
+    if not _beam_section_listing_ok(section_text):
+        log('10 x 10 mm rectangular beam section is missing')
+        return False
+    return True
 
 
 def check_ansys_boundary_loads(mapdl):
@@ -1276,7 +1388,8 @@ def check_ansys_result_binary(result_path):
         'coupled_thermal_structural_bar_gui': 185, 'column_eigen_buckling_gui': 188,
         'steady_state_thermal_block_gui': 70,
     }.get(domain)
-    if required_type is not None and required_type not in element_types:
+    accepted_types = {188, 189} if domain == 'column_eigen_buckling_gui' else ({required_type} if required_type is not None else set())
+    if accepted_types and not accepted_types.intersection(element_types):
         log('strict binary check: element type mismatch %s expected %s' % (sorted(element_types), required_type))
         return False
 
@@ -1377,8 +1490,9 @@ def check_ansys_result_binary(result_path):
             log('strict binary check: sphere/plate geometry or -500 N force missing')
             return False
     elif domain == 'column_eigen_buckling_gui':
-        active = [(value, xyz) for code, value, xyz in forces if code == 2 and abs(value) > 1.0e-9]
-        if len(active) != 1 or not _close(active[0][0], -1.0, 0.01) or active[0][1] is None or abs(active[0][1][1]-1000.0) > 0.1:
+        active = [(code, value, xyz) for code, value, xyz in forces if abs(value) > 1.0e-9]
+        if (len(active) != 1 or active[0][0] != 2 or not _close(active[0][1], -1.0, 0.01)
+                or active[0][2] is None or any(abs(a - b) > 0.1 for a, b in zip(active[0][2], (0.0, 1000.0, 0.0)))):
             log('strict binary check: single top FY=-1 N reference load missing')
             return False
         first_factor = times[0] if times else None
@@ -1387,10 +1501,12 @@ def check_ansys_result_binary(result_path):
             return False
         bottom_codes = {code for code, value, xyz in bcs if xyz is not None and abs(xyz[1]) <= 0.1 and abs(value) <= 1.0e-10}
         top_codes = {code for code, value, xyz in bcs if xyz is not None and abs(xyz[1] - 1000.0) <= 0.1 and abs(value) <= 1.0e-10}
-        if not set((1, 2, 3, 5)).issubset(bottom_codes) or any(code in bottom_codes for code in (4, 6)):
+        interior_bcs = [(code, value, xyz) for code, value, xyz in bcs if xyz is None or (abs(xyz[1]) > 0.1 and abs(xyz[1] - 1000.0) > 0.1)]
+        nonzero_bcs = [(code, value, xyz) for code, value, xyz in bcs if abs(value) > 1.0e-10]
+        if bottom_codes != {1, 2, 3, 5} or interior_bcs or nonzero_bcs:
             log('strict binary check: bottom translations/ROTY or free bending rotations are incorrect')
             return False
-        if not set((1, 3)).issubset(top_codes) or any(code in top_codes for code in (2, 4, 5, 6)):
+        if top_codes != {1, 3}:
             log('strict binary check: top pin translations or free rotations are incorrect')
             return False
     elif domain == 'steady_state_thermal_block_gui':

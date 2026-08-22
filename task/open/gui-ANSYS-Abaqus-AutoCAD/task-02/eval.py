@@ -11,7 +11,7 @@ import time
 from pathlib import Path
 
 # Standalone hidden spec. This task does not import a shared evaluator.
-TASK_SPEC = {'task_id': 'v-cae-commercial-open-choice-task-02-windows', 'open_choice_id': 'cae-open-choice-012', 'source_task': 'task/task-v/abaqus/task-12', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'thin_plate_buckling_a_gui', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a linear buckling analysis of a thin square plate; report the first eigenvalue or load factor.', 'selection_reason': 'Linear buckling is a common commercial FEA workflow and good for GUI model setup.', 'artifact_hint': {'ground_truth_files': ['Job-Buckle-A.cae', 'Job-Buckle-A.odb'], 'abaqus_stems': ['Job-Buckle-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 96.0, 'y': 96.0}, 'bounds_hint': None}
+TASK_SPEC = {'task_id': 'v-open-abaqus-ansys-autocad-task-02-windows', 'open_choice_id': 'cae-open-choice-012', 'source_task': 'task/task-v/abaqus/task-12', 'original_software': 'abaqus', 'alternative_software': 'ansys', 'distractor_software': 'autocad', 'interface': 'gui', 'domain': 'thin_plate_buckling_a_gui', 'analysis_kind': 'buckling', 'metrics': ['first_buckling_factor'], 'expected_result_fields': ['U'], 'require_metrics_json': False, 'visible_goal': 'Using only an interactive graphical workflow, run a linear buckling analysis of a thin square plate; report the first eigenvalue or load factor.', 'selection_reason': 'Linear buckling is a common commercial FEA workflow and good for GUI model setup.', 'artifact_hint': {'ground_truth_files': ['Job-Buckle-A.cae', 'Job-Buckle-A.odb'], 'abaqus_stems': ['Job-Buckle-A'], 'ansys_db_files': [], 'ansys_result_files': []}, 'span_hint': {'x': 96.0, 'y': 96.0}, 'bounds_hint': None}
 DESKTOP_CANDIDATES = [
     Path(os.environ.get('USERPROFILE', r'C:\Users\user')) / 'Desktop',
     Path(r'C:\Users\user\Desktop'),
@@ -152,6 +152,7 @@ def run_abaqus_checker_in_scratch(root, cae_path, odb_path):
 # -*- coding: utf-8 -*-
 from __future__ import annotations
 import os
+import re
 import traceback
 from abaqus import *
 from abaqusConstants import *
@@ -601,7 +602,7 @@ def _inp_header(line):
     return values
 
 def _parse_semantic_input(path):
-    data = {'nsets': {}, 'cloads': [], 'boundaries': [], 'shell_thicknesses': []}
+    data = {'nsets': {}, 'cloads': [], 'boundaries': [], 'shell_sections': []}
     mode = None
     nset_name = None
     nset_generate = False
@@ -655,7 +656,9 @@ def _parse_semantic_input(path):
                         pass
                 elif mode == '*SHELL SECTION' and fields:
                     try:
-                        data['shell_thicknesses'].append(float(fields[0]))
+                        thickness = float(fields[0])
+                        integration_points = int(float(fields[1])) if len(fields) > 1 and fields[1] else None
+                        data['shell_sections'].append((thickness, integration_points))
                     except Exception:
                         pass
         finally:
@@ -761,8 +764,9 @@ def _check_buckling_a_input(model, part):
     coordinates = _part_coordinates(part)
     if data is None or not coordinates:
         return False
-    if not any(_near(value, 1.2, 0.01, 1.0e-6) for value in data['shell_thicknesses']):
-        log('strict check: 1.2 mm shell thickness missing')
+    if not any(_near(thickness, 1.2, 0.01, 1.0e-6) and integration_points == 5
+               for thickness, integration_points in data['shell_sections']):
+        log('strict check: 1.2 mm shell section with 5 integration points is missing')
         return False
     if any(dof != 1 and abs(value) > 1.0e-12 for _, dof, value in data['cloads']):
         log('strict check: unexpected non-X concentrated load')
@@ -1033,6 +1037,24 @@ def _odb_frames(odb):
         pass
     return out
 
+def _buckling_factors(frames):
+    factors = []
+    for frame in frames:
+        try:
+            value = float(getattr(frame, 'frameValue', 0.0))
+            if value > 1.0:
+                factors.append(value)
+                continue
+        except Exception:
+            pass
+        match = re.search(r'EIGEN\s*VALUE\s*=\s*([-+0-9.E]+)', ci(getattr(frame, 'description', '')))
+        if match:
+            try:
+                factors.append(float(match.group(1)))
+            except Exception:
+                pass
+    return factors
+
 def _field_scalars(frame, name, invariant=False):
     values = []
     try:
@@ -1087,6 +1109,11 @@ def check_abaqus_odb_specific(odb):
     if domain in ('thin_plate_buckling_a_gui', 'thin_plate_buckling_b_gui_only'):
         if len([t for t in times if t != 0.0]) < 3:
             log('strict ODB check: insufficient buckling frames')
+            return False
+    if domain == 'thin_plate_buckling_a_gui':
+        factors = _buckling_factors(frames)
+        if not factors or not (90.0 <= factors[0] <= 150.0):
+            log('strict ODB check: first buckling factor is outside 90-150 observed=%s' % factors[:1])
             return False
     if domain == 'simply_supported_beam_udl_gui':
         if not disp or not (0.07 <= max(abs(v) for v in disp) <= 0.25):
