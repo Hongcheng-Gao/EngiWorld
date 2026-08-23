@@ -179,6 +179,13 @@ def find_values(obj: Any, wanted_key: str) -> List[Any]:
 
 
 def first_number(data: Dict[str, Any], key: str) -> float | None:
+    for current_key, value in data.items():
+        if norm(current_key) != norm(key):
+            continue
+        try:
+            return float(value)
+        except Exception:
+            return None
     for val in find_values(data, key):
         try:
             return float(val)
@@ -914,6 +921,19 @@ def check_ew06_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
     except Exception as exc: errors.append(f'eplusout.sql:deep_validation_failed:{type(exc).__name__}')
 
 
+def ifc_space_floor_area(space: Any) -> float:
+    import ifcopenshell.geom  # type: ignore
+    import ifcopenshell.util.element  # type: ignore
+    import ifcopenshell.util.shape  # type: ignore
+
+    qtos = ifcopenshell.util.element.get_psets(space, qtos_only=True)
+    area = qtos.get("Qto_SpaceBaseQuantities", {}).get("NetFloorArea")
+    if area is None:
+        shape = ifcopenshell.geom.create_shape(ifcopenshell.geom.settings(), space)
+        area = ifcopenshell.util.shape.get_footprint_area(shape.geometry)
+    return float(area)
+
+
 def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any], flow: Dict[str, Any], errors: List[str]) -> None:
     """Validate task semantics without assuming the reference GUIDs, areas, or openings."""
     if sha256_file(paths["init.ifc"]) != INIT_SHA256:
@@ -926,6 +946,7 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         errors.append("weather.epw:invalid_epw")
 
     stage_spaces: Dict[str, Any] = {}
+    stage_areas: Dict[str, float] = {}
     try:
         import ifcopenshell  # type: ignore
         import ifcopenshell.util.element  # type: ignore
@@ -946,10 +967,11 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
             stage_spaces[name] = space
             if norm(zone) not in norm(space.LongName):
                 errors.append(f"stage1.ifc:space_zone_semantics_mismatch:{name}")
-            qtos = ifcopenshell.util.element.get_psets(space, qtos_only=True)
-            area = qtos.get("Qto_SpaceBaseQuantities", {}).get("NetFloorArea")
-            if area is not None and float(area) <= 0:
+            area = ifc_space_floor_area(space)
+            if area <= 0:
                 errors.append(f"stage1.ifc:space_area_nonpositive:{name}")
+            else:
+                stage_areas[name] = area
 
         market = stage_spaces.get("MARKET-HALL")
         if market is not None and str(market.GlobalId) in seed_roots:
@@ -981,8 +1003,11 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         if native is not None and rec.get("ifc_global_id") != str(native.GlobalId):
             errors.append(f"handoff.json:space_global_id_not_from_stage1:{name}")
         try:
-            if float(rec.get("floor_area_m2", 0)) <= 0:
+            handoff_area = float(rec.get("floor_area_m2", 0))
+            if handoff_area <= 0:
                 raise ValueError
+            if name in stage_areas and not math.isclose(handoff_area, stage_areas[name], rel_tol=0, abs_tol=0.01):
+                errors.append(f"handoff.json:ifc_area_mismatch:{name}")
         except Exception:
             errors.append(f"handoff.json:space_area_nonpositive:{name}")
     if handoff.get("source_init_sha256") not in (None, sha256_file(paths["init.ifc"])):
@@ -1018,6 +1043,20 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         space, zone = spaces.get(name), zones.get(zone_name)
         if space is None or zone is None or osm_handle(space[10]) != osm_handle(zone[0]):
             errors.append(f"result.osm:space_zone_relationship_mismatch:{name}")
+            continue
+        floors = [
+            fields for kind, fields in objects
+            if kind == "OS:SURFACE" and len(fields) > 14
+            and fields[2].upper() == "FLOOR"
+            and osm_handle(fields[4]) == osm_handle(space[0])
+        ]
+        osm_area = sum(polygon_area_3d(osm_vertices(floor, 11)) for floor in floors)
+        try:
+            handoff_area = float(records[name].get("floor_area_m2", 0))
+            if not floors or not math.isclose(osm_area, handoff_area, rel_tol=0, abs_tol=0.01):
+                errors.append(f"result.osm:handoff_area_mismatch:{name}")
+        except Exception:
+            errors.append(f"result.osm:handoff_area_validation_failed:{name}")
     schedules = {osm_handle(x[0]) for kind, x in objects if kind.startswith("OS:SCHEDULE") and x}
     definitions = {
         kind: {osm_handle(x[0]) for current, x in objects if current == kind and x}

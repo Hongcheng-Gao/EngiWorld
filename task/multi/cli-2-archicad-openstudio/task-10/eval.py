@@ -210,6 +210,13 @@ def find_values(obj: Any, wanted_key: str) -> List[Any]:
 
 
 def first_number(data: Dict[str, Any], key: str) -> float | None:
+    for current_key, value in data.items():
+        if norm(current_key) != norm(key):
+            continue
+        try:
+            return float(value)
+        except Exception:
+            return None
     for val in find_values(data, key):
         try:
             return float(val)
@@ -986,14 +993,17 @@ def check_geometry_and_handles(paths: Dict[str, Path], errors: List[str]) -> Non
         normalized = handle(value)
         if not value or not pattern.fullmatch(value) or normalized in handles: errors.append(f"result.osm:invalid_or_duplicate_handle:{obj['line']}")
         else: handles[normalized] = obj
-    osm_spaces = {labeled(x,"Name"):x for x in osm if x["type"]=="OS:SPACE"}
-    idf_spaces = {labeled(x,"Name"):x for x in idf if x["type"]=="SPACE"}
-    if set(osm_spaces) != set(CASE_SPEC["required_spaces"]) or set(idf_spaces) != set(osm_spaces): errors.append("openstudio_idf:space_set")
+    osm_space_objects = [x for x in osm if x["type"] == "OS:SPACE"]
+    idf_space_objects = [x for x in idf if x["type"] == "SPACE"]
+    osm_spaces = {labeled(x,"Name"):x for x in osm_space_objects}
+    idf_spaces = {labeled(x,"Name"):x for x in idf_space_objects}
+    if None in osm_spaces or None in idf_spaces or len(osm_spaces) != len(osm_space_objects) or len(idf_spaces) != len(idf_space_objects): errors.append("openstudio_idf:invalid_or_duplicate_space_name")
+    if not set(CASE_SPEC["required_spaces"]).issubset(osm_spaces) or set(idf_spaces) != set(osm_spaces): errors.append("openstudio_idf:space_set")
     osm_shells = canonical_shell(osm,"Space Name",errors,"result.osm")
     osm_floor_areas=floor_areas(osm,"Space Name")
     named_osm_shells = {name:osm_shells.get(labeled(space,"Handle") or "",()) for name,space in osm_spaces.items()}
     idf_shells = canonical_shell(idf,"Space Name",errors,"in.idf")
-    for name in CASE_SPEC["required_spaces"]:
+    for name in osm_spaces:
         shell = named_osm_shells.get(name,()); translated = idf_shells.get(name,())
         types = {x[0] for x in shell}
         if not {"FLOOR","WALL","ROOF"}.issubset(types) or len(shell) < 6: errors.append(f"result.osm:incomplete_shell:{name}")
@@ -1099,7 +1109,7 @@ def rerun_archicad_stage(paths: Dict[str, Path], errors: List[str]) -> None:
 
         handoff=load_json(paths["handoff.json"])
         declared=authoritative_ifc_spaces(paths["stage1.ifc"],handoff,errors)
-        if set(declared) != set(SEED_TARGET_POOLS): raise ValueError("invalid declarations")
+        if set(declared) != set(CASE_SPEC["required_spaces"]): raise ValueError("invalid declarations")
         seed=ifcopenshell.open(str(paths["init.ifc"])); seed_roots={x.GlobalId:x for x in seed.by_type("IfcRoot")}
         rpc("Model.LoadFile", {"location":str(paths["init.ifc"])})
         changes = []

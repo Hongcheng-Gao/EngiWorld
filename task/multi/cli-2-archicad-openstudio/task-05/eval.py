@@ -158,6 +158,13 @@ def find_values(obj: Any, wanted_key: str) -> List[Any]:
 
 
 def first_number(data: Dict[str, Any], key: str) -> float | None:
+    for current_key, value in data.items():
+        if norm(current_key) != norm(key):
+            continue
+        try:
+            return float(value)
+        except Exception:
+            return None
     for val in find_values(data, key):
         try:
             return float(val)
@@ -673,24 +680,27 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
     by_type: Dict[str, List[List[str]]] = {}
     for kind, fields in objects:
         by_type.setdefault(kind, []).append(fields)
-    spaces = {x[1]: x for x in by_type.get("OS:SPACE", []) if len(x) > 10}
-    zones = {x[1]: x for x in by_type.get("OS:THERMALZONE", []) if len(x) > 1}
+    space_records = by_type.get("OS:SPACE", [])
+    zone_records = by_type.get("OS:THERMALZONE", [])
+    spaces = {x[1]: x for x in space_records if len(x) > 10 and x[1]}
+    zones = {x[1]: x for x in zone_records if len(x) > 1 and x[1]}
+    if len(spaces) != len(space_records) or len(zones) != len(zone_records):
+        errors.append("result.osm:invalid_or_duplicate_space_or_zone")
     space_handles = {name: handle(rec[0]) for name, rec in spaces.items()}
-    if set(spaces) != set(required_spaces) or set(zones) != set(required_zones):
-        errors.append("result.osm:exact_space_or_zone_set_mismatch")
+    if not set(required_spaces).issubset(spaces) or not set(required_zones).issubset(zones):
+        errors.append("result.osm:required_space_or_zone_missing")
+    zone_handles = {handle(zone[0]) for zone in zones.values()}
+    referenced_zone_handles = {handle(space[10]) for space in spaces.values()}
+    if "" in referenced_zone_handles or not referenced_zone_handles.issubset(zone_handles):
+        errors.append("result.osm:space_zone_reference_invalid")
+    if zone_handles - referenced_zone_handles:
+        errors.append("result.osm:orphan_zone")
     space_floor_areas: Dict[str, float] = {}
     handoff_records = {
         str(record.get("name") or record.get("space_name")): record
         for record in extract_space_records(handoff_data, [], "handoff.json")
     } if handoff_data is not None else {}
-    for name, spec in CASE_SPEC["target_spaces"].items():
-        rec = spaces.get(name, [])
-        if len(rec) <= 10:
-            continue
-        zone_handle = rec[10].strip("{}")
-        expected_zone = zones.get(spec["zone"], [])
-        if not expected_zone or zone_handle != expected_zone[0].strip("{}"):
-            errors.append(f"result.osm:space_zone_relationship_mismatch:{name}")
+    for name, rec in spaces.items():
         space_handle = handle(rec[0])
         floors = [x for x in by_type.get("OS:SURFACE", []) if len(x) > 14 and x[2].upper() == "FLOOR" and handle(x[4]) == space_handle]
         try:
@@ -709,6 +719,14 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
                     errors.append(f"result.osm:handoff_floor_area_mismatch:{name}")
         except Exception:
             errors.append(f"result.osm:space_floor_geometry_parse_failed:{name}")
+    for name, spec in CASE_SPEC["target_spaces"].items():
+        rec = spaces.get(name, [])
+        if len(rec) <= 10:
+            continue
+        zone_handle = rec[10].strip("{}")
+        expected_zone = zones.get(spec["zone"], [])
+        if not expected_zone or zone_handle != expected_zone[0].strip("{}"):
+            errors.append(f"result.osm:space_zone_relationship_mismatch:{name}")
     subs = [x for x in by_type.get("OS:SUBSURFACE", []) if len(x) > 4 and x[1] == "BOOTH-DOOR"]
     surfaces = {handle(x[0]): x for x in by_type.get("OS:SURFACE", []) if len(x) > 14}
     def points(rec: List[str], start: int) -> List[Tuple[float, float, float]]:
@@ -978,9 +996,9 @@ def check_flow_report(
         errors.append(f"flow_report:area_mismatch:{area:.3f}!={handoff_area:.3f}")
     room_count = first_number(data, "room_count")
     zone_count = first_number(data, "thermal_zone_count")
-    if room_count is not None and int(round(room_count)) != len(required_spaces):
+    if room_count is not None and int(round(room_count)) != osm_counts["space_count"]:
         errors.append("flow_report:room_count_mismatch")
-    if zone_count is not None and int(round(zone_count)) != len(required_zones):
+    if zone_count is not None and int(round(zone_count)) != osm_counts["zone_count"]:
         errors.append("flow_report:thermal_zone_count_mismatch")
     if first_number(data, "surface_count") is not None and int(first_number(data, "surface_count") or 0) != osm_counts["surface_count"]:
         errors.append("flow_report:surface_count_mismatch_osm")
