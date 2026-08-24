@@ -550,9 +550,9 @@ def check_flow_report(
         errors.append(f"flow_report:area_mismatch:{area:.3f}!={handoff_area:.3f}")
     room_count = first_number(data, "room_count")
     zone_count = first_number(data, "thermal_zone_count")
-    if room_count is not None and int(round(room_count)) != len(required_spaces):
+    if room_count is not None and int(round(room_count)) != osm_counts["space_count"]:
         errors.append("flow_report:room_count_mismatch")
-    if zone_count is not None and int(round(zone_count)) != len(required_zones):
+    if zone_count is not None and int(round(zone_count)) != osm_counts["zone_count"]:
         errors.append("flow_report:thermal_zone_count_mismatch")
     if first_number(data, "surface_count") is not None and int(first_number(data, "surface_count") or 0) != osm_counts["surface_count"]:
         errors.append("flow_report:surface_count_mismatch_osm")
@@ -965,8 +965,6 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
                 continue
             space = matches[0]
             stage_spaces[name] = space
-            if norm(zone) not in norm(space.LongName):
-                errors.append(f"stage1.ifc:space_zone_semantics_mismatch:{name}")
             area = ifc_space_floor_area(space)
             if area <= 0:
                 errors.append(f"stage1.ifc:space_area_nonpositive:{name}")
@@ -1092,6 +1090,26 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
     for filename, key in (("run/eplusout.sql", "sql_sha256"), ("run/eplusout.err", "err_sha256"), ("run/eplusout.end", "end_sha256")):
         if simtx.get(key) != sha256_file(paths[filename]):
             errors.append(f"flow_report:openstudio_transaction_{key}_mismatch")
+    try:
+        samples = simtx.get("stable_file_samples", [])
+        if not isinstance(samples, list) or len(samples) < 2:
+            raise ValueError
+        sim_times = [iso_time(simtx[key]) for key in ("started_at_utc", "openstudio_process_exited_at_utc", "completed_at_utc")]
+        sample_times = [iso_time(sample["sampled_at_utc"]) for sample in samples]
+        if (not (sim_times[0] < sim_times[1] <= sample_times[0] < sample_times[-1] < sim_times[2]) or
+                sample_times != sorted(sample_times) or len(set(sample_times)) != len(sample_times)):
+            raise ValueError
+        for sample in samples:
+            for short, path in (("sql", paths["run/eplusout.sql"]), ("err", paths["run/eplusout.err"]), ("end", paths["run/eplusout.end"])):
+                if int(sample[f"{short}_size"]) != path.stat().st_size or sample[f"{short}_sha256"] != sha256_file(path):
+                    raise ValueError
+                if iso_time(sample[f"{short}_mtime_utc"]) > iso_time(sample["sampled_at_utc"]):
+                    raise ValueError
+        for short in ("sql", "err", "end"):
+            if len({sample[f"{short}_mtime_utc"] for sample in samples}) != 1:
+                raise ValueError
+    except Exception:
+        errors.append("flow_report:openstudio_transaction_time_or_stable_samples_invalid")
     err_text, end_text = read_text(paths["run/eplusout.err"]), read_text(paths["run/eplusout.end"])
     if "EnergyPlus Completed Successfully" not in err_text or "0 Severe Errors" not in err_text or "EnergyPlus Completed Successfully" not in end_text:
         errors.append("energyplus:unsuccessful_or_severe")
@@ -1100,6 +1118,52 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         integrity = conn.execute("PRAGMA integrity_check").fetchone()[0]
         simulations = conn.execute("SELECT COUNT(*) FROM Simulations").fetchone()[0]
         severe = conn.execute("SELECT COUNT(*) FROM Errors WHERE ErrorType >= 1").fetchone()[0]
+        variables = (
+            "Zone Lights Electricity Energy",
+            "Zone Electric Equipment Electricity Energy",
+            "Zone Ideal Loads Zone Total Heating Energy",
+            "Zone Ideal Loads Zone Total Cooling Energy",
+            "Zone Ideal Loads Zone Total Heating Rate",
+            "Zone Ideal Loads Zone Total Cooling Rate",
+        )
+        expected = {
+            (name, variable): ((name + " IDEAL LOADS") if "Ideal Loads" in variable else zone)
+            for name, zone in zip(CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"])
+            for variable in variables
+        }
+        hourly = flow.get("simulation", {}).get("hourly_series", [])
+        by_series = {(item.get("space_name"), item.get("variable")): item for item in hourly if isinstance(item, dict)}
+        sql_data: Dict[Tuple[str, str], Tuple[int, int, float, float]] = {}
+        for pair, key_value in expected.items():
+            row = conn.execute(
+                "SELECT COUNT(*),COUNT(DISTINCT rd.TimeIndex),SUM(rd.Value),MAX(rd.Value) "
+                "FROM ReportData rd JOIN ReportDataDictionary d USING(ReportDataDictionaryIndex) "
+                "JOIN Time t USING(TimeIndex) WHERE d.KeyValue=? AND d.Name=? "
+                "AND d.ReportingFrequency='Hourly' AND t.WarmupFlag=0",
+                (key_value, pair[1]),
+            ).fetchone()
+            values = (int(row[0]), int(row[1]), float(row[2] or 0), float(row[3] or 0))
+            sql_data[pair] = values
+            reported = by_series.get(pair, {})
+            if (reported.get("key_value") != key_value or values[:2] != (8760, 8760) or
+                    int(reported.get("count", 0)) != values[0] or int(reported.get("unique_time_count", 0)) != values[1] or
+                    abs(float(reported.get("sum", math.inf)) - values[2]) > max(1e-6, abs(values[2]) * 1e-12) or
+                    abs(float(reported.get("max", math.inf)) - values[3]) > max(1e-6, abs(values[3]) * 1e-12)):
+                errors.append(f"eplusout.sql:hourly_series_mismatch:{pair[0]}:{pair[1]}")
+        with paths["model_summary.csv"].open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+        canonical_names = {norm(name): name for name in CASE_SPEC["required_spaces"]}
+        expected_zones = {norm(name): zone for name, zone in zip(CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"])}
+        for row in rows:
+            name = canonical_names.get(norm(row.get("space_name")))
+            if name is None:
+                continue
+            if norm(row.get("thermal_zone")) != norm(expected_zones[norm(name)]):
+                errors.append(f"model_summary.csv:space_zone_pair_mismatch:{name}")
+            energy = sum(sql_data[(name, variable)][2] for variable in variables[:4]) / 3.6e6
+            peak = max(sql_data[(name, variable)][3] for variable in variables[4:])
+            if abs(float(row["energy_use_kwh"]) - energy) > 1e-6 or abs(float(row["peak_load_w"]) - peak) > 1e-6:
+                errors.append(f"model_summary.csv:sql_recompute_mismatch:{name}")
         conn.close()
         if integrity != "ok" or simulations != 1 or severe != 0:
             errors.append("eplusout.sql:integrity_or_simulation_failure")

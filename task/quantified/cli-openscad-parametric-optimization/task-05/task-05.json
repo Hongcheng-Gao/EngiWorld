@@ -1,6 +1,11 @@
 {
+  "id": "c-quantified-openscad-parametric-optimization-task-05-ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "CLI-only OpenSCAD quantified CAD optimization task. For the steps below, run OpenSCAD from `/usr/bin/openscad` when working on `starter.scad`. Work from /home/user/Desktop/starter.scad, /home/user/Desktop/baseline.stl, and /home/user/Desktop/constraints.json. Use OpenSCAD command-line modeling and export, not a GUI. Edit /home/user/Desktop/starter.scad or create a derived OpenSCAD source file, then export the final geometry as STL. This is a continuous-score optimization task, not a request to match one hidden answer. Case: low-profile ventilated battery shield. Objective: Maximize surface density for a low-profile ventilated shield while penalizing unnecessary height. Hard constraints: produce one watertight, winding-consistent, edge-connected positive-volume solid inside coordinate envelope x=[0,115], y=[0,75], z=[0,22] mm; keep each bounding-box span at least [109,69,12] mm and material volume between 42000 and 76000 mm^3. Keep one usable z=0 contact region covering at least 80% of the 115 x 75 mm footprint, with at least 95% of that contact in its largest connected component. At the z=10 mm ventilation probe, provide 4 to 16 separated rail or slat runs; each measured run must be at least 2.0 mm thick, adjacent runs must have at least 3.0 mm clear gap, and at least 35% of the probe plane must remain open. Slat direction and spacing may vary as long as these geometry checks pass. Optimize for this evaluator metric after hard constraints are checked: surface_area/volume with a low-height penalty; thin ventilated shields score higher than tall blocks, including in the evaluator's secondary height factor. Required outputs: /home/user/Desktop/optimized.stl and /home/user/Desktop/design_summary.json. The benchmark evaluates the real exported STL geometry. Use only the supplied task inputs; do not use evaluator-generated artifacts or evaluator implementation files, and do not fabricate metric files without producing a valid STL.",
+  "source": "https://files.openscad.org/documentation/manual/Using_OpenSCAD_in_a_command_line_environment.html; https://openscad.org/news.html#20210131; https://trimesh.org/",
   "config": [
     {
+      "type": "upload_file",
       "parameters": {
         "files": [
           {
@@ -16,9 +21,12 @@
             "path": "/home/user/Desktop/constraints.json"
           }
         ]
-      },
-      "type": "upload_file"
+      }
     }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
   ],
   "artifact_paths": [
     "/home/user/Desktop/design_summary.json",
@@ -31,9 +39,9 @@
       "name": "low-profile surface density",
       "output_field": "score"
     },
-    "func": "quantified_score",
     "postconfig": [
       {
+        "type": "upload_file",
         "parameters": {
           "files": [
             {
@@ -41,25 +49,17 @@
               "path": "/home/user/Desktop/eval.py"
             }
           ]
-        },
-        "type": "upload_file"
+        }
       }
     ],
+    "func": "quantified_score",
     "result": {
+      "type": "vm_command_line",
       "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true",
-      "type": "vm_command_line"
+      "shell": "true"
     }
   },
-  "fixed_ip": false,
-  "id": "c-quantified-openscad-parametric-optimization-task-05-ubuntu",
-  "instruction": "CLI-only OpenSCAD quantified CAD optimization task. For the steps below, run OpenSCAD from `/usr/bin/openscad` when working on `starter.scad`. Work from /home/user/Desktop/starter.scad, /home/user/Desktop/baseline.stl, and /home/user/Desktop/constraints.json. Use OpenSCAD command-line modeling and export, not a GUI. Edit /home/user/Desktop/starter.scad or create a derived OpenSCAD source file, then export the final geometry as STL. This is a continuous-score optimization task, not a request to match one hidden answer. Case: low-profile ventilated battery shield. Objective: Maximize surface density for a low-profile ventilated shield while penalizing unnecessary height. Hard constraints: produce one watertight, winding-consistent, edge-connected positive-volume solid inside coordinate envelope x=[0,115], y=[0,75], z=[0,22] mm; keep each bounding-box span at least [109,69,12] mm and material volume between 42000 and 76000 mm^3. Keep one usable z=0 contact region covering at least 80% of the 115 x 75 mm footprint, with at least 95% of that contact in its largest connected component. At the z=10 mm ventilation probe, provide 4 to 16 separated rail or slat runs; each measured run must be at least 2.0 mm thick, adjacent runs must have at least 3.0 mm clear gap, and at least 35% of the probe plane must remain open. Slat direction and spacing may vary as long as these geometry checks pass. Optimize for this evaluator metric after hard constraints are checked: surface_area/volume with a low-height penalty; thin ventilated shields score higher than tall blocks, including in the evaluator's secondary height factor. Required outputs: /home/user/Desktop/optimized.stl and /home/user/Desktop/design_summary.json. The benchmark evaluates the real exported STL geometry. Do not read or copy ground_truth, do not edit eval.py, and do not fabricate metric files without producing a valid STL.",
-  "possibility_of_env_change": "low",
   "proxy": false,
-  "related_apps": [
-    "openscad"
-  ],
-  "snapshot": "OpenSCAD2021.01",
-  "source": "https://files.openscad.org/documentation/manual/Using_OpenSCAD_in_a_command_line_environment.html; https://openscad.org/news.html#20210131; https://trimesh.org/",
-  "trajectory": "trajectories/"
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

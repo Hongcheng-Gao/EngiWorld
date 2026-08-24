@@ -1,6 +1,11 @@
 {
+  "id": "v-quantified-freecad-lightweight-optimization-task-05-ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "FreeCAD quantified CAD optimization task. For the steps below, launch FreeCAD from `/usr/bin/freecad` and open `baseline.stl` there. Open /home/user/Desktop/baseline.stl and /home/user/Desktop/profile.dxf in FreeCAD, use them as the starting geometry and footprint guide, and redesign the part as a lightweight load-bearing fixture. This is a continuous-score optimization task, not a request to match one hidden answer. Case: panel hinge leaf reinforcement. Objective: Maximize hinge leaf load proxy per volume with three fixed hinge-side support zones. Required output: /home/user/Desktop/optimized.stl. Hard constraints: keep the STL within envelope [112.0, 46.0, 26.0] mm, keep bounding-box spans at least [106.0, 40.0, 14.0] mm, keep volume between 11500.0 and 62000.0 mm^3, and preserve at least 95% sampled material coverage in every support/load prism marked in /home/user/Desktop/profile.dxf and fully specified in /home/user/Desktop/constraints.json (support prisms extend from z=0 to 11.0 mm; load prisms extend from z=0 to 15.0 mm). The optimized STL must be one connected, watertight, consistently oriented solid. The evaluator parses only the real optimized.stl geometry, computes three-dimensional required-zone coverage and this continuous metric: hinge strip reinforcement proxy / volume; long hinge-side continuity and all hinge support zones are weighted. It writes score.json and quant_metrics.json, and ignores any self-reported score. Use only the supplied task inputs and do not use evaluator-generated artifacts or evaluator implementation files.",
+  "source": "https://wiki.freecad.org/Manual:Introduction; https://trimesh.org/; https://ezdxf.readthedocs.io/",
   "config": [
     {
+      "type": "upload_file",
       "parameters": {
         "files": [
           {
@@ -16,18 +21,21 @@
             "path": "/home/user/Desktop/constraints.json"
           }
         ]
-      },
-      "type": "upload_file"
+      }
     },
     {
+      "type": "launch",
       "parameters": {
         "command": [
           "freecad",
           "/home/user/Desktop/baseline.stl"
         ]
-      },
-      "type": "launch"
+      }
     }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
   ],
   "artifact_paths": [
     "/home/user/Desktop/optimized.stl",
@@ -41,9 +49,9 @@
       "name": "hinge strip reinforcement proxy per volume",
       "output_field": "score"
     },
-    "func": "quantified_score",
     "postconfig": [
       {
+        "type": "upload_file",
         "parameters": {
           "files": [
             {
@@ -51,25 +59,17 @@
               "path": "/home/user/Desktop/eval.py"
             }
           ]
-        },
-        "type": "upload_file"
+        }
       }
     ],
+    "func": "quantified_score",
     "result": {
+      "type": "vm_command_line",
       "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true",
-      "type": "vm_command_line"
+      "shell": "true"
     }
   },
-  "fixed_ip": false,
-  "id": "v-quantified-freecad-lightweight-optimization-task-05-ubuntu",
-  "instruction": "FreeCAD quantified CAD optimization task. For the steps below, launch FreeCAD from `/usr/bin/freecad` and open `baseline.stl` there. Open /home/user/Desktop/baseline.stl and /home/user/Desktop/profile.dxf in FreeCAD, use them as the starting geometry and footprint guide, and redesign the part as a lightweight load-bearing fixture. This is a continuous-score optimization task, not a request to match one hidden answer. Case: panel hinge leaf reinforcement. Objective: Maximize hinge leaf load proxy per volume with three fixed hinge-side support zones. Required output: /home/user/Desktop/optimized.stl. Hard constraints: keep the STL within envelope [112.0, 46.0, 26.0] mm, keep bounding-box spans at least [106.0, 40.0, 14.0] mm, keep volume between 11500.0 and 62000.0 mm^3, and preserve at least 95% sampled material coverage in every support/load prism marked in /home/user/Desktop/profile.dxf and fully specified in /home/user/Desktop/constraints.json (support prisms extend from z=0 to 11.0 mm; load prisms extend from z=0 to 15.0 mm). The optimized STL must be one connected, watertight, consistently oriented solid. The evaluator parses only the real optimized.stl geometry, computes three-dimensional required-zone coverage and this continuous metric: hinge strip reinforcement proxy / volume; long hinge-side continuity and all hinge support zones are weighted. It writes score.json and quant_metrics.json, and ignores any self-reported score. Do not read or copy ground_truth and do not edit eval.py.",
-  "possibility_of_env_change": "low",
   "proxy": false,
-  "related_apps": [
-    "freecad"
-  ],
-  "snapshot": "FreeCAD0.21.2",
-  "source": "https://wiki.freecad.org/Manual:Introduction; https://trimesh.org/; https://ezdxf.readthedocs.io/",
-  "trajectory": "trajectories/"
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

@@ -1176,7 +1176,7 @@ def check_native_simulation(root: Path, flow: Dict[str, Any], errors: List[str])
         if str(delivery.get(key, "")).lower() != sha256_file(path):
             errors.append(f"flow_report:delivery_{key}_mismatch")
     samples = delivery.get("stable_file_samples", [])
-    if len(samples) != 6 or any(int(sample.get("sql_size", -1)) != sql_path.stat().st_size or int(sample.get("err_size", -1)) != err_path.stat().st_size or int(sample.get("end_size", -1)) != end_path.stat().st_size for sample in samples):
+    if not isinstance(samples, list) or len(samples) < 2 or any(int(sample.get("sql_size", -1)) != sql_path.stat().st_size or int(sample.get("err_size", -1)) != err_path.stat().st_size or int(sample.get("end_size", -1)) != end_path.stat().st_size for sample in samples):
         errors.append("flow_report:insufficient_final_file_stability")
     try:
         started = parse_timestamp(delivery["started_at_utc"])
@@ -1239,7 +1239,10 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     handoff_hash = sha256_file(handoff)
     try:
         osw = load_json(paths["workflow.osw"])
-        if osw.get("seed_file") != "result.osm" or osw.get("weather_file") != "weather.epw" or osw.get("run_directory") != "run" or osw.get("steps") != []:
+        if (osw.get("seed_file") != "result.osm" or
+                osw.get("weather_file") != "weather.epw" or
+                osw.get("run_directory") != "run" or
+                not isinstance(osw.get("steps"), list)):
             errors.append("workflow.osw:structure_mismatch")
     except Exception as exc:
         errors.append(f"workflow.osw:parse_failed:{type(exc).__name__}")

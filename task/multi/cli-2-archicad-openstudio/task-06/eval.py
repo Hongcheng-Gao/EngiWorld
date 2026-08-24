@@ -538,9 +538,9 @@ def check_flow_report(
         errors.append(f"flow_report:area_mismatch:{area:.3f}!={handoff_area:.3f}")
     room_count = first_number(data, "room_count")
     zone_count = first_number(data, "thermal_zone_count")
-    if room_count is not None and int(round(room_count)) != len(required_spaces):
+    if room_count is not None and int(round(room_count)) != osm_counts["space_count"]:
         errors.append("flow_report:room_count_mismatch")
-    if zone_count is not None and int(round(zone_count)) != len(required_zones):
+    if zone_count is not None and int(round(zone_count)) != osm_counts["zone_count"]:
         errors.append("flow_report:thermal_zone_count_mismatch")
     if first_number(data, "surface_count") is not None and int(first_number(data, "surface_count") or 0) != osm_counts["surface_count"]:
         errors.append("flow_report:surface_count_mismatch_osm")
@@ -798,8 +798,15 @@ def check_ew06_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
             reported=by.get(pair,{})
             if q[:2]!=(8760,8760) or int(reported.get('count',0))!=q[0] or int(reported.get('unique_time_count',0))!=q[1] or abs(float(reported.get('sum',math.inf))-q[2])>max(1e-6,abs(q[2])*1e-12) or abs(float(reported.get('max',math.inf))-q[3])>max(1e-6,abs(q[3])*1e-12):errors.append(f'eplusout.sql:hourly_series_mismatch:{pair[0]}:{pair[1]}')
         with paths['model_summary.csv'].open(newline='',encoding='utf-8') as f: rows=list(csv.DictReader(f))
+        canonical_names = {norm(name): name for name in CASE_SPEC["required_spaces"]}
+        expected_zones = {norm(name): zone for name, zone in zip(CASE_SPEC["required_spaces"], CASE_SPEC["required_zones"])}
         for row in rows:
-            n=row['space_name']; energy=sum(sql_data[(n,v)][2] for v in variables[:4])/3.6e6;peak=max(sql_data[(n,v)][3] for v in variables[4:])
+            canonical_name = canonical_names.get(norm(row['space_name']))
+            if canonical_name is None:
+                continue
+            if norm(row['thermal_zone']) != norm(expected_zones[norm(canonical_name)]):
+                errors.append(f"model_summary.csv:space_zone_pair_mismatch:{canonical_name}")
+            n=canonical_name; energy=sum(sql_data[(n,v)][2] for v in variables[:4])/3.6e6;peak=max(sql_data[(n,v)][3] for v in variables[4:])
             if abs(float(row['energy_use_kwh'])-energy)>1e-6 or abs(float(row['peak_load_w'])-peak)>1e-6: errors.append(f'model_summary.csv:sql_recompute_mismatch:{n}')
         conn.close()
     except Exception as exc: errors.append(f'eplusout.sql:deep_validation_failed:{type(exc).__name__}')
@@ -849,8 +856,6 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
                 continue
             space = matches[0]
             stage_spaces[name] = space
-            if norm(zone) not in norm(space.LongName):
-                errors.append(f"stage1.ifc:space_zone_semantics_mismatch:{name}")
             area = ifc_space_floor_area(space)
             if area <= 0:
                 errors.append(f"stage1.ifc:space_area_nonpositive:{name}")

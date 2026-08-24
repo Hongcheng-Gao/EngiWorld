@@ -586,13 +586,31 @@ def authoritative_ifc_spaces(stage_path: Path, handoff: Dict[str, Any], errors: 
         if len({x["gid"] for x in result.values()}) != len(result): errors.append("handoff.json:duplicate_ifc_binding")
 
         flows = [value for value in find_values(handoff, "isolation_flow") if isinstance(value, list)]
-        if not flows:
+        if len(flows) != 1:
             errors.append("handoff.json:missing_structured_isolation_flow")
-        elif not any(
-            set(map(norm, CASE_SPEC["required_spaces"])).issubset({norm(item) for item in flow})
-            for flow in flows
-        ):
-            errors.append("handoff.json:incomplete_isolation_flow")
+        else:
+            flow = [norm(item) for item in flows[0] if isinstance(item, str)]
+            required = [norm(item) for item in CASE_SPEC["required_spaces"]]
+            if len(flow) != len(required) or len(set(flow)) != len(flow) or set(flow) != set(required):
+                errors.append("handoff.json:invalid_isolation_flow_sequence")
+            else:
+                record_order: Dict[str, int] = {}
+                for name, record in records_by_name.items():
+                    if name not in required:
+                        continue
+                    raw_order = record.get("flow_order")
+                    try:
+                        numeric_order = float(raw_order)
+                        if isinstance(raw_order, bool) or not numeric_order.is_integer():
+                            raise ValueError
+                        record_order[name] = int(numeric_order)
+                    except (TypeError, ValueError):
+                        errors.append(f"handoff.json:invalid_flow_order:{record.get('name') or record.get('space_name')}")
+                if set(record_order) == set(required):
+                    if sorted(record_order.values()) != list(range(1, len(required) + 1)):
+                        errors.append("handoff.json:nonconsecutive_flow_order")
+                    elif any(record_order[name] != index for index, name in enumerate(flow, start=1)):
+                        errors.append("handoff.json:isolation_flow_order_mismatch")
     except Exception as exc:
         errors.append(f"stage1.ifc:authoritative_space_data:{type(exc).__name__}")
     return result

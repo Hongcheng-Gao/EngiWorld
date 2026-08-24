@@ -1,6 +1,11 @@
 {
+  "id": "c-quantified-kicad-layout-optimization-task-04-ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Optimize test-point accessibility under a pogo fixture. `/home/user/Desktop/seed_board.kicad_pcb` is a routable KiCad PCB with fixed anchor parts and movable optimization parts. `/home/user/Desktop/objective.json` describes the optimization objective. Use KiCad command-line tools or KiCad scripting to place/reroute the board as well as possible. Save the optimized board as `/home/user/Desktop/optimized_board.kicad_pcb` and write `/home/user/Desktop/optimization_report.json` summarizing the choices and estimated score. The evaluator returns a continuous score for pogo accessibility and route economy where higher is better; this is a continuous optimization task; no exact file match is required. Make the four test points easy for a pogo fixture to reach while keeping their routes compact. The output must remain a valid KiCad 10.0.2 board, preserve every reference and pad/net assignment, keep fixed anchors at their objective coordinates, and pass `kicad-cli pcb drc --severity-all --exit-code-violations`. [Software] Use KiCad CLI tools such as `kicad-cli` and KiCad scripting from the terminal. Before starting the work, the installed KiCad tools are `/usr/bin/kicad-cli`, `/usr/bin/pcbnew`, and `/usr/bin/eeschema`; use the one that matches the board or schematic operation.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://gitlab.com/kicad/code/kicad/-/tree/10.0.2; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/",
   "config": [
     {
+      "type": "upload_file",
       "parameters": {
         "files": [
           {
@@ -12,16 +17,18 @@
             "path": "/home/user/Desktop/objective.json"
           }
         ]
-      },
-      "type": "upload_file"
+      }
     }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
   ],
   "artifact_paths": [
     "/home/user/Desktop/optimization_report.json",
     "/home/user/Desktop/optimized_board.kicad_pcb"
   ],
   "evaluator": {
-    "func": "quantified_score",
     "metric": {
       "baseline_score": 69.7905,
       "direction": "maximize",
@@ -30,6 +37,7 @@
     },
     "postconfig": [
       {
+        "type": "upload_file",
         "parameters": {
           "files": [
             {
@@ -37,25 +45,17 @@
               "path": "/home/user/Desktop/eval.py"
             }
           ]
-        },
-        "type": "upload_file"
+        }
       }
     ],
+    "func": "quantified_score",
     "result": {
+      "type": "vm_command_line",
       "command": "python3 /home/user/Desktop/eval.py",
-      "shell": "true",
-      "type": "vm_command_line"
+      "shell": "true"
     }
   },
-  "fixed_ip": false,
-  "id": "c-quantified-kicad-layout-optimization-task-04-ubuntu",
-  "instruction": "Optimize test-point accessibility under a pogo fixture. `/home/user/Desktop/seed_board.kicad_pcb` is a routable KiCad PCB with fixed anchor parts and movable optimization parts. `/home/user/Desktop/objective.json` describes the optimization objective. Use KiCad command-line tools or KiCad scripting to place/reroute the board as well as possible. Save the optimized board as `/home/user/Desktop/optimized_board.kicad_pcb` and write `/home/user/Desktop/optimization_report.json` summarizing the choices and estimated score. The evaluator returns a continuous score for pogo accessibility and route economy where higher is better; the supplied ground_truth is only a baseline/reference solution. Make the four test points easy for a pogo fixture to reach while keeping their routes compact. The output must remain a valid KiCad 10.0.2 board, preserve every reference and pad/net assignment, keep fixed anchors at their objective coordinates, and pass `kicad-cli pcb drc --severity-all --exit-code-violations`. [Software] Use KiCad CLI tools such as `kicad-cli` and KiCad scripting from the terminal. Before starting the work, the installed KiCad tools are `/usr/bin/kicad-cli`, `/usr/bin/pcbnew`, and `/usr/bin/eeschema`; use the one that matches the board or schematic operation.",
-  "possibility_of_env_change": "low",
   "proxy": false,
-  "related_apps": [
-    "kicad"
-  ],
-  "snapshot": "kicad-10.0.2",
-  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://gitlab.com/kicad/code/kicad/-/tree/10.0.2; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/",
-  "trajectory": "trajectories/"
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
 }

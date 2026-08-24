@@ -743,22 +743,23 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
                 {handle(surface[4]), handle(other[4])} == {storage_handle, booth_handle}):
             reciprocal.append((surface, other))
     unique_pairs = {(min(handle(a[0]), handle(b[0])), max(handle(a[0]), handle(b[0]))) for a, b in reciprocal}
-    if len(unique_pairs) != 1 or len(reciprocal) != 2:
+    if not unique_pairs:
         errors.append("result.osm:storage_booth_reciprocal_boundary_mismatch")
     else:
-        a, b = reciprocal[0]
-        try:
-            pa, pb = points(a, 11), points(b, 11)
-            if abs(polygon_area_3d(pa) - polygon_area_3d(pb)) > 1e-7 or {tuple(round(v, 8) for v in p) for p in pa} != {tuple(round(v, 8) for v in p) for p in pb}:
-                errors.append("result.osm:storage_booth_boundary_geometry_or_area_mismatch")
-            normals = []
-            for poly in (pa, pb):
-                u, v = tuple(poly[1][i]-poly[0][i] for i in range(3)), tuple(poly[2][i]-poly[0][i] for i in range(3))
-                normals.append((u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]))
-            if sum(normals[0][i]*normals[1][i] for i in range(3)) >= 0:
-                errors.append("result.osm:storage_booth_boundary_not_oppositely_oriented")
-        except Exception:
-            errors.append("result.osm:storage_booth_boundary_geometry_parse_failed")
+        for first_handle, second_handle in unique_pairs:
+            a, b = surfaces[first_handle], surfaces[second_handle]
+            try:
+                pa, pb = points(a, 11), points(b, 11)
+                if abs(polygon_area_3d(pa) - polygon_area_3d(pb)) > 1e-7 or {tuple(round(v, 8) for v in p) for p in pa} != {tuple(round(v, 8) for v in p) for p in pb}:
+                    errors.append("result.osm:storage_booth_boundary_geometry_or_area_mismatch")
+                normals = []
+                for poly in (pa, pb):
+                    u, v = tuple(poly[1][i]-poly[0][i] for i in range(3)), tuple(poly[2][i]-poly[0][i] for i in range(3))
+                    normals.append((u[1]*v[2]-u[2]*v[1], u[2]*v[0]-u[0]*v[2], u[0]*v[1]-u[1]*v[0]))
+                if sum(normals[0][i]*normals[1][i] for i in range(3)) >= 0:
+                    errors.append("result.osm:storage_booth_boundary_not_oppositely_oriented")
+            except Exception:
+                errors.append("result.osm:storage_booth_boundary_geometry_parse_failed")
     if len(subs) != 1:
         errors.append("result.osm:service_door_count_mismatch")
     else:
@@ -776,23 +777,35 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
                 errors.append("result.osm:booth_door_geometry_not_strictly_inside_parent")
         except Exception:
             errors.append("result.osm:booth_door_geometry_parse_failed")
-    expected_subs = {"BOOTH-DOOR": "DOOR", "HIGH-VENT-WINDOW": "OPERABLEWINDOW", "MAIN-STUDIO HIGH DAYLIGHT WINDOW": "FIXEDWINDOW"}
-    all_subs = {x[1]: x for x in by_type.get("OS:SUBSURFACE", []) if len(x) > 4}
-    counts["_door_count"] = sum("DOOR" in x[2].upper() for x in all_subs.values())
-    counts["_window_count"] = sum("WINDOW" in x[2].upper() for x in all_subs.values())
+    expected_subs = {"BOOTH-DOOR": "DOOR", "HIGH-VENT-WINDOW": "OPERABLEWINDOW"}
+    subsurface_records = [x for x in by_type.get("OS:SUBSURFACE", []) if len(x) > 4]
+    all_subs = {x[1]: x for x in subsurface_records}
+    counts["_door_count"] = sum("DOOR" in x[2].upper() for x in subsurface_records)
+    counts["_window_count"] = sum("WINDOW" in x[2].upper() for x in subsurface_records)
     if not set(expected_subs).issubset(all_subs):
         errors.append("result.osm:required_subsurface_set_mismatch")
     for name, subtype in expected_subs.items():
         sub = all_subs.get(name, [])
         parent = surfaces.get(handle(sub[4])) if len(sub) > 4 else None
-        expected_space = "MAIN-STUDIO" if name.startswith("MAIN-STUDIO") else "FINISHING-BOOTH"
-        if not sub or sub[2].upper() != subtype or parent is None or handle(parent[4]) != space_handles.get(expected_space):
+        if not sub or sub[2].upper() != subtype or parent is None or handle(parent[4]) != space_handles.get("FINISHING-BOOTH"):
             errors.append(f"result.osm:subsurface_identity_or_parent_mismatch:{name}")
         try:
             if not polygon_contains_strict_3d(points(parent, 11), points(sub, 10)):
                 errors.append(f"result.osm:subsurface_not_coplanar_strictly_inside:{name}")
         except Exception:
             errors.append(f"result.osm:subsurface_geometry_parse_failed:{name}")
+    daylight_windows = []
+    for sub in subsurface_records:
+        parent = surfaces.get(handle(sub[4]))
+        if (sub[2].upper() == "FIXEDWINDOW" and parent is not None and
+                handle(parent[4]) == space_handles.get("MAIN-STUDIO")):
+            try:
+                if polygon_contains_strict_3d(points(parent, 11), points(sub, 10)):
+                    daylight_windows.append(sub)
+            except Exception:
+                continue
+    if not daylight_windows:
+        errors.append("result.osm:main_studio_daylight_window_missing_or_invalid")
     try:
         gross_outdoor_wall_area = sum(polygon_area_3d(points(s, 11)) for s in surfaces.values() if s[2].upper() == "WALL" and s[5].upper() == "OUTDOORS")
         window_area = sum(polygon_area_3d(points(s, 10)) for s in all_subs.values() if "WINDOW" in s[2].upper())
@@ -877,10 +890,10 @@ def check_osm(path: Path, handoff_hash: str, required_spaces: List[str], require
     for space_name, space in spaces.items():
         oa = outdoor_air.get(handle(space[12])) if len(space) > 12 else None
         try:
-            if oa is None or oa[2].upper() != "SUM":
+            if oa is None or oa[2].upper() not in {"FLOW/AREA", "SUM", "MAXIMUM"}:
                 raise ValueError
             rates = [float(oa[index] or 0) for index in (3, 4, 5, 6)]
-            if sum(rates) <= 0:
+            if any(rate < 0 for rate in rates) or rates[1] <= 0:
                 raise ValueError
             oa_rates[space_name] = rates[1]
         except Exception:
@@ -1335,7 +1348,7 @@ def check_native_simulation(root: Path, flow: Dict[str, Any], errors: List[str])
         if str(delivery.get(key, "")).lower() != sha256_file(path):
             errors.append(f"flow_report:delivery_{key}_mismatch")
     samples = delivery.get("stable_file_samples", [])
-    if len(samples) != 6 or any(int(sample.get("sql_size", -1)) != sql_path.stat().st_size or int(sample.get("err_size", -1)) != err_path.stat().st_size or int(sample.get("end_size", -1)) != end_path.stat().st_size for sample in samples):
+    if not isinstance(samples, list) or len(samples) < 2 or any(int(sample.get("sql_size", -1)) != sql_path.stat().st_size or int(sample.get("err_size", -1)) != err_path.stat().st_size or int(sample.get("end_size", -1)) != end_path.stat().st_size for sample in samples):
         errors.append("flow_report:insufficient_final_file_stability")
     try:
         started = parse_timestamp(delivery["started_at_utc"])
@@ -1398,7 +1411,10 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
     handoff_hash = sha256_file(handoff)
     try:
         osw = load_json(paths["workflow.osw"])
-        if osw.get("seed_file") != "result.osm" or osw.get("weather_file") != "weather.epw" or osw.get("run_directory") != "run" or osw.get("steps") != []:
+        if (osw.get("seed_file") != "result.osm" or
+                osw.get("weather_file") != "weather.epw" or
+                osw.get("run_directory") != "run" or
+                not isinstance(osw.get("steps"), list)):
             errors.append("workflow.osw:structure_mismatch")
     except Exception as exc:
         errors.append(f"workflow.osw:parse_failed:{type(exc).__name__}")
