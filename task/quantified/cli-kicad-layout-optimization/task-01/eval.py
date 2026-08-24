@@ -126,7 +126,7 @@ BASELINE = json.loads(r"""{
   },
   "minimum_movable_clearance_mm": 11.5974,
   "route_length_mm": 53.1618,
-  "score": 64.6854,
+  "score": 0.646854,
   "via_count": 3
 }""")
 
@@ -447,7 +447,7 @@ def score(positions, via_count):
         if present:
             cost += max(0.0, 10.0 - sum(present) / len(present)) * 2.0
     return {
-        "score": round(max(0.0, 100.0 - cost * 0.55), 4),
+        "score": round(max(0.0, 100.0 - cost * 0.55) / 100.0, 6),
         "cost": round(cost, 4),
         "route_length_mm": round(route_len, 4),
         "via_count": via_count,

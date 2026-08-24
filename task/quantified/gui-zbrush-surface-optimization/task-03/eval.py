@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 
 TASK = {'instruction_tail': 'Optimize a gasket sealing-band relief surface. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Make the annular sealing band high and uniform while keeping the outer area flat; the measured quantity is sealing-band height uniformity, not material compression inferred from the OBJ. The exported OBJ must remain one edge-connected open height-field surface with one regular boundary loop and at least 98% coverage of that fixed grid. It must have no unused vertices, degenerate faces, non-manifold edges, additional boundary loops, overlapping XY triangle interiors, or multiple surface heights at a sample. A topology or coverage failure receives a score of 0, so changing vertex density cannot improve the sampling weight.', 'kind': 'gasket', 'metric': 'sealing-band fixed-grid height-field RMSE with span, mean-height, and face-count penalties', 'target': {'amp': 0.24, 'freq': 4.0, 'ridge': 0.26, 'smooth': 0.08}, 'title': 'Optimize gasket compression relief map'}
-BASELINE = {'score': 90.9292}
+BASELINE = {'score': 0.909292}
 GRID_SIZE = 40
 EPS = 1e-9
 
@@ -257,7 +257,7 @@ def score(verts, faces):
     raw_score = max(0.0, 100.0 - rmse * 110.0 - smooth_penalty - bbox_penalty - face_penalty)
     score_value = 0.0 if errors else raw_score
     return {
-        "score": round(score_value, 4),
+        "score": round(score_value / 100.0, 6),
         "rmse": round(rmse, 5) if math.isfinite(rmse) else None,
         "mean_abs_height": round(mean_abs_height, 5),
         "bbox_penalty": round(bbox_penalty, 5),

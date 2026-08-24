@@ -7,7 +7,7 @@ from collections import defaultdict, deque
 from pathlib import Path
 
 TASK = {'instruction_tail': 'Optimize an ergonomic grip relief surface. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Form three longitudinal grooves with a smooth central ridge. The exported OBJ must remain one edge-connected open height-field surface with one regular boundary loop and at least 98% coverage of that fixed grid. It must have no unused vertices, degenerate faces, non-manifold edges, additional boundary loops, overlapping XY triangle interiors, or multiple surface heights at a sample. A topology or coverage failure receives a score of 0, so changing vertex density cannot improve the sampling weight.', 'kind': 'grip', 'metric': 'fixed-grid target height-field RMSE with span, mean-height, and face-count penalties', 'target': {'amp': 0.32, 'freq': 3.0, 'ridge': 0.18, 'smooth': 0.11}, 'title': 'Optimize ergonomic grip relief surface'}
-BASELINE = {'score': 88.1981}
+BASELINE = {'score': 0.881981}
 GRID_SIZE = 40
 EPS = 1e-9
 
@@ -257,7 +257,7 @@ def score(verts, faces):
     raw_score = max(0.0, 100.0 - rmse * 110.0 - smooth_penalty - bbox_penalty - face_penalty)
     score_value = 0.0 if errors else raw_score
     return {
-        "score": round(score_value, 4),
+        "score": round(score_value / 100.0, 6),
         "rmse": round(rmse, 5) if math.isfinite(rmse) else None,
         "mean_abs_height": round(mean_abs_height, 5),
         "bbox_penalty": round(bbox_penalty, 5),
