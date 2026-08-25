@@ -1,0 +1,75 @@
+{
+  "id": "c-open-kicad-openscad-freecad-blender-task-05-ubuntu",
+  "snapshot": "kicad-openscad-freecad-blender",
+  "instruction": "Available command-line tools include KiCad (`/usr/bin/kicad-cli`), OpenSCAD (`/usr/bin/openscad`), FreeCAD (`/home/user/.local/bin/freecadcmd`), and Blender (`/snap/bin/blender`). This is an open-choice task: use any subset of the available tools, in any order, with any amount of iteration. No application, stage sequence, intermediate handoff, command history, software version record, or provenance log is required.\n\nPogo-pin bed adapter with board-derived pin field.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as package XY origin and the tray bottom outer face as Z=0 without rotating or mirroring KiCad X/Y. Build the specified 107.6 x 83.6 x 20.4 mm covering PC package as a tray ending at Z=17.5 plus a separate 2.8 mm lid beginning at Z=17.6, preserving the 0.1 mm assembly separation. The inner cavity must be X=-51..51 and Y=-39..39. Seat the 1.6 mm PCB bottom at Z=6.6 on four 3.8 mm high bored standoffs aligned to MH1-MH4, using 6.9 mm outer diameter and 3.2 mm bore diameter, and preserve 4 mm clearance to every inner side wall. The tallest J1 body ends at Z=12.6, leaving 5.0 mm to the lid inner face.\n\nEvery TP1-TP4 pogo target must map one-to-one to a 5.0 mm finished-diameter Z_PLUS lid bore on the KiCad target axis. Each lid cutter runs from Z=17.1 to 20.9, and the full access column from target top Z=8.4 to exterior Z=20.9 must contain no residual enclosure material. J1 must remain externally accessible through the bounded 22 x 6 mm Y_PLUS side window with cutter bounds `[-11.0, 38.5, 7.4, 11.0, 42.3, 13.4]` in `[xmin, ymin, zmin, xmax, ymax, zmax]` order; it must not become a full-height slot. Apply the specified access overcut, center/axis tolerances, and minimum guard. Extra structural features are allowed only when all accesses, guards, board clearances, and interference requirements remain valid.\n\nCalculate PC enclosure volume/mass, all four PCB side clearances, each component clearance to the nearest covering enclosure material over its XY footprint, four standoff bore checks, one-to-one TP access alignment and continuity, J1 window direction and continuity, and unintended interference from final submitted geometry.\n\nSave the completed final assembly into `/home/user/Desktop/result` as one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://openscad.org/documentation.html; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://wiki.freecad.org/Headless_FreeCAD; https://docs.blender.org/api/5.2/; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-05",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-05/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-05/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-05/ground_truth/result.step",
+              "path": "/home/user/Desktop/_eval_reference_result.step"
+            },
+            {
+              "local_path": "task-05/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

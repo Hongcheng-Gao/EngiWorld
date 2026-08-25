@@ -1,0 +1,75 @@
+{
+  "id": "c-open-kicad-openscad-freecad-blender-task-10-ubuntu",
+  "snapshot": "kicad-openscad-freecad-blender",
+  "instruction": "Available command-line tools include KiCad (`/usr/bin/kicad-cli`), OpenSCAD (`/usr/bin/openscad`), FreeCAD (`/home/user/.local/bin/freecadcmd`), and Blender (`/snap/bin/blender`). This is an open-choice task: use any subset of the available tools, in any order, with any amount of iteration. No application, stage sequence, intermediate handoff, command history, software version record, or provenance log is required.\n\nGNSS antenna keepout enclosure design.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as package XY origin and the tray bottom outer face as Z=0 without rotating or mirroring KiCad X/Y. Build the specified 95.4 x 95.4 x 35.4 mm ASA-UV package as a tray ending at Z=32.6 plus a separate 2.7 mm lid beginning at Z=32.7, preserving the 0.1 mm assembly separation. The inner cavity must be X=-45..45 and Y=-45..45. Seat the 1.2 mm PCB bottom at Z=16.8 on four 14.1 mm high bored standoffs aligned to MH1-MH4, using 6.4 mm outer diameter and 3.0 mm bore diameter, and preserve 4 mm clearance to every inner side wall. J1 ends at Z=25.2, leaving 7.5 mm to the lid inner face.\n\nKeep J1 externally accessible through the bounded 24 x 8.8 mm X_PLUS wall window with cutter `[44.5, -24.0, 17.2, 48.2, 0.0, 26.0]` and enclosure-free path `[35.0, -24.0, 17.2, 48.2, 0.0, 26.0]`. Keep TP1 accessible through the 6 mm diameter Z_PLUS top bore with lid cutter `[15.0, -33.0, 32.2, 21.0, -27.0, 35.9]` and path `[15.0, -33.0, 18.2, 21.0, -27.0, 35.9]`. Bounds use `[xmin, ymin, zmin, xmax, ymax, zmax]`; both paths must be continuous through the relevant wall or lid and neither aperture may become a full-height or full-width slot. Apply the specified overcut, center/axis tolerances, and minimum access guard.\n\nA1 requires a reserved air volume, not an exterior opening. Preserve the finite radius-24 cylinder centered on the KiCad A1 axis `(0, 16)` from A1 body top Z=23.2 to lid inner face Z=32.7, with bbox `[-24.0, -8.0, 23.2, 24.0, 40.0, 32.7]`. The nonconductive lid may cover it. Carrier material and non-A1 components may each intersect the reserved volume by no more than 0.1 mm3, and it must retain 5 mm radial clearance to the cavity wall. Extra structural features are allowed only when the access, guard, board-clearance, antenna-reservation, and interference requirements remain valid.\n\nCalculate ASA-UV enclosure volume and mass from final submitted geometry and the specified density; do not assume a fixed expected mass. Also derive all four PCB side clearances, covered-component clearances to the nearest covering enclosure material over each component footprint, four standoff bore checks, J1 and TP1 access checks, A1 keepout clearance and intersection checks, and unintended interference.\n\nSave the completed final assembly into `/home/user/Desktop/result` as one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://openscad.org/documentation.html; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://wiki.freecad.org/Headless_FreeCAD; https://wiki.freecad.org/Release_notes_1.1; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://docs.blender.org/api/5.2/bpy.ops.wm.html; https://docs.blender.org/api/5.2/bpy.ops.render.html; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-10",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-10/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-10/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-10/ground_truth/result.step",
+              "path": "/home/user/Desktop/_eval_reference_result.step"
+            },
+            {
+              "local_path": "task-10/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
