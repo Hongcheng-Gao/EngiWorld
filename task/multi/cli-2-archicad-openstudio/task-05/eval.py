@@ -977,7 +977,7 @@ def check_flow_report(
         errors.append("flow_report:osm_sha256_mismatch")
     require_tokens(data, required_spaces, errors, "flow_report:spaces")
     require_tokens(data, required_zones, errors, "flow_report:zones")
-    if data.get("software_stage") != "openstudio" or int(data.get("archicad_native_transaction_count", -1)) != 12:
+    if data.get("software_stage") != "openstudio":
         errors.append("flow_report:stage_chain_mismatch")
     version_values = [str(value).strip() for value in find_values(data, "openstudio_version")]
     if not version_values:

@@ -838,6 +838,7 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
 
     stage_spaces: Dict[str, Any] = {}
     stage_areas: Dict[str, float] = {}
+    stage: Any = None
     try:
         import ifcopenshell  # type: ignore
         import ifcopenshell.util.element  # type: ignore
@@ -899,6 +900,75 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
                 errors.append(f"handoff.json:ifc_area_mismatch:{name}")
         except Exception:
             errors.append(f"handoff.json:space_area_nonpositive:{name}")
+
+    commands = handoff.get("archicad_json_rpc_commands", [])
+    if not isinstance(commands, list):
+        commands = []
+    for name in ("SICK-BAY", "CALM-ROOM"):
+        native_space = stage_spaces.get(name)
+        native_door = None
+        if stage is not None:
+            native_door = next(
+                (door for door in stage.by_type("IfcDoor") if norm(getattr(door, "Name", "")) == norm(f"{name}-DOOR")),
+                None,
+            )
+
+        native_space_values: List[Any] = []
+        if native_space is not None:
+            native_space_values.extend(
+                getattr(native_space, attr, None)
+                for attr in ("Name", "LongName", "Description", "ObjectType", "Tag")
+            )
+            try:
+                native_space_values.append(ifcopenshell.util.element.get_psets(native_space))  # type: ignore[name-defined]
+            except Exception:
+                pass
+        native_door_values = [] if native_door is None else [
+            getattr(native_door, attr, None)
+            for attr in ("Name", "Description", "ObjectType", "Tag")
+        ]
+        native_bound = (
+            contains_token(native_space_values, "STAFF-SUPERVISED")
+            or contains_token(native_door_values, "STAFF-SUPERVISED")
+        )
+
+        rec = records.get(name, {})
+        semantic_fields = (
+            "tags", "tag", "status", "classification", "attributes",
+            "properties", "metadata", "description", "notes",
+        )
+        handoff_bound = rec.get("staff_supervised") is True or any(
+            contains_token(rec.get(key), "STAFF-SUPERVISED")
+            for key in semantic_fields
+            if rec.get(key) not in (None, "", False)
+        )
+        native_ids = {
+            str(getattr(entity, "GlobalId", ""))
+            for entity in (native_space, native_door)
+            if entity is not None
+        }
+        for command in commands:
+            params = command.get("params", {}) if isinstance(command, dict) else {}
+            entity_data = params.get("EntityData", {}) if isinstance(params, dict) else {}
+            selected = params.get("select", {}) if isinstance(params, dict) else {}
+            for entity_type in ("IfcSpace", "IfcDoor"):
+                item = entity_data.get(entity_type, {}) if isinstance(entity_data, dict) else {}
+                selector = selected.get(entity_type, {}) if isinstance(selected, dict) else {}
+                if not isinstance(selector, dict):
+                    selector = {}
+                item_name = norm(item.get("Name")) if isinstance(item, dict) else ""
+                item_id = str(item.get("GlobalId") or selector.get("GlobalId") or "") if isinstance(item, dict) else ""
+                if (
+                    item_name in {norm(name), norm(f"{name}-DOOR")}
+                    and item_id in native_ids
+                    and contains_token(item, "STAFF-SUPERVISED")
+                ):
+                    handoff_bound = True
+
+        if not native_bound:
+            errors.append(f"stage1.ifc:staff_supervised_binding_missing:{name}")
+        if not handoff_bound:
+            errors.append(f"handoff.json:staff_supervised_binding_missing:{name}")
     if handoff.get("source_init_sha256") not in (None, sha256_file(paths["init.ifc"])):
         errors.append("handoff.json:source_init_sha256_mismatch")
 
