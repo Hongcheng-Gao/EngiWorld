@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfoam--task-01--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "Begin with the incomplete OpenFOAM template `/home/user/Desktop/cavity_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve a deterministic two-dimensional laminar channel-flow case. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/channel/`. Use a channel length of 1.0 m, height of 0.1 m, and one-cell span of 0.01 m with `frontAndBack` set to `empty`. Generate a uniform `100 x 80 x 1` block mesh. 2. Use kinematic viscosity `nu=1.0e-5 m^2/s`. Set the inlet mean speed to `0.1 m/s` and prescribe the fully developed plane-Poiseuille profile `Ux(y)=6*0.1*y*(0.1-y)/0.1^2` using 80 face-centered values. Use no-slip top and bottom walls, zero-gradient outlet velocity, zero-gradient inlet pressure, and outlet kinematic pressure `p=0`. This gives `Re_H=1000` and theoretical `u_max=0.15 m/s`. 3. Configure `icoFoam` with `deltaT=0.02 s`, `endTime=30 s`, ASCII output, and sufficiently tight linear-solver tolerances. Source `/opt/openfoam11/etc/bashrc`, run `blockMesh -case /home/user/Desktop/channel` and retain `/home/user/Desktop/channel/log.blockMesh`; then run `icoFoam -case /home/user/Desktop/channel` and retain `/home/user/Desktop/channel/log.icoFoam`. Both commands must complete successfully and the final time directory must be 30 s. 4. Create `/home/user/Desktop/channel/system/sampleDict` and sample `U` on 80 uniformly spaced points at `x=0.99 m`, `z=0.005 m`, from `y=0.000625 m` to `y=0.099375 m`. Write `/home/user/Desktop/postprocess.py`; it must run OpenFOAM `postProcess` for that sampling dictionary, retain `/home/user/Desktop/channel/log.sample`, and write `/home/user/Desktop/outlet_profile.csv` with `y_m,ux_cfd_mps,ux_theory_mps,abs_error_mps`. 5. Compute the sampled maximum axial velocity, the theoretical maximum `0.15 m/s`, and the maximum absolute profile error normalized by `0.15 m/s` as a percentage. Save `/home/user/Desktop/summary.txt` as `u_max_cfd_mps,u_max_theory_mps,max_profile_error_percent`; require the full-profile error to be at most 2%. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/cavity_base.tar",
+            "path": "/home/user/Desktop/cavity_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/cavity_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/cavity_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/channel",
+    "/home/user/Desktop/outlet_profile.csv",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

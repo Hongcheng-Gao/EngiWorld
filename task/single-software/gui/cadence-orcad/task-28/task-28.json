@@ -1,0 +1,66 @@
+{
+  "id": "single-software--gui--cadence-orcad--task-28--windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "`HSD_FPGA_final.brd` is already open in Allegro PCB Editor. Open schematic work with `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe` and PCB work with `C:\\Cadence\\SPB_24.1\\tools\\bin\\allegro.exe`. Export the via usage reports as `C:\\Users\\user\\Desktop\\vialist_net.txt` and `C:\\Users\\user\\Desktop\\vialist_netlayer.txt`.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28/init_file/HSD_FPGA_final.brd",
+            "path": "C:\\Users\\user\\Desktop\\HSD_FPGA_final.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Cadence\\SPB_24.1\\tools\\bin\\allegro.exe",
+          "C:\\Users\\user\\Desktop\\HSD_FPGA_final.brd"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\vialist_net.txt",
+    "C:\\Users\\user\\Desktop\\vialist_netlayer.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-28/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

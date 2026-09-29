@@ -1,0 +1,56 @@
+{
+  "id": "opt-fenics-01",
+  "title": "FEniCS cantilever density-field compliance optimization",
+  "objective": "Minimize compliance for a fixed 2D cantilever under a density design-budget limit.",
+  "domain": {
+    "length": 2.0,
+    "height": 1.0,
+    "unit": "m"
+  },
+  "design_grid": {
+    "rows": 10,
+    "cols": 20,
+    "row_axis": "y",
+    "col_axis": "x",
+    "row_0_location": "bottom edge",
+    "col_0_location": "left fixed edge"
+  },
+  "solver_mesh": {
+    "nx": 40,
+    "ny": 20,
+    "cell_type": "triangle"
+  },
+  "material": {
+    "young_modulus": 1.0,
+    "minimum_young_modulus": 0.001,
+    "poisson_ratio": 0.3,
+    "simp_penalty": 3.0,
+    "assumption": "plane_strain"
+  },
+  "boundary_conditions": {
+    "fixed_edge": "x = 0",
+    "free_edges": [
+      "y = 0",
+      "y = height"
+    ]
+  },
+  "load": {
+    "type": "uniform_traction_patch",
+    "edge": "x = length",
+    "patch_center_y": 0.5,
+    "patch_height": 0.2,
+    "total_force_y": -1.0,
+    "total_force_x": 0.0
+  },
+  "constraints": {
+    "density_min": 0.0,
+    "density_max": 1.0
+  },
+  "baseline": {
+    "file": "baseline_density_field.csv"
+  },
+  "design_budget": {
+    "type": "mean_density_budget",
+    "max_mean_density": 0.4
+  }
+}

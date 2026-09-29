@@ -1,0 +1,220 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-07-ubuntu",
+  "owner": "taozhuo",
+  "title": "Single-board-computer HAT mount plate with GPIO and camera clearance",
+  "domain": "sbc_expansion_mount",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G07",
+  "required_files": [
+    "stage1_sbc_hat_mount_plate.dxf",
+    "stage2_sbc_hat_mount_plate.stl",
+    "stage2_sbc_hat_mount_plate_handoff_outline.dxf",
+    "stage3_sbc_hat_mount_plate_board.kicad_pcb",
+    "stage3_sbc_hat_mount_plate_board_profile.svg",
+    "stage4_sbc_hat_mount_plate.glb"
+  ],
+  "dxf": {
+    "file": "stage1_sbc_hat_mount_plate.dxf",
+    "bbox": [
+      85.0,
+      65.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "KEEP_OUT",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        7.0,
+        7.0,
+        2.75
+      ],
+      [
+        78.0,
+        7.0,
+        2.75
+      ],
+      [
+        7.0,
+        58.0,
+        2.75
+      ],
+      [
+        78.0,
+        58.0,
+        2.75
+      ],
+      [
+        42.5,
+        32.5,
+        3.0
+      ]
+    ],
+    "texts": [
+      "EW4G07",
+      "GPIO40",
+      "CAM",
+      "I2C"
+    ],
+    "min_lines": 4,
+    "no_layers": [
+      "GUIDE"
+    ],
+    "semantic_keep_outs": {
+      "required": [
+        "GPIO40",
+        "CAM"
+      ],
+      "closed": true,
+      "positive_area": true,
+      "contains_matching_label": true
+    }
+  },
+  "stl": {
+    "file": "stage2_sbc_hat_mount_plate.stl",
+    "bbox": [
+      85.0,
+      65.0,
+      12.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 600,
+    "watertight": true,
+    "fill_ratio_range": [
+      0.18,
+      0.48
+    ],
+    "required_openings": 5,
+    "raised_standoffs": 4
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G07",
+      "GPIO40-J1",
+      "CAM-KEEP",
+      "I2C-J2",
+      "EEPROM-U1",
+      "PWR-J3"
+    ],
+    "footprints": {
+      "J1": 40,
+      "J2": 4,
+      "U1": 8,
+      "J3": 2
+    },
+    "camera_keepout": {
+      "layer": "F.Cu",
+      "positive_area": true,
+      "overlaps_submitted_cam_region": true
+    },
+    "complete_handoff_layer": "Dwgs.User"
+  },
+  "glb": {
+    "file": "stage4_sbc_hat_mount_plate.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_sbc_hat_mount_plate",
+      "stage3_sbc_hat_mount_plate_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_sbc_hat_mount_plate",
+      "stage3_svg_object": "stage3_sbc_hat_mount_plate_board_profile.svg"
+    },
+    "mesh_bound_svg_edges": 4,
+    "brass_standoffs": 4,
+    "gpio_pins": 40
+  },
+  "diversity_notes": {
+    "geometry": "Single-board-computer HAT mount plate with GPIO and camera clearance",
+    "electronic_focus": "a HAT-style PCB with GPIO40 header, camera keepout, EEPROM, I2C header, and power input",
+    "visualization_focus": "an exploded mount scene showing brass standoffs and GPIO/header alignment"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_sbc_hat_mount_plate.dxf",
+    "desktop_path": "/home/user/Desktop/seed_sbc_hat_mount_plate.dxf"
+  },
+  "generated_by": {
+    "method": "real-instance GUI workflow",
+    "versions": {
+      "LibreCAD": "2.2.0.2",
+      "FreeCAD": "0.21.2",
+      "KiCad": "10.0.2",
+      "Blender": "4.2.3"
+    }
+  },
+  "handoff": {
+    "file": "stage2_sbc_hat_mount_plate_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_sbc_hat_mount_plate_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_sbc_hat_mount_plate.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_sbc_hat_mount_plate.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_sbc_hat_mount_plate_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_sbc_hat_mount_plate_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_sbc_hat_mount_plate_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_sbc_hat_mount_plate_board.kicad_pcb"
+  }
+}

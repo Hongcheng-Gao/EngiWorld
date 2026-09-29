@@ -1,0 +1,119 @@
+{
+  "status": "verified_real_snapshot",
+  "task": "task-03",
+  "task_id": "c-open-abaqus-ansys-autocad-task-03-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "solver": "ansys",
+  "software": "ANSYS Mechanical APDL 2026 R1, release 26.1, build UP20260202",
+  "analysis": "3D shell static structural",
+  "job": "Job-FlangeHole",
+  "source_instruction_sha256": "67bdb9ae7d7f2582303a256ee481c05ebf2d159de0df41782139d68a2723fb24",
+  "task_definition_sha256": "874f1654c7c5540fac793148dbc8f31c567107104dda7daeddb8db78b296ff88",
+  "open_choice_spec_sha256": "4779389c6a36fa1b0c15ae69bfdde3f008712eee7f1db46eb530e7ccec16ab0c",
+  "evaluator_sha256": "c7059d2b5c196b667add821308bdfa7522bfd8e5432fa3355016fb308bb4f23a",
+  "generated_on": "2026-08-12",
+  "provenance": {
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip_from_mapping": "10.0.6.47",
+    "access": "OSWorld REST through the supplied SSH tunnel http://127.0.0.1:15047",
+    "public_ip_from_mapping": "115.190.150.137",
+    "generator_input": "gt_task_03_ansys.inp",
+    "native_solver_log": "Job-FlangeHole.log",
+    "generation_evidence": "../validation/generation/ansys_gt_generation.json",
+    "independent_db_resolve_evidence": "../validation/generation/ansys_independent_resolve_audit.json",
+    "synthetic_or_offline_solver_data": false
+  },
+  "metric_definitions": {
+    "max_mises": "MPa; maximum native per-element S,EQV over the final RST at stored TOP and BOTTOM shell locations and, when stored, MID",
+    "stress_concentration_proxy": "dimensionless; max_mises / 8.0",
+    "edge_displacement": "mm; final mean UX on the right loaded edge minus final mean UX on the left loaded edge; positive denotes opening"
+  },
+  "metrics": {
+    "max_mises": 17.43273773581264,
+    "stress_concentration_proxy": 2.17909221697658,
+    "edge_displacement": 0.004619469060298328,
+    "left_mean_u1": -0.0000365295509240545,
+    "right_mean_u1": 0.004582939509374274
+  },
+  "model_audit": {
+    "geometry_mm": {
+      "x_bounds": [0.0, 120.0],
+      "y_bounds": [0.0, 240.0],
+      "hole_center": [60.0, 120.0],
+      "hole_radius": 6.0
+    },
+    "material": "Steel equivalent",
+    "youngs_modulus_mpa": 210000.0,
+    "poissons_ratio": 0.3,
+    "element_type": "SHELL181",
+    "keyopt_3": 2,
+    "keyopt_8": 2,
+    "shell_thickness_mm": 1.0,
+    "through_thickness_integration_points": 5,
+    "nodes": 484,
+    "elements": 440,
+    "global_line_size_mm": 10.0,
+    "hole_line_size_mm": 2.4,
+    "left_resultant_n": -1920.0,
+    "right_resultant_n": 1920.0,
+    "constraint_signature": "BL UX/UY/UZ; BR UY/UZ; TL UZ",
+    "stored_locations": ["TOP", "MID", "BOTTOM"],
+    "solver_warning_count": 0,
+    "solver_error_count": 0,
+    "independent_db_resolve_matches_submitted_result": true
+  },
+  "files": [
+    {
+      "file": "Job-FlangeHole.db",
+      "size": 393216,
+      "sha256": "1f9c56d0229d066a838f5a9d55e7b1960d8fdbfa337dd70ba4d846678c5c60fe"
+    },
+    {
+      "file": "Job-FlangeHole.rst",
+      "size": 917504,
+      "sha256": "0ec78db9adecbcee6764b7b85569e1943bd506bfada951571e0871c519e4438f"
+    },
+    {
+      "file": "metrics.json",
+      "size": 148,
+      "sha256": "cf4b133c6827fcadfd6b95a1476be3b89017ea25ed48ee63cf7a7092b3be9912"
+    },
+    {
+      "file": "gt_task_03_ansys.inp",
+      "size": 5879,
+      "sha256": "327d4b4f073e647b8a8a35ead939472af6c6027bffd058bea74f634c23723450"
+    },
+    {
+      "file": "Job-FlangeHole.log",
+      "size": 180,
+      "sha256": "3df66e4a68f5fdd25a48983ec548260f980a3c2973edbd52f132f12c78df0255"
+    },
+    {
+      "file": "native_audit.txt",
+      "size": 1497,
+      "sha256": "ede5fdd781a6347b7f2de3ed85fd2e04212d15814877f597afdb5cc656721162"
+    }
+  ],
+  "validation": {
+    "matrix": "../validation/validation_matrix.json",
+    "formal_ground_truth_final": "../validation/cases/final_formal_ansys_fixed_manifest_c705_v1/validation_result.json",
+    "same_labels_wrong_result_negative": "../validation/cases/negative_wrong_ansys_result_same_labels_c705_v1/validation_result.json",
+    "independent_db_resolve": "../validation/generation/ansys_independent_resolve_audit.json",
+    "local_audit": "../validation/local_audit.json",
+    "all_cases_restored_remote_baseline": true
+  },
+  "final_instance_cleanup": {
+    "status": "verified_clean",
+    "evidence": "../validation/final_cleanup.json",
+    "cleanup_script_sha256": "94b5430f9e7272c3e230bbc8ba74a7db0ab9cc9231d730604ad3e673a9d9b5fb"
+  },
+  "official_sources": [
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_elem/Hlp_E_SHELL181.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_SECDATA.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_F.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_RESUME.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_SET.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_ETABLE.html",
+    "https://ansyshelp.ansys.com/public/Views/Secured/corp/v261/en/ans_cmd/Hlp_C_SHELL.html"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "id": "single-software--cli--openfast--task-19--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "`/home/user/Desktop/subdyn_eq_base.dat`, an OC3 monopile SubDyn model is provided. Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. Only initialization inputs are included; no answer/result artifacts are preloaded.\n\nOn this machine, the OpenFAST executable is `/home/user/miniconda3/bin/openfast` when working on `build_case.py`. Complete a deterministic prescribed-motion analysis from the command line using the OpenFAST 5.0 SubDyn standalone driver. 1. Write `/home/user/Desktop/build_case.py`. Create `/home/user/Desktop/earthquake_motion.txt` with samples from 0 to 60 s at 0.01 s. Each row must contain time followed by the 18 `InputsMod=2` values for one transition piece: six displacements/rotations, six velocities, and six accelerations. Keep all motion zero before 30 s. From 30 to 60 s, prescribe a smooth X-direction sinusoidal displacement pulse and its analytically consistent velocity and acceleration; use a `sin^4(pi*(t-30)/30)` envelope, 1 Hz carrier, and scale it so the peak absolute X acceleration is exactly `0.2g` with `g=9.80665 m/s^2`. Set all other components to zero. 2. Create `/home/user/Desktop/subdyn_eq.dat` from the supplied model, remove the unsupported trailing `ExtLdMod` line, retain native `ReactMYss`, and request native `Intf1TDXss`. Create `/home/user/Desktop/earthquake.dvr` with `InputsMod=2`, `InputsFile=\"earthquake_motion.txt\"`, `NSteps=6000`, `TimeInterval=0.01`, one TP reference point at `(0,0,10)` m, and no applied loads. 3. Run `/home/user/miniconda3/bin/subdyn_driver earthquake.dvr`, retain `/home/user/Desktop/earthquake_sd.SD.out`, and save the console output as `/home/user/Desktop/earthquake_sd.log`; require normal termination. 4. Write `/home/user/Desktop/postprocess.py`. Over `30 <= t <= 60 s`, compute maximum absolute `Intf1TDXss` in m and maximum absolute `ReactMYss` converted from N-m to MN-m. Save `/home/user/Desktop/summary.txt` as `peak_intf1_tdx_m,peak_reactmy_mnm`. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/earthquake_motion.txt",
+    "/home/user/Desktop/earthquake_sd.log",
+    "/home/user/Desktop/earthquake_sd.SD.out",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/subdyn_eq.dat",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

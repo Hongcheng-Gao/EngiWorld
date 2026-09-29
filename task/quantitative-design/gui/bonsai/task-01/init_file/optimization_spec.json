@@ -1,0 +1,87 @@
+{
+  "case_id": "quant-gui-bonsai-task-01-ubuntu",
+  "title": "Office shell daylight without overglazing",
+  "objective": "Improve useful daylight in one compact office while avoiding a fully glazed facade.",
+  "constraints": {
+    "case_id": "quant-gui-bonsai-task-01-ubuntu",
+    "title": "Office shell daylight without overglazing",
+    "objective": "Improve useful daylight in one compact office while avoiding a fully glazed facade.",
+    "hard_constraints": [
+      "Edit the model only through the Bonsai/Blender GUI.",
+      "Preserve all IfcSpace, IfcWall, IfcSlab, and IfcDoor objects and their bounding boxes.",
+      "Do not delete, move, or resize site obstruction walls whose names begin with SITE-OBSTRUCTION.",
+      "Only IfcWindow and matching IfcOpeningElement geometry/relationships, plus optional IfcShadingDevice geometry, may be changed or added.",
+      "Keep every window on an allowed facade for its room and within sill/head limits.",
+      "Keep each room window-to-wall ratio at or below its max_wwr.",
+      "Every IfcWindow and preserved IfcDoor must fill exactly one geometric IfcOpeningElement through IfcRelFillsElement, and each opening must void its actual host IfcWall through IfcRelVoidsElement.",
+      "Do not use IfcBuildingElementProxy or visual-only mesh objects as replacements for BIM elements."
+    ],
+    "invalid_conditions": [
+      "Missing or unparsable optimized.ifc.",
+      "Changed room count, room names, fixed wall/slab/door geometry, building envelope, or site obstruction geometry.",
+      "Windows placed on forbidden/private facades or outside room boundaries.",
+      "Over-limit room WWR, excessive window count, malformed windows, or oversized shading devices.",
+      "Unhosted or floating windows/doors, missing opening geometry, or missing/incorrect fill and void relationships.",
+      "A submission that only writes score/design_summary/preview files without a valid IFC."
+    ],
+    "allowed_object_classes": [
+      "IfcWindow",
+      "IfcShadingDevice",
+      "IfcOpeningElement"
+    ],
+    "required_output": "/home/user/Desktop/optimized.ifc",
+    "optional_outputs": [
+      "/home/user/Desktop/design_summary.json",
+      "/home/user/Desktop/preview.png"
+    ],
+    "geometry_tolerance_m": 0.45,
+    "fixed_bbox_tolerance_m": 0.08,
+    "max_total_windows": 5,
+    "max_shading_devices": 8,
+    "window_dimension_limits_m": {
+      "min_width": 0.55,
+      "max_width": 3.2,
+      "min_height": 0.45,
+      "max_height": 2.25,
+      "max_thickness": 0.35
+    },
+    "shading_dimension_limits_m": {
+      "max_projection_or_length": 7.0,
+      "max_thickness": 0.35
+    },
+    "rooms": [
+      {
+        "name": "OFFICE",
+        "allowed_facades": [
+          "south",
+          "east"
+        ],
+        "ideal_wwr": 0.18,
+        "max_wwr": 0.28,
+        "max_windows": 5,
+        "min_sill_m": 0.75,
+        "max_head_m": 2.65,
+        "daylight_weight": 1.0
+      }
+    ]
+  },
+  "site": {
+    "case_id": "quant-gui-bonsai-task-01-ubuntu",
+    "orientation": "Project north is +Y; south facade is -Y; east facade is +X.",
+    "target_daylight_period": "clear-sky working hours proxy, 09:00-15:00 local time",
+    "orientation_weights": {
+      "south": 1.0,
+      "east": 0.82,
+      "west": 0.68,
+      "north": 0.48,
+      "roof": 1.12
+    },
+    "external_obstructions": [],
+    "scoring_thresholds": {
+      "daylight_threshold": 0.24,
+      "useful_target": 0.5,
+      "glare_threshold": 1.05,
+      "minimum_effective_score": 0.35
+    }
+  }
+}

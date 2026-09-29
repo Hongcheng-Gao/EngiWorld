@@ -1,0 +1,65 @@
+{
+  "id": "quantitative-design--cli--openscad--task-02--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "CLI-only OpenSCAD quantified CAD optimization task. Run OpenSCAD from `/usr/bin/openscad` when working on `starter.scad`. Work from /home/user/Desktop/starter.scad, /home/user/Desktop/baseline.stl, and /home/user/Desktop/constraints.json. Use OpenSCAD command-line modeling and export, not a GUI. Edit /home/user/Desktop/starter.scad or create a derived OpenSCAD source file, then export the final geometry as STL. This is a continuous-score optimization task, not a request to match one hidden answer. Case: wide electronics cover with a continuous protective panel, perimeter walls, and optional reinforcing ribs. Produce one watertight, winding-consistent, edge-connected positive-volume solid. Keep it within coordinate envelope x=[0,90], y=[0,65], z=[0,18] mm, with bounding spans at least [86,61,10] mm and material volume between 22000 and 46000 mm^3. The protective panel must be at least 2.0 mm thick: at the tolerance-safe z=1.99 mm probe plane its measured solid XY coverage must be one continuous component covering at least 90% of the 90 x 65 mm board region, so total projected panel openings are at most 10%. The mounting contact face is at z=0 and must cover at least 5265 mm^2; additionally, each specified 10 x 10 mm corner mounting zone must have at least 90% solid contact coverage. Perimeter walls must be at least 2.0 mm thick and remain present at z=8.0 mm; along each of the left, right, front, and back edges, solid wall coverage must be at least 90%, openings on any edge are at most 10%, and a probe 1.99 mm inward from every edge must also retain at least 90% coverage. After these hard constraints, maximize measured solid protective-panel area at z=1.99 mm divided by material volume. The score uses rasterized solid occupancy, not bbox area; isolated corner posts or sparse extremal geometry do not count as protected coverage. Required outputs: /home/user/Desktop/optimized.stl and /home/user/Desktop/design_summary.json. The benchmark evaluates the real exported STL geometry. Use only the supplied task inputs; do not use evaluator-generated artifacts or evaluator implementation files, and do not fabricate metric files without producing a valid STL.",
+  "source": "https://files.openscad.org/documentation/manual/Using_OpenSCAD_in_a_command_line_environment.html; https://openscad.org/news.html#20210131; https://trimesh.org/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/starter.scad",
+            "path": "/home/user/Desktop/starter.scad"
+          },
+          {
+            "local_path": "task-02/init_file/baseline.stl",
+            "path": "/home/user/Desktop/baseline.stl"
+          },
+          {
+            "local_path": "task-02/init_file/constraints.json",
+            "path": "/home/user/Desktop/constraints.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/design_summary.json",
+    "/home/user/Desktop/optimized.stl"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.995556,
+      "direction": "maximize",
+      "name": "measured solid panel coverage per volume",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

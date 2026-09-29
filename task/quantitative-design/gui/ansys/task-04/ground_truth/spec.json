@@ -1,0 +1,22 @@
+{
+  "id": "opt-ansys-gui-04",
+  "title": "Limited-material two-dimensional conductive-path optimization",
+  "kind": "thermal_path",
+  "objective_direction": "minimize",
+  "metric_name": "thermal_resistance",
+  "metric_units": "K_per_W",
+  "submission_files": ["submission.db", "submission.rth"],
+  "baseline_files": ["baseline_wb_conduction.db", "baseline_wb_conduction.rth"],
+  "model_contract": {
+    "envelope_mm": {"x": [0.0, 100.0], "y": [0.0, 60.0], "thickness": 1.0},
+    "element_families": ["PLANE55", "PLANE77"],
+    "conductivity_w_per_mm_k": 0.05,
+    "sink": {"x_mm": 0.0, "y_mm": [0.0, 10.0], "temperature_c": 20.0},
+    "source": {"x_mm": 100.0, "y_mm": [50.0, 60.0], "total_heat_w": 1.0},
+    "maximum_material_area_mm2": 1500.0,
+    "minimum_feature_width_mm": 5.0,
+    "maximum_element_edge_mm": 2.0
+  },
+  "baseline": {"artifact": "init_file/", "meaning": "visible initial feasible design"},
+  "invalid_sample": {"artifact": "ground_truth/invalid/"}
+}

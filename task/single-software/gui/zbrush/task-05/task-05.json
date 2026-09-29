@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--zbrush--task-05--windows",
+  "snapshot": "zbrush2025",
+  "instruction": "Generate FiberMesh Hair on a Head The provided `scene.obj` contains a ZBrush Tool whose first (and only) SubTool, named Head, is a closed UV-sphere-topology ellipsoid (an 'idealized head') roughly 1.8 BU wide, 2.2 BU tall, and 1.8 BU deep, centred at origin. Open ZBrush 2025 from the desktop shortcut and continue from `scene.obj`. The SubTool has no polygroups, no UVs, no polypaint, and no subdivision levels. Using the opened OBJ in ZBrush, paint a mask over the top of the head, run FiberMesh Preview to grow hair from the masked area, accept the preview to create a new SubTool named Fibers, and export the result as `C:\\Users\\user\\Desktop\\output.obj`. The exported `C:\\Users\\user\\Desktop\\output.obj` must satisfy: Exactly two SubTools, named Head and Fibers. The Head SubTool is geometrically unchanged (same vertex and face counts as the input; every vertex position within 1e-4 of the input). The Fibers SubTool has a face count in the range [15000, 30000] (roughly 3000 fibers with ~6 tris each). The Fibers SubTool extends upward beyond the head: its bounding-box y-max is at least 0.3 BU above the Head's y-max. The Fibers SubTool contains at least 2000 distinct connected components (each individual hair strand is a separate component of at least 2 triangles).",
+  "source": "https://help.maxon.net/zbr/en-us/; https://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/scene.obj",
+            "path": "C:\\Users\\user\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
+          "C:\\Users\\user\\Desktop\\scene.obj"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import ctypes, time\nuser32 = ctypes.windll.user32\nEnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\nEnumChildProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\ndef close_error():\n    wins = []\n    def wcb(hwnd, lparam):\n        buf = ctypes.create_unicode_buffer(512)\n        user32.GetWindowTextW(hwnd, buf, 512)\n        if 'ZHomePage.exe' in buf.value and 'System Error' in buf.value:\n            wins.append(hwnd)\n        return True\n    user32.EnumWindows(EnumWindowsProc(wcb), 0)\n    for hwnd in wins:\n        buttons = []\n        def ccb(ch, lparam):\n            text = ctypes.create_unicode_buffer(128)\n            cls = ctypes.create_unicode_buffer(128)\n            user32.GetWindowTextW(ch, text, 128)\n            user32.GetClassNameW(ch, cls, 128)\n            if text.value == 'OK' or cls.value == 'Button':\n                buttons.append(ch)\n            return True\n        user32.EnumChildWindows(hwnd, EnumChildProc(ccb), 0)\n        for ch in buttons:\n            user32.SendMessageW(ch, 0x00F5, 0, 0)\ntime.sleep(95)\nfor _ in range(4):\n    close_error()\n    time.sleep(2)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "zbrush"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\output.obj"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

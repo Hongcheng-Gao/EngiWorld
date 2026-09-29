@@ -1,0 +1,71 @@
+{
+  "id": "single-software--gui--ansys--task-12--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Carry out the following with ANSYS Workbench: complete a Transient Structural analysis. Before starting the work, launch ANSYS Workbench with `C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe`. Physical problem: A simply supported beam is subjected to a step force at mid-span. Coordinate system and geometry: - Use the global Cartesian coordinate system. - Model the beam as a line body with a beam cross-section. - The beam reference line is along the global X direction. - The beam starts at X = 0 mm and ends at X = 1000 mm. - The mid-span location is X = 500 mm. - The beam cross section is square: - Width = 20 mm - Height = 20 mm Model parameters: - Beam length: 1000 mm - Beam cross section: 20 mm × 20 mm - Material: Structural Steel with the following properties: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Density ρ = 7850 kg/m³ - Mesh: - Element size: 50 mm - Use 20 equal divisions along the beam length. Boundary conditions: - Left end at X = 0 mm: - Constrain UX = 0, UY = 0, and UZ = 0. - Leave rotations free. - Right end at X = 1000 mm: - Constrain UY = 0 and UZ = 0. - Leave UX free. - Leave rotations free. Load: - Apply a concentrated force at the mid-span node, X = 500 mm. - Force magnitude: 1000 N. - Force direction: negative global Y direction. - Apply the force as a step load at the start of the transient analysis and keep it constant through the analysis end time. Analysis type and settings: - Transient Structural analysis. - Enable large deflection. - Total analysis time: 0.05 s. - Time step: 0.001 s. - Save results at every time step. - Do not add structural damping. Save requirements: - Use C:\\Users\\user\\Desktop as the working location. - Save the Workbench project file as: C:\\Users\\user\\Desktop\\wb_transient.wbpj - Save the MAPDL-equivalent database file as: C:\\Users\\user\\Desktop\\wb_transient.db - Save the MAPDL-equivalent structural result file as: C:\\Users\\user\\Desktop\\wb_transient.rst. Run the solver to completion and ensure a result file is generated.",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
+          "-g"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\wb_transient.db",
+    "C:\\Users\\user\\Desktop\\wb_transient.rst",
+    "C:\\Users\\user\\Desktop\\wb_transient.wbpj"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfoam--task-02--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "The starting input is the incomplete OpenFOAM template `/home/user/Desktop/cavity_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve a deterministic two-dimensional lid-driven cavity at Reynolds number 1000. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/cavity/` as a 1.0 m by 1.0 m square with one 0.01 m spanwise cell and `frontAndBack` set to `empty`. Use a uniform `50 x 50 x 1` block mesh. 2. Set the top `movingWall` velocity to `(1 0 0) m/s`, all other walls to no-slip, and use kinematic viscosity `nu=1.0e-3 m^2/s`; therefore `Re=U*L/nu=1000`. Use zero normal pressure gradient on every wall and the usual pressure reference. 3. Configure `icoFoam` with first-order Euler time integration, central linear convection, `deltaT=0.005 s`, `endTime=30 s`, ASCII output, and write every 1000 time steps. Source `/opt/openfoam11/etc/bashrc`, run `blockMesh -case /home/user/Desktop/cavity`, retain `/home/user/Desktop/cavity/log.blockMesh`, then run `icoFoam -case /home/user/Desktop/cavity` and retain `/home/user/Desktop/cavity/log.icoFoam`; both commands must end successfully and the 30 s field must exist. Run `postProcess -case /home/user/Desktop/cavity -latestTime -func writeCellCentres` and retain `/home/user/Desktop/cavity/log.cellCentres`. 4. Write `/home/user/Desktop/postprocess.py`. From the final ASCII `C` and `U` fields, define the velocity at each requested coordinate as the component-wise average of the four nearest cell centers. Save `/home/user/Desktop/center_velocity.csv` with header `location,ux_mps,uy_mps,uz_mps` and rows for `center=(0.5,0.5,0.005)`, `left_mid=(0.25,0.5,0.005)`, and `right_mid=(0.75,0.5,0.005)`. The clockwise primary vortex must give center `Ux<0`, left-mid `Uy>0`, and right-mid `Uy<0`. 5. Save `/home/user/Desktop/summary.txt` as one finite scalar `center_ux_mps`; it must exactly report the center `Ux` derived above. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/cavity_base.tar",
+            "path": "/home/user/Desktop/cavity_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/cavity_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/cavity_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/cavity",
+    "/home/user/Desktop/center_velocity.csv",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

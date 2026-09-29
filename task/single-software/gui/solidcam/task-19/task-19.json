@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--solidcam--task-19--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Refer to straight_slot_block.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Start SOLIDWORKS 2025 from the desktop shortcut and use its installed SOLIDWORKS CAM/CAMWorks add-in; there is no separate SolidCAM desktop program in this image. Create a 3-axis Milling CAM-Part for straight_slot_block.step from a single top-side setup. Use standard SOLIDWORKS CAM Slot, Profile, or Contour operations to machine the four visible straight slots/keyways on the top face. Each slot must be machined along its full modeled length down to the modeled slot floor; one operation per slot or an equivalent grouped slot operation is acceptable as long as all four slots are included in the posted NC program. Use only 3-axis milling for this task; do not use rotary, indexed, or simultaneous 5-axis machining. Use suitable installed flat end mill or slotting tool-library entries; exact tool station numbers, spindle speeds, feedrates, and internal tool-library IDs may follow stable SOLIDWORKS CAM Technology Database defaults. Keep SOLIDWORKS CAM's default generated NC comments; do not rename operations just to add labels. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-19.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For this milling task, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s).",
+  "source": "SOLIDWORKS CAM 2025 official documentation: https://help.solidworks.com/2025/english/WhatsNew/c_wn_cam.htm ; SOLIDWORKS CAM 2025 Contour Mill toolpaths: https://help.solidworks.com/2025/English/WhatsNew/c_wn2025_cam_contour_mill_toolpaths.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/straight_slot_block.step",
+            "path": "C:\\Users\\User\\Desktop\\straight_slot_block.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
+          "C:\\Users\\User\\Desktop\\straight_slot_block.step"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-19.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

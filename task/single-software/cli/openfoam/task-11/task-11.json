@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfoam--task-11--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "For this task, start with the incomplete cavity template `/home/user/Desktop/cavity_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands and before invoking `run_sweep.py`.\n\nFrom the command line, perform a deterministic Reynolds-number sweep of a two-dimensional lid-driven square cavity. 1. Write `/home/user/Desktop/build_case.py` to create `/home/user/Desktop/cavity_sweep/Re100`, `Re400`, and `Re1000`. Every case must use the same cavity dimensions `L=1 m` by `1 m`, span `0.01 m`, uniform `50 x 50 x 1` hexahedral mesh, empty front/back patch, no-slip stationary side/bottom walls, and a top lid moving at `U=(1 0 0) m/s`. Define `Re=U*L/nu` and obtain the three cases only by setting `nu=0.01`, `0.0025`, and `0.001 m^2/s`, respectively. 2. Use laminar `icoFoam` with Euler time integration, `deltaT=0.005 s`, end time `30 s`, linear velocity convection, PISO with two correctors, and ASCII output at time 30. Write `/home/user/Desktop/run_sweep.py` to process the cases strictly in the order Re100, Re400, Re1000. For each case it must run `blockMesh`, `checkMesh`, `icoFoam`, and `postProcess -latestTime -func writeCellCentres`, retaining `log.blockMesh`, `log.checkMesh`, `log.icoFoam`, and `log.cellCentres`. Every log must finish with `End`, each mesh must report `Mesh OK.`, and every case must contain nonuniform `U`, `p`, and cell-center `C` fields with exactly 2,500 cells at time 30. 3. Write `/home/user/Desktop/postprocess.py`. For each case, use the four cells nearest `(0.5,0.5,0.005) m` to compute the geometric-center velocity by equal averaging. Save `/home/user/Desktop/sweep_results.csv` with columns `reynolds,nu_m2_s,center_ux,center_uy,center_uz,max_speed`, where `max_speed` is recomputed over each complete final velocity field. Require a clockwise primary vortex (`center_ux<0`), `0.5<max_speed<1.2 m/s`, and the ordered trend `center_ux(Re100)<center_ux(Re400)<center_ux(Re1000)<0`. 4. Save `/home/user/Desktop/summary.txt` as exactly three lines in the order Re100, Re400, Re1000, with format `Re, center_ux`. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/cavity_base.tar",
+            "path": "/home/user/Desktop/cavity_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/cavity_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/cavity_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/run_sweep.py",
+    "/home/user/Desktop/summary.txt",
+    "/home/user/Desktop/sweep_results.csv"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

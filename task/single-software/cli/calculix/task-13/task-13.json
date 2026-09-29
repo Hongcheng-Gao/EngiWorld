@@ -1,0 +1,58 @@
+{
+  "id": "single-software--cli--calculix--task-13--ubuntu",
+  "snapshot": "CalculiX-2.21",
+  "instruction": "Begin with a template where a beam and a solid are disconnected: `/home/user/Desktop/mpc_base.inp`. Run `ccx --version` or invoke the installed `ccx` binary from a terminal. For the steps below, use `/usr/bin/ccx` for the CalculiX solve and `/usr/bin/cgx` when CGX processing is needed.\n\nComplete the following from the command line: 1. Modify and generate `/home/user/Desktop/mpc.inp`: Please save the final input file as /home/user/Desktop/mpc.inp. - Connect node 101 (beam end) to solid right-face nodes (`2,3,6,7`) - Or manually define equivalent displacement relations - Apply `FY=-100 N` at node 102 2. Submit the job and write a post-processing script to parse `mpc.dat`: - Extract node-102 `UY` - Extract node-101 `UY` - Extract average `UY` on solid right-face nodes (`2,3,6,7`) - Write to `/home/user/Desktop/summary.txt` in this format: `tip_u2,node101_u2,solid_face_avg_u2` 4. Do not use the CGX GUI.",
+  "source": "https://github.com/calculix/CalculiX-Examples",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/mpc_base.inp",
+            "path": "/home/user/Desktop/mpc_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/mpc.dat",
+    "/home/user/Desktop/mpc.inp",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

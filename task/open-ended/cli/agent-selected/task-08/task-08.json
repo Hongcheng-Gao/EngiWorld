@@ -1,0 +1,79 @@
+{
+  "id": "open-ended--cli--agent-selected--task-08--ubuntu",
+  "task_family": "open-ended",
+  "cli_tool_policy": "open_choice",
+  "snapshot": "top-10",
+  "instruction": "This is a fully open-workflow engineering task. You may use any tools, scripts, or libraries available in the environment, in any combination and any order, with any amount of iteration. The environment starts from a blank base image with no engineering applications preinstalled. Inspect the supplied inputs, then choose, install, and configure any tools or libraries you need. No particular software is required. The evaluator does not inspect software identity, stage order, intermediate handoffs, command history, version records, or provenance.\n\nHigh-current busbar insulator carrier.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as package XY origin and the tray bottom outer face as Z=0 without rotating or mirroring KiCad X/Y. Build the specified 190 x 52 x 23.6 mm G10 package as a tray ending at Z=20.5 plus a separate 3 mm lid beginning at Z=20.6, preserving the 0.1 mm assembly separation. The inner cavity must be X=-92..92 and Y=-23..23. Seat the 1.6 mm PCB bottom at Z=5.0 on four 2 mm high bored standoffs aligned to MH1-MH4, using 8 mm outer diameter and 3.7 mm bore diameter, and preserve 4 mm clearance to every inner side wall. J1/J2 end at Z=14.6, leaving 6 mm to the lid inner face.\n\nBuild two independent bounded Y_PLUS busbar windows. J1 must have a 26 x 10 mm wall cutter `[-67.0, 22.5, 5.6, -41.0, 26.5, 15.6]` and enclosure-free path `[-67.0, 13.0, 5.6, -41.0, 26.5, 15.6]`. J2 must have a 26 x 10 mm cutter `[41.0, 22.5, 5.6, 67.0, 26.5, 15.6]` and path `[41.0, 13.0, 5.6, 67.0, 26.5, 15.6]`. Bounds use `[xmin, ymin, zmin, xmax, ymax, zmax]`. Each path must be continuous to its KiCad keepout boundary; the windows must not merge or become full-height slots.\n\nTP1 and TP2 each require a one-to-one cylindrical 6 mm finished-diameter Z_PLUS lid bore. Their respective lid-cutter bounds are `[-15.0, 11.0, 20.1, -9.0, 17.0, 24.1]` and `[9.0, 11.0, 20.1, 15.0, 17.0, 24.1]`. Each complete enclosure-free path starts at its target top Z=6.8 and ends at exterior Z=24.1 using the corresponding CSV XY bounds. Apply the specified overcut, center/axis tolerances, and minimum guard. Extra structural features are allowed only when all accesses, guards, board clearances, creepage-web, and interference requirements remain valid.\n\nThe evaluator measures the Y_PLUS side-wall web at the wall mid-plane Y=24.5 and window mid-height Z=10.6. The straight edge-to-edge segment from `[-41.0, 24.5, 10.6]` to `[41.0, 24.5, 10.6]` is nominally 82 mm and must remain at least 80 mm. The probe box `[-41.0, 24.25, 10.35, 41.0, 24.75, 10.85]` has nominal volume 20.5 mm3; actual carrier material within it must form a single connected web with no more than 0.1 mm3 missing material. The evaluator derives segment length, probe intersection/void, and connectivity from final submitted geometry instead of copying these values into a report.\n\nThe evaluator derives G10 carrier volume/mass, all four PCB side clearances, covered-component top clearance, four standoff bore checks, all four access checks, busbar-window separation, creepage-web length/material continuity, and unintended interference from final submitted geometry.\n\nSave the completed final assembly into `/home/user/Desktop/result` as exactly one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. The PCB and installed components must remain identifiable physical parts rather than being fused into enclosure material; this is a final-assembly geometry requirement, not a prescribed workflow. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://wiki.freecad.org/Release_notes_1.1; https://github.com/FreeCAD/FreeCAD-documentation/blob/main/wiki/Start_up_and_Configuration.md; https://www.blender.org/releases/5-2/; https://docs.blender.org/api/5.2/; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-08",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-08/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-08/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-08/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            },
+            {
+              "local_path": "../../prepare_evaluator.py",
+              "path": "/home/user/Desktop/_engiworld_prepare_evaluator.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "prepare_command": "python3 /home/user/Desktop/_engiworld_prepare_evaluator.py",
+      "prepare_timeout": 960
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

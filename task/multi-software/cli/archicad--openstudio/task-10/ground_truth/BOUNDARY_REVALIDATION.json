@@ -1,0 +1,33 @@
+{
+  "schema": "engiworld.task10.boundary-revalidation.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-10-windows",
+  "run_at_utc": "2026-08-14T09:59:49Z",
+  "scope": "Candidate-boundary-only evaluator correction; native GT artifacts were not regenerated or modified.",
+  "evaluator_sha256": "8ed95847fa01e2c81560ec1f4a6eafae5dcd885581d89bbad6c52758cc8ca72c",
+  "task_json_sha256": "1e24b7e682320519cda56504dae9a989e720aa687d375a64ec1b0a295c17943f",
+  "isolation": "Each case was copied independently from formal GT; no mutation state was reused.",
+  "trust_anchor": "The Windows evaluator independently reruns Archicad 27, OpenStudio ForwardTranslator, and EnergyPlus 25.1; native_stage_log.json remains candidate evidence for Archicad RPC causality.",
+  "cases": [
+    {
+      "id": "helper_free",
+      "class": "positive",
+      "change": "Omit archicad_process_journal.json, both standalone OpenStudio transaction sidecars, and repository audit/generation helpers.",
+      "expected_ok": true,
+      "actual_ok": true,
+      "errors": []
+    },
+    {
+      "id": "missing_native_archicad_evidence",
+      "class": "negative",
+      "change": "Remove command_server_process and native_transactions from native_stage_log.json.",
+      "expected_ok": false,
+      "actual_ok": false,
+      "errors": [
+        "native_stage_log.json:archicad_identity_mismatch",
+        "native_stage_log.json:transaction_sequence",
+        "native_stage_log.json:transaction_artifact_causality"
+      ]
+    }
+  ],
+  "all_cases_matched_expectation": true
+}

@@ -1,0 +1,152 @@
+{
+  "id": "opt-fenics-03",
+  "title": "FEniCS conductive network equivalent-conductance optimization",
+  "kind": "conductance",
+  "interface": "cli",
+  "primary_software": "fenics",
+  "objective": "Maximize equivalent conductance between two fixed electrodes under area and keepout constraints.",
+  "objective_direction": "maximize",
+  "metric_name": "effective_conductance",
+  "metric_units": "normalized_S",
+  "design_file": "conductive_mask.csv",
+  "result_file": "potential.xdmf",
+  "required_outputs": [
+    "conductive_mask.csv",
+    "solve_submission.py",
+    "potential.xdmf"
+  ],
+  "domain": {
+    "width": 1.0,
+    "height": 1.0,
+    "unit": "m"
+  },
+  "design_grid": {
+    "rows": 20,
+    "cols": 20,
+    "row_axis": "y",
+    "col_axis": "x",
+    "row_0_location": "bottom edge",
+    "col_0_location": "left electrode"
+  },
+  "solver_mesh": {
+    "nx": 40,
+    "ny": 40,
+    "cell_type": "triangle"
+  },
+  "material": {
+    "void_conductivity": 0.001,
+    "conductor_conductivity": 1.0
+  },
+  "electrical": {
+    "left_electrode": "x = 0",
+    "right_electrode": "x = width",
+    "left_electrode_voltage": 1.0,
+    "right_electrode_voltage": 0.0,
+    "insulated_boundaries": [
+      "y = 0",
+      "y = height"
+    ]
+  },
+  "keepout_cells": [
+    [
+      8,
+      8
+    ],
+    [
+      8,
+      9
+    ],
+    [
+      8,
+      10
+    ],
+    [
+      8,
+      11
+    ],
+    [
+      9,
+      8
+    ],
+    [
+      9,
+      9
+    ],
+    [
+      9,
+      10
+    ],
+    [
+      9,
+      11
+    ],
+    [
+      10,
+      8
+    ],
+    [
+      10,
+      9
+    ],
+    [
+      10,
+      10
+    ],
+    [
+      10,
+      11
+    ],
+    [
+      11,
+      8
+    ],
+    [
+      11,
+      9
+    ],
+    [
+      11,
+      10
+    ],
+    [
+      11,
+      11
+    ]
+  ],
+  "design_budget": {
+    "type": "conductive_material_budget",
+    "max_fraction": 0.25,
+    "threshold": 0.5
+  },
+  "constraints": {
+    "mask_min": 0.0,
+    "mask_max": 1.0,
+    "electrodes_must_be_connected": true
+  },
+  "calibration_status": "calibrated_on_snapshot",
+  "baseline": {
+    "file": "baseline_conductive_mask.csv",
+    "artifact": "init_file/baseline_conductive_mask.csv",
+    "metric_value": 0.05095000000000396,
+    "metric_units": "normalized_S",
+    "metric_source": "computed_dynamically_by_eval_on_fenics_vm"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/conductive_mask.csv"
+  },
+  "reference": {
+    "artifact": "ground_truth/reference/conductive_mask.csv",
+    "metric_value": 0.2507499999999779,
+    "normalized_effective_conductance_improvement": 0.7968095712861079,
+    "native_outputs": [
+      "ground_truth/reference/potential.xdmf",
+      "ground_truth/reference/potential.h5"
+    ]
+  },
+  "native_environment": {
+    "snapshot": "FEniCS",
+    "dolfin": "2019.1.0",
+    "python": "3.10.20",
+    "artifact_format": "DOLFIN XDMF checkpoint with HDF5 companion"
+  }
+}

@@ -1,0 +1,62 @@
+{
+  "id": "software-selection--cli--abaqus--ansys--autocad--task-17--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Decide on one suitable analysis tool from ANSYS, Abaqus, and AutoCAD and use a command-line or scripting workflow. The available command-line entry points are ANSYS MAPDL at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`, Abaqus at `C:\\SIMULIA\\Commands\\abaqus.bat`, and AutoCAD at `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`. Use either ANSYS or Abaqus to build and solve the model; AutoCAD alone is not a valid solver for this task. Create a three-dimensional static thermal-stress model of a straight steel bar driven by a prescribed uniform temperature field; a separate heat-transfer solve is not required. Use the global Cartesian coordinate system and consistent mm-N-MPa units. The bar length is along X and the solid occupies 0 <= X <= 100 mm, 0 <= Y <= 10 mm, and 0 <= Z <= 10 mm. Assign one linear-elastic isotropic steel material to the entire bar with Young's modulus E = 210000 MPa, Poisson's ratio nu = 0.3, coefficient of thermal expansion alpha = 1.5e-5 /degC, and stress-free reference temperature 20 degC. Use an appropriate three-dimensional structural solid element formulation and a global mesh size of 5 mm. Apply a uniform final body temperature of 100 degC to the entire bar, corresponding to an 80 degC rise from the stress-free state. For ANSYS, use an effective reference temperature of 20 degC with the complete bar at TEMP = 100 degC. For Abaqus, define a uniform Initial predefined Temperature of 20 degC and update the complete bar to 100 degC in the static step; the Expansion reference temperature alone does not replace this initial-temperature state. Restrain axial expansion by applying UX = 0 to every node on both end faces X = 0 and X = 100 mm. Add only the minimum three independent transverse scalar constraints needed to remove the remaining rigid-body motion. One valid realization is UY = UZ = 0 at (0, 0, 0) and UZ = 0 at (0, 10, 0); an equivalent strategically selected three-constraint realization on one end face is acceptable. Do not fully fix an end face in all translations and do not constrain an entire lateral face. Do not apply pressure, force, gravity, acceleration, contact, initial stress, or any other non-thermal mechanical load; the prescribed temperature body load is required and is not prohibited. Solve one static structural step with thermal strain enabled. Save exactly one same-stem native model/result pair into `C:/Users/user/Desktop/result`. Do not leave a native pair from the other solver on the Desktop. Write C:/Users/user/Desktop/result/metrics.json as a JSON object containing exactly two required finite numeric fields: `thermal_stress`, the maximum absolute global axial normal stress |S11/SX| over the active bar in the final native result, in MPa; and `reaction_force`, the absolute resultant X reaction force on one complete UX-restrained end face in the final native result, in N. The two end reactions must balance. For this model the native solution and metrics should be consistent with thermal_stress = 252 MPa and reaction_force = 25200 N within normal finite-element numerical tolerance. Extract both values from the submitted native result artifact; do not use hard-coded, simulated, or offline substitute data. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: use the most suitable ANSYS shortcut under `C:\\Users\\Public\\Desktop`; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data ; generated open-choice variant from task/task-c/ansys/task-08",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

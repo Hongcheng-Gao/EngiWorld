@@ -1,0 +1,160 @@
+apiVersion: v1
+kind: Namespace
+metadata:
+  name: arena-osworld
+---
+apiVersion: v1
+kind: ConfigMap
+metadata:
+  name: arena-osworld-worker-config
+  namespace: arena-osworld
+data:
+  REDIS_URL: "redis://redis.example.invalid:6379/0"
+  ENGIWORLD_ENGINE_PATH: "/app/engine"
+  OSWORLD_V2_PATH: "/app/third_party/OSWorld-V2"
+  TASK_ROOT: "/app/task"
+  LOCAL_CONCURRENCY: "4"
+  MODEL: "openai-compatible"
+  AGENT_FACTORY: "engiworld.agents.openai_compatible:create_agent"
+  ACTION_SPACE: "pyautogui"
+  OBSERVATION_TYPE: "screenshot"
+  GUI_MAX_STEPS: "200"
+  CLI_MAX_STEPS: "100"
+  GUI_MULTI_MAX_STEPS: "300"
+  CLI_MULTI_MAX_STEPS: "150"
+  OPEN_ENDED_MAX_STEPS: "150"
+  HISTORY_TURNS: "15"
+  SLEEP_AFTER_EXECUTION: "2.0"
+  SCREEN_WIDTH: "1920"
+  SCREEN_HEIGHT: "1080"
+  WORKER_IDLE_EXIT_ROUNDS: "0"
+  WORKER_REUSE_INSTANCES: "false"
+  ARENA_MODEL_API_RETRIES: "3"
+  ARENA_MODEL_MAX_TOKENS: "16384"
+  TASK_LEASE_TTL_SECONDS: "1800"
+  INSTANCE_LEASE_TTL_SECONDS: "2100"
+  POLL_INTERVAL_SECONDS: "5"
+  VOLCENGINE_S3_BUCKET: "YOUR_RESULTS_BUCKET"
+  VOLCENGINE_REGION: "cn-beijing"
+  VOLCENGINE_S3_ENDPOINT_URL: "http://tos-s3-cn-beijing.ivolces.com"
+  VOLCENGINE_S3_ADDRESSING_STYLE: "virtual"
+  VOLCENGINE_TERMINATE_ON_CLOSE: "false"
+  ARENA_MODEL_NAME: "YOUR_MODEL_NAME"
+  OPENAI_BASE_URL: "https://api.example.invalid/v1"
+---
+apiVersion: v1
+kind: Secret
+metadata:
+  name: arena-osworld-worker-secret
+  namespace: arena-osworld
+type: Opaque
+stringData:
+  OPENAI_API_KEY: "CHANGE_ME"
+  VOLCENGINE_ACCESS_KEY_ID: "CHANGE_ME"
+  VOLCENGINE_SECRET_ACCESS_KEY: "CHANGE_ME"
+---
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: arena-osworld-worker
+  namespace: arena-osworld
+  labels:
+    app.kubernetes.io/name: arena-osworld-worker
+    app.kubernetes.io/part-of: arena-osworld
+spec:
+  replicas: 8
+  revisionHistoryLimit: 3
+  selector:
+    matchLabels:
+      app.kubernetes.io/name: arena-osworld-worker
+  strategy:
+    type: RollingUpdate
+    rollingUpdate:
+      maxSurge: 1
+      maxUnavailable: 0
+  template:
+    metadata:
+      labels:
+        app.kubernetes.io/name: arena-osworld-worker
+        app.kubernetes.io/part-of: arena-osworld
+    spec:
+      terminationGracePeriodSeconds: 60
+      volumes:
+        - name: task-cache
+          hostPath:
+            path: /var/lib/arena-osworld/task-cache
+            type: DirectoryOrCreate
+      # If the image is in a private Volcengine CR registry, create the pull secret
+      # first and uncomment the following block.
+      # imagePullSecrets:
+      #   - name: volcengine-cr-pull-secret
+      containers:
+        - name: worker
+          # Keep this tag aligned with deploy/worker/version.txt.
+          image: registry.example.invalid/arena-osworld/worker:latest
+          imagePullPolicy: IfNotPresent
+          command:
+            - "/opt/venv/bin/python"
+            - "-m"
+            - "engiworld.scheduler.worker_entrypoint"
+          envFrom:
+            - configMapRef:
+                name: arena-osworld-worker-config
+            - secretRef:
+                name: arena-osworld-worker-secret
+          volumeMounts:
+            - name: task-cache
+              mountPath: /app/task
+          args:
+            - "--redis-url"
+            - "$(REDIS_URL)"
+            - "--engine-path"
+            - "$(ENGIWORLD_ENGINE_PATH)"
+            - "--task-root"
+            - "$(TASK_ROOT)"
+            - "--local-concurrency"
+            - "$(LOCAL_CONCURRENCY)"
+            - "--agent-factory"
+            - "$(AGENT_FACTORY)"
+            - "--model"
+            - "$(MODEL)"
+            - "--action-space"
+            - "$(ACTION_SPACE)"
+            - "--observation-type"
+            - "$(OBSERVATION_TYPE)"
+            - "--gui-max-steps"
+            - "$(GUI_MAX_STEPS)"
+            - "--cli-max-steps"
+            - "$(CLI_MAX_STEPS)"
+            - "--gui-multi-max-steps"
+            - "$(GUI_MULTI_MAX_STEPS)"
+            - "--cli-multi-max-steps"
+            - "$(CLI_MULTI_MAX_STEPS)"
+            - "--open-ended-max-steps"
+            - "$(OPEN_ENDED_MAX_STEPS)"
+            - "--history-turns"
+            - "$(HISTORY_TURNS)"
+            - "--sleep-after-execution"
+            - "$(SLEEP_AFTER_EXECUTION)"
+            - "--screen-width"
+            - "$(SCREEN_WIDTH)"
+            - "--screen-height"
+            - "$(SCREEN_HEIGHT)"
+            - "--task-lease-ttl-seconds"
+            - "$(TASK_LEASE_TTL_SECONDS)"
+            - "--instance-lease-ttl-seconds"
+            - "$(INSTANCE_LEASE_TTL_SECONDS)"
+            - "--poll-interval-seconds"
+            - "$(POLL_INTERVAL_SECONDS)"
+            - "--idle-exit-rounds"
+            - "$(WORKER_IDLE_EXIT_ROUNDS)"
+            - "--s3-bucket"
+            - "$(VOLCENGINE_S3_BUCKET)"
+            - "--headless"
+          resources:
+            requests:
+              cpu: "2"
+              memory: "8Gi"
+            limits:
+              cpu: "4"
+              memory: "16Gi"

@@ -1,0 +1,75 @@
+{
+  "id": "single-software--cli--revit--task-10--windows",
+  "snapshot": "Revit2025",
+  "instruction": "Complete the model in the opened Autodesk Revit environment using its automation interfaces, then export it to C:\\Users\\user\\Desktop\\result.ifc as IFC4. For this task, use `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe` as the Revit entry point for this automation. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a plain two-level laboratory block. The design lead wants clearer Lab and Prep zones on both floors and a modest sloped roof so the building reads as a small campus outbuilding rather than a flat box. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"absent_space_tokens\":[\"Ground Lab\",\"Upper Lab\"],\"bbox_ranges_m\":{\"x\":[9.4,11.2],\"y\":[6.4,8.2],\"z\":[4.9,8.5]},\"exact_counts\":{\"IfcBuilding\":1,\"IfcBuildingStorey\":2,\"IfcProject\":1,\"IfcRoof\":1,\"IfcSite\":1,\"IfcSpace\":4,\"IfcWall\":10},\"forbidden\":[\"IfcBeam\",\"IfcBuildingElementProxy\",\"IfcColumn\",\"IfcCurtainWall\",\"IfcDoor\",\"IfcWindow\"],\"min_counts\":{\"IfcSlab\":2},\"min_file_bytes\":20000,\"min_shaped_products\":12,\"roof_slope_min_m\":0.2,\"space_levels\":{\"Lab\":0,\"Lab Upper\":1,\"Prep\":0,\"Prep Upper\":1},\"space_tokens\":[\"Lab\",\"Prep\",\"Lab Upper\",\"Prep Upper\"],\"storey_tokens\":[\"Ground Floor\",\"Level 2\"]}.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software--cli--revit--task-11--windows",
+  "snapshot": "Revit2025",
+  "instruction": "Complete the model in the opened Autodesk Revit environment using its automation interfaces, then export it to C:\\Users\\user\\Desktop\\result.ifc as IFC4. On this machine, use `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe` as the Revit entry point for this automation. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a long single-storey training suite with too little functional definition. The operator wants a foyer, two classrooms, and a store arranged as a clear sequence while keeping the simple strip-building footprint. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"absent_space_tokens\":[\"Training Hall\"],\"axis_orders\":[{\"axis\":\"x\",\"tokens\":[\"Foyer\",\"Classroom A\",\"Classroom B\",\"Store\"]}],\"bbox_ranges_m\":{\"x\":[19.4,21.2],\"y\":[7.4,9.2],\"z\":[2.5,3.5]},\"exact_counts\":{\"IfcBuilding\":1,\"IfcBuildingStorey\":1,\"IfcProject\":1,\"IfcSite\":1,\"IfcSlab\":1,\"IfcSpace\":4,\"IfcWall\":7},\"forbidden\":[\"IfcBeam\",\"IfcBuildingElementProxy\",\"IfcColumn\",\"IfcCurtainWall\",\"IfcDoor\",\"IfcRoof\",\"IfcWindow\"],\"min_counts\":{},\"min_file_bytes\":20000,\"min_shaped_products\":9,\"space_tokens\":[\"Foyer\",\"Classroom A\",\"Classroom B\",\"Store\"],\"storey_tokens\":[\"Ground Floor\"]}.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

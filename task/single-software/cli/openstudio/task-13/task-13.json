@@ -1,0 +1,65 @@
+{
+  "id": "single-software--cli--openstudio--task-13--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Organize /home/user/Desktop/init.osm in the opened OpenStudio application using its CLI/API automation interface, and save the updated model as /home/user/Desktop/result.osm. For the steps below, use `/usr/local/openstudioapplication-1.11.0-rc2/bin/openstudio` for OpenStudio CLI or API automation when working on `init.osm`. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a corner retail shop with a restroom. The south and west sides carry the main display role, while the restroom on the east side needs only a smaller opening. The operator wants the model to support water and electricity end-use tracking. In addition to organizing sales and restroom loads, include restroom sink water use, entry exterior lighting, and key reporting requests. Do not change the exterior outline or room organization. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally. The completed model must meet the following exact specification (SI units; geometry coordinates and lengths are metres; areas are square metres; names are exact): {\"building\":\"CLI Retail Water Reporting\",\"stories\":[{\"name\":\"01_RETAIL\",\"z\":0}],\"spaces\":[{\"name\":\"T13-SALES\",\"zone\":\"T13-SALES Zone\",\"x0\":0,\"y0\":0,\"x1\":12,\"y1\":10,\"z0\":0,\"h\":3.4,\"story\":\"01_RETAIL\",\"space_type\":\"TASK13 Sales Type\",\"heat\":20,\"cool\":25,\"ideal\":true},{\"name\":\"T13-RESTROOM\",\"zone\":\"T13-RESTROOM Zone\",\"x0\":12,\"y0\":0,\"x1\":14,\"y1\":10,\"z0\":0,\"h\":3.4,\"story\":\"01_RETAIL\",\"space_type\":\"TASK13 Restroom Type\",\"heat\":20,\"cool\":25,\"ideal\":true}],\"constant_schedules\":{\"TASK13 Occupancy Schedule\":0.75,\"TASK13 Load Schedule\":0.8,\"TASK13 Water Flow Schedule\":0.35,\"TASK13 Water Target Temp\":43,\"TASK13 Exterior Lighting Schedule\":0.7},\"space_types\":{\"TASK13 Sales Type\":{\"people\":0.055,\"people_schedule\":\"TASK13 Occupancy Schedule\",\"lights\":9,\"lights_schedule\":\"TASK13 Load Schedule\",\"equipment\":12,\"equipment_schedule\":\"TASK13 Load Schedule\"},\"TASK13 Restroom Type\":{\"people\":0.01,\"people_schedule\":\"TASK13 Occupancy Schedule\",\"lights\":5,\"lights_schedule\":\"TASK13 Load Schedule\",\"equipment\":2,\"equipment_schedule\":\"TASK13 Load Schedule\"}},\"windows\":[{\"space\":\"T13-SALES\",\"wall\":\"south\",\"start\":2,\"end\":10,\"sill\":0.8,\"head\":2.6,\"name\":\"T13-SALES South FixedWindow\"},{\"space\":\"T13-SALES\",\"wall\":\"west\",\"start\":2,\"end\":8,\"sill\":1,\"head\":2.4,\"name\":\"T13-SALES West FixedWindow\"},{\"space\":\"T13-RESTROOM\",\"wall\":\"east\",\"start\":3,\"end\":7,\"sill\":1.2,\"head\":2.2,\"name\":\"T13-RESTROOM East FixedWindow\"}],\"water_use\":[{\"name\":\"TASK13 Restroom Sink Water Use\",\"space\":\"T13-RESTROOM\",\"peak_flow\":0.00012,\"flow_schedule\":\"TASK13 Water Flow Schedule\",\"target_temp_schedule\":\"TASK13 Water Target Temp\",\"end_use\":\"Restroom Sinks\"}],\"exterior_lights\":[{\"name\":\"TASK13 Entry Canopy Lights\",\"design_level\":450,\"schedule\":\"TASK13 Exterior Lighting Schedule\",\"control\":\"ScheduleNameOnly\"}],\"output_variables\":[{\"name\":\"TASK13 Sales Zone Temp\",\"variable\":\"Zone Mean Air Temperature\",\"key\":\"T13-SALES Zone\",\"frequency\":\"Hourly\"},{\"name\":\"TASK13 Restroom Zone Temp\",\"variable\":\"Zone Mean Air Temperature\",\"key\":\"T13-RESTROOM Zone\",\"frequency\":\"Hourly\"}],\"output_meters\":[{\"name\":\"Electricity:Facility\",\"frequency\":\"Monthly\"},{\"name\":\"WaterSystems:Water\",\"frequency\":\"Monthly\"}],\"metrics\":{\"bbox\":[14,10,3.4],\"floor_area\":140,\"exterior_wall_area\":163.2,\"surface_count\":12,\"space_count\":2,\"zone_count\":2,\"story_count\":1,\"window_count\":3,\"window_area\":26.8,\"shading_count\":0,\"shading_area\":0,\"paired_surface_count\":2,\"ground_floor_count\":2}}.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

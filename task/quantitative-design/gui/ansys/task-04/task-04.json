@@ -1,0 +1,80 @@
+{
+  "id": "quantitative-design--gui--ansys--task-04--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Minimize the thermal resistance of the limited-material two-dimensional conductive path defined in C:\\Users\\user\\Desktop\\problem_spec.json using ANSYS. Open Mechanical APDL from `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Start from C:\\Users\\user\\Desktop\\baseline_wb_conduction.db and its thermal result C:\\Users\\user\\Desktop\\baseline_wb_conduction.rth. Preserve the source and sink interfaces, total 1 W source load, 20 degC sink, material conductivity, thickness, outer envelope, analysis type, material limit, minimum feature width, mesh limit, and connectivity requirement. Material may be reshaped only inside the design envelope. Solve the final design and save its native database as C:\\Users\\user\\Desktop\\submission.db and its thermal result as C:\\Users\\user\\Desktop\\submission.rth.",
+  "source": "design-generated quantified CAE optimization task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/problem_spec.json",
+            "path": "C:\\Users\\user\\Desktop\\problem_spec.json"
+          },
+          {
+            "local_path": "task-04/init_file/baseline_wb_conduction.db",
+            "path": "C:\\Users\\user\\Desktop\\baseline_wb_conduction.db"
+          },
+          {
+            "local_path": "task-04/init_file/baseline_wb_conduction.rth",
+            "path": "C:\\Users\\user\\Desktop\\baseline_wb_conduction.rth"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\submission.db",
+    "C:\\Users\\user\\Desktop\\submission.rth"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.0,
+      "direction": "maximize",
+      "name": "normalized thermal-resistance improvement",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            },
+            {
+              "local_path": "_shared/read_only_eval.py",
+              "path": "C:\\Users\\user\\Desktop\\read_only_eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--librecad--task-04--ubuntu",
+  "snapshot": "LibreCAD2.2.0.2",
+  "instruction": "Treat guih18_ceiling_rcp_seed.dxf in LibreCAD as the reference. Launch LibreCAD from `/usr/bin/librecad` before opening `guih18_ceiling_rcp_seed.dxf`. Complete the hard reflected ceiling plan. Draw WALL rectangle (0,0)-(6000,4200). Add GRID lines every 600 mm in both directions, at minimum including vertical x=600,3000,5400 and horizontal y=600,2400,3600. Add eight LIGHT rectangles 600 x 300 centered at (900,1200), (900,3000), (2400,1200), (2400,3000), (3900,1200), (3900,3000), (5100,1200), and (5100,3000). Add DIFFUSER circles radius 180 at (1500,2100), (3000,2100), (4500,2100), and (5400,3600). Add labels RCP LEVEL 2, 8X LED 600x300, 4X DIFFUSER Ø360, and SW1 A/B. Save the result as /home/user/Desktop/guih18_ceiling_rcp_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/guih18_ceiling_rcp_seed.dxf",
+            "path": "/home/user/Desktop/guih18_ceiling_rcp_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/guih18_ceiling_rcp_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/guih18_ceiling_rcp_completed.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

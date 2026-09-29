@@ -1,0 +1,86 @@
+{
+  "id": "single-software--gui--eagle--task-19--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Treat `prototype.brd` as the starting point. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open `prototype.brd` there. Apply the assembly ECO listed in `/home/user/Desktop/assembly_change.csv`, leaving board geometry and every unlisted component unchanged, and save the result as `/home/user/Desktop/answer.brd`.",
+  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/prototype.brd",
+            "path": "/home/user/Desktop/prototype.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/assembly_change.csv",
+            "path": "/home/user/Desktop/assembly_change.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/prototype.brd"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(8); w, h = pyautogui.size(); pyautogui.click(w/2 + 100, h/2 + 25); time.sleep(2); pyautogui.click(w/2 + 213, h/2 + 146); time.sleep(2); pyautogui.click(w/2 - 80, h/2 + 68); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.brd"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

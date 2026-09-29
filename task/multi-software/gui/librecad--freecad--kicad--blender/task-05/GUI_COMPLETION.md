@@ -1,0 +1,15 @@
+# Task-05 Completion Record
+
+Status: PASS.
+
+The six GT artifacts were regenerated in strict order on instance `i-yeslqxefpc4c5qx3440g` (`115.191.24.21`, private `10.0.6.53`) using LibreCAD 2.2.0.2, FreeCAD 0.21.2, KiCad 10.0.2, and Blender 4.2.3. The provided init was opened as the starting point and remains unchanged with SHA-256 `0fb90439cc0d2290c8cc7f35161ac55f7698089ffc7a4d631bb9d8bb4ae366fb`.
+
+Task-specific evaluation requires a closed 150 x 90 mm L outline, at least two closed tie slots as implied by the `TIE1`/`TIE2` instruction, the six specified holes, and four labels in stage 1; a watertight non-box bracket whose openings match every submitted stage-1 slot; a matching FreeCAD handoff with visible ShapeString labels; a native KiCad board with J1/D1/TP1 padded footprints, a positive-area rule-area keepout, closed L Edge.Cuts derived from the imported handoff, native transfer silkscreen, and a real KiCad Plot SVG; and a Blender GLB containing vertex-equivalent STL geometry, the full-scale imported SVG outline, and one connected opaque black cable woven above and below the base through every submitted slot. The real GT chooses three slots, but that count is not an unpublished mandatory answer.
+
+The full real-output positive evaluates `True`. Isolated negatives evaluate `False` for the old rectangular stage-1 DXF, old 12-face box STL, old rectangular handoff, old text-only board, old empty SVG, old meshless-evidence GLB, 1/100-scale SVG coordinates, transform-scaled SVG, zero-area keepout, removal of all `Dwgs.User` handoff graphics, sparse-STL GLB substitution, and the first Blender GLB whose cable only hovered above the slot region.
+
+The independent read-only audit found and prompted repairs for ambiguous KiCad handoff wording, a cable that did not cross the base thickness, hard-coded STL thickness/slot coordinates, one-sided STL vertex coverage, ratio-only SVG sizing, zero-area keepouts, disconnected SVG/cable impostors, and stale generation documentation. The strengthened evaluator accepts the real artifacts and rejects each targeted attack without exceptions or numeric warnings.
+
+Final completion audit also reconciled the documentation with the evaluator: deleting one of the GT's three stage-1 slots while leaving the later three-slot artifacts is accepted because the instruction requires tie slots/TIE1/TIE2 rather than exactly three; deleting down to one remains rejected.
+
+Final instance cleanup was performed after the GT hashes and evaluator result were recorded. The seed, six deliverables, FreeCAD document, KiCad sidecars, `.history`, three Blender helpers, the KiCad helper, logs, task-related cache entries, and the stale KiCad AppImage mount were removed. Blender closed normally; the unresponsive KiCad/pcbnew processes were terminated by their exact recorded PIDs. Final confirmation: `desktop_count 0`, `task_tmp_count 0`, `trash_task_count 0`, `recovery_task_count 0`, `kicad_mount_count 0`, and `process_count 0` for LibreCAD/FreeCAD/KiCad/pcbnew/Blender.

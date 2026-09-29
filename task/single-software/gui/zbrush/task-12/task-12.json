@@ -1,0 +1,76 @@
+{
+  "id": "single-software--gui--zbrush--task-12--windows",
+  "snapshot": "zbrush2025",
+  "instruction": "Unwrap the opened Subject mesh with UV Master's Work On Clone workflow and deliver both high- and reduced-resolution versions. Open ZBrush 2025 from the desktop shortcut and continue from `high_uv.obj`. Work On Clone creates a same-topology clone; unwrap that clone, copy its UVs back to the unchanged high-resolution original, and export the original as `C:\\Users\\user\\Desktop\\high_uv.obj`. Then make a separate copy, use Decimation Master with Keep UVs enabled to reduce it to 18,000-22,000 faces, and export it as `C:\\Users\\user\\Desktop\\low_uv.obj`.\n\nEach OBJ must contain one object/group named Subject and complete UV references in [0,1]^2. `high_uv.obj` must preserve every input vertex and face, with positions within 1e-5 BU. The bidirectional Chamfer distance between the two files' UV point clouds must not exceed 0.01.",
+  "source": "https://help.maxon.net/zbr/en-us/; https://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/decimation-master/decimation-master.html; https://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/scene.obj",
+            "path": "C:\\Users\\user\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
+          "C:\\Users\\user\\Desktop\\scene.obj"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import ctypes, time\nuser32 = ctypes.windll.user32\nEnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\nEnumChildProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\ndef close_error():\n    wins = []\n    def wcb(hwnd, lparam):\n        buf = ctypes.create_unicode_buffer(512)\n        user32.GetWindowTextW(hwnd, buf, 512)\n        if 'ZHomePage.exe' in buf.value and 'System Error' in buf.value:\n            wins.append(hwnd)\n        return True\n    user32.EnumWindows(EnumWindowsProc(wcb), 0)\n    for hwnd in wins:\n        buttons = []\n        def ccb(ch, lparam):\n            text = ctypes.create_unicode_buffer(128)\n            cls = ctypes.create_unicode_buffer(128)\n            user32.GetWindowTextW(ch, text, 128)\n            user32.GetClassNameW(ch, cls, 128)\n            if text.value == 'OK' or cls.value == 'Button':\n                buttons.append(ch)\n            return True\n        user32.EnumChildWindows(hwnd, EnumChildProc(ccb), 0)\n        for ch in buttons:\n            user32.SendMessageW(ch, 0x00F5, 0, 0)\ntime.sleep(95)\nfor _ in range(4):\n    close_error()\n    time.sleep(2)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "zbrush"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\high_uv.obj",
+    "C:\\Users\\user\\Desktop\\low_uv.obj"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

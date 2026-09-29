@@ -1,0 +1,65 @@
+{
+  "id": "single-software--cli--openfoam--task-15--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "Copy the supplied `/home/user/Desktop/damBreak_base/` template to `/home/user/Desktop/dam_break/` and run the fixed two-phase dam-break benchmark using OpenFOAM from the command line. Source the installed OpenFOAM environment before running OpenFOAM commands. For this workflow, before running the case, load OpenFOAM with `source /opt/openfoam11/etc/bashrc`; the solver binaries are under `/opt/openfoam11/bin` and its platform bin directory.\n\nKeep the template's five-block two-dimensional tank: `convertToMeters 0.146` gives overall dimensions `0.584 x 0.584 x 0.0146 m` and 2,268 cells. Initialize water only in the box `(0 0 -1)` to `(0.1461 0.292 1)` m and air elsewhere. Use stationary no-slip tank walls, the open atmospheric top, gravity `(0 -9.81 0)` m/s^2, surface tension 0.07 N/m, water `rho=1000 kg/m^3, nu=1e-6 m^2/s`, air `rho=1 kg/m^3, nu=1.48e-5 m^2/s`, and laminar momentum transport. Run `blockMesh`, require a successful `checkMesh`, run `setFields`, then run `interFoam` from `t=0` through the exact final time `t=0.5 s` with `maxCo=maxAlphaCo=0.5` and retain ASCII final `alpha.water`, `U`, and `p_rgh` fields. Save the command outputs as `/home/user/Desktop/dam_break/log.blockMesh`, `log.checkMesh`, `log.setFields`, and `log.interFoam`; a failed mesh check is not acceptable. At `t=0.5 s`, write the cell-centre field `C`. At target `x=0.25 m`, choose the mesh column whose cell-centre x-coordinate is nearest to the target, sort it bottom-to-top, and define `interface_height` as the first bottom-connected downward crossing from `alpha.water >= 0.5` to `< 0.5`, linearly interpolated to `alpha.water=0.5` between the two adjacent cell centres. Create `/home/user/Desktop/postprocess.py` that reads the final `C` and `alpha.water` fields, writes the complete selected column to `/home/user/Desktop/interface_profile.csv` with columns `y_m,alpha_water`, and writes `/home/user/Desktop/summary.txt` as one line containing `interface_height` in metres. Do not hard-code the result and do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/damBreak_base.tar",
+            "path": "/home/user/Desktop/damBreak_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/damBreak_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/damBreak_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/interface_profile.csv",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

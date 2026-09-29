@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--freecad-path--task-01--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Treat /home/user/Desktop/cli_plate.step in FreeCAD 0.21.2 Path/CAM as the starting point. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). Use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `cli_plate.step`.\n\nCreate one Path/CAM Job whose stock matches the imported solid with no added stock extension, and set the work coordinate origin at the stock top-face center. In the source STEP coordinates that origin is (0, 0, 18) mm, so the requested final physical top at source Z=10.000 mm is WCS Z=-8.000 mm. Create exactly one active top Face operation using T1, defined as a face mill, with clockwise spindle S6000 rpm and horizontal cutting feed F750 mm/min. Generate the paths with FreeCAD and export the Job through FreeCAD's LinuxCNC postprocessor. Save both the native Job document and the posted program at exactly /home/user/Desktop/task-01.FCStd and /home/user/Desktop/task-01.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Job.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/MillFace.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py; https://wiki.freecad.org/index.php?oldid=1262104; https://wiki.freecad.org/index.php?oldid=1312750",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/cli_plate.step",
+            "path": "/home/user/Desktop/cli_plate.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-01.FCStd",
+    "/home/user/Desktop/task-01.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

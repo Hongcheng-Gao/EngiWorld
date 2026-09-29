@@ -1,0 +1,95 @@
+{
+  "id": "multi-software--gui--autocad--solidworks--abaqus--task-03--windows",
+  "snapshot": "Autocad-Solidworks-Abaqus",
+  "instruction": "Follow this ordered three-tool CAE workflow: AutoCAD -> SolidWorks -> Abaqus/CAE. Use the AutoCAD 2024, SOLIDWORKS 2025, and Abaqus CAE shortcuts on the desktop as the three stages of this workflow. No init files are provided; start from blank files.\n\nHandoff requirement: use the design token EW_ACAD_SW_ABQ_03. In AutoCAD, add a readable label containing EW_ACAD_SW_ABQ_03 and AUTOCAD_TO_SOLIDWORKS on a CHAIN layer in stage1_profile.dxf. In SolidWorks, keep EW_ACAD_SW_ABQ_03, FROM_stage1_profile.dxf, and SOLIDWORKS_TO_ABAQUS encoded in the part/custom properties or STEP export metadata so the text of stage2_geometry.step contains them. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_ACAD_SW_ABQ_03 and IMPORTED_FROM_stage2_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n1. In AutoCAD, draw an 80 x 60 mm closed base outline on layer OUTLINE. Draw four D5 mounting holes on layer HOLE at centers (10,10), (70,10), (10,50), and (70,50) mm. On FIN_REF, draw ten parallel reference centerlines from Y=8 to Y=52 mm at X=13, 19, 25, 31, 37, 43, 49, 55, 61, and 67 mm. Save C:\\Users\\user\\Desktop\\stage1_profile.dxf.\n2. In SolidWorks, import stage1_profile.dxf in millimeters. Create one solid: extrude the base 5 mm, cut the four mounting holes through, and add ten fins centered on the FIN_REF lines. Each fin is 2 mm thick in X, 44 mm long in Y, and rises 16 mm above the base top, giving an overall height of 21 mm. Export C:\\Users\\user\\Desktop\\stage2_geometry.step.\n3. In Abaqus/CAE, import stage2_geometry.step. Use model Model-HeatPlateThermal and material Aluminum with conductivity 0.17 W/(mm*C), equivalent to 170 W/(m*K). Assign a solid section, create steady heat-transfer step Step-Thermal, set HEAT_PAD on the base bottom, and surface FIN_SURFACES on all exposed faces except HEAT_PAD. Use first-order DC3D4 or DC3D8 heat-transfer elements and keep the Learning Edition mesh at no more than 1000 nodes. Apply HeatFlux-Base = 0.02 W/mm^2 to HEAT_PAD. Create FilmCondition BC-Convection on FIN_SURFACES with film coefficient 2.0e-5 W/(mm^2*C) and sink temperature 25 C. Submit Job-HeatPlateThermal and wait for completion.\n\n4. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_profile.dxf, C:\\Users\\user\\Desktop\\stage2_geometry.step, C:\\Users\\user\\Desktop\\Job-HeatPlateThermal.cae, and C:\\Users\\user\\Desktop\\Job-HeatPlateThermal.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\nFirst use AutoCAD to create the DXF profile, then use SolidWorks to import the DXF and export the STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables. Software launch locations: SOLIDWORKS 2025: `C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk`; Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; AutoCAD 2024 (English): `C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk`.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/; https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\AutoCAD 2024 - English.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad",
+    "solidworks",
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\FROM_stage1_profile.dxf",
+    "C:\\Users\\user\\Desktop\\IMPORTED_FROM_stage2_geometry.step",
+    "C:\\Users\\user\\Desktop\\Job-HeatPlateThermal.cae",
+    "C:\\Users\\user\\Desktop\\Job-HeatPlateThermal.odb",
+    "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+    "C:\\Users\\user\\Desktop\\stage2_geometry.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--solidcam--task-13--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Start with twin_fixture.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Start SOLIDWORKS 2025 from the desktop shortcut and use its installed SOLIDWORKS CAM/CAMWorks add-in; there is no separate SolidCAM desktop program in this image. Create the same standard Face and Profile operations for the two parts in twin_fixture.step. Use two Coordinate Systems or equivalent work offsets corresponding to G54 and G55. Use standard Face Milling and Profile or Contour operations and keep SOLIDWORKS CAM's default generated NC comments; do not rename operations just to add labels. Do not force exact tool station numbers, spindle speeds, feedrates, or internal tool-library IDs if SOLIDWORKS CAM's Technology Database assigns stable defaults; use suitable installed tool-library entries for the required operation types and let the posted NC program reflect those real CAM selections. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-13.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For milling tasks, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl; for turning tasks, use an installed turning .ctl post such as fanuc_t2axis.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s).",
+  "source": "SolidCAM integrates with CAD in one window to define, calculate, and verify machining operations: https://us.solidcam.com/cad-integration/ (SolidCAM USA)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/twin_fixture.step",
+            "path": "C:\\Users\\User\\Desktop\\twin_fixture.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
+          "C:\\Users\\User\\Desktop\\twin_fixture.step"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-13.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,216 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-03-ubuntu",
+  "owner": "taozhuo",
+  "title": "Motor driver carrier plate with heatsink and terminal zones",
+  "domain": "power_electronics_mount",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G03",
+  "required_files": [
+    "stage1_motor_driver_heatsink_carrier.dxf",
+    "stage2_motor_driver_heatsink_carrier.stl",
+    "stage2_motor_driver_heatsink_carrier_handoff_outline.dxf",
+    "stage3_motor_driver_heatsink_carrier_board.kicad_pcb",
+    "stage3_motor_driver_heatsink_carrier_board_profile.svg",
+    "stage4_motor_driver_heatsink_carrier.glb"
+  ],
+  "dxf": {
+    "file": "stage1_motor_driver_heatsink_carrier.dxf",
+    "bbox": [
+      125.0,
+      78.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "SLOT",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        10.0,
+        10.0,
+        2.4
+      ],
+      [
+        115.0,
+        10.0,
+        2.4
+      ],
+      [
+        10.0,
+        68.0,
+        2.4
+      ],
+      [
+        115.0,
+        68.0,
+        2.4
+      ],
+      [
+        62.5,
+        39.0,
+        3.0
+      ]
+    ],
+    "texts": [
+      "EW4G03",
+      "MOTOR-A",
+      "MOTOR-B",
+      "VIN"
+    ],
+    "min_lines": 4,
+    "no_layers": [
+      "GUIDE"
+    ],
+    "closed_slot_zones": 3,
+    "fin_guide_count": 7
+  },
+  "stl": {
+    "file": "stage2_motor_driver_heatsink_carrier.stl",
+    "bbox": [
+      125.0,
+      78.0,
+      16.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 1000
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G03",
+      "MOSFET-Q1",
+      "MOSFET-Q2",
+      "MOTOR-A-J1",
+      "MOTOR-B-J2",
+      "VIN-J3",
+      "HEATSINK-KEEP"
+    ],
+    "components": {
+      "Q1": [
+        "Power MOSFET A",
+        4
+      ],
+      "Q2": [
+        "Power MOSFET B",
+        4
+      ],
+      "J1": [
+        "Motor A Output",
+        3
+      ],
+      "J2": [
+        "Motor B Output",
+        3
+      ],
+      "J3": [
+        "VIN Terminal",
+        2
+      ]
+    },
+    "heatsink_keepout": [
+      40.0,
+      22.0,
+      85.0,
+      56.0
+    ]
+  },
+  "glb": {
+    "file": "stage4_motor_driver_heatsink_carrier.glb",
+    "tokens": [],
+    "min_nodes": 14,
+    "min_materials": 2,
+    "min_meshes": 14,
+    "gui_export": true,
+    "heatsink_fins": 7,
+    "blue_terminals": 3,
+    "mosfets": 2,
+    "visible_profile": true
+  },
+  "diversity_notes": {
+    "geometry": "Motor driver carrier plate with heatsink and terminal zones",
+    "electronic_focus": "a motor-driver PCB with MOSFETs, two motor outputs, VIN terminal, and heatsink keepout",
+    "visualization_focus": "a power carrier assembly with visible heatsink fins and blue terminal blocks"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_motor_driver_heatsink_carrier.dxf",
+    "desktop_path": "/home/user/Desktop/seed_motor_driver_heatsink_carrier.dxf"
+  },
+  "generated_by": {
+    "method": "real_snapshot_software",
+    "versions": [
+      "LibreCAD 2.2.0.2",
+      "FreeCAD 0.21.2",
+      "KiCad 10.0.2",
+      "Blender 4.2.3"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_motor_driver_heatsink_carrier_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_motor_driver_heatsink_carrier_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_motor_driver_heatsink_carrier.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_motor_driver_heatsink_carrier.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_motor_driver_heatsink_carrier_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_motor_driver_heatsink_carrier_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_motor_driver_heatsink_carrier_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_motor_driver_heatsink_carrier_board.kicad_pcb"
+  }
+}

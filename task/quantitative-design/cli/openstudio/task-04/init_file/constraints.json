@@ -1,0 +1,197 @@
+{
+  "baseline": {
+    "design_variables": {
+      "cooling_setpoint_c": 24.0,
+      "daylight_control_fraction": 0.1,
+      "economizer_fraction": 0.2,
+      "equipment_w_per_m2": 7.0,
+      "exterior_wall_area_m2": 150.0,
+      "floor_area_m2": 96.0,
+      "heating_setpoint_c": 20.0,
+      "hvac_availability_fraction": 0.72,
+      "infiltration_ach": 0.56,
+      "lighting_w_per_m2": 9.5,
+      "occupied_hours_fraction": 0.42,
+      "orientation_deg": 0.0,
+      "people_density_m2": 0.105,
+      "precool_hours": 0.0,
+      "roof_r_value_m2k_w": 3.8,
+      "shade_ratio": 0.06,
+      "space_count": 2,
+      "thermal_mass_level": 0.25,
+      "thermal_zone_count": 2,
+      "ventilation_lps_per_person": 8.0,
+      "wall_r_value_m2k_w": 2.4,
+      "window_area_m2": 48.0,
+      "window_shgc": 0.56,
+      "window_u_value_w_m2k": 2.9,
+      "wwr": 0.32
+    },
+    "floor_area_m2": 96.0,
+    "metrics": {
+      "carbon_kgco2e": 4068.356,
+      "cooling_kwh": 14.801,
+      "daylight_proxy": 0.6168,
+      "equipment_kwh": 2521.111,
+      "eui_kwh_m2": 161.9861,
+      "fan_kwh": 0.0,
+      "heating_kwh": 9593.242,
+      "hvac_energy_kwh": 9608.043,
+      "iaq_proxy": 0.8515,
+      "lighting_kwh": 3421.508,
+      "peak_cooling_kw": 2.065956,
+      "peak_heating_kw": 5.209258,
+      "total_site_energy_kwh": 15550.662,
+      "unmet_hours": 0.0
+    },
+    "space_names": [
+      "CLASSROOM-A",
+      "CLASSROOM-B"
+    ],
+    "thermal_zone_names": [
+      "CLASSROOM-A-ZN",
+      "CLASSROOM-B-ZN"
+    ]
+  },
+  "case_id": "quant-cli-openstudio-task-04-ubuntu",
+  "energy_model": {
+    "carbon_factors_kgco2e_per_kwh": {
+      "electricity": 0.385,
+      "gas": 0.185
+    },
+    "component_reference": {
+      "cooling_kwh": 7300,
+      "equipment_kwh": 3100,
+      "fan_kwh": 1900,
+      "heating_kwh": 4100,
+      "lighting_kwh": 4400,
+      "peak_cooling_kw": 41.0,
+      "peak_heating_kw": 18.0,
+      "unmet_hours": 52
+    },
+    "notes": "Evaluator reruns the IDF through the OpenStudio 3.11 workflow and its bundled EnergyPlus 25.2 engine, parses standard SQLite report tables, recomputes deterministic IDF plausibility bounds from metadata, and rejects submitted SQL/report metrics that are inconsistent or unrealistically better than the model variables support."
+  },
+  "hard_constraints": {
+    "exterior_wall_area_tolerance_fraction": 0.02,
+    "floor_area_tolerance_fraction": 0.01,
+    "max_sql_better_than_model_proxy_fraction": 0.22,
+    "max_unmet_hours": 85,
+    "min_total_site_energy_kwh_per_m2": 28.0,
+    "space_count": 2,
+    "space_names": [
+      "CLASSROOM-A",
+      "CLASSROOM-B"
+    ],
+    "thermal_zone_count": 2,
+    "thermal_zone_names": [
+      "CLASSROOM-A-ZN",
+      "CLASSROOM-B-ZN"
+    ],
+    "variable_ranges": {
+      "cooling_setpoint_c": [
+        23.5,
+        26.0
+      ],
+      "daylight_control_fraction": [
+        0.1,
+        0.65
+      ],
+      "equipment_w_per_m2": [
+        4.0,
+        8.0
+      ],
+      "heating_setpoint_c": [
+        19.0,
+        21.0
+      ],
+      "infiltration_ach": [
+        0.34,
+        0.65
+      ],
+      "lighting_w_per_m2": [
+        5.2,
+        9.5
+      ],
+      "people_density_m2": [
+        0.075,
+        0.13
+      ],
+      "precool_hours": [
+        0.0,
+        2.0
+      ],
+      "roof_r_value_m2k_w": [
+        3.8,
+        7.5
+      ],
+      "shade_ratio": [
+        0.05,
+        0.85
+      ],
+      "thermal_mass_level": [
+        0.2,
+        0.85
+      ],
+      "wall_r_value_m2k_w": [
+        2.4,
+        5.0
+      ],
+      "window_shgc": [
+        0.25,
+        0.58
+      ],
+      "window_u_value_w_m2k": [
+        1.3,
+        3.0
+      ],
+      "wwr": [
+        0.18,
+        0.32
+      ]
+    }
+  },
+  "input_hashes": {
+    "baseline_idf_sha256": "02f44592a56ccb62876dde0839840fca61c4d005a4d24386b9eb4e3a3fcf8127",
+    "weather_sha256": "186ac03010a542b09ed5df077b0dfa860f080a3684fc00a817a5738c3cfeaa8c"
+  },
+  "objective": "Minimize peak cooling load for two classrooms using shading, SHGC, thermal mass, precooling, and setpoint tuning while annual EUI and unmet hours remain acceptable.",
+  "required_outputs": {
+    "design_summary_json": "/home/user/Desktop/design_summary.json",
+    "energy_report_csv": "/home/user/Desktop/energy_report.csv",
+    "energyplus_err": "/home/user/Desktop/run/eplusout.err",
+    "energyplus_sql": "/home/user/Desktop/run/eplusout.sql",
+    "optimized_idf": "/home/user/Desktop/optimized.idf"
+  },
+  "scoring": {
+    "continuous_score_range": [
+      0.0,
+      1.0
+    ],
+    "hard_constraint_score": 0.0,
+    "terms": [
+      {
+        "kind": "reduction",
+        "metric": "peak_cooling_kw",
+        "name": "peak_cooling_reduction",
+        "target_fraction": 0.38,
+        "weight": 0.7
+      },
+      {
+        "kind": "reduction",
+        "metric": "eui_kwh_m2",
+        "name": "eui_reduction",
+        "target_fraction": 0.22,
+        "weight": 0.18
+      },
+      {
+        "kind": "under_limit",
+        "limit": 85,
+        "metric": "unmet_hours",
+        "name": "comfort_margin",
+        "weight": 0.12
+      }
+    ]
+  },
+  "task_family": "cli-openstudio-energy-optimization",
+  "title": "Peak cooling load reduction with classroom comfort"
+}

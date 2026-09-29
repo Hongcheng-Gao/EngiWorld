@@ -1,0 +1,52 @@
+{
+  "id": "single-software--cli--fenics--task-16--ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "Complete the full FEniCS workflow from modeling to post-processing: 1. Run your script with Python in the legacy FEniCS/DOLFIN 2019.1.0 environment (e.g. `from dolfin import *`). At the start of the task, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `poisson_full.py`.\n\nWrite Python script `/home/user/Desktop/poisson_full.py`: - Create a `1×1` unit-square mesh with 64 subdivisions in each direction using `UnitSquareMesh(64, 64)` - Define a P1 Lagrange space - Define variational problem: `-Δu = sin(πx)*sin(πy)`, with boundary `u=0` - Compute L2 error against the analytical solution `sin(πx)*sin(πy)/(2π²)` - Extract the maximum P1 nodal coefficient 2. Run `poisson_full.py`. 3. Save L2 error and maximum nodal value to `/home/user/Desktop/summary.txt`: Format: `error_L2, max_nodal_value`",
+  "source": "https://fenicsproject.org/olddocs/dolfin/2019.1.0/python/demos/poisson/demo_poisson.py.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/poisson_full.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

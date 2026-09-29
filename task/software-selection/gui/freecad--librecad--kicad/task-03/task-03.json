@@ -1,0 +1,82 @@
+{
+  "id": "software-selection--gui--freecad--librecad--kicad--task-03--ubuntu",
+  "snapshot": "freecad-librecad-kicad",
+  "instruction": "Software paths: FreeCAD: `/usr/bin/freecad`; LibreCAD: `/usr/bin/librecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`. Choose the appropriate tool from FreeCAD, LibreCAD, and KiCad, available in the current Ubuntu environment, to complete the task. Open or import /home/user/Desktop/guih05_electrical_panel_seed.dxf. Complete the hard electrical panel. Draw PANEL rectangle (0,0)-(600,400), RAIL lines (40,290)-(560,290) and (40,180)-(560,180), twelve BREAKERS as 50 x 80 rectangles starting at x=60,135,210,285,360,435 on y=250 and y=140, a TERM strip rectangle (55,35)-(545,85) with vertical dividers every 45 mm from x=70 through x=520, WIRE duct rectangles (25,105)-(575,125) and (25,335)-(575,355), labels B1 through B12, and text MAIN 480V, 24VDC CONTROL, PE N L1 L2 L3, and PANEL E-104. Save the completed drawing deliverable into `/home/user/Desktop/result`.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html; generated open-choice variant from task/task-v/librecad_final/task-03",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/guih05_electrical_panel_seed.dxf",
+            "path": "/home/user/Desktop/guih05_electrical_panel_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad",
+    "librecad",
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

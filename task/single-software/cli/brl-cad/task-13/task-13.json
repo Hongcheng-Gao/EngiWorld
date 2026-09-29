@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--brl-cad--task-13--ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Work from /home/user/Desktop/bracket_seed.step in BRL-CAD. Run `mged` from a terminal (use the full path if it is not on PATH). For the steps below, BRL-CAD's main editor is `/usr/brlcad/bin/mged`; its conversion and rendering tools are under the same `/usr/brlcad/bin` directory when working on `bracket_seed.step`.\n\nAdd a vertical plate of 10 x 40 x 60 mm at the left end of the base. Add a 60 x 20 x 10 mm cantilever extending rightward from the top of the vertical plate. Cut two 18 x 10 x 6 mm weight-reduction blind pockets in the cantilever, centered at X=30 mm and X=56 mm. Cut four through holes of diameter 5 mm in the base corners, with each hole center 10 mm from the nearest two base sides. Save the completed STL mesh as /home/user/Desktop/out.stl.",
+  "source": "human_craft",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/bracket_seed.step",
+            "path": "/home/user/Desktop/bracket_seed.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/out.stl"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--blender--task-20--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Grease Pencil Strokes On the `Sketch` object's `Lines` layer, create frames at `1`, `10`, and `20`. Before starting the work, the Blender executable is `/opt/blender/blender`; use it to open the provided scene. On each of those frames, ensure the first stroke has the required point count and shape: frame `1` -> `8` points forming a straight line spanning roughly `x=-1` to `x=+1` with little `y`/`z` variation; frame `10` -> `12` points whose distance to the origin is about `1`; frame `20` -> `16` points with at least `3` sign changes in consecutive `y`-deltas. Save the result as `/home/user/Desktop/answer.blend`.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

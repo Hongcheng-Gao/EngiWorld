@@ -1,0 +1,93 @@
+{
+  "id": "single-software--gui--eagle--task-04-reverse--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Rebuild an editable EAGLE library from the recovered LDO pin table, package report, and datasheet extract. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open the supplied board or schematic there. Create package `SOT23-3`, symbol `LDO`, and deviceset `XC6206` with prefix U; use exactly the three reported SMD pads, pin directions, and pin-to-pad connects, plus a package outline and pin-1 marker. Save `/home/user/Desktop/answer.lbr`.",
+  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/; https://learn.sparkfun.com/tutorials/using-eagle-schematic/all; https://learn.adafruit.com/ktowns-ultimate-creating-parts-in-eagle-tutorial/understanding-parts-in-eagle",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04-reverse/init_file/pin_table.csv",
+            "path": "/home/user/Desktop/pin_table.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04-reverse/init_file/package_report.csv",
+            "path": "/home/user/Desktop/package_report.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04-reverse/init_file/datasheet_extract.txt",
+            "path": "/home/user/Desktop/datasheet_extract.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(12); w, h = pyautogui.size(); pyautogui.press('enter'); time.sleep(3); pyautogui.press('enter'); time.sleep(6)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04-reverse/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

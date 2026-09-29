@@ -1,0 +1,420 @@
+{
+  "schema": "engiworld.openstudio-flow.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-10-windows",
+  "revision": "EW2A10",
+  "software_chain": [
+    "archicad",
+    "openstudio",
+    "energyplus"
+  ],
+  "consumed_handoff_sha256": "f34b462443691b7a6ba473d79344a632e3e47c085545638d13bc2faa99b94559",
+  "source_stage1_sha256": "0641e9d8207c487f6a87c34a283ca580808e7b3e022c9bdbbb530bc3b501048a",
+  "native_stage_log_sha256": "32778cfca88e72ca51460753f727ce282573c0546457715bee62086b8d6a649b",
+  "osm_sha256": "d156e878fc521ddd59c8639e7b015a0184ac42ac1bfc7368b5534cf19aded1d3",
+  "workflow_sha256": "58e2dd4b927b80487b56af49b73a5794962160ea0e153b4fcb6c1eb8d773c4de",
+  "idf_sha256": "0d6bef2964d4c14524f09d995b286046f24dbf8c3360023a43eb02dc2f169a76",
+  "weather_file": "weather.epw",
+  "weather_sha256": "4f2ee95b98df6f0a91a97ac6e5f38aac52e1700a3e16cf8b238e6a70f0d1dc21",
+  "building_area_m2": 60.0,
+  "room_count": 5,
+  "thermal_zone_count": 5,
+  "door_count": 0,
+  "window_count": 0,
+  "window_wall_ratio": 0.0,
+  "surface_count": 30,
+  "subsurface_count": 0,
+  "schedule_set": [
+    "ConsultSchedule",
+    "ContaminatedSupportLowOccupancy",
+    "EW2A10 Activity 120W",
+    "EW2A10 Always On",
+    "EW2A10 Cooling 24C",
+    "EW2A10 Heating 20C",
+    "EquipmentSchedule",
+    "IsolationConsultSchedule",
+    "PPESupportSchedule"
+  ],
+  "construction_set": [
+    "EW2A10 Opaque Construction"
+  ],
+  "openstudio_version": "3.10.0",
+  "spaces": [
+    {
+      "name": "CONSULT",
+      "thermal_zone": "CONSULT-ZN",
+      "floor_area_m2": 14,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "0p_GCOHqL9O8Orvi_YQmfp",
+      "schedule": "CONSULT-SCHEDULE",
+      "flow_order": 1
+    },
+    {
+      "name": "EQUIPMENT",
+      "thermal_zone": "EQUIPMENT-ZN",
+      "floor_area_m2": 16,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "38jEfacSPBCBtDO38Sa4ab",
+      "schedule": "EQUIPMENT-SCHEDULE",
+      "flow_order": 2
+    },
+    {
+      "name": "ISO-CONSULT",
+      "thermal_zone": "ISO-CONSULT-ZN",
+      "floor_area_m2": 14,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "2donn1s$15fQstYK6K7bhA",
+      "schedule": "ISOLATION-CONSULT-SCHEDULE",
+      "flow_order": 3
+    },
+    {
+      "name": "PPE-DONNING",
+      "thermal_zone": "PPE-DONNING-ZN",
+      "floor_area_m2": 8,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "3h$isFwRP5_hw8nERq6D$D",
+      "schedule": "PPE-SUPPORT-SCHEDULE",
+      "flow_order": 4
+    },
+    {
+      "name": "CONTAMINATED-SUPPORT",
+      "thermal_zone": "CONTAMINATED-SUPPORT-ZN",
+      "floor_area_m2": 8,
+      "door_count": 0,
+      "window_count": 0,
+      "ifc_global_id": "25gwD9sn52YxBd1q5pXbvc",
+      "schedule": "CONTAMINATED-SUPPORT-LOW-OCCUPANCY",
+      "flow_order": 5
+    }
+  ],
+  "thermal_zones": [
+    "CONSULT-ZN",
+    "EQUIPMENT-ZN",
+    "ISO-CONSULT-ZN",
+    "PPE-DONNING-ZN",
+    "CONTAMINATED-SUPPORT-ZN"
+  ],
+  "load_assumptions": [
+    {
+      "space_name": "CONSULT",
+      "people_per_m2": 0.1,
+      "lighting_w_per_m2": 10.0,
+      "equipment_w_per_m2": 8.0,
+      "schedule": "ConsultSchedule"
+    },
+    {
+      "space_name": "EQUIPMENT",
+      "people_per_m2": 0.025,
+      "lighting_w_per_m2": 9.0,
+      "equipment_w_per_m2": 24.0,
+      "schedule": "EquipmentSchedule"
+    },
+    {
+      "space_name": "ISO-CONSULT",
+      "people_per_m2": 0.07,
+      "lighting_w_per_m2": 10.0,
+      "equipment_w_per_m2": 10.0,
+      "schedule": "IsolationConsultSchedule"
+    },
+    {
+      "space_name": "PPE-DONNING",
+      "people_per_m2": 0.025,
+      "lighting_w_per_m2": 8.0,
+      "equipment_w_per_m2": 5.0,
+      "schedule": "PPESupportSchedule"
+    },
+    {
+      "space_name": "CONTAMINATED-SUPPORT",
+      "people_per_m2": 0.0125,
+      "lighting_w_per_m2": 8.0,
+      "equipment_w_per_m2": 7.0,
+      "schedule": "ContaminatedSupportLowOccupancy"
+    }
+  ],
+  "energyplus_status": "************* EnergyPlus Completed Successfully-- 12 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  2.71sec",
+  "energyplus_warning_count": 12,
+  "energyplus_severe_errors": 0,
+  "energyplus_sql_sha256": "2d9034db0205784845ddf53b43f869278044d94b9f20b163231511c4c23682c2",
+  "energyplus_err_sha256": "61d1c532758084fe1c34afae9f153677ea1ab3fef48175f2b0524436c812fac5",
+  "energyplus_end_sha256": "b942f8ed6684b8b6120e030da9656cea6749afe5ce78ba7377b9ef0ef8c79d9a",
+  "simulation": {
+    "sql_integrity_check": "ok",
+    "hourly_series": [
+      {
+        "space_name": "CONSULT",
+        "key_value": "CONSULT-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1444086000.0,
+        "max": 378000.0
+      },
+      {
+        "space_name": "CONSULT",
+        "key_value": "CONSULT-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1155268800.0,
+        "max": 302400.0
+      },
+      {
+        "space_name": "CONSULT",
+        "key_value": "CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 11854587084.014906,
+        "max": 8398222.525171926
+      },
+      {
+        "space_name": "CONSULT",
+        "key_value": "CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3764903900.4564033,
+        "max": 4684270.292110463
+      },
+      {
+        "space_name": "CONSULT",
+        "key_value": "CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3292940.856670807,
+        "max": 2332.8395903255355
+      },
+      {
+        "space_name": "CONSULT",
+        "key_value": "CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1045806.6390156676,
+        "max": 1301.1861922529063
+      },
+      {
+        "space_name": "EQUIPMENT",
+        "key_value": "EQUIPMENT-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2043532800.0,
+        "max": 466560.0
+      },
+      {
+        "space_name": "EQUIPMENT",
+        "key_value": "EQUIPMENT-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 5449420800.0,
+        "max": 1244160.0
+      },
+      {
+        "space_name": "EQUIPMENT",
+        "key_value": "EQUIPMENT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 8676632833.907145,
+        "max": 7352161.973989092
+      },
+      {
+        "space_name": "EQUIPMENT",
+        "key_value": "EQUIPMENT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 4647105008.432262,
+        "max": 5039911.556361232
+      },
+      {
+        "space_name": "EQUIPMENT",
+        "key_value": "EQUIPMENT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2410175.787196429,
+        "max": 2042.2672149969694
+      },
+      {
+        "space_name": "EQUIPMENT",
+        "key_value": "EQUIPMENT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1290862.502342295,
+        "max": 1399.9754323225643
+      },
+      {
+        "space_name": "ISO-CONSULT",
+        "key_value": "ISO-CONSULT-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1085364000.0,
+        "max": 277200.0
+      },
+      {
+        "space_name": "ISO-CONSULT",
+        "key_value": "ISO-CONSULT-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1085364000.0,
+        "max": 277200.0
+      },
+      {
+        "space_name": "ISO-CONSULT",
+        "key_value": "ISO-CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 9463812238.72353,
+        "max": 6528758.344150376
+      },
+      {
+        "space_name": "ISO-CONSULT",
+        "key_value": "ISO-CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2780937503.8898497,
+        "max": 3411431.0254697916
+      },
+      {
+        "space_name": "ISO-CONSULT",
+        "key_value": "ISO-CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2628836.7329787584,
+        "max": 1813.5439844862155
+      },
+      {
+        "space_name": "ISO-CONSULT",
+        "key_value": "ISO-CONSULT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 772482.6399694027,
+        "max": 947.6197292971642
+      },
+      {
+        "space_name": "PPE-DONNING",
+        "key_value": "PPE-DONNING-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 322087680.0,
+        "max": 80640.0
+      },
+      {
+        "space_name": "PPE-DONNING",
+        "key_value": "PPE-DONNING-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 201304800.0,
+        "max": 50400.0
+      },
+      {
+        "space_name": "PPE-DONNING",
+        "key_value": "PPE-DONNING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 6440195263.242741,
+        "max": 4014039.7680650856
+      },
+      {
+        "space_name": "PPE-DONNING",
+        "key_value": "PPE-DONNING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1101890374.0142374,
+        "max": 1862671.0014861913
+      },
+      {
+        "space_name": "PPE-DONNING",
+        "key_value": "PPE-DONNING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1788943.128678539,
+        "max": 1115.0110466847461
+      },
+      {
+        "space_name": "PPE-DONNING",
+        "key_value": "PPE-DONNING IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 306080.6594483993,
+        "max": 517.4086115239421
+      },
+      {
+        "space_name": "CONTAMINATED-SUPPORT",
+        "key_value": "CONTAMINATED-SUPPORT-ZN",
+        "variable": "Zone Lights Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 167351040.0,
+        "max": 41472.0
+      },
+      {
+        "space_name": "CONTAMINATED-SUPPORT",
+        "key_value": "CONTAMINATED-SUPPORT-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 146432160.0,
+        "max": 36288.0
+      },
+      {
+        "space_name": "CONTAMINATED-SUPPORT",
+        "key_value": "CONTAMINATED-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 9154118884.108156,
+        "max": 5802642.226827181
+      },
+      {
+        "space_name": "CONTAMINATED-SUPPORT",
+        "key_value": "CONTAMINATED-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1845180971.3419702,
+        "max": 2711280.1456997297
+      },
+      {
+        "space_name": "CONTAMINATED-SUPPORT",
+        "key_value": "CONTAMINATED-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2542810.8011411545,
+        "max": 1611.8450630075504
+      },
+      {
+        "space_name": "CONTAMINATED-SUPPORT",
+        "key_value": "CONTAMINATED-SUPPORT IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate",
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 512550.269817214,
+        "max": 753.1333738054806
+      }
+    ],
+    "energy_accounting": "lights + equipment + ideal heating + ideal cooling",
+    "peak_definition": "maximum hourly ideal heating or cooling rate"
+  }
+}

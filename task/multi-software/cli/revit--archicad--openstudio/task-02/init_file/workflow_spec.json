@@ -1,0 +1,140 @@
+{
+  "schema_version": 1,
+  "case_id": "multi-cli-3-revit-archicad-openstudio-task-02-windows",
+  "revision": "EW3B02",
+  "fixed_software": {
+    "revit": {
+      "major_version": 2025,
+      "executable": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+      "automation_entry": "C:\\ProgramData\\Autodesk\\Revit\\Addins\\2025\\EngiWorld.BimBridge.addin"
+    },
+    "archicad": {
+      "major_version": 27,
+      "minimum_build": 6000,
+      "executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe",
+      "automation_entry": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe"
+    },
+    "openstudio": {
+      "version": "3.10.0",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "energyplus_version": "25.1.0"
+    }
+  },
+  "ifc_exchange": {
+    "schema": "IFC4",
+    "model_view": "ReferenceView",
+    "requested_space_boundary_level": 2,
+    "space_boundary_policy": "Request Revit space-boundary level 2, inspect the relationships actually written by both native applications, preserve the observed upstream state in Archicad, and do not fabricate missing relationships or claim unsupported second-level boundaries.",
+    "minimum_global_id_retention": 0.8,
+    "global_id_policy": "Revit must retain every seed IfcElement GlobalId, at least 80 percent of seed IfcProduct GlobalIds, and all spatial-container GlobalIds; Archicad must retain every stage1 IfcRoot GlobalId and reject duplicates.",
+    "required_property_sets": [
+      "Pset_SpaceCommon",
+      "Qto_SpaceBaseQuantities",
+      "EngiWorld_EnergyHandoff"
+    ]
+  },
+  "revit_stage": {
+    "input": "init.ifc",
+    "output": "stage1.ifc",
+    "handoff": "revit_handoff.json",
+    "operation": "Preserve the retail sales room and divide the back-of-house bay into a prep kitchen and dry storage room with room-bounding elements.",
+    "required_tokens": [
+      "EW3B02",
+      "RETAIL-SALES",
+      "PREP-KITCHEN",
+      "DRY-STORAGE"
+    ]
+  },
+  "archicad_stage": {
+    "input": "stage1.ifc",
+    "output": "stage2.ifc",
+    "translator": "archicad_ifc4_translator.json",
+    "operation": "Validate public-service containment in the live Archicad IFC command-server model, audit the space-boundary relationships actually present in stage1.ifc and stage2.ifc without fabrication, preserve all upstream IfcRoot GlobalIds, and export load assumptions keyed by retained IfcSpace GlobalId.",
+    "required_tokens": [
+      "ARCHICAD-QA-PASS",
+      "PUBLIC-SERVICE-SEPARATION",
+      "PREP-BOUNDARY",
+      "STORAGE-BOUNDARY"
+    ]
+  },
+  "storeys": [
+    {
+      "name": "Level 1",
+      "z_m": 0.0
+    }
+  ],
+  "spaces": [
+    {
+      "name": "RETAIL-SALES",
+      "thermal_zone": "RETAIL-SALES-ZN",
+      "storey": "Level 1",
+      "energy_geometry": {
+        "x_m": 0.0,
+        "y_m": 0.0,
+        "z_m": 0.0,
+        "width_m": 9.8,
+        "depth_m": 3.8,
+        "height_m": 2.4384
+      },
+      "energy_semantics": {
+        "schedule_category": "RETAIL-PUBLIC-SCHEDULE",
+        "people_per_m2": 0.15,
+        "lighting_w_per_m2": 12.0,
+        "equipment_w_per_m2": 8.0,
+        "outdoor_air_l_per_s_person": 7.5
+      }
+    },
+    {
+      "name": "PREP-KITCHEN",
+      "thermal_zone": "PREP-KITCHEN-ZN",
+      "storey": "Level 1",
+      "energy_geometry": {
+        "x_m": 0.0,
+        "y_m": 3.8,
+        "z_m": 0.0,
+        "width_m": 5.8,
+        "depth_m": 1.8,
+        "height_m": 2.4384
+      },
+      "energy_semantics": {
+        "schedule_category": "PREP-HIGH-EQUIPMENT",
+        "people_per_m2": 0.08,
+        "lighting_w_per_m2": 10.0,
+        "equipment_w_per_m2": 35.0,
+        "outdoor_air_l_per_s_person": 10.0
+      }
+    },
+    {
+      "name": "DRY-STORAGE",
+      "thermal_zone": "DRY-STORAGE-ZN",
+      "storey": "Level 1",
+      "energy_geometry": {
+        "x_m": 5.8,
+        "y_m": 3.8,
+        "z_m": 0.0,
+        "width_m": 4.0,
+        "depth_m": 1.8,
+        "height_m": 2.4384
+      },
+      "energy_semantics": {
+        "schedule_category": "STORAGE-LOW-OCCUPANCY",
+        "people_per_m2": 0.01,
+        "lighting_w_per_m2": 4.0,
+        "equipment_w_per_m2": 1.0,
+        "outdoor_air_l_per_s_person": 5.0
+      }
+    }
+  ],
+  "handoff_tokens": [
+    "RETAIL-PUBLIC-SCHEDULE",
+    "PREP-HIGH-EQUIPMENT",
+    "STORAGE-LOW-OCCUPANCY",
+    "SERVICE-BOUNDARY"
+  ],
+  "osm_tokens": [
+    "RetailPublicSchedule",
+    "PrepKitchenHighEquipment",
+    "DryStorageLowOccupancy",
+    "ServiceBoundaryTag"
+  ]
+}

@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--altium-designer--task-18--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "The file `connector_lib.PcbLib` is the native Altium PCB footprint library for pre-release height maintenance. Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`; open the supplied design there. Save the modified native library as `C:\\Users\\user\\Desktop\\connector_lib_release.PcbLib` in Altium Designer. Requirements: change `Height` of `RESC3216X60X45ML15T20` to `25mil`, change `Height` of `51163-0500-Footprint-1` to `90mil`, and change `Height` of `53375-0510-Footprint-1` to `100mil`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/3d-bodies?version=22; https://www.altium.com/documentation/altium-designer/pcb",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/connector_lib.PcbLib",
+            "path": "C:\\Users\\user\\Desktop\\connector_lib.PcbLib"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\connector_lib.PcbLib"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\connector_lib_release.PcbLib"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

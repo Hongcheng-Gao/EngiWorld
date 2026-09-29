@@ -1,0 +1,22 @@
+* VPWL-driven diode — find current through diode at t = 50 µs.
+* The waveform is a simple triangular pulse defined in custom.stl.
+*
+* Topology:  V(t) --Rs(100 Ω)-- N1 -- D1 --GND
+* where V(t) is a PWL from custom.stl.
+*
+* Diode model DCUSTOM is in diode.lib.
+
+.INCLUDE diode.lib
+
+VIN   IN   0   PWL FILE "custom.stl"
+Rs    IN   N1  100
+D1    N1   0   DCUSTOM
+
+.TRAN 1u 100u
+
+.MEAS TRAN I_AT_50U  FIND I(D1)  AT=50u
+.MEAS TRAN V_AT_50U  FIND V(IN)  AT=50u
+.MEAS TRAN V_DIODE_AT_50U  FIND V(N1)  AT=50u
+.PROBE
+
+.END

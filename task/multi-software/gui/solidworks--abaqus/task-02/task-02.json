@@ -1,0 +1,81 @@
+{
+  "id": "multi-software--gui--solidworks--abaqus--task-02--windows",
+  "snapshot": "Solidworks-Abaqus",
+  "instruction": "This CAE task passes through two applications: SolidWorks -> Abaqus/CAE. Use the SOLIDWORKS 2025 and Abaqus CAE shortcuts on the desktop for the two stages of this workflow. No init file is provided; start from a new blank SolidWorks part.\n\nHandoff requirement: use the design token EW_SW_ABQ_02. Keep this token encoded in the SolidWorks part/custom properties or STEP export metadata so the text of stage1_geometry.step contains EW_SW_ABQ_02 and SOLIDWORKS_TO_ABAQUS. In Abaqus/CAE, create at least one model, part, instance, set, surface, job description, or other native name containing both EW_SW_ABQ_02 and IMPORTED_FROM_stage1_geometry.step, so the final CAE file carries evidence that Abaqus consumed the SolidWorks STEP handoff.\n\n1. In SolidWorks, use sketch and feature tools to create a center-hole tensile coupon. Geometry requirements: overall length 120 mm, width 30 mm, thickness 3 mm, a D12 through hole at the geometric center, and straight grip regions at both ends. Export the completed CAD geometry to C:\\Users\\user\\Desktop\\stage1_geometry.step.\n2. In Abaqus/CAE, import stage1_geometry.step and create the finite-element model. Use the model name Model-HoleTension. Define material Steel with E=210000 MPa and nu=0.3, create a solid section using Steel, and assign it to the coupon. Create a Static General analysis step named Step-Tension. Create sets named LEFT_GRIP, RIGHT_GRIP, and HOLE_EDGE. Use a coarse global seed with modest local seeding only around HOLE_EDGE, and use first-order linear solid elements such as C3D8R where practical or coarse C3D4 where needed; do not use quadratic elements. Create a boundary condition named BC-LeftGrip that fixes LEFT_GRIP. Create an action named Load-RightTension: either an approximately +1 kN axial tensile load on RIGHT_GRIP, or an equivalent named axial displacement boundary condition on RIGHT_GRIP. Submit the job named Job-HoleTension and wait for the analysis to complete.\n3. Required deliverables on the Desktop: C:\\Users\\user\\Desktop\\stage1_geometry.step, C:\\Users\\user\\Desktop\\Job-HoleTension.cae, and C:\\Users\\user\\Desktop\\Job-HoleTension.odb. Do not create extra STEP, DXF, CAE, or ODB deliverables.\n\n First use SolidWorks to create and export the CAD STEP file, then use Abaqus/CAE to import that STEP file, build the finite-element model, submit the job, and save the CAE and ODB deliverables. Software launch locations: SOLIDWORKS 2025: `C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk`; Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/; https://help.3ds.com/2025/English/DSSIMULIA_Established/SIMACAECAERefMap/",
+  "config": [
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\SOLIDWORKS 2025.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks",
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\IMPORTED_FROM_stage1_geometry.step",
+    "C:\\Users\\user\\Desktop\\Job-HoleTension.cae",
+    "C:\\Users\\user\\Desktop\\Job-HoleTension.odb",
+    "C:\\Users\\user\\Desktop\\stage1_geometry.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

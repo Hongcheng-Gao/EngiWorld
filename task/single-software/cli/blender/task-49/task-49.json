@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--blender--task-49--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Rename Armature Bones to Restore Skinning `/home/user/Desktop/scene.blend`\ncontains an armature object `Rig` with a 4-bone parent chain, but the bones\nwere imported with the same generic base name. `Skin` has vertex groups\nnamed `Bone.Root`, `Bone.A`, `Bone.B`, and `Bone.Tip`, so the armature must\nbe renamed along the actual root-to-tip chain for the skinning to work.\n\n## Requirements\n1. `Rig` is an armature with exactly 4 bones.\n2. Launch Blender by running `blender` from a terminal. Use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nThe bone names are exactly `{Bone.Root, Bone.A, Bone.B, Bone.Tip}`.\n3. The parent chain is `Bone.Root -> Bone.A -> Bone.B -> Bone.Tip`.\n4. `Skin` is a mesh with an Armature modifier pointing to `Rig`.\n5. `Skin`'s vertex groups are exactly the four semantic names above.\n6. Every vertex-group name resolves to a bone on `Rig`.\n\nDo not add, remove, or reparent bones; only rename them by walking the\nchain from root to tip. Save the result as `/home/user/Desktop/answer.blend`.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-49/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-49/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

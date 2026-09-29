@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--freecad-path--task-20--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Treat `/home/user/Desktop/full_gui_benchmark.step` in FreeCAD 0.21.2 from `/usr/bin/freecad` and use the Path workbench to produce `/home/user/Desktop/task-20.nc` as the starting point. The stock spans Z=0 to Z=18 mm. The NC program must use millimetres and absolute positioning and contain these completed machining results: top Face machining at Z=17.5 mm with at least four full-width tracks; separate left and right pocket regions reaching Z=12.0 mm; eight through holes reaching Z=-1.0 mm at X = -70, -50, -30, -10, 10, 30, 50, 70 mm and Y = -30 mm; a closed outside Profile reaching Z=-1.0 mm; and a shallow top-face Engrave path at Z=17.0 mm. Use T1, T2, T3, and T4 for the face, pocket/profile, drilling, and engraving work respectively. Include operation comments identifying FACE, POCKET, DRILL, PROFILE, and ENGRAVE, use safe rapid moves between cutting regions, and end the program with M30.",
+  "source": "https://wiki.freecad.org/CAM_Workbench；https://wiki.freecad.org/CAM_Post https://wiki.freecad.org/CAM_Workbench%EF%BC%9Bhttps:/wiki.freecad.org/CAM_Post",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/full_gui_benchmark.step",
+            "path": "/home/user/Desktop/full_gui_benchmark.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/full_gui_benchmark.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-20.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

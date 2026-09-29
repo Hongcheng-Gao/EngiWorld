@@ -1,0 +1,49 @@
+{
+  "status": "generated_from_provided_init_and_evaluator_verified",
+  "task_id": "c-open-abaqus-ansys-autocad-task-08-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "solver": "Abaqus Learning Edition 2025",
+  "generation_workflow": "Abaqus cae noGUI opened task08_block_plate_init.cae, completed ContactStep/contact/BC/load/output/job in that model, submitted Task08_BlockPlate, waited for JOB_STATUS_COMPLETED_SUCCESSFULLY, and extracted metrics from the final ODB frame.",
+  "opened_init_sha256": "ccbe576fc050ca1dace2df0ba03a57df0bc49d966ce3bd3a28bd3b652396bb1d",
+  "mesh": {
+    "plate_nodes": 162,
+    "plate_elements": 64,
+    "block_nodes": 125,
+    "block_elements": 64,
+    "total_nodes": 287,
+    "total_elements": 128,
+    "element_type": "C3D8R"
+  },
+  "solution": {
+    "status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "frames": 13,
+    "max_contact_pressure": 2.1139111518859863,
+    "vertical_displacement": -0.00010081466461997479,
+    "reaction_force": 128.00082149356604,
+    "max_mises_stress": 2.0769100189208984
+  },
+  "verification": {
+    "eval_sha256": "ffa9c8867ff364693997f8e28693c99a58ca15cd2ec3f817362f484c02116b54",
+    "production_result": "True\\n",
+    "topology_chain": "Exact node-coordinate, element-type, and element-connectivity signatures match init to GT for Plate-1 and Block-1, then GT to ODB for PLATE-1 and BLOCK-1.",
+    "semantic_checks": "SteelSection binds Steel on both parts; Static controls, Initial finite-sliding hard-frictionless contact, exact boundary DOFs and extraction-set members, and one CPU are verified.",
+    "negative_tests": "Config-only, init-as-candidate, missing ODB, wrong pressure, and extra BLOCK_GUIDE U1 all returned False\\n."
+  },
+  "files": [
+    {
+      "file": "Task08_BlockPlate_GT.cae",
+      "size": 77824,
+      "sha256": "1175c43b941baea600705a2bd618a5518056c28df9c34ee8829f0921ad3f26a3"
+    },
+    {
+      "file": "Task08_BlockPlate.odb",
+      "size": 612552,
+      "sha256": "f22fa061b5419b001b55a28fecec2065b97787cd7d5578e48f912a3de77e1ac2"
+    },
+    {
+      "file": "metrics.json",
+      "size": 183,
+      "sha256": "22602edce785f6f517201cd688c132ddddc447a5de99830e86fd31375847a02d"
+    }
+  ]
+}

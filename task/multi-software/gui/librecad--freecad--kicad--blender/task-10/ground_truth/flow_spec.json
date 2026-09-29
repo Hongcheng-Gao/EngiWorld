@@ -1,0 +1,220 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-10-ubuntu",
+  "owner": "taozhuo",
+  "title": "U-shaped optical gate fixture with emitter and receiver alignment",
+  "domain": "optical_alignment_fixture",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G10",
+  "required_files": [
+    "stage1_optical_gate_fixture.dxf",
+    "stage2_optical_gate_fixture.stl",
+    "stage2_optical_gate_fixture_handoff_outline.dxf",
+    "stage3_optical_gate_fixture_board.kicad_pcb",
+    "stage3_optical_gate_fixture_board_profile.svg",
+    "stage4_optical_gate_fixture.glb"
+  ],
+  "dxf": {
+    "file": "stage1_optical_gate_fixture.dxf",
+    "bbox": [
+      135.0,
+      85.0
+    ],
+    "bbox_tol": 0.15,
+    "circle_tol": 0.05,
+    "radius_tol": 0.03,
+    "layers": [
+      "OUTLINE",
+      "BEAM_SLOT",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        12.0,
+        12.0,
+        2.4
+      ],
+      [
+        123.0,
+        12.0,
+        2.4
+      ],
+      [
+        12.0,
+        73.0,
+        2.4
+      ],
+      [
+        123.0,
+        73.0,
+        2.4
+      ],
+      [
+        35.0,
+        42.5,
+        3.0
+      ],
+      [
+        100.0,
+        42.5,
+        3.0
+      ]
+    ],
+    "texts": [
+      "EW4G10",
+      "EMITTER",
+      "RECEIVER",
+      "ALIGN"
+    ],
+    "beam_slot_count": 1,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_optical_gate_fixture.stl",
+    "bbox": [
+      135.0,
+      85.0,
+      32.0
+    ],
+    "bbox_tol": 0.08,
+    "min_triangles": 100,
+    "watertight": true,
+    "non_box_fill_range": [
+      0.2,
+      0.9
+    ],
+    "through_holes": 6,
+    "u_opening": true
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G10",
+      "IR-D1",
+      "PHOTO-Q1",
+      "SYNC-J1",
+      "GAIN-RV1",
+      "TEST-TP1",
+      "TEST-TP2"
+    ],
+    "nets": [
+      "VCC",
+      "GND",
+      "IR_DRIVE",
+      "PHOTO_SENSE",
+      "SYNC",
+      "GAIN"
+    ]
+  },
+  "glb": {
+    "file": "stage4_optical_gate_fixture.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_optical_gate_fixture",
+      "stage3_optical_gate_fixture_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "pocket_centers": [
+      [
+        35.0,
+        42.5
+      ],
+      [
+        100.0,
+        42.5
+      ]
+    ],
+    "pocket_count": 2,
+    "red_emissive_beam_count": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_optical_gate_fixture",
+      "stage3_svg_object": "stage3_optical_gate_fixture_board_profile.svg"
+    }
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_optical_gate_fixture.dxf",
+    "desktop_path": "/home/user/Desktop/seed_optical_gate_fixture.dxf",
+    "sha256": "158ca3449ddad17fdad0d071e0ad0f78898bb6b8caee21bafd4c4cfe57520a82"
+  },
+  "gt_provenance": {
+    "instance": "i-yeslqxefpc4c5qx3440g",
+    "date": "2026-08-13",
+    "software_versions": [
+      "LibreCAD 2.2.0.2",
+      "FreeCAD 0.21.2",
+      "KiCad 10.0.2",
+      "Blender 4.2.3"
+    ],
+    "real_software_generated": true
+  },
+  "handoff": {
+    "file": "stage2_optical_gate_fixture_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_optical_gate_fixture_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_optical_gate_fixture.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_optical_gate_fixture.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_optical_gate_fixture_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_optical_gate_fixture_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_optical_gate_fixture_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_optical_gate_fixture_board.kicad_pcb"
+  }
+}

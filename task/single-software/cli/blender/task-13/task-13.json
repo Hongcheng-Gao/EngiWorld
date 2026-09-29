@@ -1,0 +1,59 @@
+{
+  "id": "single-software--cli--blender--task-13--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Compositor multi-output: beauty + depth. `/home/user/Desktop/scene.blend` contains: - Three cubes named `Cube_Y1`, `Cube_Y3`, `Cube_Y5` at y=1, y=3, y=5 respectively (staggered along X so they don't fully occlude one another). - A `Camera` at (0, -5, 0) rotated 90 degrees around X so it looks along +Y (the cubes appear at increasing depth from the camera). - A `Sun` light at (4, -4, 6). - Render engine BLENDER_EEVEE at 256x256 (samples 16). - The active view layer has `use_pass_z = True` (Z/Depth pass already enabled). - `scene.use_nodes = False` (the compositor node tree has not been built yet). Launch Blender by running `blender` from a terminal. For the steps below, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nTask: build a compositor node graph that writes two images side-by-side via a single File Output node. 1. Enable the compositor: - `scene.use_nodes = True` - `tree = scene.node_tree` - Clear any default nodes: `for n in list(tree.nodes): tree.nodes.remove(n)` 2. Add nodes: - `render_layers = tree.nodes.new('CompositorNodeRLayers')` - `map_range = tree.nodes.new('CompositorNodeMapRange')` - `inputs['From Min'].default_value = 0.0` - `inputs['From Max'].default_value = 20.0` - `inputs['To Min'].default_value = 0.0` - `inputs['To Max'].default_value = 1.0` - `use_clamp = True` - `file_out = tree.nodes.new('CompositorNodeOutputFile')` - Set `file_out.base_path` to the Desktop directory, for example `/home/user/Desktop` or `//` after saving the blend there. The final file paths will be `<base_path>/<slot_path>0001.png`. - Set `file_out.format.file_format = 'PNG'` (8-bit RGBA is fine). - Configure two file slots: - Repurpose the default slot as `beauty_`: `file_out.file_slots[0].path = 'beauty_'` - Add a depth slot: `file_out.file_slots.new('depth_')` 3. Wire the links: - `render_layers.outputs['Image']` -> `file_out.inputs[0]` (the `beauty_` slot) - `render_layers.outputs['Depth']` -> `map_range.inputs['Value']` - `map_range.outputs['Value']` -> `file_out.inputs[1]` (the `depth_` slot) 4. Ensure `scene.frame_start = scene.frame_end = 1` and render: `bpy.ops.render.render(write_still=True)` -- this triggers the File Output node to write `beauty_0001.png` and `depth_0001.png` in `file_out.base_path`. 5. Save the .blend to `/home/user/Desktop/answer.blend`. ## Requirements 1. The .blend opens. 2. The three cubes `Cube_Y1`, `Cube_Y3`, `Cube_Y5` have y=1, 3, 5 respectively. 3. The active view layer has `use_pass_z = True`. 4. `scene.use_nodes == True`. 5. The compositor node tree contains a `CompositorNodeOutputFile`. 6. The compositor node tree contains a `CompositorNodeMapRange`. 7. The File Output node has at least 2 `file_slots`. 8. After a fresh render, `beauty_0001.png` exists in `file_out.base_path`. 9. `depth_0001.png` exists in the same directory. 10. Sampling the depth PNG at the projected screen positions of the three cube centers (via `bpy_extras.object_utils.world_to_camera_view`), the R-channel values are strictly increasing along Cube_Y1 -> Cube_Y3 -> Cube_Y5 with each step delta >= 0.03 (closer cubes have lower depth because Map Range 0..20 -> 0..1 clamped).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/0001.png",
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/beauty_0001.png",
+    "/home/user/Desktop/depth_0001.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

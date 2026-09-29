@@ -1,0 +1,86 @@
+{
+  "id": "single-software--cli--openfast--task-12--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "`/home/user/Desktop/yaw_error.fst`, `/home/user/Desktop/NRELOffshrBsline5MW_ElastoDyn_Yaw.dat`, and `/home/user/Desktop/inflow_yaw_steady.dat` is provided. Only initialization inputs are preloaded; generate all result artifacts yourself.\n\nBefore starting the work, the OpenFAST executable is `/home/user/miniconda3/bin/openfast` when working on `yaw_error.fst`. Complete a fixed yaw-misalignment sensitivity analysis from the command line: 1. Confirm the shared InflowWind input uses `WindType=1`, `HWindSpeed=11.4 m/s`, and `RefHt=90 m`. 2. Generate `elasto_yaw_0.dat`, `elasto_yaw_5.dat`, `elasto_yaw_10.dat`, `elasto_yaw_15.dat`, and `elasto_yaw_20.dat` under `/home/user/Desktop`. In every file set `YawDOF=False` so `NacYaw` is fixed, and set `NacYaw` to the filename angle. Generate matching `case_yaw_ANGLE.fst` files under `/home/user/Desktop` that reference the shared steady wind and their own ElastoDyn file. 3. Run all five 60-second cases independently and retain their `.out` files and normal-termination logs under `/home/user/Desktop`. 4. Write `/home/user/Desktop/run_cases.py` and `/home/user/Desktop/postprocess.py`; for each output compute the arithmetic mean of `GenPwr` over `Time>=50 s`. Save `/home/user/Desktop/summary.txt` as `yaw_error_deg, genpwr_kw`. 5. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/elasto_yaw_0.dat",
+    "/home/user/Desktop/elasto_yaw_5.dat",
+    "/home/user/Desktop/elasto_yaw_10.dat",
+    "/home/user/Desktop/elasto_yaw_15.dat",
+    "/home/user/Desktop/elasto_yaw_20.dat",
+    "/home/user/Desktop/case_yaw_0.fst",
+    "/home/user/Desktop/case_yaw_0.out",
+    "/home/user/Desktop/case_yaw_0.log",
+    "/home/user/Desktop/case_yaw_5.fst",
+    "/home/user/Desktop/case_yaw_5.out",
+    "/home/user/Desktop/case_yaw_5.log",
+    "/home/user/Desktop/case_yaw_10.fst",
+    "/home/user/Desktop/case_yaw_10.out",
+    "/home/user/Desktop/case_yaw_10.log",
+    "/home/user/Desktop/case_yaw_15.fst",
+    "/home/user/Desktop/case_yaw_15.out",
+    "/home/user/Desktop/case_yaw_15.log",
+    "/home/user/Desktop/case_yaw_20.fst",
+    "/home/user/Desktop/case_yaw_20.out",
+    "/home/user/Desktop/case_yaw_20.log",
+    "/home/user/Desktop/inflow_yaw_steady.dat",
+    "/home/user/Desktop/run_cases.py",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

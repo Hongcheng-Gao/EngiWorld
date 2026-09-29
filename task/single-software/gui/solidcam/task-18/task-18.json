@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--solidcam--task-18--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Begin by reviewing thread_plate.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Start SOLIDWORKS 2025 from the desktop shortcut and use its installed SOLIDWORKS CAM/CAMWorks add-in; there is no separate SolidCAM desktop program in this image. Create a 3-axis Milling CAM-Part for thread_plate.step from the top side, using the top face as WCS Z=0 with Z pointing upward. Drill the six M8 pilot holes with a suitable installed pilot drill for M8 tapping, for example a 6.8 mm tap drill if that tool is available in the installed library. Then use a standard Tapping operation with a suitable installed M8 tap, such as M8 x 1.25 if available, to tap all six holes through the full 18 mm plate thickness to the bottom face at WCS Z=-18.000 mm. Do not use Thread Milling, helical interpolation, or manually created G2/G3 circular thread paths. The drill and tapping toolpaths must cover all six visible hole positions. Use standard Drilling and Tapping operations and keep SOLIDWORKS CAM's default generated NC comments so the pilot-drill diameter and M8 tap designation remain auditable; do not rename operations just to add labels. Exact tool station numbers, spindle speeds, feedrates, and internal tool-library IDs may follow stable SOLIDWORKS CAM Technology Database defaults. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-18.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For milling tasks, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s).",
+  "source": "SOLIDWORKS CAM 2025 product documentation: https://help.solidworks.com/2025/english/WhatsNew/c_wn_cam.htm ; SOLIDWORKS CAM certification scope (drilling, tapping, and post processing): https://www.solidworks.com/certifications/cam-cswp-cam",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/thread_plate.step",
+            "path": "C:\\Users\\User\\Desktop\\thread_plate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
+          "C:\\Users\\User\\Desktop\\thread_plate.step"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-18.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

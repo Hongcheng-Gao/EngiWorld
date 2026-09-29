@@ -1,0 +1,78 @@
+{
+  "id": "single-software--cli--blender--task-21--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "BVH Retarget + Bake to Action `/home/user/Desktop/character.blend` contains an armature object named `Character` with bones `Root` -> `Spine` -> `Head` (connected, all along +Z). `/home/user/Desktop/walk.bvh` is a 60-frame walk cycle whose hierarchy is `Hips` -> `Spine` -> `Head` (`Hips` has 6 channels: X/Y/Z position + Z/X/Y rotation; `Spine` and `Head` have 3 rotation channels each). Launch Blender by running `blender` from a terminal. For the steps below, use `/opt/blender/blender` for Blender command-line or background runs when working on `character.blend`.\n\nThe scene frame range is 1..60 in character.blend. retarget the BVH motion onto the `Character` rig, bake it to an Action on `Character`, strip the BVH import-artifact armature, and save the result as `/home/user/Desktop/answer.blend`. ## Mapping table Use this explicit bone-name mapping when copying fcurves from the BVH action to the character's action: source (BVH) target (Character) ----------- ------------------- Hips -> Root Spine -> Spine Head -> Head The hip translation (the `Hips` bone's `location` channels in the BVH action) must be copied onto the `Root` pose bone so the character physically walks forward. ## Requirements 1. Use the initial character scene at `/home/user/Desktop/character.blend`. 2. Import the BVH file at `/home/user/Desktop/walk.bvh` with `bpy.ops.import_anim.bvh(filepath=..., axis_forward='Y', axis_up='Z')`. The importer will create a new armature object (Blender names it after the BVH file, i.e. `walk`) with its own Action, also named `walk`. 3. Create (or reuse) an Action on the `Character` armature's `animation_data`. For every target bone in the mapping table, copy the corresponding source bone's `rotation_euler` fcurves from the BVH action; for `Root`, additionally copy the BVH `Hips` `location` fcurves. Preserve the original keyframes and handles. 4. With `Character` active and in POSE mode, call `bpy.ops.nla.bake(frame_start=1, frame_end=60, step=1, visual_keying=True, clear_constraints=True, bake_types={'POSE'}, use_current_action=True)` so the retargeted channels become a clean baked Action. 5. Delete the BVH import-artifact armature (`bpy.data.objects.remove(bvh_arm, do_unlink=True)`), its armature data-block, and the BVH-only Action if nothing else uses it. 6. Save to `/home/user/Desktop/answer.blend`. ## Requirements 1. The saved file opens as a valid Blender file. 2. The `Character` armature object still exists with armature data and bones `Root`, `Spine`, `Head`. 3. No BVH import-artifact armature remains (no armature named starting with `walk`, `bvh`, `mixamo`, and no non-Character armature whose bones include any of `Hips`, `Spine`, `Head`). 4. `Character.animation_data.action` exists with at least 30 keyframes summed across its fcurves. 5. With the scene evaluated at `frame_start` vs. `frame_end`, the world-space head position of the `Root` pose bone differs along world-Y by at least 0.5 BU (the character walked forward). 6. The baked action contains a `pose.bones[\"<target>\"].rotation_euler` fcurve for every target bone in the mapping table.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/character.blend",
+            "path": "/home/user/Desktop/character.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/walk.bvh",
+            "path": "/home/user/Desktop/walk.bvh"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-21/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

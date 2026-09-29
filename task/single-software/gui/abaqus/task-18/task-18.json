@@ -1,0 +1,61 @@
+{
+  "id": "single-software--gui--abaqus--task-18--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "With Abaqus, perform a modal analysis of a cantilever beam (Variant B). For this task, start Abaqus/CAE with `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae`. Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a 14 mm x 8 mm rectangle in the Y-Z plane and extrude along the global X-axis to a length of 360 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa, Poisson's ratio nu = 0.3, and density = 7.95e-9 tonne/mm^3. Create a Solid Homogeneous section using Steel and assign it to the entire beam. Assembly: Create one dependent instance of the beam. Analysis Step: Create a Linear Perturbation Frequency step named Step-Modal-B. Request 5 eigenvalues. Loads and Boundary Conditions: Apply an Encastre boundary condition to the fixed end face at X = 0. Discretization: Mesh the beam with a global seed size of 10 mm. Assign the element type C3D8R and generate the mesh. Job Execution: Create a job named Job-Modal-B, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Modal-B.cae and ensure the output database is written to C:\\Users\\user\\Desktop\\Job-Modal-B.odb. Run the solver to completion and ensure a result file is generated.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+          "cae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-Modal-B.cae",
+    "C:\\Users\\user\\Desktop\\Job-Modal-B.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

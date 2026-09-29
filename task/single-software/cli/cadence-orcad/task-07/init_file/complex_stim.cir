@@ -1,0 +1,24 @@
+* Task 49 — Complex stimulus through 1st-order RC LPF.
+* Stimulus source is defined externally in complex_stim.stl (Stimulus Editor
+* PWL-exported file).  RC:  R = 500 Ω, C = 1 µF → τ = 0.5 ms.
+
+.INCLUDE complex_stim.stl
+
+VSTIM  IN   0   STIMULUS=VSTIM
+
+R1     IN   OUT  500
+C1     OUT  0    1u
+
+.TRAN 10u 10m 0 10u
+
+.MEAS TRAN V_AT_1MS  FIND V(IN) AT=1m
+.MEAS TRAN V_AT_3MS  FIND V(IN) AT=3m
+.MEAS TRAN V_AT_6MS  FIND V(IN) AT=6m
+.MEAS TRAN V_AT_8MS  FIND V(IN) AT=8m
+.MEAS TRAN VO_1MS    FIND V(OUT) AT=1m
+.MEAS TRAN VO_3MS    FIND V(OUT) AT=3m
+.MEAS TRAN VO_6MS    FIND V(OUT) AT=6m
+.MEAS TRAN VO_8MS    FIND V(OUT) AT=8m
+.PROBE
+
+.END

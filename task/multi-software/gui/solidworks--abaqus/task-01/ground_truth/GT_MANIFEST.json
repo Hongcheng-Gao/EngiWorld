@@ -1,0 +1,105 @@
+{
+  "status": "native_industrial_software_generated_and_tamper_validated",
+  "environment": "SolidWorks 2025 SP0 -> Abaqus Learning Edition 2025",
+  "remote_host": "124.174.35.140",
+  "task": "task-01",
+  "title": "Cantilever Mounting Bracket Static Analysis",
+  "chain": "SolidWorks -> Abaqus/CAE",
+  "generation_method": "SolidWorks typed COM API using the native Parasolid kernel, followed by Abaqus/CAE noGUI STEP import, native model construction, meshing, and solver execution through OSWorld CLI",
+  "generated_at": "2026-08-01T10:13:51+08:00",
+  "source_instruction_sha256": "c80e44055280db8e85dc2fc85faf1e3f968498d3bfe567e4f2617a9cdf1e211c",
+  "eval_sha256": "657ee021a6384f1219aaaa575688628828ba25e7a3d90dbee6f3b4ef27e790c0",
+  "files": [
+    {
+      "file": "stage1_geometry.step",
+      "size": 65986,
+      "sha256": "fb79de1cf2c08c607353a80593a71117b0b1c13f868560d801d35e78df6af09c",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\stage1_geometry.step",
+      "producer": "SolidWorks 2025"
+    },
+    {
+      "file": "Job-Bracket.cae",
+      "size": 143360,
+      "sha256": "5b2e1996068b899455ccb2d09073437d0f88f4a7aec38b5de3baadc9839ffb72",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-Bracket.cae",
+      "producer": "Abaqus/CAE Learning Edition 2025"
+    },
+    {
+      "file": "Job-Bracket.odb",
+      "size": 643204,
+      "sha256": "64454767bae16a7c32d5c5a3cd477c3b960d9b1bbf843ca93f0f078c6fa9ddbf",
+      "expected_desktop_path": "C:\\Users\\user\\Desktop\\Job-Bracket.odb",
+      "producer": "Abaqus/Standard Learning Edition 2025"
+    }
+  ],
+  "solidworks_geometry_check": {
+    "solid_count": 1,
+    "bounding_box_mm": [
+      100.0,
+      40.0,
+      58.0
+    ],
+    "volume_mm3": 48251.51811947946,
+    "faces": {
+      "planar": 16,
+      "cylindrical": 10
+    },
+    "circular_edges": {
+      "radius_3_mm": 16,
+      "radius_5_mm": 4
+    },
+    "chain_markers": [
+      "EW_SW_ABQ_01",
+      "SOLIDWORKS_TO_ABAQUS"
+    ]
+  },
+  "abaqus_model_check": {
+    "model_name": "Model-Bracket",
+    "part_name": "EW_SW_ABQ_01_IMPORTED_FROM_stage1_geometry_step",
+    "cells": 1,
+    "faces": 26,
+    "edges": 74,
+    "vertices": 48,
+    "material": {
+      "name": "Steel",
+      "E_MPa": 210000.0,
+      "nu": 0.3
+    },
+    "step": "Step-Load",
+    "fixed_hole_faces": 8,
+    "load_hole_faces": 2,
+    "coupling": "Coupling-LoadHole",
+    "load": {
+      "name": "Load-Vertical500N",
+      "CF3_N": -500.0
+    },
+    "mesh": {
+      "element_type": "C3D4",
+      "nodes": 810,
+      "elements": 3074
+    }
+  },
+  "odb_check": {
+    "frames": 2,
+    "max_abs_CF_N": 500.0,
+    "max_abs_S_MPa": 16.727991104126,
+    "max_abs_U_mm": 0.00281648221425712,
+    "mesh_bounding_box_mm": [
+      100.0,
+      40.0,
+      58.0
+    ]
+  },
+  "validation": {
+    "sequence": [
+      "valid=True",
+      "tampered_load_CF3_minus_50N=False",
+      "byte_restored=True"
+    ],
+    "tamper_failure": "Load magnitude/sign mismatch for Load-Vertical500N",
+    "restored_cae_sha256": "5b2e1996068b899455ccb2d09073437d0f88f4a7aec38b5de3baadc9839ffb72",
+    "warnings": [
+      "Abaqus Python has no cadquery module; evaluator used the installed external Python CadQuery importer for the STEP topology check"
+    ]
+  }
+}

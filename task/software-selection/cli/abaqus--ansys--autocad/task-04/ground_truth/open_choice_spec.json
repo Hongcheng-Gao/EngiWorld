@@ -1,0 +1,72 @@
+{
+  "task_id": "c-open-abaqus-ansys-autocad-task-04-windows",
+  "open_choice_id": "cae-open-choice-004",
+  "source_task": "task/task-c/abaqus/task-04",
+  "original_software": "abaqus",
+  "alternative_software": "ansys",
+  "distractor_software": "autocad",
+  "interface": "cli",
+  "domain": "solid_bar_tension",
+  "analysis_kind": "static_structural",
+  "metrics": [
+    "free_end_displacement",
+    "axial_stress"
+  ],
+  "expected_result_fields": [
+    "U",
+    "RF",
+    "S"
+  ],
+  "require_metrics_json": true,
+  "visible_goal": "Analyze a straight rectangular solid bar under tensile surface traction; report free-end displacement and axial stress.",
+  "selection_reason": "Simple 3D solid statics is directly supported by both FEA tools.",
+  "artifact_hint": {
+    "ground_truth_files": [
+      "Job-Tension.cae",
+      "Job-Tension.odb"
+    ],
+    "abaqus_stems": [
+      "Job-Tension"
+    ],
+    "ansys_db_files": [
+      "Job-Tension.db"
+    ],
+    "ansys_result_files": [
+      "Job-Tension.rst"
+    ]
+  },
+  "span_hint": {
+    "x": 100.0,
+    "y": 10.0,
+    "z": 10.0
+  },
+  "bounds_hint": {
+    "x": [
+      0.0,
+      100.0
+    ],
+    "y": [
+      0.0,
+      10.0
+    ],
+    "z": [
+      0.0,
+      10.0
+    ]
+  },
+  "metric_definitions": {
+    "free_end_displacement": "Final global U1 in mm at the unique undeformed node (100, 5, 5).",
+    "axial_stress": "-sum(final global RF1 over all X=0 fixed-face nodes) / 100 mm^2, reported as positive tensile MPa."
+  },
+  "bounds": {
+    "free_end_displacement": [
+      0.004,
+      0.0055
+    ],
+    "axial_stress": [
+      9.8,
+      10.2
+    ]
+  },
+  "bounds_semantics": "open intervals used only as broad physical sanity filters; native-result agreement and the task contract determine acceptance"
+}

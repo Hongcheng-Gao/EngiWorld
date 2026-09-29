@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--kicad--task-13--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "BGA Fan-Out Grid The file design.kicad_pcb contains a 15x15 BGA footprint (U1, 225 pads at 0.8mm pitch) placed at the center of the board. Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. Add fan-out vias to the PCB following a dog-bone escape routing pattern and write the result as /home/user/Desktop/answer.kicad_pcb. Requirements: 1. Add exactly one via per BGA pad (225 vias total). 2. Pads on the inner power/ground ring must use via-in-pad style with drill diameter <= 0.2mm, and set the tented property. 3. The remaining pads must use a 45-degree diagonal dog-bone offset from the pad center, with an offset distance of approximately 0.566mm. 4. Alternate the dog-bone offset direction by row parity. 5. No two vias may share the same position (via centres must all be distinct). Write /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/design.kicad_pcb",
+            "path": "/home/user/Desktop/design.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "pcbnew",
+          "/home/user/Desktop/design.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.kicad_pcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

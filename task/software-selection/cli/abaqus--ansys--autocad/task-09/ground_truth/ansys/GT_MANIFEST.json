@@ -1,0 +1,71 @@
+{
+  "schema_version": 1,
+  "status": "verified_real_snapshot",
+  "task": "task-09",
+  "task_id": "c-open-abaqus-ansys-autocad-task-09-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "solver": "ansys",
+  "software": "ANSYS Mechanical APDL 2026 R1 v261",
+  "analysis": "small-displacement 3D static solid beam under uniform pressure",
+  "job": "Job-UDL",
+  "step": "final result set at time 1.0",
+  "generated_on": "2026-08-14",
+  "source_instruction_sha256": "0b65313301583ba19c6b438d471fe41d33d87c906cfe94cb9445ca0c6046623e",
+  "task_definition_sha256": "628a40dca4b27cb4eb89c09f62f3afdb9c8b0dcec000b322fe05aefac266bee5",
+  "open_choice_spec_sha256": "77e2c565561dede881ddedfa082b9fcf075038d2a68c8273aea7d77adc7a408a",
+  "evaluator_sha256": "fa5511901b66015f2c1e906e4c8bf6260ba334bbe2860870bb17e1c547ea7184",
+  "files": [
+    {"file": "Job-UDL.db", "size": 720896, "sha256": "1ad5f57ea6fbf3c1846d977b05e4908b9b6cc33f46293e4062299848aee5fcdd"},
+    {"file": "Job-UDL.rst", "size": 524288, "sha256": "dfdbaa64cd8f424ca58df4410204e5273ec18db1615faa4337e102fbff736e35"},
+    {"file": "metrics.json", "size": 98, "sha256": "3ef543a159a5e2f783d4af98336917030005da22a72e375ddceb637d86c335d6"}
+  ],
+  "metrics": {
+    "midspan_deflection": -0.07939356684527163,
+    "max_mises": 9.971703438523051
+  },
+  "metric_definitions": {
+    "midspan_deflection": "mm; signed global UY at the unique (100,5,5) node in the final RST set",
+    "max_mises": "MPa; maximum explicitly saved nodal-averaged S,EQV,NAR over every beam-solid node in the final RST set"
+  },
+  "model_audit": {
+    "geometry_mm": [200.0, 10.0, 10.0],
+    "volume_mm3": 20000.0,
+    "material": {"youngs_modulus_mpa": 210000.0, "poissons_ratio": 0.3},
+    "mesh": {"element_type": "SOLID185 reduced integration", "elements": 160, "solid_nodes": 369, "target_edge_mm": 5.0},
+    "pressure": {"element_type": "SURF154", "elements": 80, "magnitude_mpa": 0.05, "area_mm2": 2000.0, "resultant_y_n": -100.0},
+    "coupling": "two independent CONTA174 MPC rigid surfaces to TARGE170 PILO nodes",
+    "supports": {"left_fixed": ["UX", "UY", "UZ", "ROTX"], "right_fixed": ["UY", "UZ"], "reaction_y_n": [50.00000000022925, 50.00000000019649]},
+    "solver_error_count": 0,
+    "solver_warning_count": 1,
+    "warning_note": "SURF154 is excluded from NAR; formal stress extraction is explicitly restricted to SOLID185 beam nodes."
+  },
+  "generation_evidence": {
+    "input": "../generation/ansys/generate_task09_ansys.inp",
+    "input_sha256": "04290892cdb27f52891e37e190b95edf83d9765d64a429b6b37e361c6935c4b7",
+    "runner": "../generation/ansys/run_generate_task09_ansys.py",
+    "runner_sha256": "ee5dffa9b7ca18b8ee0a1daa7c8139932dee054f32feb3416d9ff7a2c64ee068",
+    "run_report": "../generation/ansys/run_report.json",
+    "cdb": "../generation/ansys/Job-UDL.cdb",
+    "model_audit": "../generation/ansys/model_audit.json",
+    "reaction_audit": "../generation/ansys/reaction_audit.json",
+    "solver_output": "../generation/ansys/run.out"
+  },
+  "validation_matrix": "../validation/validation_matrix.json",
+  "validation_matrix_sha256": "689bdc981d7ac2bb72820e68072dd10d5dbfbe88d3a4e5d64b22e78d55d70411",
+  "formal_regression": "../validation/formal_regression.json",
+  "formal_regression_sha256": "5c5b8fd913f9fc6192b6b025748678f51d4bc8b4cf4c2167da45c7b354af8b68",
+  "local_audit": "../validation/local_audit.json",
+  "local_audit_sha256": "979fa9a48c7e4ff1b9d4c4be338acb1db18182810430ee6c967bc00d5b85bc15",
+  "final_instance_cleanup": "../validation/final_cleanup.json",
+  "final_instance_cleanup_sha256": "c1c9fc4de0f93faaaebb3087c39212c420a5104c4da0c259c55741bd945a1e34",
+  "official_sources": "../validation/official_sources.md",
+  "official_sources_sha256": "a73c7d93664233a9f4388b42a2dc9ef3c12d6888c743fcea93473ae8186619bc",
+  "archive_manifest": "../../audit_archive/ARCHIVE_MANIFEST.json",
+  "archive_manifest_sha256": "719d824af2a6cf5f473740b907cc2079cb71c8b9e8409852f35fdc60dce44745",
+  "provenance": {
+    "public_ip": "115.190.150.137",
+    "access": "OSWorld REST through the supplied SSH tunnel at http://127.0.0.1:15047",
+    "synthetic_or_offline_solver_data": false
+  },
+  "synthetic_or_offline_solver_data": false
+}

@@ -1,0 +1,79 @@
+{
+  "id": "open-ended--cli--agent-selected--task-03--ubuntu",
+  "task_family": "open-ended",
+  "cli_tool_policy": "open_choice",
+  "snapshot": "top-10",
+  "instruction": "This is a fully open-workflow engineering task. You may use any tools, scripts, or libraries available in the environment, in any combination and any order, with any amount of iteration. The environment starts from a blank base image with no engineering applications preinstalled. Inspect the supplied inputs, then choose, install, and configure any tools or libraries you need. No particular software is required. The evaluator does not inspect software identity, stage order, intermediate handoffs, command history, version records, or provenance.\n\nRF daughtercard shield-can and enclosure assembly.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as XY origin and the package bottom outer face as Z=0. Build the specified 84.4 x 60.4 x 12.2 mm covering ABS-ESD package, seat the PCB bottom at Z=3.2 mm on four bored standoffs aligned to MH1-MH4, and keep at least 4 mm PCB-to-inner-wall clearance away from accesses. Build a real installed closed-top RF shield centered on U1. The shield must remain a distinct installed solid with no positive-volume overlap with the package, so shield geometry and mass can be audited separately; shared boundary faces are allowed. The complete U1 KiCad keepout cylinder must lie inside the protected volume defined by the requirements; the complete J1 keepout cylinder must have zero intersection and positive separation from that protected volume. J1 must remain externally accessible through a bounded X_PLUS side window, J2 through a bounded X_MINUS side window, and TP1 through a continuous Z_PLUS lid bore, all using the CSV finished dimensions, requirements overcut, and minimum guard. The evaluator derives package and shield volume/mass, side clearance, U1 containment, J1 protected-volume intersection/separation, each access continuity, and unintended interference from final submitted geometry.\n\nSave the completed final assembly into `/home/user/Desktop/result` as exactly one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. The PCB and installed components must remain identifiable physical parts rather than being fused into enclosure material; this is a final-assembly geometry requirement, not a prescribed workflow. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://openscad.org/documentation.html; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://wiki.freecad.org/Release_notes_1.1; https://wiki.freecad.org/Headless_FreeCAD; https://docs.blender.org/manual/en/5.1/advanced/command_line/arguments.html; https://docs.blender.org/api/5.1/; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-03",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-03/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-03/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-03/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            },
+            {
+              "local_path": "../../prepare_evaluator.py",
+              "path": "/home/user/Desktop/_engiworld_prepare_evaluator.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "prepare_command": "python3 /home/user/Desktop/_engiworld_prepare_evaluator.py",
+      "prepare_timeout": 960
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

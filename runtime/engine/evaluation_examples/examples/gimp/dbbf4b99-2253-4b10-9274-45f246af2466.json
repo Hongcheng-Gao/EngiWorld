@@ -1,0 +1,52 @@
+{
+  "id": "dbbf4b99-2253-4b10-9274-45f246af2466",
+  "snapshot": "gimp",
+  "instruction": "Use GIMP only to convert my new RAW image into a JPEG file.",
+  "source": "https://www.makeuseof.com/tag/can-photoshop-gimp-cant/",
+  "config": [
+    {
+      "type": "download",
+      "parameters": {
+        "files": [
+          {
+            "url": "https://huggingface.co/datasets/xlangai/ubuntu_osworld_file_cache/resolve/main/gimp/dbbf4b99-2253-4b10-9274-45f246af2466/yicun.raw",
+            "path": "/home/user/Desktop/yicun.raw"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "gimp",
+          "/home/user/Desktop/yicun.raw"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "gimp"
+  ],
+  "evaluator": {
+    "func": "check_include_exclude",
+    "result": {
+      "type": "vm_command_line",
+      "command": "file --mime-type /home/user/Desktop/yicun.jpg 2>/dev/null || true",
+      "shell": true
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "include": [
+          "image/jpeg"
+        ],
+        "exclude": []
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

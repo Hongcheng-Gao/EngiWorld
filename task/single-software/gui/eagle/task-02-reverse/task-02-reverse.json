@@ -1,0 +1,85 @@
+{
+  "id": "single-software--gui--eagle--task-02-reverse--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Re-create the lost three-bit address interface from `netlist.csv` and `interface_report.txt`. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open the supplied board or schematic there. Create and place U1 as DRIVER3 and U2 as RECEIVER3, connect corresponding pins with three separate scalar nets named ADDR0, ADDR1, and ADDR2, and do not create a bus object. Save `/home/user/Desktop/answer.sch`.",
+  "source": "https://web.mit.edu/xavid/arch/i386_rhel4/help/; https://learn.sparkfun.com/tutorials/using-eagle-schematic/all; https://learn.adafruit.com/ktowns-ultimate-creating-parts-in-eagle-tutorial/understanding-parts-in-eagle",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02-reverse/init_file/netlist.csv",
+            "path": "/home/user/Desktop/netlist.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02-reverse/init_file/interface_report.txt",
+            "path": "/home/user/Desktop/interface_report.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(12); w, h = pyautogui.size(); pyautogui.press('enter'); time.sleep(3); pyautogui.press('enter'); time.sleep(6)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02-reverse/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

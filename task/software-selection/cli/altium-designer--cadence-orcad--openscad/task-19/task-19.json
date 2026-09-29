@@ -1,0 +1,66 @@
+{
+  "id": "software-selection--cli--altium-designer--cadence-orcad--openscad--task-19--windows",
+  "snapshot": "OrCAD-Altium-openscad",
+  "instruction": "The available tools for this task are command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD. The neutral schematic package `oscillator_core` and `annotation_map.csv` are on the desktop. Re-annotate the listed components. Requirements: - Write the required deliverables into `C:\\Users\\user\\Desktop\\result`. - Preserve component values and connectivity while applying the mapping. Copy every input mapping to `annotation_report.csv` using header `OldRef,NewRef`. [Software] The available entry points are OrCAD Capture at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, Altium Designer at `C:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`, and OpenSCAD at `C:\\Program Files\\OpenSCAD\\openscad.exe`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/annotation_map.csv",
+            "path": "C:\\Users\\user\\Desktop\\annotation_map.csv"
+          },
+          {
+            "local_path": "task-19/init_file/oscillator_core.edif",
+            "path": "C:\\Users\\user\\Desktop\\oscillator_core.edif"
+          },
+          {
+            "local_path": "task-19/init_file/oscillator_core.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\oscillator_core.schematic.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

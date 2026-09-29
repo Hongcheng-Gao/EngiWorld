@@ -1,0 +1,67 @@
+{
+  "id": "multi-software--cli--archicad--openstudio--task-03--windows",
+  "snapshot": "cli2-archicad27-openstudio310-win",
+  "instruction": "Work only with these installed native applications: Graphisoft Archicad 27 IFC command server at C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe and OpenStudio 3.10.0 CLI at C:\\openstudio-3.10.0\\bin\\openstudio.exe. Run the Archicad stage from `C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe` and the OpenStudio stage with `C:\\openstudio-3.10.0\\bin\\openstudio.exe`. Start from C:\\Users\\user\\Desktop\\init.ifc; do not replace it with a blank or unrelated model. The seed is a compact two-storey library containing 7 IfcSpace objects, 2 IfcBuildingStorey objects, 2 IfcSlab objects, one IfcRoof named ROOF, one IfcStair named LIBRARY-STAIR, and no IfcWall, IfcDoor, IfcWindow, or IfcOpeningElement objects. Perform exactly two dependent native stages in order. Stage 1, Archicad 27: load init.ifc through the IFC command server, retain every seed IfcRoot GlobalId and all listed core BIM entity counts, rename G-READING to READING and 1-GALLERY to GALLERY, and convert the two existing 9 m2 study spaces by renaming 1-STUDY-1 to QUIET-POD-01 and 1-STUDY-2 to QUIET-POD-02. Preserve G-LOBBY, G-STACKS, G-WC, the stair, roof, storeys, slabs, geometry, quantities, and the intentional zero door/window/opening counts. Mark the project with revision EW2A03 and export C:\\Users\\user\\Desktop\\stage1.ifc using Archicad. During the same stage, derive C:\\Users\\user\\Desktop\\handoff.json and C:\\Users\\user\\Desktop\\native_stage_log.json. The handoff must identify Archicad 27 and the actual IFC command server, contain the full stage1.ifc SHA-256, case id multi-cli-2-archicad-openstudio-task-03-windows, revision, listed core BIM entity counts, preserved features, and one record for each downstream space/zone: READING/READING-ZN 48 m2, GALLERY/GALLERY-ZN 15 m2, QUIET-POD-01/QUIET-POD-01-ZN 9 m2, and QUIET-POD-02/QUIET-POD-02-ZN 9 m2. The native stage log must record the live IFC command server executable, version, executable hash, process command line and start time, task-specific EDM database descriptors, actual load/modify/save command result references, and input/output hashes and timestamps. Stage 2, OpenStudio 3.10.0: consume handoff.json and use stage1.ifc as the upstream BIM reference. Create four geometric OpenStudio spaces with the handed-off areas and separate thermal zones. Both quiet pod spaces must share matched interior surfaces with GALLERY. The OSM must retain the upstream hashes and contain, for every space, a real People object, Lights object, ElectricEquipment object, positive DesignSpecificationOutdoorAir assignment, linked dual-setpoint thermostat, and linked ideal-loads system. Apply a construction set to all surfaces. The quiet-pod lighting power densities must each be lower than both READING and GALLERY, and QUIET-POD-01 and QUIET-POD-02 must use different weekday reservation profiles, not just different display names or handles. Use a real TMY3 EPW copied to C:\\Users\\user\\Desktop\\weather.epw, bind result.osm and workflow.osw to that delivered weather file, request hourly zone lighting, equipment, ideal-load heating/cooling energy and rate outputs, and run a real annual EnergyPlus simulation through OpenStudio CLI. Required final artifacts are init.ifc, stage1.ifc, handoff.json, native_stage_log.json, result.osm, workflow.osw, weather.epw, flow_report.json, model_summary.csv, run\\eplusout.sql, run\\eplusout.err, and run\\eplusout.end. flow_report.json must record hashes for stage1.ifc, handoff.json, native_stage_log.json, result.osm, workflow.osw, weather.epw, eplusout.sql, eplusout.err and eplusout.end; actual geometry/object counts; OpenStudio version; weather, schedule and construction data; and successful EnergyPlus status with zero severe and fatal errors. model_summary.csv must contain exactly one row per required space-zone pair with case_id, floor area, both upstream hashes, and energy_use_kwh and peak_load_w recalculated from the delivered standard EnergyPlus SQLite hourly series. Do not hand-author, patch, simulate, or substitute any delivered IFC, OSM, EPW, SQL, JSON, or CSV outside its appropriate Archicad or OpenStudio stage. Evaluation parses IFC quantities and GlobalIds, native stage records, OSM object links and surface geometry, real schedule profiles, EPW/OSW dependencies, standard SQLite tables and hourly series, and checks all hashes and reported metrics; reported values do not pass without the corresponding files.",
+  "source": "https://help.graphisoft.com/AC/27/INT/_AC27_Help/121_IFC/121_IFC-4.htm; https://archicadapi.graphisoft.com/JSONInterfaceDocumentation/; https://s3.amazonaws.com/openstudio-sdk-documentation/cpp/OpenStudio-3.10.0-doc/model/html/classopenstudio_1_1model_1_1_space.html; https://s3.amazonaws.com/openstudio-sdk-documentation/cpp/OpenStudio-3.10.0-doc/model/html/classopenstudio_1_1model_1_1_thermal_zone.html; https://raw.githubusercontent.com/NREL/EnergyPlus/v25.1.0/src/EnergyPlus/api/EnergyPlusPgm.cc",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad",
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\flow_report.json",
+    "C:\\Users\\user\\Desktop\\handoff.json",
+    "C:\\Users\\user\\Desktop\\model_summary.csv",
+    "C:\\Users\\user\\Desktop\\native_stage_log.json",
+    "C:\\Users\\user\\Desktop\\result.osm",
+    "C:\\Users\\user\\Desktop\\run\\eplusout.end",
+    "C:\\Users\\user\\Desktop\\run\\eplusout.err",
+    "C:\\Users\\user\\Desktop\\run\\eplusout.sql",
+    "C:\\Users\\user\\Desktop\\stage1.ifc",
+    "C:\\Users\\user\\Desktop\\weather.epw",
+    "C:\\Users\\user\\Desktop\\workflow.osw"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

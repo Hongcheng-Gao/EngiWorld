@@ -1,0 +1,30 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    location "system";
+    object topoSetDict;
+}
+actions
+(
+    {
+        name    porousCells;
+        type    cellSet;
+        action  new;
+        source  boxToCell;
+        sourceInfo
+        {
+            box (0 -1 -1) (10 1 1); // TODO_POROUS_REGION_BOX
+        }
+    }
+    {
+        name    porosity;
+        type    cellZoneSet;
+        action  new;
+        source  setToCellZone;
+        sourceInfo
+        {
+            set porousCells;
+        }
+    }
+);

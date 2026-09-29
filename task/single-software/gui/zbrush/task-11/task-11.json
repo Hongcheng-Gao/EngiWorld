@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--zbrush--task-11--windows",
+  "snapshot": "zbrush2025",
+  "instruction": "Complete the work through UV Master: unwrap the opened `scene.obj`, a single head mesh named Head with 2,114 vertices and 2,178 faces, then export `C:\\Users\\user\\Desktop\\output.obj` with UVs. Open ZBrush 2025 from the desktop shortcut and continue from `scene.obj`. Preserve the base geometry and object/group name.\n\nEvery face must reference UV coordinates, all UVs must lie in [0,1]^2, and the layout must have no positive-area overlap between UV triangles; shared island edges and vertices are allowed. The summed UV face area must be between 0.5 and 1.05. The worst per-face UV-area/world-area ratio, normalized by the median ratio in both expansion and compression directions, must remain below 15.",
+  "source": "https://help.maxon.net/zbr/en-us/; https://help.maxon.net/zbr/en-us/Content/html/user-guide/zbrush-plugins/subtool-master/subtool-master.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/scene.obj",
+            "path": "C:\\Users\\user\\Desktop\\scene.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
+          "C:\\Users\\user\\Desktop\\scene.obj"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import ctypes, time\nuser32 = ctypes.windll.user32\nEnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\nEnumChildProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\ndef close_error():\n    wins = []\n    def wcb(hwnd, lparam):\n        buf = ctypes.create_unicode_buffer(512)\n        user32.GetWindowTextW(hwnd, buf, 512)\n        if 'ZHomePage.exe' in buf.value and 'System Error' in buf.value:\n            wins.append(hwnd)\n        return True\n    user32.EnumWindows(EnumWindowsProc(wcb), 0)\n    for hwnd in wins:\n        buttons = []\n        def ccb(ch, lparam):\n            text = ctypes.create_unicode_buffer(128)\n            cls = ctypes.create_unicode_buffer(128)\n            user32.GetWindowTextW(ch, text, 128)\n            user32.GetClassNameW(ch, cls, 128)\n            if text.value == 'OK' or cls.value == 'Button':\n                buttons.append(ch)\n            return True\n        user32.EnumChildWindows(hwnd, EnumChildProc(ccb), 0)\n        for ch in buttons:\n            user32.SendMessageW(ch, 0x00F5, 0, 0)\ntime.sleep(95)\nfor _ in range(4):\n    close_error()\n    time.sleep(2)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "zbrush"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\output.obj"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,62 @@
+{
+  "id": "software-selection--cli--altium-designer--cadence-orcad--openscad--task-17--windows",
+  "snapshot": "OrCAD-Altium-openscad",
+  "instruction": "Use command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD for this task. The neutral schematic package `harness_sheet` is on the desktop. Restore the specified harness component values/comments. Requirements: - Write the required deliverables into `C:\\Users\\user\\Desktop\\result`. - Set `R3` to `10k`; keep `R6` at `4.7k` and set its Comment to `Feedback 4.7k`; keep `J1` at `CONN7` and set its Comment to `Connector 7-pin harness`. Do not change unrelated components. Report every component in `component_properties.csv` using header `Reference,Value,Comment`, with an empty Comment when absent. [Software] The available entry points are OrCAD Capture at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, Altium Designer at `C:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`, and OpenSCAD at `C:\\Program Files\\OpenSCAD\\openscad.exe`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/harness_sheet.edif",
+            "path": "C:\\Users\\user\\Desktop\\harness_sheet.edif"
+          },
+          {
+            "local_path": "task-17/init_file/harness_sheet.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\harness_sheet.schematic.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

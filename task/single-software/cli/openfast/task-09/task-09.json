@@ -1,0 +1,72 @@
+{
+  "id": "single-software--cli--openfast--task-09--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "The starting input is `/home/user/Desktop/broken.fst`, which references complete but intentionally faulty `broken_elasto.dat` and `broken_inflow.dat` modules plus a version-matched dependency closure. Only initialization inputs are preloaded; generate all result artifacts yourself.\n\nThe OpenFAST executable is `/home/user/miniconda3/bin/openfast` when working on `broken.fst`. Complete a diagnose-fix-rerun workflow using only the command line: 1. Run `openfast broken.fst`, read the terminal or echo diagnostics, repair one reported input fault at a time, and rerun until all faults are identified. Retain the first failed run as `/home/user/Desktop/diagnostic_1.log` and the post-NumBl second failed run as `/home/user/Desktop/diagnostic_2.log`; these logs must preserve the real OpenFAST diagnostics in order. 2. Save the corrected modules as `/home/user/Desktop/fixed_elasto.dat` and `/home/user/Desktop/fixed_inflow.dat`; save a `/home/user/Desktop/fixed.fst` that explicitly references both corrected modules. Do not bypass them by referencing another baseline module. 3. Run `fixed.fst` through 60 s and retain `/home/user/Desktop/fixed.out` and save its normal-termination console output as `/home/user/Desktop/normal_termination.log`. 4. Write `/home/user/Desktop/postprocess.py` to compute the complete `GenPwr` series arithmetic mean and maximum, and save `/home/user/Desktop/fixed_summary.txt` as `mean_pwr_kw, max_pwr_kw`. 5. Write `/home/user/Desktop/diagnosis.txt` with at least 100 English word tokens, explaining every actual error message, root cause, field, old value, corrected value, and verification. 6. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/diagnostic_1.log",
+    "/home/user/Desktop/diagnostic_2.log",
+    "/home/user/Desktop/fixed_elasto.dat",
+    "/home/user/Desktop/fixed_inflow.dat",
+    "/home/user/Desktop/fixed.fst",
+    "/home/user/Desktop/fixed.out",
+    "/home/user/Desktop/normal_termination.log",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/fixed_summary.txt",
+    "/home/user/Desktop/diagnosis.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

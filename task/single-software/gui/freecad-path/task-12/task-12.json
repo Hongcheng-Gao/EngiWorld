@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--freecad-path--task-12--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "In FreeCAD Path/CAM, open /home/user/Desktop/library_part.step. Open the part in FreeCAD from `/usr/bin/freecad`, then carry out the Path workbench edits when working on `library_part.step`. Manually create exactly four ToolBits and four matching ToolControllers using the following values; all dimensions are in mm and all feed rates are in mm/min. T1 Face_12mm_EndMill: endmill ToolBit with Diameter 12, CuttingEdgeHeight 25, Length 75, and ShankDiameter 12; ToolController number 1, clockwise spindle S6000 rpm, horizontal feed 600, vertical feed 180; use it only for the Face_T1 operation. T2 Drill_6mm_118deg: drill ToolBit with Diameter 6, Length 80, and TipAngle 118 degrees; ToolController number 2, clockwise spindle S5000 rpm, horizontal feed 180, vertical feed 180; use it only for the Drilling_T2 operation. T3 RoughProfile_8mm_EndMill: endmill ToolBit with Diameter 8, CuttingEdgeHeight 20, Length 65, and ShankDiameter 8; ToolController number 3, clockwise spindle S7000 rpm, horizontal feed 500, vertical feed 150; use it only for the Profile_Rough_T3 operation. T4 FinishProfile_6mm_EndMill: endmill ToolBit with Diameter 6, CuttingEdgeHeight 18, Length 60, and ShankDiameter 6; ToolController number 4, clockwise spindle S8000 rpm, horizontal feed 300, vertical feed 100; use it only for a separate Profile_Finish_T4 finishing operation. Create the Job and stock/setup, set the origin, verify the toolpaths, and post with the linuxcnc postprocessor in metric absolute mode. To make the posted program self-describing and uniquely verifiable, task-12.nc must contain exactly one parenthesized TOOL_SPEC comment and one parenthesized TOOL_CONTROLLER comment for each tool using these key-value fields: (TOOL_SPEC T1 TYPE=ENDMILL DIAMETER=12MM CUTTING_EDGE_HEIGHT=25MM LENGTH=75MM SHANK_DIAMETER=12MM), (TOOL_CONTROLLER T1 OPERATION=FACE SPINDLE=6000RPM HORIZONTAL_FEED=600MM/MIN VERTICAL_FEED=180MM/MIN), (TOOL_SPEC T2 TYPE=DRILL DIAMETER=6MM LENGTH=80MM TIP_ANGLE=118DEG), (TOOL_CONTROLLER T2 OPERATION=DRILLING SPINDLE=5000RPM HORIZONTAL_FEED=180MM/MIN VERTICAL_FEED=180MM/MIN), (TOOL_SPEC T3 TYPE=ENDMILL DIAMETER=8MM CUTTING_EDGE_HEIGHT=20MM LENGTH=65MM SHANK_DIAMETER=8MM), (TOOL_CONTROLLER T3 OPERATION=PROFILE_ROUGH SPINDLE=7000RPM HORIZONTAL_FEED=500MM/MIN VERTICAL_FEED=150MM/MIN), (TOOL_SPEC T4 TYPE=ENDMILL DIAMETER=6MM CUTTING_EDGE_HEIGHT=18MM LENGTH=60MM SHANK_DIAMETER=6MM), and (TOOL_CONTROLLER T4 OPERATION=PROFILE_FINISH SPINDLE=8000RPM HORIZONTAL_FEED=300MM/MIN VERTICAL_FEED=100MM/MIN). Include each operation comment exactly once and place it immediately before its corresponding FreeCAD tool-change block; the standard postprocessor may insert (Begin toolchange) and M5 before the matching M6 Tn line: (OPERATION FACE T1), (OPERATION DRILLING T2), (OPERATION PROFILE_ROUGH T3), and (OPERATION PROFILE_FINISH T4). Post the required NC output using exactly this absolute file path: /home/user/Desktop/task-12.nc.",
+  "source": "https://wiki.freecad.org/CAM_ToolBit_Library; https://wiki.freecad.org/CAM_ToolController",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/library_part.step",
+            "path": "/home/user/Desktop/library_part.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/library_part.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-12.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

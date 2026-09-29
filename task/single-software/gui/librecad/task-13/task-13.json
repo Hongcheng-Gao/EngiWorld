@@ -1,0 +1,75 @@
+{
+  "id": "single-software--gui--librecad--task-13--ubuntu",
+  "snapshot": "LibreCAD2.2.0.2",
+  "instruction": "Inspect guih10_hydraulic_manifold_seed.dxf in LibreCAD. Launch LibreCAD from `/usr/bin/librecad` before opening `guih10_hydraulic_manifold_seed.dxf`. Complete the hard hydraulic manifold drilling diagram. Draw OUTLINE rectangle (0,0)-(220,120). Add PORT circles radius 9 at (35,100), (85,100), (135,100), and (185,100), labels P, T, A, and B above them, lower PORT circles radius 6 at (35,20) and (185,20), PASSAGE lines (35,100)-(35,20), (85,100)-(185,20), (135,100)-(35,20), (185,100)-(185,20), and (0,60)-(220,60), central CUT circle center (110,60) radius 14, and notes MANIFOLD M-42, CROSS DRILL 6 PLACES, PLUG BOTH ENDS, and PORTS P T A B. Save the result as /home/user/Desktop/guih10_hydraulic_manifold_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/guih10_hydraulic_manifold_seed.dxf",
+            "path": "/home/user/Desktop/guih10_hydraulic_manifold_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/guih10_hydraulic_manifold_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/guih10_hydraulic_manifold_completed.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--solidworks--task-08--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Start with C:\\Users\\User\\Desktop\\cli_028_small_hole_cleanup.step in SolidWorks. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). At the start of the task, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_028_small_hole_cleanup.step`.\n\nUsing SolidWorks command-line automation, use that input file, a 180 x 120 x 6 mm panel containing eighteen round through holes. The eight functional holes are 8 mm diameter at X=-60, -20, 20, and 60 crossed with Y=-35 and 35. The ten small holes are 2 mm diameter at X=-72, -36, 0, 36, and 72 crossed with Y=-10 and 10. Fill or delete all ten through holes whose diameter is smaller than 3 mm. Preserve all eight functional through holes whose diameter is at least 6 mm, including their positions. Keep the panel outside shape and thickness unchanged. Export C:\\Users\\User\\Desktop\\cli_028_cleanup_out.step and C:\\Users\\User\\Desktop\\cli_028_cleanup_report.txt stating that ten small holes were removed.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/cli_028_small_hole_cleanup.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_028_small_hole_cleanup.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_028_cleanup_out.step",
+    "C:\\Users\\User\\Desktop\\cli_028_cleanup_report.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

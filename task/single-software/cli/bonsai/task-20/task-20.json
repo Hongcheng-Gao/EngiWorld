@@ -1,0 +1,76 @@
+{
+  "id": "single-software--cli--bonsai--task-20--ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Update /home/user/Desktop/init.ifc in the already opened Bonsai/Blender IFC authoring environment using its CLI/API tools, and save the finished model as /home/user/Desktop/result.ifc. Before starting the work, Bonsai is installed as a Blender extension, so start `/opt/blender/blender` and use the Bonsai tools from that environment. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a coordinated house-and-garage package where two simple building parts have been merged into one IFC4 file. The project team needs the house and garage separated cleanly for downstream quantity and procurement workflows without changing the combined massing. Preserve the house rooms, garage bay, ten envelope walls, three slabs, and connector apron. Use shared envelope and slab types, classify every space, wall, and slab by the building part it belongs to, group the house package separately from the garage package, and record the coordinated merge with revision code BONSAI-CLI-20. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"counts\":{\"IfcGroup\":2,\"IfcSlab\":3,\"IfcSlabType\":1,\"IfcSpace\":4,\"IfcWall\":10,\"IfcWallType\":1},\"groups\":{\"Garage Package 20\":[\"Garage Bay\",\"G-Wall-S\",\"G-Wall-N\",\"G-Wall-W\",\"G-Wall-E\",\"Garage Slab\"],\"House Package 20\":[\"House Living\",\"House Bed\",\"House Kitchen\",\"H-Wall-S\",\"H-Wall-N\",\"H-Wall-W\",\"H-Wall-E\",\"H-Partition-1\",\"H-Partition-2\",\"House Slab\",\"Connector Apron\"]},\"markers\":{\"IfcSlab\":[\"House Slab\",\"Garage Slab\",\"Connector Apron\"],\"IfcSpace\":[\"House Living\",\"House Bed\",\"House Kitchen\",\"Garage Bay\"],\"IfcWall\":[\"H-Wall-S\",\"H-Wall-N\",\"H-Wall-W\",\"H-Wall-E\",\"H-Partition-1\",\"H-Partition-2\",\"G-Wall-S\",\"G-Wall-N\",\"G-Wall-W\",\"G-Wall-E\"]},\"props\":{\"IfcSlab\":{\"Connector Apron\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"Garage Slab\":{\"BuildingPart\":\"Garage\",\"MergeStatus\":\"COORDINATED\"},\"House Slab\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"}},\"IfcSpace\":{\"Garage Bay\":{\"BuildingPart\":\"Garage\",\"MergeStatus\":\"COORDINATED\"},\"House Bed\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"House Kitchen\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"House Living\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"}},\"IfcWall\":{\"G-Wall-E\":{\"BuildingPart\":\"Garage\",\"MergeStatus\":\"COORDINATED\"},\"G-Wall-N\":{\"BuildingPart\":\"Garage\",\"MergeStatus\":\"COORDINATED\"},\"G-Wall-S\":{\"BuildingPart\":\"Garage\",\"MergeStatus\":\"COORDINATED\"},\"G-Wall-W\":{\"BuildingPart\":\"Garage\",\"MergeStatus\":\"COORDINATED\"},\"H-Partition-1\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"H-Partition-2\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"H-Wall-E\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"H-Wall-N\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"H-Wall-S\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"},\"H-Wall-W\":{\"BuildingPart\":\"House\",\"MergeStatus\":\"COORDINATED\"}}},\"schema\":\"IFC4\",\"task\":\"BONSAI-CLI-20\",\"types\":{\"IfcSlab\":\"MergedSlabType-20\",\"IfcWall\":\"MergedEnvelopeType-20\"}}.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

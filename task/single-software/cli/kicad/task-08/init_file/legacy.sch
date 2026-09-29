@@ -1,0 +1,119 @@
+EESchema Schematic File Version 4
+EELAYER 30 0
+EELAYER END
+$Descr A4 11693 8268
+encoding utf-8
+Sheet 1 1
+Title "Legacy Power Board"
+Date "2015-04-28"
+Rev "A"
+Comp "ACME Corp"
+Comment1 ""
+Comment2 ""
+Comment3 ""
+Comment4 ""
+$EndDescr
+$Comp
+L device:R R1
+U 1 1 5A1B2C3D
+P 1600 1400
+F 0 "R1" H 1670 1446 50  0000 L CNN
+F 1 "10k" H 1670 1355 50  0000 L CNN
+F 2 "" H 1600 1400 50  0001 C CNN
+F 3 "~" H 1600 1400 50  0001 C CNN
+	1    1600 1400
+	1    0    0    -1
+$EndComp
+$Comp
+L device:C C1
+U 1 1 5A1B2C3E
+P 2400 1400
+F 0 "C1" H 2515 1446 50  0000 L CNN
+F 1 "100nF" H 2515 1355 50  0000 L CNN
+F 2 "" H 2438 1250 50  0001 C CNN
+F 3 "~" H 2400 1400 50  0001 C CNN
+	1    2400 1400
+	1    0    0    -1
+$EndComp
+$Comp
+L device:LED D1
+U 1 1 5A1B2C3F
+P 3200 1400
+F 0 "D1" H 3193 1145 50  0000 C CNN
+F 1 "LED" H 3193 1236 50  0000 C CNN
+F 2 "" H 3200 1400 50  0001 C CNN
+F 3 "~" H 3200 1400 50  0001 C CNN
+	1    3200 1400
+	-1   0    0    1
+$EndComp
+$Comp
+L transistors:BC547 Q1
+U 1 1 5A1B2C40
+P 4000 1400
+F 0 "Q1" H 4191 1446 50  0000 L CNN
+F 1 "BC547" H 4191 1355 50  0000 L CNN
+F 2 "" H 4200 1325 50  0001 L CIN
+F 3 "~" H 4000 1400 50  0001 L CNN
+	1    4000 1400
+	1    0    0    -1
+$EndComp
+$Comp
+L regul:LM7805 U1
+U 1 1 5A1B2C41
+P 5000 1400
+F 0 "U1" H 5000 1642 50  0000 C CNN
+F 1 "LM7805" H 5000 1551 50  0000 C CNN
+F 2 "" H 5000 1400 50  0001 C CNN
+F 3 "~" H 5000 1400 50  0001 C CNN
+	1    5000 1400
+	1    0    0    -1
+$EndComp
+Wire Wire Line
+	1600 1250 1600 1100
+Wire Wire Line
+	1600 1100 2400 1100
+Wire Wire Line
+	2400 1100 2400 1300
+Wire Wire Line
+	2400 1100 4750 1100
+Wire Wire Line
+	4750 1100 4750 1400
+Wire Wire Line
+	1600 1550 1600 1800
+Wire Wire Line
+	1600 1800 2400 1800
+Wire Wire Line
+	2400 1800 2400 1500
+Wire Wire Line
+	2400 1800 4100 1800
+Wire Wire Line
+	4100 1800 4100 1550
+Wire Wire Line
+	4100 1800 5000 1800
+Wire Wire Line
+	5000 1800 5000 1650
+Wire Wire Line
+	3050 1400 3050 2000
+Wire Wire Line
+	3050 2000 3800 2000
+Wire Wire Line
+	3800 2000 3800 1400
+Wire Wire Line
+	3350 1400 3500 1400
+Wire Wire Line
+	3500 1400 3500 1250
+Wire Wire Line
+	3500 1250 4100 1250
+Wire Wire Line
+	5250 1400 5500 1400
+Text Label 1800 1100 0    50   ~ 0
+VCC
+Text Label 1800 1800 0    50   ~ 0
+GND
+Text Label 3200 2000 0    50   ~ 0
+SIG_A
+Text Label 3600 1250 0    50   ~ 0
+SIG_B
+Text Label 5350 1400 0    50   ~ 0
++5V
+$EndSCHEMATC

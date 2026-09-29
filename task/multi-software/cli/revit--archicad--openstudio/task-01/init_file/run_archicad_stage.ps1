@@ -1,0 +1,350 @@
+param(
+    [string]$Desktop = "C:\Users\user\Desktop",
+    [int]$Port = 19736
+)
+
+$ErrorActionPreference = "Stop"
+$commandServer = "C:\Program Files\Graphisoft\Archicad 27\IFCCommandServerApp.exe"
+$archicadExe = "C:\Program Files\Graphisoft\Archicad 27\Archicad Starter.exe"
+$specPath = Join-Path $Desktop "workflow_spec.json"
+$translatorPath = Join-Path $Desktop "archicad_ifc4_translator.json"
+$inputPath = Join-Path $Desktop "stage1.ifc"
+$revitHandoffPath = Join-Path $Desktop "revit_handoff.json"
+$outputPath = Join-Path $Desktop "stage2.ifc"
+$handoffPath = Join-Path $Desktop "archicad_handoff.json"
+$reportPath = Join-Path $Desktop "archicad_validation_report.json"
+$nativeLogPath = Join-Path $Desktop "native_stage_log.json"
+$databasePath = Join-Path $Desktop "EngiWorld_EW3B01_IFCServer"
+$modelName = "EW3B01-RUN"
+$baseUrl = "http://127.0.0.1:$Port"
+$utf8 = New-Object System.Text.UTF8Encoding($false)
+
+foreach ($required in @($commandServer, $archicadExe, $specPath, $translatorPath, $inputPath, $revitHandoffPath, $nativeLogPath)) {
+    if (-not (Test-Path -LiteralPath $required -PathType Leaf)) {
+        throw "Required Archicad stage dependency is missing: $required"
+    }
+}
+
+$spec = Get-Content -LiteralPath $specPath -Raw | ConvertFrom-Json
+$translator = Get-Content -LiteralPath $translatorPath -Raw | ConvertFrom-Json
+$revitHandoff = Get-Content -LiteralPath $revitHandoffPath -Raw | ConvertFrom-Json
+if ($spec.case_id -ne "multi-cli-3-revit-archicad-openstudio-task-01-windows") {
+    throw "This launcher only accepts the task-01 workflow specification."
+}
+if ($translator.command_server.validation_method -ne "Macro.ValidateIfcModel") {
+    throw "The translator contract does not name the verified Archicad validation method."
+}
+
+$archicadVersionInfo = (Get-Item -LiteralPath $archicadExe).VersionInfo
+$serverVersionInfo = (Get-Item -LiteralPath $commandServer).VersionInfo
+$buildMatch = [regex]::Match($archicadVersionInfo.ProductVersion, "(?<!\d)(\d{4,})(?!\d)")
+if (-not $buildMatch.Success -or [int]$buildMatch.Groups[1].Value -lt 6000) {
+    throw "Expected Archicad 27 build 6000 or newer, found $($archicadVersionInfo.ProductVersion)."
+}
+$build = [int]$buildMatch.Groups[1].Value
+
+if (Get-NetTCPConnection -LocalPort $Port -State Listen -ErrorAction SilentlyContinue) {
+    throw "Task-local Archicad port $Port is already in use."
+}
+foreach ($stale in @($outputPath, "$outputPath.log", $handoffPath, $reportPath)) {
+    if (Test-Path -LiteralPath $stale -PathType Leaf) {
+        Remove-Item -LiteralPath $stale -Force
+    }
+}
+if (Test-Path -LiteralPath $databasePath -PathType Container) {
+    Remove-Item -LiteralPath $databasePath -Recurse -Force
+}
+New-Item -ItemType Directory -Path $databasePath -Force | Out-Null
+
+$rpcTranscript = New-Object System.Collections.Generic.List[object]
+function Invoke-Jemi {
+    param(
+        [Parameter(Mandatory = $true)][string]$Method,
+        [Parameter(Mandatory = $true)][object]$Params
+    )
+    $requestObject = [ordered]@{ method = $Method; params = $Params }
+    $requestJson = $requestObject | ConvertTo-Json -Depth 30 -Compress
+    $response = Invoke-RestMethod -Method Post -Uri "$baseUrl/JEMI" -ContentType "application/json" -Body $requestJson
+    $rpcTranscript.Add([ordered]@{ request = $requestObject; response = $response })
+    if ($null -ne $response.error) {
+        throw "Archicad JEMI $Method failed: $($response.error | ConvertTo-Json -Depth 20 -Compress)"
+    }
+    return $response
+}
+
+function Get-EntityAttribute {
+    param(
+        [Parameter(Mandatory = $true)][string]$Reference,
+        [Parameter(Mandatory = $true)][string]$Attribute
+    )
+    $response = Invoke-Jemi -Method "Entity.GetAttribute" -Params ([ordered]@{ Select = $Reference; Attribute = $Attribute })
+    return $response.result.$Attribute
+}
+
+function Get-IfcRootIds {
+    param([Parameter(Mandatory = $true)][string]$Path)
+    $text = Get-Content -LiteralPath $Path -Raw
+    $matches = [regex]::Matches($text, "#\d+\s*=\s*IFC[A-Z0-9_]+\s*\(\s*'([0-9A-Za-z_\x24]{22})'", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase)
+    return @($matches | ForEach-Object { $_.Groups[1].Value })
+}
+
+function Get-IfcEntityCount {
+    param(
+        [Parameter(Mandatory = $true)][string]$Path,
+        [Parameter(Mandatory = $true)][string]$EntityName
+    )
+    $text = Get-Content -LiteralPath $Path -Raw
+    return [regex]::Matches($text, "\b$([regex]::Escape($EntityName))\s*\(", [System.Text.RegularExpressions.RegexOptions]::IgnoreCase).Count
+}
+
+$serverProcess = $null
+$startedUtc = [DateTime]::UtcNow.ToString("o")
+try {
+    $arguments = @("--p", "$Port", "--m", $modelName, "--d", $databasePath, "--sa", "new_ifc4")
+    $serverProcess = Start-Process -FilePath $commandServer -ArgumentList $arguments -PassThru
+
+    $healthy = $false
+    for ($attempt = 0; $attempt -lt 40; $attempt++) {
+        Start-Sleep -Milliseconds 250
+        if ($serverProcess.HasExited) {
+            throw "Archicad IFC command server exited during startup with code $($serverProcess.ExitCode)."
+        }
+        try {
+            Invoke-WebRequest -UseBasicParsing -Uri "$baseUrl/HEALTH" -TimeoutSec 2 | Out-Null
+            $healthy = $true
+            break
+        }
+        catch {
+        }
+    }
+    if (-not $healthy) {
+        throw "Archicad IFC command server did not become healthy on port $Port."
+    }
+
+    $loadResponse = Invoke-Jemi -Method "Model.LoadFile" -Params ([ordered]@{ Location = $inputPath })
+    if ($loadResponse.result -ne "stage1.ifc") {
+        throw "Archicad did not report stage1.ifc as the loaded model."
+    }
+
+    $validationResponse = Invoke-Jemi -Method "Macro.ValidateIfcModel" -Params ([ordered]@{})
+    if ($null -ne $validationResponse.result) {
+        $validationItems = @($validationResponse.result)
+        if ($validationItems.Count -gt 0) {
+            throw "Archicad reported invalid IFC entities: $($validationItems | ConvertTo-Json -Depth 30 -Compress)"
+        }
+    }
+
+    $ifcClasses = @(
+        "IfcProject", "IfcSite", "IfcBuilding", "IfcBuildingStorey", "IfcSpace",
+        "IfcWall", "IfcSlab", "IfcRoof", "IfcDoor", "IfcWindow", "IfcOpeningElement"
+    )
+    $liveEntityCounts = [ordered]@{}
+    $entityReferences = [ordered]@{}
+    foreach ($className in $ifcClasses) {
+        $response = Invoke-Jemi -Method "Entity.Get" -Params ([ordered]@{ Select = [ordered]@{ $className = [ordered]@{} } })
+        if ($null -eq $response.result) {
+            $references = @()
+        }
+        elseif ($response.result -is [System.Array]) {
+            $references = @($response.result)
+        }
+        else {
+            $references = @([string]$response.result)
+        }
+        $liveEntityCounts[$className] = $references.Count
+        $entityReferences[$className] = $references
+    }
+
+    $liveSpaces = @()
+    foreach ($reference in @($entityReferences["IfcSpace"])) {
+        $liveSpaces += [ordered]@{
+            ref_id = [string]$reference
+            ifc_guid = [string](Get-EntityAttribute -Reference ([string]$reference) -Attribute "GlobalId")
+            name = [string](Get-EntityAttribute -Reference ([string]$reference) -Attribute "Name")
+            long_name = [string](Get-EntityAttribute -Reference ([string]$reference) -Attribute "LongName")
+        }
+    }
+
+    Invoke-Jemi -Method "Model.SaveFile" -Params ([ordered]@{ Location = $outputPath }) | Out-Null
+    if (-not (Test-Path -LiteralPath $outputPath -PathType Leaf) -or (Get-Item -LiteralPath $outputPath).Length -le 0) {
+        throw "Archicad Model.SaveFile did not produce stage2.ifc."
+    }
+
+    $stage1Hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $inputPath).Hash.ToLowerInvariant()
+    $stage2Hash = (Get-FileHash -Algorithm SHA256 -LiteralPath $outputPath).Hash.ToLowerInvariant()
+    $revitHandoffHash = (Get-FileHash -Algorithm SHA256 -LiteralPath $revitHandoffPath).Hash.ToLowerInvariant()
+    $stage1Ids = @(Get-IfcRootIds -Path $inputPath)
+    $stage2Ids = @(Get-IfcRootIds -Path $outputPath)
+    $stage1UniqueIds = @($stage1Ids | Sort-Object -Unique)
+    $stage2UniqueIds = @($stage2Ids | Sort-Object -Unique)
+    $missingIds = @($stage1UniqueIds | Where-Object { $_ -notin $stage2UniqueIds })
+    $stage2DuplicateIds = @($stage2Ids | Group-Object | Where-Object Count -gt 1 | ForEach-Object Name)
+    if ($missingIds.Count -ne 0) {
+        throw "Archicad stage2.ifc lost upstream IfcRoot GlobalIds: $($missingIds -join ', ')"
+    }
+    if ($stage2DuplicateIds.Count -ne 0) {
+        throw "Archicad stage2.ifc contains duplicate IfcRoot GlobalIds: $($stage2DuplicateIds -join ', ')"
+    }
+
+    $spaceRows = @()
+    foreach ($upstreamSpace in @($revitHandoff.spaces)) {
+        $liveSpace = @($liveSpaces | Where-Object { $_.long_name -eq $upstreamSpace.name -and $_.ifc_guid -eq $upstreamSpace.ifc_guid })
+        if ($liveSpace.Count -ne 1) {
+            throw "Archicad live model does not contain exactly one matching IfcSpace for $($upstreamSpace.name)."
+        }
+        $spaceRows += [ordered]@{
+            name = [string]$upstreamSpace.name
+            ifc_guid = [string]$upstreamSpace.ifc_guid
+            thermal_zone = [string]$upstreamSpace.thermal_zone
+            area_m2 = [double]$upstreamSpace.area_m2
+            storey = [string]$upstreamSpace.storey
+            schedule_category = [string]$upstreamSpace.schedule_category
+            people_per_m2 = [double]$upstreamSpace.people_per_m2
+            lighting_w_per_m2 = [double]$upstreamSpace.lighting_w_per_m2
+            equipment_w_per_m2 = [double]$upstreamSpace.equipment_w_per_m2
+            outdoor_air_l_per_s_person = [double]$upstreamSpace.outdoor_air_l_per_s_person
+            source_stage = "revit-handoff-verified-by-archicad"
+            archicad_ref_id = [string]$liveSpace[0].ref_id
+        }
+    }
+
+    $stage1BoundaryCount = Get-IfcEntityCount -Path $inputPath -EntityName "IFCRELSPACEBOUNDARY"
+    $stage2BoundaryCount = Get-IfcEntityCount -Path $outputPath -EntityName "IFCRELSPACEBOUNDARY"
+    $stage1SecondLevelCount = Get-IfcEntityCount -Path $inputPath -EntityName "IFCRELSPACEBOUNDARY2NDLEVEL"
+    $stage2SecondLevelCount = Get-IfcEntityCount -Path $outputPath -EntityName "IFCRELSPACEBOUNDARY2NDLEVEL"
+
+    $actualCommandLine = (Get-CimInstance Win32_Process -Filter "ProcessId=$($serverProcess.Id)").CommandLine
+    $productVersion = "Archicad 27 build $build (Archicad Starter $($archicadVersionInfo.ProductVersion); IFCCommandServer $($serverVersionInfo.ProductVersion))"
+    $qaTokens = @(
+        "ARCHICAD-IFC-MODEL-VALIDATED",
+        "UPSTREAM-GLOBALIDS-PRESERVED",
+        "COMMUNITY-ACTIVITY",
+        "QUIET-COUNSELLING",
+        $spec.case_id
+    )
+    $nativeProvenance = [ordered]@{
+        exe = $commandServer
+        product_version = $productVersion
+        process_id = $serverProcess.Id
+        command_line = $actualCommandLine
+        port = $Port
+        model_name = $modelName
+        database_path = $databasePath
+        health_endpoint = "$baseUrl/HEALTH"
+        jemi_endpoint = "$baseUrl/JEMI"
+        rpc_transcript = $rpcTranscript.ToArray()
+    }
+
+    $entityCounts = [ordered]@{}
+    $liveSavedCountDifferences = @()
+    foreach ($className in $ifcClasses) {
+        $savedCount = Get-IfcEntityCount -Path $outputPath -EntityName $className
+        if ([int]$liveEntityCounts[$className] -ne $savedCount) {
+            $liveSavedCountDifferences += [ordered]@{
+                entity = $className
+                live_select_count = [int]$liveEntityCounts[$className]
+                saved_exact_entity_count = $savedCount
+            }
+        }
+        $entityCounts[$className] = $savedCount
+    }
+
+    $report = [ordered]@{
+        case_id = $spec.case_id
+        software_stage = "archicad"
+        source_file = "stage1.ifc"
+        source_sha256 = $stage1Hash
+        output_file = "stage2.ifc"
+        output_sha256 = $stage2Hash
+        validation_method = "Macro.ValidateIfcModel"
+        validation_result = $validationResponse.result
+        live_entity_counts = $liveEntityCounts
+        entity_counts = $entityCounts
+        live_saved_count_differences = $liveSavedCountDifferences
+        live_spaces = $liveSpaces
+        spaces = @($spaceRows | ForEach-Object { $_.name })
+        space_boundaries = [ordered]@{
+            policy = "preserve_and_report_upstream_state"
+            stage1_relationship_count = $stage1BoundaryCount
+            stage2_relationship_count = $stage2BoundaryCount
+            stage1_second_level_count = $stage1SecondLevelCount
+            stage2_second_level_count = $stage2SecondLevelCount
+        }
+        global_id_audit = [ordered]@{
+            stage1_ifcroot_count = $stage1Ids.Count
+            stage1_unique_ifcroot_count = $stage1UniqueIds.Count
+            stage2_ifcroot_count = $stage2Ids.Count
+            stage2_unique_ifcroot_count = $stage2UniqueIds.Count
+            preserved_count = @($stage1UniqueIds | Where-Object { $_ -in $stage2UniqueIds }).Count
+            missing_ids = $missingIds
+            duplicate_ids = $stage2DuplicateIds
+        }
+        qa_tokens = $qaTokens
+        blocking_errors = @()
+        native_provenance = $nativeProvenance
+    }
+    [IO.File]::WriteAllText($reportPath, (($report | ConvertTo-Json -Depth 100) + [Environment]::NewLine), $utf8)
+
+    $buildingArea = 0.0
+    foreach ($spaceRow in $spaceRows) {
+        $buildingArea += [double]$spaceRow["area_m2"]
+    }
+    $handoff = [ordered]@{
+        case_id = $spec.case_id
+        software_stage = "archicad"
+        source_file = "stage2.ifc"
+        source_sha256 = $stage2Hash
+        stage1_sha256 = $stage1Hash
+        revit_handoff_sha256 = $revitHandoffHash
+        spaces = $spaceRows
+        thermal_zones = @($spaceRows | ForEach-Object { [ordered]@{ name = $_.thermal_zone; area_m2 = $_.area_m2 } })
+        handoff_tokens = @($spec.handoff_tokens)
+        building_area_m2 = [math]::Round($buildingArea, 6)
+        weather_file = "weather.epw"
+        schedule_set = "$($spec.revision)-ScheduleSet"
+        construction_set = "$($spec.revision)-ConstructionSet"
+        downstream_consumer = "openstudio"
+        native_provenance = $nativeProvenance
+    }
+    [IO.File]::WriteAllText($handoffPath, (($handoff | ConvertTo-Json -Depth 100) + [Environment]::NewLine), $utf8)
+
+    $finishedUtc = [DateTime]::UtcNow.ToString("o")
+    $nativeLog = Get-Content -LiteralPath $nativeLogPath -Raw | ConvertFrom-Json
+    $existingStages = @($nativeLog.stages | Where-Object { $_.stage -ne "archicad" -and $_.stage -ne "openstudio" })
+    $entry = [ordered]@{
+        stage = "archicad"
+        executable = $archicadExe
+        invoked_executable = $commandServer
+        product_version = $productVersion
+        automation_entry = $commandServer
+        command = "$actualCommandLine; JEMI Model.LoadFile -> Macro.ValidateIfcModel -> Entity.Get/Entity.GetAttribute -> Model.SaveFile"
+        started_utc = $startedUtc
+        finished_utc = $finishedUtc
+        exit_code = 0
+        input_file = "stage1.ifc"
+        input_sha256 = $stage1Hash
+        input_handoff_sha256 = $revitHandoffHash
+        output_file = "stage2.ifc"
+        output_sha256 = $stage2Hash
+        handoff_file = "archicad_handoff.json"
+        handoff_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $handoffPath).Hash.ToLowerInvariant()
+        validation_report_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $reportPath).Hash.ToLowerInvariant()
+        translator_sha256 = (Get-FileHash -Algorithm SHA256 -LiteralPath $translatorPath).Hash.ToLowerInvariant()
+        rpc_method_sequence = @($rpcTranscript.ToArray() | ForEach-Object { $_.request.method })
+    }
+    $updatedLog = [ordered]@{ schema_version = 1; stages = @($existingStages) + @($entry) }
+    [IO.File]::WriteAllText($nativeLogPath, (($updatedLog | ConvertTo-Json -Depth 100) + [Environment]::NewLine), $utf8)
+}
+finally {
+    if ($null -ne $serverProcess -and -not $serverProcess.HasExited) {
+        try {
+            Invoke-WebRequest -UseBasicParsing -Method Post -Uri "$baseUrl/SHUTDOWN" -TimeoutSec 3 | Out-Null
+            $serverProcess.WaitForExit(3000) | Out-Null
+        }
+        catch {
+        }
+        if (-not $serverProcess.HasExited) {
+            Stop-Process -Id $serverProcess.Id -Force
+        }
+    }
+}

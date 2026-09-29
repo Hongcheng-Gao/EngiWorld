@@ -1,0 +1,62 @@
+{
+  "id": "software-selection--cli--abaqus--ansys--autocad--task-10--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Determine the suitable analysis tool from ANSYS and Abaqus; AutoCAD is not a structural solver for this task. The available command-line entry points are ANSYS MAPDL at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`, Abaqus at `C:\\SIMULIA\\Commands\\abaqus.bat`, and AutoCAD at `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`. Use a command-line or scripting workflow to perform a linear static torsion analysis of circular shaft Variant B in the N-mm-MPa unit system. 1. Geometry: create one 3D deformable solid cylinder of diameter 12 mm and length 72 mm, centered on and aligned with the global Y-axis, with end faces at Y=0 mm and Y=72 mm. In Abaqus, revolve the X-Y rectangle from (0,0) to (6,72) about X=0 through 360 degrees. An equivalent native solid-cylinder construction is allowed in ANSYS. 2. Material and section: Steel with E=210000 MPa and nu=0.3, assigned to every shaft solid element as one homogeneous isotropic solid material/section. 3. Analysis: use one linear static structural step/load case named Step-Torque-B where the selected solver supports that name; use small-deflection kinematics. 4. Support: fix every node of the Y=0 end face at UX=UY=UZ=0, with no extra support constraints. 5. Torque transfer: create one reference/pilot point at (0,72,0), distinct from the shaft solid nodes. Kinematically couple the complete Y=72 end face to all six rigid-body DOFs of that point. In Abaqus use RP-1 and a kinematic coupling; in ANSYS use a native six-DOF rigid-surface MPC, a correctly audited continuum-compatible CERIG UXYZ construction, or a six-DOF MPC184 rigid-beam spider. Apply exactly one nodal moment MY=920 N*mm at that reference/pilot point and no other load. 6. Mesh: use an appropriate 3D structural solid formulation and a target global characteristic element size of 4 mm. 7. Required result output: Abaqus must save U, UR, RF, RM, and S through the final frame. ANSYS must save the corresponding NSOL, RSOL, STRS, and shaft-solid NAR records through the final result set. 8. Job and artifacts: solve with stem Job-Torsion-B. Save the native model artifact and native solver result artifact into `C:\\Users\\user\\Desktop\\result`. 9. Metrics contract: write `C:/Users/user/Desktop/result/metrics.json` as a JSON object containing exactly two finite numeric fields, `twist_angle` and `max_stress`, with no extra fields. `twist_angle` is the magnitude of the final RP-1/pilot rotation about global Y, in radians: Abaqus RP-1 UR2 or ANSYS pilot ROTY. `max_stress` is the final-result shaft-solid maximum equivalent von Mises stress in MPa: use integration-point S.Mises values in Abaqus; in ANSYS explicitly save nodal-averaged stress (NAR), select only structural-solid corner nodes, and take the maximum S,EQV,NAR, excluding coupling/contact/target elements. Both JSON values must be independently recoverable from, and numerically agree with, the submitted native result artifact. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-c/abaqus/task-10",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

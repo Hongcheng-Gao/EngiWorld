@@ -1,0 +1,34 @@
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"
+
+[tool.mypy]
+namespace_packages = true
+explicit_package_bases = true
+check_untyped_defs = true
+disable_error_code = ["import-untyped"]
+follow_imports = "silent"
+ignore_missing_imports = true
+implicit_reexport = true
+
+[[tool.mypy.overrides]]
+module = ["yaml"]
+ignore_missing_imports = true
+
+[tool.uv.workspace]
+members = [
+  "hai_drivers/desktop/remote_desktop_driver_server",
+  "hai_drivers/interfaces",
+]
+
+[tool.tomlsort]
+no_sort_tables = true
+sort_inline_arrays = true
+trailing_comma_inline_array = true
+
+[dependency-groups]
+dev = [
+  "fawltydeps>=0.20.0",
+  "ipython>=9.10.0",
+  "mypy>=1.14.1",
+]

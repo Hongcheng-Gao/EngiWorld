@@ -1,0 +1,82 @@
+{
+  "id": "software-selection--gui--freecad--librecad--kicad--task-10--ubuntu",
+  "snapshot": "freecad-librecad-kicad",
+  "instruction": "Paths for the installed applications: FreeCAD: `/usr/bin/freecad`; LibreCAD: `/usr/bin/librecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`. Choose the appropriate tool from FreeCAD, LibreCAD, and KiCad, available in the current Ubuntu environment, to complete the task. Open or import /home/user/Desktop/guih16_fire_evacuation_seed.dxf. Complete the hard fire evacuation plan and delete all GUIDE entities before saving. Draw WALL segments (0,0)-(8000,0), (8000,0)-(8000,5000), (8000,5000)-(0,5000), (0,5000)-(0,0), (2600,0)-(2600,2100), (2600,3000)-(2600,5000), (5200,0)-(5200,5000), and (0,2500)-(8000,2500). Add DOOR arcs radius 800 at centers (2600,2100), (5200,2500), and (7600,0). Insert EXTINGUISHER blocks at (1200,1200), (4200,3700), and (7000,1600). Draw EXIT arrows (1200,1200)-(300,300), (4200,3700)-(3900,4900), and (7000,1600)-(7800,300). Add EXIT labels, FIRE EVAC PLAN title, and LEGEND: F = EXTINGUISHER. Save the completed drawing deliverable into `/home/user/Desktop/result`.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html; generated open-choice variant from task/task-v/librecad_final/task-10",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/guih16_fire_evacuation_seed.dxf",
+            "path": "/home/user/Desktop/guih16_fire_evacuation_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad",
+    "librecad",
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

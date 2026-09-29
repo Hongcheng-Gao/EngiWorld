@@ -1,0 +1,26 @@
+[project]
+name = "remote-desktop-driver-server"
+version = "0.1.0"
+description = "FastAPI server that exposes desktop control functionality via pyautogui."
+readme = "README.md"
+authors = [
+  {name = "Ronan Riochet", email = "ronan.riochet@hcompany.ai"},
+]
+requires-python = "==3.12.*"
+dependencies = [
+  "fastapi",
+  "hai-drivers-interfaces",
+  "pillow>=10.3.0",
+  "pyautogui",
+  "uvicorn",
+]
+
+[tool.uv.sources]
+hai-drivers-interfaces = {workspace = true}
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/remote_desktop_driver_server"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

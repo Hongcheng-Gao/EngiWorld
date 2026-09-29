@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--altium-designer--task-01--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "Repair the native Altium board `C:\\Users\\user\\Desktop\\broken_sodimm_stackup.PcbDoc` and save the repaired document as `C:\\Users\\user\\Desktop\\sodimm_stackup.PcbDoc`. To use Altium Designer on Windows, run `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE` (adjust if your install path differs).\n\nRestore these exact stackup fields: `V9_STACK_LAYER3_NAME=TOP`, `V9_STACK_LAYER5_NAME=SPLIT2`, `V9_STACK_LAYER7_NAME=S3`, `V9_STACK_LAYER9_NAME=VDD4`, `V9_STACK_LAYER11_NAME=S5`, `V9_STACK_LAYER13_NAME=S6`, `V9_STACK_LAYER15_NAME=SPLIT7`, and `V9_STACK_LAYER17_NAME=BOTTOM`. Set `V9_STACK_LAYER4_DIELCONST`, `V9_STACK_LAYER6_DIELCONST`, and `V9_STACK_LAYER8_DIELCONST` to `4.200`. Restore the enabled `Width_DQ` rule with `MAXLIMIT=3.937mil`, `MINLIMIT=3.5433mil`, and `PREFEREDWIDTH=3.937mil`, preserving its other existing rule fields.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/broken_sodimm_stackup.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\broken_sodimm_stackup.PcbDoc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\sodimm_stackup.PcbDoc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

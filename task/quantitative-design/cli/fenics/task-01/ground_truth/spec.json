@@ -1,0 +1,92 @@
+{
+  "id": "opt-fenics-01",
+  "title": "FEniCS cantilever density-field compliance optimization",
+  "kind": "density",
+  "interface": "cli",
+  "primary_software": "fenics",
+  "objective": "Minimize compliance for a fixed 2D cantilever under a density design-budget limit.",
+  "objective_direction": "minimize",
+  "metric_name": "compliance",
+  "metric_units": "N_m_normalized",
+  "output": "density_field.csv",
+  "required_outputs": [
+    "density_field.csv",
+    "solve_submission.py",
+    "displacement.xdmf"
+  ],
+  "grid_shape": [
+    10,
+    20
+  ],
+  "solver_mesh": {
+    "nx": 40,
+    "ny": 20,
+    "cell_type": "triangle"
+  },
+  "max_volume_fraction": 0.4,
+  "domain": {
+    "length": 2.0,
+    "height": 1.0,
+    "unit": "m"
+  },
+  "material": {
+    "young_modulus": 1.0,
+    "minimum_young_modulus": 0.001,
+    "poisson_ratio": 0.3,
+    "simp_penalty": 3.0,
+    "assumption": "plane_strain"
+  },
+  "boundary_conditions": {
+    "fixed_edge": "x = 0",
+    "free_edges": [
+      "y = 0",
+      "y = height"
+    ]
+  },
+  "load": {
+    "type": "uniform_traction_patch",
+    "edge": "x = length",
+    "patch_center_y": 0.5,
+    "patch_height": 0.2,
+    "total_force_x": 0.0,
+    "total_force_y": -1.0
+  },
+  "design_variable": {
+    "file": "density_field.csv",
+    "shape": [
+      10,
+      20
+    ],
+    "value_range": [
+      0.0,
+      1.0
+    ]
+  },
+  "calibration_status": "calibrated_on_snapshot",
+  "baseline": {
+    "artifact": "init_file/baseline_density_field.csv",
+    "metric_value": 792.5666066549106,
+    "metric_units": "N_m_normalized",
+    "metric_source": "computed_dynamically_by_eval_on_fenics_vm",
+    "meaning": "uniform feasible density field with rho = 0.35 in every cell"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/density_field.csv"
+  },
+  "reference": {
+    "artifact": "ground_truth/reference/density_field.csv",
+    "metric_value": 576.5028622336696,
+    "normalized_compliance_improvement": 0.27261272757,
+    "native_outputs": [
+      "ground_truth/reference/displacement.xdmf",
+      "ground_truth/reference/displacement.h5"
+    ]
+  },
+  "native_environment": {
+    "snapshot": "FEniCS",
+    "dolfin": "2019.1.0",
+    "python": "3.10.20",
+    "petsc4py": "3.24.6",
+    "mpi4py": "4.1.1"
+  }
+}

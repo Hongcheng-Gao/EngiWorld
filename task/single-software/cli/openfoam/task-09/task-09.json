@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfoam--task-09--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "The starting input is the incomplete OpenFOAM template `/home/user/Desktop/heat_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve a deterministic plate-conduction case. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/heat/`. Build a two-dimensional rectangular plate `0<=x<=1.0 m`, `0<=y<=0.5 m`, with one `0.01 m` spanwise cell and `frontAndBack` empty. Use one uniform `200 x 20 x 1` block (4,000 cells). 2. Name the left wall `hot` and set it to `400 K`; name the right wall `cold` and set it to `300 K`; name the combined top and bottom walls `adiabatic` and make them adiabatic. Set the initial internal temperature to `350 K` and thermal diffusivity to `DT=0.01 m^2/s`. Configure `laplacianFoam` with implicit Euler, `deltaT=0.05 s`, `endTime=50 s`, and ASCII output only at 50 s. Source `/opt/openfoam11/etc/bashrc`, run `blockMesh -case /home/user/Desktop/heat` and retain `heat/log.blockMesh`, then run `laplacianFoam -case /home/user/Desktop/heat` and retain `heat/log.laplacianFoam`; both must finish with `End`, and time 50 must exist. Run `postProcess -case /home/user/Desktop/heat -latestTime -func writeCellCentres` and retain `heat/log.cellCentres`. 3. Write `/home/user/Desktop/postprocess.py`. Verify all 4,000 cell temperatures against the one-dimensional steady theory `T(x)=400-100*x K`; the whole-field RMS error must be at most `1 K`. Save the 200 points on the cell-center row nearest `y=0.25 m`, choosing the smaller y coordinate if two rows are equally near, sorted by x, to `/home/user/Desktop/temperature_profile.csv` with `x_m,temperature_K,linear_theory_K`. 4. Select the cells nearest `(0.25,0.25) m` and `(0.75,0.25) m`, resolving equal-distance ties by smaller x, then smaller y, then smaller z (each x coordinate within 0.006 m), and save `/home/user/Desktop/summary.txt` as exactly `temp_a, temp_b` in K. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/heat_base.tar",
+            "path": "/home/user/Desktop/heat_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/heat_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/heat_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/heat",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt",
+    "/home/user/Desktop/temperature_profile.csv"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,46 @@
+{
+  "schema_version": 1,
+  "task_id": "opt-fenics-02",
+  "ground_truth_policy": "baseline-only scoring with explicit positive reference sample",
+  "baseline_sample": {
+    "artifact": "init_file/baseline_conductivity_mask.csv",
+    "expected_score": 0.0,
+    "meaning": "visible initial feasible design, not a reference optimum"
+  },
+  "reference_sample": {
+    "artifact": "ground_truth/reference/",
+    "files": [
+      "solve_submission.py",
+      "conductivity_mask.csv",
+      "temperature.xdmf",
+      "temperature.h5"
+    ],
+    "expected_score_min": 0.05,
+    "measured_score": 0.8771552955624183,
+    "baseline_thermal_resistance": 1.141173289564719,
+    "reference_thermal_resistance": 0.1401870954686407,
+    "meaning": "deterministic feasible improved sample for evaluator sanity checks, not a proven global optimum",
+    "description": "Five-cell-high conductive band from cold boundary to heat source."
+  },
+  "equivalent_xdmf_sample": {
+    "artifact": "ground_truth/equivalent/",
+    "files": [
+      "relabel_checkpoint.py",
+      "equivalent_temperature.xdmf",
+      "equivalent_temperature.h5"
+    ],
+    "checkpoint_attribute": "thermal_state",
+    "measured_score": 0.877155,
+    "meaning": "The same real DOLFIN temperature coefficients serialized under an alternative valid checkpoint field name."
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/conductivity_mask.csv",
+    "expected_score": 0.0
+  },
+  "generated_with": {
+    "snapshot": "FEniCS",
+    "dolfin": "2019.1.0",
+    "python": "3.10.20",
+    "artifact_format": "DOLFIN XDMF checkpoint with HDF5 companion"
+  }
+}

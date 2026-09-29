@@ -1,0 +1,65 @@
+{
+  "id": "single-software--cli--floris--task-10--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "For this task, start with `/home/user/Desktop/derating_base.yaml` and `/home/user/Desktop/derating_base.py` for three in-line `nrel_5MW` turbines at `x=[0,630,1260] m`. Use Python with `floris==4.6.4`. For this task, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program.\n\nWork from the command line. Write `/home/user/Desktop/derating.py`: load the YAML; set wind direction `270 deg`, wind speed `8 m/s`, and turbulence intensity `0.06`; run a baseline with all turbines unconstrained and compute `P_base`; record turbine 0's baseline available power; call `set_operation_model(\"simple-derating\")`; set turbine 0's power setpoint to exactly 80% of that baseline available power while leaving turbines 1 and 2 unconstrained; rerun and compute `P_derated`; and compute `net_change_kw=P_derated_kw-P_base_kw`. Execute the script and write `/home/user/Desktop/summary.txt` as `P_base_kw, P_derated_kw, net_change_kw`. Do not use yaw control as a substitute for derating. Do not use a GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/derating_base.py",
+            "path": "/home/user/Desktop/derating_base.py"
+          },
+          {
+            "local_path": "task-10/init_file/derating_base.yaml",
+            "path": "/home/user/Desktop/derating_base.yaml"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/derating.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

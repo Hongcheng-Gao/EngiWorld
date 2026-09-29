@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--cadence-orcad--task-04--windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "Run `C:\\Users\\user\\Desktop\\abm_vs_real.cir` in native PSpice. Use the native PSpice command-line simulator `C:\\Cadence\\SPB_24.1\\tools\\bin\\psp_cmd.exe`. Before starting the work, use `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe` for OrCAD schematics and `C:\\Cadence\\SPB_24.1\\tools\\bin\\allegro.exe` for board work.\n\nSave the native simulator output as `C:\\Users\\user\\Desktop\\abm_vs_real.out`. From the AC sweep table in that `.out`, compare `VDB(OUT_ABM)` and `VDB(OUT_SK)` over the whole sweep and write `C:\\Users\\user\\Desktop\\compare.json` with `max_abs_diff_dB`, `rms_diff_dB`, `n_points`, and `passes_spec`. Set `passes_spec` to true exactly when `max_abs_diff_dB < 0.5` dB; otherwise set it to false.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://www.cadence.com/en_US/home/resources/datasheets/pspice-advanced-circuit-simulation-ds.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/abm_vs_real.cir",
+            "path": "C:\\Users\\user\\Desktop\\abm_vs_real.cir"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\abm_vs_real.out",
+    "C:\\Users\\user\\Desktop\\compare.json"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

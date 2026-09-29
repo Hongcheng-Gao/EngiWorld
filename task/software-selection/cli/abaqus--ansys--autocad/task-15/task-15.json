@@ -1,0 +1,62 @@
+{
+  "id": "software-selection--cli--abaqus--ansys--autocad--task-15--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Use whichever of ANSYS, Abaqus, and AutoCAD is suitable for the task. The available command-line entry points are ANSYS MAPDL at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`, Abaqus at `C:\\SIMULIA\\Commands\\abaqus.bat`, and AutoCAD at `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`. Use a command-line or scripting workflow. Use the selected tool to build and solve a modal analysis model of a fixed-fixed beam. Physical problem: modal analysis of one straight, connected beam fixed at both ends. Coordinate system and geometry: use the global Cartesian coordinate system; place the beam on the global X axis from X = 0 mm to X = 500 mm; use a 10 mm by 10 mm rectangular beam section. Model parameters: use a 3D beam formulation (ANSYS BEAM188 or BEAM189, or Abaqus B31 or B32); create exactly 20 connected equal-length elements along the beam, with no disconnected or unused mesh nodes. Material and units: use a consistent N-mm-s-tonne unit system; Young's modulus E = 210000 MPa (210000 N/mm^2); Poisson's ratio = 0.3; density = 7.85e-9 tonne/mm^3 (7850 kg/m^3). Boundary conditions: fully constrain UX, UY, UZ, ROTX, ROTY, and ROTZ at both X = 0 mm and X = 500 mm. Do not add interior restraints, coupled-DOF sets, constraint equations, loads, preload steps, prestress, or other stiffness-changing conditions. Analysis type: use one modal frequency-extraction step after the initial state and extract at least modes 1, 2, and 3. Deliverables: save the native model artifact and the native solver result artifact into `C:\\Users\\user\\Desktop\\result`. Save only the files from the selected tool. Write `C:/Users/user/Desktop/result/metrics.json` as a JSON object with exactly two keys: `first_frequency`, a finite positive numeric first natural frequency in Hz, and `frequency_list`, an array of exactly three finite positive numeric frequencies for modes 1, 2, and 3 in nondecreasing order in Hz. `first_frequency` must represent the same first mode as `frequency_list[0]`; consistent rounding is allowed. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data ; generated open-choice variant from task/task-c/ansys/task-05",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

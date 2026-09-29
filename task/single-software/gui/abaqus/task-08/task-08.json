@@ -1,0 +1,69 @@
+{
+  "id": "single-software--gui--abaqus--task-08--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Working with Abaqus/CAE, complete the provided block-on-plate nonlinear contact seed model in the N-mm-MPa unit system. Start from C:\\Users\\user\\Desktop\\Contact-Seed.cae; do not rebuild or replace its preloaded geometry, material, section, assembly, named surfaces, or named sets. The seed contains an unmeshed 10 mm x 10 mm x 12 mm 3D deformable Block, an unmeshed 30 mm x 30 mm x 4 mm 3D deformable Plate, Steel with E = 210000 MPa and nu = 0.3, the Steel-Solid homogeneous solid section assigned to both parts, and dependent instances with BLOCK-1 centered on PLATE-1: block X/Y = 10..20 mm and Z = 4..16 mm, plate X/Y = 0..30 mm and Z = 0..4 mm. Preserve the named regions SURF_BLOCK_TOP, SURF_BLOCK_BOTTOM, SURF_PLATE_TOP, SET_PLATE_BOTTOM, SET_BLOCK_GUIDE_A, and SET_BLOCK_GUIDE_B. Analysis: create a Static, General step named Step-Contact after Initial with Nlgeom = ON, initial increment 0.05, maximum increment 0.1, minimum increment 1e-8, and at most 200 increments. Contact: create one finite-sliding Surface-to-Surface Contact (Standard) interaction active in Initial, using SURF_PLATE_TOP as the main surface and SURF_BLOCK_BOTTOM as the secondary surface; use one interaction property with Hard normal contact, separation allowed, and frictionless tangential behavior. Boundary conditions: apply ENCASTRE to SET_PLATE_BOTTOM; to remove only the block's frictionless in-plane rigid-body modes, set U1 = U2 = 0 on SET_BLOCK_GUIDE_A and U2 = 0 on SET_BLOCK_GUIDE_B, leaving U3 unconstrained on both guide sets. Load: in Step-Contact apply a uniform positive pressure of 5 MPa to SURF_BLOCK_TOP, acting inward/downward; the 100 mm2 loaded area gives a 500 N resultant. Mesh: use structured HEX C3D8R elements, a 2 mm global seed on Block, and a 3 mm global seed on Plate; generate both meshes. Output: request U, S, RF, and contact stress output so the solved ODB contains CPRESS for the required contact pair. Job and deliverables: create and submit Job-Contact, wait for successful completion, verify nonzero displacement, Mises stress, and CPRESS results and pressure/reaction equilibrium, then save the completed database as C:\\Users\\user\\Desktop\\Job-Contact.cae with the solved output database at C:\\Users\\user\\Desktop\\Job-Contact.odb.",
+  "source": "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEEXCRefMap/simaexc-c-caeproc.htm https://docs.software.vt.edu/abaqusv2025/English/SIMACAEITNRefMap/simaitn-c-contactpairform.htm https://docs.software.vt.edu/abaqusv2025/English/SIMACAEOUTRefMap/simaout-c-dboutput-elementoutput.htm https://edu.3ds.com/en/software/abaqus-learning-edition",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/Contact-Seed.cae",
+            "path": "C:\\Users\\user\\Desktop\\Contact-Seed.cae"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+          "cae",
+          "database=C:\\Users\\user\\Desktop\\Contact-Seed.cae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-Contact.cae",
+    "C:\\Users\\user\\Desktop\\Job-Contact.odb",
+    "C:\\Users\\user\\Desktop\\eval_detail.txt",
+    "C:\\Users\\user\\Desktop\\eval_result.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

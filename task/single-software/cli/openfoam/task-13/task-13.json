@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfoam--task-13--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "Create and solve `/home/user/Desktop/cylinder_fo/` for two-dimensional laminar crossflow over a circular cylinder with OpenFOAM from the command line. Source the installed OpenFOAM environment before running OpenFOAM commands. For the steps below, before running the case, load OpenFOAM with `source /opt/openfoam11/etc/bashrc`; the solver binaries are under `/opt/openfoam11/bin` and its platform bin directory.\n\nUse a cylinder diameter of 0.1 m centered at the origin, an empty span of 0.01 m, and an O-grid whose outer circular boundary has radius 1.0 m. Divide the outer boundary into an upstream inlet half and a downstream outlet half. Use a uniform inlet velocity `(1 0 0)` m/s, zero-gauge-pressure outlet, no-slip cylinder, density 1 kg/m^3, and kinematic viscosity 1e-3 m^2/s, so Re_D = 100. Build exactly 8 hexahedral sectors with `(40 12 1)` cells per sector, run laminar `pimpleFoam` with `deltaT = 0.0025 s` through `t = 20 s`, and retain the final `U` and `p` fields. Add an online `forceCoeffs` function object for the cylinder with `liftDir (0 1 0)`, `dragDir (1 0 0)`, `magUInf 1`, `lRef 0.1`, and `Aref 0.001`. Save successful `blockMesh`, `checkMesh`, and solver logs as `log.blockMesh`, `log.checkMesh`, and `log.pimpleFoam` in the case; a failed `checkMesh` is not acceptable. Create `/home/user/Desktop/postprocess.py` that reads the final `forceCoeffs.dat`, uses every sample in the fixed averaging window `10 <= t <= 20 s`, writes the complete coefficient history to `/home/user/Desktop/force_history.csv` with columns `time_s,cd,cl`, and writes `/home/user/Desktop/summary.txt` as one CSV line `avg_cl, avg_cd`. Do not hard-code result values and do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/cylinder_base.tar",
+            "path": "/home/user/Desktop/cylinder_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/cylinder_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/cylinder_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/cylinder_fo",
+    "/home/user/Desktop/force_history.csv",
+    "/home/user/Desktop/forceCoeffs.dat",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

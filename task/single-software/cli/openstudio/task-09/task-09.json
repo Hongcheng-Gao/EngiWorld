@@ -1,0 +1,65 @@
+{
+  "id": "single-software--cli--openstudio--task-09--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Organize /home/user/Desktop/init.osm in the opened OpenStudio application using its CLI/API automation interface, and save the updated model as /home/user/Desktop/result.osm. Use `/usr/local/openstudioapplication-1.11.0-rc2/bin/openstudio` for OpenStudio CLI or API automation when working on `init.osm`. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a row of single-story small office studios made up of administration, open studio, and support segments. The operations team wants the model to reflect a realistic rhythm with weekday peaks, limited Saturday use, and a Sunday setback instead of constant all-day loads. Preserve the three-part space organization and the south-facing daylight order while completing distinct space types, people, lighting, equipment loads, and rule-based operating schedules. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally. The completed model must meet the following exact specification (SI units; geometry coordinates and lengths are metres; areas are square metres; names are exact): {\"building\":\"CLI Ruleset Office\",\"stories\":[{\"name\":\"01_RULESET\",\"z\":0}],\"spaces\":[{\"name\":\"T09-ADMIN\",\"zone\":\"T09-ADMIN Zone\",\"x0\":0,\"y0\":0,\"x1\":6,\"y1\":9,\"z0\":0,\"h\":3,\"story\":\"01_RULESET\",\"space_type\":\"TASK09 Admin Type\",\"heat\":20,\"cool\":25,\"ideal\":true},{\"name\":\"T09-STUDIO\",\"zone\":\"T09-STUDIO Zone\",\"x0\":6,\"y0\":0,\"x1\":12,\"y1\":9,\"z0\":0,\"h\":3,\"story\":\"01_RULESET\",\"space_type\":\"TASK09 Studio Type\",\"heat\":21,\"cool\":24,\"ideal\":true},{\"name\":\"T09-SUPPORT\",\"zone\":\"T09-SUPPORT Zone\",\"x0\":12,\"y0\":0,\"x1\":18,\"y1\":9,\"z0\":0,\"h\":3,\"story\":\"01_RULESET\",\"space_type\":\"TASK09 Support Type\",\"heat\":18,\"cool\":28,\"ideal\":true}],\"ruleset_schedules\":{\"TASK09 Occupancy Ruleset\":{\"default\":[[7,0.05],[8,0.75],[12,0.55],[13,0.88],[18,0.12],[24,0.05]],\"rules\":[{\"name\":\"TASK09 Occupancy Saturday\",\"days\":[\"Saturday\"],\"values\":[[8,0.05],[10,0.42],[15,0.2],[24,0.05]]},{\"name\":\"TASK09 Occupancy Sunday\",\"days\":[\"Sunday\"],\"values\":[[24,0.02]]}]},\"TASK09 Lighting Ruleset\":{\"default\":[[7,0.1],[8,0.82],[18,0.18],[24,0.06]],\"rules\":[{\"name\":\"TASK09 Lighting Saturday\",\"days\":[\"Saturday\"],\"values\":[[9,0.05],[14,0.32],[24,0.05]]},{\"name\":\"TASK09 Lighting Sunday\",\"days\":[\"Sunday\"],\"values\":[[24,0.02]]}]},\"TASK09 Equipment Ruleset\":{\"default\":[[7,0.18],[8,0.7],[18,0.32],[24,0.14]],\"rules\":[{\"name\":\"TASK09 Equipment Saturday\",\"days\":[\"Saturday\"],\"values\":[[9,0.12],[15,0.28],[24,0.1]]},{\"name\":\"TASK09 Equipment Sunday\",\"days\":[\"Sunday\"],\"values\":[[24,0.08]]}]}},\"space_types\":{\"TASK09 Admin Type\":{\"people\":0.04,\"people_schedule\":\"TASK09 Occupancy Ruleset\",\"lights\":8,\"lights_schedule\":\"TASK09 Lighting Ruleset\",\"equipment\":9,\"equipment_schedule\":\"TASK09 Equipment Ruleset\"},\"TASK09 Studio Type\":{\"people\":0.055,\"people_schedule\":\"TASK09 Occupancy Ruleset\",\"lights\":10,\"lights_schedule\":\"TASK09 Lighting Ruleset\",\"equipment\":14,\"equipment_schedule\":\"TASK09 Equipment Ruleset\"},\"TASK09 Support Type\":{\"people\":0.015,\"people_schedule\":\"TASK09 Occupancy Ruleset\",\"lights\":5,\"lights_schedule\":\"TASK09 Lighting Ruleset\",\"equipment\":4,\"equipment_schedule\":\"TASK09 Equipment Ruleset\"}},\"windows\":[{\"space\":\"T09-ADMIN\",\"wall\":\"south\",\"start\":1,\"end\":5,\"sill\":0.9,\"head\":2.4,\"name\":\"T09-ADMIN South FixedWindow\"},{\"space\":\"T09-STUDIO\",\"wall\":\"south\",\"start\":7,\"end\":11,\"sill\":0.9,\"head\":2.4,\"name\":\"T09-STUDIO South FixedWindow\"},{\"space\":\"T09-SUPPORT\",\"wall\":\"south\",\"start\":13,\"end\":17,\"sill\":0.9,\"head\":2.4,\"name\":\"T09-SUPPORT South FixedWindow\"},{\"space\":\"T09-ADMIN\",\"wall\":\"west\",\"start\":2,\"end\":7,\"sill\":1,\"head\":2.2,\"name\":\"T09-ADMIN West FixedWindow\"},{\"space\":\"T09-SUPPORT\",\"wall\":\"east\",\"start\":2,\"end\":7,\"sill\":1,\"head\":2.2,\"name\":\"T09-SUPPORT East FixedWindow\"}],\"metrics\":{\"bbox\":[18,9,3],\"floor_area\":162,\"exterior_wall_area\":162,\"surface_count\":18,\"space_count\":3,\"zone_count\":3,\"story_count\":1,\"window_count\":5,\"window_area\":30,\"shading_count\":0,\"shading_area\":0,\"paired_surface_count\":4,\"ground_floor_count\":3},\"constant_schedules\":{}}.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

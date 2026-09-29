@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--freecad--task-10--ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Load /home/user/Desktop/freecad_task-10_input.step. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). For this task, use `/usr/lib/freecad/bin/freecadcmd-python3` for the FreeCAD command-line work in this task when working on `freecad_task-10_input.step`.\n\nKeep the 130 x 110 x 14 mm outside envelope. Cut one centered through rounded-rectangle window centered at (65,55), overall size 64 x 46 mm, with 8 mm corner radii. Cut four blind circular top relief pockets of diameter 12 mm and depth 5 mm at (22,22), (108,22), (22,88), and (108,88); these pockets start from the top face and must not pass through the bottom. Export /home/user/Desktop/freecad_task-10_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/freecad_task-10_input.step",
+            "path": "/home/user/Desktop/freecad_task-10_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/freecad_task-10_output.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,139 @@
+{
+  "id": "single-software--gui--altium-designer--task-08--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`. The opened project `project.PrjPcb` is already open in Altium Designer. open `project.PrjPcb` there. Using `C:\\Users\\user\\Desktop\\add_list.csv`, append 8 new source-document entries to the project and save the result as `project.PrjPcb`. Requirements: Preserve the original `[Design]` and `[Preferences]` sections unchanged. Preserve the existing `[Document1]` through `[Document6]` sections unchanged. Append 8 new document sections in CSV order so the project ends with `[Document7]` through `[Document14]`. For each appended document section, set `DocumentPath`, `AnnotationEnabled`, `AnnotateStartValue`, and `ClassGenCCAutoEnabled` exactly as specified by the corresponding row in `C:\\Users\\user\\Desktop\\add_list.csv`. Do not create any extra `[Document*]` sections beyond `Document1..Document14`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/add_list.csv",
+            "path": "C:\\Users\\user\\Desktop\\add_list.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/project.PrjPcb",
+            "path": "C:\\Users\\user\\Desktop\\project.PrjPcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/Libraries/ProjectLib.SchLib",
+            "path": "C:\\Users\\user\\Desktop\\Libraries\\ProjectLib.SchLib"
+          },
+          {
+            "local_path": "task-08/init_file/Libraries/ProjectLib.PcbLib",
+            "path": "C:\\Users\\user\\Desktop\\Libraries\\ProjectLib.PcbLib"
+          },
+          {
+            "local_path": "task-08/init_file/TopSheet.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\TopSheet.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/PowerSubsystem.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\PowerSubsystem.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/IOSubsystem.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\IOSubsystem.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Board.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\Board.PcbDoc"
+          },
+          {
+            "local_path": "task-08/init_file/MCU.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\MCU.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Memory.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Memory.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Analog.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Analog.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Debug.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Debug.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Connectors.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Connectors.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Indicators.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Indicators.SchDoc"
+          },
+          {
+            "local_path": "task-08/init_file/Libraries/Extra.SchLib",
+            "path": "C:\\Users\\user\\Desktop\\Libraries\\Extra.SchLib"
+          },
+          {
+            "local_path": "task-08/init_file/Output/Preview.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\Output\\Preview.PcbDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\project.PrjPcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\project.PrjPcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

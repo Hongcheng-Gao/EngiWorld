@@ -1,0 +1,75 @@
+{
+  "id": "single-software--cli--revit--task-16--windows",
+  "snapshot": "Revit2025",
+  "instruction": "Complete the model in the opened Autodesk Revit environment using its automation interfaces, then export it to C:\\Users\\user\\Desktop\\result.ifc as IFC4. At the start of the task, use `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe` as the Revit entry point for this automation. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a plain three-storey mixed-use block. The architect wants the building reorganized so the ground floor reads as retail with back-office support, the upper floors become paired studios and labs, and the top is capped by a modest sloped roof. Keep the regular frame and stacked floor plates coherent. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"absent_space_tokens\":[\"Open\"],\"bbox_ranges_m\":{\"x\":[13.4,15.3],\"y\":[8.4,10.3],\"z\":[7.9,11.7]},\"exact_counts\":{\"IfcBeam\":5,\"IfcBuilding\":1,\"IfcBuildingStorey\":3,\"IfcColumn\":6,\"IfcProject\":1,\"IfcRoof\":1,\"IfcSite\":1,\"IfcSpace\":6,\"IfcWall\":15},\"forbidden\":[\"IfcBuildingElementProxy\",\"IfcCurtainWall\",\"IfcDoor\",\"IfcWindow\"],\"min_counts\":{\"IfcSlab\":3},\"min_file_bytes\":20000,\"min_shaped_products\":18,\"roof_slope_min_m\":0.2,\"space_levels\":{\"Back Office\":0,\"Lab A\":2,\"Lab B\":2,\"Retail\":0,\"Studio A\":1,\"Studio B\":1},\"space_tokens\":[\"Retail\",\"Back Office\",\"Studio A\",\"Studio B\",\"Lab A\",\"Lab B\"],\"storey_tokens\":[\"Ground Floor\",\"Level 2\",\"Level 3\"]}.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

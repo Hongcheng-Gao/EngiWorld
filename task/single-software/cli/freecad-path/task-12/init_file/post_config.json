@@ -1,0 +1,96 @@
+{
+  "task": "task-12",
+  "unit": "mm",
+  "coordinate_system": "G54",
+  "postprocessor": "linuxcnc",
+  "post_arguments": [
+    "--line-numbers",
+    "--no-show-editor"
+  ],
+  "sequence_numbers": true,
+  "sequence_start": 110,
+  "sequence_increment": 10,
+  "program_number": null,
+  "program_end": "M2",
+  "part": {
+    "stock_size": [
+      120,
+      80,
+      18
+    ],
+    "stock_bounds": {
+      "x": [-60, 60],
+      "y": [-40, 40],
+      "z": [0, 18]
+    },
+    "pocket": {
+      "center": [0, 0],
+      "size": [40, 24],
+      "top_z": 18,
+      "bottom_z": 13,
+      "depth": 5
+    },
+    "holes": {
+      "diameter": 5,
+      "top_z": 18,
+      "bottom_z": 10,
+      "depth": 8,
+      "centers": [
+        [-40, -25],
+        [-40, 25],
+        [40, -25],
+        [40, 25]
+      ]
+    }
+  },
+  "tools": [
+    {
+      "tool": 1,
+      "name": "flat end mill",
+      "diameter": 6,
+      "spindle": 7000,
+      "feed": 600,
+      "operations": [
+        "pocket_shape"
+      ]
+    },
+    {
+      "tool": 2,
+      "name": "drill",
+      "diameter": 5,
+      "spindle": 7000,
+      "feed": 600,
+      "operations": [
+        "drilling"
+      ]
+    }
+  ],
+  "operations": [
+    "PocketShape",
+    "Drilling"
+  ],
+  "operation_settings": {
+    "pocket_shape": {
+      "step_down": 5,
+      "step_over_percent": 50,
+      "safe_height": 20,
+      "clearance_height": 23,
+      "offset_pattern": "ZigZag",
+      "start_at": "Center",
+      "cut_mode": "Climb"
+    },
+    "drilling": {
+      "cycle": "G81",
+      "safe_height": 20,
+      "clearance_height": 23,
+      "retract_height": 20,
+      "peck": false,
+      "dwell": false,
+      "keep_tool_down": false
+    }
+  },
+  "outputs": [
+    "/home/user/Desktop/task-12.FCStd",
+    "/home/user/Desktop/task-12.nc"
+  ]
+}

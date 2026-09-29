@@ -1,0 +1,80 @@
+{
+  "id": "quantitative-design--gui--ansys--task-05--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "This task uses ANSYS. Maximize stiffness per unit mass for the cantilever defined in C:\\Users\\user\\Desktop\\problem_spec.json. Open Mechanical APDL from `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Start from C:\\Users\\user\\Desktop\\baseline_apdl_solid_beam.db and its result file. Preserve the fixed and loaded end interfaces, 500 N distributed end load, material, outer envelope, analysis type, minimum load-path width, mesh limit, and stress limit. Material may be redistributed only inside the permitted design domain. Stiffness is defined using the area-averaged directional displacement of the loaded face. Solve the final design and save its native database as C:\\Users\\user\\Desktop\\submission.db and its structural result as C:\\Users\\user\\Desktop\\submission.rst.",
+  "source": "design-generated quantified CAE optimization task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/problem_spec.json",
+            "path": "C:\\Users\\user\\Desktop\\problem_spec.json"
+          },
+          {
+            "local_path": "task-05/init_file/baseline_apdl_solid_beam.db",
+            "path": "C:\\Users\\user\\Desktop\\baseline_apdl_solid_beam.db"
+          },
+          {
+            "local_path": "task-05/init_file/baseline_apdl_solid_beam.rst",
+            "path": "C:\\Users\\user\\Desktop\\baseline_apdl_solid_beam.rst"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "$licenseOutput = & python 'C:\\Users\\user\\Desktop\\license.py' 2>&1; $licenseCode = $LASTEXITCODE; $licenseText = $licenseOutput | Out-String; if ($licenseCode -ne 0 -or -not $licenseText.Contains('[SUCCESS]')) { exit 1 }; Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\submission.db",
+    "C:\\Users\\user\\Desktop\\submission.rst"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.0,
+      "direction": "maximize",
+      "name": "normalized stiffness-per-mass improvement",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            },
+            {
+              "local_path": "_shared/read_only_eval.py",
+              "path": "C:\\Users\\user\\Desktop\\read_only_eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

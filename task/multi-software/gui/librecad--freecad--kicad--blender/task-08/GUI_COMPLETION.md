@@ -1,0 +1,11 @@
+# GUI completion record: task-08
+
+Status: independently rebuilt and validated in the mapped snapshot on 2026-08-13.
+
+The old six GT artifacts were invalid despite passing the former evaluator: stage 1 had only three open WINDOW lines, the STL was a full box, the board had no native footprints or pads, the SVG was handwritten, and the GLB used meshless/name-only import evidence with an opaque material. The old evaluator trusted counts, strings, sorted bounding boxes, SVG viewBox dimensions, and node names.
+
+The repaired evaluator now checks one real closed outline, eight distinct positive-area window regions, exact mounting holes and labels, a watertight non-box STL with real bores/openings, exact directly parseable handoff text, retained imported `Dwgs.User` geometry, native padded KiCad footprints/nets, actual F.SilkS, one visible simple PCBNEW SVG outline, and active-scene mesh-bound STL/SVG evidence in Blender. It compares the Blender STL by vertices, triangle centers, surface area, full parent/world transforms, and topology; it also requires transparent materials on every cover primitive plus eight substantial visible window and numbered-text meshes. It permits reasonable differences in text placement, window dimensions, footprint model/reference, native line/rectangle/arc outline representation, SVG element representation, alpha-only versus transmission transparency, and Blender text triangulation instead of requiring byte identity to GT.
+
+The final audit synchronized those promises with the executable contract. The instruction now explicitly requires the eight terminal footprints, one four-pad power footprint, at least 20 pads, pad-bound CH1-CH8/24V/GND nets, and retained Dwgs.User handoff evidence. KiCad 10 pad nets are parsed as an exact set from `(net "NAME")`, so replacing every `GND` assignment with `BARGND` evaluates `False`. The unchanged real GT evaluates `True`, and an equivalent cover using opaque alpha with `KHR_materials_transmission.transmissionFactor=0.65` also evaluates `True`.
+
+The unchanged init is a valid seed and remains the correct starting state. Full generation details, hashes, official sources, validation matrix, and cleanup record are in `ground_truth/GT_GENERATION.md`.

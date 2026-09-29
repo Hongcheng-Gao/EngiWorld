@@ -1,0 +1,2988 @@
+#!/usr/bin/env python3
+from __future__ import annotations
+
+import csv
+import hashlib
+import json
+import math
+import os
+import re
+import shlex
+import shutil
+import struct
+import subprocess
+import sys
+import tempfile
+import zlib
+from datetime import datetime
+from pathlib import Path
+from typing import Any
+
+
+DESKTOP = Path(os.environ.get("ENGIWORLD_DESKTOP", Path.home() / "Desktop")).resolve()
+PRODUCTIVE_DESKTOP = Path("/home/user/Desktop")
+SOFTWARE_SEQUENCE = ["KiCad", "OpenSCAD", "FreeCAD", "Blender"]
+EXPECTED_VERSION_PATTERNS = {
+    "KiCad": re.compile(r"(?<![0-9.])10\.0\.4(?![0-9.])"),
+    "OpenSCAD": re.compile(r"\bOpenSCAD version 2021\.01\b", re.IGNORECASE),
+    "FreeCAD": re.compile(r"\bFreeCAD 1\.1\.0\b", re.IGNORECASE),
+    "Blender": re.compile(r"\bBlender 5\.2\.0\b", re.IGNORECASE),
+}
+MIN_RENDER_SIMILARITY = 0.95
+REQUIRED_ARTIFACTS = [
+    "01_kicad_board.kicad_pcb",
+    "01_kicad_export.json",
+    "01_kicad_board.step",
+    "01_kicad_mechanical_map.csv",
+    "01_kicad_parameters.scad",
+    "02_openscad_enclosure.scad",
+    "02_openscad_enclosure.stl",
+    "02_openscad_parameters.json",
+    "03_freecad_assembly.step",
+    "03_freecad_assembly.obj",
+    "03_freecad_clearance_report.json",
+    "04_blender_review.blend",
+    "04_blender_review.obj",
+    "04_blender_review.mtl",
+    "04_blender_review.png",
+    "04_blender_scene_report.json",
+    "toolchain_invocation_log.json",
+    "final_release_package.json",
+]
+MIN_FILE_SIZE = {
+    "01_kicad_board.kicad_pcb": 800,
+    "01_kicad_export.json": 200,
+    "01_kicad_board.step": 1000,
+    "01_kicad_mechanical_map.csv": 200,
+    "01_kicad_parameters.scad": 200,
+    "02_openscad_enclosure.scad": 300,
+    "02_openscad_enclosure.stl": 1000,
+    "02_openscad_parameters.json": 200,
+    "03_freecad_assembly.step": 1000,
+    "03_freecad_assembly.obj": 1000,
+    "03_freecad_clearance_report.json": 500,
+    "04_blender_review.blend": 1000,
+    "04_blender_review.obj": 1000,
+    "04_blender_review.mtl": 100,
+    "04_blender_review.png": 1000,
+    "04_blender_scene_report.json": 500,
+    "toolchain_invocation_log.json": 500,
+    "final_release_package.json": 500,
+}
+MAX_FILE_SIZE = 200 * 1024 * 1024
+
+
+class EvaluationError(RuntimeError):
+    pass
+
+
+def fail(message: str) -> None:
+    raise EvaluationError(message)
+
+
+def number(value: Any, label: str) -> float:
+    try:
+        result = float(value)
+    except (TypeError, ValueError):
+        fail(f"{label} is not numeric: {value!r}")
+    if not math.isfinite(result):
+        fail(f"{label} is not finite")
+    return result
+
+
+def close(actual: Any, expected: Any, tolerance: float, label: str) -> None:
+    got = number(actual, label)
+    want = number(expected, label)
+    if abs(got - want) > tolerance:
+        fail(f"{label}: expected {want} +/- {tolerance}, got {got}")
+
+
+def close_vector(actual: Any, expected: Any, tolerance: float, label: str) -> None:
+    if not isinstance(actual, (list, tuple)) or len(actual) != len(expected):
+        fail(f"{label}: expected {len(expected)} values, got {actual!r}")
+    for index, (got, want) in enumerate(zip(actual, expected)):
+        close(got, want, tolerance, f"{label}[{index}]")
+
+
+def normalized(value: Any) -> str:
+    return re.sub(r"[^A-Z0-9]+", "", str(value or "").upper())
+
+
+def version_matches(software: str, value: Any) -> bool:
+    pattern = EXPECTED_VERSION_PATTERNS.get(software)
+    return pattern is not None and pattern.search(str(value or "")) is not None
+
+
+def json_file(path: Path) -> dict[str, Any]:
+    try:
+        value = json.loads(path.read_text(encoding="utf-8"))
+    except Exception as exc:
+        fail(f"cannot parse JSON {path.name}: {exc}")
+    if not isinstance(value, dict):
+        fail(f"{path.name} must contain a JSON object")
+    return value
+
+
+def sha256(path: Path) -> str:
+    digest = hashlib.sha256()
+    with path.open("rb") as handle:
+        for chunk in iter(lambda: handle.read(1024 * 1024), b""):
+            digest.update(chunk)
+    return digest.hexdigest()
+
+
+def trusted_input_paths() -> dict[str, Path]:
+    override = os.environ.get("ENGIWORLD_TASK05_SPEC_DIR")
+    if override:
+        root = Path(override).resolve()
+        paths = {
+            "board": root / "board_input.kicad_pcb",
+            "requirements": root / "mechanical_requirements.json",
+            "connectors": root / "connector_keepouts.csv",
+            "seed": root / "enclosure_seed.scad",
+            "notes": root / "handoff_notes.md",
+        }
+    else:
+        paths = {
+            "board": DESKTOP / "_eval_task05_board_input.kicad_pcb",
+            "requirements": DESKTOP / "_eval_task05_mechanical_requirements.json",
+            "connectors": DESKTOP / "_eval_task05_connector_keepouts.csv",
+            "seed": DESKTOP / "_eval_task05_enclosure_seed.scad",
+            "notes": DESKTOP / "_eval_task05_handoff_notes.md",
+        }
+    missing = [str(path) for path in paths.values() if not path.is_file()]
+    if missing:
+        fail("trusted postconfig input missing: " + ", ".join(missing))
+    return paths
+
+
+def sexpr_blocks(text: str, marker: str) -> list[str]:
+    blocks: list[str] = []
+    cursor = 0
+    while True:
+        start = text.find(marker, cursor)
+        if start < 0:
+            return blocks
+        depth = 0
+        quoted = False
+        escaped = False
+        for index in range(start, len(text)):
+            char = text[index]
+            if quoted:
+                if escaped:
+                    escaped = False
+                elif char == "\\":
+                    escaped = True
+                elif char == '"':
+                    quoted = False
+                continue
+            if char == '"':
+                quoted = True
+            elif char == "(":
+                depth += 1
+            elif char == ")":
+                depth -= 1
+                if depth == 0:
+                    blocks.append(text[start : index + 1])
+                    cursor = index + 1
+                    break
+        else:
+            fail(f"unterminated KiCad block beginning with {marker!r}")
+
+
+def property_number(block: str, name: str, default: float | None = None) -> float | None:
+    match = re.search(rf'\(property\s+"{re.escape(name)}"\s+"([^"]+)"', block)
+    return number(match.group(1), name) if match else default
+
+
+def parse_board(path: Path) -> dict[str, Any]:
+    try:
+        text = path.read_text(encoding="utf-8")
+    except Exception as exc:
+        fail(f"cannot read KiCad board {path.name}: {exc}")
+    if "(kicad_pcb" not in text:
+        fail(f"{path.name} is not a KiCad PCB file")
+    thickness_match = re.search(r"\((?:board_thickness|thickness)\s+([-+0-9.eE]+)\)", text)
+    outline_match = re.search(
+        r'\(gr_rect\s+\(start\s+([-+0-9.eE]+)\s+([-+0-9.eE]+)\)\s+'
+        r'\(end\s+([-+0-9.eE]+)\s+([-+0-9.eE]+)\).*?\(layer\s+"Edge.Cuts"\)',
+        text,
+        flags=re.DOTALL,
+    )
+    if not thickness_match or not outline_match:
+        fail(f"{path.name} lacks a readable thickness or rectangular Edge.Cuts outline")
+    x1, y1, x2, y2 = (float(value) for value in outline_match.groups())
+    footprints: dict[str, dict[str, Any]] = {}
+    for block in sexpr_blocks(text, "(footprint "):
+        name_match = re.search(r'\(footprint\s+"([^"]+)"', block)
+        at_match = re.search(r"\(at\s+([-+0-9.eE]+)\s+([-+0-9.eE]+)", block)
+        ref_match = re.search(r'\(property\s+"Reference"\s+"([^"]+)"', block)
+        if not name_match or not at_match or not ref_match:
+            continue
+        ref = ref_match.group(1)
+        if ref in footprints:
+            fail(f"{path.name} has duplicate footprint reference {ref}")
+        drill_match = re.search(
+            r'\(pad\s+"[^"]*"\s+np_thru_hole\b.*?\(drill\s+([-+0-9.eE]+)',
+            block,
+            flags=re.DOTALL,
+        )
+        footprints[ref] = {
+            "footprint": name_match.group(1),
+            "kind": name_match.group(1).split(":")[-1],
+            "ref": ref,
+            "x_mm": float(at_match.group(1)),
+            "y_mm": float(at_match.group(2)),
+            "height_mm": property_number(block, "HEIGHT_MM", 0.0),
+            "keepout_radius_mm": property_number(block, "KEEPOUT_RADIUS_MM", 0.0),
+            "hole_diameter_mm": property_number(block, "HOLE_DIA_MM"),
+            "npth_drill_mm": float(drill_match.group(1)) if drill_match else None,
+        }
+    return {
+        "text": text,
+        "thickness_mm": float(thickness_match.group(1)),
+        "bounds_xy_mm": [min(x1, x2), min(y1, y2), max(x1, x2), max(y1, y2)],
+        "bbox_mm": [abs(x2 - x1), abs(y2 - y1), float(thickness_match.group(1))],
+        "footprints": footprints,
+    }
+
+
+def read_connectors(path: Path) -> dict[str, dict[str, str]]:
+    try:
+        with path.open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+    except Exception as exc:
+        fail(f"cannot parse trusted connector CSV: {exc}")
+    required = {
+        "ref", "kind", "access_type", "direction", "finished_width_mm",
+        "finished_height_mm", "finished_diameter_mm", "vertical_margin_mm",
+        "cutter_x_min_mm", "cutter_y_min_mm", "cutter_z_min_mm",
+        "cutter_x_max_mm", "cutter_y_max_mm", "cutter_z_max_mm",
+        "path_z_min_mm", "path_z_max_mm",
+    }
+    result: dict[str, dict[str, str]] = {}
+    for row in rows:
+        if not required.issubset(row):
+            fail("trusted connector CSV lacks required columns")
+        ref = str(row["ref"]).strip()
+        if not ref or ref in result:
+            fail(f"trusted connector CSV has invalid or duplicate ref {ref!r}")
+        result[ref] = row
+    if set(result) != {"TP1", "TP2", "TP3", "TP4", "J1"}:
+        fail("trusted connector CSV must define exactly TP1-TP4 and J1")
+    for ref in ("TP1", "TP2", "TP3", "TP4"):
+        row = result[ref]
+        if normalized(row.get("access_type")) != normalized("top_bore") or normalized(row.get("direction")) != normalized("Z_PLUS"):
+            fail(f"trusted connector {ref} must be a Z_PLUS top_bore")
+    if normalized(result["J1"].get("access_type")) != normalized("side_window") or normalized(result["J1"].get("direction")) != normalized("Y_PLUS"):
+        fail("trusted connector J1 must be a Y_PLUS side_window")
+    return result
+
+
+def build_spec(paths: dict[str, Path]) -> dict[str, Any]:
+    board = parse_board(paths["board"])
+    req = json_file(paths["requirements"])
+    connectors = read_connectors(paths["connectors"])
+    if int(req.get("schema_version", 0)) != 2:
+        fail("trusted mechanical requirements schema_version must be 2")
+    required_fields = {
+        "access_center_tolerance_mm", "access_overcut_mm", "axis_tolerance_mm",
+        "base_thickness_mm", "board_bottom_z_mm", "component_bodies",
+        "enclosure_material_density_g_cm3", "expected_enclosure_bbox_mm",
+        "geometry_tolerance_mm", "interference_volume_tolerance_mm3",
+        "inner_cavity_xy_bounds_mm",
+        "lid_inner_z_mm", "lid_separation_mm", "lid_thickness_mm",
+        "mass_report_relative_tolerance", "minimum_access_guard_mm",
+        "minimum_side_clearance_mm", "minimum_top_clearance_mm", "pogo_access",
+        "mount_hole_diameter_mm", "standoff_bore_cutter_z_bounds_mm",
+        "standoff_bore_diameter_mm", "standoff_bore_overcut_mm",
+        "standoff_height_mm", "standoff_outer_diameter_mm",
+        "tray_outer_top_z_mm", "wall_mm",
+    }
+    missing = sorted(required_fields - set(req))
+    if missing:
+        fail("trusted mechanical requirements lack: " + ", ".join(missing))
+    enclosure = [number(value, "expected enclosure bbox") for value in req["expected_enclosure_bbox_mm"]]
+    if len(enclosure) != 3 or min(enclosure) <= 0:
+        fail("trusted expected_enclosure_bbox_mm must contain three positive values")
+    tol = number(req["geometry_tolerance_mm"], "geometry tolerance")
+    wall = number(req["wall_mm"], "wall thickness")
+    expected_cavity = [
+        -enclosure[0] / 2.0 + wall, -enclosure[1] / 2.0 + wall,
+        enclosure[0] / 2.0 - wall, enclosure[1] / 2.0 - wall,
+    ]
+    close_vector(req["inner_cavity_xy_bounds_mm"], expected_cavity, tol, "trusted inner cavity")
+    close(req["tray_outer_top_z_mm"], number(req["lid_inner_z_mm"], "lid inner") - number(req["lid_separation_mm"], "lid separation"), tol, "tray/lid separation")
+    close(number(req["lid_inner_z_mm"], "lid inner") + number(req["lid_thickness_mm"], "lid thickness"), enclosure[2], tol, "lid outer top")
+    close(number(req["base_thickness_mm"], "base thickness") + number(req["standoff_height_mm"], "standoff height"), req["board_bottom_z_mm"], tol, "standoff installed height")
+    expected_refs = {"TP1", "TP2", "TP3", "TP4", "J1", "MH1", "MH2", "MH3", "MH4"}
+    if set(board["footprints"]) != expected_refs:
+        fail(f"trusted KiCad board refs mismatch: expected {sorted(expected_refs)}, got {sorted(board['footprints'])}")
+    for ref in ("MH1", "MH2", "MH3", "MH4"):
+        close(req["mount_hole_diameter_mm"], board["footprints"][ref]["hole_diameter_mm"], number(req["axis_tolerance_mm"], "axis tolerance"), f"trusted {ref} diameter")
+    expected_bore_z = [
+        number(req["base_thickness_mm"], "base thickness") - number(req["standoff_bore_overcut_mm"], "standoff bore overcut"),
+        number(req["board_bottom_z_mm"], "board bottom") + number(req["standoff_bore_overcut_mm"], "standoff bore overcut"),
+    ]
+    close_vector(req["standoff_bore_cutter_z_bounds_mm"], expected_bore_z, tol, "trusted standoff bore cutter z")
+    for ref, connector in connectors.items():
+        footprint = board["footprints"].get(ref)
+        if footprint is None:
+            fail(f"trusted access {ref} is absent from the KiCad board")
+        if ref.startswith("TP"):
+            close(connector["finished_diameter_mm"], 2.0 * footprint["keepout_radius_mm"], tol, f"trusted {ref} bore diameter")
+            close(connector["path_z_min_mm"], req["pogo_access"]["continuous_path_z_bounds_mm"][0], tol, f"trusted {ref} path z min")
+            close(connector["path_z_max_mm"], req["pogo_access"]["continuous_path_z_bounds_mm"][1], tol, f"trusted {ref} path z max")
+            close(connector["cutter_z_min_mm"], req["pogo_access"]["lid_bore_cutter_z_bounds_mm"][0], tol, f"trusted {ref} cutter z min")
+            close(connector["cutter_z_max_mm"], req["pogo_access"]["lid_bore_cutter_z_bounds_mm"][1], tol, f"trusted {ref} cutter z max")
+        else:
+            expected_height = number(footprint["height_mm"], f"{ref} height") + 2.0 * number(connector["vertical_margin_mm"], f"{ref} vertical margin")
+            close(connector["finished_height_mm"], expected_height, tol, f"{ref} finished height")
+            if number(connector["finished_width_mm"], f"{ref} finished width") <= 0:
+                fail("trusted J1 side window has non-positive width")
+            expected_bounds = [
+                footprint["x_mm"] - number(connector["finished_width_mm"], "J1 width") / 2.0,
+                expected_cavity[3] - number(req["access_overcut_mm"], "access overcut"),
+                number(req["board_bottom_z_mm"], "board bottom") + board["thickness_mm"] - number(connector["vertical_margin_mm"], "J1 margin"),
+                footprint["x_mm"] + number(connector["finished_width_mm"], "J1 width") / 2.0,
+                enclosure[1] / 2.0 + number(req["access_overcut_mm"], "access overcut"),
+                number(req["board_bottom_z_mm"], "board bottom") + board["thickness_mm"] + footprint["height_mm"] + number(connector["vertical_margin_mm"], "J1 margin"),
+            ]
+            actual_bounds = [
+                number(connector[field], f"J1 {field}")
+                for field in ("cutter_x_min_mm", "cutter_y_min_mm", "cutter_z_min_mm", "cutter_x_max_mm", "cutter_y_max_mm", "cutter_z_max_mm")
+            ]
+            close_vector(actual_bounds, expected_bounds, tol, "trusted J1 cutter bounds")
+    components = req.get("component_bodies")
+    if not isinstance(components, dict):
+        fail("trusted requirements component_bodies must be an object")
+    if set(components) != {"TP1", "TP2", "TP3", "TP4", "J1"}:
+        fail("trusted component_bodies must define exactly TP1-TP4 and J1")
+    for ref, body in components.items():
+        expected_shape = "cylinder" if ref.startswith("TP") else "box"
+        if not isinstance(body, dict) or normalized(body.get("shape")) != normalized(expected_shape):
+            fail(f"trusted component body {ref} must be a {expected_shape}")
+        bbox = body.get("bbox_mm")
+        if not isinstance(bbox, list) or len(bbox) != 3 or min(number(value, f"{ref} body") for value in bbox) <= 0:
+            fail(f"trusted component body {ref} has invalid bbox_mm")
+    board_top = number(req["board_bottom_z_mm"], "board bottom") + board["thickness_mm"]
+    close(req["pogo_access"]["continuous_path_z_bounds_mm"][0], board_top + board["footprints"]["TP1"]["height_mm"], tol, "pogo path start")
+    close(req["pogo_access"]["continuous_path_z_bounds_mm"][1], enclosure[2] + number(req["access_overcut_mm"], "access overcut"), tol, "pogo path end")
+    close(req["pogo_access"]["lid_bore_cutter_z_bounds_mm"][0], number(req["lid_inner_z_mm"], "lid inner") - number(req["access_overcut_mm"], "access overcut"), tol, "pogo lid cutter start")
+    close(req["pogo_access"]["lid_bore_cutter_z_bounds_mm"][1], enclosure[2] + number(req["access_overcut_mm"], "access overcut"), tol, "pogo lid cutter end")
+    side_clearances = [
+        board["bounds_xy_mm"][0] - expected_cavity[0],
+        expected_cavity[2] - board["bounds_xy_mm"][2],
+        board["bounds_xy_mm"][1] - expected_cavity[1],
+        expected_cavity[3] - board["bounds_xy_mm"][3],
+    ]
+    if min(side_clearances) + tol < number(req["minimum_side_clearance_mm"], "minimum side clearance"):
+        fail("trusted contract cannot satisfy its minimum side clearance")
+    tallest = max(number(board["footprints"][ref]["height_mm"], f"{ref} height") for ref in components)
+    if number(req["lid_inner_z_mm"], "lid inner") - (board_top + tallest) + tol < number(req["minimum_top_clearance_mm"], "minimum top clearance"):
+        fail("trusted contract cannot satisfy its minimum top clearance")
+    return {"board": board, "requirements": req, "connectors": connectors, "paths": paths}
+
+
+def check_required_files() -> None:
+    for name in REQUIRED_ARTIFACTS:
+        path = DESKTOP / name
+        if not path.is_file():
+            fail(f"missing required artifact {name}")
+        size = path.stat().st_size
+        if size < MIN_FILE_SIZE[name]:
+            fail(f"required artifact {name} is too small ({size} bytes)")
+        if size > MAX_FILE_SIZE:
+            fail(f"required artifact {name} is implausibly large ({size} bytes)")
+
+
+def check_answer_board(spec: dict[str, Any]) -> dict[str, Any]:
+    canonical = spec["board"]
+    answer = parse_board(DESKTOP / "01_kicad_board.kicad_pcb")
+    tol = number(spec["requirements"]["axis_tolerance_mm"], "axis_tolerance_mm")
+    close(answer["thickness_mm"], canonical["thickness_mm"], tol, "answer board thickness")
+    close_vector(answer["bounds_xy_mm"], canonical["bounds_xy_mm"], tol, "answer board Edge.Cuts")
+    for ref, expected in canonical["footprints"].items():
+        actual = answer["footprints"].get(ref)
+        if actual is None:
+            fail(f"answer board is missing footprint {ref}")
+        close(actual["x_mm"], expected["x_mm"], tol, f"answer board {ref} x")
+        close(actual["y_mm"], expected["y_mm"], tol, f"answer board {ref} y")
+        if ref.startswith("MH"):
+            close(actual["hole_diameter_mm"], expected["hole_diameter_mm"], tol, f"answer board {ref} hole")
+            close(actual["npth_drill_mm"], expected["hole_diameter_mm"], tol, f"answer board {ref} NPTH")
+        else:
+            close(actual["height_mm"], expected["height_mm"], tol, f"answer board {ref} height")
+            close(actual["keepout_radius_mm"], expected["keepout_radius_mm"], tol, f"answer board {ref} radius")
+    return answer
+
+
+def rows_by_ref(path: Path) -> dict[str, dict[str, str]]:
+    try:
+        with path.open(newline="", encoding="utf-8") as handle:
+            rows = list(csv.DictReader(handle))
+    except Exception as exc:
+        fail(f"cannot parse {path.name}: {exc}")
+    result: dict[str, dict[str, str]] = {}
+    for row in rows:
+        ref = str(row.get("ref", "")).strip()
+        if not ref or ref in result:
+            fail(f"{path.name} has invalid or duplicate ref {ref!r}")
+        result[ref] = row
+    return result
+
+
+def check_kicad_handoff(spec: dict[str, Any]) -> tuple[dict[str, Any], dict[str, dict[str, str]]]:
+    board = spec["board"]
+    req = spec["requirements"]
+    connectors = spec["connectors"]
+    tol = number(req["axis_tolerance_mm"], "axis_tolerance_mm")
+    rows = rows_by_ref(DESKTOP / "01_kicad_mechanical_map.csv")
+    for ref, footprint in board["footprints"].items():
+        row = rows.get(ref)
+        if row is None:
+            fail(f"mechanical map lacks {ref}")
+        close(row.get("x_mm"), footprint["x_mm"], tol, f"map {ref} x")
+        close(row.get("y_mm"), footprint["y_mm"], tol, f"map {ref} y")
+        if ref.startswith("MH"):
+            if normalized(row.get("kind")) != normalized("MOUNTING_HOLE"):
+                fail(f"mechanical map {ref} kind mismatch")
+            if str(row.get("hole_diameter_mm", "")).strip():
+                close(row.get("hole_diameter_mm"), footprint["hole_diameter_mm"], tol, f"map {ref} hole")
+            elif str(row.get("keepout_radius_mm", "")).strip():
+                close(2.0 * number(row.get("keepout_radius_mm"), f"map {ref} radius"), footprint["hole_diameter_mm"], tol, f"map {ref} hole")
+            else:
+                fail(f"mechanical map {ref} lacks mounting-hole diameter")
+            if normalized(row.get("role")) != normalized("standoff_axis"):
+                fail(f"mechanical map {ref} is not a standoff axis")
+        else:
+            close(row.get("height_mm"), footprint["height_mm"], tol, f"map {ref} height")
+            close(row.get("keepout_radius_mm"), footprint["keepout_radius_mm"], tol, f"map {ref} radius")
+        if ref in connectors:
+            connector = connectors[ref]
+            if normalized(row.get("kind")) != normalized(connector["kind"]):
+                fail(f"mechanical map {ref} kind mismatch")
+            allowed_roles = (
+                {normalized(value) for value in ("access_bore", "access", "top_bore", "keepout_opening")}
+                if ref.startswith("TP")
+                else {normalized(value) for value in ("connector_window", "access", "side_window", "access_corridor")}
+            )
+            if normalized(row.get("role")) not in allowed_roles:
+                fail(f"mechanical map {ref} role mismatch")
+            for field in ("finished_width_mm", "finished_height_mm", "finished_diameter_mm"):
+                if str(row.get(field, "")).strip():
+                    close(row.get(field), connector[field], tol, f"map {ref} {field}")
+            for field in (
+                "vertical_margin_mm", "cutter_x_min_mm", "cutter_y_min_mm",
+                "cutter_z_min_mm", "cutter_x_max_mm", "cutter_y_max_mm",
+                "cutter_z_max_mm", "path_z_min_mm", "path_z_max_mm",
+            ):
+                if str(row.get(field, "")).strip() and str(connector.get(field, "")).strip():
+                    close(row.get(field), connector[field], tol, f"map {ref} {field}")
+            if str(row.get("access_type", "")).strip() and normalized(row.get("access_type")) != normalized(connector["access_type"]):
+                fail(f"mechanical map {ref} access_type mismatch")
+            if str(row.get("direction", "")).strip() and normalized(row.get("direction")) != normalized(connector["direction"]):
+                fail(f"mechanical map {ref} direction mismatch")
+            if str(row.get("alignment_tolerance_mm", "")).strip():
+                close(row.get("alignment_tolerance_mm"), req["access_center_tolerance_mm"], tol, f"map {ref} alignment tolerance")
+
+    export = json_file(DESKTOP / "01_kicad_export.json")
+    close_vector(export.get("board_bbox_mm"), board["bbox_mm"], tol, "KiCad export board bbox")
+    components = export.get("components")
+    if not isinstance(components, list):
+        fail("KiCad export components must be a list")
+    by_ref = {str(item.get("ref")): item for item in components if isinstance(item, dict)}
+    for ref, footprint in board["footprints"].items():
+        if ref.startswith("MH"):
+            continue
+        item = by_ref.get(ref)
+        if item is None:
+            fail(f"KiCad export is missing component {ref}")
+        for field in ("x_mm", "y_mm", "height_mm", "keepout_radius_mm"):
+            expected = footprint[field]
+            close(item.get(field), expected, tol, f"export {ref} {field}")
+        close_vector(item.get("body_bbox_mm"), req["component_bodies"][ref]["bbox_mm"], tol, f"export {ref} body")
+    close(export.get("max_component_height_mm"), max(item["height_mm"] for item in board["footprints"].values() if not item["ref"].startswith("MH")), tol, "KiCad export max component height")
+    holes = export.get("mounting_holes")
+    if not isinstance(holes, list):
+        fail("KiCad export mounting_holes must be a list")
+    holes_by_ref = {str(item.get("ref")): item for item in holes if isinstance(item, dict)}
+    for ref, footprint in board["footprints"].items():
+        if not ref.startswith("MH"):
+            continue
+        item = holes_by_ref.get(ref)
+        if item is None:
+            fail(f"KiCad export is missing mounting hole {ref}")
+        close(item.get("x_mm"), footprint["x_mm"], tol, f"export {ref} x")
+        close(item.get("y_mm"), footprint["y_mm"], tol, f"export {ref} y")
+        close(item.get("diameter_mm"), footprint["hole_diameter_mm"], tol, f"export {ref} diameter")
+    if export.get("input_board_sha256") is not None and export["input_board_sha256"] != sha256(spec["paths"]["board"]):
+        fail("KiCad export input_board_sha256 does not match trusted postconfig")
+    return export, rows
+
+
+def expected_geometry(spec: dict[str, Any]) -> dict[str, Any]:
+    board = spec["board"]
+    req = spec["requirements"]
+    enclosure = [number(value, "enclosure bbox") for value in req["expected_enclosure_bbox_mm"]]
+    board_bottom = number(req["board_bottom_z_mm"], "board bottom")
+    board_top = board_bottom + board["thickness_mm"]
+    half_x, half_y = enclosure[0] / 2.0, enclosure[1] / 2.0
+    tray_bounds = [-half_x, -half_y, 0.0, half_x, half_y, number(req["tray_outer_top_z_mm"], "tray top")]
+    lid_bounds = [-half_x, -half_y, number(req["lid_inner_z_mm"], "lid inner"), half_x, half_y, enclosure[2]]
+    board_bounds = [
+        board["bounds_xy_mm"][0], board["bounds_xy_mm"][1], board_bottom,
+        board["bounds_xy_mm"][2], board["bounds_xy_mm"][3], board_top,
+    ]
+    components = []
+    for ref in ("TP1", "TP2", "TP3", "TP4", "J1"):
+        footprint = board["footprints"][ref]
+        sx, sy, sz = [number(value, f"{ref} body") for value in req["component_bodies"][ref]["bbox_mm"]]
+        x, y = footprint["x_mm"], footprint["y_mm"]
+        bounds = [x - sx / 2.0, y - sy / 2.0, board_top, x + sx / 2.0, y + sy / 2.0, board_top + sz]
+        components.append({
+            "ref": ref, "shape": req["component_bodies"][ref]["shape"],
+            "x_mm": x, "y_mm": y, "body_bbox_mm": [sx, sy, sz], "bounds_mm": bounds,
+        })
+    accesses = []
+    for ref in ("TP1", "TP2", "TP3", "TP4"):
+        connector = spec["connectors"][ref]
+        footprint = board["footprints"][ref]
+        diameter = number(connector["finished_diameter_mm"], f"{ref} diameter")
+        path_z = [number(connector["path_z_min_mm"], f"{ref} path z min"), number(connector["path_z_max_mm"], f"{ref} path z max")]
+        cutter_z = [number(connector["cutter_z_min_mm"], f"{ref} cutter z min"), number(connector["cutter_z_max_mm"], f"{ref} cutter z max")]
+        accesses.append({
+            "ref": ref, "access_type": "top_bore", "direction": "Z_PLUS",
+            "x_mm": footprint["x_mm"], "y_mm": footprint["y_mm"],
+            "finished_diameter_mm": diameter,
+            "path_cylinder_mm": [footprint["x_mm"], footprint["y_mm"], diameter / 2.0, path_z[0], path_z[1]],
+            "cutter_cylinder_mm": [footprint["x_mm"], footprint["y_mm"], diameter / 2.0, cutter_z[0], cutter_z[1]],
+        })
+    connector = spec["connectors"]["J1"]
+    j1_bounds = [
+        number(connector[field], f"J1 {field}")
+        for field in ("cutter_x_min_mm", "cutter_y_min_mm", "cutter_z_min_mm", "cutter_x_max_mm", "cutter_y_max_mm", "cutter_z_max_mm")
+    ]
+    accesses.append({
+        "ref": "J1", "access_type": "side_window", "direction": "Y_PLUS",
+        "bounds_mm": j1_bounds,
+        "finished_width_mm": number(connector["finished_width_mm"], "J1 width"),
+        "finished_height_mm": number(connector["finished_height_mm"], "J1 height"),
+        "center_x_mm": (j1_bounds[0] + j1_bounds[3]) / 2.0,
+        "center_z_mm": (j1_bounds[2] + j1_bounds[5]) / 2.0,
+    })
+    standoffs = []
+    for ref in ("MH1", "MH2", "MH3", "MH4"):
+        footprint = board["footprints"][ref]
+        standoffs.append({"ref": ref, "x_mm": footprint["x_mm"], "y_mm": footprint["y_mm"]})
+
+    overlays = []
+    for access in accesses:
+        if access["access_type"] == "top_bore":
+            overlays.append({
+                "id": f"{access['ref']}_Z_PLUS_access", "ref": access["ref"],
+                "role": "pogo_access_review", "shape": "cylinder",
+                "direction": "Z_PLUS", "cylinder_mm": access["path_cylinder_mm"],
+            })
+        else:
+            overlays.append({
+                "id": "J1_Y_PLUS_access", "ref": "J1", "role": "access_corridor",
+                "shape": "box", "direction": "Y_PLUS", "bounds_mm": access["bounds_mm"],
+            })
+    return {
+        "enclosure_bbox_mm": enclosure, "tray_bounds_mm": tray_bounds, "lid_bounds_mm": lid_bounds,
+        "board_bounds_mm": board_bounds, "board_top_z_mm": board_top, "components": components,
+        "accesses": accesses, "standoffs": standoffs, "overlays": overlays,
+    }
+
+
+def check_openscad_handoff(spec: dict[str, Any], geometry: dict[str, Any]) -> dict[str, Any]:
+    req = spec["requirements"]
+    tol = number(req["geometry_tolerance_mm"], "geometry tolerance")
+    handoff_text = (DESKTOP / "01_kicad_parameters.scad").read_text(encoding="utf-8")
+    source_text = (DESKTOP / "02_openscad_enclosure.scad").read_text(encoding="utf-8")
+    uncommented = re.sub(r"/\*.*?\*/|//[^\n]*", "", handoff_text, flags=re.DOTALL)
+    if not re.findall(r"(?m)^\s*[A-Za-z_$][A-Za-z0-9_$]*\s*=", uncommented):
+        fail("01_kicad_parameters.scad does not contain a parameter assignment")
+    if re.search(r"(?im)^\s*include\s*<\s*(?:[^>]+/)?01_kicad_parameters\.scad\s*>", source_text) is None:
+        fail("OpenSCAD source does not consume 01_kicad_parameters.scad")
+    params = json_file(DESKTOP / "02_openscad_parameters.json")
+    close_vector(params.get("board_bbox_mm"), spec["board"]["bbox_mm"], tol, "OpenSCAD board bbox")
+    close_vector(params.get("enclosure_bbox_mm"), geometry["enclosure_bbox_mm"], tol, "OpenSCAD enclosure bbox")
+    for field in (
+        "wall_mm", "base_thickness_mm", "tray_outer_top_z_mm", "lid_inner_z_mm",
+        "lid_separation_mm", "lid_thickness_mm", "board_bottom_z_mm", "standoff_height_mm",
+        "standoff_outer_diameter_mm", "standoff_bore_diameter_mm", "standoff_bore_overcut_mm",
+        "access_overcut_mm",
+    ):
+        close(params.get(field), req[field], tol, f"OpenSCAD {field}")
+    close(params.get("board_top_z_mm"), geometry["board_top_z_mm"], tol, "OpenSCAD board top")
+    if params.get("tray_bounds_mm") is not None:
+        close_vector(params["tray_bounds_mm"], geometry["tray_bounds_mm"], tol, "OpenSCAD tray bounds")
+    close_vector(params.get("lid_bounds_mm"), geometry["lid_bounds_mm"], tol, "OpenSCAD lid bounds")
+
+    def records(*keys: str) -> list[dict[str, Any]]:
+        values: list[dict[str, Any]] = []
+        for key in keys:
+            raw = params.get(key)
+            if isinstance(raw, list):
+                values.extend(item for item in raw if isinstance(item, dict))
+            elif isinstance(raw, dict):
+                for ref, item in raw.items():
+                    if isinstance(item, dict):
+                        values.append({**item, "ref": ref})
+        return values
+
+    actual_standoffs = {
+        str(item.get("ref")): item
+        for item in records("standoff_axes", "standoffs")
+        if item.get("ref")
+    }
+    for expected in geometry["standoffs"]:
+        actual = actual_standoffs.get(expected["ref"])
+        if actual is None:
+            fail(f"OpenSCAD parameters lack standoff {expected['ref']}")
+        axis_xy = actual.get("axis_xy_mm")
+        actual_x = axis_xy[0] if isinstance(axis_xy, list) and len(axis_xy) == 2 else actual.get("x_mm")
+        actual_y = axis_xy[1] if isinstance(axis_xy, list) and len(axis_xy) == 2 else actual.get("y_mm")
+        close(actual_x, expected["x_mm"], tol, f"OpenSCAD {expected['ref']} x")
+        close(actual_y, expected["y_mm"], tol, f"OpenSCAD {expected['ref']} y")
+    actual_accesses = records("accesses", "pogo_accesses", "top_bores", "lid_bores", "side_windows")
+    grouped_accesses: dict[str, list[dict[str, Any]]] = {}
+    for item in actual_accesses:
+        if item.get("ref"):
+            grouped_accesses.setdefault(str(item["ref"]), []).append(item)
+    for ref, items in grouped_accesses.items():
+        for field in ("direction",):
+            values = {normalized(item[field]) for item in items if str(item.get(field, "")).strip()}
+            if len(values) > 1:
+                fail(f"OpenSCAD parameters contain conflicting {field} values for {ref}")
+        access_types = {
+            normalized(item.get("access_type", item.get("type")))
+            for item in items
+            if str(item.get("access_type", item.get("type", ""))).strip()
+        }
+        if len(access_types) > 1:
+            fail(f"OpenSCAD parameters contain conflicting access types for {ref}")
+        for field in ("x_mm", "y_mm", "finished_width_mm", "finished_height_mm", "finished_diameter_mm"):
+            values = [number(item[field], f"OpenSCAD {ref} {field}") for item in items if item.get(field) is not None]
+            if values and max(values) - min(values) > tol:
+                fail(f"OpenSCAD parameters contain conflicting {field} values for {ref}")
+    by_ref = {str(item.get("ref")): item for item in actual_accesses if item.get("ref")}
+    for expected in geometry["accesses"]:
+        actual = by_ref.get(expected["ref"])
+        if actual is None:
+            fail(f"OpenSCAD parameters lack access {expected['ref']}")
+        actual_type = actual.get("access_type", actual.get("type"))
+        if normalized(actual_type) != normalized(expected["access_type"]):
+            fail(f"OpenSCAD access {expected['ref']} type mismatch")
+        if normalized(actual.get("direction")) != normalized(expected["direction"]):
+            fail(f"OpenSCAD access {expected['ref']} direction mismatch")
+        if expected["access_type"] == "top_bore":
+            axis_xy = actual.get("axis_xy_mm")
+            path_cylinder = actual.get("path_cylinder_mm")
+            actual_x = axis_xy[0] if isinstance(axis_xy, list) and len(axis_xy) == 2 else actual.get("x_mm")
+            actual_y = axis_xy[1] if isinstance(axis_xy, list) and len(axis_xy) == 2 else actual.get("y_mm")
+            if isinstance(path_cylinder, list) and len(path_cylinder) == 5:
+                actual_x = path_cylinder[0] if actual_x is None else actual_x
+                actual_y = path_cylinder[1] if actual_y is None else actual_y
+            close(actual_x, expected["x_mm"], tol, f"OpenSCAD {expected['ref']} x")
+            close(actual_y, expected["y_mm"], tol, f"OpenSCAD {expected['ref']} y")
+            close(
+                actual.get("finished_diameter_mm", actual.get("diameter_mm")),
+                expected["finished_diameter_mm"], tol, f"OpenSCAD {expected['ref']} diameter",
+            )
+            path_bounds = actual.get("path_z_bounds_mm")
+            if path_bounds is None and isinstance(actual.get("path_cylinder_mm"), list):
+                path_bounds = actual["path_cylinder_mm"][-2:]
+            if path_bounds is None:
+                path_bounds = [actual.get("path_z_min_mm"), actual.get("path_z_max_mm")]
+            cutter_bounds = actual.get("cutter_z_bounds_mm")
+            if cutter_bounds is None and isinstance(actual.get("cutter_cylinder_mm"), list):
+                cutter_bounds = actual["cutter_cylinder_mm"][-2:]
+            if cutter_bounds is None:
+                cutter_bounds = [actual.get("cutter_z_min_mm"), actual.get("cutter_z_max_mm")]
+            close_vector(path_bounds, expected["path_cylinder_mm"][-2:], tol, f"OpenSCAD {expected['ref']} path z")
+            close_vector(cutter_bounds, expected["cutter_cylinder_mm"][-2:], tol, f"OpenSCAD {expected['ref']} cutter z")
+        else:
+            bounds = actual.get("cutter_bounds_mm", actual.get("bounds_mm"))
+            close_vector(bounds, expected["bounds_mm"], tol, f"OpenSCAD {expected['ref']} bounds")
+            close(actual.get("finished_width_mm"), expected["finished_width_mm"], tol, f"OpenSCAD {expected['ref']} width")
+            close(actual.get("finished_height_mm"), expected["finished_height_mm"], tol, f"OpenSCAD {expected['ref']} height")
+    if params.get("input_mechanical_map_sha256") is not None and params["input_mechanical_map_sha256"] != sha256(DESKTOP / "01_kicad_mechanical_map.csv"):
+        fail("OpenSCAD input mechanical-map hash mismatch")
+    return params
+
+
+def resolve_executable(name: str, candidates: list[str]) -> str:
+    found = shutil.which(name)
+    if found:
+        return found
+    for candidate in candidates:
+        matches = sorted(Path("/").glob(candidate.lstrip("/"))) if "*" in candidate else [Path(candidate)]
+        for path in reversed(matches):
+            if path.is_file() and os.access(path, os.X_OK):
+                return str(path)
+    fail(f"required evaluator executable is unavailable: {name}")
+
+
+def run_command(command: list[str], *, cwd: Path, timeout: int, label: str) -> subprocess.CompletedProcess[str]:
+    try:
+        completed = subprocess.run(
+            command,
+            cwd=str(cwd),
+            text=True,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
+            encoding="utf-8",
+            errors="replace",
+            timeout=timeout,
+            check=False,
+            env={**os.environ, "PYTHONPATH": ""},
+        )
+    except Exception as exc:
+        fail(f"{label} could not run: {exc}")
+    if completed.returncode != 0:
+        output = (completed.stdout + "\n" + completed.stderr)[-4000:]
+        fail(f"{label} failed with return code {completed.returncode}: {output}")
+    return completed
+
+
+def run_kicad_export(answer_board: Path, output_step: Path, runtime: Path) -> None:
+    kicad = resolve_executable("kicad-cli", ["/home/user/Applications/kicad-*/kicad-*-x86_64.AppImage"])
+    prefix = [kicad, "--appimage-extract-and-run", "kicad-cli"] if Path(kicad).suffix.lower() == ".appimage" else [kicad]
+    run_command(
+        prefix + ["pcb", "export", "step", "--force", "--board-only", "--output", str(output_step), str(answer_board)],
+        cwd=runtime,
+        timeout=90,
+        label="KiCad board STEP re-export",
+    )
+    if not output_step.is_file() or output_step.stat().st_size < 500:
+        fail("KiCad re-export did not create a substantial STEP file")
+
+
+def load_mesh_metrics(path: Path) -> dict[str, Any]:
+    try:
+        import numpy as np
+    except Exception as exc:
+        fail(f"evaluator mesh dependencies unavailable: {exc}")
+    try:
+        data = path.read_bytes()
+        triangles = None
+        if len(data) >= 84:
+            facet_count = struct.unpack_from("<I", data, 80)[0]
+            if facet_count > 0 and 84 + facet_count * 50 == len(data):
+                dtype = np.dtype([("normal", "<f4", (3,)), ("vertices", "<f4", (3, 3)), ("attribute", "<u2")])
+                triangles = np.asarray(np.frombuffer(data, dtype=dtype, count=facet_count, offset=84)["vertices"], dtype=float)
+        if triangles is None:
+            values = []
+            for line in data.decode("utf-8", errors="strict").splitlines():
+                fields = line.strip().split()
+                if fields and fields[0].lower() == "vertex" and len(fields) == 4:
+                    values.append([float(value) for value in fields[1:]])
+            if not values or len(values) % 3:
+                fail(f"{path.name} is not a valid binary or ASCII STL triangle mesh")
+            triangles = np.asarray(values, dtype=float).reshape((-1, 3, 3))
+        if not np.isfinite(triangles).all():
+            fail(f"{path.name} contains non-finite coordinates")
+
+        vertex_ids = {}
+        vertices = []
+        faces = []
+        seen_faces = set()
+        for triangle in triangles:
+            ids = []
+            for raw in triangle:
+                key = tuple(round(float(value), 8) for value in raw)
+                if key not in vertex_ids:
+                    vertex_ids[key] = len(vertices)
+                    vertices.append(key)
+                ids.append(vertex_ids[key])
+            if len(set(ids)) != 3:
+                continue
+            points = np.asarray([vertices[index] for index in ids], dtype=float)
+            if float(np.linalg.norm(np.cross(points[1] - points[0], points[2] - points[0]))) <= 1e-12:
+                continue
+            canonical = tuple(sorted(ids))
+            if canonical not in seen_faces:
+                seen_faces.add(canonical)
+                faces.append(tuple(ids))
+        if len(vertices) < 20 or len(faces) < 30:
+            fail(f"{path.name} has implausibly little triangle geometry")
+
+        edge_uses = {}
+        for face_index, (a, b, c) in enumerate(faces):
+            for start, end in ((a, b), (b, c), (c, a)):
+                edge = (min(start, end), max(start, end))
+                edge_uses.setdefault(edge, []).append((face_index, 1 if start < end else -1))
+        if any(len(uses) != 2 for uses in edge_uses.values()):
+            fail(f"{path.name} must be a watertight mesh")
+        if any(uses[0][1] + uses[1][1] != 0 for uses in edge_uses.values()):
+            fail(f"{path.name} must be consistently wound")
+
+        vertex_array = np.asarray(vertices, dtype=float)
+        face_array = np.asarray(faces, dtype=int)
+
+        def calculate(face_indices):
+            points = vertex_array[face_array[np.asarray(face_indices, dtype=int)]]
+            cross = np.cross(points[:, 1] - points[:, 0], points[:, 2] - points[:, 0])
+            signed = np.einsum("ij,ij->i", points[:, 0], np.cross(points[:, 1], points[:, 2])) / 6.0
+            signed_volume = float(signed.sum())
+            used = np.unique(face_array[np.asarray(face_indices, dtype=int)].reshape(-1))
+            local_vertices = vertex_array[used]
+            local_bounds = np.asarray([local_vertices.min(axis=0), local_vertices.max(axis=0)], dtype=float)
+            center = ((points.sum(axis=1) / 4.0) * signed[:, None]).sum(axis=0) / signed_volume
+            return local_bounds, abs(signed_volume), float((np.linalg.norm(cross, axis=1) * 0.5).sum()), center
+
+        neighbors = [set() for _ in faces]
+        for uses in edge_uses.values():
+            first, second = uses[0][0], uses[1][0]
+            neighbors[first].add(second)
+            neighbors[second].add(first)
+        groups = []
+        unseen = set(range(len(faces)))
+        while unseen:
+            seed = unseen.pop()
+            group = {seed}
+            stack = [seed]
+            while stack:
+                adjacent = neighbors[stack.pop()] & unseen
+                unseen.difference_update(adjacent)
+                group.update(adjacent)
+                stack.extend(adjacent)
+            groups.append(sorted(group))
+
+        bounds, volume, area, center = calculate(range(len(faces)))
+        if volume <= 0 or area <= 0:
+            fail(f"{path.name} must be a positive-volume mesh")
+        components = []
+        for group in groups:
+            if len(group) < 4:
+                continue
+            cbounds, component_volume, _component_area, _component_center = calculate(group)
+            components.append({
+                "bounds": [float(value) for value in cbounds.reshape(-1)],
+                "bbox": [float(value) for value in cbounds[1] - cbounds[0]],
+                "volume": component_volume,
+                "faces": len(group),
+            })
+        return {
+            "bounds": [float(value) for value in bounds.reshape(-1)],
+            "bbox": [float(value) for value in bounds[1] - bounds[0]],
+            "volume": volume,
+            "area": area,
+            "center": [float(value) for value in center],
+            "vertices": len(vertices),
+            "faces": len(faces),
+            "components": components,
+        }
+    except EvaluationError:
+        raise
+    except Exception as exc:
+        fail(f"cannot inspect mesh {path.name}: {exc}")
+
+
+def find_mesh_component(metrics: dict[str, Any], bounds: list[float], label: str) -> dict[str, Any]:
+    matches = []
+    for component in metrics["components"]:
+        error = max(abs(a - b) for a, b in zip(component["bounds"], bounds))
+        if error <= 0.25:
+            matches.append((error, component))
+    if not matches:
+        fail(f"{label} does not contain the expected disconnected solid at {bounds}")
+    return min(matches, key=lambda item: item[0])[1]
+
+
+def compare_meshes(submitted: dict[str, Any], rendered: dict[str, Any], geometry: dict[str, Any]) -> None:
+    expected_bbox = geometry["enclosure_bbox_mm"]
+    expected_bounds = [-expected_bbox[0] / 2.0, -expected_bbox[1] / 2.0, 0.0, expected_bbox[0] / 2.0, expected_bbox[1] / 2.0, expected_bbox[2]]
+    for label, metrics in (("submitted STL", submitted), ("OpenSCAD rerender", rendered)):
+        close_vector(metrics["bbox"], expected_bbox, 0.15, f"{label} bbox")
+        close_vector(metrics["bounds"], expected_bounds, 0.15, f"{label} bounds")
+        if len(metrics["components"]) < 2:
+            fail(f"{label} must retain disconnected tray and lid solids")
+        find_mesh_component(metrics, geometry["tray_bounds_mm"], f"{label} tray")
+        find_mesh_component(metrics, geometry["lid_bounds_mm"], f"{label} lid")
+        fill = metrics["volume"] / math.prod(expected_bbox)
+        if not 0.10 <= fill <= 0.65:
+            fail(f"{label} has an implausible tray/lid fill ratio: {fill}")
+    if abs(submitted["volume"] - rendered["volume"]) > max(5.0, rendered["volume"] * 0.005):
+        fail("submitted STL volume differs materially from the submitted SCAD rerender")
+    if abs(submitted["area"] - rendered["area"]) > max(10.0, rendered["area"] * 0.01):
+        fail("submitted STL area differs materially from the submitted SCAD rerender")
+
+
+FREECAD_CHECKER = r'''
+import json
+import math
+import os
+import traceback
+
+import FreeCAD as App
+import Import
+import Mesh
+import MeshPart
+import Part
+
+
+config = json.load(open(os.environ["ENGIWORLD_TASK05_CAD_CONFIG"], "r"))
+result_path = os.environ["ENGIWORLD_TASK05_CAD_RESULT"]
+
+
+def bounds(shape):
+    box = shape.BoundBox
+    return [box.XMin, box.YMin, box.ZMin, box.XMax, box.YMax, box.ZMax]
+
+
+def metrics(shape):
+    return {
+        "valid": bool(shape.isValid()),
+        "solid_count": len(shape.Solids),
+        "volume_mm3": float(shape.Volume),
+        "bounds_mm": bounds(shape),
+        "bbox_mm": [shape.BoundBox.XLength, shape.BoundBox.YLength, shape.BoundBox.ZLength],
+    }
+
+
+def read_step(path):
+    shape = Part.read(path)
+    if shape.isNull() or not shape.isValid() or not shape.Solids or shape.Volume <= 0:
+        raise RuntimeError("STEP has no valid positive-volume solid: " + path)
+    return shape
+
+
+def read_step_objects(path):
+    doc = App.newDocument("Task05EvalAssembly")
+    Import.insert(path, doc.Name)
+    doc.recompute()
+    values = []
+    for obj in doc.Objects:
+        shape = getattr(obj, "Shape", None)
+        if shape is None or shape.isNull() or not shape.isValid() or shape.Volume <= 0:
+            continue
+        solids = list(shape.Solids)
+        for index, solid in enumerate(solids):
+            if solid.Volume > 0:
+                values.append({"name": obj.Name + "_" + str(index), "label": obj.Label, "shape": solid})
+    unique = []
+    seen = set()
+    for value in values:
+        shape = value["shape"]
+        key = tuple(round(v, 4) for v in bounds(shape) + [float(shape.Volume)])
+        if key not in seen:
+            seen.add(key)
+            unique.append(value)
+    if not unique:
+        raise RuntimeError("assembly STEP import produced no solid objects")
+    return doc, unique
+
+
+def mesh_solids(path):
+    mesh = Mesh.Mesh(path)
+    if mesh.CountFacets < 30:
+        raise RuntimeError("STL has too few facets: " + path)
+    shell_shape = Part.Shape()
+    shell_shape.makeShapeFromMesh(mesh.Topology, 0.05)
+    if not shell_shape.isClosed():
+        raise RuntimeError("STL contains an open shell: " + path)
+    solids = []
+    for shell in shell_shape.Shells or [shell_shape]:
+        candidate = Part.makeSolid(shell)
+        if candidate.isNull() or not candidate.isValid() or candidate.Volume <= 0:
+            raise RuntimeError("STL shell cannot form a valid solid: " + path)
+        solids.extend(candidate.Solids)
+    if len(solids) < 2:
+        raise RuntimeError("STL does not retain distinct tray and lid solids: " + path)
+    return solids, Part.makeCompound(solids), int(mesh.CountFacets)
+
+
+def bounds_error(shape, expected):
+    return max(abs(a - b) for a, b in zip(bounds(shape), expected))
+
+
+def pick(values, expected, label, tolerance=0.25):
+    ranked = [(bounds_error(value["shape"], expected), value) for value in values]
+    ranked.sort(key=lambda item: item[0])
+    if not ranked or ranked[0][0] > tolerance:
+        raise RuntimeError("cannot identify " + label + " by trusted geometry")
+    if len(ranked) > 1 and ranked[1][0] <= tolerance and abs(ranked[1][0] - ranked[0][0]) < 1e-6:
+        raise RuntimeError("ambiguous geometry for " + label)
+    return ranked[0][1]
+
+
+def bounds_contained(actual, expected, tolerance=0.25):
+    return all(actual[index] >= expected[index] - tolerance for index in range(3)) and all(
+        actual[index] <= expected[index] + tolerance for index in range(3, 6)
+    )
+
+
+def pick_group(values, expected, label, excluded_ids, tolerance=0.25):
+    matches = [
+        value for value in values
+        if id(value) not in excluded_ids and bounds_contained(bounds(value["shape"]), expected, 0.05)
+    ]
+    if not matches:
+        raise RuntimeError("cannot identify " + label + " by trusted geometry")
+    shape = Part.makeCompound([value["shape"] for value in matches])
+    if bounds_error(shape, expected) > tolerance:
+        raise RuntimeError("cannot identify complete " + label + " by trusted geometry")
+    return {
+        "name": label,
+        "label": label,
+        "shape": shape,
+        "members": matches,
+    }
+
+
+def pick_shape(values, expected, label, tolerance=0.25):
+    ranked = [(bounds_error(shape, expected), shape) for shape in values]
+    ranked.sort(key=lambda item: item[0])
+    if not ranked or ranked[0][0] > tolerance:
+        raise RuntimeError("cannot identify " + label + " in STL")
+    return ranked[0][1]
+
+
+def box_shape(box):
+    xmin, ymin, zmin, xmax, ymax, zmax = box
+    return Part.makeBox(xmax - xmin, ymax - ymin, zmax - zmin, App.Vector(xmin, ymin, zmin))
+
+
+def cylinder_shape(volume):
+    x, y, radius, zmin, zmax = volume
+    return Part.makeCylinder(radius, zmax - zmin, App.Vector(x, y, zmin))
+
+
+def overlap(first, second):
+    common = float(first.common((second,), 1e-6).Volume)
+    return {
+        "common_volume_mm3": common,
+        "first_only_volume_mm3": max(0.0, float(first.Volume) - common),
+        "second_only_volume_mm3": max(0.0, float(second.Volume) - common),
+        "symmetric_difference_volume_mm3": max(0.0, float(first.Volume + second.Volume - 2.0 * common)),
+    }
+
+
+def inside(shape, x, y, z):
+    return bool(shape.isInside(App.Vector(float(x), float(y), float(z)), 1e-4, False))
+
+
+def export_reference(objects, path):
+    doc = App.newDocument("Task05EvalReference")
+    meshes = []
+    for index, value in enumerate(objects):
+        obj = doc.addObject("Mesh::Feature", "Reference_%02d" % index)
+        obj.Label = "Evaluation reference %02d" % index
+        obj.Mesh = MeshPart.meshFromShape(
+            Shape=value["shape"], LinearDeflection=0.1, AngularDeflection=0.35, Relative=False
+        )
+        if obj.Mesh.CountFacets <= 0:
+            raise RuntimeError("cannot mesh assembly role for bridge validation")
+        meshes.append(obj)
+    Mesh.export(meshes, path)
+    if not os.path.isfile(path) or os.path.getsize(path) < 1000:
+        raise RuntimeError("cannot export evaluator reference OBJ")
+
+
+def centered_void(shape, x, y, z):
+    candidates = [
+        solid for solid in shape.Solids
+        if solid.BoundBox.XMin - 1e-4 <= x <= solid.BoundBox.XMax + 1e-4
+        and solid.BoundBox.YMin - 1e-4 <= y <= solid.BoundBox.YMax + 1e-4
+        and solid.BoundBox.ZMin - 1e-4 <= z <= solid.BoundBox.ZMax + 1e-4
+    ]
+    if not candidates:
+        return None
+    return min(
+        candidates,
+        key=lambda solid: solid.BoundBox.XLength * solid.BoundBox.YLength * solid.BoundBox.ZLength,
+    )
+
+
+def top_bore_metrics(material, access):
+    tolerance = config["interference_tolerance_mm3"]
+    geometry_tolerance = config["geometry_tolerance_mm"]
+    axis_tolerance = config["access_center_tolerance_mm"]
+    guard = config["minimum_access_guard_mm"]
+    x, y, radius, zmin, zmax = access["path_cylinder_mm"]
+    probe_radius = radius
+    path_probe = Part.makeCylinder(probe_radius, zmax - zmin, App.Vector(x, y, zmin))
+    residual = float(material.common(path_probe).Volume)
+
+    lid_zmin, lid_zmax = config["lid_bounds_mm"][2], config["lid_bounds_mm"][5]
+    section_height = min(0.2, (lid_zmax - lid_zmin) / 4.0)
+    section_z = (lid_zmin + lid_zmax - section_height) / 2.0
+    search_radius = radius + guard + 0.4
+    search = Part.makeCylinder(search_radius, section_height, App.Vector(x, y, section_z))
+    void = centered_void(search.cut(material), x, y, section_z + section_height / 2.0)
+    if void is None:
+        measured_diameter = None
+        center = None
+        center_error = None
+        section_difference = None
+    else:
+        measured_diameter = (float(void.BoundBox.XLength) + float(void.BoundBox.YLength)) / 2.0
+        center = [float(void.BoundBox.Center.x), float(void.BoundBox.Center.y)]
+        center_error = math.hypot(center[0] - x, center[1] - y)
+        ideal_void = Part.makeCylinder(radius, section_height, App.Vector(x, y, section_z))
+        section_difference = overlap(void, ideal_void)["symmetric_difference_volume_mm3"]
+    outer_guard = Part.makeCylinder(radius + guard, section_height, App.Vector(x, y, section_z))
+    inner_guard = Part.makeCylinder(radius + geometry_tolerance, section_height, App.Vector(x, y, section_z))
+    guard_ring = outer_guard.cut(inner_guard)
+    guard_fraction = float(material.common(guard_ring).Volume) / max(float(guard_ring.Volume), 1e-9)
+    dimensions_pass = (
+        measured_diameter is not None
+        and abs(measured_diameter - 2.0 * radius) <= geometry_tolerance
+        and center_error is not None
+        and center_error <= axis_tolerance
+        and section_difference is not None
+        and section_difference <= max(tolerance, float(math.pi * radius * radius * section_height) * 0.03)
+    )
+    return {
+        "ref": access["ref"],
+        "access_type": "top_bore",
+        "direction": access["direction"],
+        "axis_xy_mm": [x, y],
+        "measured_center_xy_mm": center,
+        "center_error_mm": center_error,
+        "finished_diameter_mm": measured_diameter,
+        "path_z_bounds_mm": [zmin, zmax],
+        "cutter_z_bounds_mm": access["cutter_cylinder_mm"][-2:],
+        "residual_material_volume_mm3": residual,
+        "annular_guard_fill_ratio": guard_fraction,
+        "section_symmetric_difference_mm3": section_difference,
+        "guard_material_present": guard_fraction >= 0.90,
+        "continuous": residual <= tolerance and guard_fraction >= 0.90 and dimensions_pass,
+        "through": residual <= tolerance and guard_fraction >= 0.90 and dimensions_pass,
+    }
+
+
+def side_window_metrics(material, access):
+    tolerance = config["interference_tolerance_mm3"]
+    geometry_tolerance = config["geometry_tolerance_mm"]
+    center_tolerance = config["access_center_tolerance_mm"]
+    guard = config["minimum_access_guard_mm"]
+    wall = config["wall_mm"]
+    enclosure = config["enclosure_bbox_mm"]
+    if access["direction"] != "Y_PLUS":
+        raise RuntimeError("task-05 J1 access must be on the Y_PLUS wall")
+    xmin, _cutter_ymin, zmin, xmax, _cutter_ymax, zmax = access["bounds_mm"]
+    inner_y, outer_y = enclosure[1] / 2.0 - wall, enclosure[1] / 2.0
+    inset = min(0.05, (xmax - xmin) / 20.0, (zmax - zmin) / 20.0)
+    core = box_shape([xmin + inset, inner_y + inset, zmin + inset, xmax - inset, outer_y - inset, zmax - inset])
+    residual = float(material.common(core).Volume)
+
+    section_height = min(0.2, wall / 4.0)
+    section_y = (inner_y + outer_y - section_height) / 2.0
+    search = box_shape([
+        xmin - guard - 0.4, section_y, max(0.0, zmin - guard - 0.4),
+        xmax + guard + 0.4, section_y + section_height,
+        min(config["tray_outer_top_z_mm"], zmax + guard + 0.4),
+    ])
+    void = centered_void(search.cut(material), (xmin + xmax) / 2.0, section_y + section_height / 2.0, (zmin + zmax) / 2.0)
+    if void is None:
+        measured_width = measured_height = center_error = None
+        measured_bounds = None
+        section_difference = None
+    else:
+        measured_width = float(void.BoundBox.XLength)
+        measured_height = float(void.BoundBox.ZLength)
+        center_error = math.hypot(
+            float(void.BoundBox.Center.x) - (xmin + xmax) / 2.0,
+            float(void.BoundBox.Center.z) - (zmin + zmax) / 2.0,
+        )
+        measured_bounds = [
+            float(void.BoundBox.XMin), inner_y, float(void.BoundBox.ZMin),
+            float(void.BoundBox.XMax), outer_y, float(void.BoundBox.ZMax),
+        ]
+        ideal_section = box_shape([xmin, section_y, zmin, xmax, section_y + section_height, zmax])
+        section_difference = overlap(void, ideal_section)["symmetric_difference_volume_mm3"]
+
+    gap = geometry_tolerance + 0.03
+    width = max(0.2, guard - gap)
+    probes = [
+        box_shape([xmin - gap - width, inner_y, zmin + inset, xmin - gap, outer_y, zmax - inset]),
+        box_shape([xmax + gap, inner_y, zmin + inset, xmax + gap + width, outer_y, zmax - inset]),
+        box_shape([xmin + inset, inner_y, zmin - gap - width, xmax - inset, outer_y, zmin - gap]),
+        box_shape([xmin + inset, inner_y, zmax + gap, xmax - inset, outer_y, zmax + gap + width]),
+    ]
+    fractions = [float(material.common(probe).Volume) / max(float(probe.Volume), 1e-9) for probe in probes]
+    opposite_probe = box_shape([
+        xmin + inset, -outer_y + inset, zmin + inset,
+        xmax - inset, -inner_y - inset, zmax - inset,
+    ])
+    opposite_fill = float(material.common(opposite_probe).Volume) / max(float(opposite_probe.Volume), 1e-9)
+    opposite_overlap_allowed = any(
+        other.get("access_type") == "side_window"
+        and other.get("direction") == "Y_MINUS"
+        and other.get("ref") != access["ref"]
+        and max(xmin, other["bounds_mm"][0]) < min(xmax, other["bounds_mm"][3])
+        and max(zmin, other["bounds_mm"][2]) < min(zmax, other["bounds_mm"][5])
+        for other in config["accesses"]
+    )
+    guards = [
+        xmin + enclosure[0] / 2.0,
+        enclosure[0] / 2.0 - xmax,
+        zmin,
+        config["tray_outer_top_z_mm"] - zmax,
+    ]
+    dimensions_pass = (
+        measured_width is not None
+        and measured_height is not None
+        and abs(measured_width - access["finished_width_mm"]) <= geometry_tolerance
+        and abs(measured_height - access["finished_height_mm"]) <= geometry_tolerance
+        and center_error is not None
+        and center_error <= center_tolerance
+        and section_difference is not None
+        and section_difference <= max(tolerance, access["finished_width_mm"] * access["finished_height_mm"] * section_height * 0.02)
+    )
+    through = (
+        residual <= tolerance
+        and dimensions_pass
+        and min(fractions) >= 0.90
+        and min(guards) + geometry_tolerance >= guard
+        and (opposite_overlap_allowed or opposite_fill >= 0.90)
+    )
+    return {
+        "ref": access["ref"],
+        "access_type": "side_window",
+        "direction": access["direction"],
+        "contract_cutter_bounds_mm": access["bounds_mm"],
+        "measured_opening_bounds_mm": measured_bounds,
+        "finished_width_mm": measured_width,
+        "finished_height_mm": measured_height,
+        "center_error_mm": center_error,
+        "minimum_guard_mm": min(guards),
+        "guard_fill_fractions": fractions,
+        "guard_material_present": min(fractions) >= 0.90,
+        "opposite_wall_fill_ratio": opposite_fill,
+        "opposite_wall_overlap_allowed": opposite_overlap_allowed,
+        "residual_material_volume_mm3": residual,
+        "section_symmetric_difference_mm3": section_difference,
+        "continuous": through,
+        "through": through,
+    }
+
+
+def access_metrics(material, access):
+    if access["access_type"] == "top_bore":
+        return top_bore_metrics(material, access)
+    if access["access_type"] == "side_window":
+        return side_window_metrics(material, access)
+    raise RuntimeError("unsupported task-05 access type: " + str(access["access_type"]))
+
+
+def side_clearance(package, board, direction):
+    epsilon = 0.02
+    z_height = max(0.05, min(0.2, board.BoundBox.ZLength / 2.0))
+    z0 = board.BoundBox.Center.z - z_height / 2.0
+    x_outer = config["enclosure_bbox_mm"][0] / 2.0 + 1.0
+    y_outer = config["enclosure_bbox_mm"][1] / 2.0 + 1.0
+    box = board.BoundBox
+    if direction == "X_PLUS":
+        reference = Part.makeBox(epsilon, box.YLength, z_height, App.Vector(box.XMax - epsilon, box.YMin, z0))
+        search = Part.makeBox(x_outer - box.XMax, box.YLength, z_height, App.Vector(box.XMax, box.YMin, z0))
+    elif direction == "X_MINUS":
+        reference = Part.makeBox(epsilon, box.YLength, z_height, App.Vector(box.XMin, box.YMin, z0))
+        search = Part.makeBox(box.XMin + x_outer, box.YLength, z_height, App.Vector(-x_outer, box.YMin, z0))
+    elif direction == "Y_PLUS":
+        reference = Part.makeBox(box.XLength, epsilon, z_height, App.Vector(box.XMin, box.YMax - epsilon, z0))
+        search = Part.makeBox(box.XLength, y_outer - box.YMax, z_height, App.Vector(box.XMin, box.YMax, z0))
+    else:
+        reference = Part.makeBox(box.XLength, epsilon, z_height, App.Vector(box.XMin, box.YMin, z0))
+        search = Part.makeBox(box.XLength, box.YMin + y_outer, z_height, App.Vector(box.XMin, -y_outer, z0))
+    material = package.common(search)
+    if material.isNull() or material.Volume <= 0:
+        return None
+    return float(reference.distToShape(material)[0])
+
+
+def top_clearance(material, component):
+    box = component.BoundBox
+    top = float(box.ZMax)
+    height = max(0.0, config["enclosure_bbox_mm"][2] - top)
+    if height <= 0:
+        return -1.0
+    probe = Part.makeBox(
+        float(box.XLength),
+        float(box.YLength),
+        height,
+        App.Vector(float(box.XMin), float(box.YMin), top),
+    )
+    covering = material.common(probe)
+    if covering.isNull() or covering.Volume <= 1e-6:
+        return None
+    return float(covering.BoundBox.ZMin - top)
+
+
+def standoff_metrics(material):
+    values = {}
+    base = config["base_thickness_mm"]
+    height = config["standoff_height_mm"]
+    outer_radius = config["standoff_outer_diameter_mm"] / 2.0
+    bore_radius = config["standoff_bore_diameter_mm"] / 2.0
+    geometry_tolerance = config["geometry_tolerance_mm"]
+    volume_tolerance = config["interference_tolerance_mm3"]
+    board_bottom = config["board_bounds_mm"][2]
+    bore_zmin, bore_zmax = config["standoff_bore_z_bounds_mm"]
+    for hole in config["mounting_holes"]:
+        x, y = hole["x_mm"], hole["y_mm"]
+        probe_radius = max(0.05, bore_radius - geometry_tolerance)
+        bore = Part.makeCylinder(probe_radius, bore_zmax - bore_zmin, App.Vector(x, y, bore_zmin))
+        residual = float(material.common(bore).Volume)
+
+        section_height = 0.2
+        section_z = board_bottom - 0.6
+        outer_search = Part.makeCylinder(
+            outer_radius + 0.5,
+            section_height,
+            App.Vector(x, y, section_z),
+        )
+        actual_section = material.common(outer_search).removeSplitter()
+        expected_section = Part.makeCylinder(outer_radius, section_height, App.Vector(x, y, section_z)).cut(
+            Part.makeCylinder(bore_radius, section_height, App.Vector(x, y, section_z))
+        )
+        expected_section_volume = math.pi * (outer_radius * outer_radius - bore_radius * bore_radius) * section_height
+        fill = float(actual_section.Volume) / max(expected_section_volume, 1e-9)
+        section_difference = overlap(actual_section, expected_section)["symmetric_difference_volume_mm3"]
+        section_box = actual_section.BoundBox
+        measured_outer_diameter = (float(section_box.XLength) + float(section_box.YLength)) / 2.0
+        measured_outer_center = (float(section_box.Center.x), float(section_box.Center.y))
+        restricted = Part.makeCylinder(
+            max(bore_radius + 0.25, outer_radius - 0.2),
+            section_height,
+            App.Vector(x, y, section_z),
+        )
+        void_shape = restricted.cut(material)
+        bore_voids = [solid for solid in void_shape.Solids if float(solid.Volume) > min(volume_tolerance, 0.01)]
+        centered_voids = [
+            shape
+            for shape in bore_voids
+            if shape.BoundBox.XMin - geometry_tolerance <= x <= shape.BoundBox.XMax + geometry_tolerance
+            and shape.BoundBox.YMin - geometry_tolerance <= y <= shape.BoundBox.YMax + geometry_tolerance
+        ]
+        if centered_voids:
+            bore_void = min(
+                centered_voids,
+                key=lambda shape: math.hypot(shape.BoundBox.Center.x - x, shape.BoundBox.Center.y - y),
+            )
+            bore_box = bore_void.BoundBox
+            measured_bore_diameter = (float(bore_box.XLength) + float(bore_box.YLength)) / 2.0
+            measured_bore_center = (float(bore_box.Center.x), float(bore_box.Center.y))
+            axis_error = math.hypot(measured_bore_center[0] - x, measured_bore_center[1] - y)
+            concentric_error = math.hypot(
+                measured_bore_center[0] - measured_outer_center[0],
+                measured_bore_center[1] - measured_outer_center[1],
+            )
+        else:
+            measured_bore_diameter = None
+            measured_bore_center = None
+            axis_error = None
+            concentric_error = None
+        dimensions_pass = (
+            measured_bore_diameter is not None
+            and abs(measured_bore_diameter - 2.0 * bore_radius) <= geometry_tolerance
+            and abs(measured_outer_diameter - 2.0 * outer_radius) <= geometry_tolerance
+            and axis_error is not None
+            and axis_error <= config["axis_tolerance_mm"]
+            and concentric_error is not None
+            and concentric_error <= config["axis_tolerance_mm"]
+            and section_difference <= max(volume_tolerance, expected_section_volume * 0.03)
+        )
+        ideal_standoff = Part.makeCylinder(outer_radius, height, App.Vector(x, y, base)).cut(
+            Part.makeCylinder(bore_radius, height, App.Vector(x, y, base))
+        )
+        standoff_fill = float(material.common(ideal_standoff).Volume) / max(float(ideal_standoff.Volume), 1e-9)
+        values[hole["ref"]] = {
+            "axis_error_mm": axis_error,
+            "bore_center_xy_mm": measured_bore_center,
+            "bore_diameter_mm": measured_bore_diameter,
+            "bore_residual_mm3": residual,
+            "bore_z_max_mm": bore_zmax,
+            "bore_z_min_mm": bore_zmin,
+            "concentric_error_mm": concentric_error,
+            "continuous_bore": residual <= volume_tolerance and dimensions_pass,
+            "annulus_fill_ratio": fill,
+            "full_height_annulus_fill_ratio": standoff_fill,
+            "outer_center_xy_mm": measured_outer_center,
+            "outer_diameter_mm": measured_outer_diameter,
+            "section_symmetric_difference_mm3": section_difference,
+            "standoff_present": fill >= 0.95 and standoff_fill >= 0.95 and dimensions_pass,
+            "x_mm": x,
+            "y_mm": y,
+        }
+    return values
+
+
+def enclosure_coverage(tray, lid):
+    enclosure = config["enclosure_bbox_mm"]
+    wall = config["wall_mm"]
+    base = config["base_thickness_mm"]
+    wall_height = config["tray_outer_top_z_mm"] - base
+    base_shape = Part.makeBox(
+        enclosure[0], enclosure[1], base,
+        App.Vector(-enclosure[0] / 2.0, -enclosure[1] / 2.0, 0.0),
+    )
+    wall_shapes = [
+        Part.makeBox(wall, enclosure[1], wall_height, App.Vector(-enclosure[0] / 2.0, -enclosure[1] / 2.0, base)),
+        Part.makeBox(wall, enclosure[1], wall_height, App.Vector(enclosure[0] / 2.0 - wall, -enclosure[1] / 2.0, base)),
+        Part.makeBox(enclosure[0] - 2.0 * wall, wall, wall_height, App.Vector(-enclosure[0] / 2.0 + wall, -enclosure[1] / 2.0, base)),
+        Part.makeBox(enclosure[0] - 2.0 * wall, wall, wall_height, App.Vector(-enclosure[0] / 2.0 + wall, enclosure[1] / 2.0 - wall, base)),
+    ]
+    for access in config["accesses"]:
+        if access["access_type"] == "side_window":
+            window = box_shape(access["bounds_mm"])
+            wall_shapes = [shape.cut(window) for shape in wall_shapes]
+    lid_bounds = config["lid_bounds_mm"]
+    probe_margin = max(0.005, min(0.02, config["geometry_tolerance_mm"] / 4.0))
+    lid_probe_bounds = [
+        lid_bounds[0] + probe_margin,
+        lid_bounds[1] + probe_margin,
+        lid_bounds[2] + probe_margin,
+        lid_bounds[3] - probe_margin,
+        lid_bounds[4] - probe_margin,
+        lid_bounds[5] - probe_margin,
+    ]
+    lid_blank = box_shape(lid_probe_bounds)
+    lid_cutters = []
+    for access in config["accesses"]:
+        if access["access_type"] == "top_bore":
+            x, y, radius, _zmin, _zmax = access["cutter_cylinder_mm"]
+            clipped = cylinder_shape(
+                [x, y, radius + probe_margin, lid_probe_bounds[2], lid_probe_bounds[5]]
+            ).common(lid_blank)
+            if clipped.isNull() or not clipped.isValid() or clipped.Volume <= 0:
+                raise RuntimeError("top-bore cutter does not intersect the trusted lid bounds: " + access["ref"])
+            lid_cutters.append(clipped.removeSplitter())
+    expected_lid = lid_blank
+    if lid_cutters:
+        cutter_union = lid_cutters[0]
+        for cutter in lid_cutters[1:]:
+            cutter_union = cutter_union.fuse(cutter)
+        cutter_union = cutter_union.removeSplitter()
+        if cutter_union.isNull() or not cutter_union.isValid() or cutter_union.Volume <= 0:
+            raise RuntimeError("cannot construct a valid combined top-bore cutter")
+        expected_lid = lid_blank.cut(cutter_union).removeSplitter()
+    if expected_lid.isNull() or not expected_lid.isValid() or expected_lid.Volume <= 0:
+        raise RuntimeError("cannot construct a valid trusted lid reference")
+    return {
+        "base_slab_coverage": float(tray.common((base_shape,), 1e-6).Volume) / max(float(base_shape.Volume), 1e-9),
+        "side_wall_coverage": sum(float(tray.common((shape,), 1e-6).Volume) for shape in wall_shapes)
+        / max(sum(float(shape.Volume) for shape in wall_shapes), 1e-9),
+        "lid_slab_coverage": float(lid.common((expected_lid,), 1e-6).Volume) / max(float(expected_lid.Volume), 1e-9),
+    }
+
+
+def main():
+    rerendered_board = read_step(config["rerendered_board_step"])
+    submitted_parts, submitted_material, submitted_facets = mesh_solids(config["submitted_stl"])
+    rendered_parts, rendered_material, rendered_facets = mesh_solids(config["rerendered_stl"])
+    assembly = read_step(config["assembly_step"])
+    _doc, objects = read_step_objects(config["assembly_step"])
+
+    tray_obj = pick(objects, config["tray_bounds_mm"], "tray")
+    lid_obj = pick(objects, config["lid_bounds_mm"], "lid")
+    used_ids = {id(tray_obj), id(lid_obj)}
+    board_obj = pick_group(objects, config["board_bounds_mm"], "installed PCB", used_ids)
+    used_ids.update(id(value) for value in board_obj["members"])
+    component_objects = {}
+    for component in config["components"]:
+        component_objects[component["ref"]] = pick_group(
+            objects, component["bounds_mm"], "component " + component["ref"], used_ids
+        )
+        used_ids.update(id(value) for value in component_objects[component["ref"]]["members"])
+    physical = [tray_obj, lid_obj, board_obj] + [component_objects[item["ref"]] for item in config["components"]]
+    export_reference(physical, config["reference_bridge_obj"])
+
+    non_carrier_ids = {
+        id(value)
+        for role in [board_obj] + list(component_objects.values())
+        for value in role["members"]
+    }
+    carrier_objects = [value for value in objects if id(value) not in non_carrier_ids]
+    if not carrier_objects:
+        raise RuntimeError("assembly STEP contains no enclosure carrier solids")
+
+    submitted_tray = pick_shape(submitted_parts, config["tray_bounds_mm"], "submitted tray")
+    submitted_lid = pick_shape(submitted_parts, config["lid_bounds_mm"], "submitted lid")
+    rendered_tray = pick_shape(rendered_parts, config["tray_bounds_mm"], "rerendered tray")
+    rendered_lid = pick_shape(rendered_parts, config["lid_bounds_mm"], "rerendered lid")
+    tray = tray_obj["shape"]
+    lid = lid_obj["shape"]
+    board = board_obj["shape"]
+    material = Part.makeCompound([value["shape"] for value in carrier_objects])
+
+    rerendered_board_installed = rerendered_board.copy()
+    rerendered_board_installed.translate(
+        App.Vector(0, 0, config["board_bounds_mm"][2] - rerendered_board.BoundBox.ZMin)
+    )
+
+    board_holes = {}
+    for hole in config["mounting_holes"]:
+        x, y = hole["x_mm"], hole["y_mm"]
+        probe = hole["diameter_mm"] / 2.0 + 0.3
+        board_holes[hole["ref"]] = {
+            "rerendered_center_empty": not inside(rerendered_board, x, y, rerendered_board.BoundBox.Center.z),
+            "rerendered_surrounding_material": inside(rerendered_board, x + probe, y, rerendered_board.BoundBox.Center.z),
+        }
+
+    component_geometry = {}
+    interference = {"carrier": {}}
+    for component in config["components"]:
+        ref = component["ref"]
+        actual = component_objects[ref]["shape"]
+        ideal = (
+            cylinder_shape(component["cylinder_mm"])
+            if component["shape"] == "cylinder"
+            else box_shape(component["bounds_mm"])
+        )
+        component_geometry[ref] = {"metrics": metrics(actual), "vs_ideal": overlap(actual, ideal)}
+        interference["carrier"][ref] = float(material.common(actual).Volume)
+    interference["carrier"]["PCB"] = float(material.common(board).Volume)
+    total_interference = sum(value for role in interference.values() for value in role.values())
+
+    access_by_geometry = {}
+    for label, combined in (
+        ("submitted_stl", submitted_material),
+        ("rerendered_stl", rendered_material),
+        ("assembly_step", material),
+    ):
+        access_by_geometry[label] = [access_metrics(combined, item) for item in config["accesses"]]
+
+    side = {direction: side_clearance(material, board, direction) for direction in ("X_MINUS", "X_PLUS", "Y_MINUS", "Y_PLUS")}
+    top_clearances = {
+        ref: top_clearance(material, component_objects[ref]["shape"])
+        for ref in component_objects
+    }
+    tray_sanity = {
+        "floor": inside(tray, 0, 0, config["base_thickness_mm"] / 2.0),
+        "cavity": not inside(tray, 0, 0, (config["base_thickness_mm"] + config["tray_outer_top_z_mm"]) / 2.0),
+        "x_wall": inside(tray, config["enclosure_bbox_mm"][0] / 2.0 - config["wall_mm"] / 2.0, config["enclosure_bbox_mm"][1] / 2.0 - 2.0, 6.0),
+        "y_wall": inside(tray, 0, config["enclosure_bbox_mm"][1] / 2.0 - config["wall_mm"] / 2.0, 6.0),
+    }
+    submitted_vs_rendered = overlap(submitted_material, rendered_material)
+    assembly_vs_submitted = overlap(material, submitted_material)
+    assembly_board_comparison = overlap(board, rerendered_board_installed)
+    enclosure_volume = float(submitted_material.Volume)
+    tray_volume = float(submitted_tray.Volume)
+    lid_volume = float(submitted_lid.Volume)
+    return {
+        "rerendered_board": metrics(rerendered_board),
+        "board_holes": board_holes,
+        "assembly_board_symmetric_difference_mm3": assembly_board_comparison["symmetric_difference_volume_mm3"],
+        "submitted_stl": metrics(submitted_material),
+        "rerendered_stl": metrics(rendered_material),
+        "submitted_stl_facets": submitted_facets,
+        "rerendered_stl_facets": rendered_facets,
+        "submitted_stl_solid_count": len(submitted_parts),
+        "rerendered_stl_solid_count": len(rendered_parts),
+        "submitted_vs_rerendered": submitted_vs_rendered,
+        "stl_symmetric_difference_mm3": submitted_vs_rendered["symmetric_difference_volume_mm3"],
+        "step_stl_symmetric_difference_mm3": assembly_vs_submitted["symmetric_difference_volume_mm3"],
+        "assembly": metrics(assembly),
+        "assembly_object_count": len(objects),
+        "tray": metrics(tray),
+        "lid": metrics(lid),
+        "board": metrics(board),
+        "components": component_geometry,
+        "tray_vs_submitted": overlap(tray, submitted_tray),
+        "lid_vs_submitted": overlap(lid, submitted_lid),
+        "tray_vs_rerendered": overlap(tray, rendered_tray),
+        "lid_vs_rerendered": overlap(lid, rendered_lid),
+        "lid_separation_mm": float(lid.BoundBox.ZMin - tray.BoundBox.ZMax),
+        "tray_lid_intersection_mm3": float(tray.common(lid).Volume),
+        "tray_sanity": tray_sanity,
+        "enclosure_coverage": enclosure_coverage(tray, lid),
+        "standoff_checks": standoff_metrics(submitted_material),
+        "access_by_geometry": access_by_geometry,
+        "access_checks": {item["ref"]: item for item in access_by_geometry["submitted_stl"]},
+        "interference_by_role_mm3": interference,
+        "unintended_interference_volume_mm3": total_interference,
+        "side_clearances_mm": side,
+        "minimum_side_clearance_mm": min(value for value in side.values() if value is not None),
+        "component_top_clearances_mm": top_clearances,
+        "minimum_top_clearance_mm": min(value for value in top_clearances.values() if value is not None),
+        "enclosure_bbox_mm": [submitted_material.BoundBox.XLength, submitted_material.BoundBox.YLength, submitted_material.BoundBox.ZLength],
+        "enclosure_volume_mm3": enclosure_volume,
+        "enclosure_mass_g": enclosure_volume * config["enclosure_density_g_cm3"] / 1000.0,
+        "tray_volume_mm3": tray_volume,
+        "tray_mass_g": tray_volume * config["enclosure_density_g_cm3"] / 1000.0,
+        "lid_volume_mm3": lid_volume,
+        "lid_mass_g": lid_volume * config["enclosure_density_g_cm3"] / 1000.0,
+    }
+
+
+try:
+    payload = {"ok": True, "result": main()}
+except Exception as exc:
+    payload = {"ok": False, "error": str(exc), "traceback": traceback.format_exc()}
+with open(result_path, "w") as handle:
+    json.dump(payload, handle, indent=2, sort_keys=True)
+    handle.flush()
+    os.fsync(handle.fileno())
+os._exit(0)
+'''
+
+
+def run_freecad_checker(
+    runtime: Path,
+    spec: dict[str, Any],
+    geometry: dict[str, Any],
+    rerendered_board_step: Path,
+    rerendered_stl: Path,
+) -> dict[str, Any]:
+    freecad = resolve_executable(
+        "freecadcmd",
+        ["/home/user/.local/bin/freecadcmd", "/usr/bin/freecadcmd", "/usr/bin/FreeCADCmd"],
+    )
+    req = spec["requirements"]
+    board = spec["board"]
+    board_bottom = number(req["board_bottom_z_mm"], "board bottom")
+    board_bounds = geometry["board_bounds_mm"]
+    components = []
+    for item in geometry["components"]:
+        sx, sy, sz = item["body_bbox_mm"]
+        component = {
+            **item,
+            "bounds_mm": [
+                item["x_mm"] - sx / 2.0,
+                item["y_mm"] - sy / 2.0,
+                geometry["board_top_z_mm"],
+                item["x_mm"] + sx / 2.0,
+                item["y_mm"] + sy / 2.0,
+                geometry["board_top_z_mm"] + sz,
+            ],
+        }
+        if normalized(item["shape"]) == normalized("cylinder"):
+            component["cylinder_mm"] = [
+                item["x_mm"], item["y_mm"], sx / 2.0,
+                geometry["board_top_z_mm"], geometry["board_top_z_mm"] + sz,
+            ]
+        components.append(component)
+    mounting_holes = [
+        {
+            "ref": ref,
+            "x_mm": item["x_mm"],
+            "y_mm": item["y_mm"],
+            "diameter_mm": item["hole_diameter_mm"],
+        }
+        for ref, item in board["footprints"].items()
+        if ref.startswith("MH")
+    ]
+    enclosure = geometry["enclosure_bbox_mm"]
+    config = {
+        "rerendered_board_step": str(rerendered_board_step),
+        "submitted_stl": str(DESKTOP / "02_openscad_enclosure.stl"),
+        "rerendered_stl": str(rerendered_stl),
+        "assembly_step": str(DESKTOP / "03_freecad_assembly.step"),
+        "reference_bridge_obj": str(runtime / "assembly_reference.obj"),
+        "enclosure_bbox_mm": enclosure,
+        "tray_bounds_mm": geometry["tray_bounds_mm"],
+        "lid_bounds_mm": geometry["lid_bounds_mm"],
+        "board_bounds_mm": board_bounds,
+        "components": components,
+        "mounting_holes": mounting_holes,
+        "accesses": geometry["accesses"],
+        "wall_mm": number(req["wall_mm"], "wall"),
+        "base_thickness_mm": number(req["base_thickness_mm"], "base"),
+        "lid_thickness_mm": number(req["lid_thickness_mm"], "lid"),
+        "tray_outer_top_z_mm": number(req["tray_outer_top_z_mm"], "tray top"),
+        "standoff_height_mm": number(req["standoff_height_mm"], "standoff height"),
+        "standoff_outer_diameter_mm": number(req["standoff_outer_diameter_mm"], "standoff OD"),
+        "standoff_bore_diameter_mm": number(req["standoff_bore_diameter_mm"], "standoff bore"),
+        "standoff_bore_overcut_mm": number(req["standoff_bore_overcut_mm"], "standoff bore overcut"),
+        "standoff_bore_z_bounds_mm": [number(value, "standoff bore z") for value in req["standoff_bore_cutter_z_bounds_mm"]],
+        "axis_tolerance_mm": number(req["axis_tolerance_mm"], "axis tolerance"),
+        "access_center_tolerance_mm": number(req["access_center_tolerance_mm"], "access center tolerance"),
+        "geometry_tolerance_mm": number(req["geometry_tolerance_mm"], "geometry tolerance"),
+        "interference_tolerance_mm3": number(req["interference_volume_tolerance_mm3"], "interference tolerance"),
+        "minimum_access_guard_mm": number(req["minimum_access_guard_mm"], "access guard"),
+        "enclosure_density_g_cm3": number(req["enclosure_material_density_g_cm3"], "enclosure density"),
+    }
+    config_path = runtime / "cad_config.json"
+    result_path = runtime / "cad_result.json"
+    checker_path = runtime / "freecad_checker.py"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    checker_path.write_text(FREECAD_CHECKER, encoding="utf-8")
+    old = (os.environ.get("ENGIWORLD_TASK05_CAD_CONFIG"), os.environ.get("ENGIWORLD_TASK05_CAD_RESULT"))
+    os.environ["ENGIWORLD_TASK05_CAD_CONFIG"] = str(config_path)
+    os.environ["ENGIWORLD_TASK05_CAD_RESULT"] = str(result_path)
+    completed: subprocess.CompletedProcess[str]
+    try:
+        completed = subprocess.run(
+            [freecad, str(checker_path)],
+            cwd=runtime,
+            text=True,
+            capture_output=True,
+            timeout=300,
+            check=False,
+            env={**os.environ, "PYTHONPATH": ""},
+        )
+    finally:
+        for key, value in zip(("ENGIWORLD_TASK05_CAD_CONFIG", "ENGIWORLD_TASK05_CAD_RESULT"), old):
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+    if not result_path.is_file():
+        output = (completed.stdout + "\n" + completed.stderr)[-3000:]
+        fail(f"FreeCAD/OCC semantic checker failed with return code {completed.returncode}: {output}")
+    payload = json_file(result_path)
+    if not payload.get("ok"):
+        detail = str(payload.get("traceback") or "")[-3000:]
+        fail(f"FreeCAD/OCC checker rejected artifacts: {payload.get('error')}\n{detail}")
+    output = completed.stdout + "\n" + completed.stderr
+    wrapped_shutdown_sigsegv = (
+        completed.returncode == 1
+        and "Program received signal SIGSEGV" in output
+        and "closeAllDocuments" in output
+    )
+    if completed.returncode not in (0, -11) and not wrapped_shutdown_sigsegv:
+        fail(f"FreeCAD/OCC semantic checker failed with return code {completed.returncode}: {output[-3000:]}")
+    result = payload.get("result")
+    if not isinstance(result, dict):
+        fail("FreeCAD/OCC checker returned no result")
+    return result
+
+
+def report_accesses(report: dict[str, Any]) -> dict[str, dict[str, Any]]:
+    raw = report.get("access_checks")
+    if isinstance(raw, dict):
+        return {str(ref): item for ref, item in raw.items() if isinstance(item, dict)}
+    if isinstance(raw, list):
+        result: dict[str, dict[str, Any]] = {}
+        for item in raw:
+            if not isinstance(item, dict) or not item.get("ref"):
+                fail("FreeCAD report access_checks list contains an invalid item")
+            ref = str(item["ref"])
+            if ref in result:
+                fail(f"FreeCAD report access_checks contains duplicate {ref}")
+            result[ref] = item
+        return result
+    fail("FreeCAD report access_checks must be an object or list")
+
+
+def check_access_report(
+    item: dict[str, Any],
+    expected: dict[str, Any],
+    measured: dict[str, Any],
+    geometry_tolerance: float,
+    volume_tolerance: float,
+) -> None:
+    if str(item.get("ref", expected["ref"])) != expected["ref"]:
+        fail(f"FreeCAD report {expected['ref']} reference mismatch")
+    reported_type = item.get("access_type", item.get("type"))
+    if normalized(reported_type) != normalized(expected["access_type"]):
+        fail(f"FreeCAD report {expected['ref']} access type mismatch")
+    reported_direction = item.get("direction", item.get("wall_direction"))
+    if normalized(reported_direction) != normalized(expected["direction"]):
+        fail(f"FreeCAD report {expected['ref']} access direction mismatch")
+    verdicts = [item[key] for key in ("through", "continuous", "access_continuous", "continuity_pass") if key in item]
+    if not verdicts or any(value is not True for value in verdicts):
+        fail(f"FreeCAD report {expected['ref']} does not record a passing continuous access")
+    if item.get("decision") is not None and normalized(item.get("decision")) not in {"PASS", "PASSED"}:
+        fail(f"FreeCAD report {expected['ref']} decision is not pass")
+    if item.get("pass") is not None and item.get("pass") is not True:
+        fail(f"FreeCAD report {expected['ref']} pass flag is false")
+    center_error = item.get("center_error_mm")
+    if center_error is None and expected["access_type"] == "top_bore":
+        center_error = item.get("axis_error_mm")
+    close(
+        center_error, measured["center_error_mm"], geometry_tolerance,
+        f"FreeCAD report {expected['ref']} center error",
+    )
+    close(
+        item.get("residual_material_volume_mm3"), measured["residual_material_volume_mm3"],
+        volume_tolerance, f"FreeCAD report {expected['ref']} residual material",
+    )
+    if expected["access_type"] == "top_bore":
+        diameter = item.get("finished_diameter_mm", item.get("measured_diameter_mm"))
+        close(diameter, measured["finished_diameter_mm"], geometry_tolerance, f"FreeCAD report {expected['ref']} diameter")
+        close_vector(
+            item.get("bore_center_xy_mm", item.get("measured_center_xy_mm")),
+            measured["measured_center_xy_mm"],
+            geometry_tolerance,
+            f"FreeCAD report {expected['ref']} bore center",
+        )
+        close_vector(
+            item.get("cutter_z_bounds_mm"),
+            expected["cutter_cylinder_mm"][-2:],
+            geometry_tolerance,
+            f"FreeCAD report {expected['ref']} cutter z bounds",
+        )
+        close_vector(
+            item.get("path_z_bounds_mm"),
+            expected["path_cylinder_mm"][-2:],
+            geometry_tolerance,
+            f"FreeCAD report {expected['ref']} path z bounds",
+        )
+    else:
+        for field in ("finished_width_mm", "finished_height_mm"):
+            close(item.get(field), measured[field], geometry_tolerance, f"FreeCAD report {expected['ref']} {field}")
+        contract_bounds = item.get(
+            "contract_cutter_bounds_mm",
+            item.get("cutter_bounds_mm", item.get("bounds_mm")),
+        )
+        close_vector(contract_bounds, expected["bounds_mm"], geometry_tolerance, f"FreeCAD report {expected['ref']} cutter bounds")
+        close(
+            item.get("minimum_guard_mm"), measured["minimum_guard_mm"],
+            geometry_tolerance, f"FreeCAD report {expected['ref']} minimum guard",
+        )
+    guard_verdicts = [
+        item[key]
+        for key in ("guard_material_present", "guard_wall_material_present", "minimum_guard_material_present")
+        if key in item
+    ]
+    if not guard_verdicts or any(value is not True for value in guard_verdicts):
+        fail(f"FreeCAD report {expected['ref']} guard check failed")
+
+
+def check_standoff_report(
+    item: dict[str, Any],
+    ref: str,
+    measured: dict[str, Any],
+    geometry_tolerance: float,
+    volume_tolerance: float,
+) -> None:
+    if str(item.get("ref", ref)) != ref:
+        fail(f"FreeCAD report {ref} reference mismatch")
+    if item.get("continuous_bore") is not True or item.get("standoff_present") is not True:
+        fail(f"FreeCAD report {ref} does not record a present bored standoff")
+    for field in ("axis_error_mm", "concentric_error_mm", "outer_diameter_mm", "bore_diameter_mm"):
+        close(item.get(field), measured[field], geometry_tolerance, f"FreeCAD report {ref} {field}")
+    close_vector(
+        item.get("bore_center_xy_mm"), measured["bore_center_xy_mm"],
+        geometry_tolerance, f"FreeCAD report {ref} bore center",
+    )
+    close_vector(
+        item.get("outer_center_xy_mm"), measured["outer_center_xy_mm"],
+        geometry_tolerance, f"FreeCAD report {ref} outer center",
+    )
+    close(
+        item.get("residual_bore_material_volume_mm3", item.get("bore_residual_mm3")),
+        measured["bore_residual_mm3"],
+        volume_tolerance,
+        f"FreeCAD report {ref} residual bore material",
+    )
+
+
+def check_cad_result(
+    spec: dict[str, Any],
+    geometry: dict[str, Any],
+    result: dict[str, Any],
+    report: dict[str, Any],
+) -> None:
+    req = spec["requirements"]
+    geom_tol = number(req["geometry_tolerance_mm"], "geometry tolerance")
+    volume_tol = number(req["interference_volume_tolerance_mm3"], "interference tolerance")
+    mass_rel = number(req["mass_report_relative_tolerance"], "mass report relative tolerance")
+    board_reference_volume = number(result["rerendered_board"]["volume_mm3"], "rerendered board volume")
+    if number(result.get("assembly_board_symmetric_difference_mm3"), "assembly board symmetric difference") > max(0.5, board_reference_volume * 0.002):
+        fail("assembly STEP does not contain the fresh KiCad-exported PCB geometry")
+    if set(result.get("board_holes", {})) != {"MH1", "MH2", "MH3", "MH4"}:
+        fail("board STEP checker did not inspect all four mounting-hole axes")
+    for ref, checks in result["board_holes"].items():
+        if not all(bool(value) for value in checks.values()):
+            fail(f"board STEP lacks real NPTH geometry at {ref}: {checks}")
+    if int(result.get("submitted_stl_solid_count", 0)) < 2 or int(result.get("rerendered_stl_solid_count", 0)) < 2:
+        fail("OpenSCAD geometry does not contain distinct tray and lid solids")
+    close_vector(result["tray"]["bounds_mm"], geometry["tray_bounds_mm"], 0.2, "assembly tray bounds")
+    close_vector(result["lid"]["bounds_mm"], geometry["lid_bounds_mm"], 0.2, "assembly lid bounds")
+    for key in ("submitted_vs_rerendered", "tray_vs_submitted", "lid_vs_submitted", "tray_vs_rerendered", "lid_vs_rerendered"):
+        delta = number(result[key]["symmetric_difference_volume_mm3"], f"{key} difference")
+        reference_volume = number(result["submitted_stl"]["volume_mm3"], "submitted STL volume")
+        if delta > max(8.0, reference_volume * 0.005):
+            fail(f"geometry handoff differs materially at {key}: {delta}")
+    if number(result.get("tray_lid_intersection_mm3"), "tray/lid intersection") > volume_tol:
+        fail("tray and lid are not distinct non-overlapping solids")
+    close(result.get("lid_separation_mm"), req["lid_separation_mm"], geom_tol, "tray/lid separation")
+    if not all(bool(value) for value in result.get("tray_sanity", {}).values()):
+        fail(f"tray lacks a real floor, cavity, or walls: {result.get('tray_sanity')}")
+    coverage = result.get("enclosure_coverage", {})
+    if set(coverage) != {"base_slab_coverage", "side_wall_coverage", "lid_slab_coverage"} or any(
+        number(value, f"enclosure coverage {key}") < 0.98 for key, value in coverage.items()
+    ):
+        fail(f"enclosure lacks continuous base, wall, or lid coverage: {coverage}")
+
+    standoffs = result.get("standoff_checks", {})
+    if set(standoffs) != {"MH1", "MH2", "MH3", "MH4"}:
+        fail("FreeCAD checker did not find exactly four required standoffs")
+    for ref, values in standoffs.items():
+        if values.get("continuous_bore") is not True or values.get("standoff_present") is not True:
+            fail(f"invalid bored standoff geometry at {ref}: {values}")
+        if (
+            number(values.get("bore_residual_mm3"), f"{ref} bore residual") > volume_tol
+            or number(values.get("annulus_fill_ratio"), f"{ref} section annulus") < 0.95
+            or number(values.get("full_height_annulus_fill_ratio"), f"{ref} full-height annulus") < 0.95
+        ):
+            fail(f"invalid bored standoff geometry at {ref}: {values}")
+        close(values.get("outer_diameter_mm"), req["standoff_outer_diameter_mm"], geom_tol, f"{ref} outer diameter")
+        close(values.get("bore_diameter_mm"), req["standoff_bore_diameter_mm"], geom_tol, f"{ref} bore diameter")
+
+    for ref, component in result.get("components", {}).items():
+        delta = number(component["vs_ideal"]["symmetric_difference_volume_mm3"], f"{ref} proxy difference")
+        if delta > max(volume_tol, number(component["metrics"]["volume_mm3"], f"{ref} volume") * 0.01):
+            fail(f"assembly component {ref} is not a real expected body")
+    expected_component_refs = {"TP1", "TP2", "TP3", "TP4", "J1"}
+    if set(result.get("components", {})) != expected_component_refs:
+        fail("assembly STEP does not retain all five expected component bodies")
+    for source, values in result.get("access_by_geometry", {}).items():
+        by_ref = {item.get("ref"): item for item in values if isinstance(item, dict)}
+        if set(by_ref) != expected_component_refs:
+            fail(f"{source} did not inspect every required access")
+        for expected in geometry["accesses"]:
+            item = by_ref[expected["ref"]]
+            if not item.get("through"):
+                fail(f"{source} {expected['ref']} is not a bounded continuous access")
+            if normalized(item.get("direction")) != normalized(expected["direction"]):
+                fail(f"{source} {expected['ref']} is cut through the wrong wall")
+            if expected["access_type"] == "top_bore":
+                close(item.get("finished_diameter_mm"), expected["finished_diameter_mm"], geom_tol, f"{source} {expected['ref']} diameter")
+                if item.get("guard_material_present") is not True:
+                    fail(f"{source} {expected['ref']} lacks annular lid guard material")
+            else:
+                close(item.get("finished_width_mm"), expected["finished_width_mm"], geom_tol, f"{source} {expected['ref']} width")
+                close(item.get("finished_height_mm"), expected["finished_height_mm"], geom_tol, f"{source} {expected['ref']} height")
+                if number(item.get("minimum_guard_mm"), f"{source} {expected['ref']} guard") + geom_tol < number(req["minimum_access_guard_mm"], "minimum access guard"):
+                    fail(f"{source} {expected['ref']} does not retain the minimum wall guard")
+                if item.get("guard_material_present") is not True:
+                    fail(f"{source} {expected['ref']} is unbounded or lacks real guard material")
+    if number(result.get("unintended_interference_volume_mm3"), "unintended interference") > volume_tol:
+        fail("assembly has unintended enclosure interference with PCB or components")
+    side_clearances = result.get("side_clearances_mm", {})
+    if set(side_clearances) != {"X_MINUS", "X_PLUS", "Y_MINUS", "Y_PLUS"}:
+        fail("FreeCAD checker did not measure all four PCB side clearances")
+    for direction, value in side_clearances.items():
+        if value is None or number(value, f"side clearance {direction}") + geom_tol < number(req["minimum_side_clearance_mm"], "minimum side clearance"):
+            fail(f"insufficient geometry-derived side clearance at {direction}: {value}")
+    top_clearances = result.get("component_top_clearances_mm", {})
+    if set(top_clearances) != expected_component_refs:
+        fail("FreeCAD checker did not measure every component top clearance")
+    covered_refs = expected_component_refs - {
+        access["ref"] for access in geometry["accesses"] if access["access_type"] == "top_bore"
+    }
+    for ref, value in top_clearances.items():
+        if ref in covered_refs:
+            if value is None or number(value, f"top clearance {ref}") + geom_tol < number(req["minimum_top_clearance_mm"], "minimum top clearance"):
+                fail(f"assembly has insufficient component-to-lid clearance at {ref}")
+        elif value is not None:
+            fail(f"{ref} has a full lid access bore and must report unbounded top clearance")
+    close_vector(result.get("enclosure_bbox_mm"), geometry["enclosure_bbox_mm"], 0.2, "measured enclosure bbox")
+    for field in ("enclosure_volume_mm3", "tray_volume_mm3", "lid_volume_mm3", "enclosure_mass_g", "tray_mass_g", "lid_mass_g"):
+        if number(result.get(field), field) <= 0:
+            fail(f"FreeCAD checker produced a non-positive {field}")
+    close(
+        result["enclosure_mass_g"],
+        number(result["enclosure_volume_mm3"], "enclosure volume") * number(req["enclosure_material_density_g_cm3"], "density") / 1000.0,
+        max(0.02, number(result["enclosure_mass_g"], "enclosure mass") * 0.005),
+        "geometry-derived enclosure mass",
+    )
+
+    if normalized(report.get("decision")) not in {"PASS", "PASSED"}:
+        fail("FreeCAD report decision must be pass")
+    if report.get("inputs") is not None:
+        report_inputs = {Path(str(value)).name for value in report.get("inputs", [])}
+        required_report_inputs = {
+            "01_kicad_board.kicad_pcb", "01_kicad_export.json",
+            "02_openscad_enclosure.stl", "02_openscad_parameters.json",
+        }
+        if not required_report_inputs.issubset(report_inputs):
+            fail("FreeCAD report inputs omit a required KiCad or OpenSCAD artifact")
+    checks = report.get("checks")
+    if checks is not None:
+        if not isinstance(checks, dict) or not checks:
+            fail("FreeCAD report checks must be a nonempty object when provided")
+    close_vector(report.get("enclosure_bbox_mm"), geometry["enclosure_bbox_mm"], geom_tol, "FreeCAD report enclosure bbox")
+    metric_contract = {
+        "enclosure_volume_mm3": (result["enclosure_volume_mm3"], max(2.0, result["enclosure_volume_mm3"] * 0.01)),
+        "enclosure_mass_g": (result["enclosure_mass_g"], max(0.02, result["enclosure_mass_g"] * mass_rel)),
+        "tray_volume_mm3": (result["tray_volume_mm3"], max(1.0, result["tray_volume_mm3"] * 0.01)),
+        "tray_mass_g": (result["tray_mass_g"], max(0.02, result["tray_mass_g"] * mass_rel)),
+        "lid_volume_mm3": (result["lid_volume_mm3"], max(1.0, result["lid_volume_mm3"] * 0.01)),
+        "lid_mass_g": (result["lid_mass_g"], max(0.02, result["lid_mass_g"] * mass_rel)),
+        "lid_separation_mm": (result["lid_separation_mm"], geom_tol),
+        "minimum_side_clearance_mm": (min(result["side_clearances_mm"].values()), geom_tol),
+        "minimum_top_clearance_mm": (result["minimum_top_clearance_mm"], geom_tol),
+        "unintended_interference_volume_mm3": (result["unintended_interference_volume_mm3"], volume_tol),
+    }
+    for field, (expected, tolerance) in metric_contract.items():
+        if field not in report:
+            fail(f"FreeCAD report is missing required metric {field}")
+        close(report[field], expected, tolerance, f"FreeCAD report {field}")
+    if report.get("tray_bounds_mm") is not None:
+        close_vector(report["tray_bounds_mm"], geometry["tray_bounds_mm"], geom_tol, "FreeCAD report tray bounds")
+    if report.get("lid_bounds_mm") is not None:
+        close_vector(report["lid_bounds_mm"], geometry["lid_bounds_mm"], geom_tol, "FreeCAD report lid bounds")
+    report_side = report.get("side_clearances_mm")
+    if not isinstance(report_side, dict) or not {"X_MINUS", "X_PLUS", "Y_MINUS", "Y_PLUS"}.issubset(report_side):
+        fail("FreeCAD report must include all four side_clearances_mm")
+    for direction, measured in result["side_clearances_mm"].items():
+        close(report_side[direction], measured, geom_tol, f"FreeCAD report side clearance {direction}")
+    report_top = report.get("component_top_clearances_mm")
+    if not isinstance(report_top, dict) or not {"TP1", "TP2", "TP3", "TP4", "J1"}.issubset(report_top):
+        fail("FreeCAD report must include every component_top_clearances_mm value")
+    for ref, measured in result["component_top_clearances_mm"].items():
+        if measured is None:
+            if report_top[ref] is not None and normalized(report_top[ref]) not in {"UNBOUNDED", "NOTCOVERED", "OPEN"}:
+                fail(f"FreeCAD report top clearance {ref} must be null or unbounded")
+        else:
+            close(report_top[ref], measured, geom_tol, f"FreeCAD report top clearance {ref}")
+    accesses = report_accesses(report)
+    expected_accesses = {item["ref"]: item for item in geometry["accesses"]}
+    measured_accesses = result["access_checks"]
+    if set(accesses) != set(expected_accesses):
+        fail("FreeCAD report must include exactly TP1-TP4 and J1 access checks")
+    for ref, expected in expected_accesses.items():
+        check_access_report(
+            accesses[ref], expected, measured_accesses[ref], geom_tol, volume_tol,
+        )
+    report_standoffs = report.get("standoff_checks")
+    if not isinstance(report_standoffs, dict) or set(report_standoffs) != {"MH1", "MH2", "MH3", "MH4"}:
+        fail("FreeCAD report must include exactly MH1-MH4 standoff checks")
+    for ref, measured in result["standoff_checks"].items():
+        item = report_standoffs[ref]
+        if not isinstance(item, dict):
+            fail(f"FreeCAD report {ref} standoff check must be an object")
+        check_standoff_report(item, ref, measured, geom_tol, volume_tol)
+
+
+BLENDER_CHECKER = r'''
+import json
+import math
+import os
+import traceback
+
+import bpy
+from bpy_extras.object_utils import world_to_camera_view
+from mathutils import Vector
+from mathutils.bvhtree import BVHTree
+
+
+config = json.load(open(os.environ["ENGIWORLD_TASK05_BLEND_CONFIG"], "r"))
+result_path = os.environ["ENGIWORLD_TASK05_BLEND_RESULT"]
+
+
+def world_bounds(objects):
+    points = [obj.matrix_world @ Vector(corner) for obj in objects for corner in obj.bound_box]
+    if not points:
+        raise RuntimeError("cannot compute bounds of empty geometry")
+    return [min(point[i] for point in points) for i in range(3)] + [max(point[i] for point in points) for i in range(3)]
+
+
+def object_bounds(obj):
+    return world_bounds([obj])
+
+
+def bounds_error(actual, expected):
+    return max(abs(float(a) - float(b)) for a, b in zip(actual, expected))
+
+
+def bounds_contained(actual, expected, tolerance=0.10):
+    return all(actual[index] >= expected[index] - tolerance for index in range(3)) and all(
+        actual[index] <= expected[index] + tolerance for index in range(3, 6)
+    )
+
+
+def classify(objects, label):
+    roles = {}
+    used = set()
+    for role, expected in config["role_bounds"].items():
+        if role == "pcb" or role.startswith("component_"):
+            matches = [
+                obj for obj in objects
+                if id(obj) not in used and bounds_contained(object_bounds(obj), expected)
+            ]
+            if not matches or bounds_error(world_bounds(matches), expected) > 0.6:
+                raise RuntimeError(label + " cannot identify physical role " + role + " by geometry")
+            roles[role] = matches
+            used.update(id(obj) for obj in matches)
+            continue
+        ranked = [(bounds_error(object_bounds(obj), expected), obj) for obj in objects if id(obj) not in used]
+        ranked.sort(key=lambda item: item[0])
+        if not ranked or ranked[0][0] > 0.6:
+            raise RuntimeError(label + " cannot identify physical role " + role + " by geometry")
+        roles[role] = [ranked[0][1]]
+        used.add(id(ranked[0][1]))
+    return roles
+
+
+def mesh_data(objects):
+    vertices = []
+    polygons = []
+    for obj in objects:
+        offset = len(vertices)
+        vertices.extend(tuple(obj.matrix_world @ vertex.co) for vertex in obj.data.vertices)
+        polygons.extend(tuple(offset + index for index in polygon.vertices) for polygon in obj.data.polygons)
+    if not vertices or not polygons:
+        raise RuntimeError("empty role mesh")
+    return {"vertices": vertices, "polygons": polygons}
+
+
+def directed_distance(source, target, sample_limit=5000):
+    tree = BVHTree.FromPolygons([Vector(value) for value in target["vertices"]], target["polygons"], all_triangles=False)
+    if tree is None:
+        raise RuntimeError("cannot build role comparison BVH")
+    points = list(source["vertices"])
+    for polygon in source["polygons"]:
+        count = float(len(polygon))
+        points.append(tuple(sum(source["vertices"][index][axis] for index in polygon) / count for axis in range(3)))
+    stride = max(1, int(math.ceil(len(points) / float(sample_limit))))
+    maximum = 0.0
+    for point in points[::stride]:
+        nearest = tree.find_nearest(Vector(point))
+        if nearest is None:
+            raise RuntimeError("role surface has no nearest comparison point")
+        maximum = max(maximum, float(nearest[3]))
+    return maximum
+
+
+def role_meshes(roles):
+    return {role: mesh_data(objects) for role, objects in roles.items()}
+
+
+def compare_roles(label, actual, reference):
+    if set(actual) != set(reference):
+        raise RuntimeError(label + " physical role set mismatch")
+    distances = {}
+    for role in reference:
+        first = actual[role]
+        second = reference[role]
+        distance = max(directed_distance(first, second), directed_distance(second, first))
+        distances[role] = distance
+        if distance > 0.6:
+            raise RuntimeError(label + " geometry differs from assembly STEP role " + role + ": " + str(distance))
+    return distances
+
+
+def object_volume(obj):
+    obj.data.calc_loop_triangles()
+    total = 0.0
+    for triangle in obj.data.loop_triangles:
+        a, b, c = (obj.matrix_world @ obj.data.vertices[index].co for index in triangle.vertices)
+        total += a.dot(b.cross(c)) / 6.0
+    return abs(float(total))
+
+
+def used_materials(obj):
+    values = []
+    for slot in obj.material_slots:
+        if slot.material is not None and slot.material not in values:
+            values.append(slot.material)
+    return values
+
+
+def material_signature(material):
+    diffuse = tuple(float(value) for value in material.diffuse_color)
+    node_color = diffuse
+    metallic = 0.0
+    if material.use_nodes:
+        node = material.node_tree.nodes.get("Principled BSDF")
+        if node is not None:
+            node_color = tuple(float(value) for value in node.inputs["Base Color"].default_value)
+            metallic = float(node.inputs["Metallic"].default_value)
+    return (
+        tuple(round(value, 2) for value in diffuse)
+        + tuple(round(value, 2) for value in node_color)
+        + (round(metallic, 2),)
+    )
+
+
+def material_alpha(material):
+    alpha = float(material.diffuse_color[3])
+    if material.use_nodes and material.node_tree:
+        node = material.node_tree.nodes.get("Principled BSDF")
+        if node is not None and node.inputs.get("Alpha") is not None:
+            alpha = min(alpha, float(node.inputs["Alpha"].default_value))
+    return alpha
+
+
+def hit_material(obj, polygon_index):
+    if obj.type != "MESH" or polygon_index < 0 or polygon_index >= len(obj.data.polygons):
+        return None
+    slot_index = obj.data.polygons[polygon_index].material_index
+    if slot_index < 0 or slot_index >= len(obj.material_slots):
+        return None
+    return obj.material_slots[slot_index].material
+
+
+def camera_visible(scene, camera, obj):
+    points = [obj.matrix_world @ polygon.center for polygon in obj.data.polygons]
+    if not points:
+        points = [obj.matrix_world @ vertex.co for vertex in obj.data.vertices]
+    stride = max(1, int(math.ceil(len(points) / 64.0)))
+    depsgraph = bpy.context.evaluated_depsgraph_get()
+    camera_forward = (camera.matrix_world.to_quaternion() @ Vector((0, 0, -1))).normalized()
+    for point in points[::stride]:
+        projected = world_to_camera_view(scene, camera, point)
+        if projected.z <= 0 or not (0.0 <= projected.x <= 1.0 and 0.0 <= projected.y <= 1.0):
+            continue
+        if camera.data.type == "ORTHO":
+            ray_origin = point - camera_forward * 10000.0
+            ray_direction = camera_forward
+            remaining = 10000.1
+        else:
+            ray_origin = camera.matrix_world.translation
+            offset = point - ray_origin
+            ray_direction = offset.normalized()
+            remaining = offset.length + 0.1
+        for _ in range(32):
+            hit, location, _normal, polygon_index, hit_object, _matrix = scene.ray_cast(
+                depsgraph, ray_origin, ray_direction, distance=remaining,
+            )
+            if not hit or hit_object is None:
+                break
+            if hit_object == obj or hit_object.name == obj.name:
+                return True
+            material = hit_material(hit_object, polygon_index)
+            if material is None or material_alpha(material) >= 0.98:
+                break
+            advance = (location - ray_origin).length + 0.001
+            remaining -= advance
+            if remaining <= 0.0:
+                break
+            ray_origin = location + ray_direction * 0.001
+    return False
+
+
+def physical_material_signatures(objects, roles):
+    signatures = set()
+    for role, role_objects in roles.items():
+        if any(obj.hide_render or obj.hide_get() for obj in role_objects):
+            raise RuntimeError("physical role is hidden from the review: " + role)
+        materials = [material for obj in role_objects for material in used_materials(obj)]
+        if not materials:
+            raise RuntimeError("physical role has no assigned material: " + role)
+        signatures.update(material_signature(material) for material in materials)
+    return signatures
+
+
+def overlay_matches(obj, expected):
+    actual = object_bounds(obj)
+    if expected.get("shape") == "arrow":
+        start = expected["start_mm"]
+        end = expected["end_mm"]
+        center_y = (start[1] + end[1]) / 2.0
+        center_z = (start[2] + end[2]) / 2.0
+        if abs((actual[1] + actual[4]) / 2.0 - center_y) > 0.65 or abs((actual[2] + actual[5]) / 2.0 - center_z) > 0.65:
+            return False
+        if actual[4] - actual[1] > 4.5 or actual[5] - actual[2] > 4.5:
+            return False
+        if expected.get("direction") == "X_PLUS":
+            return abs(actual[0] - start[0]) <= 0.65 and abs(actual[3] - end[0]) <= 0.65
+        if expected.get("direction") == "X_MINUS":
+            return abs(actual[3] - start[0]) <= 0.65 and abs(actual[0] - end[0]) <= 0.65
+        return False
+    wanted = expected["bounds_mm"]
+    if expected.get("role") == "access_corridor" and expected.get("shape") == "box":
+        # A review overlay may show only the wall penetration or extend inward to
+        # the connector. Its transverse opening and passage through the outer
+        # wall are the semantic requirements; the cutter's full axial length is
+        # an OpenSCAD implementation detail.
+        if max(abs(actual[index] - wanted[index]) for index in (0, 2, 3, 5)) > 0.65:
+            return False
+        inner_wall = float(expected["inner_wall_y_mm"])
+        outer_wall = float(expected["outer_wall_y_mm"])
+        actual_volume = object_volume(obj)
+        wall_volume = (wanted[3] - wanted[0]) * (outer_wall - inner_wall) * (wanted[5] - wanted[2])
+        return (
+            expected.get("direction") == "Y_PLUS"
+            and actual[1] <= inner_wall + 0.65
+            and actual[4] >= outer_wall - 0.65
+            and actual[1] >= wanted[1] - 0.65
+            and actual[4] <= wanted[4] + 0.65
+            and actual_volume >= wall_volume * 0.50
+            and actual_volume <= expected["volume_mm3"] * 1.25
+        )
+    if bounds_error(actual, wanted) > 0.65:
+        return False
+    got = object_volume(obj)
+    want = float(expected["volume_mm3"])
+    return abs(got - want) <= max(2.0, want * 0.08)
+
+
+def overlay_materials(objects, physical_signatures, visible_only, scene=None, camera=None):
+    signatures = {}
+    for expected in config["overlays"]:
+        matches = [obj for obj in objects if overlay_matches(obj, expected)]
+        if visible_only:
+            matches = [
+                obj for obj in matches
+                if not obj.hide_render and not obj.hide_get() and camera_visible(scene, camera, obj)
+            ]
+        feature_signatures = {
+            material_signature(material)
+            for obj in matches
+            for material in used_materials(obj)
+            if material_signature(material) not in physical_signatures
+        }
+        if not feature_signatures:
+            raise RuntimeError("missing visible materially distinct overlay " + expected["id"])
+        signatures[expected["id"]] = feature_signatures
+    return {key: len(value) for key, value in signatures.items()}
+
+
+def projected_bounds(scene, camera, obj):
+    points = [world_to_camera_view(scene, camera, obj.matrix_world @ Vector(corner)) for corner in obj.bound_box]
+    return [min(point.x for point in points), min(point.y for point in points), max(point.x for point in points), max(point.y for point in points)]
+
+
+def boxes_overlap(first, second, padding=0.002):
+    return not (
+        first[2] + padding <= second[0]
+        or second[2] + padding <= first[0]
+        or first[3] + padding <= second[1]
+        or second[3] + padding <= first[1]
+    )
+
+
+def image_similarity(first_path, second_path):
+    images = []
+    try:
+        for path in (first_path, second_path):
+            image = bpy.data.images.load(path, check_existing=False)
+            image.scale(64, 48)
+            images.append([float(value) for value in image.pixels[:]])
+        first, second = images
+        if len(first) != len(second) or not first:
+            return 0.0
+        indices = [index for index in range(len(first)) if index % 4 != 3]
+        error = sum(abs(first[index] - second[index]) for index in indices) / len(indices)
+        return max(0.0, 1.0 - error)
+    finally:
+        for image in list(bpy.data.images):
+            if image.filepath in {first_path, second_path}:
+                bpy.data.images.remove(image)
+
+
+def import_obj(path):
+    bpy.ops.wm.read_factory_settings(use_empty=True)
+    bpy.ops.wm.obj_import(
+        filepath=path,
+        forward_axis="Y",
+        up_axis="Z",
+        use_split_objects=True,
+        use_split_groups=True,
+    )
+    objects = [obj for obj in bpy.context.scene.objects if obj.type == "MESH"]
+    if not objects:
+        raise RuntimeError("OBJ imported no mesh objects: " + path)
+    return objects
+
+
+def main():
+    bpy.ops.wm.open_mainfile(filepath=config["blend_path"])
+    scene = bpy.context.scene
+    native = [obj for obj in scene.objects if obj.type == "MESH"]
+    native_roles = classify(native, "native scene")
+    physical_signatures = physical_material_signatures(native, native_roles)
+    native_role_meshes = role_meshes(native_roles)
+
+    camera = scene.camera
+    if camera is None or camera.type != "CAMERA" or camera.hide_render or camera.data.type not in {"ORTHO", "PERSP"}:
+        raise RuntimeError("native scene lacks an active visible engineering camera")
+    direction = camera.matrix_world.to_quaternion() @ Vector((0, 0, -1))
+    target = Vector((0, 0, config["enclosure_bbox_mm"][2] / 2.0))
+    toward = (target - camera.matrix_world.translation).normalized()
+    if direction.dot(toward) < 0.75:
+        raise RuntimeError("native scene camera is not aimed at the assembly")
+    native_overlays = overlay_materials(native, physical_signatures, True, scene, camera)
+    collections = {collection.name for obj in native for collection in obj.users_collection}
+    visible_meshes = [obj for obj in native if not obj.hide_render and not obj.hide_get()]
+    framed = [projected_bounds(scene, camera, obj) for obj in visible_meshes]
+    if any(box[0] < -0.03 or box[1] < -0.03 or box[2] > 1.03 or box[3] > 1.03 for box in framed):
+        raise RuntimeError("native scene camera does not frame the physical assembly")
+
+    native_render_resolution = [
+        int(scene.render.resolution_x * scene.render.resolution_percentage / 100),
+        int(scene.render.resolution_y * scene.render.resolution_percentage / 100),
+    ]
+    scene.render.resolution_x = 160
+    scene.render.resolution_y = 120
+    scene.render.resolution_percentage = 100
+    scene.render.image_settings.file_format = "PNG"
+    scene.render.filepath = config["rerender_path"]
+    bpy.ops.render.render(write_still=True)
+    similarity = image_similarity(config["submitted_render_path"], config["rerender_path"])
+    native_camera = camera.name
+    native_bounds = world_bounds(native)
+
+    reference_objects = import_obj(config["reference_obj_path"])
+    reference_roles = classify(reference_objects, "evaluator STEP reference")
+    reference_role_meshes = role_meshes(reference_roles)
+    native_distances = compare_roles("native scene", native_role_meshes, reference_role_meshes)
+
+    bridge_objects = import_obj(config["bridge_obj_path"])
+    bridge_roles = classify(bridge_objects, "FreeCAD bridge OBJ")
+    bridge_distances = compare_roles("FreeCAD bridge OBJ", role_meshes(bridge_roles), reference_role_meshes)
+
+    review_objects = import_obj(config["review_obj_path"])
+    review_roles = classify(review_objects, "review OBJ")
+    review_distances = compare_roles("review OBJ", role_meshes(review_roles), reference_role_meshes)
+    review_physical_signatures = physical_material_signatures(review_objects, review_roles)
+    review_overlays = overlay_materials(review_objects, review_physical_signatures, False)
+    return {
+        "active_camera": native_camera,
+        "native_bounds_mm": native_bounds,
+        "native_object_count": len(native),
+        "native_overlay_material_counts": native_overlays,
+        "review_overlay_material_counts": review_overlays,
+        "role_collections": sorted(collections),
+        "render_similarity": similarity,
+        "native_render_resolution": native_render_resolution,
+        "native_reference_surface_distances_mm": native_distances,
+        "bridge_reference_surface_distances_mm": bridge_distances,
+        "review_reference_surface_distances_mm": review_distances,
+        "bridge_object_count": len(bridge_objects),
+        "review_object_count": len(review_objects),
+    }
+
+
+try:
+    payload = {"ok": True, "result": main()}
+except Exception as exc:
+    payload = {"ok": False, "error": str(exc), "traceback": traceback.format_exc()}
+with open(result_path, "w") as handle:
+    json.dump(payload, handle, indent=2, sort_keys=True)
+'''
+
+
+def run_blender_checker(
+    runtime: Path,
+    spec: dict[str, Any],
+    geometry: dict[str, Any],
+) -> dict[str, Any]:
+    blender = resolve_executable("blender", ["/home/user/Applications/blender-*/blender"])
+    req = spec["requirements"]
+    board = spec["board"]
+    board_bottom = number(req["board_bottom_z_mm"], "board bottom")
+    board_top = geometry["board_top_z_mm"]
+    enclosure = geometry["enclosure_bbox_mm"]
+    role_bounds = {
+        "tray": geometry["tray_bounds_mm"],
+        "lid": geometry["lid_bounds_mm"],
+        "pcb": [-board["bbox_mm"][0] / 2.0, -board["bbox_mm"][1] / 2.0, board_bottom, board["bbox_mm"][0] / 2.0, board["bbox_mm"][1] / 2.0, board_top],
+    }
+    for component in geometry["components"]:
+        sx, sy, sz = component["body_bbox_mm"]
+        role_bounds["component_" + component["ref"]] = [
+            component["x_mm"] - sx / 2.0,
+            component["y_mm"] - sy / 2.0,
+            board_top,
+            component["x_mm"] + sx / 2.0,
+            component["y_mm"] + sy / 2.0,
+            board_top + sz,
+        ]
+    overlays = []
+    wall = number(req["wall_mm"], "wall thickness")
+    for item in geometry["overlays"]:
+        if item["shape"] == "box":
+            bounds = item["bounds_mm"]
+            volume = (bounds[3] - bounds[0]) * (bounds[4] - bounds[1]) * (bounds[5] - bounds[2])
+        elif item["shape"] == "cylinder":
+            x, y, radius, zmin, zmax = item["cylinder_mm"]
+            bounds = [x - radius, y - radius, zmin, x + radius, y + radius, zmax]
+            volume = math.pi * radius * radius * (zmax - zmin)
+        else:
+            bounds = None
+            volume = None
+        entry = {
+            "id": item["id"],
+            "bounds_mm": bounds,
+            "volume_mm3": volume,
+            "shape": item["shape"],
+            "role": item["role"],
+            "direction": item.get("direction"),
+            "material_group": item.get("ref", item["id"]),
+        }
+        if item["shape"] == "arrow":
+            entry["start_mm"] = item["start_mm"]
+            entry["end_mm"] = item["end_mm"]
+        if item["role"] == "access_corridor" and item["shape"] == "box":
+            entry["inner_wall_y_mm"] = enclosure[1] / 2.0 - wall
+            entry["outer_wall_y_mm"] = enclosure[1] / 2.0
+        overlays.append(entry)
+    config = {
+        "blend_path": str(DESKTOP / "04_blender_review.blend"),
+        "reference_obj_path": str(runtime / "assembly_reference.obj"),
+        "bridge_obj_path": str(DESKTOP / "03_freecad_assembly.obj"),
+        "review_obj_path": str(DESKTOP / "04_blender_review.obj"),
+        "submitted_render_path": str(DESKTOP / "04_blender_review.png"),
+        "rerender_path": str(runtime / "blender_rerender.png"),
+        "enclosure_bbox_mm": enclosure,
+        "role_bounds": role_bounds,
+        "overlays": overlays,
+    }
+    config_path = runtime / "blend_config.json"
+    result_path = runtime / "blend_result.json"
+    checker_path = runtime / "blender_checker.py"
+    config_path.write_text(json.dumps(config), encoding="utf-8")
+    checker_path.write_text(BLENDER_CHECKER, encoding="utf-8")
+    old = (os.environ.get("ENGIWORLD_TASK05_BLEND_CONFIG"), os.environ.get("ENGIWORLD_TASK05_BLEND_RESULT"))
+    os.environ["ENGIWORLD_TASK05_BLEND_CONFIG"] = str(config_path)
+    os.environ["ENGIWORLD_TASK05_BLEND_RESULT"] = str(result_path)
+    try:
+        run_command(
+            [blender, "--background", "--factory-startup", "--disable-autoexec", "--python", str(checker_path)],
+            cwd=runtime,
+            timeout=180,
+            label="Blender native/bridge/review/render checker",
+        )
+    finally:
+        for key, value in zip(("ENGIWORLD_TASK05_BLEND_CONFIG", "ENGIWORLD_TASK05_BLEND_RESULT"), old):
+            if value is None:
+                os.environ.pop(key, None)
+            else:
+                os.environ[key] = value
+    payload = json_file(result_path)
+    if not payload.get("ok"):
+        fail(f"Blender checker rejected artifacts: {payload.get('error')}")
+    result = payload.get("result")
+    if not isinstance(result, dict):
+        fail("Blender checker returned no result")
+    return result
+
+
+def check_blender_report(
+    geometry: dict[str, Any],
+    cad_result: dict[str, Any],
+    blender_result: dict[str, Any],
+    report: dict[str, Any],
+    submitted_png_size: tuple[int, int],
+) -> None:
+    if normalized(report.get("decision")) not in {"PASS", "PASSED"}:
+        fail("Blender scene report decision must be pass")
+    if report.get("inputs") is not None:
+        inputs = {Path(str(value)).name for value in report.get("inputs", [])}
+        if not {"03_freecad_assembly.obj", "03_freecad_clearance_report.json"}.issubset(inputs):
+            fail("Blender report inputs omit a required FreeCAD artifact")
+    for field, expected in (
+        ("native_scene", "04_blender_review.blend"),
+        ("review_obj", "04_blender_review.obj"),
+        ("review_mtl", "04_blender_review.mtl"),
+        ("render", "04_blender_review.png"),
+    ):
+        if report.get(field) is not None and Path(str(report[field])).name != expected:
+            fail(f"Blender report {field} mismatch")
+    if report.get("active_camera") is not None and str(report["active_camera"]) != str(blender_result["active_camera"]):
+        fail("Blender report active camera does not match native scene")
+    similarity = number(blender_result.get("render_similarity"), "Blender submitted/rerendered image similarity")
+    if similarity < MIN_RENDER_SIMILARITY:
+        fail(
+            f"Blender review PNG does not match the native scene rerender: "
+            f"similarity {similarity:.4f} < {MIN_RENDER_SIMILARITY:.2f}"
+        )
+    close_vector(
+        list(submitted_png_size),
+        blender_result.get("native_render_resolution"),
+        0,
+        "Blender submitted PNG/native scene render resolution",
+    )
+    if report.get("visible_features") is not None and not isinstance(report.get("visible_features"), list):
+        fail("Blender report visible_features must be a list when provided")
+    roles = report.get("object_roles")
+    if roles is not None and (not isinstance(roles, dict) or not roles):
+        fail("Blender report object_roles must be a nonempty object when provided")
+    assignments = report.get("material_assignments")
+    if assignments is not None and (not isinstance(assignments, dict) or not assignments):
+        fail("Blender report material_assignments must be nonempty when provided")
+    camera = report.get("camera")
+    if isinstance(camera, dict) and camera.get("framing_pass") is not True:
+        fail("Blender report records a failed camera framing check")
+    copied = report.get("freecad_metrics")
+    if copied is None:
+        return
+    if not isinstance(copied, dict):
+        fail("Blender report freecad_metrics must be an object when provided")
+    copied_contract = {
+        "enclosure_volume_mm3": cad_result["enclosure_volume_mm3"],
+        "enclosure_mass_g": cad_result["enclosure_mass_g"],
+        "minimum_side_clearance_mm": min(cad_result["side_clearances_mm"].values()),
+        "minimum_top_clearance_mm": cad_result["minimum_top_clearance_mm"],
+        "unintended_interference_volume_mm3": cad_result["unintended_interference_volume_mm3"],
+    }
+    for key, expected in copied_contract.items():
+        if key in copied:
+            close(copied[key], expected, max(0.1, abs(expected) * 0.02), f"Blender copied metric {key}")
+    if copied.get("decision") is not None and normalized(copied.get("decision")) not in {"PASS", "PASSED"}:
+        fail("Blender copied metrics do not retain the FreeCAD pass decision")
+    copied_accesses = copied.get("access_checks")
+    if copied_accesses is not None and not isinstance(copied_accesses, (dict, list)):
+        fail("Blender copied access checks must be an object or list")
+    copied_standoffs = copied.get("standoff_checks")
+    if copied_standoffs is not None and not isinstance(copied_standoffs, (dict, list)):
+        fail("Blender copied standoff checks must be an object or list")
+
+
+def check_png(path: Path, *, minimum_width: int = 160, minimum_height: int = 120) -> tuple[int, int]:
+    data = path.read_bytes()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        fail(f"{path.name} is not a PNG file")
+    cursor = 8
+    width = height = 0
+    compressed = bytearray()
+    while cursor + 12 <= len(data):
+        length = struct.unpack(">I", data[cursor : cursor + 4])[0]
+        kind = data[cursor + 4 : cursor + 8]
+        payload = data[cursor + 8 : cursor + 8 + length]
+        cursor += 12 + length
+        if kind == b"IHDR" and len(payload) >= 8:
+            width, height = struct.unpack(">II", payload[:8])
+        elif kind == b"IDAT":
+            compressed.extend(payload)
+        elif kind == b"IEND":
+            break
+    if width < minimum_width or height < minimum_height or width > 8192 or height > 8192 or not compressed:
+        fail(f"{path.name} is too small or malformed: {width}x{height}")
+    if len(compressed) > 100 * 1024 * 1024:
+        fail(f"{path.name} compressed payload is implausibly large")
+    try:
+        raw = zlib.decompress(bytes(compressed))
+    except Exception as exc:
+        fail(f"{path.name} pixel data cannot be decoded: {exc}")
+    if len(raw) < width * height or len(set(raw)) < 16:
+        fail(f"{path.name} appears blank or nearly uniform")
+    return width, height
+
+
+def names_from(value: Any, label: str) -> set[str]:
+    if isinstance(value, str):
+        value = [value]
+    if not isinstance(value, list):
+        fail(f"{label} must be a list or string")
+    return {Path(str(item)).name for item in value}
+
+
+def option_value(argv: list[str], options: set[str]) -> str | None:
+    for index, value in enumerate(argv):
+        if value in options and index + 1 < len(argv):
+            return argv[index + 1]
+        for option in options:
+            if value.startswith(option + "="):
+                return value.split("=", 1)[1]
+    return None
+
+
+def productive_argv_matches(
+    software: str,
+    argv: list[str],
+    expected_inputs: set[str],
+    expected_outputs: set[str],
+) -> bool:
+    args = [str(value) for value in argv[1:]]
+    lowered = [value.lower() for value in args]
+    if any(value in {"--version", "-v", "--help", "-h", "-?"} for value in lowered):
+        return False
+    basenames = {Path(value).name for value in args}
+    if software == "KiCad":
+        if len(lowered) < 3 or lowered[:3] != ["pcb", "export", "step"]:
+            return False
+        output = option_value(args, {"-o", "--output"})
+        return (
+            output is not None
+            and Path(output).name in expected_outputs
+            and "01_kicad_board.kicad_pcb" in basenames
+        )
+    if software == "OpenSCAD":
+        output = option_value(args, {"-o", "--output"})
+        return (
+            output is not None
+            and Path(output).name in expected_outputs
+            and "02_openscad_enclosure.scad" in basenames
+        )
+    if software == "FreeCAD":
+        scripts = [value for value in args if not value.startswith("-") and Path(value).suffix.lower() == ".py"]
+        return len(scripts) == 1
+    if software == "Blender":
+        script = option_value(args, {"--python"})
+        return (
+            "--background" in lowered
+            and script is not None
+            and Path(script).suffix.lower() == ".py"
+        )
+    return False
+
+
+def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> None:
+    log = json_file(DESKTOP / "toolchain_invocation_log.json")
+    actual = log.get("actual_invocations")
+    commands = actual if isinstance(actual, list) else log.get("commands")
+    if not isinstance(commands, list) or len(commands) < 4:
+        fail("toolchain log must contain productive commands; retries and helper calls are allowed")
+    def valid_execution(
+        entry: dict[str, Any],
+        expected_inputs: set[str],
+        expected_outputs: set[str],
+        software: str | None,
+        trusted_inputs: dict[str, Path] | None = None,
+    ) -> str | None:
+        if type(entry.get("exit_code")) is not int or entry["exit_code"] != 0:
+            return None
+        if Path(str(entry.get("cwd", ""))).resolve() != PRODUCTIVE_DESKTOP:
+            return None
+        argv = entry.get("argv")
+        command = str(entry.get("command", ""))
+        if not isinstance(argv, list) or not argv or shlex.split(command) != argv:
+            return None
+        inputs = names_from(entry.get("inputs", []), "recorded inputs")
+        outputs = names_from(entry.get("outputs", []), "recorded outputs")
+        if not expected_inputs.issubset(inputs) or not expected_outputs.issubset(outputs):
+            return None
+        if any(Path(str(value)).parent != Path(".") for value in entry.get("outputs", [])):
+            return None
+        try:
+            started = datetime.fromisoformat(str(entry["started_at_utc"]).replace("Z", "+00:00"))
+            finished = datetime.fromisoformat(str(entry["finished_at_utc"]).replace("Z", "+00:00"))
+        except (KeyError, TypeError, ValueError):
+            return None
+        if started.tzinfo is None or finished.tzinfo is None or finished < started:
+            return None
+        input_hashes = entry.get("input_sha256")
+        output_hashes = entry.get("output_sha256")
+        if not isinstance(input_hashes, dict) or not expected_inputs.issubset(input_hashes):
+            return None
+        if not isinstance(output_hashes, dict) or not expected_outputs.issubset(output_hashes):
+            return None
+        trusted_inputs = trusted_inputs or {}
+        for name in expected_inputs:
+            path = trusted_inputs.get(name, DESKTOP / name)
+            if not path.is_file() or input_hashes.get(name) != sha256(path):
+                return None
+        for name in expected_outputs:
+            path = DESKTOP / name
+            if not path.is_file() or output_hashes.get(name) != sha256(path):
+                return None
+        version = str(entry.get("version", "")).strip()
+        if software is not None:
+            token = {"KiCad": "kicad", "OpenSCAD": "openscad", "FreeCAD": "freecad", "Blender": "blender"}[software]
+            if (
+                token not in Path(argv[0]).name.lower()
+                or not version_matches(software, version)
+                or not productive_argv_matches(software, argv, expected_inputs, expected_outputs)
+            ):
+                return None
+        return version
+
+    trusted = trusted_input_paths()
+    prep_inputs = {"board_input.kicad_pcb", "mechanical_requirements.json", "connector_keepouts.csv", "enclosure_seed.scad", "handoff_notes.md"}
+    prep_outputs = {"01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad", "02_openscad_enclosure.scad", "02_openscad_parameters.json"}
+    preparation_index = next(
+        (
+            index for index, entry in enumerate(commands)
+            if isinstance(entry, dict) and valid_execution(
+                entry,
+                prep_inputs,
+                prep_outputs,
+                None,
+                {
+                    "board_input.kicad_pcb": trusted["board"],
+                    "mechanical_requirements.json": trusted["requirements"],
+                    "connector_keepouts.csv": trusted["connectors"],
+                    "enclosure_seed.scad": trusted["seed"],
+                    "handoff_notes.md": trusted["notes"],
+                },
+            ) is not None
+        ),
+        None,
+    )
+    if preparation_index is None:
+        fail("toolchain log lacks a valid recorded handoff preparation")
+    logged_sequence = log.get("required_software_sequence")
+    if logged_sequence is not None and [normalized(value) for value in logged_sequence] != [normalized(value) for value in SOFTWARE_SEQUENCE]:
+        fail("toolchain log required software sequence mismatch")
+    expected = {
+        "KiCad": ({"01_kicad_board.kicad_pcb"}, {"01_kicad_board.step"}),
+        "OpenSCAD": ({"01_kicad_parameters.scad", "02_openscad_enclosure.scad"}, {"02_openscad_enclosure.stl"}),
+        "FreeCAD": (
+            {"01_kicad_board.step", "02_openscad_enclosure.stl", "02_openscad_parameters.json"},
+            {"03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
+        ),
+        "Blender": (
+            {"03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
+            {"04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"},
+        ),
+    }
+    previous = preparation_index
+    stage_versions: dict[str, str] = {}
+    for software in SOFTWARE_SEQUENCE:
+        required_inputs, required_outputs = expected[software]
+        found: int | None = None
+        for index, entry in enumerate(commands):
+            if index <= previous or not isinstance(entry, dict):
+                continue
+            version = valid_execution(entry, required_inputs, required_outputs, software)
+            if version is not None:
+                found = index
+                stage_versions[software] = version
+                break
+        if found is None:
+            fail(f"toolchain log lacks an ordered, versioned productive {software} stage")
+        previous = found
+
+    package = json_file(DESKTOP / "final_release_package.json")
+    if normalized(package.get("release_decision")) not in {"PASS", "PASSED"}:
+        fail("final release package decision must be pass")
+    if not isinstance(package.get("software_sequence"), list) or [normalized(value) for value in package["software_sequence"]] != [normalized(value) for value in SOFTWARE_SEQUENCE]:
+        fail("final release package software sequence mismatch")
+    listed = names_from(package.get("required_artifacts", []), "final required_artifacts")
+    if not set(REQUIRED_ARTIFACTS).issubset(listed):
+        fail("final package required_artifacts is incomplete")
+    produced = package.get("produced_artifacts")
+    if produced is not None and not set(REQUIRED_ARTIFACTS).issubset(names_from(produced, "final produced_artifacts")):
+        fail("final package produced_artifacts omits a required artifact")
+    stage_outputs = package.get("stage_outputs")
+    if not isinstance(stage_outputs, dict):
+        fail("final package stage_outputs must be an object")
+    expected_stage_outputs = {
+        "KiCad": {"01_kicad_board.kicad_pcb", "01_kicad_export.json", "01_kicad_board.step", "01_kicad_mechanical_map.csv", "01_kicad_parameters.scad"},
+        "OpenSCAD": {"02_openscad_enclosure.scad", "02_openscad_enclosure.stl", "02_openscad_parameters.json"},
+        "FreeCAD": {"03_freecad_assembly.step", "03_freecad_assembly.obj", "03_freecad_clearance_report.json"},
+        "Blender": {"04_blender_review.blend", "04_blender_review.obj", "04_blender_review.mtl", "04_blender_review.png", "04_blender_scene_report.json"},
+    }
+    normalized_stage_outputs = {normalized(key): value for key, value in stage_outputs.items()}
+    for software, required in expected_stage_outputs.items():
+        if not required.issubset(names_from(normalized_stage_outputs.get(normalized(software), []), f"{software} stage_outputs")):
+            fail(f"final package {software} stage_outputs is incomplete")
+    hashes = package.get("artifact_sha256")
+    hashed_artifacts = set(REQUIRED_ARTIFACTS) - {"final_release_package.json"}
+    if not isinstance(hashes, dict) or not hashed_artifacts.issubset(hashes):
+        fail("final package artifact_sha256 is incomplete")
+    for name in hashed_artifacts:
+        expected_hash = hashes[name]
+        if not isinstance(expected_hash, str) or len(expected_hash) != 64:
+            fail(f"final package has an invalid SHA-256 for {name}")
+        if expected_hash.lower() != sha256(DESKTOP / name):
+            fail(f"final package hash mismatch for {name}")
+    checks = package.get("checks")
+    if not isinstance(checks, dict) or not checks or not all(value is True for value in checks.values()):
+        fail("final package contains a failed release check")
+    versions = package.get("tool_versions")
+    if not isinstance(versions, dict) or any(not str(versions.get(software, "")).strip() for software in SOFTWARE_SEQUENCE):
+        fail("final package tool_versions is incomplete")
+    for software in SOFTWARE_SEQUENCE:
+        package_version = str(versions[software]).strip()
+        if not version_matches(software, package_version) or package_version != stage_versions[software]:
+            fail(f"final package {software} version does not match the recorded stage")
+    metrics = package.get("key_metrics")
+    required_metrics = {
+        "access_checks", "board_bbox_mm", "component_top_clearances_mm", "enclosure_bbox_mm",
+        "enclosure_mass_g", "enclosure_volume_mm3", "lid_mass_g", "lid_separation_mm",
+        "lid_volume_mm3", "minimum_side_clearance_mm", "minimum_top_clearance_mm",
+        "side_clearances_mm", "standoff_checks", "tray_mass_g", "tray_volume_mm3",
+        "unintended_interference_volume_mm3",
+    }
+    if not isinstance(metrics, dict) or not required_metrics.issubset(metrics):
+        fail("final package key_metrics is incomplete")
+    mass_rel = number(spec["requirements"]["mass_report_relative_tolerance"], "mass report relative tolerance")
+    metric_contract = {
+        "enclosure_volume_mm3": (cad_result["enclosure_volume_mm3"], max(2.0, cad_result["enclosure_volume_mm3"] * 0.01)),
+        "enclosure_mass_g": (cad_result["enclosure_mass_g"], max(0.02, cad_result["enclosure_mass_g"] * mass_rel)),
+        "tray_volume_mm3": (cad_result["tray_volume_mm3"], max(1.0, cad_result["tray_volume_mm3"] * 0.01)),
+        "tray_mass_g": (cad_result["tray_mass_g"], max(0.02, cad_result["tray_mass_g"] * mass_rel)),
+        "lid_volume_mm3": (cad_result["lid_volume_mm3"], max(1.0, cad_result["lid_volume_mm3"] * 0.01)),
+        "lid_mass_g": (cad_result["lid_mass_g"], max(0.02, cad_result["lid_mass_g"] * mass_rel)),
+        "lid_separation_mm": (cad_result["lid_separation_mm"], 0.1),
+        "minimum_side_clearance_mm": (min(cad_result["side_clearances_mm"].values()), 0.1),
+        "minimum_top_clearance_mm": (cad_result["minimum_top_clearance_mm"], 0.1),
+        "unintended_interference_volume_mm3": (cad_result["unintended_interference_volume_mm3"], 0.1),
+    }
+    for field, (expected_value, tolerance) in metric_contract.items():
+        close(metrics[field], expected_value, tolerance, f"final package {field}")
+    geometry = expected_geometry(spec)
+    geom_tol = number(spec["requirements"]["geometry_tolerance_mm"], "geometry tolerance")
+    volume_tol = number(
+        spec["requirements"]["interference_volume_tolerance_mm3"],
+        "interference tolerance",
+    )
+    close_vector(
+        metrics["board_bbox_mm"], spec["board"]["bbox_mm"], geom_tol,
+        "final package board bbox",
+    )
+    close_vector(
+        metrics["enclosure_bbox_mm"], cad_result["enclosure_bbox_mm"], geom_tol,
+        "final package enclosure bbox",
+    )
+    package_side = metrics.get("side_clearances_mm")
+    if not isinstance(package_side, dict) or set(package_side) != {"X_MINUS", "X_PLUS", "Y_MINUS", "Y_PLUS"}:
+        fail("final package must include exactly four side clearances")
+    for direction, measured in cad_result["side_clearances_mm"].items():
+        close(package_side[direction], measured, geom_tol, f"final package side clearance {direction}")
+    package_top = metrics.get("component_top_clearances_mm")
+    if not isinstance(package_top, dict) or set(package_top) != {"TP1", "TP2", "TP3", "TP4", "J1"}:
+        fail("final package must include exactly TP1-TP4 and J1 top clearances")
+    for ref, measured in cad_result["component_top_clearances_mm"].items():
+        if measured is None:
+            if package_top[ref] is not None and normalized(package_top[ref]) not in {"UNBOUNDED", "NOTCOVERED", "OPEN"}:
+                fail(f"final package top clearance {ref} must be null or unbounded")
+        else:
+            close(package_top[ref], measured, geom_tol, f"final package top clearance {ref}")
+    package_accesses = report_accesses(metrics)
+    expected_accesses = {item["ref"]: item for item in geometry["accesses"]}
+    if set(package_accesses) != set(expected_accesses):
+        fail("final package must include exactly TP1-TP4 and J1 access checks")
+    for ref, expected_access in expected_accesses.items():
+        check_access_report(
+            package_accesses[ref], expected_access, cad_result["access_checks"][ref],
+            geom_tol, volume_tol,
+        )
+    package_standoffs = metrics.get("standoff_checks")
+    if not isinstance(package_standoffs, dict) or set(package_standoffs) != {"MH1", "MH2", "MH3", "MH4"}:
+        fail("final package must include exactly MH1-MH4 standoff checks")
+    for ref, measured in cad_result["standoff_checks"].items():
+        item = package_standoffs[ref]
+        if not isinstance(item, dict):
+            fail(f"final package {ref} standoff check must be an object")
+        check_standoff_report(item, ref, measured, geom_tol, volume_tol)
+
+
+def main() -> bool:
+    check_required_files()
+    spec = build_spec(trusted_input_paths())
+    check_answer_board(spec)
+    check_kicad_handoff(spec)
+    geometry = expected_geometry(spec)
+    check_openscad_handoff(spec, geometry)
+    freecad_report = json_file(DESKTOP / "03_freecad_clearance_report.json")
+    blender_report = json_file(DESKTOP / "04_blender_scene_report.json")
+
+    with tempfile.TemporaryDirectory(prefix="engiworld_task05_eval_") as temp_dir:
+        runtime = Path(temp_dir)
+        rerendered_board_step = runtime / "kicad_board_rerender.step"
+        rerendered_stl = runtime / "openscad_rerender.stl"
+        run_kicad_export(DESKTOP / "01_kicad_board.kicad_pcb", rerendered_board_step, runtime)
+        openscad = resolve_executable("openscad", ["/usr/bin/openscad"])
+        run_command(
+            [openscad, "-o", str(rerendered_stl), str(DESKTOP / "02_openscad_enclosure.scad")],
+            cwd=runtime,
+            timeout=150,
+            label="OpenSCAD tray/lid rerender",
+        )
+        if not rerendered_stl.is_file() or rerendered_stl.stat().st_size < 1000:
+            fail("OpenSCAD rerender did not produce a substantial STL")
+        submitted_mesh = load_mesh_metrics(DESKTOP / "02_openscad_enclosure.stl")
+        rendered_mesh = load_mesh_metrics(rerendered_stl)
+        compare_meshes(submitted_mesh, rendered_mesh, geometry)
+        cad_result = run_freecad_checker(runtime, spec, geometry, rerendered_board_step, rerendered_stl)
+        check_cad_result(spec, geometry, cad_result, freecad_report)
+        blender_result = run_blender_checker(runtime, spec, geometry)
+        submitted_png_size = check_png(DESKTOP / "04_blender_review.png", minimum_width=320, minimum_height=240)
+        check_blender_report(geometry, cad_result, blender_result, blender_report, submitted_png_size)
+        check_png(runtime / "blender_rerender.png", minimum_width=120, minimum_height=90)
+
+    check_release_chain(spec, cad_result)
+    return True
+
+
+if __name__ == "__main__":
+    detail_path = DESKTOP / "eval_detail.txt"
+    try:
+        passed = main()
+        detail = "PASS: task-05 artifacts satisfy the trusted semantic, geometry, bridge, and review contract.\n"
+    except Exception as exc:
+        passed = False
+        detail = f"FAIL: {type(exc).__name__}: {exc}\n"
+    try:
+        detail_path.write_text(detail, encoding="utf-8")
+    except Exception:
+        pass
+    if not passed:
+        print(detail.rstrip(), file=sys.stderr)
+    print("True" if passed else "False")

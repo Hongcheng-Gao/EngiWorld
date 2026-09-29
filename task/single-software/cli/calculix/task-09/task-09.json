@@ -1,0 +1,59 @@
+{
+  "id": "single-software--cli--calculix--task-09--ubuntu",
+  "snapshot": "CalculiX-2.21",
+  "instruction": "For this task, start with a frequency-analysis cantilever deck `/home/user/Desktop/ssd_base.inp`. Run `ccx --version` or invoke the installed `ccx` binary from a terminal. Use `/usr/bin/ccx` for the CalculiX solve and `/usr/bin/cgx` when CGX processing is needed.\n\nComplete the following from the command line: 1. Copy/extend it as `/home/user/Desktop/ssd.inp`, keeping the existing `*Frequency, Storage=YES` step first so its stored modes and the frequency-response step belong to the same `ssd` job. 2. Add a `*Steady State Dynamics` step over `1-100 Hz` with `20` points. Apply a total real harmonic `FY=100 N` to the four nodes in the `Tip` node set (`25 N` per node), keep the `Fixed` set constrained, use Rayleigh modal damping with `alpha=5.0` and `beta=1.0e-5`, and request Tip `U` with `*Node Print` and `*Node File`. 3. Run `ccx ssd`; the successful job must create `ssd.dat`, `ssd.frd`, and `ssd.eig`. 4. Write `/home/user/Desktop/postprocess.py` to parse each pair of real/imaginary Tip displacement blocks in `ssd.dat`, average `UY` over the four Tip nodes, compute amplitude as `sqrt(real_mean^2 + imag_mean^2)`, and write `/home/user/Desktop/summary.txt` as `peak_frequency_hz, peak_mean_tip_uy_amplitude_mm`.",
+  "source": "https://github.com/calculix/CalculiX-Examples",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/ssd_base.inp",
+            "path": "/home/user/Desktop/ssd_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/ssd.dat",
+    "/home/user/Desktop/ssd.inp",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

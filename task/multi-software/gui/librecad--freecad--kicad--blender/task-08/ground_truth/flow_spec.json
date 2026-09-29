@@ -1,0 +1,204 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-08-ubuntu",
+  "owner": "taozhuo",
+  "title": "Eight-channel terminal cover with numbered windows",
+  "domain": "industrial_terminal_cover",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G08",
+  "required_files": [
+    "stage1_terminal_cover_long.dxf",
+    "stage2_terminal_cover_long.stl",
+    "stage2_terminal_cover_long_handoff_outline.dxf",
+    "stage3_terminal_cover_long_board.kicad_pcb",
+    "stage3_terminal_cover_long_board_profile.svg",
+    "stage4_terminal_cover_long.glb"
+  ],
+  "dxf": {
+    "file": "stage1_terminal_cover_long.dxf",
+    "bbox": [
+      165.0,
+      52.0
+    ],
+    "bbox_tol": 0.15,
+    "circle_tol": 0.05,
+    "radius_tol": 0.03,
+    "layers": [
+      "OUTLINE",
+      "WINDOW",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        8.0,
+        8.0,
+        2.2
+      ],
+      [
+        157.0,
+        8.0,
+        2.2
+      ],
+      [
+        8.0,
+        44.0,
+        2.2
+      ],
+      [
+        157.0,
+        44.0,
+        2.2
+      ]
+    ],
+    "texts": [
+      "EW4G08",
+      "CH1",
+      "CH8",
+      "24V",
+      "GND"
+    ],
+    "window_count": 8,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_terminal_cover_long.stl",
+    "bbox": [
+      165.0,
+      52.0,
+      14.0
+    ],
+    "bbox_tol": 0.08,
+    "min_triangles": 100,
+    "watertight": true,
+    "non_box_fill_range": [0.05, 0.8],
+    "mounting_bores": 4,
+    "window_openings": 8
+  },
+  "kicad": {
+    "tokens": [
+      "EW4G08",
+      "TERM1",
+      "TERM2",
+      "TERM3",
+      "TERM4",
+      "TERM5",
+      "TERM6",
+      "TERM7",
+      "TERM8",
+      "24V",
+      "GND"
+    ],
+    "footprints": {
+      "terminal_references": ["TERM1", "TERM2", "TERM3", "TERM4", "TERM5", "TERM6", "TERM7", "TERM8"],
+      "terminal_min_pads_each": 2,
+      "power_min_pads": 4,
+      "total_min_pads": 20
+    },
+    "nets": ["CH1", "CH2", "CH3", "CH4", "CH5", "CH6", "CH7", "CH8", "24V", "GND"],
+    "complete_handoff_layer": "Dwgs.User"
+  },
+  "glb": {
+    "file": "stage4_terminal_cover_long.glb",
+    "tokens": [],
+    "min_nodes": 2,
+    "min_materials": 0,
+    "nodes": [
+      "stage2_terminal_cover_long",
+      "stage3_terminal_cover_long_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "cover_transparency": ["alpha_blend", "KHR_materials_transmission"],
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_terminal_cover_long",
+      "stage3_svg_object": "stage3_terminal_cover_long_board_profile.svg"
+    }
+  },
+  "diversity_notes": {
+    "geometry": "Eight-channel terminal cover with numbered windows",
+    "electronic_focus": "an eight-channel terminal PCB with TERM1 through TERM8, 24V, GND, and channel-number silk",
+    "visualization_focus": "a long transparent-smoke cover with the eight numbered terminal windows visible"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_terminal_cover_long.dxf",
+    "desktop_path": "/home/user/Desktop/seed_terminal_cover_long.dxf"
+  },
+  "gt_provenance": {
+    "instance": "i-yeslqxefpc4c5qx3440g",
+    "date": "2026-08-13",
+    "software_versions": [
+      "LibreCAD 2.2.0.2",
+      "FreeCAD 0.21.2",
+      "KiCad 10.0.2",
+      "Blender 4.2.3"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_terminal_cover_long_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_terminal_cover_long_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_terminal_cover_long.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_terminal_cover_long.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_terminal_cover_long_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_terminal_cover_long_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_terminal_cover_long_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_terminal_cover_long_board.kicad_pcb"
+  }
+}

@@ -1,0 +1,61 @@
+{
+  "id": "single-software--cli--ansys--task-09--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "With ANSYS Fluent via the Command Line Interface (CLI), complete a 2D lid-driven cavity flow analysis. To start ANSYS Workbench, run `C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe -g` (version/path may differ on your machine).\n\nPhysical problem: Laminar lid-driven cavity flow in a square cavity. Coordinate system and geometry: - Use a 2D planar model. - Use SI units in Fluent. - The cavity is a square domain with side length 1 mm. - In Fluent coordinates, the domain should occupy: - 0 ≤ X ≤ 0.001 m - 0 ≤ Y ≤ 0.001 m - The top lid is the boundary at Y = 0.001 m. - The bottom wall is the boundary at Y = 0 m. - The left wall is the boundary at X = 0 m. - The right wall is the boundary at X = 0.001 m. Model parameters: - Fluid: water-liquid - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Structured quadrilateral mesh - Element size: 0.05 mm, equivalent to 5.0e-5 m - Use approximately 20 divisions along each side of the square cavity. Boundary conditions: - Top lid: - Moving wall - X-velocity = 0.1 m/s - Y-velocity = 0 m/s - Bottom wall: - Stationary no-slip wall - Left wall: - Stationary no-slip wall - Right wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialization: hybrid initialization - Run 1000 iterations or until the solution is converged. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\cavity.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\cavity.dat",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "python",
+          "C:\\Users\\user\\Desktop\\license.py"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\cavity.cas",
+    "C:\\Users\\user\\Desktop\\cavity.dat"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

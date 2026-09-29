@@ -1,0 +1,53 @@
+{
+  "id": "single-software--cli--altium-designer--task-23--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "Perform pre-release height maintenance on the native Altium PCB footprint library `C:\\Users\\user\\Desktop\\connector_lib.PcbLib`. To use Altium Designer on Windows, run `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE` (adjust if your install path differs).\n\nSave the modified native library as `C:\\Users\\user\\Desktop\\connector_lib_release.PcbLib`. Requirements: - Change `Height` of `RESC3216X60X45ML15T20` to `25mil`. - Change `Height` of `51163-0500-Footprint-1` to `90mil`. - Change `Height` of `53375-0510-Footprint-1` to `100mil`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/3d-bodies?version=22; https://www.altium.com/documentation/altium-designer/pcb",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-23/init_file/connector_lib.PcbLib",
+            "path": "C:\\Users\\user\\Desktop\\connector_lib.PcbLib"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-23/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

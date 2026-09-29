@@ -1,0 +1,64 @@
+{
+  "id": "image-based-modeling--gui--freecad--task-47--ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Complete the task in FreeCAD through visible GUI interaction only: inspect the accompanying reference image, create the required single solid with FreeCAD GUI tools, and export the final result. Launch FreeCAD from `/usr/bin/freecad`. Do not use a terminal, FreeCAD Python console, FreeCADCmd, or an external script to bypass GUI actions. The accompanying reference image is the only public source of geometry. Inspect every orthographic and isometric view, numeric dimension, centreline, hidden line, and annotation in the reference image before modelling. Then read /home/user/Desktop/supplement.csv only for datum, feature direction, depth, array phase, and connectivity facts intentionally omitted from the reference image; it does not replace the geometry shown in the reference image. Interpret the views using ISO first-angle projection. Reconstruct the mechanical part shown in the reference image in millimetres as exactly one valid connected solid. Do not infer dimensions from the task title or evaluator. Preserve every shown hole, opening, step, slope, wall, array, axis, depth, and connectivity relation. Create the part using FreeCAD's visible modeling tools. Export only the final valid solid as /home/user/Desktop/result.step. Do not create metrics.json or reference_dimensions.csv; they are evaluator artifacts.",
+  "source": "generated canonical reverse-CAD evidence package; native FreeCAD TechDraw ISO first-angle page",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-47/init_file/supplement.csv",
+            "path": "/home/user/Desktop/supplement.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-47/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
