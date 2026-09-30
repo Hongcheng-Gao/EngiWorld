@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="https://engiworld.github.io/">🌐 项目网站</a> ·
-  <span>📄 论文（即将上线 arXiv）</span> ·
+  <a href="https://arxiv.org/abs/2609.37686">📄 论文 (arXiv)</a> ·
   <a href="task/">🧩 任务与评分器</a> ·
   <a href="https://huggingface.co/datasets/HongchengGao/EngiWorld-Images">🤗 环境镜像</a>
 </p>
@@ -139,8 +139,10 @@ Open-ended 使用 **CLI**，位于 `task/open-ended/cli/agent-selected/`，
   title = {EngiWorld: What Can Frontier Agents Deliver in Professional Engineering Environments?},
   author = {Hongcheng Gao and Hailong Qu and Yu Lei and Henghui Sun and Haoyang Li and Yipeng Wei and Naihao Xue and Xiaohan Yu and Zhuo Tao and Yihe Zang and Yajiao Wang and Jingyi Tang and Yi Li and Jingjing Zhou and Jie Luo and Bohan Zeng and Chengyu Shen and Hao Jiang and Chong Chen and Bowen Qu and Olive Huang and Zeqiang Wang},
   year = {2026},
-  howpublished = {Manuscript},
-  url = {https://openreview.net/forum?id=4kPwNYWJYm}
+  eprint = {2609.37686},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AI},
+  url = {https://arxiv.org/abs/2609.37686}
 }
 ```
 

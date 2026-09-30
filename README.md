@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="https://engiworld.github.io/">🌐 Website</a> ·
-  <span>📄 Paper (arXiv coming soon)</span> ·
+  <a href="https://arxiv.org/abs/2609.37686">📄 Paper (arXiv)</a> ·
   <a href="task/">🧩 Tasks &amp; Verifiers</a> ·
   <a href="https://huggingface.co/datasets/HongchengGao/EngiWorld-Images">🤗 Environment Images</a>
 </p>
@@ -139,8 +139,10 @@ If you use EngiWorld in your research, please cite:
   title = {EngiWorld: What Can Frontier Agents Deliver in Professional Engineering Environments?},
   author = {Hongcheng Gao and Hailong Qu and Yu Lei and Henghui Sun and Haoyang Li and Yipeng Wei and Naihao Xue and Xiaohan Yu and Zhuo Tao and Yihe Zang and Yajiao Wang and Jingyi Tang and Yi Li and Jingjing Zhou and Jie Luo and Bohan Zeng and Chengyu Shen and Hao Jiang and Chong Chen and Bowen Qu and Olive Huang and Zeqiang Wang},
   year = {2026},
-  howpublished = {Manuscript},
-  url = {https://openreview.net/forum?id=4kPwNYWJYm}
+  eprint = {2609.37686},
+  archivePrefix = {arXiv},
+  primaryClass = {cs.AI},
+  url = {https://arxiv.org/abs/2609.37686}
 }
 ```
 
