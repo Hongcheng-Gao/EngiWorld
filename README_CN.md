@@ -5,7 +5,7 @@
 
 <p align="center">
   <a href="https://engiworld.github.io/">🌐 项目网站</a> ·
-  <a href="https://arxiv.org/abs/2609.37686">📄 论文 (arXiv)</a> ·
+  <a href="https://arxiv.org/abs/2609.37686">📄 论文</a> ·
   <a href="task/">🧩 任务与评分器</a> ·
   <a href="https://huggingface.co/datasets/HongchengGao/EngiWorld-Images">🤗 环境镜像</a>
 </p>
