@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--solidworks--task-20--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Start with C:\\Users\\User\\Desktop\\cli_040_step_quality_export.step in SolidWorks. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). Before starting the work, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_040_step_quality_export.step`.\n\nUsing SolidWorks command-line automation, use that input file, a six-part mechanical assembly. Do not change the geometry. Perform a standardized export to STEP AP242 in millimeters while preserving assembly structure and colors. Also generate C:\\Users\\User\\Desktop\\cli_040_quality_report.txt listing solid or part count, each part bounding box, and the total assembly bounding box. Export C:\\Users\\User\\Desktop\\cli_040_ap242_quality_out.step.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_file_types.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/cli_040_step_quality_export.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_040_step_quality_export.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_040_ap242_quality_out.step",
+    "C:\\Users\\User\\Desktop\\cli_040_quality_report.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

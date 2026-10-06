@@ -1,0 +1,89 @@
+{
+  "schema": "engiworld.task02.eval-matrix.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-02-windows",
+  "snapshot": "cli2-archicad27-openstudio310-win",
+  "host": "iv-v44c5quhrp39",
+  "windows_python": "3.11.9",
+  "evaluator_sha256": "b59478e5f74824f1efdd7412c3df58e1080ece0c86a2d18bf5dd52b1baa440ca",
+  "run_stamp_utc": "20260812T185143447660Z",
+  "isolation": "Each archive was freshly extracted into its own case directory; pre-existing multi_metrics.json was excluded and each evaluator invocation wrote only inside that directory.",
+  "summary": {
+    "total": 6,
+    "positive": 3,
+    "negative": 3,
+    "matched_expectation": 6
+  },
+  "cases": [
+    {
+      "id": "formal",
+      "class": "positive",
+      "purpose": "Current checked-in formal ground truth",
+      "expected_ok": true,
+      "actual_ok": true,
+      "stdout": "True",
+      "errors": [],
+      "started_utc": "2026-08-12T18:51:43.510601+00:00",
+      "completed_utc": "2026-08-12T18:51:44.672729+00:00"
+    },
+    {
+      "id": "baseline",
+      "class": "positive",
+      "purpose": "Independent byte-identical formal baseline archive",
+      "expected_ok": true,
+      "actual_ok": true,
+      "stdout": "True",
+      "errors": [],
+      "started_utc": "2026-08-12T18:51:44.719626+00:00",
+      "completed_utc": "2026-08-12T18:51:45.833884+00:00"
+    },
+    {
+      "id": "default_day_profile",
+      "class": "positive_reasonable_equivalent",
+      "purpose": "Instruction-permitted distinct effective weekday occupancy profiles expressed through ScheduleRuleset default days",
+      "expected_ok": true,
+      "actual_ok": true,
+      "stdout": "True",
+      "errors": [],
+      "started_utc": "2026-08-12T18:51:45.880818+00:00",
+      "completed_utc": "2026-08-12T18:51:47.010819+00:00"
+    },
+    {
+      "id": "duplicate_global_id",
+      "class": "negative",
+      "purpose": "Reject duplicate IFC GlobalId even when introduced outside the primary entity list",
+      "expected_ok": false,
+      "actual_ok": false,
+      "stdout": "False",
+      "errors": ["stage1.ifc:duplicate_global_ids"],
+      "started_utc": "2026-08-12T18:51:47.067788+00:00",
+      "completed_utc": "2026-08-12T18:51:48.188514+00:00"
+    },
+    {
+      "id": "non_target_geometry_change",
+      "class": "negative",
+      "purpose": "Reject semantic geometry change to non-target RECEPTION root",
+      "expected_ok": false,
+      "actual_ok": false,
+      "stdout": "False",
+      "errors": ["stage1.ifc:unrequested_root_semantic_changes:['3_xFKYVlvD6xWt5klp5Zhi']"],
+      "started_utc": "2026-08-12T18:51:48.251158+00:00",
+      "completed_utc": "2026-08-12T18:51:49.364852+00:00"
+    },
+    {
+      "id": "single_timeindex",
+      "class": "negative",
+      "purpose": "Reject SQL whose 8760 result rows reuse one TimeIndex and therefore lack annual hourly timestamp coverage",
+      "expected_ok": false,
+      "actual_ok": false,
+      "stdout": "False",
+      "error_summary": {
+        "affected_required_series": 12,
+        "checks_per_series": ["hourly_distinct_time_indexes", "hourly_annual_timestamp_coverage", "hourly_interval_metadata_invalid"]
+      },
+      "started_utc": "2026-08-12T18:51:49.427381+00:00",
+      "completed_utc": "2026-08-12T18:51:50.463921+00:00"
+    }
+  ],
+  "all_matched_expectation": true,
+  "source_windows_receipt_sha256": "a85ae2a2e561a5a74c2ab63844d164b153bae6db513422ae4cf50235a0227581"
+}

@@ -1,0 +1,52 @@
+{
+  "id": "single-software--cli--abaqus--task-05--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Perform a tensile analysis in the N-mm-MPa unit system using Abaqus from the command line. For the steps below, Abaqus command-line jobs should be launched through `C:\\SIMULIA\\Commands\\abaqus.bat`. Create a 3D deformable solid block 120 mm long in global X with a 12 mm by 8 mm Y-Z cross-section. Define Aluminum with E = 70000 MPa and nu = 0.33, assign a solid homogeneous section, and create one dependent instance. Create a Static, General step named Step-Load. Apply Encastre to the X = 0 end face. At the center of the X = 120 mm end face, create a reference point at (120, 6, 4), kinematically couple the complete end face to it, and apply a concentrated force CF1 = +800 N at the reference point. This coupled force, rather than pressure, must produce tension in +X. Mesh the block with C3D8R elements and a global seed size of 4 mm. Create and run Job-BlockTension. Review S11 near X = 60 mm and U1 at the loaded reference point. Save C:\\Users\\user\\Desktop\\Job-BlockTension.cae and C:\\Users\\user\\Desktop\\Job-BlockTension.odb.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-BlockTension.cae",
+    "C:\\Users\\user\\Desktop\\Job-BlockTension.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

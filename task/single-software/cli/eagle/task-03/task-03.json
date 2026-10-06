@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--eagle--task-03--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The file `/home/user/Desktop/board.brd` is the board to modify. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nAdd at least one polygon on layer `16` associated with the `GND` signal, and save the result as `/home/user/Desktop/poured.brd`. Requirements: 1. The file must parse as XML. 2. At least one `<polygon layer=\"16\">` must be associated with `GND`, either via `signal=\"GND\"` or by living inside `<signal name=\"GND\">`. 3. The polygon's `rank` attribute must be `1`. 4. The polygon's `isolate` attribute must be `0.3 mm` within `0.01 mm`. 5. The polygon must have at least 3 `<vertex>` children.",
+  "source": "https://www.autodesk.com/products/fusion-360/blog/what-you-didnt-know-about-eagle-polygon-ranking/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/board.brd",
+            "path": "/home/user/Desktop/board.brd"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/poured.brd"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

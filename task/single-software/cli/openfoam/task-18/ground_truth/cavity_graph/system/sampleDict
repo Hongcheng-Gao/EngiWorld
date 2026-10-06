@@ -1,0 +1,31 @@
+FoamFile
+{
+    format ascii;
+    class dictionary;
+    location "system";
+    object sampleDict;
+}
+type sets;
+libs ("libsampling.so");
+interpolationScheme cellPoint;
+setFormat raw;
+sets
+(
+    vertical
+    {
+        type lineUniform;
+        axis y;
+        start (0.5 0.01 0.005);
+        end (0.5 0.99 0.005);
+        nPoints 99;
+    }
+    horizontal
+    {
+        type lineUniform;
+        axis x;
+        start (0.01 0.5 0.005);
+        end (0.99 0.5 0.005);
+        nPoints 99;
+    }
+);
+fields (U);

@@ -1,0 +1,75 @@
+{
+  "id": "single-software--cli--revit--task-08--windows",
+  "snapshot": "Revit2025",
+  "instruction": "Complete the model in the opened Autodesk Revit environment using its automation interfaces, then export it to C:\\Users\\user\\Desktop\\result.ifc as IFC4. At the start of the task, use `C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe` as the Revit entry point for this automation. Do not create, rewrite, patch, copy, or post-process IFC outside Revit. The current model is a single-storey library annex with an overly open reading area. The librarian wants a clearer arrival lobby, a reading room, book stacks, a small staff office, and a restroom, all within the existing quiet rectangular shell.",
+  "source": "Autodesk Revit 2025 API and IFC exporter",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; pyautogui.FAILSAFE=False; time.sleep(35); pyautogui.press('enter'); time.sleep(10); pyautogui.press('enter')"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

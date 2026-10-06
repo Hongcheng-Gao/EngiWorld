@@ -1,0 +1,53 @@
+{
+  "id": "software-selection--cli--abaqus--ansys--autocad--task-04--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Determine the appropriate tool among ANSYS, Abaqus, and AutoCAD, then complete the task with it. The available command-line entry points are ANSYS MAPDL at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`, Abaqus at `C:\\SIMULIA\\Commands\\abaqus.bat`, and AutoCAD at `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`. Use a command-line or scripting workflow and the selected solver's native equivalent of each operation below. Use consistent mm, N, and MPa units. 1. Geometry: Create one 3D deformable solid rectangular bar occupying exactly X = 0 to 100 mm, Y = 0 to 10 mm, and Z = 0 to 10 mm. In Abaqus, create it as an extruded solid part; in ANSYS MAPDL, an equivalent native solid volume is acceptable. 2. Material and section: Create a material named Steel with Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3, and assign it to the entire bar through a homogeneous solid section or the solver-native equivalent. 3. Assembly: In Abaqus, create exactly one dependent instance of the bar. In ANSYS, use the single native solid model directly. 4. Analysis: Create one linear static analysis step named Step-Load after Initial, or the ANSYS MAPDL static-analysis equivalent. 5. Boundary condition and load: Fully fix every translational degree of freedom on the complete X = 0 end face, with no other constraints. In Abaqus, use an Encastre boundary condition for this fixed face. Apply a uniform 10 MPa surface traction to the complete X = 100 end face in global +X, equivalent to a total tensile force of 1000 N. In Abaqus, use Surface Traction, General with global +X direction. In ANSYS MAPDL, use the native face-pressure equivalent; because positive SOLID185/186/187 pressure acts inward, PRES = -10 MPa on the X = 100 face represents the required outward +X traction. Do not add other loads. 6. Mesh: Apply a global target size of 5 mm, use an appropriate three-dimensional structural solid element formulation, and generate one connected mesh. The mesh must contain a unique node at the undeformed global coordinate (100, 5, 5) mm. 7. Job and output: Create or use the job name Job-Tension, solve it successfully, and store complete final-result U, RF, and S fields so displacement, fixed-end reaction, and Mises stress can be evaluated. Open the native result and display the Mises stress contour. 8. Metrics: Write `C:/Users/user/Desktop/result/metrics.json` as a JSON object containing exactly two finite numeric fields. `free_end_displacement` is the final completed static result's global U1, in mm, at the unique node whose undeformed global coordinate is (100, 5, 5) mm; positive means +X tension. `axial_stress` is the positive nominal axial stress in MPa computed from the same final native result as `-sum(global RF1 over every node on the fixed X = 0 face) / (10 mm * 10 mm)`. 9. Native deliverables: Save the native model artifact and the native solver result artifact into `C:\\Users\\user\\Desktop\\result`. Save only the files from the selected solver. Write metrics.json in that folder. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-c/abaqus/task-04",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

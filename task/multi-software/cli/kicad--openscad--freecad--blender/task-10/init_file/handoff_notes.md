@@ -1,0 +1,13 @@
+# Task 10 Handoff Notes
+
+The KiCad board is authoritative for the outline, thickness, footprint centers, mounting-hole axes, component heights, and keepout radii. Requirements define installed Z placement, tray/lid/standoff geometry, clearances, material, mass conversion, and tolerances. The connector CSV defines access semantics, directions, finished dimensions, cutter bounds, and continuous-path or reserved-volume bounds.
+
+Use the PCB outline center as XY origin without rotating or mirroring KiCad X/Y. Z=0 is the tray bottom outer face, and Z_PLUS points toward the separate lid and F.Cu components. The tray ends at Z=32.6, the lid starts at Z=32.7, the PCB bottom is Z=16.8, and the PCB top is Z=18.0. The maximum component height is the maximum KiCad `HEIGHT_MM`, which is J1 at 7.2 mm; A1's 24 mm keepout radius is not a height. J1 ends at Z=25.2 and leaves 7.5 mm to the lid inner face.
+
+The tray cavity is 90 x 90 mm, from X=-45 to 45 and Y=-45 to 45, so the 82 x 82 mm PCB has 4 mm clearance to every inner side wall. Each MH1-MH4 standoff starts at the base inner face Z=2.7, ends at the PCB bottom Z=16.8, has 6.4 mm outer diameter, and has a 3.0 mm bore cut from Z=2.2 to 17.3.
+
+J1 requires the bounded 24 x 8.8 mm X_PLUS window with cutter `[44.5, -24.0, 17.2, 48.2, 0.0, 26.0]` and enclosure-free path extending inward to X=35.0. TP1 requires a 6 mm diameter Z_PLUS top bore with lid cutter `[15.0, -33.0, 32.2, 21.0, -27.0, 35.9]` and continuous path beginning at TP1 body top Z=18.2. Bounds use `[xmin, ymin, zmin, xmax, ymax, zmax]`. Both accesses must remain bounded and continuous and must not become full-height or full-width slots.
+
+A1 is different from J1 and TP1: it requires no exterior opening. Reserve a radius-24 finite cylindrical air volume centered on the KiCad A1 axis `(0, 16)`, from the A1 body top Z=23.2 to the lid inner face Z=32.7. Its bbox is `[-24.0, -8.0, 23.2, 24.0, 40.0, 32.7]`. The nonconductive ASA-UV lid may cover it. Carrier material and non-A1 components may each intersect this volume by no more than 0.1 mm3, and the radial clearance to the cavity wall is 5 mm. Keep an independent, matching, visible and non-occluded antenna-volume overlay in Blender.
+
+FreeCAD must derive ASA-UV enclosure volume/mass, all four PCB side clearances, covered-component top clearances, four standoff bore checks, J1 and TP1 access checks, A1 keepout clearance/intersections, and unintended interference from actual geometry. Blender must retain real tray, lid, PCB, component, access-review, and antenna-volume objects; save a native scene and render a nonblank review image.

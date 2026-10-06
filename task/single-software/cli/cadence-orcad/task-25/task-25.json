@@ -1,0 +1,89 @@
+{
+  "id": "single-software--cli--cadence-orcad--task-25--windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "Generate Allegro artwork outputs from `C:\\Users\\user\\Desktop\\demo.brd` using the parameter file `C:\\Users\\user\\Desktop\\art_param.txt`. Use Allegro's native command-line artwork generator `C:\\Cadence\\SPB_24.1\\tools\\bin\\artwork.exe`. Use `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe` for OrCAD schematics and `C:\\Cadence\\SPB_24.1\\tools\\bin\\allegro.exe` for board work.\n\nWrite the resulting Gerber films and artwork log as `C:\\Users\\user\\Desktop\\TOP.art`, `C:\\Users\\user\\Desktop\\BOTTOM.art`, `C:\\Users\\user\\Desktop\\POWER.art`, `C:\\Users\\user\\Desktop\\GND.art`, and `C:\\Users\\user\\Desktop\\photoplot.log`.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/art_param.txt",
+            "path": "C:\\Users\\user\\Desktop\\art_param.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/demo.brd",
+            "path": "C:\\Users\\user\\Desktop\\demo.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/README.md",
+            "path": "C:\\Users\\user\\Desktop\\README.md"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/violations.json",
+            "path": "C:\\Users\\user\\Desktop\\violations.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\photoplot.log"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-25/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

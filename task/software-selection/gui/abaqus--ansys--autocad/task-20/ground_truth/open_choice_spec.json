@@ -1,0 +1,94 @@
+{
+  "task_id": "v-open-abaqus-ansys-autocad-task-20-windows",
+  "open_choice_id": "cae-open-choice-040",
+  "source_task": "task/task-v/ansys/task-20",
+  "original_software": "ansys",
+  "alternative_software": "abaqus",
+  "distractor_software": "autocad",
+  "interface": "gui",
+  "domain": "steady_state_thermal_block_gui",
+  "analysis_kind": "thermal",
+  "metrics": [
+    "mid_temperature",
+    "heat_flow_optional"
+  ],
+  "expected_result_fields": [
+    "NT11"
+  ],
+  "require_metrics_json": false,
+  "visible_goal": "Using only an interactive graphical workflow, solve a steady one-dimensional thermal conduction block; report mid-length temperature and heat-flow consistency.",
+  "selection_reason": "Steady thermal analysis is a common non-structural FEA capability in both tools.",
+  "artifact_hint": {
+    "ground_truth_files": [
+      "wb_conduction.db",
+      "wb_conduction.rth"
+    ],
+    "abaqus_stems": [],
+    "ansys_db_files": [
+      "wb_conduction.db"
+    ],
+    "ansys_result_files": [
+      "wb_conduction.rth"
+    ]
+  },
+  "span_hint": {
+    "x": 100.0,
+    "y": 10.0,
+    "z": 10.0
+  },
+  "bounds_hint": {
+    "x": [
+      0.0,
+      100.0
+    ],
+    "y": [
+      0.0,
+      10.0
+    ],
+    "z": [
+      0.0,
+      10.0
+    ]
+  },
+  "material_hint": {
+    "conductivity_w_per_mm_k": 0.05,
+    "conductivity_w_per_m_k": 50.0
+  },
+  "element_hint": {
+    "accepted_ansys_types": [
+      70,
+      87,
+      90,
+      278,
+      279
+    ],
+    "abaqus_family": "DC3D"
+  },
+  "mesh_hint": {
+    "required_x_section_mm": 50.0
+  },
+  "temperature_hint": {
+    "left_face_x_mm": 0.0,
+    "left_temperature_c": 100.0,
+    "right_face_x_mm": 100.0,
+    "right_temperature_c": 20.0
+  },
+  "side_boundary_hint": {
+    "adiabatic": true,
+    "nonzero_heat_flux_film_radiation_allowed": false
+  },
+  "result_window": {
+    "mid_temperature_c": [
+      57.0,
+      63.0
+    ],
+    "left_heat_flow_w": [
+      3.88,
+      4.12
+    ],
+    "right_heat_flow_w": [
+      -4.12,
+      -3.88
+    ]
+  }
+}

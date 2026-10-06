@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--eagle--task-01--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The file `/home/user/Desktop/mystery.brd` is the board to process. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nExport its board netlist and save it as `/home/user/Desktop/mystery_netlist.txt`. Requirements:\n1. `/home/user/Desktop/mystery_netlist.txt` must exist and be non-empty.\n2. The export must preserve every signal on the board, with no omitted or merged signal sections.\n3. Every `(signal, contactref)` pair from the board must appear exactly once in the netlist as a `PART PAD` or `PART.PAD` reference.",
+  "source": "https://learn.sparkfun.com/tutorials/using-eagle-schematic/all",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/mystery.brd",
+            "path": "/home/user/Desktop/mystery.brd"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/mystery_netlist.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

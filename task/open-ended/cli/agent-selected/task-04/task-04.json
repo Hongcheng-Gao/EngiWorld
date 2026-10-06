@@ -1,0 +1,79 @@
+{
+  "id": "open-ended--cli--agent-selected--task-04--ubuntu",
+  "task_family": "open-ended",
+  "cli_tool_policy": "open_choice",
+  "snapshot": "top-10",
+  "instruction": "This is a fully open-workflow engineering task. You may use any tools, scripts, or libraries available in the environment, in any combination and any order, with any amount of iteration. The environment starts from a blank base image with no engineering applications preinstalled. Inspect the supplied inputs, then choose, install, and configure any tools or libraries you need. No particular software is required. The evaluator does not inspect software identity, stage order, intermediate handoffs, command history, version records, or provenance.\n\nMotor-controller vibration tray design.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as package XY origin and the tray bottom outer face as Z=0 without rotating or mirroring the board. Build the specified 142.4 x 100.4 x 26.4 mm covering package as a tray ending at Z=23.1 plus a separate 3.2 mm lid beginning at Z=23.2, preserving the specified 0.1 mm assembly separation. Seat the PCB bottom at Z=9.0 on four bored standoffs aligned to MH1-MH4, preserve 4 mm clearance to each inner side wall, and preserve 3.6 mm between the tallest installed component and the lid inner face. Build both required ribs at the requirement bounds, each may be fused with the tray while still filling its specified non-overlapping bounds. Treat each Q1-Q3 KiCad keepout radius as a projected column from the base top to the lid inner face: each rib must have zero intersection and at least the specified clearance from every column. Extra structural features are allowed only when all exclusions, accesses, guards, and board clearances remain valid.\n\nKeep J1 externally accessible through a bounded 28 x 11 mm X_PLUS wall window and J2 through a bounded 16 x 6 mm X_MINUS wall window. Both must use the specified overcut and minimum guard and must not become full-height slots. The evaluator derives ASA package volume/mass, side and top clearances, standoff bore continuity, per-rib/per-Q keepout intersection and separation, J1/J2 access continuity and direction, and unintended interference from final submitted geometry.\n\nSave the completed final assembly into `/home/user/Desktop/result` as exactly one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. The PCB and installed components must remain identifiable physical parts rather than being fused into enclosure material; this is a final-assembly geometry requirement, not a prescribed workflow. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://docs.kicad.org/; https://docs.kicad.org/8.0/en/cli/cli.html; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://wiki.freecad.org/Headless_FreeCAD; https://docs.blender.org/api/4.2/; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-04",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-04/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-04/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-04/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            },
+            {
+              "local_path": "../../prepare_evaluator.py",
+              "path": "/home/user/Desktop/_engiworld_prepare_evaluator.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "prepare_command": "python3 /home/user/Desktop/_engiworld_prepare_evaluator.py",
+      "prepare_timeout": 960
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

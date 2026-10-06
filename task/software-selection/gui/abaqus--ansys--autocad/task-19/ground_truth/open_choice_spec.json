@@ -1,0 +1,95 @@
+{
+  "task_id": "v-open-abaqus-ansys-autocad-task-19-windows",
+  "open_choice_id": "cae-open-choice-039",
+  "source_task": "task/task-v/ansys/task-19",
+  "original_software": "ansys",
+  "alternative_software": "abaqus",
+  "distractor_software": "autocad",
+  "interface": "gui",
+  "domain": "column_eigen_buckling_gui",
+  "analysis_kind": "buckling",
+  "metrics": [
+    "first_buckling_factor"
+  ],
+  "expected_result_fields": [
+    "U"
+  ],
+  "require_metrics_json": false,
+  "visible_goal": "Using only an interactive graphical workflow, run a linear eigenvalue buckling analysis of a pin-ended column under axial compression; constrain only the bottom axial spin in addition to the pin translations and report the first load factor.",
+  "selection_reason": "Column buckling gives a distinct structural stability domain while staying cross-solver.",
+  "artifact_hint": {
+    "ground_truth_files": [
+      "wb_buckling.db",
+      "wb_buckling.rst"
+    ],
+    "abaqus_stems": [],
+    "ansys_db_files": [
+      "wb_buckling.db"
+    ],
+    "ansys_result_files": [
+      "wb_buckling.rst"
+    ]
+  },
+  "span_hint": {
+    "y": 1000.0
+  },
+  "bounds_hint": {
+    "y": [
+      0.0,
+      1000.0
+    ]
+  },
+  "material_hint": {
+    "youngs_modulus_mpa": 210000.0,
+    "poissons_ratio": 0.3
+  },
+  "section_hint": {
+    "shape": "rectangular",
+    "width_mm": 10.0,
+    "height_mm": 10.0
+  },
+  "element_hint": {
+    "ansys_types": [
+      "BEAM188",
+      "BEAM189"
+    ],
+    "abaqus_family": "B"
+  },
+  "load_hint": {
+    "top_force_y_n": -1.0,
+    "load_node_mm": [
+      0.0,
+      1000.0,
+      0.0
+    ]
+  },
+  "boundary_hint": {
+    "bottom_fixed_dofs": [
+      "UX",
+      "UY",
+      "UZ",
+      "ROTY"
+    ],
+    "bottom_free_dofs": [
+      "ROTX",
+      "ROTZ"
+    ],
+    "top_fixed_dofs": [
+      "UX",
+      "UZ"
+    ],
+    "top_free_dofs": [
+      "UY",
+      "ROTX",
+      "ROTY",
+      "ROTZ"
+    ]
+  },
+  "buckling_hint": {
+    "requested_modes": 1,
+    "first_factor_window": [
+      1500.0,
+      1950.0
+    ]
+  }
+}

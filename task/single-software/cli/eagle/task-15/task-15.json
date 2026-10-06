@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--eagle--task-15--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The file `/home/user/Desktop/assembled.brd` is the assembled board. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nRun EAGLE's bundled `mountsmd.ulp` to obtain the component placements, then normalize its native output into two CSV files named `/home/user/Desktop/pnp_top.csv` and `/home/user/Desktop/pnp_bottom.csv`. Each file must have the header `Name,Value,Package,X,Y,Rotation,Side`. Use millimetres for numeric X and Y, and write Rotation as numeric degrees in the range 0 through 359. The top file must contain the top-side components with `Side` set to `top`, and the bottom file must contain the bottom-side components with `Side` set to `bottom`. Every row's Name, Value, Package, X, Y, Rotation, and Side must match the corresponding element in the assembled board.",
+  "source": "https://pcbsync.com/how-to-generate-pick-and-place-files-from-eagle/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/assembled.brd",
+            "path": "/home/user/Desktop/assembled.brd"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/pnp_bottom.csv",
+    "/home/user/Desktop/pnp_top.csv"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

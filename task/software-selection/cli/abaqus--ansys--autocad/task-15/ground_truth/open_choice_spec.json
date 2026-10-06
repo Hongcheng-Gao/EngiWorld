@@ -1,0 +1,95 @@
+{
+  "task_id": "c-open-abaqus-ansys-autocad-task-15-windows",
+  "open_choice_id": "cae-open-choice-025",
+  "source_task": "task/task-c/ansys/task-05",
+  "original_software": "ansys",
+  "alternative_software": "abaqus",
+  "distractor_software": "autocad",
+  "interface": "cli",
+  "domain": "fixed_fixed_beam_modal",
+  "analysis_kind": "modal",
+  "visible_goal": "Build and solve a 500 mm fixed-fixed 10 x 10 mm beam with 20 equal beam elements and report modes 1-3.",
+  "selection_reason": "ANSYS MAPDL and Abaqus 2025 LE both provide native 3D beam elements and frequency extraction.",
+  "geometry": {
+    "axis": "global X",
+    "bounds_mm": {
+      "x": [0.0, 500.0],
+      "y": [0.0, 0.0],
+      "z": [0.0, 0.0]
+    },
+    "section": {
+      "type": "rectangle",
+      "width_mm": 10.0,
+      "height_mm": 10.0
+    },
+    "element_count": 20,
+    "element_length_mm": 25.0,
+    "allowed_element_families": {
+      "ansys": ["BEAM188", "BEAM189"],
+      "abaqus": ["B31", "B32"]
+    },
+    "requires_single_connected_chain": true
+  },
+  "material": {
+    "youngs_modulus_mpa": 210000.0,
+    "poisson_ratio": 0.3,
+    "density_tonne_per_mm3": 7.85e-9
+  },
+  "boundary": {
+    "locations_x_mm": [0.0, 500.0],
+    "fixed_dofs": ["UX", "UY", "UZ", "ROTX", "ROTY", "ROTZ"],
+    "disallow_interior_constraints": true,
+    "disallow_coupled_dofs_and_constraint_equations": true
+  },
+  "analysis": {
+    "step_count_after_initial": 1,
+    "requested_modes": [1, 2, 3],
+    "disallow_loads_prestress_and_preload_steps": true
+  },
+  "metrics_schema": {
+    "required_file": "metrics.json",
+    "exact_keys": ["first_frequency", "frequency_list"],
+    "first_frequency": {
+      "type": "finite_positive_number",
+      "units": "Hz",
+      "represents": "mode 1"
+    },
+    "frequency_list": {
+      "type": "array",
+      "length": 3,
+      "items": "finite_positive_number",
+      "order": "nondecreasing",
+      "units": "Hz",
+      "represents": ["mode 1", "mode 2", "mode 3"]
+    },
+    "consistent_rounding_allowed": true
+  },
+  "delivery": {
+    "backend_count": 1,
+    "model_count": 1,
+    "result_count": 1,
+    "matching_pair_required": true,
+    "matching_filename_stem_required": false
+  },
+  "artifact_hint": {
+    "ansys": {
+      "model_extensions": [".db"],
+      "result_extensions": [".rst"],
+      "ground_truth_files": [
+        "apdl_fixed_beam_modal.db",
+        "apdl_fixed_beam_modal.rst",
+        "metrics.json"
+      ]
+    },
+    "abaqus": {
+      "model_extensions": [".cae"],
+      "result_extensions": [".odb"],
+      "ground_truth_files": [
+        "gt_task_15_abaqus.cae",
+        "gt_task_15_abaqus.odb",
+        "metrics.json"
+      ]
+    }
+  },
+  "expected_result_fields": ["U"]
+}

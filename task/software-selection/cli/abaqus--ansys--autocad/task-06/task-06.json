@@ -1,0 +1,53 @@
+{
+  "id": "software-selection--cli--abaqus--ansys--autocad--task-06--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Determine one suitable solver from ANSYS and Abaqus to complete the task; AutoCAD alone is not a thermal solver. The available command-line entry points are ANSYS MAPDL at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`, Abaqus at `C:\\SIMULIA\\Commands\\abaqus.bat`, and AutoCAD at `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`. Use a command-line or scripting workflow. Perform a steady-state heat-conduction analysis: 1. Geometry: create one connected 3D solid block spanning X=0..100 mm, Y=0..50 mm, and Z=0..10 mm. 2. Material and section: create Copper with constant isotropic conductivity 400 W/(m*K), assign one homogeneous solid section to the complete block, and use one consistent unit system. You may instead use millimeters with conductivity 0.4 W/(mm*K). 3. Assembly: create one instance of the complete block. 4. Analysis: create a steady-state heat-transfer analysis named Step-Thermal. Do not use a transient approximation. 5. Thermal conditions: prescribe 100 degC on the complete X=0 end face and 20 degC on the complete X=100 mm end face. Keep all other faces adiabatic by applying no other thermal boundary condition or thermal load; do not add body heat generation, surface heat flux, film, or radiation. 6. Mesh: use a global element size of 5 mm. In Abaqus use first-order DC3D8 heat-transfer bricks; in ANSYS use the equivalent first-order SOLID70 heat-transfer bricks. Ensure that the mesh contains nodes on X=50 mm. 7. Solve: create and solve Job-Thermal. Request the complete final nodal-temperature field, heat-flux-density vector field, and prescribed-temperature reaction heat flow. 8. Deliverables: save the native model artifact and the native solver result artifact into `C:\\Users\\user\\Desktop\\result`. Save only the files from the selected solver. Also write `C:/Users/user/Desktop/result/metrics.json` as a JSON object containing exactly these finite numeric fields: `midplane_temperature_c`, the arithmetic mean of final nodal temperature over all mesh nodes on X=50 mm (X=0.05 m in an SI model); and `heat_flux_x_w_per_mm2`, the arithmetic mean global +X component of the final heat-flux-density field over the complete solid, normalized to W/mm^2 (convert from W/m^2 when using SI units). The expected physical values are approximately 60 degC and +0.32 W/mm^2; the X=0 and X=100 mm reaction heat-flow sums should be equal and opposite with magnitude approximately 160 W. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-c/abaqus/task-06",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

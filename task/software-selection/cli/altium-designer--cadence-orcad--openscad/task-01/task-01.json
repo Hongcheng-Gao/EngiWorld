@@ -1,0 +1,70 @@
+{
+  "id": "software-selection--cli--altium-designer--cadence-orcad--openscad--task-01--windows",
+  "snapshot": "OrCAD-Altium-openscad",
+  "instruction": "This task is completed with command-line or batch-capable tools from Altium Designer, OrCAD Capture, or OpenSCAD. Two neutral schematic packages, `design_a` and `design_b`, are on the desktop. Extract every primitive part reference designator from both designs and Write the required deliverables into `C:\\Users\\user\\Desktop\\result`. Requirements: - Prefix refdes from `design_a` with `A:` and refdes from `design_b` with `B:`. - Sort first by prefix (`A` before `B`), then lexicographically by the original refdes. - Use one refdes per line in `merged_refdes.txt`. [Software] The available entry points are OrCAD Capture at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, Altium Designer at `C:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`, and OpenSCAD at `C:\\Program Files\\OpenSCAD\\openscad.exe`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/design_a.edif",
+            "path": "C:\\Users\\user\\Desktop\\design_a.edif"
+          },
+          {
+            "local_path": "task-01/init_file/design_a.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\design_a.schematic.json"
+          },
+          {
+            "local_path": "task-01/init_file/design_b.edif",
+            "path": "C:\\Users\\user\\Desktop\\design_b.edif"
+          },
+          {
+            "local_path": "task-01/init_file/design_b.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\design_b.schematic.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

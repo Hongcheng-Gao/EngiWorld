@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--openscad--task-05--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "In OpenSCAD, open /home/user/Desktop/task-025_initial.scad. To use OpenSCAD, run `openscad` from a terminal. For the steps below, run OpenSCAD from `/usr/bin/openscad` when working on `task-025_initial.scad`.\n\nEdit it. Change $fn to 96 and ribs to 24. Keep outside diameter 38 mm, height 16 mm, and center hole diameter 6 mm unchanged. Export /home/user/Desktop/task-025_output.stl using the command line.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://openscad.org/cheatsheet/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/task-025_initial.scad",
+            "path": "/home/user/Desktop/task-025_initial.scad"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-025_output.stl"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

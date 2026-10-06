@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--kicad--task-09--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Thermal Relief Parameters Per Pad Function The file `/home/user/Desktop/board.kicad_pcb` contains a GND pour on F.Cu with 4 footprints: U1 (an SMD IC with VCC and GND power pads), R1 and R2 (through-hole signal resistors), and R3 (a through-hole DNP resistor with net DNC_NET). Use KiCad 10.0.2; run `kicad` for the GUI or `kicad-cli` for scripting/headless use (use PATH or the full install path). The installed KiCad tools are `/usr/bin/kicad-cli`, `/usr/bin/pcbnew`, and `/usr/bin/eeschema`; use the one that matches the board or schematic operation.\n\nAll pads currently use the zone's global thermal relief setting. The file `/home/user/Desktop/pad_rules.csv` specifies the desired per-pad zone connection rules. Use `/home/user/Desktop/pad_rules.csv` to set per-pad zone connections: - IC power pads (U1, VCC and GND nets): solid connection (`zone_connect 2`) - Signal through-hole pads (R1, R2): 4-spoke thermal relief (`zone_connect 1`), `thermal_bridge_width 0.4` - DNC pads (R3, net DNC_NET): no connection to the zone (`zone_connect 0`) Requirements: 1. U1 VCC pads must include `zone_connect 2`. 2. The U1 GND pad must include `zone_connect 2`. 3. R1 and R2 pads must include both `zone_connect 1` and `thermal_bridge_width 0.4`. 4. R3 pads must include `zone_connect 0`. 5. The GND zone on F.Cu must remain in the file. 6. Total pad count must remain 10. 7. Also write `/home/user/Desktop/fcu.svg` as the native KiCad CLI F.Cu SVG export of your final board after zone refill. Write `/home/user/Desktop/board.kicad_pcb` and `/home/user/Desktop/fcu.svg`.",
+  "source": "https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://dev-docs.kicad.org/en/file-formats/; https://gitlab.com/kicad/code/kicad/-/tags/10.0.2",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/pad_rules.csv",
+            "path": "/home/user/Desktop/pad_rules.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/fcu.svg"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

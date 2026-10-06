@@ -1,0 +1,69 @@
+{
+  "id": "single-software--cli--blender--task-40--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Build a Geometry Nodes-driven pipeline from `/home/user/Desktop/bricks.csv`: create `BrickPoints`, instance `Brick` on it, drive color from `hue`, animate a turntable, render frames 1-30 to `/home/user/Desktop/output/frame_0001.png` through `/home/user/Desktop/output/frame_0030.png`, and save `/home/user/Desktop/answer.blend`. ## Requirements 1. `/home/user/Desktop/answer.blend` exists and opens. 2. `/home/user/Desktop/output/frame_0001.png` .. `/home/user/Desktop/output/frame_0030.png` all exist. 3. `BrickPoints` is a MESH object with exactly 100 vertices. 4. `BrickPoints` carries a POINT-domain FLOAT attribute named `hue`. 5. `Brick` has material `Mat_Brick` with ShaderNodeAttribute (attribute_name='hue'), a ShaderNodeValToRGB ColorRamp, and a ShaderNodeBsdfPrincipled node. 6. `TurnPivot` (or the Camera) is animated on rotation_z such that the camera's cumulative XY polar sweep across frames 1..30, or the pivot's z-rotation delta from frame 1 to frame 30, is >= pi radians. 7. Launch Blender by running `blender` from a terminal. At the start of the task, use `/opt/blender/blender` for Blender command-line or background runs.\n\nSilhouette (alpha > 0.5 pixel count) varies across frames: max/min ratio >= 1.1 over the 30 frames. 8. Frame 15 shows color variation from the hue-driven ramp: the R-channel standard deviation over alpha>0.5 pixels is >= 0.1, and the G-channel stddev is >= 0.1.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/init_file/bricks.csv",
+            "path": "/home/user/Desktop/bricks.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-40/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/output/frame_0001.png",
+    "/home/user/Desktop/output/frame_0030.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-40/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

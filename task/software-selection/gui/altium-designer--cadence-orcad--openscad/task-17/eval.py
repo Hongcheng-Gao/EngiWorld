@@ -1,0 +1,430 @@
+from __future__ import annotations
+
+import base64
+import csv
+import io
+import json
+import re
+import sys
+import zipfile
+from pathlib import Path
+from xml.etree import ElementTree as ET
+
+EXPECTED = {
+  "variant_bom_preview.csv": "VmFyaWFudCxSZWZlcmVuY2UsRml0dGVkLFZhbHVlDQpTdGFuZGFyZCxSMSxZZXMsMWsNClN0YW5kYXJkLFIyLFllcywxMGsNClN0YW5kYXJkLEMxLFllcywxMDBuRg0KU3RhbmRhcmQsVTEsWWVzLE1DVQ0KTGl0ZSxSMSxZZXMsMWsNCkxpdGUsUjIsTm8sMTBrDQpMaXRlLEMxLE5vLDEwMG5GDQpMaXRlLFUxLFllcyxNQ1UNCk1lZGljYWwsUjEsTm8sMWsNCk1lZGljYWwsUjIsWWVzLDEwaw0KTWVkaWNhbCxDMSxZZXMsMTAwbkYNCk1lZGljYWwsVTEsWWVzLE1DVQ0K",
+  "variant_manifest.json": "ewogICJMaXRlIjogewogICAgImRlc2NyaXB0aW9uIjogIkxpdGUgYXNzZW1ibHkiLAogICAgImRucCI6IFsKICAgICAgIlIyIiwKICAgICAgIkMxIgogICAgXSwKICAgICJvdmVycmlkZXMiOiB7CiAgICAgICJSMiI6IHsKICAgICAgICAiVmFsdWUiOiAiRE5QIgogICAgICB9CiAgICB9CiAgfSwKICAiTWVkaWNhbCI6IHsKICAgICJkZXNjcmlwdGlvbiI6ICJNZWRpY2FsIGFzc2VtYmx5IiwKICAgICJkbnAiOiBbCiAgICAgICJSMSIKICAgIF0sCiAgICAib3ZlcnJpZGVzIjogewogICAgICAiVTEiOiB7CiAgICAgICAgIk1QTiI6ICJNRUQtTUNVIgogICAgICB9CiAgICB9CiAgfSwKICAiU3RhbmRhcmQiOiB7CiAgICAiZGVzY3JpcHRpb24iOiAiU3RhbmRhcmQgYXNzZW1ibHkiLAogICAgImRucCI6IFtdLAogICAgIm92ZXJyaWRlcyI6IHsKICAgICAgIlIzIjogewogICAgICAgICJUb2xlcmFuY2UiOiAiMSUiCiAgICAgIH0KICAgIH0KICB9Cn0K"
+}
+
+
+def _desktop() -> Path:
+    return Path(__file__).resolve().parent
+
+
+def _decode(name: str) -> bytes:
+    return base64.b64decode(EXPECTED[name].encode("ascii"))
+
+
+def _text(data: bytes) -> str:
+    return data.decode("utf-8", errors="replace").replace("\r\n", "\n").replace("\r", "\n").rstrip() + "\n"
+
+
+_VOLATILE_JSON_KEYS = {
+    "created_at", "exported_at", "generated_at", "generator", "timestamp",
+    "tool_version", "exporter_version",
+}
+_VOLATILE_XML_ATTRS = {
+    "created", "created_at", "date", "exported_at", "generated_at",
+    "generator", "timestamp", "time", "tool_version", "exporter_version",
+}
+
+
+def _number(value):
+    if isinstance(value, bool):
+        return None
+    if isinstance(value, (int, float)):
+        return float(value)
+    if isinstance(value, str) and re.fullmatch(r"[-+]?\d+(?:\.\d+)?(?:[eE][-+]?\d+)?", value.strip()):
+        try:
+            return float(value)
+        except ValueError:
+            return None
+    return None
+
+
+def _scalar_equal(actual, expected) -> bool:
+    actual_number = _number(actual)
+    expected_number = _number(expected)
+    if actual_number is not None and expected_number is not None:
+        tolerance = max(1e-6, abs(expected_number) * 1e-6)
+        return abs(actual_number - expected_number) <= tolerance
+    boolean_values = {"true": True, "false": False}
+    actual_boolean = (
+        boolean_values.get(actual.strip().lower())
+        if isinstance(actual, str) else actual if isinstance(actual, bool) else None
+    )
+    expected_boolean = (
+        boolean_values.get(expected.strip().lower())
+        if isinstance(expected, str) else expected if isinstance(expected, bool) else None
+    )
+    if actual_boolean is not None and expected_boolean is not None:
+        return actual_boolean == expected_boolean
+    return actual == expected
+
+
+def _json_value_equal(actual, expected) -> bool:
+    if isinstance(expected, dict):
+        if not isinstance(actual, dict):
+            return False
+        expected_keys = {key for key in expected if key.lower() not in _VOLATILE_JSON_KEYS}
+        actual_keys = {key for key in actual if key.lower() not in _VOLATILE_JSON_KEYS}
+        if actual_keys != expected_keys:
+            return False
+        return all(_json_value_equal(actual[key], expected[key]) for key in expected_keys)
+    if isinstance(expected, list):
+        if not isinstance(actual, list) or len(actual) != len(expected):
+            return False
+        unmatched = list(actual)
+        for expected_item in expected:
+            for index, actual_item in enumerate(unmatched):
+                if _json_value_equal(actual_item, expected_item):
+                    unmatched.pop(index)
+                    break
+            else:
+                return False
+        return not unmatched
+    return _scalar_equal(actual, expected)
+
+
+def _json_equal(path: Path, expected: bytes) -> bool:
+    try:
+        actual_value = json.loads(path.read_text(encoding="utf-8-sig"))
+        expected_value = json.loads(expected.decode("utf-8-sig"))
+        return _json_value_equal(actual_value, expected_value)
+    except Exception:
+        return False
+
+
+def _csv_rows(data: str):
+    rows = [
+        [cell.strip() for cell in row]
+        for row in csv.reader(io.StringIO(data.replace("\r\n", "\n").replace("\r", "\n")))
+        if any(cell.strip() for cell in row)
+    ]
+    if not rows or len(set(header.lower() for header in rows[0])) != len(rows[0]):
+        return None
+    headers = [header.lower() for header in rows[0]]
+    records = []
+    for row in rows[1:]:
+        if len(row) != len(headers):
+            return None
+        records.append({header: value for header, value in zip(headers, row)})
+    return set(headers), records
+
+
+def _csv_row_equal(actual, expected, headers) -> bool:
+    return all(_scalar_equal(actual[header], expected[header]) for header in headers)
+
+
+def _csv_equal(path: Path, expected: bytes) -> bool:
+    try:
+        actual = _csv_rows(path.read_text(encoding="utf-8-sig"))
+        target = _csv_rows(expected.decode("utf-8-sig"))
+        if actual is None or target is None or actual[0] != target[0]:
+            return False
+        headers = sorted(target[0])
+        unmatched = list(actual[1])
+        if len(unmatched) != len(target[1]):
+            return False
+        for expected_row in target[1]:
+            for index, actual_row in enumerate(unmatched):
+                if _csv_row_equal(actual_row, expected_row, headers):
+                    unmatched.pop(index)
+                    break
+            else:
+                return False
+        return not unmatched
+    except Exception:
+        return False
+
+
+def _local_name(name: str) -> str:
+    return name.rsplit("}", 1)[-1].lower()
+
+
+def _xml_value_equal(actual: str, expected: str) -> bool:
+    return _scalar_equal(" ".join(actual.split()), " ".join(expected.split()))
+
+
+def _xml_element_equal(actual, expected) -> bool:
+    if _local_name(actual.tag) != _local_name(expected.tag):
+        return False
+
+    actual_attrs = {
+        _local_name(key): str(value)
+        for key, value in actual.attrib.items()
+        if _local_name(key) not in _VOLATILE_XML_ATTRS
+    }
+    expected_attrs = {
+        _local_name(key): str(value)
+        for key, value in expected.attrib.items()
+        if _local_name(key) not in _VOLATILE_XML_ATTRS
+    }
+    if set(actual_attrs) != set(expected_attrs):
+        return False
+    if not all(_xml_value_equal(actual_attrs[key], expected_attrs[key]) for key in expected_attrs):
+        return False
+    if not _xml_value_equal(actual.text or "", expected.text or ""):
+        return False
+
+    unmatched = list(actual)
+    if len(unmatched) != len(expected):
+        return False
+    for expected_child in expected:
+        for index, actual_child in enumerate(unmatched):
+            if _xml_element_equal(actual_child, expected_child):
+                unmatched.pop(index)
+                break
+        else:
+            return False
+    return not unmatched
+
+
+def _xml_equal(path: Path, expected: bytes) -> bool:
+    try:
+        actual_root = ET.parse(path).getroot()
+        expected_root = ET.fromstring(expected)
+        return _xml_element_equal(actual_root, expected_root)
+    except Exception:
+        return False
+
+
+def _edif_parse(text: str):
+    tokens = re.findall(r'"(?:[^"\\]|\\.)*"|[()]|[^\s()]+', text)
+    index = 0
+
+    def parse_one():
+        nonlocal index
+        if index >= len(tokens):
+            raise ValueError("unexpected end of EDIF")
+        token = tokens[index]
+        index += 1
+        if token != "(":
+            if token == ")":
+                raise ValueError("unexpected close parenthesis")
+            return token
+        values = []
+        while index < len(tokens) and tokens[index] != ")":
+            values.append(parse_one())
+        if index >= len(tokens):
+            raise ValueError("unclosed EDIF expression")
+        index += 1
+        return values
+
+    value = parse_one()
+    if index != len(tokens):
+        raise ValueError("trailing EDIF tokens")
+    return value
+
+
+def _edif_canon(value):
+    if not isinstance(value, list):
+        return value
+    atoms = []
+    children = []
+    for item in value:
+        if isinstance(item, list):
+            canonical = _edif_canon(item)
+            head = canonical[0][0].lower() if canonical and canonical[0] else ""
+            if head != "status":
+                children.append(canonical)
+        else:
+            atoms.append(item)
+    return (tuple(atoms), tuple(sorted(children, key=repr)))
+
+
+def _edif_equal(path: Path, expected: bytes) -> bool:
+    try:
+        actual = _edif_parse(path.read_text(encoding="utf-8-sig", errors="ignore"))
+        target = _edif_parse(expected.decode("utf-8-sig", errors="ignore"))
+        return _edif_canon(actual) == _edif_canon(target)
+    except Exception:
+        return False
+
+
+def _gerber_valid(data: bytes) -> bool:
+    text = _text(data).upper()
+    return bool(re.search(r"%FS[^%]*\*%", text)) and "M02*" in text
+
+
+def _log_equal(actual: bytes, expected: bytes) -> bool:
+    actual_text = _text(actual)
+    expected_text = _text(expected)
+    critical = set(re.findall(r"\b[A-Z][A-Z0-9_.-]+\b|\b\d+(?:-\d+)?\b|\b[\w.-]+\.[A-Za-z0-9]+\b", expected_text))
+    lowered = actual_text.lower()
+    if not all(token.lower() in lowered for token in critical):
+        return False
+    if re.search(r"\bno\s+fatal\b", expected_text, re.IGNORECASE):
+        return bool(re.search(r"\bno\s+fatal\b", actual_text, re.IGNORECASE))
+    return True
+
+
+def _drill_signature(data: bytes):
+    text = _text(data).upper()
+    units = "INCH" if "INCH" in text else "METRIC" if "METRIC" in text else None
+    tools = sorted((tool, format(float(diameter), ".12g")) for tool, diameter in re.findall(r"T(\d+)C([0-9.]+)", text))
+    coordinates = sorted(re.findall(r"X[-+]?\d+Y[-+]?\d+", text))
+    return units, tools, coordinates
+
+
+def _content_equal(name: str, actual: bytes, expected: bytes) -> bool:
+    suffix = Path(name).suffix.lower()
+    if suffix in {".gbr", ".gtl", ".gbl", ".gts", ".gbs", ".gto", ".gbo", ".gm1", ".gml"}:
+        return _gerber_valid(actual)
+    if suffix == ".log":
+        return _log_equal(actual, expected)
+    if suffix == ".drl":
+        return _drill_signature(actual) == _drill_signature(expected)
+    if suffix in {".xml", ".ipc2581"}:
+        try:
+            return _xml_element_equal(ET.fromstring(actual), ET.fromstring(expected))
+        except Exception:
+            return False
+    return _text(actual) == _text(expected)
+
+
+def _zip_equal(path: Path, expected: bytes) -> bool:
+    try:
+        with zipfile.ZipFile(path) as actual_zip, zipfile.ZipFile(io.BytesIO(expected)) as expected_zip:
+            actual_names = {Path(name).name.lower(): name for name in actual_zip.namelist() if not name.endswith("/")}
+            expected_names = {Path(name).name.lower(): name for name in expected_zip.namelist() if not name.endswith("/")}
+            if set(actual_names) != set(expected_names):
+                return False
+            return all(
+                _content_equal(
+                    expected_names[key],
+                    actual_zip.read(actual_names[key]),
+                    expected_zip.read(expected_names[key]),
+                )
+                for key in expected_names
+            )
+    except Exception:
+        return False
+
+
+def _bytes_equal(path: Path, expected: bytes) -> bool:
+    try:
+        suffix = path.suffix.lower()
+        if suffix == ".json":
+            return _json_equal(path, expected)
+        if suffix == ".csv":
+            return _csv_equal(path, expected)
+        if suffix in {".ipc2581", ".xml"}:
+            return _xml_equal(path, expected)
+        if suffix == ".zip":
+            return _zip_equal(path, expected)
+        if suffix == ".edif":
+            return _edif_equal(path, expected)
+        return _content_equal(path.name, path.read_bytes(), expected)
+    except Exception:
+        return False
+
+
+def _key(value) -> str:
+    return re.sub(r"[^a-z0-9]+", "", str(value).casefold())
+
+
+def _variant_dict(data):
+    if isinstance(data, dict):
+        for key, value in data.items():
+            if _key(key) in {"variants", "variantmanifest"} and isinstance(value, dict):
+                return value
+        return data
+    return None
+
+
+def _field(entry, *names):
+    if not isinstance(entry, dict):
+        return None
+    normalized = {_key(key): value for key, value in entry.items()}
+    return next((normalized.get(_key(name)) for name in names if _key(name) in normalized), None)
+
+
+def _manifest_valid(path: Path, spec_path: Path) -> bool:
+    actual = _variant_dict(json.loads(path.read_text(encoding="utf-8-sig")))
+    spec = _variant_dict(json.loads(spec_path.read_text(encoding="utf-8-sig")))
+    if not isinstance(actual, dict) or not isinstance(spec, dict):
+        return False
+    actual_by_name = {_key(name): entry for name, entry in actual.items()}
+    if set(actual_by_name) != {_key(name) for name in spec}:
+        return False
+    for name, expected_entry in spec.items():
+        entry = actual_by_name[_key(name)]
+        dnp = _field(entry, "dnp", "not_fitted", "do_not_populate", "excluded")
+        if not isinstance(dnp, list) or {_key(ref) for ref in dnp} != {_key(ref) for ref in expected_entry.get("dnp", [])}:
+            return False
+        overrides = _field(entry, "overrides", "parameter_overrides", "parameters", "component_overrides")
+        if not isinstance(overrides, dict) or not _json_value_equal(overrides, expected_entry.get("overrides", {})):
+            return False
+    return True
+
+
+def _fitted(value):
+    normalized = _key(value)
+    if normalized in {"yes", "y", "true", "1", "fitted", "installed", "populate", "populated"}:
+        return True
+    if normalized in {"no", "n", "false", "0", "dnp", "notfitted", "notinstalled"}:
+        return False
+    return None
+
+
+def _bom_preview_valid(path: Path, source_path: Path, spec_path: Path) -> bool:
+    source = json.loads(source_path.read_text(encoding="utf-8-sig"))
+    values = {str(item["ref"]).upper(): str(item.get("value", "")) for item in source.get("components", [])}
+    spec = json.loads(spec_path.read_text(encoding="utf-8-sig"))
+    with path.open("r", encoding="utf-8-sig", newline="") as handle:
+        reader = csv.DictReader(handle)
+        headers = {_key(name): name for name in (reader.fieldnames or [])}
+        variant_header = next((headers[name] for name in ("variant", "variantname") if name in headers), None)
+        ref_header = next((headers[name] for name in ("reference", "ref", "refdes", "designator") if name in headers), None)
+        fitted_header = next((headers[name] for name in ("fitted", "installed", "populate", "state") if name in headers), None)
+        value_header = next((headers[name] for name in ("value", "componentvalue", "partvalue") if name in headers), None)
+        if None in (variant_header, ref_header, fitted_header, value_header):
+            return False
+        rows = list(reader)
+    expected_count = len(values) * len(spec)
+    if len(rows) != expected_count:
+        return False
+    seen = set()
+    spec_by_name = {_key(name): entry for name, entry in spec.items()}
+    for row in rows:
+        variant = _key(row[variant_header])
+        ref = str(row[ref_header]).strip().upper()
+        key = (variant, ref)
+        if variant not in spec_by_name or ref not in values or key in seen:
+            return False
+        seen.add(key)
+        expected_fitted = ref not in {str(item).upper() for item in spec_by_name[variant].get("dnp", [])}
+        if _fitted(row[fitted_header]) is not expected_fitted or _key(row[value_header]) != _key(values[ref]):
+            return False
+    return len(seen) == expected_count
+
+
+def evaluate() -> bool:
+    desktop = _desktop()
+    manifest = desktop / "result" / "variant_manifest.json"
+    preview = desktop / "result" / "variant_bom_preview.csv"
+    try:
+        return (
+            manifest.is_file() and manifest.stat().st_size > 0 and
+            preview.is_file() and preview.stat().st_size > 0 and
+            _manifest_valid(manifest, desktop / "variants.json") and
+            _bom_preview_valid(preview, desktop / "base_project.schematic.json", desktop / "variants.json")
+        )
+    except Exception:
+        return False
+
+
+if __name__ == "__main__":
+    ok = evaluate()
+    print("True" if ok else "False")
+    sys.exit(0 if ok else 1)

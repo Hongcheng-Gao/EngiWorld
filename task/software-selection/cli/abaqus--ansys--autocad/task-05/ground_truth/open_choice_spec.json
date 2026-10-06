@@ -1,0 +1,79 @@
+{
+  "task_id": "c-open-abaqus-ansys-autocad-task-05-windows",
+  "open_choice_id": "cae-open-choice-005",
+  "source_task": "task/task-c/abaqus/task-05",
+  "original_software": "abaqus",
+  "alternative_software": "ansys",
+  "distractor_software": "autocad",
+  "interface": "cli",
+  "domain": "solid_block_tension",
+  "analysis_kind": "static_structural",
+  "metrics": [
+    "end_displacement",
+    "max_stress"
+  ],
+  "expected_result_fields": [
+    "U",
+    "RF",
+    "S"
+  ],
+  "require_metrics_json": true,
+  "visible_goal": "Analyze a rectangular aluminum block under axial tensile loading; report end displacement and stress.",
+  "selection_reason": "Linear elastic solid block tension is a low-risk cross-solver replacement task.",
+  "artifact_hint": {
+    "ground_truth_files": [
+      "Job-BlockTension.cae",
+      "Job-BlockTension.odb"
+    ],
+    "abaqus_stems": [
+      "Job-BlockTension"
+    ],
+    "ansys_db_files": [
+      "Job-BlockTension.db"
+    ],
+    "ansys_result_files": [
+      "Job-BlockTension.rst"
+    ]
+  },
+  "span_hint": {
+    "x": 120.0,
+    "y": 12.0,
+    "z": 8.0
+  },
+  "bounds_hint": {
+    "x": [
+      0.0,
+      120.0
+    ],
+    "y": [
+      0.0,
+      12.0
+    ],
+    "z": [
+      0.0,
+      8.0
+    ]
+  },
+  "load_definition": {
+    "face": "complete X=120 end face",
+    "direction": "global +X",
+    "resultant_n": 800.0,
+    "traction_mpa": 8.333333333333334,
+    "rounded_instruction_value_mpa": 8.33
+  },
+  "metric_definitions": {
+    "end_displacement": "Arithmetic mean final global U1 in mm over every node on the complete undeformed X=120 end face.",
+    "max_stress": "Maximum final Mises stress in MPa over the complete native solid result: all stored Abaqus integration-point S values or the complete ANSYS native nodal-extrapolated equivalent-stress field."
+  },
+  "bounds": {
+    "end_displacement": [
+      0.01,
+      0.02
+    ],
+    "max_stress": [
+      7.5,
+      16.0
+    ]
+  },
+  "bounds_semantics": "open intervals used only as broad physical sanity filters; native-result agreement and the task contract determine acceptance"
+}

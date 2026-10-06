@@ -1,0 +1,52 @@
+{
+  "id": "single-software--cli--ansys--task-14--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Complete a harmonic response analysis using ANSYS Mechanical APDL via the Command Line Interface (CLI). To start ANSYS Workbench, run `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe -g` (version/path may differ on your machine). On this machine, launch ANSYS Workbench with `C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe`.\n\nPhysical problem: A cantilever beam is subjected to a harmonic force at its free end. Coordinate system and geometry: - Use the global Cartesian coordinate system. - Model the beam as a line body using BEAM188. - The beam reference line is along the global X direction. - The fixed end is at X = 0 mm. - The free end is at X = 500 mm. - The beam cross section is rectangular: - Width = 10 mm - Height = 10 mm Model parameters: - Beam length: 500 mm - Element type: BEAM188 - Section type: rectangular beam section - Section size: 10 mm × 10 mm - Mesh: 20 uniform divisions along the beam length - Material: Structural Steel - Use a consistent N-mm-s unit system: - Young's modulus E = 210000 MPa - Poisson's ratio ν = 0.3 - Density ρ = 7.85e-9 tonne/mm³, equivalent to 7850 kg/m³ Boundary conditions and load: - Fixed end at X = 0 mm: - Fully constrain UX, UY, UZ, ROTX, ROTY, and ROTZ. - Free end at X = 500 mm: - Apply a harmonic force with magnitude 10 N. - Force direction: negative global Y direction. - Excitation frequency: 5 Hz. - Use no damping, or use a damping ratio smaller than 0.001. Analysis type: - Harmonic response analysis. - Use the Full method. - Solve a single frequency point at 5 Hz. - Save the harmonic response result. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as: C:\\Users\\user\\Desktop\\apdl_harmonic.db - Save the structural result file as: C:\\Users\\user\\Desktop\\apdl_harmonic.rst",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\apdl_harmonic.db",
+    "C:\\Users\\user\\Desktop\\apdl_harmonic.rst"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

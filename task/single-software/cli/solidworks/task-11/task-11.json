@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--solidworks--task-11--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Work from C:\\Users\\User\\Desktop\\cli_031_ribbed_enclosure.step in SolidWorks. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). On this machine, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_031_ribbed_enclosure.step`.\n\nUsing SolidWorks command-line automation, use that input file, an open-top enclosure base of outer size 110 x 75 x 22 mm with 3 mm wall thickness and a 3 mm bottom thickness. Add a grid of internal bottom ribs: three ribs along X at Y=-18, 0, and 18, and two ribs along Y at X=-18 and 18. Each rib is 2.5 mm wide and 6 mm high from Z=3 to Z=9, and each rib end remains 4 mm away from the inner wall. Merge the ribs into the same solid as the enclosure. Export C:\\Users\\User\\Desktop\\cli_031_ribbed_enclosure_out.step while preserving the outer bounding box.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/cli_031_ribbed_enclosure.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_031_ribbed_enclosure.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_031_ribbed_enclosure_out.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

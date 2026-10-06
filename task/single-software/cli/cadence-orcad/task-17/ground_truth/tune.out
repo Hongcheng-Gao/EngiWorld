@@ -1,0 +1,510 @@
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+* Goal: use native PSpice transient analysis to find the stepped
+* resistor pair whose V(OUT) at 5 us is closest to the 3.30 V target.
+
+.PARAM CASE = 1
+.PARAM R_GAIN = {TABLE(CASE,
++ 1,8.2k,  2,8.2k,  3,8.2k,  4,8.2k,  5,8.2k,
++ 6,9.5k,  7,9.5k,  8,9.5k,  9,9.5k, 10,9.5k,
++11,11k,  12,11k,  13,11k,  14,11k, 15,11k)}
+.PARAM R_FB = {TABLE(CASE,
++ 1,18k,  2,20k,  3,22k,  4,24k,  5,27k,
++ 6,18k,  7,20k,  8,22k,  9,24k, 10,27k,
++11,18k, 12,20k, 13,22k, 14,24k, 15,27k)}
+
+VIN  IN  0  PULSE(0 1 0 100n 100n 10m 20m)
+E1   OUT 0 LAPLACE {V(IN,FB)} {1e5/((1+s/1.2566e4)*(1+s/1.2566e6))}
+RFB  OUT FB {R_FB}
+RG   FB  0  {R_GAIN}
+RL   OUT 0  10k
+
+.TRAN 100n 2m 0 100n
+.STEP PARAM CASE LIST 1 2 3 4 5 6 7 8 9 10 11 12 13 14 15
+.MEAS TRAN RGAINVAL PARAM {R_GAIN}
+.MEAS TRAN RFBVAL   PARAM {R_FB}
+.MEAS TRAN V_AT_5US FIND V(OUT) AT=5u
+.PROBE
+
+.END
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    1     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    2     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    3     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    4     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    5     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    6     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    7     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    8     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    9     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =   10    
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =   11    
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =   12    
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =   13    
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =   14    
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =   15    
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   FB)    0.0000  (   IN)    0.0000  (  OUT)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+
+          JOB CONCLUDED
+
+**** 04/27/26 22:18:46 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native dynamic tuning task.
+
+
+ ****     JOB STATISTICS SUMMARY
+
+ ****     CURRENT STEP                     PARAM CASE =   15    
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =        2.11
+

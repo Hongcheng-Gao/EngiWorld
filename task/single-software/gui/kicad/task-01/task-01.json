@@ -1,0 +1,109 @@
+{
+  "id": "single-software--gui--kicad--task-01--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Power-Tree Net Classes with IPC-2152 Widths The files `board.kicad_pro` and `board.kicad_pcb` form a KiCad 10.0.2 board project for a small power-distribution worksheet. Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. The project still only has the default net class, and the rail segments on the board still use generic widths. The board carries the power nets +12V, +5V, +3V3, +1V8, and GND. The expected steady-state current for each rail is given in `/home/user/Desktop/netlist.csv`; the relevant stackup constraints and IPC-2152 reference widths are given in `/home/user/Desktop/stackup.txt`. Set up per-rail net classes and matching patterns for the five power nets, then update the five routed rail segments so each one uses the intended width for its rail. Keep the existing 'Default' class untouched. Requirements: 1. board.kicad_pro: net_settings.classes must contain six entries in total: the original 'Default' class, plus one class each named exactly '+12V', '+5V', '+3V3', '+1V8', and 'GND'. 2. Each new class's 'track_width' must match the IPC-2152 reference listed in /home/user/Desktop/stackup.txt to within the stated tolerance (5 % of value, minimum 0.02 mm absolute). 3. Each new class must set 'clearance' to at least 0.2 mm and must include a 'via_diameter' and 'via_drill' consistent with KiCad 10.0.2 defaults (non-zero, via_diameter > via_drill). 4. net_settings.netclass_patterns must contain exactly five entries, each mapping the rail's net name (as a plain pattern, i.e. '+12V', '+5V', '+3V3', '+1V8', 'GND') to its matching class. 5. board.kicad_pcb must still contain the five labeled power-net segments, and each segment's width must match its rail's intended class width. 6. The project JSON must remain valid KiCad-project JSON; no extra top-level keys are added or removed. Save the finished project files as `/home/user/Desktop/board.kicad_pro` and `/home/user/Desktop/board.kicad_pcb`.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://docs.kicad.org/10.0/en/eeschema/eeschema.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/board.kicad_pro",
+            "path": "/home/user/Desktop/board.kicad_pro"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/netlist.csv",
+            "path": "/home/user/Desktop/netlist.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/stackup.txt",
+            "path": "/home/user/Desktop/stackup.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "pcbnew",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/board.kicad_pcb",
+    "/home/user/Desktop/board.kicad_pro"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

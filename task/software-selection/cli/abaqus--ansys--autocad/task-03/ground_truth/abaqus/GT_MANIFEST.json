@@ -1,0 +1,124 @@
+{
+  "status": "verified_real_snapshot",
+  "task": "task-03",
+  "task_id": "c-open-abaqus-ansys-autocad-task-03-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "solver": "abaqus",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "analysis": "3D deformable shell static structural",
+  "model": "Model-FlangeHole",
+  "step": "Step-HoleTension",
+  "job": "Job-FlangeHole",
+  "source_instruction_sha256": "67bdb9ae7d7f2582303a256ee481c05ebf2d159de0df41782139d68a2723fb24",
+  "task_definition_sha256": "874f1654c7c5540fac793148dbc8f31c567107104dda7daeddb8db78b296ff88",
+  "open_choice_spec_sha256": "4779389c6a36fa1b0c15ae69bfdde3f008712eee7f1db46eb530e7ccec16ab0c",
+  "evaluator_sha256": "c7059d2b5c196b667add821308bdfa7522bfd8e5432fa3355016fb308bb4f23a",
+  "generated_on": "2026-08-12",
+  "provenance": {
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip_from_mapping": "10.0.6.47",
+    "access": "OSWorld REST through the supplied SSH tunnel http://127.0.0.1:15047",
+    "public_ip_from_mapping": "115.190.150.137",
+    "generator": "gt_task_03_abaqus.py",
+    "generation_evidence": "../validation/generation/abaqus_gt_generation.json",
+    "native_completion_evidence": "native_audit.json odb_job_status=JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "synthetic_or_offline_solver_data": false
+  },
+  "metric_definitions": {
+    "max_mises": "MPa; maximum final-frame integration-point S.mises over the complete shell mesh and every stored section point",
+    "stress_concentration_proxy": "dimensionless; max_mises / 8.0",
+    "edge_displacement": "mm; final mean U1 on the right loaded edge minus final mean U1 on the left loaded edge; positive denotes opening"
+  },
+  "metrics": {
+    "max_mises": 16.02847671508789,
+    "stress_concentration_proxy": 2.0035595893859863,
+    "edge_displacement": 0.0046216110658133394,
+    "left_mean_u1": -0.00003732794488314539,
+    "right_mean_u1": 0.0045842831209301944
+  },
+  "model_audit": {
+    "geometry_mm": {
+      "x_bounds": [0.0, 120.0],
+      "y_bounds": [0.0, 240.0],
+      "hole_center": [60.0, 120.0],
+      "hole_radius": 6.0
+    },
+    "material": "Steel",
+    "youngs_modulus_mpa": 210000.0,
+    "poissons_ratio": 0.3,
+    "shell_thickness_mm": 1.0,
+    "through_thickness_integration_points": 5,
+    "dependent_instance": true,
+    "element_types": ["S3", "S4R"],
+    "nodes": 638,
+    "elements": 605,
+    "stress_element_coverage": 605,
+    "stored_section_points": [1, 2, 3, 4, 5],
+    "global_seed_mm": 10.0,
+    "hole_edge_seed_mm": 2.4,
+    "left_resultant_n": -1920.0,
+    "right_resultant_n": 1920.0,
+    "constraint_signature": "BL U1/U2/U3; BR U2/U3; TL U3",
+    "odb_job_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY"
+  },
+  "files": [
+    {
+      "file": "Job-FlangeHole.cae",
+      "size": 69632,
+      "sha256": "c0fdebe87133363c9b554fa0dcbe16600becfc9a341283f6f64affc1fbadac28"
+    },
+    {
+      "file": "Job-FlangeHole.odb",
+      "size": 560260,
+      "sha256": "712647582732256db40aa17307aa99f3b1666713bc93981615ea26ae6acb54c0"
+    },
+    {
+      "file": "metrics.json",
+      "size": 138,
+      "sha256": "3112acca8f7bd429e5bf7ce065ca7787420b79b9cc5984cdc6339562a22201b8"
+    },
+    {
+      "file": "gt_task_03_abaqus.py",
+      "size": 15054,
+      "sha256": "afa0942eafbbb1b0b90e85541cb036303030eb32fd745d50b2c05a2d61a7adeb"
+    },
+    {
+      "file": "Job-FlangeHole.inp",
+      "size": 51432,
+      "sha256": "49b8b73501824182220ba8f0ecac561bb9d0e85e399e0f7d70157ab9d3a82b50"
+    },
+    {
+      "file": "Job-FlangeHole.log",
+      "size": 504,
+      "sha256": "0fe9e0188133536d347f2eadcadd2a4f2b222a305ff2e35c33d9eaa3c309acf0"
+    },
+    {
+      "file": "Job-FlangeHole.sta",
+      "size": 460,
+      "sha256": "6f024abcd6389e679f0f431083b2ba8b881db91c23a48a1e15a42397c1737b67"
+    },
+    {
+      "file": "native_audit.json",
+      "size": 20072,
+      "sha256": "3174541d54fbc7eefccf3664d8b8af117d13417ae53945e5e1f8e0f990d9e7dd"
+    }
+  ],
+  "validation": {
+    "matrix": "../validation/validation_matrix.json",
+    "formal_ground_truth_final": "../validation/cases/final_formal_abaqus_fixed_manifest_c705_v1/validation_result.json",
+    "reasonable_equivalent": "../validation/cases/equivalent_abaqus_95_22_c705_v1/validation_result.json",
+    "local_audit": "../validation/local_audit.json",
+    "all_cases_restored_remote_baseline": true
+  },
+  "final_instance_cleanup": {
+    "status": "verified_clean",
+    "evidence": "../validation/final_cleanup.json",
+    "cleanup_script_sha256": "94b5430f9e7272c3e230bbc8ba74a7db0ab9cc9231d730604ad3e673a9d9b5fb"
+  },
+  "official_sources": [
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-shelledgeloadpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-homogeneousshellsectionpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-fieldoutputrequestpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEOUTRefMap/simaout-c-dboutput-elementoutput.htm"
+  ]
+}

@@ -1,0 +1,69 @@
+{
+  "status": "native_solidworks_abaqus_rebuild_verified",
+  "snapshot": "Solidworks-Abaqus",
+  "task": "task/multi/gui-2-solidworks-abaqus/task-02",
+  "title": "Central Hole Tension Coupon",
+  "chain": "SOLIDWORKS 2025 SP0 -> Abaqus Learning Edition 2025",
+  "generated_at": "2026-08-12T13:56:07+08:00",
+  "no_init_file": true,
+  "software": {
+    "solidworks": {
+      "product": "SOLIDWORKS 2025 SP0",
+      "file_version": "33.0.0.5050",
+      "com_revision": "33.0.0"
+    },
+    "abaqus": {
+      "product": "Abaqus Learning Edition 2025",
+      "sequence": "2025_03_14-21.12.51 RELr427 199052"
+    }
+  },
+  "solidworks_stage": {
+    "start_state": "new blank part; document count before creation was 0",
+    "modeling": "native center rectangle 120 x 30 mm plus concentric R6 sketch loop, 3 mm Boss-Extrude",
+    "units": "millimeters",
+    "solid_count": 1,
+    "body_bbox_mm": [-60.0, -15.0, 0.0, 60.0, 15.0, 3.0],
+    "body_volume_mm3": 10460.707993,
+    "native_body_name": "EW_SW_ABQ_02_SOLIDWORKS_TO_ABAQUS_CENTER_HOLE_COUPON",
+    "chain_markers_in_step_data_entities": ["EW_SW_ABQ_02", "SOLIDWORKS_TO_ABAQUS"]
+  },
+  "abaqus_stage": {
+    "model_name": "Model-HoleTension",
+    "model_description": "EW_SW_ABQ_02 IMPORTED_FROM_stage1_geometry.step",
+    "part_name": "Coupon_EW_SW_ABQ_02_IMPORTED_FROM_stage1_geometry_step",
+    "chain_set": "CHAIN_EW_SW_ABQ_02_IMPORTED_FROM_STAGE1_GEOMETRY_STEP",
+    "material": {"name": "Steel", "E_MPa": 210000.0, "nu": 0.3},
+    "step_name": "Step-Tension",
+    "boundary_condition": "BC-LeftGrip",
+    "load": {"name": "Load-RightTension", "kind": "ConcentratedForce", "CF1_N": 1000.0},
+    "mesh": {"element_type": "C3D8R", "elements": 228, "nodes": 532, "global_seed_mm": 5.0, "hole_seed_mm": 2.5},
+    "native_termination": {
+      "sta": "THE ANALYSIS HAS COMPLETED SUCCESSFULLY",
+      "log": "Abaqus JOB Job-HoleTension COMPLETED"
+    },
+    "odb": {
+      "frames": 2,
+      "fields": ["CF", "CM", "E", "RF", "RM", "S", "U", "UR"],
+      "left_grip_reaction_N": [-999.9999923706055, -3.5762786865234375e-7, 0.0],
+      "left_grip_reaction_magnitude_N": 999.9999923706055,
+      "max_displacement_mm": 0.007053358064514228,
+      "max_mises_MPa": 26.303852081298828
+    }
+  },
+  "generated_files": [
+    {"file": "stage1_geometry.step", "size": 18771, "sha256": "40AA9EFF974E0045F7229F523EDC1AC7FD203ACF6B5CD5A8D62CA410CBADA395"},
+    {"file": "Job-HoleTension.cae", "size": 73728, "sha256": "0551ED82148EA1A4BF78D12237764623B819270B0BF1C778DA52CBFB80B40CBC"},
+    {"file": "Job-HoleTension.odb", "size": 382224, "sha256": "AF4F35435572C0D3165B8F8CCB5CE03EC7FE552DDFF9B3560B9D5BC6D54A095A"}
+  ],
+  "verification": {
+    "positive": "strengthened evaluator returned True against the restored force-load candidate",
+    "reasonable_equivalent": "native displacement boundary Load-RightTension with U1=0.00703763822093606 mm produced 1000.00025177 N reaction and returned True",
+    "negative": [
+      "old STEP with chain markers only in a header comment returned False",
+      "old ODB with incorrect reaction returned False",
+      "corrupt ODB returned False",
+      "missing CAE returned False",
+      "unexpected extra STEP deliverable returned False"
+    ]
+  }
+}

@@ -1,0 +1,52 @@
+{
+  "id": "single-software--cli--ansys--task-16--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Complete a 2D laminar channel-flow analysis using ANSYS Fluent via the Command Line Interface (CLI). To start ANSYS Workbench, run `C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe -g` (version/path may differ on your machine).\n\nPhysical problem: Two-dimensional laminar Poiseuille flow in a straight rectangular channel. Coordinate system and geometry: - Use a 2D planar model. - Use SI units in Fluent. - The channel length is along the global X direction. - The channel height is along the global Y direction. - The channel length is 1000 mm, equivalent to 1.000 m. - The channel height is 2 mm, equivalent to 0.002 m. - The computational domain should occupy: - 0 ≤ X ≤ 1.000 m - 0 ≤ Y ≤ 0.002 m - The inlet is the boundary at X = 0 m. - The outlet is the boundary at X = 1.000 m. - The bottom wall is the boundary at Y = 0 m. - The top wall is the boundary at Y = 0.002 m. Boundary zone names: - Name the inlet boundary: inlet - Name the outlet boundary: outlet - Name the bottom wall boundary: bottom - Name the top wall boundary: top Model parameters: - Fluid: water - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Structured quadrilateral mesh - Use sufficient resolution across the channel height to resolve the laminar velocity profile. Boundary conditions: - Inlet: - Velocity inlet - Uniform X-velocity = 0.1 m/s - Y-velocity = 0 m/s - Outlet: - Pressure outlet - Gauge pressure = 0 Pa - Top wall: - Stationary no-slip wall - Bottom wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialize the solution and iterate until convergence. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\poiseuille_2d.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\poiseuille_2d.dat",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\poiseuille_2d.cas",
+    "C:\\Users\\user\\Desktop\\poiseuille_2d.dat"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

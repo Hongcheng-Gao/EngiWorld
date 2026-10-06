@@ -1,0 +1,89 @@
+{
+  "id": "opt-fenics-02",
+  "title": "FEniCS conductive heat-path thermal-resistance optimization",
+  "kind": "heat",
+  "interface": "cli",
+  "primary_software": "fenics",
+  "objective": "Minimize thermal resistance from a fixed heat source to a fixed cold boundary.",
+  "objective_direction": "minimize",
+  "metric_name": "thermal_resistance",
+  "metric_units": "K_per_W_normalized",
+  "design_file": "conductivity_mask.csv",
+  "result_file": "temperature.xdmf",
+  "required_outputs": [
+    "conductivity_mask.csv",
+    "solve_submission.py",
+    "temperature.xdmf"
+  ],
+  "domain": {
+    "width": 1.0,
+    "height": 1.0,
+    "unit": "m"
+  },
+  "design_grid": {
+    "rows": 20,
+    "cols": 20,
+    "row_axis": "y",
+    "col_axis": "x",
+    "row_0_location": "bottom edge",
+    "col_0_location": "left cold boundary"
+  },
+  "solver_mesh": {
+    "nx": 40,
+    "ny": 40,
+    "cell_type": "triangle"
+  },
+  "material": {
+    "base_conductivity": 1.0,
+    "high_conductivity": 25.0
+  },
+  "thermal": {
+    "cold_boundary": "x = 0",
+    "cold_boundary_temperature": 0.0,
+    "insulated_boundaries": [
+      "y = 0",
+      "y = height",
+      "x = width except heat patch"
+    ],
+    "heat_source_cell": [
+      10,
+      18
+    ],
+    "heat_power": 1.0
+  },
+  "design_budget": {
+    "type": "high_conductivity_material_budget",
+    "max_fraction": 0.3,
+    "threshold": 0.5
+  },
+  "constraints": {
+    "mask_min": 0.0,
+    "mask_max": 1.0
+  },
+  "calibration_status": "calibrated_on_snapshot",
+  "baseline": {
+    "file": "baseline_conductivity_mask.csv",
+    "artifact": "init_file/baseline_conductivity_mask.csv",
+    "metric_value": 1.141173289564719,
+    "metric_units": "K_per_W_normalized",
+    "metric_source": "computed_dynamically_by_eval_on_fenics_vm"
+  },
+  "invalid_sample": {
+    "artifact": "ground_truth/invalid/conductivity_mask.csv"
+  },
+  "reference": {
+    "artifact": "ground_truth/reference/conductivity_mask.csv",
+    "metric_value": 0.1401870954686407,
+    "normalized_thermal_resistance_improvement": 0.8771552955624183,
+    "native_outputs": [
+      "ground_truth/reference/temperature.xdmf",
+      "ground_truth/reference/temperature.h5"
+    ]
+  },
+  "native_environment": {
+    "snapshot": "FEniCS",
+    "dolfin": "2019.1.0",
+    "python": "3.10.20",
+    "artifact_format": "DOLFIN XDMF checkpoint with HDF5 companion"
+  }
+}

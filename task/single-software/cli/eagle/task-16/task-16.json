@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--eagle--task-16--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Merge `/home/user/Desktop/partA.sch` and `/home/user/Desktop/partB.sch` into a single-sheet schematic and save the result as `/home/user/Desktop/merged.sch`. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nRequirements: 1. `/home/user/Desktop/merged.sch` must parse as well-formed XML. 2. It must contain exactly 4 `<part>` entries. 3. All 4 refdes must be unique. 4. The parts from `/home/user/Desktop/partA.sch` must remain present as `R1` with value `10k` and `R2` with value `4.7k`. 5. The merged schematic must also contain one part with value `1k` and one part with value `100n`. 6. The `R1` coming from `/home/user/Desktop/partB.sch` must end up with a refdes other than `R1`.",
+  "source": "https://forums.autodesk.com/t5/eagle-forum/merge-multiple-schematic-sheets-eagle/td-p/8081048",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/partA.sch",
+            "path": "/home/user/Desktop/partA.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/partB.sch",
+            "path": "/home/user/Desktop/partB.sch"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/merged.sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

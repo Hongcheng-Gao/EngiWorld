@@ -1,0 +1,84 @@
+{
+  "id": "software-selection--gui--abaqus--ansys--autocad--task-04--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "From ANSYS, Abaqus, and AutoCAD, select an appropriate tool for the task. Launch Abaqus CAE or AutoCAD 2024 from their desktop shortcuts; ANSYS MAPDL is available at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Use the selected tool to perform a constrained thermal stress analysis (Case A). Use the N-mm-MPa unit system. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a 10 mm x 10 mm rectangle in the Y-Z plane (Y from 0 to 10, Z from 0 to 10) and extrude along the global X-axis to a length of 100 mm. Material and Section: Define a material named Steel with Young's modulus E = 210000 MPa, Poisson's ratio nu = 0.3, and thermal expansion coefficient = 1.2e-5 /K. Create a Solid Homogeneous section using Steel and assign it to the entire bar. Assembly: Create one dependent instance of the bar. Analysis Step: Create a Static, General step named Step-Thermal-A. Loads and Boundary Conditions: Apply a predefined temperature field of 20 degC to the whole model in the Initial step. Constrain both end faces with U1 = U2 = U3 = 0: the left end face at X = 0 and the right end face at X = 100 mm. In Step-Thermal-A, apply a predefined temperature field of 120 degC to the whole model. Discretization: Mesh the bar with a global seed size of 5 mm. Assign the element type appropriate three-dimensional solid element formulation and generate the mesh. Job Execution: Create a job named Job-ThermalStress-A, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: save the native model artifact and the native solver result artifact into `C:\\Users\\user\\Desktop\\result`. Save only the files from the selected tool. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-v/abaqus/task-14",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
+          "-g"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk\""
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

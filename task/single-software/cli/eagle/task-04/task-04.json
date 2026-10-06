@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--eagle--task-04--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The files `/home/user/Desktop/proj.sch` and `/home/user/Desktop/proj.brd` are the schematic and board to compare. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nGenerate a board/schematic consistency report and save it as `/home/user/Desktop/consistency_report.md`. Requirements:\n1. `/home/user/Desktop/consistency_report.md` must exist and be non-empty.\n2. The report must contain a `parts_shared` section listing the shared parts.\n3. The report must contain a `parts_only_in_sch` section listing the schematic-only parts.\n4. The report must contain a `parts_only_in_brd` section listing the board-only parts.\n5. The report must contain `value_mismatch` and `package_mismatch` sections, and both must be empty.\n6. No shared part may appear under either mismatch section.",
+  "source": "https://siytek.com/eagle-board-and-schematic-are-not-consistent-how-to-fix/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/proj.brd",
+            "path": "/home/user/Desktop/proj.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/proj.sch",
+            "path": "/home/user/Desktop/proj.sch"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/consistency_report.md"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,66 @@
+{
+  "id": "quantitative-design--cli--fenics--task-03--ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "Working with FEniCS from the command line, design a conductive network. Run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `conductive_network_opt_base.py`. Read /home/user/Desktop/problem_spec.json for the domain, design grid, solver mesh, electrode locations, voltages, keepout cells, material conductivities, and conductive material budget. Read /home/user/Desktop/baseline_conductive_mask.csv as the initial feasible conductive mask. You may use /home/user/Desktop/conductive_network_opt_base.py as the starter workflow. Create /home/user/Desktop/conductive_mask.csv, /home/user/Desktop/solve_submission.py, and /home/user/Desktop/potential.xdmf; if the XDMF writer creates a companion .h5 file, keep it in the same directory. The mask CSV must be 20 by 20, all values must be in [0, 1], the conductive material budget must not exceed 0.25 of the design cells, the keepout cells must remain empty, and the two electrodes must stay connected through conductive cells. Keep the domain, electrode locations, voltages, keepout region, material constants, and material budget from the problem specification unchanged.",
+  "source": "design-generated quantified CAE optimization task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/conductive_network_opt_base.py",
+            "path": "/home/user/Desktop/conductive_network_opt_base.py"
+          },
+          {
+            "local_path": "task-03/init_file/problem_spec.json",
+            "path": "/home/user/Desktop/problem_spec.json"
+          },
+          {
+            "local_path": "task-03/init_file/baseline_conductive_mask.csv",
+            "path": "/home/user/Desktop/baseline_conductive_mask.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/conductive_mask.csv",
+    "/home/user/Desktop/potential.xdmf",
+    "/home/user/Desktop/solve_submission.py"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.79681,
+      "direction": "maximize",
+      "name": "normalized effective-conductance improvement",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

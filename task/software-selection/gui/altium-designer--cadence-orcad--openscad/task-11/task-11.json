@@ -1,0 +1,90 @@
+{
+  "id": "software-selection--gui--altium-designer--cadence-orcad--openscad--task-11--windows",
+  "snapshot": "OrCAD-Altium-openscad",
+  "instruction": "Determine the appropriate application among Altium Designer, OrCAD Capture, or OpenSCAD. Open the neutral `spiritlevel` schematic package and repair the sheet-symbol target filenames. Requirements: - Write the required deliverables into `C:\\Users\\user\\Desktop\\result`. - Set the target filenames to `XS1 = SL_Config_2E.SchDoc`, `XS2 = SL_LCD_SW_LED_2E.SchDoc`, `XS3 = SL_FPGA_Auto_2E.SchDoc`, and `XS4 = SL_Power.SchDoc` without changing unrelated schematic data. [Software] Altium Designer can be opened from its desktop shortcut; OrCAD Capture is at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, and OpenSCAD is at `C:\\Program Files\\OpenSCAD\\openscad.exe`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/project_structure.json",
+            "path": "C:\\Users\\user\\Desktop\\project_structure.json"
+          },
+          {
+            "local_path": "task-11/init_file/spiritlevel.edif",
+            "path": "C:\\Users\\user\\Desktop\\spiritlevel.edif"
+          },
+          {
+            "local_path": "task-11/init_file/spiritlevel.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\spiritlevel.schematic.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Altium\\AD26\\X2.EXE"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\orcad\\tools\\bin\\Capture.exe"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\OpenSCAD\\openscad.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

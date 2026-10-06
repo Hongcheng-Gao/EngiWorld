@@ -1,0 +1,60 @@
+{
+  "id": "single-software--cli--openscad--task-19--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Work from /home/user/Desktop/task-039_initial.scad and /home/user/Desktop/task-039_motor.stl in OpenSCAD. To use OpenSCAD, run `openscad` from a terminal. On this machine, run OpenSCAD from `/usr/bin/openscad` when working on `task-039_initial.scad`.\n\nModify /home/user/Desktop/task-039_initial.scad. Use difference() between guard_blank() and the imported motor shape /home/user/Desktop/task-039_motor.stl to create a protective cover that fits around the motor. The target 2.5 mm thickness applies to the X- and Y-direction side walls; retain the imported motor's given Z placement, which leaves the bottom and top clearances determined by that seed geometry. Add six diameter 3 mm ventilation holes through the Y-direction side walls, with hole centers at x=-24, -14, -4, 6, 16, and 26 mm and z=20 mm. Export /home/user/Desktop/task-039_output.stl.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Importing_Geometry; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/task-039_initial.scad",
+            "path": "/home/user/Desktop/task-039_initial.scad"
+          },
+          {
+            "local_path": "task-19/init_file/task-039_motor.stl",
+            "path": "/home/user/Desktop/task-039_motor.stl"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-039_output.stl"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,28 @@
+* Nonideal loaded resonant band-pass task.
+* Run the native PSpice AC sweep, keep the generated .out/.dat/.measure
+* artifacts, and recover the peak sample, 3 dB sample-grid bandwidth,
+* and Q from the measured response across the load resistor.
+
+VIN   IN   0   AC 1 0
+RSRC  IN   N1  27
+L1    N1   N2  820u
+RCOIL N2   N3  11
+C1    N3   N4  1.3n
+RESR  N4   N5  0.6
+RLOAD N5   0   82
+
+.AC DEC 100 10 10MEG
+.MEAS AC DB_130K FIND DB(V(N5)) AT=130k
+.MEAS AC DB_138K FIND DB(V(N5)) AT=138k
+.MEAS AC DB_142K FIND DB(V(N5)) AT=142k
+.MEAS AC DB_146K FIND DB(V(N5)) AT=146k
+.MEAS AC DB_150K FIND DB(V(N5)) AT=150k
+.MEAS AC DB_154K FIND DB(V(N5)) AT=154k
+.MEAS AC DB_158K FIND DB(V(N5)) AT=158k
+.MEAS AC DB_162K FIND DB(V(N5)) AT=162k
+.MEAS AC DB_166K FIND DB(V(N5)) AT=166k
+.MEAS AC DB_170K FIND DB(V(N5)) AT=170k
+.MEAS AC DB_176K FIND DB(V(N5)) AT=176k
+.MEAS AC DB_184K FIND DB(V(N5)) AT=184k
+.PROBE
+.END

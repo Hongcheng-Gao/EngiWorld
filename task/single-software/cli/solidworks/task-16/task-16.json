@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--solidworks--task-16--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Begin in SolidWorks with C:\\Users\\User\\Desktop\\cli_036_mold_split_simple.step. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). At the start of the task, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_036_mold_split_simple.step`.\n\nUsing SolidWorks command-line automation, use that input file, a drafted plastic housing from Z=0 to Z=40. Its bottom and top sections are 80 x 50 mm, and its maximum section at Z=20 is 100 x 70 mm. Split the part at the Z=20 mm parting plane into core_side for the lower half and cavity_side for the upper half. Export C:\\Users\\User\\Desktop\\cli_036_core_side.step and C:\\Users\\User\\Desktop\\cli_036_cavity_side.step. The two solids must not overlap, their split faces must lie on Z=20, and their Boolean union must equal the original geometry.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/cli_036_mold_split_simple.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_036_mold_split_simple.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_036_cavity_side.step",
+    "C:\\Users\\User\\Desktop\\cli_036_core_side.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

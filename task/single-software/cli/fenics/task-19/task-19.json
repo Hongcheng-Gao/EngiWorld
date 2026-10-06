@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--fenics--task-19--ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "Start from a post-processing template `/home/user/Desktop/lift_drag_base.py`. Run your script with Python in the legacy FEniCS/DOLFIN 2019.1.0 environment (e.g. `from dolfin import *`). On this machine, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `lift_drag_base.py`.\n\nComplete the following self-contained legacy DOLFIN workflow: 1. Modify and generate `/home/user/Desktop/lift_drag.py`: - Build a 2.2 by 0.41 channel mesh by removing cells inside the cylinder centered at `(0.2,0.2)` with diameter `L=0.1` from a `RectangleMesh(...,110,21)` using `SubMesh` - Mark the resulting cylinder boundary with facet marker 5 - Solve steady incompressible Stokes flow in mixed P2/P1 spaces with `nu=0.001`, no-slip channel walls/cylinder, parabolic inlet of mean speed `U_mean=0.2`, and zero outlet pressure - Define `FacetNormal n` - Define surface force: `force = -p*n + nu*dot(grad(u), n)` - Compute force on the cylinder as the negative integral of this fluid-boundary traction on marker 5, obtaining `F_D` and `F_L` - Compute dimensionless coefficients: `C_D = 2*F_D/(U_mean^2 * L)` and `C_L = 2*F_L/(U_mean^2 * L)` 2. Run and save to `/home/user/Desktop/summary.txt`: Format: `drag_coefficient, lift_coefficient`",
+  "source": "https://fenicsproject.org/olddocs/dolfin/2019.1.0/python/demos/stokes-taylor-hood/demo_stokes-taylor-hood.py.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/lift_drag_base.py",
+            "path": "/home/user/Desktop/lift_drag_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/lift_drag.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

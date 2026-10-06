@@ -1,0 +1,192 @@
+{
+  "baseline": {
+    "design_variables": {
+      "cooling_setpoint_c": 24.0,
+      "daylight_control_fraction": 0.1,
+      "economizer_fraction": 0.2,
+      "equipment_w_per_m2": 10.5,
+      "exterior_wall_area_m2": 96.0,
+      "floor_area_m2": 60.0,
+      "heating_setpoint_c": 20.0,
+      "hvac_availability_fraction": 0.72,
+      "infiltration_ach": 0.62,
+      "lighting_w_per_m2": 10.0,
+      "occupied_hours_fraction": 0.42,
+      "orientation_deg": 0.0,
+      "people_density_m2": 0.05,
+      "precool_hours": 0.0,
+      "roof_r_value_m2k_w": 3.5,
+      "shade_ratio": 0.1,
+      "space_count": 1,
+      "thermal_mass_level": 0.35,
+      "thermal_zone_count": 1,
+      "ventilation_lps_per_person": 8.0,
+      "wall_r_value_m2k_w": 2.2,
+      "window_area_m2": 29.76,
+      "window_shgc": 0.52,
+      "window_u_value_w_m2k": 3.1,
+      "wwr": 0.31
+    },
+    "floor_area_m2": 60.0,
+    "metrics": {
+      "carbon_kgco2e": 5997.457,
+      "cooling_kwh": 0.0,
+      "daylight_proxy": 0.5965,
+      "equipment_kwh": 5518.8,
+      "eui_kwh_m2": 346.1709,
+      "fan_kwh": 0.0,
+      "heating_kwh": 9995.454,
+      "hvac_energy_kwh": 9995.454,
+      "iaq_proxy": 0.8305,
+      "lighting_kwh": 5256.0,
+      "peak_cooling_kw": 16.447,
+      "peak_heating_kw": 11.0,
+      "total_site_energy_kwh": 20770.254,
+      "unmet_hours": 23.32
+    },
+    "space_names": [
+      "VISITOR-OFFICE"
+    ],
+    "thermal_zone_names": [
+      "VISITOR-OFFICE-ZN"
+    ]
+  },
+  "case_id": "quant-cli-openstudio-task-01-ubuntu",
+  "energy_model": {
+    "carbon_factors_kgco2e_per_kwh": {
+      "electricity": 0.385,
+      "gas": 0.185
+    },
+    "component_reference": {
+      "cooling_kwh": 3200,
+      "equipment_kwh": 2550,
+      "fan_kwh": 900,
+      "heating_kwh": 2600,
+      "lighting_kwh": 2300,
+      "peak_cooling_kw": 17.5,
+      "peak_heating_kw": 11.0,
+      "unmet_hours": 32
+    },
+    "notes": "Evaluator reruns the IDF through the OpenStudio 3.11 workflow and its bundled EnergyPlus 25.2 engine, parses standard SQLite report tables, recomputes deterministic IDF plausibility bounds from metadata, and rejects submitted SQL/report metrics that are inconsistent or unrealistically better than the model variables support."
+  },
+  "hard_constraints": {
+    "exterior_wall_area_tolerance_fraction": 0.02,
+    "floor_area_tolerance_fraction": 0.01,
+    "max_sql_better_than_model_proxy_fraction": 0.22,
+    "max_unmet_hours": 70,
+    "min_total_site_energy_kwh_per_m2": 28.0,
+    "space_count": 1,
+    "space_names": [
+      "VISITOR-OFFICE"
+    ],
+    "thermal_zone_count": 1,
+    "thermal_zone_names": [
+      "VISITOR-OFFICE-ZN"
+    ],
+    "variable_ranges": {
+      "cooling_setpoint_c": [
+        23.0,
+        26.0
+      ],
+      "daylight_control_fraction": [
+        0.0,
+        0.7
+      ],
+      "equipment_w_per_m2": [
+        6.0,
+        11.5
+      ],
+      "heating_setpoint_c": [
+        19.0,
+        21.0
+      ],
+      "infiltration_ach": [
+        0.3,
+        0.7
+      ],
+      "lighting_w_per_m2": [
+        5.5,
+        10.0
+      ],
+      "people_density_m2": [
+        0.035,
+        0.075
+      ],
+      "roof_r_value_m2k_w": [
+        3.5,
+        8.0
+      ],
+      "shade_ratio": [
+        0.05,
+        0.75
+      ],
+      "wall_r_value_m2k_w": [
+        2.0,
+        5.5
+      ],
+      "window_shgc": [
+        0.25,
+        0.58
+      ],
+      "window_u_value_w_m2k": [
+        1.2,
+        3.2
+      ],
+      "wwr": [
+        0.18,
+        0.32
+      ]
+    }
+  },
+  "input_hashes": {
+    "baseline_idf_sha256": "6816f0724c4439ba146f83b1763ae5e6faef84a86813f22f9abffc9b86826ab2",
+    "weather_sha256": "186ac03010a542b09ed5df077b0dfa860f080a3684fc00a817a5738c3cfeaa8c"
+  },
+  "objective": "Minimize annual site EUI for a compact visitor office by tuning envelope insulation, glazing performance, shading, lighting density, and equipment density.",
+  "required_outputs": {
+    "design_summary_json": "/home/user/Desktop/design_summary.json",
+    "energy_report_csv": "/home/user/Desktop/energy_report.csv",
+    "energyplus_err": "/home/user/Desktop/run/eplusout.err",
+    "energyplus_sql": "/home/user/Desktop/run/eplusout.sql",
+    "optimized_idf": "/home/user/Desktop/optimized.idf"
+  },
+  "scoring": {
+    "continuous_score_range": [
+      0.0,
+      1.0
+    ],
+    "hard_constraint_score": 0.0,
+    "terms": [
+      {
+        "kind": "reduction",
+        "metric": "eui_kwh_m2",
+        "name": "eui_reduction",
+        "target_fraction": 0.34,
+        "weight": 0.56
+      },
+      {
+        "kind": "reduction",
+        "metric": "hvac_energy_kwh",
+        "name": "hvac_reduction",
+        "target_fraction": 0.4,
+        "weight": 0.22
+      },
+      {
+        "kind": "reduction",
+        "metric": "peak_cooling_kw",
+        "name": "peak_cooling_reduction",
+        "target_fraction": 0.28,
+        "weight": 0.12
+      },
+      {
+        "kind": "under_limit",
+        "limit": 70,
+        "metric": "unmet_hours",
+        "name": "comfort_margin",
+        "weight": 0.1
+      }
+    ]
+  },
+  "task_family": "cli-openstudio-energy-optimization",
+  "title": "Envelope insulation and glazing energy trim"
+}

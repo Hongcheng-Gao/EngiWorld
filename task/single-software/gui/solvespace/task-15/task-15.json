@@ -1,0 +1,64 @@
+{
+  "id": "single-software--gui--solvespace--task-15--ubuntu",
+  "snapshot": "solvespace3.1ds1-3.1build2",
+  "instruction": "SolveSpace is the working environment for this task. Import seed_ss_gui_15_gusset.dxf from /home/user/Desktop with File > Import, then continue editing that imported drawing rather than starting from an empty document. Launch SolveSpace from `/usr/bin/solvespace` before importing `seed_ss_gui_15_gusset.dxf`. Do not use File > Open or launch the DXF as a native SolveSpace file. Use the triangular outline and hole-location guides in the file to create the final right-triangular gusset plate with vertices (0,0), (120,0), and (0,90). All dimensions are in drawing units. Add three diameter 8 holes with centers at (12,12), (84,12), and (12,66). The center at (12,12) is 12 from both the bottom edge and the left edge; the center at (84,12) is 12 from both the bottom edge and the sloped edge; and the center at (12,66) is 12 from both the left edge and the sloped edge. Measure each stated offset perpendicularly from the hole center to the corresponding edge. Construction or guide geometry from the seed may be changed or removed unless it is explicitly required above. When the geometry is complete, align the view to the active workplane if needed, then use File > Export 2d View, choose the DXF file type, and save the result as /home/user/Desktop/final_ss_gui_15.dxf. Do not use File > Save As for this final DXF export.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/seed_ss_gui_15_gusset.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_15_gusset.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/final_ss_gui_15.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

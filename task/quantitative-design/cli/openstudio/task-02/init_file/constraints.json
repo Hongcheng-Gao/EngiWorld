@@ -1,0 +1,200 @@
+{
+  "baseline": {
+    "design_variables": {
+      "cooling_setpoint_c": 24.0,
+      "daylight_control_fraction": 0.08,
+      "economizer_fraction": 0.2,
+      "equipment_w_per_m2": 8.4,
+      "exterior_wall_area_m2": 132.0,
+      "floor_area_m2": 84.0,
+      "heating_setpoint_c": 20.0,
+      "hvac_availability_fraction": 0.72,
+      "infiltration_ach": 0.58,
+      "lighting_w_per_m2": 10.5,
+      "occupied_hours_fraction": 0.42,
+      "orientation_deg": 0.0,
+      "people_density_m2": 0.07,
+      "precool_hours": 0.0,
+      "roof_r_value_m2k_w": 4.0,
+      "shade_ratio": 0.08,
+      "space_count": 2,
+      "thermal_mass_level": 0.35,
+      "thermal_zone_count": 2,
+      "ventilation_lps_per_person": 8.0,
+      "wall_r_value_m2k_w": 2.6,
+      "window_area_m2": 39.6,
+      "window_shgc": 0.55,
+      "window_u_value_w_m2k": 2.9,
+      "wwr": 0.3
+    },
+    "floor_area_m2": 84.0,
+    "metrics": {
+      "carbon_kgco2e": 7828.847,
+      "cooling_kwh": 0.0,
+      "daylight_proxy": 0.581,
+      "equipment_kwh": 6179.879,
+      "eui_kwh_m2": 324.8328,
+      "fan_kwh": 0.0,
+      "heating_kwh": 13381.225,
+      "hvac_energy_kwh": 13381.225,
+      "iaq_proxy": 0.8445,
+      "lighting_kwh": 7724.848,
+      "peak_cooling_kw": 24.465,
+      "peak_heating_kw": 15.0,
+      "total_site_energy_kwh": 27285.952,
+      "unmet_hours": 28.48
+    },
+    "space_names": [
+      "WAITING",
+      "CONSULT"
+    ],
+    "thermal_zone_names": [
+      "WAITING-ZN",
+      "CONSULT-ZN"
+    ]
+  },
+  "case_id": "quant-cli-openstudio-task-02-ubuntu",
+  "energy_model": {
+    "carbon_factors_kgco2e_per_kwh": {
+      "electricity": 0.385,
+      "gas": 0.185
+    },
+    "component_reference": {
+      "cooling_kwh": 5100,
+      "equipment_kwh": 3400,
+      "fan_kwh": 1250,
+      "heating_kwh": 3600,
+      "lighting_kwh": 3800,
+      "peak_cooling_kw": 26.0,
+      "peak_heating_kw": 15.0,
+      "unmet_hours": 38
+    },
+    "notes": "Evaluator reruns the IDF through the OpenStudio 3.11 workflow and its bundled EnergyPlus 25.2 engine, parses standard SQLite report tables, recomputes deterministic IDF plausibility bounds from metadata, and rejects submitted SQL/report metrics that are inconsistent or unrealistically better than the model variables support."
+  },
+  "hard_constraints": {
+    "exterior_wall_area_tolerance_fraction": 0.02,
+    "floor_area_tolerance_fraction": 0.01,
+    "max_sql_better_than_model_proxy_fraction": 0.22,
+    "max_unmet_hours": 75,
+    "min_total_site_energy_kwh_per_m2": 28.0,
+    "space_count": 2,
+    "space_names": [
+      "WAITING",
+      "CONSULT"
+    ],
+    "thermal_zone_count": 2,
+    "thermal_zone_names": [
+      "WAITING-ZN",
+      "CONSULT-ZN"
+    ],
+    "variable_ranges": {
+      "cooling_setpoint_c": [
+        23.5,
+        26.0
+      ],
+      "daylight_control_fraction": [
+        0.25,
+        0.75
+      ],
+      "equipment_w_per_m2": [
+        4.8,
+        9.5
+      ],
+      "heating_setpoint_c": [
+        19.0,
+        21.0
+      ],
+      "infiltration_ach": [
+        0.32,
+        0.68
+      ],
+      "lighting_w_per_m2": [
+        5.8,
+        10.8
+      ],
+      "orientation_deg": [
+        -15.0,
+        15.0
+      ],
+      "people_density_m2": [
+        0.045,
+        0.1
+      ],
+      "roof_r_value_m2k_w": [
+        4.0,
+        7.5
+      ],
+      "shade_ratio": [
+        0.05,
+        0.8
+      ],
+      "wall_r_value_m2k_w": [
+        2.4,
+        5.0
+      ],
+      "window_shgc": [
+        0.25,
+        0.58
+      ],
+      "window_u_value_w_m2k": [
+        1.3,
+        3.0
+      ],
+      "wwr": [
+        0.16,
+        0.31
+      ]
+    }
+  },
+  "input_hashes": {
+    "baseline_idf_sha256": "8c01522bd6b6a8367ba6f2d3b0f2d32d1ebb552efc58aa3165eee25a9558bf66",
+    "weather_sha256": "186ac03010a542b09ed5df077b0dfa860f080a3684fc00a817a5738c3cfeaa8c"
+  },
+  "objective": "Minimize annual carbon emissions while preserving a daylight proxy in a two-zone consultation suite by balancing WWR, SHGC, overhang ratio, and lighting controls.",
+  "required_outputs": {
+    "design_summary_json": "/home/user/Desktop/design_summary.json",
+    "energy_report_csv": "/home/user/Desktop/energy_report.csv",
+    "energyplus_err": "/home/user/Desktop/run/eplusout.err",
+    "energyplus_sql": "/home/user/Desktop/run/eplusout.sql",
+    "optimized_idf": "/home/user/Desktop/optimized.idf"
+  },
+  "scoring": {
+    "continuous_score_range": [
+      0.0,
+      1.0
+    ],
+    "hard_constraint_score": 0.0,
+    "terms": [
+      {
+        "kind": "reduction",
+        "metric": "carbon_kgco2e",
+        "name": "carbon_reduction",
+        "target_fraction": 0.33,
+        "weight": 0.46
+      },
+      {
+        "kind": "reduction",
+        "metric": "eui_kwh_m2",
+        "name": "eui_reduction",
+        "target_fraction": 0.3,
+        "weight": 0.24
+      },
+      {
+        "kind": "maximize",
+        "metric": "daylight_proxy",
+        "name": "daylight_proxy",
+        "target": 0.72,
+        "weight": 0.18
+      },
+      {
+        "kind": "reduction",
+        "metric": "peak_cooling_kw",
+        "name": "peak_cooling_reduction",
+        "target_fraction": 0.25,
+        "weight": 0.12
+      }
+    ]
+  },
+  "task_family": "cli-openstudio-energy-optimization",
+  "title": "Window and shading carbon-weighted tradeoff"
+}

@@ -1,0 +1,95 @@
+{
+  "id": "single-software--gui--altium-designer--task-19--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "The project `base.PrjPcb` is already open in Altium Designer. Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`; open `base.PrjPcb` there. Using `C:\\Users\\user\\Desktop\\variants.json`, create three project variants in Variant Manager - `Standard`, `Lite`, and `Medical` - and save the result as `C:\\Users\\user\\Desktop\\variants.PrjPcb`. Requirements: Preserve the original base project sections (`Design`, `Preferences`, and `Document1..Document3`). Create variants whose names and descriptions exactly match `C:\\Users\\user\\Desktop\\variants.json`. For each listed component, set fitted/DNP state, alternate component, and parameter overrides so the variant behavior matches `C:\\Users\\user\\Desktop\\variants.json` exactly. In particular: `Standard`: all components remain fitted; `R3` gets `Tolerance=1%`. `Lite`: `R2`, `C2`, `U2`, and `D2` are not fitted; `R2` uses alternate component `RES-0402-10K`; `U2` uses alternate component `TL074-SOIC14`. `Medical`: all components remain fitted; `U1` uses alternate component `STM32L071-LQFP64`; `Q1` uses alternate component `NMOS-SOT23-AEC`; `R1` and `R3` get `Tolerance=0.1%`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/design-variants",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/base.PrjPcb",
+            "path": "C:\\Users\\user\\Desktop\\base.PrjPcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/variants.json",
+            "path": "C:\\Users\\user\\Desktop\\variants.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/Page1.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Page1.SchDoc"
+          },
+          {
+            "local_path": "task-19/init_file/Page2.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Page2.SchDoc"
+          },
+          {
+            "local_path": "task-19/init_file/Page3.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\Page3.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\base.PrjPcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\variants.PrjPcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

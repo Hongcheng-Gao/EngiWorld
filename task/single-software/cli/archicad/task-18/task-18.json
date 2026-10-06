@@ -1,0 +1,75 @@
+{
+  "id": "single-software--cli--archicad--task-18--windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Update C:\\Users\\user\\Desktop\\init.ifc in the opened Graphisoft/Archicad environment using the official Graphisoft/Archicad command-line or automation interfaces available there, and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. For this task, invoke Archicad from `C:\\Program Files\\GRAPHISOFT\\Archicad 27\\Archicad.exe` when running the automation. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a three-storey small hotel with lobby, cafe, back-of-house, accessible WC, stair, guest rooms, corridors, and a compact roof form. The operator wants a family suite, a housekeeping hub on the upper guest floor, and a clearer fire-lobby/support arrangement without disturbing the room stack, main stair, roof, or front cafe. Add the guest, service, and life-safety records needed for the revised hotel operations plan. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"annotations\":[{\"class\":\"IfcSpace\",\"name\":\"LOBBY\",\"tokens\":[\"FAMILY SUITE ARRIVAL\",\"GUEST ROUTE\",\"HOTEL OPERATIONS\"]},{\"class\":\"IfcSpace\",\"name\":\"CORRIDOR-2\",\"tokens\":[\"HOUSEKEEPING HUB\",\"FIRE LOBBY\",\"UPPER GUEST FLOOR\"]},{\"class\":\"IfcSpace\",\"name\":\"BACK-OF-HOUSE\",\"tokens\":[\"SERVICE ROUTE\",\"HOUSEKEEPING\",\"OPERATIONS\"]}],\"products\":[{\"class\":\"IfcSpace\",\"name\":\"FAMILY-SUITE-1\",\"predefined\":\"INTERNAL\",\"storey\":\"Level 1\",\"tokens\":[\"FAMILY SUITE\",\"GUEST\",\"CONNECTED ROOMS\",\"HOTEL\"]},{\"class\":\"IfcSpace\",\"name\":\"HOUSEKEEPING-HUB-2\",\"predefined\":\"INTERNAL\",\"storey\":\"Level 2\",\"tokens\":[\"HOUSEKEEPING HUB\",\"SERVICE\",\"UPPER GUEST FLOOR\",\"HOTEL\"]},{\"class\":\"IfcSpace\",\"name\":\"FIRE-LOBBY-2\",\"predefined\":\"INTERNAL\",\"storey\":\"Level 2\",\"tokens\":[\"FIRE LOBBY\",\"STAIR ACCESS\",\"LIFE SAFETY\",\"UPPER FLOOR\"]},{\"class\":\"IfcDoor\",\"name\":\"FAMILY-SUITE-DOOR\",\"predefined\":\"DOOR\",\"storey\":\"Level 1\",\"tokens\":[\"FAMILY SUITE\",\"GUEST\",\"CONNECTED ROOMS\",\"DOOR\"]},{\"class\":\"IfcDoor\",\"name\":\"FIRE-LOBBY-DOOR-2\",\"predefined\":\"DOOR\",\"storey\":\"Level 2\",\"tokens\":[\"FIRE LOBBY\",\"STAIR ACCESS\",\"LIFE SAFETY\",\"DOOR\"]},{\"class\":\"IfcWindow\",\"name\":\"FAMILY-SUITE-BAY-WINDOW\",\"predefined\":\"WINDOW\",\"storey\":\"Level 1\",\"tokens\":[\"FAMILY SUITE\",\"DAYLIGHT\",\"GUEST\",\"WINDOW\"]},{\"class\":\"IfcWall\",\"name\":\"HOUSEKEEPING-SERVICE-SCREEN\",\"predefined\":\"PARTITIONING\",\"storey\":\"Level 2\",\"tokens\":[\"HOUSEKEEPING\",\"SERVICE SCREEN\",\"CORRIDOR\",\"HOTEL\"]}]}.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

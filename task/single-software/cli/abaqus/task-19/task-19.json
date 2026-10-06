@@ -1,0 +1,52 @@
+{
+  "id": "single-software--cli--abaqus--task-19--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Perform a linear buckling analysis of a thin plate (Variant B) using Abaqus via the Command Line Interface (CLI). To start Abaqus/CAE, run `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae` (adjust path to your install). On this machine, Abaqus command-line jobs should be launched through `C:\\SIMULIA\\Commands\\abaqus.bat`.\n\nUse the N-mm-MPa unit system. Part: Create a 3D Deformable Shell, Planar part. Sketch a square plate from (0, 0) to (120, 120) in the X-Y plane. Partition the plate face using two centerlines at X = 60 mm and Y = 60 mm so that the plate center and the edge midpoints can be selected reliably. Property: Create a material named Steel. Set Young's modulus E = 210000 MPa and Poisson's ratio nu = 0.3. Create a Homogeneous Shell Section with thickness = 0.8 mm and 5 integration points. Assign the shell section to the whole plate. Assembly: Create one dependent instance of the plate. Step: Create a Linear Perturbation Buckle step named Step-Buckle-B. Request 3 eigenvalues. Mesh: Use a global seed size of 8 mm. Use S4R shell elements and generate the mesh. Load and Boundary Conditions: Represent the compressive edge load of 0.9 N/mm on the two vertical edges by equivalent nodal forces after meshing. On the X = 0 edge, apply nodal forces in the +X direction. On the X = 120 edge, apply nodal forces in the -X direction. For each loaded edge node, calculate the nodal force as 0.9 N/mm multiplied by that node's tributary edge length. Apply U3 = 0 on all four plate edges: X = 0, X = 120, Y = 0, and Y = 120, to represent simply supported transverse conditions. Select the center mesh node at approximately (X = 60, Y = 60, Z = 0) and apply U1 = U2 = 0 to suppress in-plane translational rigid-body motion. Select the bottom-edge midpoint mesh node at approximately (X = 60, Y = 0, Z = 0) and apply U1 = 0 only to suppress the remaining in-plane rotational rigid-body mode. Job: Create a job named Job-Buckle-B and submit it for solving. Wait for the analysis to complete successfully. Visualization: Review the first buckling mode. Record the first eigenvalue. Save: Save the model database to C:\\Users\\user\\Desktop\\Job-Buckle-B.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Buckle-B.odb.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-Buckle-B.cae",
+    "C:\\Users\\user\\Desktop\\Job-Buckle-B.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

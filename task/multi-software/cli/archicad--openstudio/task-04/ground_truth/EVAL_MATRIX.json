@@ -1,0 +1,21 @@
+{
+  "schema": "engiworld.task04.eval-matrix.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-04-windows",
+  "snapshot": "cli2-archicad27-openstudio310-win",
+  "host": "iv-v44c5quhrp39",
+  "windows_python": "3.11.9",
+  "evaluator_sha256": "142314c8246ec02c3fb88cc822e088247a2e1ca980ea1c15408a8850d61cd74a",
+  "run_stamp_utc": "20260812T190752264224Z",
+  "isolation": "Each main case was freshly extracted into its own Windows directory. The corrected lighting negative was then freshly extracted into a new v3 directory. multi_metrics.json was excluded from every archive.",
+  "summary": {"total_counted": 6, "positive": 2, "negative": 4, "matched_expectation": 6},
+  "cases": [
+    {"id":"formal","class":"positive","purpose":"Current formal GT","expected_ok":true,"actual_ok":true,"stdout":"True","errors":[],"started_utc":"2026-08-12T19:07:52.326669+00:00","completed_utc":"2026-08-12T19:07:53.278803+00:00"},
+    {"id":"csv_row_order","class":"positive_reasonable_equivalent","purpose":"Same two required mappings and SQL-derived metrics with CSV rows reversed; instruction does not constrain row order","expected_ok":true,"actual_ok":true,"stdout":"True","errors":[],"started_utc":"2026-08-12T19:07:53.346846+00:00","completed_utc":"2026-08-12T19:07:54.241419+00:00"},
+    {"id":"missing_native_log","class":"negative","purpose":"Reject missing Archicad native transaction evidence","expected_ok":false,"actual_ok":false,"stdout":"False","errors":["missing_or_empty:native_stage_log.json"],"started_utc":"2026-08-12T19:07:54.304007+00:00","completed_utc":"2026-08-12T19:07:54.366570+00:00"},
+    {"id":"duplicate_global_id","class":"negative","purpose":"Reject duplicate/lost IfcRoot identity and broken target semantics","expected_ok":false,"actual_ok":false,"stdout":"False","key_errors":["stage1.ifc:duplicate_global_ids","stage1.ifc:ifcroot_exact_set_mismatch","stage1.ifc:target_semantics_mismatch:1G6nPejgHAEO7LI0O2lCv8","handoff.json:source_sha256_mismatch"],"started_utc":"2026-08-12T19:07:54.429499+00:00","completed_utc":"2026-08-12T19:07:55.340178+00:00"},
+    {"id":"parcel_lighting_high_v3","class":"negative","purpose":"Reject parcel-pickup total design lighting 320 W when workshop total is 300 W","expected_ok":false,"actual_ok":false,"stdout":"False","errors":["result.osm:parcel_lighting_not_low","flow_report:osm_sha256_mismatch","flow_report:delivery_input_hash_mismatch"],"completed_utc":"2026-08-12T19:09:45.942732+00:00","audit_note":"Initial 12 W/m2 variant remained instruction-compliant because 12*16=192 W is below 10*30=300 W; it was not counted. Corrected v3 uses 20 W/m2 and directly triggers the semantic rule."},
+    {"id":"single_timeindex","class":"negative","purpose":"Reject 8760 apparent rows per series when every row reuses one TimeIndex","expected_ok":false,"actual_ok":false,"stdout":"False","error_summary":{"affected_required_series":12,"check":"run/eplusout.sql:incomplete_hourly_series"},"started_utc":"2026-08-12T19:07:56.369330+00:00","completed_utc":"2026-08-12T19:07:57.207549+00:00"}
+  ],
+  "all_counted_cases_matched_expectation": true,
+  "source_windows_receipt_sha256": "df20d2cfefc8b15df487c3b4dd193630a87d5cd9d30e7a9869e67af6f8475366"
+}

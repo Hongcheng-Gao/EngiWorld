@@ -1,0 +1,78 @@
+run_id: engiworld-dev
+
+engiworld:
+  # Use the bundled EngiWorld engine; override with ENGIWORLD_ENGINE_PATH.
+  path: engine
+  task_root: ../task
+  # Optional private S3-compatible task bundle key in fixed bucket agent-eval-tasks.
+  # CLI equivalent: --task-file-path ...
+  task_file_path: null
+  test_all_meta_path: evaluation_examples/test_all.json
+  test_config_base_dir: evaluation_examples
+
+agent:
+  name: gemini-3.7-flash-high
+  # Formal runs select the named profile with --agent. These fields show its resolved defaults.
+  factory: engiworld.agents.openai_compatible:create_agent
+  # platform: null  # null means infer ubuntu/windows per claimed instance.
+  # action_space: pyautogui
+  # observation_type: screenshot
+  checkpoint_path: null
+  platform: null
+  action_space: pyautogui
+  observation_type: screenshot
+  max_steps: 200
+  gui_max_steps: 200
+  cli_max_steps: 100
+  gui_multi_max_steps: 300
+  cli_multi_max_steps: 150
+  open_ended_max_steps: 150
+  history_turns: 15
+  sleep_after_execution: 2.0
+  screen_width: 1920
+  screen_height: 1080
+  headless: true
+
+scheduler:
+  instance_count: 128
+  worker_replicas: 8
+  local_concurrency_per_worker: 16
+  task_lease_ttl_seconds: 1800
+  instance_lease_ttl_seconds: 2100
+  heartbeat_interval_seconds: 15
+  master_reconcile_interval_seconds: 30
+  task_run_timeout_seconds: 18000  # 5 hours
+  max_attempts: 3
+
+redis:
+  # master and worker also read REDIS_URL from the environment.
+  url: redis://127.0.0.1:6379/0
+
+volcengine:
+  # Read by master from environment variables.
+  # VOLCENGINE_ACCESS_KEY_ID
+  # VOLCENGINE_SECRET_ACCESS_KEY
+  # VOLCENGINE_REGION
+  # VOLCENGINE_SUBNET_ID
+  # VOLCENGINE_SECURITY_GROUP_ID
+  # VOLCENGINE_INSTANCE_TYPE
+  # VOLCENGINE_ZONE_ID
+  # VOLCENGINE_PROJECT_NAME=agent-eval
+  # VOLCENGINE_IMAGE_PROJECT_NAME=default
+  # VOLCENGINE_IMAGE_VISIBILITY=private
+  # VOLCENGINE_KEEP_IMAGE_CREDENTIAL=true
+  # VOLCENGINE_SYSTEM_DISK_SIZE_GB=50
+  # VOLCENGINE_SYSTEM_DISK_SIZE_GB_BY_IMAGE='{"task-v-openstudio": 120, "img-xxxxx": 80}'
+  # VOLCENGINE_RUN_INSTANCES_MAX_COUNT=100
+  # VOLCENGINE_API_MAX_RETRIES=5
+  # VOLCENGINE_API_RETRY_BASE_SECONDS=2
+  # VOLCENGINE_API_RETRY_MAX_SECONDS=30
+  # Optional when VOLCENGINE_KEEP_IMAGE_CREDENTIAL=false:
+  # VOLCENGINE_DEFAULT_PASSWORD
+  image_visibility: private
+
+storage:
+  enabled: true
+  provider: s3
+  bucket: agent-eval-results
+  keep_local_results: false

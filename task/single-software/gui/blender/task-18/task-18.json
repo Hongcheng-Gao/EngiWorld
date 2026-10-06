@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--blender--task-18--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "NLA Blend (Walk + Wave) Using the existing armature `Rig` and the existing actions `WalkAction` and `WaveAction`, build exactly two NLA tracks: one strip that uses `WalkAction`, and one strip that uses `WaveAction`. For this task, the Blender executable is `/opt/blender/blender`; use it to open the provided scene. The `WaveAction` strip must cover about frames `20..40` with influence about `0.5`, and at frame `30` both motions must be active at once: `pose.bones[\"Root\"].location.y` is about `1.0` and `pose.bones[\"Head\"].rotation_euler.y` is non-zero. Save the result as `/home/user/Desktop/answer.blend`.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

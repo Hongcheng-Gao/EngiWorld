@@ -1,0 +1,82 @@
+{
+  "id": "software-selection--gui--freecad--librecad--kicad--task-15--ubuntu",
+  "snapshot": "freecad-librecad-kicad",
+  "instruction": "Launch the workflow tools from: FreeCAD: `/usr/bin/freecad`; LibreCAD: `/usr/bin/librecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`. Choose the appropriate tool from FreeCAD, LibreCAD, and KiCad, available in the current Ubuntu environment, to complete the task. Open or import /home/user/Desktop/guih03_gearbox_gasket_seed.dxf. Draft the hard gearbox gasket in exact coordinates. On OUTLINE create the closed profile through (0,30), (30,0), (160,0), (190,30), (190,110), (160,140), (30,140), and (0,110). Add eight HOLE circles radius 5 at (30,30), (95,20), (160,30), (170,70), (160,110), (95,120), (30,110), and (20,70). Add CUT circles center (95,70) radius 38 and centers (65,70), (125,70) radius 6. Add CENTER axes (95,0)-(95,140) and (0,70)-(190,70). Add an HATCH fill for the gasket body and notes GEARBOX GASKET - 8X Ø10 and HATCH BODY, LEAVE ALL CUTOUTS OPEN. Save the completed drawing deliverable into `/home/user/Desktop/result`.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html; generated open-choice variant from task/task-v/librecad_final/task-15",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/guih03_gearbox_gasket_seed.dxf",
+            "path": "/home/user/Desktop/guih03_gearbox_gasket_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad",
+    "librecad",
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

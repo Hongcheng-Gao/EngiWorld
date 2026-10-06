@@ -1,0 +1,82 @@
+{
+  "id": "software-selection--gui--freecad--librecad--kicad--task-20--ubuntu",
+  "snapshot": "freecad-librecad-kicad",
+  "instruction": "Paths for the installed applications: FreeCAD: `/usr/bin/freecad`; LibreCAD: `/usr/bin/librecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`. Choose the appropriate tool from FreeCAD, LibreCAD, and KiCad, available in the current Ubuntu environment, to complete the task. Open or import /home/user/Desktop/gui20_fixture_edit_seed.dxf. Change the center slot width from 12 mm to 18 mm while keeping slot length 80 mm and slot center at (90,45). Change the four corner holes from diameter 8 mm to diameter 10 mm while keeping centers (25,20), (155,20), (25,70), and (155,70). Add one new center circular hole, diameter 20 mm, centered at (90,45). Save as into `/home/user/Desktop/result`.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; generated open-choice variant from task/task-v/librecad_final/task-20",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/gui20_fixture_edit_seed.dxf",
+            "path": "/home/user/Desktop/gui20_fixture_edit_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad",
+    "librecad",
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

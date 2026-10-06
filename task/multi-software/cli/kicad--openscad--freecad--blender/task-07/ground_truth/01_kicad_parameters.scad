@@ -1,0 +1,24 @@
+// Generated from task-07 KiCad and frozen mechanical contract.
+// source_mechanical_map = 01_kicad_mechanical_map.csv
+// input_board_sha256 = 6b40374a3d33bfe53b8c7c9a3aded633d94a5841d17ae80fa405474228b7b2a5
+board_bbox = [66.000000, 42.000000, 1.000000];
+package_bbox = [78.000000, 54.000000, 12.200000];
+cavity_bounds = [-37.000000, -25.000000, 37.000000, 25.000000];
+wall_mm = 2.000000;
+base_mm = 2.000000;
+tray_top_z = 10.100000;
+lid_inner_z = 10.200000;
+lid_thickness = 2.000000;
+board_bottom_z = 5.200000;
+board_top_z = 6.200000;
+standoff_outer_diameter = 5.600000;
+standoff_bore_diameter = 2.600000;
+standoff_height = 3.200000;
+standoff_bore_z = [1.500000, 5.700000];
+standoff_axes = [["MH1", -26.000000, -16.000000], ["MH2", 26.000000, -16.000000], ["MH3", -26.000000, 16.000000], ["MH4", 26.000000, 16.000000]];
+mechanical_features = [["U1", "OPTICAL_ASIC", 0.000000, 0.000000, 0.800000, 6.000000, 12.000000, 12.000000, 0.800000, "box"], ["LED1", "EMITTER", -16.000000, 0.000000, 1.500000, 4.000000, 8.000000, 8.000000, 1.500000, "cylinder"], ["PD1", "PHOTODIODE", 16.000000, 0.000000, 1.200000, 4.000000, 8.000000, 8.000000, 1.200000, "cylinder"], ["J1", "FLEX", 0.000000, -20.000000, 2.800000, 8.000000, 16.000000, 10.000000, 2.800000, "box"], ["FID1", "FIDUCIAL", -24.000000, 14.000000, 0.100000, 2.000000, 4.000000, 4.000000, 0.100000, "cylinder"]];
+interface_features = [["J1", "Y_MINUS", -8.000000, -27.500000, 5.400000, 8.000000, -24.500000, 9.800000, 16.000000, 4.400000]];
+side_windows = [["J1", "Y_MINUS", -8.000000, -27.500000, 5.400000, 8.000000, -24.500000, 9.800000, 16.000000, 4.400000]];
+optical_start = [-16.000000, 0.000000, 8.200000];
+optical_end = [16.000000, 0.000000, 8.200000];
+optical_radius = 0.500000;

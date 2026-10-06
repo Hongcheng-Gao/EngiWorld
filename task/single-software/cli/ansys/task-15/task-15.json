@@ -1,0 +1,52 @@
+{
+  "id": "single-software--cli--ansys--task-15--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Complete a 3D laminar pipe-flow analysis using ANSYS Fluent via the Command Line Interface (CLI). To start ANSYS Workbench, run `C:\\Program Files\\ANSYS Inc\\v261\\fluent\\ntbin\\win64\\fluent.exe -g` (version/path may differ on your machine).\n\nPhysical problem: Steady laminar flow of water through a straight circular pipe. Coordinate system and geometry: - Use a 3D model. - Use SI units in Fluent. - The pipe axis is along the global X direction. - The pipe length is 100 mm, equivalent to 0.100 m. - The pipe diameter is 4 mm, equivalent to 0.004 m. - The pipe radius is 0.002 m. - The circular cross-section is centered on the X axis: - Cross-section center: Y = 0 m, Z = 0 m - Radius: 0.002 m - The pipe domain should extend from: - X = 0 m at the inlet - X = 0.100 m at the outlet Boundary zone names: - Name the inlet boundary: inlet - Name the outlet boundary: outlet - Name the pipe wall boundary: wall Model parameters: - Fluid: water - Use constant material properties: - Density: 998.2 kg/m³ - Dynamic viscosity: 0.001003 Pa·s - Mesh: - Use a structured hexahedral or swept mesh. - Include 3 boundary-layer layers near the pipe wall. - Use sufficient axial and radial resolution to resolve the laminar velocity profile. Boundary conditions: - Inlet: - Velocity inlet - Mean inlet velocity = 0.1 m/s in the positive X direction - Outlet: - Pressure outlet - Gauge pressure = 0 Pa - Pipe wall: - Stationary no-slip wall Solver setup: - Solver type: pressure-based - Time setting: steady - Flow model: laminar - Pressure-velocity coupling: SIMPLE - Spatial discretization: second-order schemes where applicable - Initialize the solution and iterate until convergence. Save requirements: - Use C:\\Users\\user\\Desktop as the working directory. - Save the Fluent case file as: C:\\Users\\user\\Desktop\\pipe_laminar.cas - Save the Fluent data file as: C:\\Users\\user\\Desktop\\pipe_laminar.dat",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\pipe_laminar.cas",
+    "C:\\Users\\user\\Desktop\\pipe_laminar.dat"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

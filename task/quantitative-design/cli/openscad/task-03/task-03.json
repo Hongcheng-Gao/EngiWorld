@@ -1,0 +1,65 @@
+{
+  "id": "quantitative-design--cli--openscad--task-03--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "CLI-only OpenSCAD quantified structural-proxy task. Run OpenSCAD from `/usr/bin/openscad` when working on `starter.scad`. Work from /home/user/Desktop/starter.scad, /home/user/Desktop/baseline.stl, and /home/user/Desktop/constraints.json. Use OpenSCAD command-line modeling and export, not a GUI. Edit starter.scad or create a derived OpenSCAD source, then export /home/user/Desktop/optimized.stl and write /home/user/Desktop/design_summary.json. Produce one watertight, winding-consistent, edge-connected positive-volume cable-tray bridge inside x=[0,130], y=[0,38], z=[0,45] mm, with bounding spans at least [124,32,36] mm and volume between 52000 and 98000 mm^3. Structural proxy assumptions: isotropic linear-elastic material E=2000 N/mm^2 and allowable bending stress 12 MPa; simple supports at x=2 and x=128 mm on the z=0 underside; a 100 N downward center load introduced through two top bearing patches, x=[62,68] mm and y=[5,9] plus y=[29,33] mm, at z>=40 mm. Each support contact zone x=[0,5] and x=[125,130] mm must provide at least 170 mm^2 of actual z=0 contact, and each top load patch must provide at least 20 mm^2. The evaluator rasterizes connected Y-Z material sections every 2.5 mm from x=5 through x=125, calculates vertical-bending I_y, and uses the minimum effective section. Every sampled section must be one connected load path, minimum I_y must be at least 75000 mm^4, Euler-Bernoulli center deflection P*L^3/(48*E*I_min) for L=126 mm must not exceed 0.03 mm, and calculated bending stress must not exceed 12 MPa. After hard constraints, maximize calculated bending stiffness 48*E*I_min/L^3 divided by material volume. This is an explicitly defined beam-theory geometry proxy, not finite-element certification. Sparse extremal or non-load-bearing geometry does not improve the score. This is a continuous optimization task, not a hidden-shape matching task. Use only the supplied task inputs; do not use evaluator-generated artifacts or evaluator implementation files, and do not fabricate metrics without a valid STL.",
+  "source": "https://files.openscad.org/documentation/manual/Using_OpenSCAD_in_a_command_line_environment.html; https://openscad.org/news.html#20210131; https://trimesh.org/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/starter.scad",
+            "path": "/home/user/Desktop/starter.scad"
+          },
+          {
+            "local_path": "task-03/init_file/baseline.stl",
+            "path": "/home/user/Desktop/baseline.stl"
+          },
+          {
+            "local_path": "task-03/init_file/constraints.json",
+            "path": "/home/user/Desktop/constraints.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/design_summary.json",
+    "/home/user/Desktop/optimized.stl"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.997333,
+      "direction": "maximize",
+      "name": "calculated bending stiffness per volume",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

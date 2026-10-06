@@ -1,0 +1,65 @@
+{
+  "id": "single-software--cli--floris--task-05--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "Start from a complete FLORIS configuration `/home/user/Desktop/two_turbine.yaml` and a yaw-optimization template `/home/user/Desktop/yaw_opt_base.py`. Use Python with `floris==4.6.4`. For the steps below, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program.\n\nComplete the following from the command line: 1. Write `/home/user/Desktop/yaw_opt.py`: load the supplied configuration; set wind direction `270 deg`, wind speed `8 m/s`, and turbulence intensity `0.06`; run the zero-yaw baseline; create `YawOptimizationSR(fmodel, minimum_yaw_angle=-30, maximum_yaw_angle=30, Ny_passes=[3,4])`; call `optimize()`; apply the returned yaw angles; and rerun to obtain optimized total power. 2. Execute the script and write `/home/user/Desktop/summary.txt` as `baseline_total_kw, optimized_total_kw, opt_yaw_t0_deg, opt_yaw_t1_deg`. 3. Do not use a GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/two_turbine.yaml",
+            "path": "/home/user/Desktop/two_turbine.yaml"
+          },
+          {
+            "local_path": "task-05/init_file/yaw_opt_base.py",
+            "path": "/home/user/Desktop/yaw_opt_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/summary.txt",
+    "/home/user/Desktop/yaw_opt.py"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

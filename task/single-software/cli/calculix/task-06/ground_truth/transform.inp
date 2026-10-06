@@ -1,0 +1,31 @@
+*Heading
+Cylindrical transform test - CalculiX (task06)
+*Node
+1, 50.0, 0.0, 0.0
+2, 100.0, 0.0, 0.0
+3, 100.0, 10.0, 0.0
+4, 50.0, 10.0, 0.0
+*Element, type=CAX4, elset=All_Elements
+1, 1, 2, 3, 4
+*Material, name=Steel
+*Elastic
+210000.0, 0.3
+*Solid Section, elset=All_Elements, material=Steel
+*Nset, nset=Bottom
+1,2
+*Nset, nset=Outer
+2,3
+*Step
+*Static
+*Boundary
+Bottom,2,2,0.
+Outer,1,1,0.
+*Dload
+All_Elements,P2,10.0
+*Node Print, NSET=Bottom
+U
+*Node Print, NSET=Outer
+U
+*El Print, ELSET=All_Elements
+S
+*End Step

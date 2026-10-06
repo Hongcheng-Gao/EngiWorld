@@ -1,0 +1,82 @@
+{
+  "id": "software-selection--gui--freecad--librecad--kicad--task-13--ubuntu",
+  "snapshot": "freecad-librecad-kicad",
+  "instruction": "Installed tools: FreeCAD: `/usr/bin/freecad`; LibreCAD: `/usr/bin/librecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`. Choose the appropriate tool from FreeCAD, LibreCAD, and KiCad, available in the current Ubuntu environment, to complete the task. Open or import /home/user/Desktop/guih10_hydraulic_manifold_seed.dxf. Complete the hard hydraulic manifold drilling diagram. Draw OUTLINE rectangle (0,0)-(220,120). Add PORT circles radius 9 at (35,100), (85,100), (135,100), and (185,100), labels P, T, A, and B above them, lower PORT circles radius 6 at (35,20) and (185,20), PASSAGE lines (35,100)-(35,20), (85,100)-(185,20), (135,100)-(35,20), (185,100)-(185,20), and (0,60)-(220,60), central CUT circle center (110,60) radius 14, and notes MANIFOLD M-42, CROSS DRILL 6 PLACES, PLUG BOTH ENDS, and PORTS P T A B. Save the completed drawing deliverable into `/home/user/Desktop/result`.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html; generated open-choice variant from task/task-v/librecad_final/task-13",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/guih10_hydraulic_manifold_seed.dxf",
+            "path": "/home/user/Desktop/guih10_hydraulic_manifold_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad",
+    "librecad",
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

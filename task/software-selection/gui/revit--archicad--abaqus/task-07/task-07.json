@@ -1,0 +1,83 @@
+{
+  "id": "software-selection--gui--revit--archicad--abaqus--task-07--windows",
+  "snapshot": "Revit2025-ArchiCAD27-Abaqus2025",
+  "instruction": "Launch an appropriate application from: Revit 2025: C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe; Archicad 27: C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe; Abaqus 2025: C:\\SIMULIA\\EstProducts\\2025\\win_b64\\resources\\install\\cmdDirFeature\\launcher.bat. Open Revit 2025, Archicad 27, or Abaqus CAE from the corresponding desktop shortcut, according to the tool you choose for the task. Revit 2025, Archicad 27, and Abaqus 2025 are available at the paths listed above. Choose an appropriate tool from these three to complete the task. Open the provided seed IFC from C:\\Users\\user\\Desktop\\init.ifc in the selected application before editing. The seed IFC is intentionally prepared with stable base geometry so the task can be completed with reliable native edits in the selected application: keep the existing floor slab and other useful seed elements unless the task explicitly asks you to add or rename something. If the imported IFC space is not available as a native room/zone/space, place a new room/zone/space in the bounded area and use a room/space schedule or room properties to set the required room name. Seed door placement exercise. The seed already contains a single-storey suite with partition walls, one floor slab, and at least four hosted doors. The partition and hosted door elements are preconfigured because hosted placement on imported IFC geometry is not reliable in this environment. Do not redraw the floor slab, partitions, or doors. Rename or recreate the three rooms as Room A, Room B, and Room C using room properties or a room/space schedule. Create real BIM model elements rather than visual-only detail geometry. Use the selected application's Room/Zone/Space tool or editable imported room/space data for named rooms so they export as IFC spaces. Save the completed model deliverable into `C:\\Users\\user\\Desktop\\result` using the selected application's built-in export. Use IFC4 if the export dialog asks for a setup, and enable room or space export if that option is available. The exported IFC should contain IfcSpace rooms named Room A, Room B, and Room C; at least 1 building storey, at least 6 wall elements, at least 1 slab, at least 4 doors. Other dimensions, exact coordinates, materials, family type names, wall thicknesses, and harmless metadata may vary.",
+  "source": "Open-choice BIM environment; evaluation checks IFC deliverable semantics rather than the selected tool.",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\EstProducts\\2025\\win_b64\\resources\\install\\cmdDirFeature\\launcher.bat",
+          "cae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "revit",
+    "archicad",
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

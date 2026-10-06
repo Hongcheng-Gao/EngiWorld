@@ -1,0 +1,97 @@
+{
+  "id": "multi-software--gui--librecad--freecad--kicad--blender--task-05--ubuntu",
+  "snapshot": "freecad-librecad-kicad-blender",
+  "instruction": "Launch the workflow tools from: LibreCAD: `/usr/bin/librecad`; FreeCAD: `/usr/bin/freecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`; Blender: `/home/user/Applications/blender-4.2.3-linux-x64/blender`. Required four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from the provided seed DXF /home/user/Desktop/seed_l_cable_strain_bracket.dxf; do not start from a blank or unrelated drawing. Run the stages in order. Each stage must read the preceding stage output, and every required intermediate file must be saved on the Desktop. The design token for this task is EW4G05; keep this token visible in the DXF labels and KiCad silkscreen. The Blender output must visibly consume the stage-2 STL and stage-3 SVG through Blender's native import/export operations.\n\nDesign goal: L-shaped cable strain relief bracket with tie slots. This case is intentionally different from the other benchmark cases: domain=cable_management_bracket, mechanical target=a bracket scene showing a black cable path through the inlet and tie slots, electronics target=a small cable-entry PCB with JST input, TVS diode, ground test pad, and strain-relief keepout.\n\n1. LibreCAD stage: open the provided seed file /home/user/Desktop/seed_l_cable_strain_bracket.dxf in LibreCAD, use it as the starting drawing, complete the required 2D geometry, remove all GUIDE construction entities, and save /home/user/Desktop/stage1_l_cable_strain_bracket.dxf. Use millimeters. Use layers OUTLINE, TIE_SLOT, HOLE, LABEL. The overall drawing envelope must be 150 mm x 90 mm. Include the required circular features: center (12,12) radius 2.6; center (138,12) radius 2.6; center (12,78) radius 2.6; center (52,72) radius 2; center (78,72) radius 2; center (104,72) radius 2. Add readable labels EW4G05, CABLE-IN, TIE1, TIE2 on the LABEL layer.\n2. FreeCAD stage: import /home/user/Desktop/stage1_l_cable_strain_bracket.dxf in FreeCAD. Create the 3D mechanical body from that LibreCAD DXF, and export the body as /home/user/Desktop/stage2_l_cable_strain_bracket.stl with an approximate bounding size of 150 mm x 90 mm x 24 mm. Then, from the same FreeCAD model, export a top-face or board-interface outline for KiCad as /home/user/Desktop/stage2_l_cable_strain_bracket_handoff_outline.dxf. This handoff DXF must represent the same XY envelope as the FreeCAD body and include the visible labels FREECAD_TO_KICAD and EW4G05.\n3. KiCad stage: open KiCad and import /home/user/Desktop/stage2_l_cable_strain_bracket_handoff_outline.dxf onto a user-drawings layer so the complete FreeCAD handoff remains visible. From that imported handoff, copy or convert its single outer L-shaped interface outline onto Edge.Cuts; do not place its labels or internal circular features on Edge.Cuts. Save the native board as /home/user/Desktop/stage3_l_cable_strain_bracket_board.kicad_pcb. Add native footprints with pads for a JST cable input (reference J1), a TVS diode (reference D1), and a ground test pad (reference TP1), and place them within the L-shaped board. Add a native positive-area rule-area keepout for the strain-relief/clamp zone. Add F.SilkS silkscreen text carrying KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the stage2 handoff filename, EW4G05, and these board tokens: EW4G05, JST-J1, STRAIN-RELIEF, TVS-D1, GND-TEST, CLAMP-ZONE. Then use KiCad's plot/export workflow to create the Blender handoff SVG /home/user/Desktop/stage3_l_cable_strain_bracket_board_profile.svg from the same Edge.Cuts outline.\n4. Blender stage: open Blender. Import /home/user/Desktop/stage2_l_cable_strain_bracket.stl with File > Import > STL, then import /home/user/Desktop/stage3_l_cable_strain_bracket_board_profile.svg with File > Import > Scalable Vector Graphics (.svg). Keep the imported STL body object and the imported SVG board/profile curves visible and at full scale in the scene so the exported GLB carries Blender import evidence such as stage2_l_cable_strain_bracket and stage3_l_cable_strain_bracket_board_profile.svg. Add one continuous, visible, opaque black cable path that enters the bracket and weaves through the tie-slot openings, crossing from above to below the base at the slots. You may leave Blender's default cube/camera/light or remove them; do not manually inject handoff metadata. Export glTF Binary (.glb) as /home/user/Desktop/stage4_l_cable_strain_bracket.glb.\n\nRequired deliverables on the Desktop: /home/user/Desktop/stage1_l_cable_strain_bracket.dxf, /home/user/Desktop/stage2_l_cable_strain_bracket.stl, /home/user/Desktop/stage2_l_cable_strain_bracket_handoff_outline.dxf, /home/user/Desktop/stage3_l_cable_strain_bracket_board.kicad_pcb, /home/user/Desktop/stage3_l_cable_strain_bracket_board_profile.svg, /home/user/Desktop/stage4_l_cable_strain_bracket.glb.\n\n[Software] Use LibreCAD first, then FreeCAD, then KiCad, then Blender. Do not skip stages, reorder stages, or recreate the final result in only one software package.",
+  "source": "https://github.com/LibreCAD/LibreCAD/releases/tag/2.2.0.2; https://docs.librecad.org/en/2.2.0_a/; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://wiki.freecad.org/Draft_DXF; https://wiki.freecad.org/Std_Export; https://wiki.freecad.org/Mesh_Export; https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#importing-graphics; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#working-with-footprints; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#board-outlines; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#plotting; https://docs.blender.org/manual/en/4.2/files/import_export/stl.html; https://docs.blender.org/manual/en/4.2/addons/import_export/curve_svg.html; https://docs.blender.org/manual/en/4.2/addons/import_export/scene_gltf2.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/seed_l_cable_strain_bracket.dxf",
+            "path": "/home/user/Desktop/seed_l_cable_strain_bracket.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/stage1_l_cable_strain_bracket.dxf",
+    "/home/user/Desktop/stage2_l_cable_strain_bracket.stl",
+    "/home/user/Desktop/stage2_l_cable_strain_bracket_handoff_outline.dxf",
+    "/home/user/Desktop/stage3_l_cable_strain_bracket_board.kicad_pcb",
+    "/home/user/Desktop/stage3_l_cable_strain_bracket_board_profile.svg",
+    "/home/user/Desktop/stage4_l_cable_strain_bracket.glb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "metric": {
+      "name": "four_gui_transfer_completion",
+      "direction": "maximize",
+      "output_field": "score",
+      "baseline_score": 0.0,
+      "max_score": 1.0
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

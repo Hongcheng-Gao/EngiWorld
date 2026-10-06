@@ -1,0 +1,20 @@
+FoamFile
+{
+    format ascii;
+    class volScalarField;
+    location "0";
+    object k;
+}
+dimensions [0 2 -2 0 0 0 0];
+internalField uniform 0.001;
+boundaryField
+{
+    FARFIELD
+    {
+        type inletOutlet;
+        inletValue uniform 0.001;
+        value uniform 0.001;
+    }
+    SYMP3 { type empty; }
+    WALL10 { type kqRWallFunction; value uniform 1e-10; }
+}

@@ -1,0 +1,55 @@
+{
+  "task_id": "c-open-abaqus-ansys-autocad-task-09-windows",
+  "open_choice_id": "cae-open-choice-009",
+  "source_task": "task/task-c/abaqus/task-09",
+  "original_software": "abaqus",
+  "alternative_software": "ansys",
+  "distractor_software": "autocad",
+  "interface": "cli",
+  "domain": "simply_supported_beam_udl",
+  "analysis_kind": "static_structural",
+  "metrics": [
+    "midspan_deflection",
+    "max_mises"
+  ],
+  "expected_result_fields": [
+    "U",
+    "S",
+    "RF"
+  ],
+  "require_metrics_json": true,
+  "visible_goal": "Analyze the specified simply supported 3D solid beam under a 0.05 MPa top-face pressure; report signed center-node U2 and the solver-defined maximum Mises stress.",
+  "selection_reason": "Solid-beam statics with complete rigid end-face couplings, stable support DOFs, pressure loading, and native U/RF/S output is feasible in Abaqus 2025 LE and ANSYS 2026 R1.",
+  "artifact_hint": {
+    "ground_truth_files": [
+      "Job-UDL.cae",
+      "Job-UDL.odb",
+      "Job-UDL.db",
+      "Job-UDL.rst"
+    ],
+    "abaqus_stems": [
+      "Job-UDL"
+    ],
+    "ansys_db_files": [
+      "Job-UDL.db"
+    ],
+    "ansys_result_files": [
+      "Job-UDL.rst"
+    ]
+  },
+  "span_hint": {
+    "x": 200.0,
+    "y": 10.0,
+    "z": 10.0
+  },
+  "bounds_hint": {
+    "midspan_deflection": [
+      -0.2,
+      -0.03
+    ],
+    "max_mises": [
+      1.0,
+      100.0
+    ]
+  }
+}

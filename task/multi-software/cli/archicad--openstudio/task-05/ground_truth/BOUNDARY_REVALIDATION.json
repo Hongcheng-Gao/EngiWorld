@@ -1,0 +1,30 @@
+{
+  "schema": "engiworld.task05.boundary-revalidation.v2",
+  "case_id": "multi-cli-2-archicad-openstudio-task-05-windows",
+  "scope": "IFC handoff area and handoff-to-OSM floor geometry enforcement",
+  "positive_boundary": {
+    "change": "Reverse only the top-level key order of flow_report.json",
+    "actual_ok": true,
+    "errors": []
+  },
+  "negative_boundaries": [
+    {
+      "change": "Restore the old handoff areas 31.78, 15.44, and 27.0 m2",
+      "actual_ok": false,
+      "required_errors": [
+        "handoff.json:stage1_net_floor_area_mismatch:MAIN-STUDIO",
+        "handoff.json:stage1_net_floor_area_mismatch:STORAGE",
+        "handoff.json:stage1_net_floor_area_mismatch:FINISHING-BOOTH"
+      ]
+    },
+    {
+      "change": "Reduce only the MAIN-STUDIO OSM floor polygon and update the declared OSM hashes",
+      "actual_ok": false,
+      "required_errors": [
+        "result.osm:handoff_floor_area_mismatch:MAIN-STUDIO"
+      ]
+    }
+  ],
+  "all_cases_matched_expectation": true,
+  "full_matrix": "EVAL_MATRIX.json"
+}

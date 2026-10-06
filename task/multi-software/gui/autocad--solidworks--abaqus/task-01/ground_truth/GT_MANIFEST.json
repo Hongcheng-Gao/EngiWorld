@@ -1,0 +1,153 @@
+{
+  "status": "native_software_generated_and_validated",
+  "environment": "Autocad-Solidworks-Abaqus",
+  "task": "task-01",
+  "title": "DXF Mounting Plate Static Analysis",
+  "chain": "AutoCAD 2024 -> SOLIDWORKS 2025 -> Abaqus/CAE 2025",
+  "no_init_file": true,
+  "generated_at": "2026-08-11T23:26:00+08:00",
+  "validated_at": "2026-08-12T03:30:17+08:00",
+  "snapshot": {
+    "instance_id": "i-yeslqx4lq8bw80d1b65n",
+    "private_api": "10.0.6.48:5000",
+    "remote_desktop": "C:\\Users\\user\\Desktop"
+  },
+  "software": {
+    "autocad": "AutoCAD 2024, R24.3.171.0.0 (24.3s LMS Tech)",
+    "solidworks": "SOLIDWORKS 2025, 33.0.0.5050 (revision 33.0.0)",
+    "abaqus": "Abaqus/Standard Learning Edition 2025"
+  },
+  "generation_method": "Native automation APIs were executed inside the mapped Windows Snapshot against the installed AutoCAD, SOLIDWORKS, and Abaqus applications. AutoCAD saved the DXF, SOLIDWORKS imported that exact DXF and exported the STEP, and Abaqus imported that exact STEP, built the model, submitted the job, and wrote the CAE/ODB. No offline or simulated GT geometry/results were used.",
+  "source_instruction_utf8_bytes": 3235,
+  "source_instruction_sha256": "23fb576da0ea075c0bd30c36fe21e7513936a4f32b2991133761476eebe4cd39",
+  "task_json_size": 5211,
+  "task_json_sha256": "c37a16851269b3dd6cd0da2fe930b789c1aa750dd283fdb1c03d78d51d6b822b",
+  "evaluator_size": 104807,
+  "evaluator_sha256": "49ecabc38bced88d59e97617040a628ee822d9cc3f48e8cd39625f266bce7f08",
+  "generated_files": [
+    {
+      "file": "stage1_profile.dxf",
+      "size": 81135,
+      "sha256": "f00f1e1ca904b5c89e91c9d5bd4600ae6bac5ad48e4f13452b8d03db06ff0ff3",
+      "remote_path": "C:\\Users\\user\\Desktop\\stage1_profile.dxf",
+      "generated_by": "AutoCAD 2024"
+    },
+    {
+      "file": "stage2_geometry.step",
+      "size": 62713,
+      "sha256": "67036103121ec81b3409b2a1ed740939e03f0541dec7977d1d339d79a13179ea",
+      "remote_path": "C:\\Users\\user\\Desktop\\stage2_geometry.step",
+      "generated_by": "SOLIDWORKS 2025"
+    },
+    {
+      "file": "Job-PlateStatic.cae",
+      "size": 151552,
+      "sha256": "8202208b124afbdeb6199a04d745b6dd0fd3455a9f6d79932acac7fc3c982f7e",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-PlateStatic.cae",
+      "generated_by": "Abaqus/CAE 2025",
+      "hash_note": "Authoritative post-process-shutdown hash; evaluator copy-on-open validation leaves this file unchanged."
+    },
+    {
+      "file": "Job-PlateStatic.odb",
+      "size": 908624,
+      "sha256": "6a9f332a95565a82878ccc30aa6da45605765eec8442e3a2876eaf670d7d42fc",
+      "remote_path": "C:\\Users\\user\\Desktop\\Job-PlateStatic.odb",
+      "generated_by": "Abaqus/Standard 2025"
+    }
+  ],
+  "native_geometry_audit": {
+    "autocad": {
+      "entity_count": 7,
+      "layers": ["OUTLINE", "HOLE", "CUTOUT", "CHAIN"],
+      "slot_entity": "closed AcDbPolyline",
+      "slot_vertices": [[46, 34], [74, 34], [74, 46], [46, 46]],
+      "slot_bulges": [0.0, 1.0, 0.0, 1.0]
+    },
+    "solidworks": {
+      "solid_body_count": 1,
+      "bounding_box_mm": [120.0, 80.0, 6.0],
+      "volume_mm3": 53301.71107451277,
+      "native_face_count": 22,
+      "native_edge_count": 48,
+      "outer_chamfer_edges": 8,
+      "chamfer_feature_type": "Chamfer",
+      "manifold_solid_brep_count": 1
+    }
+  },
+  "abaqus_audit": {
+    "model": "Model-PlateStatic",
+    "part": "EW_ACAD_SW_ABQ_01_IMPORTED_FROM_stage2_geometry_step_PLATE",
+    "instance": "PLATE-1",
+    "step": "Step-Static",
+    "job": "Job-PlateStatic",
+    "material": {"name": "Steel", "E_MPa": 210000.0, "nu": 0.3},
+    "fixed_hole_face_indices": [2, 4, 11, 13],
+    "load_hole_face_indices": [1, 3, 12, 14],
+    "load_surface": "LOAD_HOLES_SURFACE",
+    "load_implementation": "one +800 N CF1 reference point with distributing coupling to both right holes",
+    "mesh": {"nodes": 943, "elements": 3212, "element_types": ["C3D4"]},
+    "odb_status": "JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "frames": 2,
+    "max_displacement_mm": 0.000979550532065332,
+    "max_mises_MPa": 4.4607462882995605,
+    "sum_RF1_N": -799.9999995231628
+  },
+  "chain_evidence": {
+    "dxf_native_text": ["EW_ACAD_SW_ABQ_01", "AUTOCAD_TO_SOLIDWORKS"],
+    "step_quoted_data": ["EW_ACAD_SW_ABQ_01", "FROM_stage1_profile.dxf", "SOLIDWORKS_TO_ABAQUS"],
+    "cae_native_metadata": ["EW_ACAD_SW_ABQ_01", "IMPORTED_FROM_stage2_geometry.step"]
+  },
+  "validation": {
+    "evaluator_sha256": "49ecabc38bced88d59e97617040a628ee822d9cc3f48e8cd39625f266bce7f08",
+    "matrix": [
+      {"id": "final_v51_negative_freed_u3_inp_authoritative", "validated_at": "2026-08-12T03:04:29+08:00", "expected": false, "result": false, "first_failure": "BC-FixedHoles does not fix U1, U2, and U3 to zero"},
+      {"id": "final_v52_negative_extra_bc", "validated_at": "2026-08-12T03:05:05+08:00", "expected": false, "result": false, "first_failure": "Unexpected additional active boundary conditions: Hidden-Extra-BC"},
+      {"id": "final_v54_negative_1600n_load", "validated_at": "2026-08-12T03:06:32+08:00", "expected": false, "result": false, "first_failure": "Load-RightHoles total concentrated load is 1600.0 N, expected 800 N"},
+      {"id": "final_v55_negative_quadratic_mesh", "validated_at": "2026-08-12T03:07:22+08:00", "expected": false, "result": false, "first_failure": "CAE mesh must use only first-order C3D4/C3D8R; got ['C3D10']"},
+      {"id": "final_v57_negative_remeshed_cae_stale_odb", "validated_at": "2026-08-12T03:08:43+08:00", "expected": false, "result": false, "first_failure": "ODB must contain exactly one meshed analysis instance matching CAE: [] vs PLATE-1"},
+      {"id": "final_v58_negative_unrelated_odb", "validated_at": "2026-08-12T03:09:06+08:00", "expected": false, "result": false, "first_failure": "Missing ODB step"},
+      {"id": "final_v59_negative_suppressed_load", "validated_at": "2026-08-12T03:16:20+08:00", "expected": false, "result": false, "first_failure": "Load-RightHoles must have positive CF1"},
+      {"id": "final_v60_positive_native", "validated_at": "2026-08-12T03:17:04+08:00", "expected": true, "result": true},
+      {"id": "final_v61_positive_surface_traction", "validated_at": "2026-08-12T03:18:03+08:00", "expected": true, "result": true},
+      {"id": "final_v62_positive_direct_nodal", "validated_at": "2026-08-12T03:19:08+08:00", "expected": true, "result": true},
+      {"id": "final_v63_positive_coupled_fixed", "validated_at": "2026-08-12T03:19:56+08:00", "expected": true, "result": true},
+      {"id": "final_v64_negative_freed_u3_inp_authoritative", "validated_at": "2026-08-12T03:21:29+08:00", "expected": false, "result": false, "first_failure": "BC-FixedHoles does not fix U1, U2, and U3 to zero"},
+      {"id": "final_v65_negative_missing_force_outputs", "validated_at": "2026-08-12T03:22:28+08:00", "expected": false, "result": false, "first_failure": "CAE active field output request is missing: CF, NFORC"},
+      {"id": "final_v66_negative_extra_equation", "validated_at": "2026-08-12T03:23:20+08:00", "expected": false, "result": false, "first_failure": "Unexpected active constraint cards in Step-Static: *Equation"},
+      {"id": "final_v67_negative_wrong_load_location_same_mesh_odb", "validated_at": "2026-08-12T03:24:37+08:00", "expected": false, "result": false, "first_failure": "ODB right-hole NFORC resultant mismatch got [2.39163637161255e-06, -1.49570405483246e-06, -1.93249434232712e-07] N expected approximately [-800,0,0] N"},
+      {"id": "final_v68_negative_wrong_named_odb_set", "validated_at": "2026-08-12T03:26:31+08:00", "expected": false, "result": false, "first_failure": "ODB right-hole load-set instance/node membership does not match the validated CAE"},
+      {"id": "final_v69_negative_remeshed_cae_stale_odb", "validated_at": "2026-08-12T03:27:33+08:00", "expected": false, "result": false, "first_failure": "ODB must contain exactly one meshed analysis instance matching CAE: [] vs PLATE-1"},
+      {"id": "final_v70_authoritative_native", "validated_at": "2026-08-12T03:28:32+08:00", "expected": true, "result": true}
+    ],
+    "final_authoritative_positive": {
+      "id": "final_v70_authoritative_native",
+      "result": true,
+      "cae_hash_stable": true,
+      "remote_roundtrip_matches_formal_files": true,
+      "evaluator_temp_residuals": 0
+    },
+    "resolved_evaluator_issue": "A prior probe (final_v50_negative_freed_u3) was excluded because it relied on the CAE state's u3 attribute, which reported 0.0 even though the exported Step-Static input used *Boundary, op=NEW without U3. The evaluator now intersects CAE state with authoritative step-scoped exported-INP boundary DOFs; final_v51 and final_v64 reject that fixture.",
+    "excluded_probe": {"id": "final_v50_negative_freed_u3", "result": true, "counted": false}
+  },
+  "cleanup": {
+    "status": "completed",
+    "completed_at": "2026-08-12T03:29:29.2759365+08:00",
+    "verified_at": "2026-08-12T03:30:17.7369426+08:00",
+    "removed_desktop_files": [
+      "stage1_profile.dxf",
+      "stage2_geometry.step",
+      "Job-PlateStatic.cae",
+      "Job-PlateStatic.odb",
+      "eval.py",
+      "eval_detail.txt",
+      "eval_result.txt"
+    ],
+    "removed_run_directory": "C:\\Users\\user\\AppData\\Local\\Temp\\engiworld_goal_019ff103_task01",
+    "evaluator_temp_directory_exists": false,
+    "residual_count": 0,
+    "desktop_cad_deliverables": 0,
+    "cad_cae_processes": 0,
+    "baseline_restored_exactly": true,
+    "post_cleanup_platform": "Windows"
+  }
+}

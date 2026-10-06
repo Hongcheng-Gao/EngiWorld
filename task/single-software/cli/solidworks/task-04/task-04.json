@@ -1,0 +1,59 @@
+{
+  "id": "single-software--cli--solidworks--task-04--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Begin in SolidWorks with C:\\Users\\User\\Desktop\\cli_024_batch_scale_parts.step. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). Before starting the work, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_024_batch_scale_parts.step`.\n\nUsing SolidWorks command-line automation, use that input file containing independent solids bracket_A, bracket_B, and bracket_C. Bracket_A is 60 x 40 x 20 mm centered at X=0, bracket_B starts as 60 x 40 x 20 mm centered at X=65, and bracket_C is 55 x 35 x 18 mm centered at X=145. Scale only bracket_B uniformly by factor 1.25 while preserving its local origin position at X=65, Y=0. Do not change bracket_A or bracket_C. Export the complete assembly as C:\\Users\\User\\Desktop\\cli_024_scaled_assembly_out.step. Also export C:\\Users\\User\\Desktop\\cli_024_A.step, C:\\Users\\User\\Desktop\\cli_024_B_scaled.step, and C:\\Users\\User\\Desktop\\cli_024_C.step as separate part STEP files using each part's own centered local coordinates.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Measuring.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/cli_024_batch_scale_parts.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_024_batch_scale_parts.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_024_A.step",
+    "C:\\Users\\User\\Desktop\\cli_024_B_scaled.step",
+    "C:\\Users\\User\\Desktop\\cli_024_C.step",
+    "C:\\Users\\User\\Desktop\\cli_024_scaled_assembly_out.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

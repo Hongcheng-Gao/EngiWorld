@@ -1,0 +1,89 @@
+{
+  "status": "verified_real_snapshot",
+  "task": "task-02",
+  "task_id": "c-open-abaqus-ansys-autocad-task-02-windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "solver": "abaqus",
+  "software": "Abaqus/Standard Learning Edition 2025",
+  "analysis": "2D axisymmetric static structural",
+  "model": "Model-Cylinder",
+  "step": "Step-Pressure",
+  "job": "Job-Cylinder",
+  "source_instruction_sha256": "0914e4158ae723a5fb00dc6f239a81fc29574db1c563334c3f9b9745dfc43f38",
+  "evaluator_sha256": "a35380dd9989463a1c6b810dda51221a08b63781220792777c7a4defc81efe47",
+  "generated_on": "2026-08-12",
+  "provenance": {
+    "instance_id": "i-yeslqx375s4c5qupem47",
+    "private_ip": "10.0.6.47",
+    "access": "OSWorld REST through SSH tunnel http://127.0.0.1:15047",
+    "public_ip_from_mapping": "115.190.150.137",
+    "generator": "gt_task_02_abaqus.py",
+    "generation_evidence": "../validation/generation/abaqus_gt_generation.json",
+    "native_completion_evidence": "native_audit.json odb_job_status=JOB_STATUS_COMPLETED_SUCCESSFULLY",
+    "synthetic_or_offline_solver_data": false
+  },
+  "metrics": {
+    "radial_displacement": 0.004539687652140856,
+    "radial_displacement_definition": "signed final-frame U1 at INNER node (r,z)=(50,5) mm",
+    "max_mises": 21.03687858581543,
+    "max_mises_definition": "maximum final-frame integration-point S.mises"
+  },
+  "model_audit": {
+    "element_family": "CAX4",
+    "nodes": 33,
+    "elements": 20,
+    "integration_points_per_element": 4,
+    "total_equivalent_cf1_n": 31415.92653589793,
+    "field_counts": {
+      "U": 33,
+      "RF": 33,
+      "S": 80
+    }
+  },
+  "files": [
+    {
+      "file": "Job-Cylinder.cae",
+      "size": 53248,
+      "sha256": "203c40dc838501141f51a2aa11dab416cc6128b678aad49aa4c9aa35d0dac278"
+    },
+    {
+      "file": "Job-Cylinder.odb",
+      "size": 222364,
+      "sha256": "5710072fffe24f73eb8e4b0720f1470e25c3c0267119ba182ee74842e3a14761"
+    },
+    {
+      "file": "metrics.json",
+      "size": 86,
+      "sha256": "9064fa4ee3d10771fa2143e98f83daa1fcd166bad937cbadc8ad88fcca870fff"
+    },
+    {
+      "file": "gt_task_02_abaqus.py",
+      "size": 11579,
+      "sha256": "9353db719225db9e5aa95ab41d18db5ce7883ee36752abb9747546254a6e170e"
+    },
+    {
+      "file": "native_audit.json",
+      "size": 2545,
+      "sha256": "605cb7e057d41198934c8d9a82d789e66c1572d04fa8aecfa6f494d0fa5235ab"
+    }
+  ],
+  "validation": {
+    "matrix": "../validation/validation_matrix.json",
+    "ground_truth_positive": "../validation/cases/formal_abaqus_ground_truth_a353_v1/validation_result.json",
+    "generated_candidate_positive": "../validation/cases/positive_abaqus_a353_v1/validation_result.json",
+    "equivalent_cax4r_positive": "../validation/cases/equivalent_abaqus_cax4r_a353_v1/validation_result.json",
+    "negative_same_labels_wrong_result": "../validation/cases/negative_same_labels_wrong_abaqus_result_a353_v1/validation_result.json",
+    "all_cases_restored_remote_baseline": true
+  },
+  "final_instance_cleanup": {
+    "status": "verified_clean",
+    "evidence": "../validation/final_cleanup.json",
+    "cleanup_script_sha256": "668248a74657f37d7c5af6e39b5ae734a6ed8027530005b9024f9017616fa11d"
+  },
+  "official_sources": [
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-regionpyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-displacementbcstatepyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-concentratedforcestatepyc.htm",
+    "https://docs.software.vt.edu/abaqusv2025/English/SIMACAEKERRefMap/simaker-c-mdbpyc.htm"
+  ]
+}

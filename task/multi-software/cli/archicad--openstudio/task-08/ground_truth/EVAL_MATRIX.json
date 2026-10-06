@@ -1,0 +1,167 @@
+{
+  "schema": "engiworld.eval_matrix.v1",
+  "case_id": "multi-cli-2-archicad-openstudio-task-08-windows",
+  "evaluator_policy": "instruction-derived semantic checks with native provenance",
+  "environments": {
+    "local": "Python 3 evaluator with ifcopenshell and SQLite readback",
+    "windows": "cli2-archicad27-openstudio310-win; OpenStudio 3.10.0; EnergyPlus 25.1"
+  },
+  "cases": [
+    {
+      "id": "formal",
+      "kind": "positive",
+      "construction": "Unmodified native formal GT.",
+      "expected": "pass",
+      "actual": "pass",
+      "errors": [],
+      "artifact_sha256": {
+        "result.osm": "6880657bdf0c2ee4a6fa89a1fd127007d8f07fdd4025ca947299776fa15ad3ae",
+        "run/eplusout.sql": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c"
+      }
+    },
+    {
+      "id": "schedule_equivalent",
+      "kind": "reasonable_equivalent_native",
+      "construction": "Use OpenStudio 3.10 Ruby API to rename three load schedules and change one valid positive day-profile value, then rerun EnergyPlus 25.1 and native postprocessing.",
+      "expected": "pass",
+      "actual": "pass",
+      "errors": [],
+      "artifact_sha256": {
+        "result.osm": "b49678312de2d7118f79a22ef9818f103b6ef20b034f69bbd42a23fc27411434",
+        "run/eplusout.sql": "06132b19e8f071bb989d2deb622cbb64cd0c32a2bbcdb440191d8b19cfc1fee6",
+        "model_summary.csv": "1d9df76002f09506b749abcd0ebaf02f02f92bf1dbd4831087286c9e282bcb41"
+      },
+      "native_transaction": {"started_at_utc":"2026-08-12T11:55:26.6361553+00:00","openstudio_process_exited_at_utc":"2026-08-12T11:55:30.3708310+00:00","completed_at_utc":"2026-08-12T11:55:34.4647289+00:00","openstudio_executable_sha256":"46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361","energyplus_executable_sha256":"3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5","result_osm_sha256":"b49678312de2d7118f79a22ef9818f103b6ef20b034f69bbd42a23fc27411434","sql_sha256":"06132b19e8f071bb989d2deb622cbb64cd0c32a2bbcdb440191d8b19cfc1fee6","hourly_series_count":18}
+    },
+    {
+      "id": "alternate_epw",
+      "kind": "reasonable_equivalent_native",
+      "construction": "Change only COMMENTS 1 metadata in a valid 35-field, 8760-record TMY3 EPW; bind it through OpenStudio API and rerun EnergyPlus 25.1 plus native postprocessing.",
+      "expected": "pass",
+      "actual": "pass",
+      "errors": [],
+      "artifact_sha256": {
+        "weather.epw": "6ddf765cf0865bdd80b1431a17f4a7acad4bc0b062ccf60b481ffddb2d0f7e65",
+        "result.osm": "fdbbb80bbeabc539cf50724bd33ad263ad247b3a406ced4191f6073b8c8298ab",
+        "run/eplusout.sql": "cf263b22602d2202dd620702d575c6ae4aa51b190dc84cf0d45a7da87ddab256"
+      },
+      "native_transaction": {"started_at_utc":"2026-08-12T11:17:00.4412972+00:00","openstudio_process_exited_at_utc":"2026-08-12T11:17:04.2248700+00:00","completed_at_utc":"2026-08-12T11:17:08.3330749+00:00","openstudio_executable_sha256":"46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361","energyplus_executable_sha256":"3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5","result_osm_sha256":"fdbbb80bbeabc539cf50724bd33ad263ad247b3a406ced4191f6073b8c8298ab","sql_sha256":"cf263b22602d2202dd620702d575c6ae4aa51b190dc84cf0d45a7da87ddab256","hourly_series_count":18}
+    },
+    {
+      "id": "extra_space_zone",
+      "kind": "reasonable_equivalent_native",
+      "construction": "Export stage1-preserved GUEST-1 as a fourth OpenStudio space/GUEST-1-ZN with schedule, loads, thermostat, outdoor air, and Ideal Loads; rerun 24 hourly series.",
+      "expected": "pass",
+      "actual": "pass",
+      "errors": [],
+      "artifact_sha256": {
+        "result.osm": "6bfefc916ec405a769ca9ba42ce00d9a6c766e02e76219cee666ce43f0f5d1bd",
+        "model_summary.csv": "7fc60e3a2f026ed3b64aede2e2f38cda403c31d43b69ec1f94082495fe5139c3",
+        "run/eplusout.sql": "7f4a33ed66503f7246a10a8e97e0cbcb9792e4462b941a73fdaf55aade44ce52"
+      },
+      "native_transaction": {"started_at_utc":"2026-08-12T11:17:55.2792637+00:00","openstudio_process_exited_at_utc":"2026-08-12T11:17:59.4235927+00:00","completed_at_utc":"2026-08-12T11:18:03.8286738+00:00","openstudio_executable_sha256":"46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361","energyplus_executable_sha256":"3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5","result_osm_sha256":"6bfefc916ec405a769ca9ba42ce00d9a6c766e02e76219cee666ce43f0f5d1bd","sql_sha256":"7f4a33ed66503f7246a10a8e97e0cbcb9792e4462b941a73fdaf55aade44ce52","hourly_series_count":24}
+    },
+    {
+      "id": "zero_window",
+      "kind": "reasonable_equivalent_native",
+      "construction": "Remove both OpenStudio window subsurfaces through OpenStudio API, retain three doors, set WWR to zero, and rerun EnergyPlus and postprocessing.",
+      "expected": "pass",
+      "actual": "pass",
+      "errors": [],
+      "artifact_sha256": {
+        "result.osm": "6497a3feb03e7a8442beef6e36e9772e6c58eafb369e86ce35145be30a3cbf0e",
+        "flow_report.json": "e9d4c24ddeaad3d41f9cfc3a4f691dac471fc03f90352040ac12f23e30114bfb",
+        "run/eplusout.sql": "f4aaea706dea7677ee4b9eb6f511a7172b8d9f6b1ee4c35f2a1735fc68db62e6"
+      },
+      "native_transaction": {"started_at_utc":"2026-08-12T11:18:58.9873518+00:00","openstudio_process_exited_at_utc":"2026-08-12T11:19:02.5181107+00:00","completed_at_utc":"2026-08-12T11:19:06.6100520+00:00","openstudio_executable_sha256":"46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361","energyplus_executable_sha256":"3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5","result_osm_sha256":"6497a3feb03e7a8442beef6e36e9772e6c58eafb369e86ce35145be30a3cbf0e","sql_sha256":"f4aaea706dea7677ee4b9eb6f511a7172b8d9f6b1ee4c35f2a1735fc68db62e6","hourly_series_count":18}
+    },
+    {
+      "id": "manifest_tamper",
+      "kind": "negative",
+      "construction": "Append one byte to flow_report and refresh the package manifest, but do not refresh OpenStudio postprocess provenance.",
+      "expected": "reject",
+      "actual": "reject",
+      "errors": [
+        "openstudio_postprocess_transaction.json:identity_or_hash_mismatch"
+      ],
+      "artifact_sha256": {
+        "flow_report.json": "a37701f012adefa796f12729e94f930caae9a86ddd115f89a28ec13b86bca793"
+      }
+    },
+    {
+      "id": "missing_ideal_loads",
+      "kind": "negative",
+      "construction": "Replace one zone equipment-list Ideal Loads handle with a dangling UUID while coherently refreshing downstream hashes.",
+      "expected": "reject",
+      "actual": "reject",
+      "errors": [
+        "result.osm:zone_ideal_equipment_chain:RECEPTION"
+      ],
+      "artifact_sha256": {
+        "result.osm": "efd8dd18e1b20386623bf1c50ee4906f5e3f08c82efe73fa5a41ab8006eb4a82"
+      }
+    },
+    {
+      "id": "shared_schedule",
+      "kind": "negative",
+      "construction": "Make all three required-use load schedule rulesets point to one default day profile while coherently refreshing downstream hashes.",
+      "expected": "reject",
+      "actual": "reject",
+      "errors": [
+        "result.osm:scheduled_uses_not_distinct"
+      ],
+      "artifact_sha256": {
+        "result.osm": "a92a2894b89d80328eae1ccff6eedccb8c195b85c20931aabffb3a4b0fd7e1e8"
+      }
+    },
+    {
+      "id": "contradictory_sql_flags",
+      "kind": "negative",
+      "construction": "Set Completed TRUE and CompletedSuccessfully FALSE in the native SQLite database while coherently refreshing all dependent hashes.",
+      "expected": "reject",
+      "actual": "reject",
+      "errors": [
+        "eplusout.sql:integrity_simulation_version_or_flags"
+      ],
+      "artifact_sha256": {
+        "run/eplusout.sql": "9f60d179b14c9044e53df44f3046643870b4aafc5ab3550d51b65d262dbc771e"
+      }
+    },
+    {
+      "id": "unzoned_space",
+      "kind": "negative",
+      "construction": "Add a fourth OSM Space with no ThermalZone binding, update flow room count, and coherently refresh downstream hashes.",
+      "expected": "reject",
+      "actual": "reject",
+      "errors": ["result.osm:space_without_valid_thermal_zone"],
+      "artifact_sha256": {"result.osm":"c74b01b99e379a7d33b60a28ae2a0cea27e0fa65a3818b2bd5cce95f8cc3c8cb"}
+    },
+    {
+      "id": "orphan_zone",
+      "kind": "negative",
+      "construction": "Add a fourth OSM ThermalZone not referenced by any Space, update flow zone count, and coherently refresh downstream hashes.",
+      "expected": "reject",
+      "actual": "reject",
+      "errors": ["result.osm:orphan_thermal_zone"],
+      "artifact_sha256": {"result.osm":"2544e1e98b018051e149ca63105d421d0a5e94b0d7acdebe286961456af0c442"}
+    }
+  ],
+  "windows_revalidation": {
+    "schema": "engiworld.task08.windows-revalidation.v1",
+    "run_root": "C:\\Users\\user\\Desktop\\EW_AUDIT_TASK08_RUN_V2_20260812T194509778921Z",
+    "run_stamp_utc": "20260812T194509778921Z",
+    "evaluator_sha256": "6085fb3f943992e1a646378d00ce2a4d7ba5ed0c37c14c1b528aa9f80339d30d",
+    "isolation": "Each case was copied afresh from the verified 21-file formal input. Mutated cases refreshed their manifest entry so rejection exercised the target check.",
+    "summary": {"total": 6, "positive": 2, "negative": 4, "matched_expectation": 6},
+    "cases": [
+      {"id": "formal", "expected_ok": true, "actual_ok": true, "errors": [], "started_utc": "2026-08-12T19:45:09.810643+00:00", "completed_utc": "2026-08-12T19:45:11.160708+00:00"},
+      {"id": "json_key_order", "purpose": "Reverse simulation transaction top-level JSON key order", "expected_ok": true, "actual_ok": true, "errors": [], "started_utc": "2026-08-12T19:45:11.207611+00:00", "completed_utc": "2026-08-12T19:45:12.479493+00:00"},
+      {"id": "bad_matrix_time", "purpose": "Set one native reasonable-equivalent start equal to completion", "expected_ok": false, "actual_ok": false, "errors": ["EVAL_MATRIX.json:invalid_or_incomplete"], "started_utc": "2026-08-12T19:45:12.511232+00:00", "completed_utc": "2026-08-12T19:45:13.792677+00:00"},
+      {"id": "bad_stable_hash", "purpose": "Replace the first stable SQL sample hash with zeros", "expected_ok": false, "actual_ok": false, "errors": ["openstudio_simulation_transaction.json:time_order_or_stable_samples_invalid"], "started_utc": "2026-08-12T19:45:13.829962+00:00", "completed_utc": "2026-08-12T19:45:15.069730+00:00"},
+      {"id": "bad_post_time", "purpose": "Set postprocess start equal to completion", "expected_ok": false, "actual_ok": false, "errors": ["openstudio_postprocess_transaction.json:time_or_script_hash_mismatch"], "started_utc": "2026-08-12T19:45:15.117103+00:00", "completed_utc": "2026-08-12T19:45:16.388484+00:00"},
+      {"id": "bad_post_script", "purpose": "Append bytes to the delivered Ruby postprocessor", "expected_ok": false, "actual_ok": false, "errors": ["openstudio_postprocess_transaction.json:time_or_script_hash_mismatch"], "started_utc": "2026-08-12T19:45:16.420177+00:00", "completed_utc": "2026-08-12T19:45:17.708205+00:00"}
+    ],
+    "all_cases_matched_expectation": true,
+    "source_windows_receipt_sha256": "10d010554655afc7f817c565f3ef959a57b5f0f1de5294dc48b0297b078e0fd1"
+  }
+}

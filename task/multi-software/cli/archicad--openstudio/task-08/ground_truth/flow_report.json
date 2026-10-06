@@ -1,0 +1,441 @@
+{
+  "case_id": "multi-cli-2-archicad-openstudio-task-08-windows",
+  "software_chain": [
+    "archicad",
+    "openstudio"
+  ],
+  "stage_sequence": [
+    {
+      "software": "archicad",
+      "input": "init.ifc",
+      "output": "stage1.ifc",
+      "handoff": "handoff.json"
+    },
+    {
+      "software": "openstudio",
+      "input": "handoff.json",
+      "upstream_reference": "stage1.ifc",
+      "output": "result.osm"
+    }
+  ],
+  "consumed_handoff_sha256": "3f112865fe54f1c42984fc7cd0b2bd3e4225d227a21b8ab3bb568280e2f9ae6c",
+  "source_stage1_sha256": "f3e292c1879abf89f3f1d6b0dfa85af3d854431a7d3ee2b3fa36bf5f6eadbb5d",
+  "osm_sha256": "6880657bdf0c2ee4a6fa89a1fd127007d8f07fdd4025ca947299776fa15ad3ae",
+  "building_area_m2": 60.0,
+  "room_count": 3,
+  "thermal_zone_count": 3,
+  "door_count": 3,
+  "window_count": 2,
+  "window_wall_ratio": 0.059649122807017535,
+  "surface_count": 18,
+  "subsurface_count": 5,
+  "weather_file": "weather.epw",
+  "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+  "schedule_set": [
+    "EW2A08 Activity 120W",
+    "EW2A08 Always On",
+    "EW2A08 Cooling 26C",
+    "EW2A08 Heating 20C",
+    "GuestSuiteSchedule",
+    "HousekeepingServiceSchedule",
+    "ReceptionPublicSchedule"
+  ],
+  "construction_set": [
+    "EW2A08 Door Construction",
+    "EW2A08 Opaque Construction",
+    "EW2A08 Window Construction"
+  ],
+  "openstudio_version": "3.10.0",
+  "spaces": [
+    {
+      "name": "RECEPTION",
+      "ifc_global_id": "0iErBA12fCh8zBSJ$FAvr7",
+      "thermal_zone": "RECEPTION-ZN",
+      "floor_area_m2": 28,
+      "door_count": 1,
+      "window_count": 1,
+      "opening_names": [
+        "RECEPTION-ENTRY-DOOR",
+        "RECEPTION-COURTYARD-WINDOW"
+      ]
+    },
+    {
+      "name": "ACCESSIBLE-SUITE",
+      "ifc_global_id": "0WmLJ6ODH2yw62O7bJWELt",
+      "thermal_zone": "ACCESSIBLE-SUITE-ZN",
+      "floor_area_m2": 20,
+      "door_count": 1,
+      "window_count": 1,
+      "opening_names": [
+        "ACCESSIBLE-SUITE-DOOR",
+        "ACCESSIBLE-SUITE-COURTYARD-WINDOW"
+      ]
+    },
+    {
+      "name": "HOUSEKEEPING-CLOSET",
+      "ifc_global_id": "1cKlNMUnv08A3dRlsgDtgT",
+      "thermal_zone": "HOUSEKEEPING-CLOSET-ZN",
+      "floor_area_m2": 12,
+      "door_count": 1,
+      "window_count": 0,
+      "opening_names": [
+        "HOUSEKEEPING-CLOSET-DOOR"
+      ]
+    }
+  ],
+  "thermal_zones": [
+    "RECEPTION-ZN",
+    "ACCESSIBLE-SUITE-ZN",
+    "HOUSEKEEPING-CLOSET-ZN"
+  ],
+  "osm_tokens": [
+    "GuestSuiteSchedule",
+    "HousekeepingServiceLoad",
+    "CourtyardDaylight",
+    "AccessibleSuiteZone"
+  ],
+  "assumptions": {
+    "reception_people_m2": 0.08,
+    "accessible_suite_people_m2": 0.06,
+    "housekeeping_equipment_w_m2": 18.0
+  },
+  "openstudio_build_transaction": {
+    "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+    "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+    "arguments": [
+      "C:\\Users\\user\\Documents\\ew08-build.rb"
+    ],
+    "started_at_utc": "2026-08-12T10:36:33.9298763Z",
+    "completed_at_utc": "2026-08-12T10:36:33.9299131Z",
+    "exit_code": 0
+  },
+  "native_stage_log_sha256": "2af4472d80d952f6b15cee272ec69e990973856d8048cc4da3426d53e6a5298d",
+  "native_cli_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+  "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5",
+  "energyplus_status": "************* EnergyPlus Completed Successfully-- 10 Warning; 0 Severe Errors; Elapsed Time=00hr 00min  2.40sec",
+  "energyplus_warning_count": 10,
+  "energyplus_severe_errors": 0,
+  "energyplus_sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+  "energyplus_err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+  "energyplus_end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486",
+  "model_summary_sha256": "7bf8cae21a879695d569044af61c01f053380dc12cd6b4243f40611206692441",
+  "simulation": {
+    "sql_integrity_check": "ok",
+    "hourly_series": [
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3796934400.0000005,
+        "max": 645120.0000000001,
+        "space_name": "RECEPTION",
+        "key_value": "RECEPTION-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2373084000.0,
+        "max": 403200.0,
+        "space_name": "RECEPTION",
+        "key_value": "RECEPTION-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 18459026400.820015,
+        "max": 15806479.286124637,
+        "space_name": "RECEPTION",
+        "key_value": "RECEPTION IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 6358154175.289026,
+        "max": 7033173.061349096,
+        "space_name": "RECEPTION",
+        "key_value": "RECEPTION IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 5127507.333561116,
+        "max": 4390.6886905901765,
+        "space_name": "RECEPTION",
+        "key_value": "RECEPTION IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1766153.9375802851,
+        "max": 1953.6591837080823,
+        "space_name": "RECEPTION",
+        "key_value": "RECEPTION IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2419074000.0,
+        "max": 453600.0,
+        "space_name": "ACCESSIBLE-SUITE",
+        "key_value": "ACCESSIBLE-SUITE-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2764656000.0,
+        "max": 518400.0,
+        "space_name": "ACCESSIBLE-SUITE",
+        "key_value": "ACCESSIBLE-SUITE-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 13823831115.674788,
+        "max": 11824246.935103402,
+        "space_name": "ACCESSIBLE-SUITE",
+        "key_value": "ACCESSIBLE-SUITE IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 4366664215.424312,
+        "max": 5214003.972504049,
+        "space_name": "ACCESSIBLE-SUITE",
+        "key_value": "ACCESSIBLE-SUITE IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 3839953.087687441,
+        "max": 3284.513037528722,
+        "space_name": "ACCESSIBLE-SUITE",
+        "key_value": "ACCESSIBLE-SUITE IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1212962.2820623089,
+        "max": 1448.33443680668,
+        "space_name": "ACCESSIBLE-SUITE",
+        "key_value": "ACCESSIBLE-SUITE IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 591300000.0,
+        "max": 162000.0,
+        "space_name": "HOUSEKEEPING-CLOSET",
+        "key_value": "HOUSEKEEPING-CLOSET-ZN",
+        "variable": "Zone Lights Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2128680000.0,
+        "max": 583200.0,
+        "space_name": "HOUSEKEEPING-CLOSET",
+        "key_value": "HOUSEKEEPING-CLOSET-ZN",
+        "variable": "Zone Electric Equipment Electricity Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 8157465909.683224,
+        "max": 6397512.9309886005,
+        "space_name": "HOUSEKEEPING-CLOSET",
+        "key_value": "HOUSEKEEPING-CLOSET IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 1126360478.2417014,
+        "max": 2598844.560511215,
+        "space_name": "HOUSEKEEPING-CLOSET",
+        "key_value": "HOUSEKEEPING-CLOSET IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Energy"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 2265962.7526897844,
+        "max": 1777.0869252746113,
+        "space_name": "HOUSEKEEPING-CLOSET",
+        "key_value": "HOUSEKEEPING-CLOSET IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Heating Rate"
+      },
+      {
+        "count": 8760,
+        "unique_time_count": 8760,
+        "sum": 312877.9106226948,
+        "max": 721.9012668086708,
+        "space_name": "HOUSEKEEPING-CLOSET",
+        "key_value": "HOUSEKEEPING-CLOSET IDEAL LOADS",
+        "variable": "Zone Ideal Loads Zone Total Cooling Rate"
+      }
+    ],
+    "energy_accounting": "lights + electric equipment + ideal heating + ideal cooling",
+    "peak_definition": "maximum hourly ideal heating or cooling rate"
+  },
+  "openstudio_cli_transactions": [
+    {
+      "stage": "openstudio_weather_period_simulation_final_delivery",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+      "arguments": [
+        "run",
+        "-w",
+        "C:\\Users\\user\\Desktop\\workflow.osw"
+      ],
+      "working_directory": "C:\\Users\\user\\Desktop",
+      "started_at_utc": "2026-08-12T10:36:34.1696914+00:00",
+      "openstudio_process_exited_at_utc": "2026-08-12T10:36:37.9067901+00:00",
+      "completed_at_utc": "2026-08-12T10:36:42.0172971+00:00",
+      "exit_code": 0,
+      "related_processes_after_wait": 0,
+      "stable_file_samples": [
+        {
+          "sampled_at_utc": "2026-08-12T10:36:37.9067901+00:00",
+          "sql_size": 9064448,
+          "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+          "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+          "err_size": 3159,
+          "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:36:38.9894978+00:00",
+          "sql_size": 9064448,
+          "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+          "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+          "err_size": 3159,
+          "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:36:40.0082830+00:00",
+          "sql_size": 9064448,
+          "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+          "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+          "err_size": 3159,
+          "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+        },
+        {
+          "sampled_at_utc": "2026-08-12T10:36:41.0122511+00:00",
+          "sql_size": 9064448,
+          "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+          "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+          "err_size": 3159,
+          "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+          "end_size": 99,
+          "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+          "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+        }
+      ],
+      "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+      "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+      "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486",
+      "result_osm_sha256": "6880657bdf0c2ee4a6fa89a1fd127007d8f07fdd4025ca947299776fa15ad3ae",
+      "workflow_sha256": "58e2dd4b927b80487b56af49b73a5794962160ea0e153b4fcb6c1eb8d773c4de",
+      "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+      "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+      "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5"
+    }
+  ],
+  "final_delivery": {
+    "stage": "openstudio_weather_period_simulation_final_delivery",
+    "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+    "executable_sha256": "46a80a3d340696bcc189d9a7ae7ec4b70ea4db0fdb4565a33ecd25aa8ebf6361",
+    "arguments": [
+      "run",
+      "-w",
+      "C:\\Users\\user\\Desktop\\workflow.osw"
+    ],
+    "working_directory": "C:\\Users\\user\\Desktop",
+    "started_at_utc": "2026-08-12T10:36:34.1696914+00:00",
+    "openstudio_process_exited_at_utc": "2026-08-12T10:36:37.9067901+00:00",
+    "completed_at_utc": "2026-08-12T10:36:42.0172971+00:00",
+    "exit_code": 0,
+    "related_processes_after_wait": 0,
+    "stable_file_samples": [
+      {
+        "sampled_at_utc": "2026-08-12T10:36:37.9067901+00:00",
+        "sql_size": 9064448,
+        "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+        "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+        "err_size": 3159,
+        "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:36:38.9894978+00:00",
+        "sql_size": 9064448,
+        "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+        "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+        "err_size": 3159,
+        "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:36:40.0082830+00:00",
+        "sql_size": 9064448,
+        "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+        "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+        "err_size": 3159,
+        "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+      },
+      {
+        "sampled_at_utc": "2026-08-12T10:36:41.0122511+00:00",
+        "sql_size": 9064448,
+        "sql_mtime_utc": "2026-08-12T10:36:37.0121807Z",
+        "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+        "err_size": 3159,
+        "err_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+        "end_size": 99,
+        "end_mtime_utc": "2026-08-12T10:36:37.0278082Z",
+        "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486"
+      }
+    ],
+    "sql_sha256": "1cdbe6ef37cacba39264e810a122206ad99fe12e6ffaca9b296c0cf7c205aa8c",
+    "err_sha256": "e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c",
+    "end_sha256": "38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486",
+    "result_osm_sha256": "6880657bdf0c2ee4a6fa89a1fd127007d8f07fdd4025ca947299776fa15ad3ae",
+    "workflow_sha256": "58e2dd4b927b80487b56af49b73a5794962160ea0e153b4fcb6c1eb8d773c4de",
+    "weather_sha256": "c184b947cd34d41c6d6474d63d66dbb82bc0e6cae4c888edcf837348282bce7f",
+    "energyplus_executable": "C:\\openstudio-3.10.0\\EnergyPlus\\energyplus.exe",
+    "energyplus_executable_sha256": "3659efbfece93597d382f2cba94cf8a864215d664cbb1b422d702d5519100ee5"
+  }
+}

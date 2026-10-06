@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--blender--task-43--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Find the camera orientation that maximizes the silhouette area of `Target`, render `/home/user/Desktop/output/optimal.png`, and save `/home/user/Desktop/answer.blend`. ## Requirements 1. `/home/user/Desktop/answer.blend` exists and opens in Blender. 2. Launch Blender by running `blender` from a terminal. On this machine, use `/opt/blender/blender` for Blender command-line or background runs.\n\nScene contains a `Target` object (mesh) centered near the origin. 3. Scene contains a `Camera` object (type CAMERA) as the active `scene.camera`. 4. `/home/user/Desktop/output/optimal.png` exists. 5. The rendered PNG is exactly 256x256. 6. The submitted render has silhouette area (alpha > 0.5 pixel count) >= 1000 pixels (object is visible, not edge-on). 7. The submitted camera orientation yields a silhouette area within 2% of the true analytical optimum (camera on the +Y axis at distance 5, looking at the origin, orthographic).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-43/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/output/optimal.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-43/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,57 @@
+{
+  "id": "single-software--cli--blender--task-26--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Car Paint Shader (two-lobe BSDF) `/home/user/Desktop/scene.blend` contains a UV sphere `PaintBall` at the origin (radius 1.0, 64x32 segments, smooth shaded) with a basic Principled BSDF material `CarPaint` whose Base Color is a dark blue (0.1, 0.1, 0.3). Launch Blender by running `blender` from a terminal. For this task, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nNo Coat / Sheen / Metallic is set. The scene has a camera at (0, -4, 0.8) looking at the origin, a three-point area light rig (KEY at (2,-2,3) E=400, FILL at (-2,-2,1) E=150, RIM at (0,1,2) E=200), a plain gray (0.1,0.1,0.1) world, Cycles 128 samples with denoise ON, view transform = 'Standard', exposure -1.5, resolution 512x512. Your task: rebuild the `CarPaint` material into an explicit two-lobe car-paint shader (metallic flake + clearcoat + sheen), render the scene at 512x512, and save both the .blend and the rendered PNG. ## Required material Rebuild `CarPaint` around a single Principled BSDF with these inputs: - Base Color : (0.1, 0.1, 0.3, 1.0) - dark metallic blue - Metallic : 0.9 - strong metal flake lobe - Roughness : 0.3 - broad metallic highlight - Coat Weight : 1.0 - full clearcoat layer - Coat Roughness : 0.03 - sharp clearcoat highlight - Coat IOR : 1.5 - Sheen Weight : 0.2 - subtle rim glow - Sheen Roughness : 0.5 - Sheen Tint : (1, 1, 1, 1) The Principled BSDF's output drives the Material Output's Surface input. The dual-lobe behaviour comes from the combination of the broad metallic lobe (Metallic=0.9, Roughness=0.3) and the sharp clearcoat lobe (Coat=1, Coat Roughness=0.03) layered on top. ## Render Set the render engine to Cycles, 512x512, 128 samples, denoise on, view transform 'Standard', exposure -1.5. Render with `bpy.ops.render.render(write_still=True)` to: - `/home/user/Desktop/render.png` and save the blend to: - `/home/user/Desktop/answer.blend` ## Requirements 1. `answer.blend` exists. 2. `answer.blend` opens cleanly in Blender. 3. `PaintBall` mesh is present with >= 1000 verts. 4. The sphere's material has a Principled BSDF node. 5. Principled.inputs['Coat Weight'] > 0.5. 6. Principled.inputs['Metallic'] > 0.7. 7. `/home/user/Desktop/render.png` exists and is 512x512. 8. Full-image mean luma is in [0.05, 0.35] (dark car body with bright specular). 9. Dual-highlight signature: inside a 60x60 ROI centred on the predicted KEY-light highlight pixel on the sphere (computed from the half-vector between the sphere->camera direction and the sphere->KEY light direction, then projected through the camera), the per-pixel luma standard deviation is >= 0.08. A single-lobe matte Principled BSDF produces a smooth gradient with low std; a two-lobe car paint produces both a broad metallic plateau AND a sharp clearcoat peak, spreading the luma distribution.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/render.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

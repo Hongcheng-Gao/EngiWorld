@@ -1,0 +1,67 @@
+{
+  "id": "single-software--gui--altium-designer--task-01--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "`broken_spiritlevel_top.SchDoc` is a native Altium schematic. Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`; open `broken_spiritlevel_top.SchDoc` there. Repair the broken sheet-symbol target filenames, and save the repaired document as `C:\\Users\\user\\Desktop\\spiritlevel_top.SchDoc`. The repaired schematic must restore the four sheet-symbol target filenames: `SL_Config_2E.SchDoc`, `SL_LCD_SW_LED_2E.SchDoc`, `SL_FPGA_Auto_2E.SchDoc`, and `SL_Power.SchDoc`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/components-libraries/file-based-libraries/schematic",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/broken_spiritlevel_top.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\broken_spiritlevel_top.SchDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\broken_spiritlevel_top.SchDoc"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\SL_Config_2E.SchDoc",
+    "C:\\Users\\user\\Desktop\\SL_LCD_SW_LED_2E.SchDoc",
+    "C:\\Users\\user\\Desktop\\spiritlevel_top.SchDoc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

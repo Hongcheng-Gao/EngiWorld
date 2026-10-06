@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfoam--task-10--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "Work from the incomplete buoyancy template `/home/user/Desktop/buoyant_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve this deterministic natural-convection benchmark. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/buoyant/` as a two-dimensional square cavity of width and height `L=0.1 m`, span `0.01 m`, and a single empty spanwise cell. Use a uniform `41 x 41 x 1` hexahedral mesh, producing exactly 1,681 cells. Name the left wall `hot`, right wall `cold`, horizontal walls `topAndBottom`, and front/back patch `frontAndBack`; make `frontAndBack` empty. 2. Model air as a perfect gas at reference pressure `100000 Pa`, molecular weight `28.96 kg/kmol`, `Cp=1004.4 J/(kg K)`, dynamic viscosity `mu=1.846e-5 Pa s`, and `Pr=0.71`. Use laminar momentum transport and gravity `g=(0 -9.81 0) m/s^2`. Set `T=310 K` on `hot`, `T=290 K` on `cold`, and zero temperature gradient on `topAndBottom`; use no-slip velocity on every wall. These values define `DeltaT=20 K`, mean temperature `300 K`, and a Rayleigh number of approximately `1.8e6` based on `L`. 3. Use OpenFOAM 11 `foamRun -solver fluid` with steady-state schemes for exactly 1000 iterations, ASCII output at iteration 1000, GAMG for `p_rgh`, and bounded upwind convection for velocity and enthalpy. Source `/opt/openfoam11/etc/bashrc`; run `blockMesh`, `checkMesh`, and the solver, retaining `buoyant/log.blockMesh`, `buoyant/log.checkMesh`, and `buoyant/log.foamRun`. The mesh must report `Mesh OK.`, all logs must finish with `End`, and the solver must reach iteration 1000. Then run `postProcess -func writeCellCentres -latestTime` and retain `buoyant/log.cellCentres`. 4. Write `/home/user/Desktop/postprocess.py`. Read the nonuniform `T`, `U`, and cell-center `C` fields at iteration 1000, locate the cell centered at the geometric point `(0.05,0.05,0.005) m`, and save one row to `/home/user/Desktop/center_sample.csv` with columns `x,y,z,temperature_k,max_speed_m_s`, where `max_speed_m_s` is recomputed over the entire final velocity field. Require `295<center_temp<305 K` and `1e-4<max_speed_m_s<1 m/s`. 5. Save `/home/user/Desktop/summary.txt` as exactly one scalar, the final geometric-center temperature in kelvin. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/buoyant_base.tar",
+            "path": "/home/user/Desktop/buoyant_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/buoyant_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/buoyant_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/buoyant",
+    "/home/user/Desktop/center_sample.csv",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

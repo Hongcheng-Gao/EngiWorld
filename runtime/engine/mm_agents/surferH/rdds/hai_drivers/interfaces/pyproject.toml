@@ -1,0 +1,30 @@
+[project]
+name = "hai-drivers-interfaces"
+version = "0.3.0"
+description = "Interfaces for drivers used by H agents"
+readme = "README.md"
+authors = [
+  {name = "Antoine Chassang", email = "antoine@hcompany.ai"},
+  {name = "Axel Moyal", email = "axel.moyal@hcompany.ai"},
+  {name = "Julien Revelle", email = "jr@hcompany.ai"},
+  {name = "Matthias Brunel", email = "mb@hcompany.ai"},
+]
+requires-python = "==3.12.*"
+dependencies = ["anyio", "httpx", "pydantic>=2.12.4"]
+
+[tool.uv]
+default-groups = ["dev", "test"]
+
+[tool.hatch.build.targets.wheel]
+packages = ["src/hai_drivers"]
+
+[tool.pytest.ini_options]
+asyncio_mode = "auto"
+
+[dependency-groups]
+dev = ["pre-commit>=4.3.0"]
+test = ["pytest", "pytest-asyncio", "pytest-localserver"]
+
+[build-system]
+requires = ["hatchling"]
+build-backend = "hatchling.build"

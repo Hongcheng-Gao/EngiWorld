@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--blender--task-03--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "In the opened `scene.blend`, keep `Terrain` as a mesh with its existing FLOAT attribute `density`, keep `Tree` as a mesh object, and give `Terrain` exactly one modifier, a Geometry Nodes modifier. On this machine, the Blender executable is `/opt/blender/blender`; use it to open `scene.blend`. Save the completed scene as `/home/user/Desktop/answer.blend`. The node group must contain a `Distribute Points on Faces` node with distribute method `POISSON` and Seed 42, and an `Instance on Points` node. The evaluated depsgraph must expose true instances parented to `Terrain` with a total count between 30 and 500, and every instance must have world-space `x >= -0.1`.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

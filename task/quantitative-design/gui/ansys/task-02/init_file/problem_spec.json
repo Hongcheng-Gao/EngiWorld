@@ -1,0 +1,40 @@
+{
+  "id": "opt-ansys-gui-02",
+  "title": "Uniform beam-column buckling-factor-per-mass optimization",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": {
+    "direction": "maximize",
+    "quantity": "first_buckling_factor_per_mass",
+    "formula": "objective = first positive eigenvalue buckling load factor / structural mass"
+  },
+  "model": {
+    "analysis": "linear eigenvalue buckling with a preceding static reference-load state",
+    "unit_system": "N-mm",
+    "column_axis": "global Y",
+    "length_mm": 1000.0,
+    "element": {"family": "BEAM188", "equal_divisions": 40},
+    "material": {
+      "youngs_modulus_mpa": 210000.0,
+      "poissons_ratio": 0.3,
+      "density_tonne_per_mm3": 7.85e-9
+    }
+  },
+  "interfaces": {
+    "bottom": {"location": "Y = 0 mm", "constraints": ["UX = 0", "UY = 0", "UZ = 0"]},
+    "top": {"location": "Y = 1000 mm", "constraints": ["UX = 0", "UZ = 0"], "reference_force": "FY = -1 N"},
+    "rotations": "bending rotations remain free; one axial-spin reference may be used only to remove the beam torsional rigid mode"
+  },
+  "design_variables": {
+    "allowed_section_types": ["RECT", "HREC"],
+    "uniform_along_length": true,
+    "outer_width_mm": [8.0, 20.0],
+    "outer_height_mm": [8.0, 20.0],
+    "section_area_mm2": [80.0, 160.0],
+    "hrec_wall_thickness_mm": [1.0, 4.0]
+  },
+  "constraints": {"connectivity": "one continuous beam line with one uniform section"},
+  "baseline": {"files": ["baseline_wb_buckling.db", "baseline_wb_buckling.rst"]},
+  "submission": {"files": ["submission.db", "submission.rst"]},
+  "workflow": {"must_use": "interactive graphical interface"}
+}

@@ -1,0 +1,36 @@
+{
+  "id": "opt-ansys-gui-04",
+  "title": "Limited-material two-dimensional conductive-path optimization",
+  "interface": "gui",
+  "primary_software": "ansys",
+  "objective": {
+    "direction": "minimize",
+    "quantity": "thermal_resistance",
+    "formula": "thermal_resistance = (area-averaged source-interface temperature - sink temperature) / total source heat"
+  },
+  "model": {
+    "analysis": "steady-state thermal",
+    "unit_system": "W-mm-degC",
+    "geometry": {
+      "outer_envelope_mm": {"x": [0.0, 100.0], "y": [0.0, 60.0]},
+      "thickness_mm": 1.0,
+      "design_domain": "inside the outer envelope"
+    },
+    "element": {"family": "PLANE55 or PLANE77", "behavior": "two-dimensional conduction with 1 mm thickness"},
+    "material": {"thermal_conductivity_w_per_mm_k": 0.05}
+  },
+  "interfaces": {
+    "sink": {"location": "X = 0 mm and 0 <= Y <= 10 mm", "temperature_c": 20.0},
+    "source": {"location": "X = 100 mm and 50 <= Y <= 60 mm", "total_heat_w": 1.0}
+  },
+  "constraints": {
+    "maximum_material_area_mm2": 1500.0,
+    "maximum_material_volume_mm3": 1500.0,
+    "minimum_feature_width_mm": 5.0,
+    "maximum_element_edge_mm": 2.0,
+    "connectivity": "one connected conductive path joining the complete source and sink interfaces"
+  },
+  "baseline": {"files": ["baseline_wb_conduction.db", "baseline_wb_conduction.rth"]},
+  "submission": {"files": ["submission.db", "submission.rth"]},
+  "workflow": {"must_use": "interactive graphical interface"}
+}

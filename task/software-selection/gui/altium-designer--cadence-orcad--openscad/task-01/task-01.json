@@ -1,0 +1,86 @@
+{
+  "id": "software-selection--gui--altium-designer--cadence-orcad--openscad--task-01--windows",
+  "snapshot": "OrCAD-Altium-openscad",
+  "instruction": "Determine the appropriate application among Altium Designer, OrCAD Capture, or OpenSCAD. Open the neutral schematic package `bcd` from the desktop and set the required Install properties. Requirements: - Write the required deliverables into `C:\\Users\\user\\Desktop\\result`. - `U30=Y`, `U31=Y`, `U32=N`, `U33=Y`, and `U34=N`; do not set Install on unrelated components. [Software] Altium Designer can be opened from its desktop shortcut; OrCAD Capture is at `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe`, and OpenSCAD is at `C:\\Program Files\\OpenSCAD\\openscad.exe`.",
+  "source": "https://www.altium.com/altium-designer; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad.html; https://openscad.org/; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://www.ipc.org/ipc-2581",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/bcd.edif",
+            "path": "C:\\Users\\user\\Desktop\\bcd.edif"
+          },
+          {
+            "local_path": "task-01/init_file/bcd.schematic.json",
+            "path": "C:\\Users\\user\\Desktop\\bcd.schematic.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Altium\\AD26\\X2.EXE"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\orcad\\tools\\bin\\Capture.exe"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\OpenSCAD\\openscad.exe"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer",
+    "cadence-orcad",
+    "openscad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

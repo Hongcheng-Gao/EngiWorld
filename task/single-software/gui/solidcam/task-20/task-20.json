@@ -1,0 +1,76 @@
+{
+  "id": "single-software--gui--solidcam--task-20--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Start with two_sided_housing.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Start SOLIDWORKS 2025 from the desktop shortcut and use its installed SOLIDWORKS CAM/CAMWorks add-in; there is no separate SolidCAM desktop program in this image. Create two independent Coordinate Systems or setups for two_sided_housing.step. Side A machines the pocket and four holes; side B machines the two counterbores. The two setup Z axes must point in opposite directions. Do not force exact tool station numbers, spindle speeds, feedrates, or internal tool-library IDs if SOLIDWORKS CAM's Technology Database assigns stable defaults; use suitable installed tool-library entries for the required operation types and let the posted NC program reflect those real CAM selections. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-20_sideA.nc, C:\\Users\\User\\Desktop\\task-20_sideB.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For milling tasks, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl; for turning tasks, use an installed turning .ctl post such as fanuc_t2axis.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s).",
+  "source": "SOLIDWORKS CAM product overview: https://www.solidworks.com/product/solidworks-cam ; SOLIDWORKS 2025 CAM What's New: https://help.solidworks.com/2025/english/WhatsNew/c_wn_cam.htm ; CAMWorks 2.5 Axis Milling: https://camworks.com/modules/25axis-milling/ ; CAMWorks Universal Post Generator: https://camworks.com/universal-post-generator/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/two_sided_housing.step",
+            "path": "C:\\Users\\User\\Desktop\\two_sided_housing.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
+          "C:\\Users\\User\\Desktop\\two_sided_housing.step"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-20_sideA.nc",
+    "C:\\Users\\User\\Desktop\\task-20_sideB.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

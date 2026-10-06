@@ -1,0 +1,86 @@
+{
+  "id": "single-software--gui--kicad--task-08--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "nRF52840 Pinmux Correction The file design.kicad_sch is a KiCad 10.0.2 schematic for a Nordic nRF52840 design. Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. The symbol U1 has hidden properties encoding GPIO pad assignments for five peripherals: QSPI, SPI0, TWI0, UART0, and PWM0. A reference CSV is at /home/user/Desktop/pinmux_initial.csv. Reassign the peripheral pad properties so that all pinmux rules are satisfied. Write the corrected schematic as /home/user/Desktop/answer.kicad_sch. Requirements: 1. QSPI pins (SCK, CSN, IO0, IO1, IO2, IO3) must all be assigned to pads in the range P0.17..P0.25. 2. SPI0 pins must NOT be on any pad in the QSPI-dedicated range P0.17..P0.25. 3. All pads must be valid nRF52840 GPIO pads (P0.00..P0.47 or P1.00..P1.15). 4. No GPIO pad may be assigned to more than one peripheral function. 5. All 5 peripherals must retain their full set of functions (no function may be removed). 6. Only the pad assignment property values may change; all other schematic content must remain intact. Write /home/user/Desktop/answer.kicad_sch.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://docs.kicad.org/10.0/en/eeschema/eeschema.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/design.kicad_sch",
+            "path": "/home/user/Desktop/design.kicad_sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/pinmux_initial.csv",
+            "path": "/home/user/Desktop/pinmux_initial.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "eeschema",
+          "/home/user/Desktop/design.kicad_sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.kicad_sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

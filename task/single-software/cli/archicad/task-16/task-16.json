@@ -1,0 +1,75 @@
+{
+  "id": "single-software--cli--archicad--task-16--windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Update C:\\Users\\user\\Desktop\\init.ifc in the opened Graphisoft/Archicad environment using the official Graphisoft/Archicad command-line or automation interfaces available there, and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. At the start of the task, invoke Archicad from `C:\\Program Files\\GRAPHISOFT\\Archicad 27\\Archicad.exe` when running the automation. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a two-level laboratory building with a lower lab floor, upper seminar/gallery level, a stair, roof elements, and a glazed envelope rhythm. The research group needs a controlled wet-lab support suite on the lower level and an observation record connected to the upper seminar space. Preserve the stair, roof, atrium, and existing lab shell, and add the controlled suite, prep, eyewash, and observation items so safety review can read the workflow across both levels. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"annotations\":[{\"class\":\"IfcSpace\",\"name\":\"LAB-1\",\"tokens\":[\"CONTROLLED LAB ADJACENCY\",\"WET LAB\",\"LOWER LEVEL\",\"SAFETY\"]},{\"class\":\"IfcSpace\",\"name\":\"SEMINAR\",\"tokens\":[\"OBSERVATION\",\"UPPER LEVEL\",\"RESEARCH\",\"VISITOR CONTROL\"]},{\"class\":\"IfcSpace\",\"name\":\"ATRIUM\",\"tokens\":[\"PROTECTED ATRIUM\",\"NO CHANGE\",\"CIRCULATION\"]}],\"products\":[{\"class\":\"IfcSpace\",\"name\":\"CONTROLLED-LAB-SUITE\",\"predefined\":\"INTERNAL\",\"storey\":\"Lower Lab\",\"tokens\":[\"CONTROLLED LAB\",\"WET LAB\",\"SAFETY\",\"LOWER LEVEL\"]},{\"class\":\"IfcSpace\",\"name\":\"SPECIMEN-PREP\",\"predefined\":\"INTERNAL\",\"storey\":\"Lower Lab\",\"tokens\":[\"SPECIMEN PREP\",\"CONTROLLED LAB\",\"SAFETY\",\"LOWER LEVEL\"]},{\"class\":\"IfcSpace\",\"name\":\"EYEWASH-ALCOVE\",\"predefined\":\"INTERNAL\",\"storey\":\"Lower Lab\",\"tokens\":[\"EYEWASH\",\"SAFETY\",\"CONTROLLED LAB\",\"LOWER LEVEL\"]},{\"class\":\"IfcDoor\",\"name\":\"CONTROLLED-LAB-DOOR\",\"predefined\":\"DOOR\",\"storey\":\"Lower Lab\",\"tokens\":[\"CONTROLLED LAB\",\"ACCESS CONTROL\",\"SAFETY\",\"DOOR\"]},{\"class\":\"IfcWall\",\"name\":\"LAB-SAFETY-SCREEN\",\"predefined\":\"PARTITIONING\",\"storey\":\"Lower Lab\",\"tokens\":[\"SAFETY SCREEN\",\"CONTROLLED LAB\",\"SEPARATION\",\"WET LAB\"]},{\"class\":\"IfcWindow\",\"name\":\"SEMINAR-OBSERVATION-WINDOW\",\"predefined\":\"WINDOW\",\"storey\":\"Upper Lab\",\"tokens\":[\"OBSERVATION\",\"SEMINAR\",\"CONTROLLED LAB\",\"UPPER LEVEL\"]},{\"class\":\"IfcSpace\",\"name\":\"SEMINAR-OBSERVATION\",\"predefined\":\"INTERNAL\",\"storey\":\"Upper Lab\",\"tokens\":[\"SEMINAR OBSERVATION\",\"RESEARCH\",\"VISITOR CONTROL\",\"UPPER LEVEL\"]}]}.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

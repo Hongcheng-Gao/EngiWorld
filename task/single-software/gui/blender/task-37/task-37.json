@@ -1,0 +1,65 @@
+{
+  "id": "single-software--gui--blender--task-37--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Recalculate Outward Normals `scene.blend` contains a single mesh object `Shell`, a closed sphere-like surface whose shading looks wrong: roughly half the faces appear inside-out. For the steps below, the Blender executable is `/opt/blender/blender`; use it to open `scene.blend`. The geometry itself is fine - only face orientation is inconsistent. Make all face normals point outward consistently, and save the result to `/home/user/Desktop/answer.blend`. Requirements: 1. `answer.blend` opens as a valid Blender file containing exactly one mesh object, named `Shell`. 2. The mesh is closed-manifold: every edge is shared by exactly two faces (non-manifold edge count = 0). 3. The mesh has no loose vertices (every vertex is incident to at least one edge). 4. The mesh has no loose edges (every edge bounds at least one face). 5. The signed volume of `Shell` is strictly positive (outward-consistent orientation). 6. `|signed_volume - unsigned_volume| < 1e-4` - all face normals agree in orientation. 7. Vertex, edge, and face counts are unchanged from the input (no remeshing, subdividing, or decimating). 8. The axis-aligned bounding box of `Shell`'s vertex coordinates matches the input bbox to within 1e-4 per axis. Do not add, remove, or move any vertex - only fix the face orientations.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-37/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-37/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

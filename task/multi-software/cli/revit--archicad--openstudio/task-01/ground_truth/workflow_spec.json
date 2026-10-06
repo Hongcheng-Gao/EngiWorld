@@ -1,0 +1,117 @@
+{
+  "schema_version": 1,
+  "case_id": "multi-cli-3-revit-archicad-openstudio-task-01-windows",
+  "revision": "EW3B01",
+  "fixed_software": {
+    "revit": {
+      "major_version": 2025,
+      "executable": "C:\\Program Files\\Autodesk\\Revit 2025\\Revit.exe",
+      "automation_entry": "C:\\ProgramData\\Autodesk\\Revit\\Addins\\2025\\EngiWorld.BimBridge.addin"
+    },
+    "archicad": {
+      "major_version": 27,
+      "minimum_build": 6000,
+      "executable": "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad Starter.exe",
+      "automation_entry": "C:\\Program Files\\Graphisoft\\Archicad 27\\IFCCommandServerApp.exe"
+    },
+    "openstudio": {
+      "version": "3.10.0",
+      "executable": "C:\\openstudio-3.10.0\\bin\\openstudio.exe",
+      "energyplus_version": "25.1.0"
+    }
+  },
+  "ifc_exchange": {
+    "schema": "IFC4",
+    "model_view": "ReferenceView_V1.2",
+    "space_boundary_policy": "preserve upstream relationships and report the observed count; do not fabricate missing boundaries",
+    "minimum_init_to_revit_ifcproduct_global_id_retention": 0.8,
+    "minimum_revit_to_archicad_ifcroot_global_id_retention": 1.0,
+    "required_property_sets": [
+      "Pset_SpaceCommon",
+      "Qto_SpaceBaseQuantities",
+      "EngiWorld_EnergyHandoff"
+    ]
+  },
+  "revit_stage": {
+    "input": "init.ifc",
+    "output": "stage1.ifc",
+    "handoff": "revit_handoff.json",
+    "operation": "Preserve the activity-room shell, split the east expansion bay with room-bounding elements, and create the named counselling room.",
+    "required_tokens": [
+      "EW3B01",
+      "COMMUNITY-ACTIVITY",
+      "QUIET-COUNSELLING",
+      "EAST-ROOM-ADDED"
+    ]
+  },
+  "archicad_stage": {
+    "input": "stage1.ifc",
+    "output": "stage2.ifc",
+    "translator": "archicad_ifc4_translator.json",
+    "operation": "Use the installed Archicad 27 IFC command server to load stage1.ifc, run Macro.ValidateIfcModel, query entity and IfcSpace identity data, preserve the observed boundary state and all upstream IfcRoot GlobalIds, and save stage2.ifc. Generate reports from the live JEMI responses and verified Revit handoff.",
+    "required_tokens": [
+      "ARCHICAD-IFC-MODEL-VALIDATED",
+      "UPSTREAM-GLOBALIDS-PRESERVED"
+    ]
+  },
+  "storeys": [
+    {
+      "name": "Level 1",
+      "z_m": 0.0
+    }
+  ],
+  "spaces": [
+    {
+      "name": "COMMUNITY-ACTIVITY",
+      "thermal_zone": "COMMUNITY-ACTIVITY-ZN",
+      "storey": "Level 1",
+      "energy_geometry": {
+        "x_m": 0.0,
+        "y_m": 0.0,
+        "z_m": 0.0,
+        "width_m": 6.0,
+        "depth_m": 5.8,
+        "height_m": 2.4384
+      },
+      "energy_semantics": {
+        "schedule_category": "ACTIVITY-SCHEDULE",
+        "people_per_m2": 0.12,
+        "lighting_w_per_m2": 8.0,
+        "equipment_w_per_m2": 6.0,
+        "outdoor_air_l_per_s_person": 10.0
+      }
+    },
+    {
+      "name": "QUIET-COUNSELLING",
+      "thermal_zone": "QUIET-COUNSELLING-ZN",
+      "storey": "Level 1",
+      "energy_geometry": {
+        "x_m": 6.0,
+        "y_m": 0.0,
+        "z_m": 0.0,
+        "width_m": 2.8,
+        "depth_m": 5.8,
+        "height_m": 2.4384
+      },
+      "energy_semantics": {
+        "schedule_category": "COUNSELLING-SCHEDULE",
+        "people_per_m2": 0.04,
+        "lighting_w_per_m2": 6.0,
+        "equipment_w_per_m2": 3.0,
+        "outdoor_air_l_per_s_person": 8.0
+      }
+    }
+  ],
+  "handoff_tokens": [
+    "ACTIVITY-SCHEDULE",
+    "COUNSELLING-SCHEDULE",
+    "SEPARATE-THERMOSTAT",
+    "LOW-COUNSELLING-OCCUPANCY"
+  ],
+  "osm_tokens": [
+    "ActivityRoomSchedule",
+    "CounsellingRoomSchedule",
+    "SeparateThermostatMetadata",
+    "QUIET-COUNSELLING-ZN"
+  ]
+}

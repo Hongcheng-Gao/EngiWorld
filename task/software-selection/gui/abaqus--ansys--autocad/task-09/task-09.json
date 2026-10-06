@@ -1,0 +1,84 @@
+{
+  "id": "software-selection--gui--abaqus--ansys--autocad--task-09--windows",
+  "snapshot": "ANSYS-ABAQUS-AUTOCAD",
+  "instruction": "Choose the appropriate tool from ANSYS, Abaqus, and AutoCAD for this task. Launch Abaqus CAE or AutoCAD 2024 from their desktop shortcuts; ANSYS MAPDL is available at `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Use the selected tool to perform a linear buckling analysis of a thin plate (Variant B): 1. Part: - Create a 3D Deformable Shell, Planar part. - Sketch a square plate from (0,0) to (120,120) in the X-Y plane. - Partition the plate face using two centerlines at X=60 mm and Y=60 mm so that the plate center and the edge midpoints can be selected reliably. 2. Property: - Material Steel: E = 210000 MPa, nu = 0.3. - Create a Homogeneous Shell Section with thickness = 0.8 mm and 5 integration points. - Assign the shell section to the whole plate. 3. Assembly: - Create one dependent instance of the plate. 4. Step: - Create a Linear Perturbation > Buckle step named Step-Buckle-B. - Request 3 eigenvalues. 5. Mesh: - Use global seed size = 8 mm. - Use appropriate shell element formulation shell elements. - Generate the mesh. 6. Load and boundary conditions: - Represent the compressive edge load of 0.9 N/mm on the two vertical edges by equivalent nodal forces after meshing. - On the X=0 edge, apply nodal forces in the +X direction. - On the X=120 edge, apply nodal forces in the -X direction. - For each loaded edge node, calculate the nodal force as 0.9 N/mm multiplied by that node's tributary edge length. - Apply U3 = 0 on all four plate edges: X=0, X=120, Y=0, and Y=120, to represent simply supported transverse conditions. - Select the center mesh node at approximately (X=60, Y=60, Z=0) and apply U1 = U2 = 0 to suppress in-plane translational rigid-body motion. - Select the bottom-edge midpoint mesh node at approximately (X=60, Y=0, Z=0) and apply U1 = 0 only to suppress the remaining in-plane rotational rigid-body mode. 7. Job: - Create Job-Buckle-B and submit it for solving. 8. Deliverables: save the native model artifact and the native solver result artifact into `C:\\Users\\user\\Desktop\\result`. Save only the files from the selected tool. Software launch locations: Abaqus/CAE: `C:\\Users\\user\\Desktop\\Abaqus CAE.lnk`; ANSYS: multiple ANSYS launch shortcuts are available under `C:\\Users\\Public\\Desktop`; choose the most suitable ANSYS shortcut for the task; AutoCAD 2024: `C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk`.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines ; generated open-choice variant from task/task-v/abaqus/task-19",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\user\\Desktop\\Abaqus CAE.lnk\""
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe",
+          "-g"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath \"C:\\Users\\Public\\Desktop\\AutoCAD 2024.lnk\""
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus",
+    "ansys",
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

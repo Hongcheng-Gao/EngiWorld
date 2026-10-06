@@ -1,0 +1,56 @@
+{
+  "id": "single-software--cli--autocad--task-11--windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "The work begins in AutoCAD with only the DXF file(s) from the Desktop path(s): C:\\Users\\user\\Desktop\\housing.dxf. Launch AutoCAD with `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`.\n\nImport housing.dxf. Draw a housing with outer rectangle (0,0)-(180,110), inner cavity rectangle (40,30)-(140,80), boss circles centered at (40,55) and (140,55) radius 18, four bolt holes radius 4 at (20,20), (160,20), (20,90), and (160,90), two SLOT keyway rectangles with opposite corners (60,42)-(85,50) and (95,60)-(120,68), CENTER axes from (90,0) to (90,110) and from (0,55) to (180,55), and text ACAD-31. Use OUTLINE for the outer rectangle and boss circles, CUTOUT for the inner cavity rectangle, HOLE for bolt holes, SLOT for keyway rectangles, CENTER for axes, and ANNOTATION for text. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/housing.dxf",
+            "path": "C:\\Users\\user\\Desktop\\housing.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\autocad_result.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

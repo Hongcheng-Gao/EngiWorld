@@ -1,0 +1,95 @@
+{
+  "id": "single-software--gui--altium-designer--task-22--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "`prod_design.PrjPcb` is already open in Altium Designer. Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`; open `prod_design.PrjPcb` there. Add two variants to the project, and save the result as `prod_design.PrjPcb`. The exact variant specification is given in `C:\\Users\\user\\Desktop\\variant_spec.json` and must be matched precisely. Requirements: Variant 1 - `Production`: Its Description must contain `Production`. Mark these 7 components as Not Fitted / DNP: `J5`, `D10`, `D11`, `D12`, `R20`, `R21`, `R22`. Set `U3` to an Alternate Part with `Library Reference = MCU_STM32F405RGT6`, `Manufacturer = GigaDevice`, and `MPN = GD32F405RGT6`; `U3` must still remain fitted. Variant 2 - `Debug`: Its Description must contain `Debug` (case-insensitive). All components must remain fitted; none may be DNP.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb/high-speed-design/xsignals?version=22; https://www.altium.com/documentation/altium-designer/schematic/defining-differential-pairs; https://www.altium.com/documentation/altium-designer/design-variants",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/prod_design.PrjPcb",
+            "path": "C:\\Users\\user\\Desktop\\prod_design.PrjPcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/variant_spec.json",
+            "path": "C:\\Users\\user\\Desktop\\variant_spec.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-22/init_file/main.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\main.SchDoc"
+          },
+          {
+            "local_path": "task-22/init_file/debug.SchDoc",
+            "path": "C:\\Users\\user\\Desktop\\debug.SchDoc"
+          },
+          {
+            "local_path": "task-22/init_file/board.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\board.PcbDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\prod_design.PrjPcb"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\prod_design.PrjPcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-22/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

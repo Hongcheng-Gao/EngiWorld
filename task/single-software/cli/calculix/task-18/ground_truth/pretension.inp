@@ -1,0 +1,32 @@
+*Heading
+Pretension analysis - CalculiX (task18)
+*Node
+1, 0.0, 0.0, 0.0
+2, 100.0, 0.0, 0.0
+3, 100.0, 10.0, 0.0
+4, 0.0, 10.0, 0.0
+5, 0.0, 0.0, 10.0
+6, 100.0, 0.0, 10.0
+7, 100.0, 10.0, 10.0
+8, 0.0, 10.0, 10.0
+*Element, type=C3D8R, elset=All_Elements
+1, 1, 2, 3, 4, 5, 6, 7, 8
+*Material, name=Steel
+*Elastic
+210000.0, 0.3
+*Solid Section, elset=All_Elements, material=Steel
+*Nset, nset=FixNodes
+1,4,5,8
+*Nset, nset=PullNodes
+2,3,6,7
+*Step
+*Static
+*Boundary
+FixNodes,1,3,0.
+*Boundary
+PullNodes,1,1,0.1
+*Node Print,NSET=FixNodes
+RF,U
+*El Print, ELSET=All_Elements
+S
+*End Step

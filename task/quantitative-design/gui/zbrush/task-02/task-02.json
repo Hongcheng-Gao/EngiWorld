@@ -1,0 +1,75 @@
+{
+  "id": "quantitative-design--gui--zbrush--task-02--windows",
+  "snapshot": "zbrush2025",
+  "instruction": "Optimize a weathered-rock planar-break surface. Open ZBrush 2025 from the desktop shortcut and continue from `seed.obj`. The opened `seed.obj` is the starting mesh. Use ZBrush sculpting/modeling tools to optimize the shape, then export `C:\\Users\\user\\Desktop\\optimized.obj`. Create strong, coherent planar breaks by fitting the specified height field; this task scores the open surface geometry and does not use or infer enclosed volume. The exported OBJ must remain one edge-connected open height-field surface with one regular boundary loop and at least 98% coverage of that fixed grid. It must have no unused vertices, degenerate faces, non-manifold edges, additional boundary loops, overlapping XY triangle interiors, or multiple surface heights at a sample. A topology or coverage failure receives a score of 0, so changing vertex density cannot improve the sampling weight.\n\nThe continuous score is computed directly from the exported OBJ. X and Y are normalized independently to [-1, 1] using the output bounding box, while Z remains in OBJ units. The target height field is `0.42*(0.55*sin(5*x+1.7*y) + 0.45*sin(2.2*x-5*y)) + 0.08*cos(4*x*y)`. The surface is sampled by triangle interpolation at a fixed 40x40 cell-centered grid in normalized XY. Let RMSE be the root-mean-square difference between those 1,600 sampled Z values and the target, and let H be the mean absolute sampled height. The score is `max(0, 100 - 110*RMSE - 15*abs(H-0.2) - 8*abs(X_span-2) - 8*abs(Y_span-2) - face_penalty) / 100`, where `face_penalty = 0.03*(300-face_count)` below 300 faces, `0.002*(face_count-8000)` above 8000 faces, and zero otherwise. Higher is better. This is a continuous optimization task; no exact file match is required.",
+  "source": "https://help.maxon.net/zbr/en-us/; https://help.maxon.net/zbr/en-us/Content/html/user-guide/3d-modeling/sculpting/sculpting.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/seed.obj",
+            "path": "C:\\Users\\user\\Desktop\\seed.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Maxon ZBrush 2025\\ZBrush.exe",
+          "C:\\Users\\user\\Desktop\\seed.obj"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import ctypes, time\nuser32 = ctypes.windll.user32\nEnumWindowsProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\nEnumChildProc = ctypes.WINFUNCTYPE(ctypes.c_bool, ctypes.c_void_p, ctypes.c_void_p)\ndef close_error():\n    wins = []\n    def wcb(hwnd, lparam):\n        buf = ctypes.create_unicode_buffer(512)\n        user32.GetWindowTextW(hwnd, buf, 512)\n        if 'ZHomePage.exe' in buf.value and 'System Error' in buf.value:\n            wins.append(hwnd)\n        return True\n    user32.EnumWindows(EnumWindowsProc(wcb), 0)\n    for hwnd in wins:\n        buttons = []\n        def ccb(ch, lparam):\n            text = ctypes.create_unicode_buffer(128)\n            cls = ctypes.create_unicode_buffer(128)\n            user32.GetWindowTextW(ch, text, 128)\n            user32.GetClassNameW(ch, cls, 128)\n            if text.value == 'OK' or cls.value == 'Button':\n                buttons.append(ch)\n            return True\n        user32.EnumChildWindows(hwnd, EnumChildProc(ccb), 0)\n        for ch in buttons:\n            user32.SendMessageW(ch, 0x00F5, 0, 0)\ntime.sleep(95)\nfor _ in range(4):\n    close_error()\n    time.sleep(2)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "zbrush"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\optimized.obj"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.847826,
+      "direction": "maximize",
+      "name": "planar-break height-field RMSE with span, mean-height, and face-count penalties",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

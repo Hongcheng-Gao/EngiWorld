@@ -1,0 +1,67 @@
+{
+  "id": "single-software--cli--openfast--task-04--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "For this task, start with an OpenFAST linearization template. Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. Only initialization inputs are included; no answer/result artifacts are preloaded. Use the full OpenFAST executable path shown above.\n\nComplete a deterministic, tower-only structural linearization from the command line. 1. Copy `/home/user/Desktop/linear_base.fst` to `/home/user/Desktop/linear.fst`, then modify `linear.fst`: set `TMax=0.1`, `ModCoupling=1`, `CompElast=1`, `CompInflow=0`, `CompAero=0`, `CompServo=0`, `Gravity=0`, `Linearize=True`, `CalcSteady=False`, `NLinTimes=1`, `LinTimes=0.09`, `LinInputs=0`, `LinOutputs=0`, `LinOutJac=False`, and `LinOutMod=False`. 2. Modify `/home/user/Desktop/NRELOffshrBsline5MW_Linear_ElastoDyn.dat`: disable `FlapDOF1`, `FlapDOF2`, `EdgeDOF`, `DrTrDOF`, `GenDOF`, `YawDOF`, `TwFADOF2`, and `TwSSDOF2`; enable only `TwFADOF1` and `TwSSDOF1`; set `RotSpeed=0`. 3. Run `/home/user/miniconda3/bin/openfast linear.fst` from `/home/user/Desktop`. A successful run must generate the native files `/home/user/Desktop/linear.1.lin` and `/home/user/Desktop/linear.out`. 4. Write `/home/user/Desktop/postprocess.py` to parse the state matrix A from `linear.1.lin`, compute its eigenvalues, and distinguish the first tower fore-aft and side-to-side frequencies using the associated state/eigenvector participation. Run it to save `/home/user/Desktop/summary.txt` as exactly one line: `tower_fa_freq_hz,tower_ss_freq_hz`. Do not use GUI tools.",
+  "source": "https://github.com/OpenFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/linear.fst",
+    "/home/user/Desktop/linear.out",
+    "/home/user/Desktop/NRELOffshrBsline5MW_Linear_ElastoDyn.dat",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

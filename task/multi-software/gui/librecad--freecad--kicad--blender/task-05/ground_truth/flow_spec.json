@@ -1,0 +1,200 @@
+{
+  "case_id": "multi-gui-4-librecad-freecad-kicad-blender-task-05-ubuntu",
+  "owner": "taozhuo",
+  "title": "L-shaped cable strain relief bracket with tie slots",
+  "domain": "cable_management_bracket",
+  "software_chain": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "token": "EW4G05",
+  "required_files": [
+    "stage1_l_cable_strain_bracket.dxf",
+    "stage2_l_cable_strain_bracket.stl",
+    "stage2_l_cable_strain_bracket_handoff_outline.dxf",
+    "stage3_l_cable_strain_bracket_board.kicad_pcb",
+    "stage3_l_cable_strain_bracket_board_profile.svg",
+    "stage4_l_cable_strain_bracket.glb"
+  ],
+  "dxf": {
+    "file": "stage1_l_cable_strain_bracket.dxf",
+    "bbox": [
+      150.0,
+      90.0
+    ],
+    "bbox_tol": 1.5,
+    "circle_tol": 1.0,
+    "radius_tol": 0.5,
+    "layers": [
+      "OUTLINE",
+      "TIE_SLOT",
+      "HOLE",
+      "LABEL"
+    ],
+    "circles": [
+      [
+        12.0,
+        12.0,
+        2.6
+      ],
+      [
+        138.0,
+        12.0,
+        2.6
+      ],
+      [
+        12.0,
+        78.0,
+        2.6
+      ],
+      [
+        52.0,
+        72.0,
+        2.0
+      ],
+      [
+        78.0,
+        72.0,
+        2.0
+      ],
+      [
+        104.0,
+        72.0,
+        2.0
+      ]
+    ],
+    "texts": [
+      "EW4G05",
+      "CABLE-IN",
+      "TIE1",
+      "TIE2"
+    ],
+    "min_closed_slots": 2,
+    "no_layers": [
+      "GUIDE"
+    ]
+  },
+  "stl": {
+    "file": "stage2_l_cable_strain_bracket.stl",
+    "bbox": [
+      150.0,
+      90.0,
+      24.0
+    ],
+    "bbox_tol": 4.0,
+    "min_triangles": 100,
+    "max_fill_ratio": 0.75
+  },
+  "kicad": {
+    "components": {
+      "J1": "JST cable input",
+      "D1": "TVS diode",
+      "TP1": "GND test pad"
+    },
+    "tokens": [
+      "EW4G05",
+      "JST-J1",
+      "STRAIN-RELIEF",
+      "TVS-D1",
+      "GND-TEST",
+      "CLAMP-ZONE"
+    ]
+  },
+  "glb": {
+    "file": "stage4_l_cable_strain_bracket.glb",
+    "tokens": [],
+    "min_nodes": 3,
+    "min_materials": 1,
+    "nodes": [
+      "stage2_l_cable_strain_bracket",
+      "stage3_l_cable_strain_bracket_board_profile.svg"
+    ],
+    "min_meshes": 1,
+    "gui_export": true,
+    "accepted_import_evidence": {
+      "stage2_stl_object": "stage2_l_cable_strain_bracket",
+      "stage3_svg_object": "stage3_l_cable_strain_bracket_board_profile.svg"
+    }
+  },
+  "diversity_notes": {
+    "geometry": "L-shaped cable strain relief bracket with tie slots",
+    "electronic_focus": "a small cable-entry PCB with JST input, TVS diode, ground test pad, and strain-relief keepout",
+    "visualization_focus": "a bracket scene showing a black cable path through the inlet and tie slots"
+  },
+  "eval_dependencies": {
+    "pip_packages": [
+      "ezdxf",
+      "trimesh",
+      "pygltflib",
+      "numpy"
+    ],
+    "vm_preinstalled": true,
+    "usage": {
+      "ezdxf": "parse and validate DXF geometry, layers, circles, and text",
+      "trimesh": "parse and validate STL mesh dimensions and triangle count",
+      "pygltflib": "parse and validate Blender-exported GLB scene, nodes, materials, and metadata",
+      "numpy": "numeric array and bounding-box comparisons for CAD geometry checks"
+    }
+  },
+  "seed": {
+    "file": "seed_l_cable_strain_bracket.dxf",
+    "desktop_path": "/home/user/Desktop/seed_l_cable_strain_bracket.dxf"
+  },
+  "generated_by": {
+    "method": "real_snapshot_software",
+    "versions": [
+      "LibreCAD 2.2.0.2",
+      "FreeCAD 0.21.2",
+      "KiCad 10.0.2",
+      "Blender 4.2.3"
+    ]
+  },
+  "handoff": {
+    "file": "stage2_l_cable_strain_bracket_handoff_outline.dxf"
+  },
+  "board_profile": {
+    "file": "stage3_l_cable_strain_bracket_board_profile.svg"
+  },
+  "intermediate_outputs": [
+    {
+      "stage": "librecad",
+      "file": "stage1_l_cable_strain_bracket.dxf",
+      "type": "dxf",
+      "consumed_by": "freecad",
+      "eval_check": "check_stage1_dxf"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_l_cable_strain_bracket.stl",
+      "type": "stl",
+      "consumed_by": "blender",
+      "eval_check": "check_stl"
+    },
+    {
+      "stage": "freecad",
+      "file": "stage2_l_cable_strain_bracket_handoff_outline.dxf",
+      "type": "dxf",
+      "consumed_by": "kicad",
+      "eval_check": "check_handoff_dxf"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_l_cable_strain_bracket_board.kicad_pcb",
+      "type": "kicad_pcb",
+      "consumed_by": "blender",
+      "eval_check": "check_kicad_board_file"
+    },
+    {
+      "stage": "kicad",
+      "file": "stage3_l_cable_strain_bracket_board_profile.svg",
+      "type": "svg",
+      "consumed_by": "blender",
+      "eval_check": "check_board_profile_svg"
+    }
+  ],
+  "board_file": {
+    "file": "stage3_l_cable_strain_bracket_board.kicad_pcb"
+  }
+}

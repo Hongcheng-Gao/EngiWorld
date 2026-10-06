@@ -1,0 +1,80 @@
+{
+  "id": "quantitative-design--gui--ansys--task-03--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Using ANSYS, maximize the first natural frequency per unit mass for the fixed-fixed beam defined in C:\\Users\\user\\Desktop\\problem_spec.json. Open Mechanical APDL from `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Start from C:\\Users\\user\\Desktop\\baseline_apdl_fixed_beam_modal.db and its result file. Keep the 500 mm beam axis, both fully fixed end interfaces, material, density, BEAM188 formulation, modal analysis type, mesh, and uniform-section restrictions unchanged. Select one uniform RECT or HREC section within the published dimension, wall-thickness, and area limits. Solve the final design and save its native database as C:\\Users\\user\\Desktop\\submission.db and its modal result as C:\\Users\\user\\Desktop\\submission.rst.",
+  "source": "design-generated quantified CAE optimization task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/problem_spec.json",
+            "path": "C:\\Users\\user\\Desktop\\problem_spec.json"
+          },
+          {
+            "local_path": "task-03/init_file/baseline_apdl_fixed_beam_modal.db",
+            "path": "C:\\Users\\user\\Desktop\\baseline_apdl_fixed_beam_modal.db"
+          },
+          {
+            "local_path": "task-03/init_file/baseline_apdl_fixed_beam_modal.rst",
+            "path": "C:\\Users\\user\\Desktop\\baseline_apdl_fixed_beam_modal.rst"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\submission.db",
+    "C:\\Users\\user\\Desktop\\submission.rst"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.0,
+      "direction": "maximize",
+      "name": "normalized frequency-per-mass improvement",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            },
+            {
+              "local_path": "_shared/read_only_eval.py",
+              "path": "C:\\Users\\user\\Desktop\\read_only_eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

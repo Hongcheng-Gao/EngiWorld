@@ -1,0 +1,65 @@
+{
+  "id": "single-software--cli--freecad-path--task-19--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Treat /home/user/Desktop/complex_pockets.step and /home/user/Desktop/tool_candidates.csv in FreeCAD 0.21.2 Path/CAM as the starting point. On this machine, use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `complex_pockets.step`. The STEP is one 120 x 80 x 18 mm part in source coordinates X=-60..60, Y=-40..40, Z=0..18. It contains five centered rounded-rectangle pockets: P1 at X=-48, 18 x 18 mm, R8.5, depth 4 mm; P2 at X=-24, 18 x 16 mm, R6, depth 5 mm; P3 at X=0, 18 x 14 mm, R6, depth 6 mm; P4 at X=24, 18 x 12 mm, R5.5, depth 7 mm; and P5 at X=48, 18 x 10 mm, R4.5, depth 8 mm. It also contains six D14 through holes at Y=27 and six D12 through holes at Y=-27, both using X=-50,-30,-10,10,30,50. Create one editable native Path Job with G54 at the center of the top face: the Job model and stock must span Z=-18..0, and the stock must span X=-62..62 and Y=-42..42 with no Z extension. Use all five CSV tools exactly as defined; operation_count is the maximum number of operations allowed for that tool. Use T1 D16 for P1 and the outside Profile, T2 D14 for the six D14 holes, T3 D12 for the six D12 holes, T4 D10 for P2, P3, and P4, and T5 D8 for P5. No selected end-mill diameter may exceed its pocket minimum width. Use native PocketShape operations with StartDepth 0, floors at Z=-4,-5,-6,-7,-8 respectively, StepDown 2 mm, 50% stepover, SafeHeight 3 mm, and ClearanceHeight 5 mm. Use two native Drilling operations with nominal FinalDepth -19 mm, RetractHeight 2 mm, Drill Tip extra offset, G98 safety retraction, and the same safe and clearance heights. Use one native compensated Outside Profile with T1, StartDepth 0, FinalDepth -18 mm, StepDown 3 mm, clockwise direction, and a complete closed contour. Keep the posted operation order P1, D14 drilling, D12 drilling, P2, P3, P4, P5, Outside Profile. All ToolControllers must use forward spindle S7000 rpm and horizontal and vertical feed F500 mm/min. Post with the native linuxcnc postprocessor, write /home/user/Desktop/task-19.nc, and save the editable recomputable native document as /home/user/Desktop/task-19.FCStd. All eight operations must remain active, non-empty, and Up-to-date after recompute.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Main/Job.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/PocketShape.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Drilling.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Op/Profile.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Bit.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Tool/Controller.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/PathScripts/PathUtils.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Post/Command.py\nhttps://github.com/FreeCAD/FreeCAD/blob/b9bfa5c5507506e4515816414cd27f4851d00489/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py\nhttps://wiki.freecad.org/index.php?title=CAM_Pocket_Shape&oldid=1262258\nhttps://wiki.freecad.org/index.php?title=CAM_Drilling&oldid=1261626\nhttps://wiki.freecad.org/index.php?title=CAM_Profile&oldid=1262290\nhttps://linuxcnc.org/docs/2.8/html/gcode/g-code.html#gcode:g81\nhttps://linuxcnc.org/docs/2.8/html/gcode/g-code.html#gcode:g98-g99\nhttps://linuxcnc.org/docs/2.8/html/gcode/m-code.html#mcode:m2-m30",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/complex_pockets.step",
+            "path": "/home/user/Desktop/complex_pockets.step"
+          },
+          {
+            "local_path": "task-19/init_file/tool_candidates.csv",
+            "path": "/home/user/Desktop/tool_candidates.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-19.FCStd",
+    "/home/user/Desktop/task-19.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": [
+        "/usr/bin/python3",
+        "-I",
+        "/home/user/Desktop/eval.py"
+      ],
+      "shell": false
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
