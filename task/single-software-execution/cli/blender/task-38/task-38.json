@@ -1,0 +1,67 @@
+{
+  "id": "single-software-execution--cli--blender--task-38--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Append material `StudioBrass` from `/home/user/Desktop/materials.blend` into `/home/user/Desktop/scene.blend`, assign it to `Target`, and save `/home/user/Desktop/answer.blend`. ## Requirements 1. `/home/user/Desktop/answer.blend` exists. 2. Launch Blender by running `blender` from a terminal. On this machine, use `/opt/blender/blender` for Blender command-line or background runs when working on `materials.blend`.\n\nThe object `Target` exists and is a MESH. 3. `bpy.data.materials.get('StudioBrass')` is not None. 4. `bpy.data.materials['StudioBrass'].library is None` (appended, not linked). 5. `Target.material_slots[0].material.name == 'StudioBrass'`. 6. The `StudioBrass` Principled BSDF has Metallic == 1.0 and Base Color with R > 0.7, G > 0.5, B < 0.3. Do not rename the `Target` object or the `StudioBrass` material.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-38/init_file/materials.blend",
+            "path": "/home/user/Desktop/materials.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-38/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-38/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

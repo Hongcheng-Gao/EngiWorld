@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--cli--floris--task-19--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "Start from a template `/home/user/Desktop/curve_base.py`. Run your scripts with Python in an environment where `floris` is installed (e.g. `from floris import FlorisModel`). On this machine, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program.\n\nComplete the following from the command line: 1. Write a complete script `/home/user/Desktop/curve.py`: - Build a single-turbine wind farm (NREL 5MW) - Sweep wind speeds: `4, 6, 8, 10, 12, 14, 16, 18, 20 m/s` - For each wind speed, execute `run_no_wake()` (to avoid wake interference) - Extract power (kW) and thrust coefficient `Ct` 2. Execute and save to `/home/user/Desktop/summary.txt` in this format: `ws4_p_kw, ws4_ct, ws8_p_kw, ws8_ct, ws12_p_kw, ws12_ct, ws20_p_kw, ws20_ct` 3. Do not use any GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/curve_base.py",
+            "path": "/home/user/Desktop/curve_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/curve.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

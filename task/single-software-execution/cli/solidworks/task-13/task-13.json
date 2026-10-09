@@ -1,0 +1,58 @@
+{
+  "id": "single-software-execution--cli--solidworks--task-13--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Load C:\\Users\\User\\Desktop\\cli_033_mirror_pair_right.step in SolidWorks. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). For the steps below, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_033_mirror_pair_right.step`.\n\nUsing SolidWorks command-line automation, use that input file, a non-symmetric right-hand bracket fully in X>0. It has a base block from X=20..75, Y=-15..15, Z=0..10 and a raised tab from X=55..75, Y=-10..10, Z=10..20. Create a left-hand mirrored version using the YZ plane as the mirror plane while leaving the original right-hand part unchanged. Export C:\\Users\\User\\Desktop\\cli_033_right_original.step, C:\\Users\\User\\Desktop\\cli_033_left_mirrored.step, and an assembly C:\\Users\\User\\Desktop\\cli_033_pair_assembly.step containing both parts with 20 mm minimum spacing in X and no interference.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Assemblies.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/hidd_interference_detection.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/cli_033_mirror_pair_right.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_033_mirror_pair_right.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_033_left_mirrored.step",
+    "C:\\Users\\User\\Desktop\\cli_033_pair_assembly.step",
+    "C:\\Users\\User\\Desktop\\cli_033_right_original.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

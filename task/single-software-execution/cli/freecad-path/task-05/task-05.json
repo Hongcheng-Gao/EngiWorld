@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--cli--freecad-path--task-05--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "In FreeCAD Path/CAM, open /home/user/Desktop/multi_feature.step and /home/user/Desktop/tool_library.csv. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). For the steps below, use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `multi_feature.step`.\n\nThe STEP is the finished 120 x 80 x 18 mm part at X=-60..60, Y=-40..40, Z=0..18. It has a centered 50 x 30 x 6 mm top pocket with R8 inside corners, two through holes of diameter 14 mm at (-42, 0) and (42, 0), and two through holes of diameter 12 mm at (0, -28) and (0, 28). Use the CSV as the tool-definition table and create native FreeCAD ToolBits and Tool Controllers exactly as listed; do not use any tool outside it. Use T1, the diameter-16 end mill, for milling; T2, the diameter-14 118-degree drill, for the diameter-14 holes; and T3, the diameter-12 118-degree drill, for the diameter-12 holes. Set all three controllers to forward spindle S7000 and horizontal/vertical feed 500 mm/min. Create one native Path Job with G54 at the finished part's top-face center, so the Job model spans X=-60..60, Y=-40..40, Z=-18..0. Define stock with 2 mm extension on every X/Y side, 1 mm above the part, and no bottom extension (X=-62..62, Y=-42..42, Z=-18..1). Create exactly five active native operations in this order: (1) Face with T1 from stock top Z=1 to finished top Z=0 and cover the entire stock top; (2) Pocket with T1 that clears the complete R8 pocket to Z=-6 without gouging outside it; (3) Drilling with T2 for both diameter-14 holes; (4) Drilling with T3 for both diameter-12 holes; and (5) an outside compensated Profile with T1 that follows the complete outer boundary to Z=-18 without entering the finished part. For both Drilling operations use nominal FinalDepth Z=-19, positive safe/retract heights, a safe retract mode, and FreeCAD's Drill Tip extra-offset so the full hole diameter passes 1 mm below the part bottom. Use the FreeCAD 0.21.2 LinuxCNC postprocessor and preserve operation order. Save the editable native Job and the posted program to exactly /home/user/Desktop/task-05.FCStd and /home/user/Desktop/task-05.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Job.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Stock.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/MillFace.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/PocketShape.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Drilling.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Profile.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Tool/Bit.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Tool/Controller.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/multi_feature.step",
+            "path": "/home/user/Desktop/multi_feature.step"
+          },
+          {
+            "local_path": "task-05/init_file/tool_library.csv",
+            "path": "/home/user/Desktop/tool_library.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-05.FCStd",
+    "/home/user/Desktop/task-05.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

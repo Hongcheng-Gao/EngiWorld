@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--blender--task-29--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Weight-Selective Bevel `/home/user/Desktop/scene.blend` contains a single mesh object `Block` (a cube of dimensions 2x2x2 centred on the origin). Launch Blender by running `blender` from a terminal. For the steps below, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nThe mesh carries an edge-domain float attribute `bevel_weight_edge`. Use that attribute to bevel only the edges whose weight is greater than 0.5, then apply the modifier so no modifier remains. Save the result as `/home/user/Desktop/answer.blend`. ## Bevel parameters - Width (offset-mode distance): 0.10 BU. - Segments: 2. - Profile shape: 0.5 (circular arc). - Limited so only weighted edges are affected. ## Requirements 1. Output scene contains exactly one mesh object, named `Block`, at world origin. 2. `Block`'s modifier stack is empty. 3. `Block`'s mesh is closed-manifold (every edge shared by exactly two faces). 4. Overall bounding box is unchanged (x,y,z each still span +-1 within tol 5e-3). 5. The beveled edges are the ones indicated by `bevel_weight_edge`.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-29/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-29/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

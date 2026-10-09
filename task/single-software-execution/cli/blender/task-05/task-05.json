@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--blender--task-05--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Proximity Vertex Group. `/home/user/Desktop/scene.blend` contains two mesh objects: - `Skin`: a 4x4 BU plane in XY centered at the origin, subdivided 40x40 (1681 verts, 1600 quads), flat at z=0, with no modifiers. - `Bone`: a UV sphere of radius 0.3 positioned at world (0, 0, 0.5) (sitting above the center of the Skin). Launch Blender by running `blender` from a terminal. For the steps below, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nAdd a Geometry Nodes modifier on `Skin` that computes, for every Skin vertex, the proximity (distance) to the `Bone` mesh surface, remaps it through a smoothstep falloff, and stores the result as a POINT-domain FLOAT attribute named `Influence` (this makes it recognized as a vertex group in the UI). Do NOT apply the modifier - it must remain on the stack so the `Influence` attribute is available on the evaluated mesh. Required node-tree behaviour: 1. An `Object Info` node reads `Bone`'s geometry (transform_space='RELATIVE' is convenient because Skin sits at the world origin, so Bone's geometry arrives in Skin's local/world frame). 2. A `Geometry Proximity` node (target_element='FACES') takes `Bone` geometry as Target; the Source Position defaults to Position, so the node outputs, per Skin vertex, the distance to the nearest Bone surface point. 3. A `Map Range` node with interpolation_type='SMOOTHSTEP' and clamp=True converts distance -> influence by mapping: - from_min = 0.3, to_min = 1.0 - from_max = 1.0, to_max = 0.0 so distance <= 0.3 gives Influence = 1.0, distance >= 1.0 gives Influence = 0.0, and in between gives a smooth fade. 4. A `Store Named Attribute` node with data_type='FLOAT', domain='POINT', Name='Influence' writes the remapped value onto the Skin geometry. 5. `Group Input` geometry flows into the attribute-store stage; `Group Output` receives the stored geometry. Save the result to `/home/user/Desktop/answer.blend` with the GN modifier still on `Skin` (unapplied). ## Requirements 1. Both `Skin` and `Bone` exist as mesh objects. 2. `Skin` carries at least one NODES modifier. 3. The evaluated mesh (via depsgraph) of `Skin` contains a POINT-domain FLOAT attribute named `Influence`. 4. All Influence values lie in [0, 1] (with small tolerance). 5. Every Skin vertex whose distance to the Bone surface is <= 0.3 BU has Influence >= 0.9. 6. Every Skin vertex whose distance to the Bone surface is > 1.0 BU has Influence <= 0.1.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

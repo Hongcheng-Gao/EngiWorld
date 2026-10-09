@@ -1,0 +1,97 @@
+{
+  "id": "cross-software-coordination--gui--librecad--freecad--kicad--blender--task-01--ubuntu",
+  "snapshot": "freecad-librecad-kicad-blender",
+  "instruction": "Software paths: LibreCAD: `/usr/bin/librecad`; FreeCAD: `/usr/bin/freecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`; Blender: `/home/user/Applications/blender-4.2.3-linux-x64/blender`. Required four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from the provided seed DXF /home/user/Desktop/seed_sensor_node_enclosure.dxf; do not start from a blank or unrelated drawing. Run the stages in order. Each stage must read the preceding stage output, and every required intermediate file must be saved on the Desktop. The design token for this task is EW4G01; keep this token visible in the DXF labels and KiCad silkscreen. The Blender output must visibly consume the stage-2 STL and stage-3 SVG through Blender's native import/export operations.\n\nDesign goal: DIN rail sensor node enclosure with USB and LED windows. This case is intentionally different from the other benchmark cases: domain=industrial_iot_enclosure, mechanical target=an assembled enclosure with visible USB window and two translucent LED lenses, electronics target=a sensor-node PCB with USB-C connector, MCU, sensor header, and two LED footprints.\n\n1. LibreCAD stage: open the provided seed file /home/user/Desktop/seed_sensor_node_enclosure.dxf in LibreCAD, use it as the starting drawing, complete the required 2D geometry, remove all GUIDE construction entities, and save /home/user/Desktop/stage1_sensor_node_enclosure.dxf. Use millimeters. Use layers OUTLINE, PORT, HOLE, LABEL. The overall drawing envelope must be 92 mm x 58 mm. Include the required circular features: center (8,8) radius 2.2; center (84,8) radius 2.2; center (8,50) radius 2.2; center (84,50) radius 2.2; center (72,29) radius 1.6; center (80,29) radius 1.6. Add readable labels EW4G01, USB-C, LED-A, LED-B on the LABEL layer.\n2. FreeCAD stage: import /home/user/Desktop/stage1_sensor_node_enclosure.dxf in FreeCAD. Create the 3D mechanical body from that LibreCAD DXF, and export the body as /home/user/Desktop/stage2_sensor_node_enclosure.stl with an approximate bounding size of 92 mm x 58 mm x 22 mm. Then, from the same FreeCAD model, export a top-face or board-interface outline for KiCad as /home/user/Desktop/stage2_sensor_node_enclosure_handoff_outline.dxf. This handoff DXF must represent the same XY envelope as the FreeCAD body and include the visible labels FREECAD_TO_KICAD and EW4G01.\n3. KiCad stage: open KiCad, create a PCB from /home/user/Desktop/stage2_sensor_node_enclosure_handoff_outline.dxf by importing the handoff DXF as the Edge.Cuts board outline, and save the KiCad board as /home/user/Desktop/stage3_sensor_node_enclosure_board.kicad_pcb. The Edge.Cuts outline must be the same single closed 92 mm x 58 mm four-edge outline as the handoff and contain no text. Add five real footprints using references and values U1 / MCU Sensor Controller, J1 / USB-C Receptacle, J2 / Sensor Header, LED1 / Status LED A, and LED2 / Status LED B. Keep every footprint, pad, reference/value label, and the required F.SilkS transfer text within the closed board outline. Add F.SilkS silkscreen text carrying KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the stage2 handoff filename, EW4G01, and these board tokens: EW4G01, MCU-U1, USB-C-J1, LED1, LED2, SENSOR-J2. Then use KiCad's plot/export workflow to create /home/user/Desktop/stage3_sensor_node_enclosure_board_profile.svg from the same Edge.Cuts outline; the SVG must contain a visibly painted closed 92 mm x 58 mm outline.\n4. Blender stage: open Blender. Import /home/user/Desktop/stage2_sensor_node_enclosure.stl with File > Import > STL, then import /home/user/Desktop/stage3_sensor_node_enclosure_board_profile.svg with File > Import > Scalable Vector Graphics (.svg). Keep the imported STL body object and make the imported SVG board/profile curves visibly rendered as a distinct mesh in the scene, using object names stage2_sensor_node_enclosure and stage3_sensor_node_enclosure_board_profile.svg. Add two distinct visible lens meshes named LED_A_Lens and LED_B_Lens over the two LED apertures, each using a translucent alpha material. You may leave Blender's default cube/camera/light or remove them; do not manually inject handoff metadata. Export glTF Binary (.glb) as /home/user/Desktop/stage4_sensor_node_enclosure.glb.\n\nRequired deliverables on the Desktop: /home/user/Desktop/stage1_sensor_node_enclosure.dxf, /home/user/Desktop/stage2_sensor_node_enclosure.stl, /home/user/Desktop/stage2_sensor_node_enclosure_handoff_outline.dxf, /home/user/Desktop/stage3_sensor_node_enclosure_board.kicad_pcb, /home/user/Desktop/stage3_sensor_node_enclosure_board_profile.svg, /home/user/Desktop/stage4_sensor_node_enclosure.glb.\n\n[Software] Use LibreCAD first, then FreeCAD, then KiCad, then Blender. Do not skip stages, reorder stages, or recreate the final result in only one software package.",
+  "source": "https://github.com/LibreCAD/LibreCAD/releases/tag/2.2.0.2; https://docs.librecad.org/en/2.2.0_a/; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://github.com/yorikvanhavre/Draft-dxf-importer/tree/1.41; https://wiki.freecad.org/Mesh_Export; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#plotting; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/; https://dev-docs.kicad.org/en/apis-and-binding/pcbnew/index.html; https://www.w3.org/TR/SVG11/painting.html; https://docs.blender.org/manual/en/4.2/files/import_export/stl.html; https://docs.blender.org/manual/en/4.2/addons/import_export/curve_svg.html; https://docs.blender.org/manual/en/4.2/addons/import_export/scene_gltf2.html; https://registry.khronos.org/glTF/specs/2.0/glTF-2.0.html#materials; all task artifacts regenerated in the assigned real snapshot software",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/seed_sensor_node_enclosure.dxf",
+            "path": "/home/user/Desktop/seed_sensor_node_enclosure.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/stage1_sensor_node_enclosure.dxf",
+    "/home/user/Desktop/stage2_sensor_node_enclosure.stl",
+    "/home/user/Desktop/stage2_sensor_node_enclosure_handoff_outline.dxf",
+    "/home/user/Desktop/stage3_sensor_node_enclosure_board.kicad_pcb",
+    "/home/user/Desktop/stage3_sensor_node_enclosure_board_profile.svg",
+    "/home/user/Desktop/stage4_sensor_node_enclosure.glb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "metric": {
+      "name": "four_gui_transfer_completion",
+      "direction": "maximize",
+      "output_field": "score",
+      "baseline_score": 0.0,
+      "max_score": 1.0
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

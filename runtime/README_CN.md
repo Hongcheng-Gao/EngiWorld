@@ -12,9 +12,9 @@
 |---|---|
 | 桌面分辨率 | 1920×1080，初始化前后均校准并验证 |
 | 历史轮数 | 15 |
-| 常规 GUI / CLI 步数上限 | 200 / 100 |
-| 多软件 GUI / CLI 步数上限 | 300 / 150 |
-| Open-ended 步数上限 | 150 |
+| 常规 GUI / CLI 轮数上限 | 200 / 100 |
+| 跨软件协同 GUI / CLI 轮数上限 | 300 / 150 |
+| 开放环境工程轮数上限 | 150 |
 | 单任务活跃时间 | 5 小时（18000 秒） |
 
 本地时间上限使用 `--task-timeout` 设置；云端使用 master 的 `--task-run-timeout-seconds` 或 `TASK_RUN_TIMEOUT_SECONDS`。本地计时包含虚拟机启动、初始化、模型请求、动作执行和评分。扣除框架登记的暂停区间，重叠暂停只扣除一次，恢复运行时保留此前的活跃时间。智能体的 WAIT 动作和请求重试计入时间预算。
@@ -55,12 +55,12 @@ python -m engiworld.scheduler.master plan \
 
 只有收到完整的流式响应后才执行动作。中断或无效响应会重试，重试耗尽后记录为 API 中断。
 
-## 图像任务
+## 视觉引导建模
 
-`image-based-modeling/` 的参考图位于 `init_file/`，通过 `python -m engiworld.prepare_tasks` 下载。运行框架默认将图片放入模型消息：GUI 使用 `gui_message_initial`，CLI 使用 `cli_message_initial`。
+`vision-guided-modeling/` 的参考图位于 `init_file/`，通过 `python -m engiworld.prepare_tasks` 下载。运行框架默认将图片放入模型消息：GUI 使用 `gui_message_initial`，CLI 使用 `cli_message_initial`。
 
-## Open-ended 环境
+## 开放环境工程
 
-`open-ended/cli/agent-selected/` 使用没有预装工程软件的空白 `top-10` 基础镜像。模型自行选择、安装和配置工具，使用终端观察和 `open_engineering` 交互配置。
+`open-environment-engineering/cli/agent-selected/` 使用没有预装工程软件的空白 `top-10` 基础镜像。模型自行选择、安装和配置工具，使用终端观察和 `open_engineering` 交互配置。
 
 几何评分需要 FreeCAD。框架会在模型结束后检查并安装该依赖；镜像需要支持非交互式 sudo，并能访问 Ubuntu 软件源。

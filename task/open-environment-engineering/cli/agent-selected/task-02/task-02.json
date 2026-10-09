@@ -1,0 +1,79 @@
+{
+  "id": "open-environment-engineering--cli--agent-selected--task-02--ubuntu",
+  "task_family": "open-environment-engineering",
+  "cli_tool_policy": "open_choice",
+  "snapshot": "top-10",
+  "instruction": "This is a fully open-workflow engineering task. You may use any tools, scripts, or libraries available in the environment, in any combination and any order, with any amount of iteration. The environment starts from a blank base image with no engineering applications preinstalled. Inspect the supplied inputs, then choose, install, and configure any tools or libraries you need. No particular software is required. The evaluator does not inspect software identity, stage order, intermediate handoffs, command history, version records, or provenance.\n\nBuck regulator heat-spreader clamp package.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as XY origin. Z=0 is the package bottom outer face and Z increases toward the covering lid. Build the required 117.2 x 75.2 x 18.6 mm PA12 package with 2.6 mm base/lid/side walls, seat the PCB bottom at Z=3.8 mm on four bored standoffs aligned to MH1-MH4, and retain at least 4 mm PCB-to-inner-wall clearance away from apertures. A real covering lid is required. Center a real 6 x 6 mm U1 thermal contact column on U1: its lower face must have a non-negative gap of at most 0.1 mm to the nominal U1 body top, and the solid must continue to the lid inner face; it may be integral with the lid or a separate installed part. Keep the full L1 interior keepout cylinder empty: use the KiCad L1 center and `KEEPOUT_RADIUS_MM`, from the nominal PCB top to the covering lid inner face; the lid above its inner face remains required. The evaluator measures C1 clearance from the nominal C1 body top to the nearest installed clamp/lid material covering any part of the KiCad C1 keepout-radius region and requires at least 2.4 mm; deleting the lid is not a clearance solution. J1 must form a bounded continuous opening through the X_MINUS wall and J2 through the X_PLUS wall, using the CSV finished width/height and the requirements overcut, with the required guard material around every edge. The evaluator derives package volume/mass, side clearance, C1 clearance, U1 contact gap, L1 keepout intrusion, and unintended interference from the final submitted geometry, not from declared values.\n\nSave the completed final assembly into `/home/user/Desktop/result` as exactly one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. The PCB and installed components must remain identifiable physical parts rather than being fused into enclosure material; this is a final-assembly geometry requirement, not a prescribed workflow. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/; https://openscad.org/news.html; https://openscad.org/documentation.html; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://wiki.freecad.org/Release_notes_1.1; https://wiki.freecad.org/Start_up_and_Configuration; https://www.blender.org/releases/5-2/; https://docs.blender.org/api/5.2/; https://developer.blender.org/docs/release_notes/5.2/pipeline_io/; https://docs.blender.org/manual/en/5.2/addons/scene_gltf2.html; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-02",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-02/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-02/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-02/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            },
+            {
+              "local_path": "../../prepare_evaluator.py",
+              "path": "/home/user/Desktop/_engiworld_prepare_evaluator.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "prepare_command": "python3 /home/user/Desktop/_engiworld_prepare_evaluator.py",
+      "prepare_timeout": 960
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

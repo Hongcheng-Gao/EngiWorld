@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-07--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Use command-line/API automation with the installed SOLIDWORKS CAM 2025 environment (powered by CAMWorks); do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. For this workflow, SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\variant_template.step, a 120 x 80 x 18 mm solid plate, and read C:\\Users\\User\\Desktop\\variants.json. For every variant, independently import the STEP into a new SOLIDWORKS CAM document; do not duplicate or reuse another variant's modified document, feature, operation, or posted code. Create one centered rectangular pocket with the JSON pocket size. Set G54 at the center of the top face with the tool axis in -Z; the JSON bottom_z is a STEP-model Z coordinate, so its posted G54 depth is bottom_z - 18 mm. Use the JSON tool diameter as tool 1 (T1), use G43 with H1, and post CAM-computed tool-center motion without controller-side G41/G42 compensation. Generate the pocket toolpath, run the SOLIDWORKS CAM simulation with zero reported gouges and zero undercuts, then use the installed native post to generate the exact JSON program number. Save the five independent posted outputs exactly as C:\\Users\\User\\Desktop\\variant_01.nc, C:\\Users\\User\\Desktop\\variant_02.nc, C:\\Users\\User\\Desktop\\variant_03.nc, C:\\Users\\User\\Desktop\\variant_04.nc, and C:\\Users\\User\\Desktop\\variant_05.nc.",
+  "source": "https://camworks.com/camworks-is-powering-solidworks-cam/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/variant_template.step",
+            "path": "C:\\Users\\User\\Desktop\\variant_template.step"
+          },
+          {
+            "local_path": "task-07/init_file/variants.json",
+            "path": "C:\\Users\\User\\Desktop\\variants.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\variant_01.nc",
+    "C:\\Users\\User\\Desktop\\variant_02.nc",
+    "C:\\Users\\User\\Desktop\\variant_03.nc",
+    "C:\\Users\\User\\Desktop\\variant_04.nc",
+    "C:\\Users\\User\\Desktop\\variant_05.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

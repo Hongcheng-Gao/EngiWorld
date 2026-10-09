@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--cli--openstudio--task-14--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Organize /home/user/Desktop/init.osm in the opened OpenStudio application using its CLI/API automation interface, and save the updated model as /home/user/Desktop/result.osm. On this machine, use `/usr/local/openstudioapplication-1.11.0-rc2/bin/openstudio` for OpenStudio CLI or API automation when working on `init.osm`. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a three-segment archive storage suite. The owner has decided it should no longer be modeled like ordinary conditioned office space, but as low-occupancy, low-load, unconditioned archive storage. Preserve the three archive rooms, exterior walls, and roof. Keep only the necessary low-load and infiltration assumptions, and remove misleading active comfort controls. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally. The completed model must meet the following exact specification (SI units; geometry coordinates and lengths are metres; areas are square metres; names are exact): {\"building\":\"CLI Unconditioned Archive\",\"stories\":[{\"name\":\"01_ARCHIVE\",\"z\":0}],\"spaces\":[{\"name\":\"T14-ARCHIVE-A\",\"zone\":\"T14-ARCHIVE-A Zone\",\"x0\":0,\"y0\":0,\"x1\":6,\"y1\":8,\"z0\":0,\"h\":3.2,\"story\":\"01_ARCHIVE\",\"space_type\":\"TASK14 Archive Type\",\"heat\":null,\"cool\":null,\"ideal\":false},{\"name\":\"T14-ARCHIVE-B\",\"zone\":\"T14-ARCHIVE-B Zone\",\"x0\":6,\"y0\":0,\"x1\":12,\"y1\":8,\"z0\":0,\"h\":3.2,\"story\":\"01_ARCHIVE\",\"space_type\":\"TASK14 Archive Type\",\"heat\":null,\"cool\":null,\"ideal\":false},{\"name\":\"T14-ARCHIVE-C\",\"zone\":\"T14-ARCHIVE-C Zone\",\"x0\":12,\"y0\":0,\"x1\":18,\"y1\":8,\"z0\":0,\"h\":3.2,\"story\":\"01_ARCHIVE\",\"space_type\":\"TASK14 Archive Type\",\"heat\":null,\"cool\":null,\"ideal\":false}],\"init_with_controls\":true,\"constant_schedules\":{\"TASK14 Archive Occupancy\":0.1,\"TASK14 Archive Load\":0.25,\"TASK14 Archive Infiltration\":1},\"space_types\":{\"TASK14 Archive Type\":{\"people\":0.004,\"people_schedule\":\"TASK14 Archive Occupancy\",\"lights\":3.5,\"lights_schedule\":\"TASK14 Archive Load\",\"equipment\":1.5,\"equipment_schedule\":\"TASK14 Archive Load\"}},\"windows\":[{\"space\":\"T14-ARCHIVE-A\",\"wall\":\"south\",\"start\":1,\"end\":5,\"sill\":1.2,\"head\":2.2,\"name\":\"T14-ARCHIVE-A South FixedWindow\"},{\"space\":\"T14-ARCHIVE-B\",\"wall\":\"south\",\"start\":7,\"end\":11,\"sill\":1.2,\"head\":2.2,\"name\":\"T14-ARCHIVE-B South FixedWindow\"},{\"space\":\"T14-ARCHIVE-C\",\"wall\":\"south\",\"start\":13,\"end\":17,\"sill\":1.2,\"head\":2.2,\"name\":\"T14-ARCHIVE-C South FixedWindow\"}],\"infiltration\":{\"all\":{\"flow_per_exterior_area\":0.00018,\"schedule\":\"TASK14 Archive Infiltration\"}},\"output_variables\":[{\"name\":\"TASK14 Archive Operative Temperature\",\"variable\":\"Zone Operative Temperature\",\"key\":\"*\",\"frequency\":\"Daily\"}],\"metrics\":{\"bbox\":[18,8,3.2],\"floor_area\":144,\"exterior_wall_area\":166.4,\"surface_count\":18,\"space_count\":3,\"zone_count\":3,\"story_count\":1,\"window_count\":3,\"window_area\":12,\"shading_count\":0,\"shading_area\":0,\"paired_surface_count\":4,\"ground_floor_count\":3}}.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,67 @@
+{
+  "id": "single-software-execution--cli--cadence-orcad--task-23--windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "Export the Allegro differential-pair gap report for `C:\\Users\\user\\Desktop\\HSD_FPGA_final.brd` and save it as `C:\\Users\\user\\Desktop\\dpg.txt`. Use Allegro's native command-line report utility `C:\\Cadence\\SPB_24.1\\tools\\bin\\report.exe`. For this workflow, use `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe` for OrCAD schematics and `C:\\Cadence\\SPB_24.1\\tools\\bin\\allegro.exe` for board work.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/pcb-layout/allegro-pcb-designer.html; https://www.cadence.com/content/dam/cadence-www/global/en_US/documents/tools/pcb-design-analysis/allegro-pcb-manufacturing-ds.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-23/init_file/HSD_FPGA_final.brd",
+            "path": "C:\\Users\\user\\Desktop\\HSD_FPGA_final.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-23/init_file/README.md",
+            "path": "C:\\Users\\user\\Desktop\\README.md"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\dpg.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-23/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,65 @@
+{
+  "id": "design-optimization--cli--openscad--task-01--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "CLI-only OpenSCAD quantified CAD optimization task. Run OpenSCAD from `/usr/bin/openscad` when working on `starter.scad`. Work from /home/user/Desktop/starter.scad, /home/user/Desktop/baseline.stl, and /home/user/Desktop/constraints.json. Use OpenSCAD command-line modeling and export, not a GUI. Edit /home/user/Desktop/starter.scad or create a derived OpenSCAD source file, then export the final geometry as STL. This is a continuous-score geometry-proxy task, not a thermal simulation and not a request to match one hidden answer. Case: compact controller heat sink with straight fins and externally open airflow channels. Produce one watertight, winding-consistent, connected solid. The base contact face must lie at z=0, have area at least 3800 mm^2, span at least 76 x 46 mm, and be part of a base at least 4.0 mm thick. Use 6 to 16 straight fins running along Y; every fin must join the base, run at least 44 mm, reach at least z=24 mm, have thickness at least 1.5 mm, and leave at least 3.0 mm clear gap to the next fin. Keep the model within coordinate envelope x=[0,80], y=[0,50], z=[0,28] mm, keep each bounding-box span at least [76,46,24] mm, and keep material volume between 14500 and 54000 mm^3. After these hard constraints, maximize (single connected exterior-shell area minus the bottom contact area) / material volume. Enclosed inner shells, disconnected pieces, non-manifold sheets, the bottom contact face, and sub-threshold slits or fins do not earn credit. This metric is explicitly only a geometric surface-density proxy for heat-sink design; it does not claim thermal performance. Required outputs: /home/user/Desktop/optimized.stl and /home/user/Desktop/design_summary.json. The benchmark evaluates the real exported STL geometry. Use only the supplied task inputs; do not use evaluator-generated artifacts or evaluator implementation files, and do not fabricate metric files without producing a valid STL.",
+  "source": "https://files.openscad.org/documentation/manual/Using_OpenSCAD_in_a_command_line_environment.html; https://openscad.org/news.html#20210131; https://trimesh.org/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/starter.scad",
+            "path": "/home/user/Desktop/starter.scad"
+          },
+          {
+            "local_path": "task-01/init_file/baseline.stl",
+            "path": "/home/user/Desktop/baseline.stl"
+          },
+          {
+            "local_path": "task-01/init_file/constraints.json",
+            "path": "/home/user/Desktop/constraints.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/design_summary.json",
+    "/home/user/Desktop/optimized.stl"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 1.0,
+      "direction": "maximize",
+      "name": "externally exposed geometric area per volume",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

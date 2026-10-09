@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--gui--ansys--task-19--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Complete a linear eigenvalue buckling analysis of a pin-ended column using ANSYS Workbench. On this machine, launch ANSYS Workbench with `C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe`. Geometry and material: - Use a line body from (0, 0, 0) mm to (0, 1000, 0) mm. - Assign a 10 mm by 10 mm rectangular beam section and Structural Steel with E = 210000 MPa and Poisson's ratio = 0.3. - Use a consistent N-mm unit system. Workbench workflow: - Create a Static Structural system for the 1 N reference compression state. - Create an Eigenvalue Buckling system and link the Static Structural Solution cell to the Eigenvalue Buckling Setup cell. - Use BEAM188 and 40 equal elements along the line body. Boundary conditions and load: - At Y = 0 mm, constrain UX, UY, and UZ while leaving bending rotations free. - At Y = 1000 mm, constrain UX and UZ, leave UY free, and leave bending rotations free. - Apply FY = -1 N at the top end in the Static Structural system. Analysis: - Solve the Static Structural system. - Solve the linked Eigenvalue Buckling system and extract the first buckling mode. Save requirements: - Save a native Workbench project as C:\\Users\\user\\Desktop\\wb_buckling.wbpj. - Save the final MAPDL database as C:\\Users\\user\\Desktop\\wb_buckling.db. - Save the final buckling result as C:\\Users\\user\\Desktop\\wb_buckling.rst. - To preserve these exact solver filenames, you may open the Solver Files Directory from Workbench and use the graphical file manager to copy and rename the final database and result files onto the Desktop.",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\Framework\\bin\\Win64\\RunWB2.exe'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\wb_buckling.db",
+    "C:\\Users\\user\\Desktop\\wb_buckling.rst",
+    "C:\\Users\\user\\Desktop\\wb_buckling.wbpj"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

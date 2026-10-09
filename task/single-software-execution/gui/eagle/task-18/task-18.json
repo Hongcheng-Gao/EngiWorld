@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--eagle--task-18--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Review `amp1.sch`, duplicate the placed `U1` / `R1` / `C1` component group on the same sheet; copy the three components only and leave the existing nets unchanged, and save the result as `/home/user/Desktop/answer.sch`. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open `amp1.sch` there. Requirements: 1. `/home/user/Desktop/answer.sch` must parse as EAGLE XML. 2. It must contain exactly 6 `<part>` elements. 3. The original `U1`, `R1`, and `C1` must remain present. 4. Each of `U1`, `R1`, and `C1` must have at least one duplicate whose refdes follows EAGLE's rename pattern, such as `U1_1` or `U2`. 5. Every duplicate must also be placed on the sheet via an `<instance>` element.",
+  "source": "https://www.baldengineer.com/eagle-tutorial-copy-and-paste.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/amp1.sch",
+            "path": "/home/user/Desktop/amp1.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/amp1.sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(8); w, h = pyautogui.size(); pyautogui.click(w/2 + 100, h/2 + 25); time.sleep(2); pyautogui.click(w/2 + 213, h/2 + 146); time.sleep(2); pyautogui.click(w/2 - 80, h/2 + 68); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,77 @@
+{
+  "id": "single-software-execution--gui--blender--task-32--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "OBJ with Material Library. At the start of the task, the Blender executable is `/opt/blender/blender`; use it to open `scene.blend`. `scene.blend` uses Metric units in meters and contains three unit cubes, each with one material slot: `Cube_R` at (-2, 0, 0) with `Mat_Red` and Base Color (0.9, 0.1, 0.1, 1.0), `Cube_G` at (0, 0, 0) with `Mat_Green` and Base Color (0.1, 0.9, 0.1, 1.0), and `Cube_B` at (2, 0, 0) with `Mat_Blue` and Base Color (0.1, 0.1, 0.9, 1.0). Export the whole scene through Blender's Wavefront OBJ export dialog as `/home/user/Desktop/scene.obj`, overwriting any existing file. Enable Materials so Blender also writes `/home/user/Desktop/scene.mtl` beside it and references that material library from the OBJ. Set Forward to Y Forward and Up to Z Up. Leave Triangulated Mesh disabled; either triangle or quad faces are acceptable in the result. Requirements: 1. Both `scene.obj` and `scene.mtl` exist in the same directory, and the OBJ refers to `scene.mtl` by relative filename. 2. The OBJ contains between 20 and 30 vertices and between 14 and 22 faces, with every face having three or four vertices. 3. It assigns exactly three distinct materials to the cube faces. 4. The MTL contains exactly the three materials `Mat_Red`, `Mat_Green`, and `Mat_Blue`, with the corresponding red, green, and blue diffuse channels above 0.7 and each of their other two channels below 0.3.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-32/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-32/init_file/stub.obj",
+            "path": "/home/user/Desktop/stub.obj"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/scene.mtl",
+    "/home/user/Desktop/scene.obj"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-32/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

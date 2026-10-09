@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--blender--task-26--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "External Helical Thread `scene.blend` contains a single mesh object `Shaft` - a smooth cylindrical shaft coaxial with the world Z axis. For this task, the Blender executable is `/opt/blender/blender`; use it to open `scene.blend`. Cut a continuous helical groove into the top 2 BU of the shaft so that the lower portion remains an untouched smooth cylinder. Save the result as `/home/user/Desktop/answer.blend`. Groove parameters - Thread region: the upper 2 BU of the shaft (top 40% of the axial length). - Pitch (lead): 0.5 BU of axial travel per full 360 deg turn. - Groove cross-section: circular, radius 0.05 BU. - Exactly four complete turns over the thread region; helix starts at the lower edge of the region and ends at the top face. - Subtractive only: the groove removes material. No geometry extends beyond the original cylindrical envelope. Requirements: 1. The scene contains a mesh object named `Shaft`. 2. Exactly one mesh object exists in the scene. 3. The object's world location and rotation are unchanged from the initial scene. 4. The mesh is closed-manifold (every edge shared by exactly two faces). 5. The axial extent of the mesh is unchanged (z from 0 to 5 within tol). 6. The lower portion of the shaft (z in [0.5, 2.5]) is still a smooth cylinder at the original radius. 7. Inside the thread region the groove cuts at least one full groove-radius below the shaft surface. 8. Inside the thread region the crest of the thread still reaches the original shaft radius. 9. The groove follows a right-handed helix whose angular position advances consistently with the specified pitch across the thread region. Inspect the initial mesh to read off shaft radius, length, and orientation before cutting.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-26/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-26/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

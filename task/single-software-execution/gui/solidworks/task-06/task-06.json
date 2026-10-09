@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--solidworks--task-06--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Inspect gui_006_bracket_L.step in SolidWorks, a single L bracket. Open SOLIDWORKS 2025 from its desktop shortcut, then load `gui_006_bracket_L.step`. The base plate spans X=-40 to X=40, Y=-25 to Y=25, and Z=0 to Z=8. The vertical plate spans X=-40 to X=40, Y=17 to Y=25, and Z=8 to Z=68. Cut two vertical through mounting holes through the base plate, with hole axes parallel to Z, diameter 9 mm, centered at X=+/-25 and Y=0; each hole passes through the base thickness from Z=0 to Z=8. Add one horizontal obround slot through the vertical plate along Y, total length 32 mm in X, width 10 mm in Z, centered at X=0 and Z=35. Add two symmetric triangular gussets centered at X=+/-20; each gusset is 6 mm thick in X and has 35 mm right-angle legs from the inside corner at Y=17, Z=8. Export C:\\Users\\User\\Desktop\\gui_006_bracket_reinforced_out.step as one connected solid.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Hole_Wizard_Overview.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Fillets.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/gui_006_bracket_L.step",
+            "path": "C:\\Users\\User\\Desktop\\gui_006_bracket_L.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
+          "C:\\Users\\User\\Desktop\\gui_006_bracket_L.step"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\gui_006_bracket_reinforced_out.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

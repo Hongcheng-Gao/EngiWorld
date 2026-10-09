@@ -1,0 +1,58 @@
+{
+  "id": "single-software-execution--cli--calculix--task-17--ubuntu",
+  "snapshot": "CalculiX-2.21",
+  "instruction": "A solid block template `/home/user/Desktop/gravity_base.inp` is provided. Run `ccx --version` or invoke the installed `ccx` binary from a terminal. Use `/usr/bin/ccx` for the CalculiX solve and `/usr/bin/cgx` when CGX processing is needed.\n\nComplete the following from the command line: 1. Modify and generate `/home/user/Desktop/gravity.inp`: Please save the final input file as /home/user/Desktop/gravity.inp. - Apply gravity acceleration `9.81 m/s²` in the `-Y` direction - Note unit conversion: density `7.85e-9 tonne/mm³`, `g=9810 mm/s²` - Fix one end 2. Submit the job and write a post-processing script to parse `gravity.dat`: - Extract global maximum Mises stress - Extract maximum `UY` at the free end (nodes `2,3,6,7`) - Write to `/home/user/Desktop/summary.txt` in this format: `max_mises, tip_uy`",
+  "source": "https://github.com/calculix/CalculiX-Examples",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/gravity_base.inp",
+            "path": "/home/user/Desktop/gravity_base.inp"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "calculix"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/gravity.dat",
+    "/home/user/Desktop/gravity.inp",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

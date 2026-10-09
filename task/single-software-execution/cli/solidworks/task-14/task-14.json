@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--solidworks--task-14--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Start with C:\\Users\\User\\Desktop\\cli_034_pin_array_fixture.step in SolidWorks. Launch SOLIDWORKS from `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\` (use your actual executable or shortcut). On this machine, run the SOLIDWORKS automation through `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe` when working on `cli_034_pin_array_fixture.step`.\n\nUsing SolidWorks command-line automation, use that input file containing fixture_plate and ten loose_pin parts. The fixture_plate is 100 x 70 x 8 mm and has ten blind locating holes of diameter 4.2 mm, depth 4 mm from the top face, at X=-40, -20, 0, 20, and 40 crossed with Y=-20 and 20. Each loose_pin is a 4 mm diameter x 20 mm long vertical cylinder. Insert each loose pin into one locating hole in the fixture plate so every pin axis is coaxial with its hole axis and each pin bottom is flush with the hole bottom at Z=4. Do not scale pins. Export C:\\Users\\User\\Desktop\\cli_034_pins_inserted_out.step as an assembly retaining eleven solids or components.",
+  "source": "https://help.solidworks.com/2025/English/SolidWorks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/c_Mates.htm\nhttps://help.solidworks.com/2025/English/SolidWorks/sldworks/hidd_interference_detection.htm\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.ISldWorks~OpenDoc6.html\nhttps://help.solidworks.com/2025/English/api/sldworksapi/SOLIDWORKS.Interop.sldworks~SOLIDWORKS.Interop.sldworks.IModelDocExtension~SaveAs3.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/cli_034_pin_array_fixture.step",
+            "path": "C:\\Users\\User\\Desktop\\cli_034_pin_array_fixture.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\cli_034_pins_inserted_out.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

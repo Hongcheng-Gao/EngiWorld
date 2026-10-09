@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--cli--autocad--task-14--windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Start in AutoCAD by opening only the DXF file(s) from the Desktop path(s): C:\\Users\\user\\Desktop\\base_mm.dxf, C:\\Users\\user\\Desktop\\cover_inch.dxf, C:\\Users\\user\\Desktop\\pin_mirrored.dxf. Launch AutoCAD with `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`.\n\nImport base_mm.dxf, cover_inch.dxf, and pin_mirrored.dxf. Draw a mixed-units assembly: base rectangle (0,0)-(160,70) in millimeters, cover converted from 3.0 x 1.0 inches as rectangle (41.9,80)-(118.1,105.4), pin circle at (80,35) radius 6, mirrored pin reference circle at (125,35) radius 6, CENTER datum lines from (80,0) to (80,105.4) and from (41.9,92.7) to (118.1,92.7), two CUTOUT converted inch slots with opposite corners (54.6,86.35)-(67.3,92.7) and (92.7,92.7)-(105.4,99.05), and text ACAD-34. Use OUTLINE for base and cover rectangles, HOLE for pin and mirrored pin reference circles, CENTER for datum lines, CUTOUT for converted slots, and ANNOTATION for text. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/mixed_units_assy/base_mm.dxf",
+            "path": "C:\\Users\\user\\Desktop\\base_mm.dxf"
+          },
+          {
+            "local_path": "task-14/init_file/cover_inch.dxf",
+            "path": "C:\\Users\\user\\Desktop\\cover_inch.dxf"
+          },
+          {
+            "local_path": "task-14/init_file/pin_mirrored.dxf",
+            "path": "C:\\Users\\user\\Desktop\\pin_mirrored.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\autocad_result.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

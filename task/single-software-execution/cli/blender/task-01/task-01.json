@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--blender--task-01--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "GN Cable Sag. `/home/user/Desktop/scene.blend` contains two Empties and one empty mesh: - Empty `A` at world location (-3, 0, 2). - Empty `B` at world location (+3, 0, 2). - Mesh object `Cable` at the world origin with zero vertices and zero polygons. Launch Blender by running `blender` from a terminal. Use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nAdd a Geometry Nodes modifier on `Cable` whose node tree generates a cable with sag between `A` and `B`. Do NOT apply the modifier - it must remain on the stack. Required node-tree behaviour: 1. Read `A.location` and `B.location` via two `Object Info` nodes (one pointing to `A`, one to `B`). 2. Build a curve that runs between the two world positions, for example with a `Curve Line` node fed by the two locations, then `Resample Curve` (count mode) with at least 50 sample points so the sag is smooth. 3. Compute the Euclidean distance between the two empties, `|A - B|`, from their locations (`Vector Math` Subtract followed by `Vector Math` Length). 4. For every point on the resampled curve, compute a parametric factor `t` in [0, 1] along the curve (use a `Spline Parameter` node and take the Factor output) and apply a cosine-shaped Z-axis sag offset equal to `-sag_factor * |A - B| * sin(pi * t)`. At the endpoints (t = 0 and t = 1) the sag is zero; at t = 0.5 the sag reaches its maximum magnitude of `sag_factor * |A - B|` in the downward (-Z) direction. Apply this offset with a `Set Position` node - pass only the Offset vector (no explicit Position override needed). 5. Expose `sag_factor` as a Group Input socket of type Float on the node tree (in addition to the default Geometry input), so the modifier exposes an editable `sag_factor` parameter. Default value 0.1. 6. Convert the sagged curve to a mesh with `Curve to Mesh`, using a hexagonal profile produced by a `Curve Circle` node with Resolution = 6 (6 vertices per ring). 7. Plug the final mesh into Group Output. Also set the modifier's `sag_factor` input to 0.1. Save to `/home/user/Desktop/answer.blend`; the Geometry Nodes modifier must still be on `Cable`, unapplied. ## Requirements 1. `Cable` exists as a mesh object and carries at least one Geometry Nodes (NODES) modifier; empties `A` and `B` are still at their original positions. 2. The evaluated mesh (via depsgraph) has at least 40 rings x 6 vertices per ring = 240 vertices total, and the total vertex count is divisible by 6. 3. The centroid of the vertex ring closest to `A` is within 0.01 BU of `A.location`; likewise for `B`. 4. The ring closest to the midpoint of the cable (t ~= 0.5 along the A to B direction) has an average Z within 5% of the expected sag depth, i.e. approximately `A.z - sag_factor * |A - B| = 2.0 - 0.1 * 6 = 1.4`. 5. All interior (non-endpoint) edges on the evaluated mesh are 2-face manifold; open caps at the two ends are permitted. 6. Every ring (group of vertices at the same curve parameter) contains exactly 6 vertices.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,63 @@
+{
+  "id": "single-software-execution--gui--ansys--task-07--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "With ANSYS Mechanical APDL, build and solve a 3D solid cantilever beam under an eccentric end load. For this workflow, open Mechanical APDL from `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Coordinate system and geometry: - Use the global Cartesian coordinate system. - The beam occupies 0 <= X <= 150 mm, 0 <= Y <= 20 mm, and 0 <= Z <= 10 mm. - The fixed end is the face X = 0 mm. - The load point is the corner (150, 20, 10) mm on the free end. Model parameters: - Material: linear elastic steel. - Young's modulus E = 210000 MPa. - Poisson's ratio = 0.3. - Element type: SOLID185. Mesh: - Use a mapped/swept hexahedral mesh with a 5 mm element size in X, Y, and Z. - Use 30 divisions along X, 4 divisions along Y, and 2 divisions along Z. Boundary conditions and load: - Fully constrain UX, UY, and UZ on the face X = 0 mm. - Apply a concentrated FY = -200 N at (150, 20, 10) mm. Analysis type: - Static structural analysis. Save requirements: - Use C:\\Users\\user\\Desktop as the ANSYS working directory. - Save the database file as C:\\Users\\user\\Desktop\\apdl_eccentric_beam.db. - Save the structural result file as C:\\Users\\user\\Desktop\\apdl_eccentric_beam.rst. - Run the solver to completion and save the final solved state in both files.",
+  "source": "https://github.com/ansys/pymapdl https://github.com/ansys/example-data",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\apdl_eccentric_beam.db",
+    "C:\\Users\\user\\Desktop\\apdl_eccentric_beam.rst"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

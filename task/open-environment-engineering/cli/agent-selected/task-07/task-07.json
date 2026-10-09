@@ -1,0 +1,79 @@
+{
+  "id": "open-environment-engineering--cli--agent-selected--task-07--ubuntu",
+  "task_family": "open-environment-engineering",
+  "cli_tool_policy": "open_choice",
+  "snapshot": "top-10",
+  "instruction": "This is a fully open-workflow engineering task. You may use any tools, scripts, or libraries available in the environment, in any combination and any order, with any amount of iteration. The environment starts from a blank base image with no engineering applications preinstalled. Inspect the supplied inputs, then choose, install, and configure any tools or libraries you need. No particular software is required. The evaluator does not inspect software identity, stage order, intermediate handoffs, command history, version records, or provenance.\n\nOptical encoder readhead alignment carrier.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as package XY origin and the tray bottom outer face as Z=0 without rotating or mirroring KiCad X/Y. Build the specified 78 x 54 x 12.2 mm PETG package as a tray ending at Z=10.1 plus a separate 2 mm lid beginning at Z=10.2, preserving the 0.1 mm assembly separation. The inner cavity must be X=-37..37 and Y=-25..25. Seat the 1 mm PCB bottom at Z=5.2 on four 3.2 mm high bored standoffs aligned to MH1-MH4, using 5.6 mm outer diameter and 2.6 mm bore diameter, and preserve 4 mm clearance to every inner side wall. J1 ends at Z=9.0, leaving 1.2 mm to the lid inner face.\n\nKeep J1 externally accessible through the bounded 16 x 4.4 mm Y_MINUS wall window with cutter/path bounds `[-8.0, -27.5, 5.4, 8.0, -24.5, 9.8]` in `[xmin, ymin, zmin, xmax, ymax, zmax]` order. The window must be continuous through the relative wall and must not become a full-height slot. These fixed bounds leave 0.3 mm material below the tray top, so the applicable minimum access guard is 0.25 mm. Apply the specified overcut and center/axis tolerances. Extra structural features are allowed only when the access, guard, board clearances, optical corridor, and interference requirements remain valid.\n\nTreat the optical line as one uniquely measurable 3D solid: the finite flat-capped cylinder of radius 0.5 mm whose axis starts at the LED1 endpoint `[-16.0, 0.0, 8.2]` and ends at the PD1 endpoint `[16.0, 0.0, 8.2]`. Carrier material means tray, lid, standoffs, and any extra structural feature; it excludes the PCB, installed components, and review overlays. Actual carrier intersection with the optical cylinder may not exceed 0.05 mm3. The evaluator derives this intersection from final submitted geometry.\n\nThe evaluator derives PETG carrier volume/mass, all four PCB side clearances, covered-component top clearance, four standoff bore checks, J1 access direction and continuity, optical endpoints/radius and corridor/carrier intersection, and unintended interference from final submitted geometry.\n\nSave the completed final assembly into `/home/user/Desktop/result` as exactly one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. The PCB and installed components must remain identifiable physical parts rather than being fused into enclosure material; this is a final-assembly geometry requirement, not a prescribed workflow. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://wiki.freecad.org/Release_notes_1.1; https://github.com/FreeCAD/FreeCAD-documentation/blob/main/wiki/Start_up_and_Configuration.md; https://www.blender.org/releases/5-2/; https://docs.blender.org/api/5.2/; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-07",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-07/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-07/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-07/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            },
+            {
+              "local_path": "../../prepare_evaluator.py",
+              "path": "/home/user/Desktop/_engiworld_prepare_evaluator.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "prepare_command": "python3 /home/user/Desktop/_engiworld_prepare_evaluator.py",
+      "prepare_timeout": 960
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

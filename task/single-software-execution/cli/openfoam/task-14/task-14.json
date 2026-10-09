@@ -1,0 +1,66 @@
+{
+  "id": "single-software-execution--cli--openfoam--task-14--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "With OpenFOAM from the command line, copy the supplied template `/home/user/Desktop/snappy_base/` to `/home/user/Desktop/cylinder_snappy/` and mesh the supplied `/home/user/Desktop/snappy_base/constant/triSurface/cylinder.stl` without geometric transformation (scale 1). Source the installed OpenFOAM environment before running OpenFOAM commands. On this machine, before running the case, load OpenFOAM with `source /opt/openfoam11/etc/bashrc`; the solver binaries are under `/opt/openfoam11/bin` and its platform bin directory.\n\nThe STL is a closed cylinder of diameter 0.1 m, length 0.01 m, and center `(0.5, 0.5, 0)` inside a fixed `2 x 1 x 0.01 m` domain. Generate a `(160 80 1)` background mesh, keep the fluid using `locationInMesh (0.1 0.5 0)`, use cylinder surface refinement levels `(2 3)`, enable snapping, and add exactly 3 cylinder layers with expansion ratio 1.2 and relative final-layer thickness 0.4. Run `surfaceFeatures`, `blockMesh`, `snappyHexMesh -overwrite`, and `checkMesh`; preserve their successful logs as `log.surfaceFeatures`, `log.blockMesh`, `log.snappyHexMesh`, and `log.checkMesh`, and do not accept a failed mesh check. Solve the incompressible steady external flow for exactly 500 SIMPLE iterations with `simpleFoam`, retaining the iteration-500 fields. Use inlet velocity `(3 0 0)` m/s, zero-gauge-pressure outlet, symmetry on the transverse domain boundaries, no-slip on the cylinder, density 1 kg/m^3, kinematic viscosity 1e-6 m^2/s (`Re_D = 300000`), and the realizable k-epsilon RANS model with inlet `k = 0.03375 m^2/s^2` and `epsilon = 0.1458 m^2/s^3`. Compute the final wall `yPlus` field; the target arithmetic mean of all cylinder boundary-face values is the wall-function interval `20 < avg_yplus < 80`. Create `/home/user/Desktop/postprocess.py` that reads the final `yPlus` field, writes every cylinder face value to `/home/user/Desktop/yplus_surface.csv` with columns `face_index,yplus`, and writes `/home/user/Desktop/summary.txt` as one line containing `avg_yplus`. Do not hard-code result values and do not use GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/snappy_base.tar",
+            "path": "/home/user/Desktop/snappy_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/snappy_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/snappy_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/snappy_base/constant/triSurface/cylinder.stl",
+    "/home/user/Desktop/summary.txt",
+    "/home/user/Desktop/yplus_surface.csv"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

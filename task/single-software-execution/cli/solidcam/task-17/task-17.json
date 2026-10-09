@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-17--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Use the installed SOLIDWORKS CAM 2025 environment (powered by CAMWorks) through native API or GUI automation; do not use generic G-code generators or manual .nc editing/copying. SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\two_sided_part.step and read C:\\Users\\User\\Desktop\\tools.csv. Create two physically opposite setups. Put each setup's X/Y work zero at the part center and Z work zero on its active surface, with positive Z pointing away from the stock, so cutting depths post as negative Z. In side A's top-face setup, machine the centered 50 x 28 mm open pocket to 11 mm depth using T1 (D10 flat end mill, S7500, F520). In side B's bottom-face setup, machine the four centers (X,Y) = (+/-30,+/-20) mm: use T2 (D5 drill, S5000, F180) for the 8 mm-deep pilot holes and T3 (D8 flat end mill, S8500, F420) for the D11 x 4 mm counterbores. Natively post the two setups separately. The posted NC must preserve the specified tool numbers, spindle speeds, feeds, work offsets, tool-length compensation, depths, pocket/counterbore coverage, and safe approach/retract moves; side A must contain only T1, while side B must contain exactly T2 and T3. Save the A and B outputs exactly as C:\\Users\\User\\Desktop\\task-17_A.nc and C:\\Users\\User\\Desktop\\task-17_B.nc.",
+  "source": "https://camworks.com/camworks-is-powering-solidworks-cam/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/two_sided_part.step",
+            "path": "C:\\Users\\User\\Desktop\\two_sided_part.step"
+          },
+          {
+            "local_path": "task-17/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-17_A.nc",
+    "C:\\Users\\User\\Desktop\\task-17_B.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

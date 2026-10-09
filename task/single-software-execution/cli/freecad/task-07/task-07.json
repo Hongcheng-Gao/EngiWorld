@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--freecad--task-07--ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Work from /home/user/Desktop/freecad_task-07_input.step. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). For this workflow, use `/usr/lib/freecad/bin/freecadcmd-python3` for the FreeCAD command-line work in this task when working on `freecad_task-07_input.step`.\n\nStart from the 110 x 60 x 24 mm rectangular solid and keep that outside bounding box. Add 5 mm chamfers to all top outside edges. Add 4 mm radius fillets to the four vertical outside corners. Cut a shallow rectangular top pocket spanning X=35..75, Y=20..40, and Z=18..24. Do not add holes or split the body; the result must remain one solid. Export /home/user/Desktop/freecad_task-07_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/freecad_task-07_input.step",
+            "path": "/home/user/Desktop/freecad_task-07_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/freecad_task-07_output.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

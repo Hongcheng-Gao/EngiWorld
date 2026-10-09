@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--openstudio--task-15--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Mixed Loads Suite. For this workflow, launch the OpenStudio application from `/usr/local/bin/OpenStudioApp` and open `init.osm`. Work in the opened OpenStudio application, starting from the Desktop input file init.osm. Modify the model rather than replacing the task package with an unrelated file, then save the completed model as `/home/user/Desktop/result.osm`. The starting model already contains the resolved two-space OSM geometry and does not contain an embedded FloorspaceJS-editable floorplan.json; use the existing OSM surfaces and do not attempt to recreate or edit this geometry in FloorspaceJS. Add people, lights, and electric equipment loads directly to both Workroom and Breakroom, using schedules for the loads. The completed model must contain 1 building story, 2 spaces and 2 thermal zones. Use these exact OS:Space names: Breakroom and Workroom. Every space must be assigned to a building story and a thermal zone, and each space must have more than 0.05 m2 of floor area. Model the enclosure with 12 OS:Surface objects, split into 2 floor surfaces, 2 roof/ceiling surfaces and 8 wall surfaces. The outside-boundary counts must be exactly 2 Ground, 8 Outdoors and 2 Surface: the two floors are Ground; the two roofs and six exterior walls are Outdoors; and the shared partition pair is Workroom East Wall <-> Breakroom West Wall. Both members of that pair must use the Surface outside boundary condition and each member's Outside Boundary Condition Object must reference the other member. Do not add any windows or other subsurfaces. Include 0 ideal-loads air systems, 2 zone HVAC equipment lists and 0 dual-setpoint thermostats. Include simple metadata objects for schedules and loads: at least 2 schedule rulesets, 2 people loads, 2 lights loads, 2 electric equipment loads and 0 space type objects. Set the geometry so the overall surface-geometry bounding box spans 11.00 m in X, 5.00 m in Y and 3.20 m in Z, each within +/-0.10 m. The total floor surface area should be 55.00 m2 within +/-0.75 m2 and the total exterior wall gross area should be 102.40 m2 within +/-0.75 m2. Other model details may vary as long as the saved OSM satisfies these stated requirements.",
+  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

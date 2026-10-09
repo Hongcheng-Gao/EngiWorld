@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--kicad--task-17--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Keepout Zone for Antenna Clearance `board.kicad_pcb` contains an nRF52 module with a PCB antenna trace on net ANT routed on F.Cu near coordinates (52.5-67.5, 6.5-13.5) mm. Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. A GND copper pour currently covers the entire F.Cu layer including the antenna area. Per Nordic antenna keepout guidelines, no copper other than the antenna trace itself should remain in the antenna zone. 1. Add a rectangular 15x7 mm keepout zone enclosing the antenna trace area. The keepout must block copper pours, vias, and tracks on all copper layers. 2. Keep the F.Cu GND zone present and filled everywhere outside the keepout. 3. Do not leave any pad centers or non-ANT vias inside the keepout. Requirements: 1. A (zone...) with (keepout...) exists with width approx 15 mm and height approx 7 mm (+/-1.5 mm). 2. The keepout has (copperpour not_allowed), (vias not_allowed), and (tracks not_allowed). 3. No pad centers inside the keepout bounding box. 4. No non-ANT vias inside the keepout bounding box. 5. The GND zone on F.Cu remains with at least one (filled_polygon...) child. 6. No GND filled polygon point falls inside the keepout boundary. Write /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "pcbnew",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.kicad_pcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

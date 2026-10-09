@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--gui--solvespace--task-04--ubuntu",
+  "snapshot": "solvespace3.1ds1-3.1build2",
+  "instruction": "Import seed_ss_gui_04_hole_strip.dxf from /home/user/Desktop with File > Import, then continue editing that imported drawing rather than starting from an empty document in SolveSpace. Launch SolveSpace from `/usr/bin/solvespace` before importing `seed_ss_gui_04_hole_strip.dxf`. Do not use File > Open or launch the DXF as a native SolveSpace file. Use the existing strip outline and centerline guides to finish it as a five-hole link plate with an outer outline of 220 x 40. Add five holes of diameter 6 on y=20, with center X coordinates 20, 70, 120, 170, and 200. All hole centers must be collinear. Construction or guide geometry from the seed may be changed or removed unless it is explicitly required above. When the geometry is complete, align the view to the active workplane if needed, then use File > Export 2d View, choose the DXF file type, and save the result as /home/user/Desktop/final_ss_gui_04.dxf. Do not use File > Save As for this final DXF export.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/constraints/distance_diameter.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/seed_ss_gui_04_hole_strip.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_04_hole_strip.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/final_ss_gui_04.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

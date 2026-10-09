@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--freecad-path--task-14--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Inspect collision_drill.step. Open the part in FreeCAD from `/usr/bin/freecad`, then carry out the Path workbench edits when working on `collision_drill.step`. Create a FreeCAD Path/CAM Job. Plan drilling for all twelve candidate holes. The two holes with toolholder collision risk must be skipped and must not be written to the final NC program. All safe holes must be fully machined. T1 is a drilling tool; skip candidate holes that collide with the holder. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-14.nc.",
+  "source": "https://wiki.freecad.org/CAM_Drilling; https://wiki.freecad.org/CAM_Workbench",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/collision_drill.step",
+            "path": "/home/user/Desktop/collision_drill.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/collision_drill.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-14.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

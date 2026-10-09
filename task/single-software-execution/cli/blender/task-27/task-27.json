@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--blender--task-27--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Triplanar Projection `/home/user/Desktop/scene.blend` contains a torus mesh object `TorusTri` at the origin (major_radius=1.0, minor_radius=0.35, ~1152 verts) with NO UV layer (mesh.uv_layers is empty) and a plain flat-grey Principled BSDF material `TriplanarMat`. Launch Blender by running `blender` from a terminal. On this machine, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nA camera sits at (0, -4, 2) aimed at the origin, with an area light lighting the torus. Cycles is configured for 512x512, 64 samples, denoising ON. Your job: rebuild `TriplanarMat` as a triplanar-projection shader that samples a checker texture (Cycles' `ShaderNodeTexChecker`) via three separate 2D projections — one per world axis plane — and blends them using the absolute value of the surface normal along each axis. Then render frame 1 to `/home/user/Desktop/render.png` at 512x512 and save the answer to `/home/user/Desktop/answer.blend`. ## Render - Render engine: CYCLES, 512x512, 64 samples, denoising ON. - Frame 1 --> `/home/user/Desktop/render.png`. - View transform: Standard. - Save the blend to `/home/user/Desktop/answer.blend`. ## Requirements 1. `/home/user/Desktop/answer.blend` exists and opens. 2. Mesh object `TorusTri` exists with ~1152 verts. 3. Material tree contains >= 3 `ShaderNodeTexChecker` nodes. 4. Material tree contains a `ShaderNodeTexCoord` node (coord source). 5. Material tree contains a `ShaderNodeNewGeometry` node (normal source). 6. Principled BSDF `Base Color` is driven (transitively via the shader graph) by all 3 Checker texture nodes. 7. `/home/user/Desktop/render.png` exists and is 512x512. 8. Rendered mean luma is in [0.25, 0.85] (visible lit torus). 9. Along the horizontal centreline strip (y in [180, 320)) of the rendered image, the median per-column luma std is in [0.02, 0.40] — i.e. the triplanar pattern is visible (not flat) but transitions smoothly (no hard seam jumps).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-27/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/render.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-27/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

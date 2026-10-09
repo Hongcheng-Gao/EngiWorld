@@ -1,0 +1,102 @@
+{
+  "id": "single-software-execution--cli--kicad--task-08--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Legacy Project Migration v5 to v10. Run kicad for the GUI or kicad-cli for scripting and headless validation. At the start of the task, the installed KiCad tools are `/usr/bin/kicad-cli`, `/usr/bin/pcbnew`, and `/usr/bin/eeschema`; use the one that matches the board or schematic operation.\n\nYou have a KiCad v5-era project in /home/user/Desktop/: /home/user/Desktop/legacy.pro (INI-style config), /home/user/Desktop/legacy.sch (EESchema v4 schematic), /home/user/Desktop/legacy.cache.lib (cached symbol library), and /home/user/Desktop/legacy.kicad_pcb (v4/v5 PCB). A migration mapping is provided in /home/user/Desktop/lib_map.csv (two columns: v5_lib_id, v9_lib_id; the historical v9_lib_id column name identifies the required modern target IDs). Migrate the project with the installed KiCad 10.0.2 while preserving the five source components, their references, values, pin or pad numbering, electrical pin meaning, schematic connectivity, and source PCB footprint geometry and metadata. Produce four output files: 1. /home/user/Desktop/board.kicad_pro - KiCad 10 JSON project file with top-level keys meta (version 3 and filename board.kicad_pro), net_settings (version 5 metadata and a Default class), schematic (version 1 metadata), and pcbnew (including last_paths). 2. /home/user/Desktop/design.kicad_sch - KiCad 10.0.2 schematic with version 20260306, generator eeschema, generator_version 10.0, and exactly the five placed components R1=10k, C1=100nF, D1=LED, Q1=BC547, and U1=LM7805 migrated to their target library IDs from /home/user/Desktop/lib_map.csv. Preserve exactly this source connectivity: VCC={R1.1,C1.1,U1.1}, GND={R1.2,C1.2,Q1.3,U1.2}, SIG_A={D1.2,Q1.1}, SIG_B={D1.1,Q1.2}, and +5V={U1.3}. 3. /home/user/Desktop/design.kicad_pcb - KiCad 10.0.2 PCB with version 20260206, generator pcbnew, generator_version 10.0, modern canonical layer names, 1.6 mm board thickness, the source title/date/revision/company, and exactly five native footprint structures. Preserve each source footprint library ID, reference, value, center, and every pad's number, type, shape, relative position, size, drill, and layer set. 4. /home/user/Desktop/project.kicad_sym - Local KiCad symbol library with version 20251024, generator kicad_symbol_editor, generator_version 10.0, freezing exactly the five source symbols with usable graphical primitives and their pin names, numbering, and electrical types. Local library definitions may retain the legacy DEF names BC547 and LM7805 or use the mapped target short names Q_NPN_BCE and LM7805_TO220. Requirements: 1. All four files must exist directly under /home/user/Desktop/. 2. Every placed symbol and every embedded symbol definition in design.kicad_sch must use a target ID from the v9_lib_id column, and all five target IDs must be represented. 3. Preserve the five named nets as real electrical connectivity with exactly the ref.pin memberships listed above; labels or free text without those connections are not sufficient. 4. Preserve the corrected LED polarity K=pin 1 and A=pin 2. 5. None of the four outputs may contain the exact uppercase legacy marker EESchema. 6. The native schematic, PCB, and symbol library must load and upgrade successfully with the installed KiCad 10.0.2, and the schematic must export a valid KiCad s-expression netlist. Write /home/user/Desktop/board.kicad_pro, /home/user/Desktop/design.kicad_sch, /home/user/Desktop/design.kicad_pcb, and /home/user/Desktop/project.kicad_sym.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://dev-docs.kicad.org/en/file-formats/sexpr-schematic/; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/; https://dev-docs.kicad.org/en/file-formats/sexpr-symbol-lib/; https://gitlab.com/kicad/libraries/kicad-symbols/-/blob/10.0.2/Transistor_BJT.kicad_sym",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.cache.lib",
+            "path": "/home/user/Desktop/legacy.cache.lib"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.kicad_pcb",
+            "path": "/home/user/Desktop/legacy.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.pro",
+            "path": "/home/user/Desktop/legacy.pro"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/legacy.sch",
+            "path": "/home/user/Desktop/legacy.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/lib_map.csv",
+            "path": "/home/user/Desktop/lib_map.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/board.kicad_pro",
+    "/home/user/Desktop/design.kicad_pcb",
+    "/home/user/Desktop/design.kicad_sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

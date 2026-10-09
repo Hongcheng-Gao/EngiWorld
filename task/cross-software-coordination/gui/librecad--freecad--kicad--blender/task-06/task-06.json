@@ -1,0 +1,97 @@
+{
+  "id": "cross-software-coordination--gui--librecad--freecad--kicad--blender--task-06--ubuntu",
+  "snapshot": "freecad-librecad-kicad-blender",
+  "instruction": "Tool paths: LibreCAD: `/usr/bin/librecad`; FreeCAD: `/usr/bin/freecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`; Blender: `/home/user/Applications/blender-4.2.3-linux-x64/blender`. Required four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from the provided seed DXF /home/user/Desktop/seed_fan_control_panel.dxf; do not start from a blank or unrelated drawing. Run the stages in order. Each stage must read the preceding stage output, and every required intermediate file must be saved on the Desktop. The design token for this task is EW4G06; keep this token visible in the DXF labels and KiCad silkscreen. The Blender output must visibly consume the stage-2 STL and stage-3 SVG through Blender's native import/export operations.\n\nDesign goal: Fan controller panel with grille, knob, and four buttons. This case is intentionally different from the other benchmark cases: domain=thermal_control_panel, mechanical target=a front-panel render with grille spokes, knob, and a button row aligned to the PCB, electronics target=a fan-control PCB with fan header, encoder, OLED, and four button footprints.\n\n1. LibreCAD stage: open the provided seed file /home/user/Desktop/seed_fan_control_panel.dxf in LibreCAD, use it as the starting drawing, complete the required 2D geometry, remove all GUIDE construction entities, and save /home/user/Desktop/stage1_fan_control_panel.dxf. Use millimeters. Use layers OUTLINE, GRILLE, HOLE, LABEL. The overall drawing envelope must be 145 mm x 95 mm. Include the required circular features: center (72.5,47.5) radius 32; center (12,12) radius 2.4; center (133,12) radius 2.4; center (12,83) radius 2.4; center (133,83) radius 2.4; center (116,47.5) radius 5.5. Add at least eight real radial grille spokes inside the radius-32 fan opening. Add readable labels EW4G06, PWM, RPM, FAN on the LABEL layer.\n2. FreeCAD stage: import /home/user/Desktop/stage1_fan_control_panel.dxf in FreeCAD. Create a manufactured front-panel body from that LibreCAD DXF with the fan opening and grille, four mounting holes, and the encoder opening, and export it as /home/user/Desktop/stage2_fan_control_panel.stl with an approximate bounding size of 145 mm x 95 mm x 10 mm. Then, from the same FreeCAD model, export a top-face or board-interface outline for KiCad as /home/user/Desktop/stage2_fan_control_panel_handoff_outline.dxf. This handoff DXF must represent the same XY envelope as the FreeCAD body and include the visible labels FREECAD_TO_KICAD and EW4G06.\n3. KiCad stage: open KiCad and import /home/user/Desktop/stage2_fan_control_panel_handoff_outline.dxf onto a user-drawings layer so the complete FreeCAD handoff remains visible. From that imported handoff, copy or convert its single outer panel interface outline onto Edge.Cuts; do not place its labels or internal features on Edge.Cuts. Save the native board as /home/user/Desktop/stage3_fan_control_panel_board.kicad_pcb. Add native footprints with pads for a fan header J1, rotary encoder SW1, OLED display DS1, and four push buttons SW2 through SW5, all within the board outline. Add F.SilkS silkscreen text carrying KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the stage2 handoff filename, EW4G06, and these board tokens: EW4G06, FAN-J1, ENCODER-SW1, BTN-UP, BTN-DN, BTN-MODE, BTN-SET, OLED-DS1. Then use KiCad's plot/export workflow to create the Blender handoff SVG /home/user/Desktop/stage3_fan_control_panel_board_profile.svg from the same Edge.Cuts outline.\n4. Blender stage: open Blender. Import /home/user/Desktop/stage2_fan_control_panel.stl with File > Import > STL, then import /home/user/Desktop/stage3_fan_control_panel_board_profile.svg with File > Import > Scalable Vector Graphics (.svg). Keep the imported STL body object and the imported SVG board/profile geometry visible and at full scale in the scene so the exported GLB carries real Blender import evidence such as stage2_fan_control_panel and stage3_fan_control_panel_board_profile.svg. Add a visible raised control knob aligned to the encoder opening and four distinct raised button caps in one row aligned to the four PCB button footprints; the fan grille/spokes from the STL must remain visible. Export glTF Binary (.glb) as /home/user/Desktop/stage4_fan_control_panel.glb.\n\nRequired deliverables on the Desktop: /home/user/Desktop/stage1_fan_control_panel.dxf, /home/user/Desktop/stage2_fan_control_panel.stl, /home/user/Desktop/stage2_fan_control_panel_handoff_outline.dxf, /home/user/Desktop/stage3_fan_control_panel_board.kicad_pcb, /home/user/Desktop/stage3_fan_control_panel_board_profile.svg, /home/user/Desktop/stage4_fan_control_panel.glb.\n\n[Software] Use LibreCAD first, then FreeCAD, then KiCad, then Blender. Do not skip stages, reorder stages, or recreate the final result in only one software package.",
+  "source": "https://github.com/LibreCAD/LibreCAD/releases/tag/2.2.0.2; https://docs.librecad.org/en/2.2.0_a/; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://wiki.freecad.org/Draft_DXF; https://wiki.freecad.org/Std_Export; https://wiki.freecad.org/Mesh_Export; https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#importing-graphics; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#working-with-footprints; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#board-outlines; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#plotting; https://docs.blender.org/manual/en/4.2/files/import_export/stl.html; https://docs.blender.org/manual/en/4.2/addons/import_export/curve_svg.html; https://docs.blender.org/manual/en/4.2/addons/import_export/scene_gltf2.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/seed_fan_control_panel.dxf",
+            "path": "/home/user/Desktop/seed_fan_control_panel.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/stage1_fan_control_panel.dxf",
+    "/home/user/Desktop/stage2_fan_control_panel.stl",
+    "/home/user/Desktop/stage2_fan_control_panel_handoff_outline.dxf",
+    "/home/user/Desktop/stage3_fan_control_panel_board.kicad_pcb",
+    "/home/user/Desktop/stage3_fan_control_panel_board_profile.svg",
+    "/home/user/Desktop/stage4_fan_control_panel.glb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "metric": {
+      "name": "four_gui_transfer_completion",
+      "direction": "maximize",
+      "output_field": "score",
+      "baseline_score": 0.0,
+      "max_score": 1.0
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

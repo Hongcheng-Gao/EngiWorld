@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--cli--freecad-path--task-04--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Start with /home/user/Desktop/hole_table_plate.step and /home/user/Desktop/hole_table.csv in FreeCAD 0.21.2 Path/CAM. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). Before starting the work, use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `hole_table_plate.step`.\n\nThe corrected STEP is a 120 x 80 x 12 mm finished plate whose ten holes match the CSV. Create one native Path Job using the source top-face center as G54 origin, so the finished model and zero-extension block stock occupy X[-60,60], Y[-40,40], Z[-12,0]. Use the LinuxCNC postprocessor. Create native Drilling operations from every CSV coordinate and group them so an operation never mixes tool diameter or final depth. Map T1 to the 5 mm drill, T2 to the 6 mm drill, and T3 to the 7 mm drill. Use clockwise S7000 rpm and F500 mm/min for every tool, stop the spindle before each tool change, and activate matching G43 H1/H2/H3 tool-length compensation. Start at Z=0: each through row has drill-tip final Z=-13 mm, which breaks through the stock bottom by 1 mm, while each blind row has drill-tip final Z=-5 mm. Use a positive retract plane, safe height, and clearance height, and cancel each drilling cycle before leaving its group. Save the native Job and post its actual LinuxCNC program using exactly these absolute paths: /home/user/Desktop/task-04.FCStd and /home/user/Desktop/task-04.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2\nhttps://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Drilling.py\nhttps://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/CircularHoleBase.py\nhttps://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Tool/Controller.py\nhttps://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py\nhttps://wiki.freecad.org/index.php?oldid=1262104",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/hole_table_plate.step",
+            "path": "/home/user/Desktop/hole_table_plate.step"
+          },
+          {
+            "local_path": "task-04/init_file/hole_table.csv",
+            "path": "/home/user/Desktop/hole_table.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-04.FCStd",
+    "/home/user/Desktop/task-04.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

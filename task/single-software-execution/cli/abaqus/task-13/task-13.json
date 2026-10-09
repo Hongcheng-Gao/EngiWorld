@@ -1,0 +1,52 @@
+{
+  "id": "single-software-execution--cli--abaqus--task-13--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Perform a modal analysis of a cantilever beam (Variant A) using Abaqus via the Command Line Interface (CLI). To start Abaqus/CAE, run `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae` (adjust path to your install). For the steps below, Abaqus command-line jobs should be launched through `C:\\SIMULIA\\Commands\\abaqus.bat`.\n\nUse the N-mm-MPa unit system. Part: Create a 3D Deformable Solid part using Extrusion. Sketch a 12 mm x 10 mm rectangle in the Y-Z plane. Extrude along the global X-axis to a length of 420 mm. This creates a beam with cross-section 12 mm x 10 mm and length 420 mm. Property: Create a material named Steel. Set Young's modulus E = 210000 MPa, Poisson's ratio nu = 0.3, and density = 7.80e-9 tonne/mm^3. Assembly: Create one dependent instance of the beam. Step: Create a Linear Perturbation > Frequency step named Step-Modal-A. Request 4 eigenvalues. Load: Apply an Encastre boundary condition to the fixed end face at X = 0. Mesh: Apply a global seed size of 12 mm. Assign element type C3D8R and generate the mesh. Job: Create a job named Job-Modal-A, submit it for analysis, and wait for successful completion. Visualization: Review the first four mode shapes. Record the first natural frequency in Hz. Save: Save the model database to C:\\Users\\user\\Desktop\\Job-Modal-A.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Modal-A.odb.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-Modal-A.cae",
+    "C:\\Users\\user\\Desktop\\Job-Modal-A.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

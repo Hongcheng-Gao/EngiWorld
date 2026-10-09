@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--freecad-path--task-02--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Open /home/user/Desktop/slot_plate.step in FreeCAD 0.21.2 Path/CAM. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). For this task, use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `slot_plate.step`.\n\nThe STEP is the finished 120 x 80 x 18 mm plate model and contains one centered X-axis obround through-slot: 40 mm overall length, 8 mm width, end radius 4 mm, straight centerline endpoints (-16, 0) and (16, 0) mm, top Z=18 mm, and bottom Z=0 mm. Create one Path/CAM Job with zero stock extension so its bounding-box stock is the complete 120 x 80 x 18 mm starting block. Use exactly two active operations in this order: (1) a Slot operation to rough the stated centerline and (2) a Pocket Shape operation based on the slot wall geometry to clear the full obround region. Use multiple depth layers in both operations and reach final source-coordinate Z=0.000 mm without cutting below it. Use T1, a 6 mm flat end mill, with clockwise spindle S8500 rpm and horizontal cutting feed F500 mm/min. Export the Job through FreeCAD's LinuxCNC postprocessor. Save the native Job and posted program at exactly /home/user/Desktop/task-02.FCStd and /home/user/Desktop/task-02.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Slot.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/PocketShape.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Stock.py; https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py; https://wiki.freecad.org/index.php?oldid=1262337; https://wiki.freecad.org/index.php?oldid=1262258",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/slot_plate.step",
+            "path": "/home/user/Desktop/slot_plate.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-02.FCStd",
+    "/home/user/Desktop/task-02.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

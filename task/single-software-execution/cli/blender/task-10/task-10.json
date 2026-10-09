@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--blender--task-10--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Geometry Nodes Tree Built From Python `/home/user/Desktop/scene.blend` contains a single mesh object named `Array` at the world origin whose mesh data is empty (0 vertices, 0 faces). Launch Blender by running `blender` from a terminal. For this task, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nThe scene contains nothing else. Your task is to author a Python script that, starting from this scene, constructs a Geometry Nodes setup on `Array` entirely through the Python API (`bpy.data.node_groups.new(...)`, `tree.nodes.new(...)`, `tree.links.new(...)`, `tree.interface.new_socket(...)`), so that the object, although its base mesh stays empty, evaluates to a line of 20 cube instances along the Z axis. Save the result as `/home/user/Desktop/answer.blend`. ## Required setup 1. Add a Geometry Nodes modifier (type `NODES`) to `Array`. 2. Create a new Geometry-Nodes node tree with a Geometry input socket and a Geometry output socket (via `tree.interface.new_socket(...)`), and assign it to the modifier. 3. Into that tree add EXACTLY these three nodes (on top of the default Group Input / Group Output): - `GeometryNodeMeshLine` — Mesh Line - `GeometryNodeInstanceOnPoints` — Instance on Points - `GeometryNodeRealizeInstances` — Realize Instances You may add a Mesh Cube primitive (`GeometryNodeMeshCube`) as the instance source; this 4th node is permitted. 4. Configure the Mesh Line: - `Count = 20` - Vertices spaced along the Z axis with offset `(0, 0, 0.2)` (so points land at z = 0, 0.2, 0.4, …, 3.8). 5. Use a Mesh Cube primitive with `Size = 0.1` (uniform) as the instance source. 6. Wire the links: - Mesh Line `Mesh` (geometry) → Instance on Points `Points` - Mesh Cube `Mesh` → Instance on Points `Instance` - Instance on Points `Instances` → Realize Instances `Geometry` - Realize Instances `Geometry` → Group Output `Geometry` 7. Do NOT apply the modifier. The modifier must remain on the object with the three (or four, including the Mesh Cube) added nodes visible in its node tree. The base mesh on `Array.data` must still have 0 vertices. ## Requirements 1. Output scene contains exactly one mesh object named `Array`. 2. `Array` has exactly one modifier and its type is `NODES` (Geometry Nodes). 3. The Geometry-Nodes tree on that modifier contains one `GeometryNodeMeshLine`, one `GeometryNodeInstanceOnPoints`, and one `GeometryNodeRealizeInstances` node (added nodes). 4. The Mesh Line’s `Count` input is 20. 5. Links are wired in the order Mesh Line → Instance on Points (Points socket) → Realize Instances (Geometry socket) → Group Output (Geometry socket). A Mesh-Cube-style source feeds Instance on Points' `Instance` socket. 6. `Array.data` still has 0 vertices (modifier NOT applied). 7. The evaluated mesh (via `obj.evaluated_get(depsgraph).to_mesh()`) has exactly 160 vertices (20 cubes × 8 verts) and its Z extent spans at least from ~0.0 to ~3.8 BU.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

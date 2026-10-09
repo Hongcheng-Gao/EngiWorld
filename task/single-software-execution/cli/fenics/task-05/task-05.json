@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--fenics--task-05--ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "Start from an incomplete legacy FEniCS/DOLFIN modal-analysis template `/home/user/Desktop/eigenvalue_base.py` for a 500 mm by 10 mm 2D cantilever. Run with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0) and SLEPc, not DOLFINx. For the steps below, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `eigenvalue_base.py`.\n\nComplete the following: 1. Modify and generate `/home/user/Desktop/modal.py`: - Use plane-stress linear elasticity with `E=210000 MPa`, `nu=0.3`, and `rho=7.85e-9` in the template's consistent mm-N-s unit system - Clamp the left end (all displacement components equal to 0) - Define stiffness bilinear form: `a = inner(sigma(u), epsilon(v))*dx` - Define mass bilinear form: `m = rho*inner(u, v)*dx` - Use `SLEPc.EPS` and request the 3 smallest positive eigenvalues - Convert frequencies to Hz as `sqrt(lambda)/(2*pi)` 2. Run and save the first 3 ascending positive frequencies to `/home/user/Desktop/summary.txt`: Format: `mode1, mode2, mode3`",
+  "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/eigenvalue_base.py",
+            "path": "/home/user/Desktop/eigenvalue_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/modal.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

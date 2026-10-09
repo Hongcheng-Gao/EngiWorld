@@ -1,0 +1,76 @@
+{
+  "id": "single-software-execution--cli--bonsai--task-11--ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Update /home/user/Desktop/init.ifc in the already opened Bonsai/Blender IFC authoring environment using its CLI/API tools, and save the finished model as /home/user/Desktop/result.ifc. On this machine, Bonsai is installed as a Blender extension, so start `/opt/blender/blender` and use the Bonsai tools from that environment. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a compact apartment with Living, Kitchen, Bedroom, and Bath spaces around a simple partition layout. Preserve the existing shell, three partitions, four doors, two windows, and room geometry. Create one IfcGroup named Residential Unit R-11 and assign exactly those four spaces to it. Standardise all seven existing walls by assigning them to one shared IfcWallType named ApartmentWallType; no wall thickness, geometry, or material-layer change is required. Record the four rooms, seven walls, four doors, two windows, shared wall type, and residential unit group with revision code BONSAI-CLI-11.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

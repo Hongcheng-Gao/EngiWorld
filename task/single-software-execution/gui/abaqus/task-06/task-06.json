@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--gui--abaqus--task-06--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Complete the work through Abaqus: perform a steady-state heat conduction analysis in a consistent millimeter-based unit system. In this image, start Abaqus/CAE with `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae`. Model Definition: Create a 3D Deformable Solid part using Extrusion. Sketch a rectangle from (0, 0) to (100, 50) in the X-Y plane and extrude along the global Z-axis to a thickness of 10 mm. This produces a plate with in-plane dimensions 100 mm x 50 mm and thickness 10 mm. Material and Section: Define a material named Copper with thermal conductivity = 0.0004 W/(mm·K), equivalent to 400 W/(m·K). Create a Solid Homogeneous section using Copper and assign it to the entire plate. Assembly: Create one dependent instance of the plate. Analysis Step: Create a Heat Transfer, Steady-state step named Step-Thermal. Loads and Boundary Conditions: Apply a temperature of 100 degC to the end face at X = 0 (the face with normal in -X, dimensions 50 mm x 10 mm). Apply a temperature of 20 degC to the end face at X = 100 mm (the face with normal in +X, dimensions 50 mm x 10 mm). Keep all other faces adiabatic by applying no thermal boundary condition to them. Discretization: Mesh the plate with a global seed size of 5 mm. Assign the element type DC3D8 and generate the mesh. Job Execution: Create a job named Job-Thermal, submit it for analysis, and wait for the analysis to complete successfully. Deliverables: Save the model database as C:\\Users\\user\\Desktop\\Job-Thermal.cae and ensure the output database is generated as C:\\Users\\user\\Desktop\\Job-Thermal.odb. Run the solver to completion and ensure a result file is generated.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+          "cae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-Thermal.cae",
+    "C:\\Users\\user\\Desktop\\Job-Thermal.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

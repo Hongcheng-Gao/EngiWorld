@@ -1,0 +1,60 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-11--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Handle the task with command-line automation through the installed SOLIDWORKS CAM 2025 environment and CAMWorks API; do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. On this machine, SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\shaft_family.step and read C:\\Users\\User\\Desktop\\tools.csv. Create a turning setup and complete OD roughing, OD finishing, two grooving operations, and end-face center drilling using the supplied turning tool data. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-11.nc.",
+  "source": "https://camworks.com/modules/turning/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/shaft_family.step",
+            "path": "C:\\Users\\User\\Desktop\\shaft_family.step"
+          },
+          {
+            "local_path": "task-11/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-11.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

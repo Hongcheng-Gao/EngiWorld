@@ -20,14 +20,14 @@ def test_all_120_released_reference_tasks_default_to_message():
     with patch.dict("os.environ", {}, clear=True):
         for task in tasks:
             config = _agent_config_for_task(profile.agent_config, task)
-            if task.task_id.startswith("image-based-modeling/"):
+            if task.task_id.startswith("vision-guided-modeling/"):
                 selected.append(config)
                 example = load_task_config(EvalConfig(run_id="test", task_root=str(TASK_ROOT)), task)
                 assert Path(example["_engiworld_config_path"]).is_file()
                 assert config.experiment_profile == f"{config.eval_mode}_message_initial"
                 assert config.max_steps == (100 if config.eval_mode == "cli" else 200)
                 assert config.history_turns == 15
-            elif task.task_id.startswith("open-ended/"):
+            elif task.task_id.startswith("open-environment-engineering/"):
                 assert config.experiment_profile == "open_engineering"
             else:
                 assert config.experiment_profile is None

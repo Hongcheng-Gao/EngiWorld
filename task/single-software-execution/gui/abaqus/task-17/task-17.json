@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--gui--abaqus--task-17--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Complete the task entirely in the Abaqus/CAE graphical user interface. Start Abaqus/CAE with `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae`. Analyze thermal bending of a cantilever plate in the N-mm-MPa unit system. Create a 3D deformable solid plate spanning X = 0 to 100 mm, Y = 0 to 20 mm, and Z = 0 to 4 mm. Partition it at Y = 10 mm so the upper and lower halves are separate cell regions. Define Aluminum with E = 70000 MPa, nu = 0.33, and thermal expansion coefficient 2.3e-5 /K; assign a solid homogeneous section to the whole plate. Create one dependent instance and a Static, General step named Step-ThermalBend. Apply Encastre only to the X = 0 end. Apply an initial temperature of 20 degC to the whole plate. In Step-ThermalBend, set only the upper half, Y = 10 to 20 mm, to 120 degC; the lower half must remain at 20 degC. Create named sets FIXED_END and HOT_HALF. Mesh with C3D8R elements and a 4 mm global seed. Create and run Job-ThermalBend. Review U2 at the free end and the S11 bending-stress distribution. Save C:\\Users\\user\\Desktop\\Job-ThermalBend.cae and C:\\Users\\user\\Desktop\\Job-ThermalBend.odb.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat",
+          "cae"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-ThermalBend.cae",
+    "C:\\Users\\user\\Desktop\\Job-ThermalBend.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

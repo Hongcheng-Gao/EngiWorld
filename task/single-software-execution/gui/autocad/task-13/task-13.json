@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--autocad--task-13--windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Start with hard-14_seed.dxf. For the steps below, launch AutoCAD 2024 from the desktop shortcut, then open `hard-14_seed.dxf`. Create the hard AutoCAD drawing 'pump volute and foot casting layout' using exact model-space coordinates in millimeters. Create or keep these layers exactly as needed: ANNOTATION, CENTER, CUTOUT, HOLE, OUTLINE, REFERENCE, RIB. Straight geometry may be LINE entities or straight LWPOLYLINE edges; every listed rounded or slot end must be an ARC entity using the listed start/end angles in degrees. Required straight segments: OUTLINE (135,70)->(230,70); OUTLINE (230,70)->(230,110); OUTLINE (230,110)->(135,110); OUTLINE (135,110)->(135,70); OUTLINE (35,0)->(145,0); OUTLINE (145,0)->(145,28); OUTLINE (145,28)->(35,28); OUTLINE (35,28)->(35,0); CENTER (90,0)->(90,152); CENTER (28,90)->(230,90); RIB (135,70)->(145,28); RIB (135,110)->(145,28). Required circles: OUTLINE center (90,90) radius 62; CUTOUT center (90,90) radius 28; HOLE center (55,14) radius 5; HOLE center (125,14) radius 5; HOLE center (165,90) radius 6; HOLE center (210,90) radius 6. Required arcs: OUTLINE center (105,95) radius 74 start 310 end 75; RIB center (90,90) radius 45 start 15 end 65; RIB center (90,90) radius 45 start 145 end 205; RIB center (90,90) radius 45 start 250 end 300. Required text strings: ANNOTATION text ACAD-H14; ANNOTATION text VOLUTE-A. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/hard-14_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\hard-14_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe",
+          "C:\\Users\\user\\Desktop\\hard-14_seed.dxf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\autocad_result.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

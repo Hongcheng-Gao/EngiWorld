@@ -1,0 +1,74 @@
+{
+  "id": "single-software-execution--cli--openfast--task-06--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "Start from `/home/user/Desktop/moordyn_base.fst`, `/home/user/Desktop/moordyn_oc4_base.dat`, and the NREL 5 MW OC4 semisubmersible dependency set. Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. Only initialization inputs are included; no answer/result artifacts are preloaded.\n\nComplete a deterministic MoorDyn fairlead-tension analysis from the command line. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/moordyn.dat` with exactly one line type `main`: diameter `0.0766 m`, mass density `113.35 kg/m`, and axial stiffness `7.536e8 N`. Use fixed anchors `(418.8,725.383,-200)`, `(-837.6,0,-200)`, `(418.8,-725.383,-200)` m; vessel fairleads `(20.434,35.393,-14)`, `(-40.868,0,-14)`, `(20.434,-35.393,-14)` m; and three corresponding `835.35 m`, 20-segment lines. Request `FairTen1`, `FairTen2`, and `FairTen3`. 2. Under `/home/user/Desktop`, create `elasto_moordyn.dat`, `aero_moordyn.dat`, `servo_moordyn.dat`, and `hydrodyn_moordyn.dat` from the supplied module files and normalize their dependency paths to the desktop `5MW_Baseline` tree. Set `GenDOF=False` and `RotSpeed=9 rpm` in ElastoDyn. Create `/home/user/Desktop/seastate_moordyn.dat` from `SeaState.dat` with `WaveMod=0`. Create `/home/user/Desktop/moordyn_case.fst`; set `TMax=120`, `CompSeaSt=1`, `CompHydro=1`, `CompServo=0`, `CompMooring=3`, `DT_Out=0.1`, `OutFileFmt=1`, retain the supplied steady 8 m/s inflow, and reference the generated module files. HydroDyn must remain enabled because OpenFAST 5.0 requires it when MoorDyn is enabled; `WaveMod=0` supplies the no-wave condition. 3. Run `/home/user/miniconda3/bin/openfast moordyn_case.fst`, retain `/home/user/Desktop/moordyn_case.out`, and save the console output as `/home/user/Desktop/moordyn_case.log`; require normal termination. 4. Write `/home/user/Desktop/postprocess.py`. The glue output reports the requested channels as `FAIRTEN1/2/3` in N. Using samples with `t >= 60 s`, convert them to kN, calculate mean `FAIRTEN1`, and calculate the population standard deviation of each tension; report the largest of the three. Save `/home/user/Desktop/summary.txt` as `mean_fairten1_kn,max_std_kn`. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/moordyn.dat",
+    "/home/user/Desktop/elasto_moordyn.dat",
+    "/home/user/Desktop/aero_moordyn.dat",
+    "/home/user/Desktop/servo_moordyn.dat",
+    "/home/user/Desktop/hydrodyn_moordyn.dat",
+    "/home/user/Desktop/seastate_moordyn.dat",
+    "/home/user/Desktop/moordyn_case.fst",
+    "/home/user/Desktop/moordyn_case.out",
+    "/home/user/Desktop/moordyn_case.log",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

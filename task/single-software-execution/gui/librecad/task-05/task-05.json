@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--librecad--task-05--ubuntu",
+  "snapshot": "LibreCAD2.2.0.2",
+  "instruction": "Review guih01_fixture_plate_seed.dxf in LibreCAD. Launch LibreCAD from `/usr/bin/librecad` before opening `guih01_fixture_plate_seed.dxf`. Create a hard rounded fixture datum plate using exact model-space millimeter coordinates. Layers: OUTLINE, CUT, HOLE, CENTER, DIM. Required OUTLINE straight segments: (20,0)-(220,0), (240,20)-(240,130), (220,150)-(20,150), (0,130)-(0,20). Required OUTLINE arcs: center (20,20) radius 20 start 180 end 270; center (220,20) radius 20 start 270 end 0; center (220,130) radius 20 start 0 end 90; center (20,130) radius 20 start 90 end 180. Required CUT slots: obround 56 x 14 at centers (70,45) and (170,105), plus CUT circle center (120,75) radius 18. Required HOLE circles: centers (35,35), (205,35), (35,115), (205,115) radius 4 and center (120,75) radius 10. Add CENTER axes (0,75)-(240,75) and (120,0)-(120,150). Add DIM text notes 2X SLOT 56X14, 4X Ø8, and DATUM A. Save the result as /home/user/Desktop/guih01_fixture_plate_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/guih01_fixture_plate_seed.dxf",
+            "path": "/home/user/Desktop/guih01_fixture_plate_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/guih01_fixture_plate_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/guih01_fixture_plate_completed.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,69 @@
+{
+  "id": "single-software-execution--gui--freecad-path--task-17--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Refer to vcarve_sign.step, vcarve_text.svg. Open the part in FreeCAD from `/usr/bin/freecad`, then carry out the Path workbench edits when working on `vcarve_sign.step`. Create a FreeCAD Path/CAM V-Carve operation. Use the SVG closed double-line OPEN text, keep its center position unchanged, and carve it into the top face with a maximum depth of 2 mm using the 60 degree V-bit. T1 is a 60 degree V-bit for the V-Carve OPEN text. Set the T1 ToolController label to exactly T1_60DEG_VBIT so the posted NC preserves the required tool-angle metadata. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-17.nc.",
+  "source": "https://wiki.freecad.org/index.php?title=CAM_Vcarve&oldid=1276607; https://wiki.freecad.org/index.php?title=CAM_Engrave&oldid=1262122",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/vcarve_sign.step",
+            "path": "/home/user/Desktop/vcarve_sign.step"
+          },
+          {
+            "local_path": "task-17/init_file/vcarve_text.svg",
+            "path": "/home/user/Desktop/vcarve_text.svg"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/vcarve_sign.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-17.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

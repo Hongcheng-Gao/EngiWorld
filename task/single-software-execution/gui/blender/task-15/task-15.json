@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--blender--task-15--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "UV Cross-Seam Unwrap `scene.blend` contains mesh `Cube` with no UV layer and no seams. For this workflow, the Blender executable is `/opt/blender/blender`; use it to open `scene.blend`. Mark a seam layout that unfolds the cube into a cross-style unwrap, unwrap it with the Angle-Based method, pack the islands, and save the scene as `/home/user/Desktop/answer.blend`. Requirements: `Cube` must end up with at least one UV layer; between 5 and 9 edges must be marked as seams; all UV coordinates must lie within `[0,1]^2` within epsilon `0.01`; the UV bounding box must span at least `0.60` in one dimension and `0.40` in the other; UV overlap must remain below 1% on the required grid test; and the island count must be between 1 and 6.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

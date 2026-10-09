@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--openstudio--task-14--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Space Type Assignment. In this image, launch the OpenStudio application from `/usr/local/bin/OpenStudioApp` and open `init.osm`. Work in the opened OpenStudio application, starting from the Desktop input file init.osm. Modify the model rather than replacing the task package with an unrelated file, then save the completed model as `/home/user/Desktop/result.osm`. Create exactly one OS:SpaceType named OfficeType and assign both Office1 and Office2 to it. Model the people and lighting metadata as shared space-type loads so both spaces inherit them: create exactly one OS:People instance with one OS:People:Definition and exactly one OS:Lights instance with one OS:Lights:Definition, and attach both load instances to OfficeType rather than directly to either space. Each load instance must reference its corresponding definition and a valid OS:Schedule:Ruleset; use two distinct rulesets, one for People and one for Lights. The completed model must contain 1 building story, 2 spaces and 2 thermal zones. Use these exact OS:Space names: Office1 and Office2. Every space must be assigned to the building story, its thermal zone, and OfficeType, and each space must have more than 0.05 m2 of floor area. Model the enclosure with 12 OS:Surface objects, split into 2 floor surfaces, 2 roof/ceiling surfaces and 8 wall surfaces. The surface outside-boundary counts should be 2 Ground, 8 Outdoors and 2 Surface. Do not add any windows or other subsurfaces. Include 0 ideal-loads air systems, 2 zone HVAC equipment lists and 0 dual-setpoint thermostats. Include at least 2 schedule rulesets for the shared people and lighting loads and 0 electric equipment loads. Set the geometry so the overall surface-geometry bounding box spans 10.00 m in X, 5.00 m in Y and 3.20 m in Z, each within +/-0.10 m. The total floor surface area should be 50.00 m2 within +/-0.75 m2 and the total exterior wall gross area should be 96.00 m2 within +/-0.75 m2. Other model details may vary as long as the saved OSM satisfies these stated requirements.",
+  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

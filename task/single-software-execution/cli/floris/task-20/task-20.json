@@ -1,0 +1,62 @@
+{
+  "id": "single-software-execution--cli--floris--task-20--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "Open FLORIS 4.6.4 from the command line for this task. Before starting the work, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program. Write /home/user/Desktop/wind_sector.py using nine nrel_5MW turbines with rotor diameter D = 126 m in a 3x3 grid. Use x and y coordinates [0, 882, 1764] m (7D spacing) in row-major order. Evaluate wind directions [0, 30, 60, ..., 330] deg as 12 vectorized conditions, each at 8 m/s and turbulence intensity 0.06. Save turbine powers in kW to /home/user/Desktop/power_matrix.csv as exactly 12 rows by 9 columns. Compute each sector total, then write /home/user/Desktop/summary.txt as max_sector_total_kw, min_sector_total_kw, wake_loss_max_percent. Compute P_nowake by running the same nine turbines at 8 m/s and TI 0.06 with wakes disabled, and compute wake_loss_max_percent = (P_nowake - min_sector_total_kw) / P_nowake * 100. Do not use a GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/wind_sector_base.py",
+            "path": "/home/user/Desktop/wind_sector_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/power_matrix.csv",
+    "/home/user/Desktop/summary.txt",
+    "/home/user/Desktop/wind_sector.py"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

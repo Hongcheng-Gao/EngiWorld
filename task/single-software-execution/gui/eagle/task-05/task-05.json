@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--eagle--task-05--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Use EAGLE's bundled `bom.ulp` named below and a spreadsheet or text editor only for final CSV cleanup. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open `design.sch` there. Look at `design.sch` and generate an ungrouped, one-row-per-reference Bill of Materials using EAGLE's bundled `bom.ulp`, then save the output as `/home/user/Desktop/answer.csv`. Requirements: 1. `/home/user/Desktop/answer.csv` is a readable CSV with at least one data row. 2. The header row is exactly `Part,Value,Package,MPN,Datasheet`. 3. The row count matches the number of non-DNP, non-supply, non-frame parts in the init schematic. 4. Every non-DNP real part appears in the CSV. 5. Parts flagged `DNP=yes` in the schematic are excluded from the CSV. 6. The `MPN` and `Datasheet` columns are populated for at least 80% of rows. The opened schematic `design.sch` is a copy of EAGLE's `singlesided.sch` with `MPN` and `DATASHEET` attributes added to every real part, plus `DNP=yes` on `C6` and `Q1`.",
+  "source": "https://help.autodesk.com/view/fusion360/ENU/?contextId=LP-READ-P13N-SNP-GS-ECD-CRD-6; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-USER-LANG-REF.htm; https://help.autodesk.com/cloudhelp/ENU/Fusion-ECAD/files/ECD-ULP-OBJECT-TYPES.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/design.sch",
+            "path": "/home/user/Desktop/design.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/design.sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(8); w, h = pyautogui.size(); pyautogui.click(w/2 + 100, h/2 + 25); time.sleep(2); pyautogui.click(w/2 + 213, h/2 + 146); time.sleep(2); pyautogui.click(w/2 - 80, h/2 + 68); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.csv"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

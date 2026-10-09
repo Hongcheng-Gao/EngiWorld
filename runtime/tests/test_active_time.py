@@ -187,7 +187,7 @@ def test_local_budget_result_and_smoke_failure_have_different_classifications(tm
 
     image = tmp_path / "test.qcow2"
     image.touch()
-    task = TaskSpec("single-software/gui/example/task-01", "example", "task-01",
+    task = TaskSpec("single-software-execution/gui/example/task-01", "example", "task-01",
                     metadata={"os_type": "Ubuntu", "eval_mode": "gui"})
     monkeypatch.setattr(local, "preflight", lambda *a: task)
     monkeypatch.setattr(local.sys, "platform", "linux")

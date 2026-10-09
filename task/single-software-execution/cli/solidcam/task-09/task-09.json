@@ -1,0 +1,60 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-09--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Use command-line/API automation with the installed SOLIDWORKS CAM 2025 environment (powered by CAMWorks); do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\four_parts.step and read C:\\Users\\User\\Desktop\\tools.csv. Import the STEP into a fresh native CAM assembly. It contains four identical 45 x 30 x 10 mm parts centered at XY [-60,-40], [60,-40], [-60,40], and [60,40] mm. For each part, use a local origin at the center of its top face with +X/+Y matching the STEP axes and the tool axis in -Z; assign the four parts to G54, G55, G56, and G57 respectively, or to four equivalent posted work offsets. Add 2 mm stock in each XY direction and 1 mm on +Z for every part. Create exactly eight operations: one Face and one outside Contour operation for each part. Use the supplied T1 8 mm flat end mill for all eight operations at S8000 rpm and F500 mm/min. Generate every toolpath, run the native simulation with zero reported gouges and zero undercuts, and post through the installed native .ctl postprocessor. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-09.nc.",
+  "source": "https://camworks.com/camworks-is-powering-solidworks-cam/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/four_parts.step",
+            "path": "C:\\Users\\User\\Desktop\\four_parts.step"
+          },
+          {
+            "local_path": "task-09/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-09.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

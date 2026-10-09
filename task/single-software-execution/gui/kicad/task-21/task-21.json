@@ -1,0 +1,86 @@
+{
+  "id": "single-software-execution--gui--kicad--task-21--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Board Outline to Raspberry Pi HAT+ The file board.kicad_pcb is an 85x56 mm rectangular PCB with a 2x20 GPIO header (J1) and no mounting holes. Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. The file /home/user/Desktop/spec.txt points to the Raspberry Pi HAT+ form factor. Modify the board to comply with the Raspberry Pi HAT+ mechanical specification. Replace the rectangular Edge.Cuts outline with the HAT+ outline: 65x56.5 mm with R=3 mm rounded corners. Add 4 M2.5 mounting holes at the HAT+ positions. Move the GPIO header to the HAT+ required location. Requirements: 1. Edge.Cuts bounding box: width = 65 mm +/- 0.05, height = 56.5 mm +/- 0.05. 2. Exactly 4 gr_arc elements on Edge.Cuts, each with radius approx 3 mm (+/- 0.1 mm). 3. 4 mounting hole footprints at positions (3.5,3.5), (61.5,3.5), (3.5,53.0), (61.5,53.0) +/- 0.05 mm. 4. GPIO header J1 at (29.0, 52.5) +/- 0.1 mm. Write /home/user/Desktop/answer.kicad_pcb.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-21/init_file/spec.txt",
+            "path": "/home/user/Desktop/spec.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "pcbnew",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.kicad_pcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-21/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

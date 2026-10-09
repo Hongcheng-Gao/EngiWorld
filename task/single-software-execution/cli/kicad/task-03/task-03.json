@@ -1,0 +1,90 @@
+{
+  "id": "single-software-execution--cli--kicad--task-03--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "DRC Rule Regression Detection You have two board revisions (/home/user/Desktop/before.kicad_pcb and /home/user/Desktop/after.kicad_pcb) and a clearance ruleset (/home/user/Desktop/rules.kicad_dru, min clearance 0.2 mm). Use KiCad 10.0.2; run `kicad` for the GUI or `kicad-cli` for scripting/headless use (use PATH or the full install path). On this machine, the installed KiCad tools are `/usr/bin/kicad-cli`, `/usr/bin/pcbnew`, and `/usr/bin/eeschema`; use the one that matches the board or schematic operation.\n\nThe after board was edited and may have introduced new clearance violations while fixing some existing ones. 1. Determine which violations exist in before but not after (resolved) and which exist in after but not before (introduced). 2. Produce /home/user/Desktop/diff.json enumerating introduced and resolved violations. 3. Produce /home/user/Desktop/fixed.kicad_pcb identical to after but with only the newly introduced violations resolved (move offending segments apart to achieve >= 0.2 mm clearance). Pre-existing violations from before must remain unchanged. Requirements: 1. /home/user/Desktop/diff.json: {\"added\": [{\"type\": \"clearance\", \"location\": [x, y]},...], \"removed\": [{\"type\": \"clearance\", \"location\": [x, y]},...]}. 2. diff.added has exactly 2 entries; diff.removed has exactly 1 entry. 3. /home/user/Desktop/fixed.kicad_pcb has no more clearance violations than /home/user/Desktop/before.kicad_pcb. 4. /home/user/Desktop/fixed.kicad_pcb segment count matches /home/user/Desktop/after.kicad_pcb; net IDs preserved. Write /home/user/Desktop/diff.json and /home/user/Desktop/fixed.kicad_pcb.",
+  "source": "https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://dev-docs.kicad.org/en/file-formats/; https://gitlab.com/kicad/code/kicad/-/tags/10.0.2",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/after.kicad_pcb",
+            "path": "/home/user/Desktop/after.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/before.kicad_pcb",
+            "path": "/home/user/Desktop/before.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/rules.kicad_dru",
+            "path": "/home/user/Desktop/rules.kicad_dru"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/diff.json",
+    "/home/user/Desktop/fixed.kicad_pcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

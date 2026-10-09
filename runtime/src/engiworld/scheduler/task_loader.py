@@ -37,8 +37,8 @@ def _app_from_path(task_root: Path, task_file: Path) -> str:
     parts = canonical_prefix(task_file.relative_to(task_root).as_posix()).split("/")
     if len(parts) >= 4 and parts[0] in TASK_TYPES and parts[1] in {"gui", "cli"}:
         return parts[2]
-    if parts[0] == "open-ended":
-        return "open-ended"
+    if parts[0] == "open-environment-engineering":
+        return "open-environment-engineering"
     if len(parts) >= 3:
         return parts[1]
     return "unknown"
@@ -58,13 +58,13 @@ def infer_engiworld_eval_mode(task_path: str | Path) -> str:
         raise ValueError(f"Cannot infer eval mode from empty task path: {task_path!r}")
     if parts[0] in TASK_TYPES and len(parts) >= 2 and parts[1] in {"cli", "gui"}:
         return parts[1]
-    if parts[0] == "single-software" and len(parts) >= 2:
+    if parts[0] == "single-software-execution" and len(parts) >= 2:
         if parts[1] in {"cli", "gui"}:
             return parts[1]
         raise ValueError(f"Cannot infer EngiWorld interface from task path: {task_path!r}")
-    if parts[0] == "open-ended":
+    if parts[0] == "open-environment-engineering":
         return "cli"
-    if parts[0] in {"software-selection", "multi-software", "quantitative-design", "image-based-modeling", "reverse"} and len(parts) >= 2:
+    if parts[0] in {"software-selection", "cross-software-coordination", "design-optimization", "vision-guided-modeling", "reverse"} and len(parts) >= 2:
         if parts[1].startswith("cli-"):
             return "cli"
         if parts[1].startswith("gui-"):
@@ -152,6 +152,11 @@ def load_tasks(
         raise ValueError(f"Unsupported benchmark: {benchmark!r}")
     root = Path(task_root).expanduser().resolve()
     tasks: list[TaskSpec] = []
+    task_aliases: dict[str, list[str]] = {}
+    aliases_file = root / "aliases.json"
+    if aliases_file.is_file():
+        for alias, canonical in json.loads(aliases_file.read_text(encoding="utf-8")).items():
+            task_aliases.setdefault(canonical, []).append(alias)
     for task_file in discover_task_files(root, path_prefixes=path_prefixes, limit=limit):
         with task_file.open("r", encoding="utf-8") as file:
             task_json = json.load(file)
@@ -173,6 +178,7 @@ def load_tasks(
                     "base_task_id": base_task_id,
                     "task_id_suffix": task_id_suffix or "",
                     "source_task_id": str(task_json["id"]),
+                    "aliases": task_aliases.get(base_task_id, []),
                     "snapshot": snapshot,
                     "os_type": _infer_os_type(task_json),
                     "app": _app_from_path(root, task_file),
@@ -188,9 +194,9 @@ def load_tasks(
 
 
 def _resolve_snapshot(base_task_id: str, configured_snapshot: str) -> str:
-    """Keep Open-ended tasks on the dedicated blank image by default."""
+    """Keep Open-Environment Engineering tasks on the dedicated blank image by default."""
     if (
-        canonical_prefix(base_task_id).startswith("open-ended/")
+        canonical_prefix(base_task_id).startswith("open-environment-engineering/")
         and configured_snapshot.strip().lower() == "top-10"
     ):
         return (

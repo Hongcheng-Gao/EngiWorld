@@ -68,12 +68,12 @@ zstd -d ../environment-images/images/LibreCAD2.2.0.2.qcow2.zst
 准备所选任务的输入和评分资源：
 
 ```bash
-python -m engiworld.prepare_tasks --task single-software/gui/librecad/task-08
+python -m engiworld.prepare_tasks --task single-software-execution/gui/librecad/task-08
 ```
 
 ```bash
 python -m engiworld.local_eval \
-  --task single-software/gui/librecad/task-08 \
+  --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --smoke-test
 ```
@@ -97,7 +97,7 @@ export OPENAI_BASE_URL="https://your-api-endpoint/v1"
 export OPENAI_API_KEY="your-api-key"
 
 python -m engiworld.local_eval \
-  --task single-software/gui/librecad/task-08 \
+  --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --model your-model-name \
   --result-dir results
@@ -112,14 +112,16 @@ task/<类别>/<gui|cli>/<软件或软件1--软件2>/<任务编号>/
 runtime/
 ```
 
-任务分为 `single-software`、`multi-software`、`software-selection`、
-`quantitative-design`、`image-based-modeling` 和 `open-ended`。
-开放环境工程任务使用 **CLI**，位于 `task/open-ended/cli/agent-selected/`，
+任务分为 `single-software-execution`、`cross-software-coordination`、`software-selection`、
+`design-optimization`、`vision-guided-modeling` 和 `open-environment-engineering`。
+开放环境工程任务使用 **CLI**，位于 `task/open-environment-engineering/cli/agent-selected/`，
 由智能体在空白环境中自行选择和安装软件。
 
 任务 JSON 的 ID 格式为 `<类别>--<gui|cli>--<软件>--<任务编号>--<系统>`，例如
-`single-software--gui--librecad--task-08--ubuntu`。`--task` 同时支持此 ID 和任务目录路径。
+`single-software-execution--gui--librecad--task-08--ubuntu`。`--task` 同时支持此 ID 和任务目录路径。
 详见[任务说明](task/README_CN.md)。
+
+目录类别和 JSON ID 已按 2026-10-09 新版论文统一命名。`task/aliases.json` 保留历史 JSON ID 和目录名的对应关系；本运行框架可继续使用旧标识选择任务。完整改名表见 [`id-migration-20261009.json`](task/id-migration-20261009.json)，任务名称与数量见 [`taxonomy.json`](task/taxonomy.json)。
 
 ## 📊 模型评测结果
 

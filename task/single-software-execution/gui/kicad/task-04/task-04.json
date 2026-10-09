@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--kicad--task-04--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Differential-Pair Labelling `mipi.kicad_sch` holds a MIPI D-PHY interface with 4 differential pairs drawn between an image sensor SoC (U1) and a 10-pin FFC connector (J1). Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. The nets are currently named with arbitrary labels: D0A/D0B, D1P/D1N, CLK+/CLK-, D2plus/D2minus. A hidden property `PadConvention` on J1 states the pad numbering rule. Rename the 8 differential-pair nets to the standard MIPI D-PHY names below, using the pad convention encoded on J1 to decide polarity: MIPI_D0_P / MIPI_D0_N (data lane 0), MIPI_D1_P / MIPI_D1_N (data lane 1), MIPI_D2_P / MIPI_D2_N (data lane 2), and MIPI_CLK_P / MIPI_CLK_N (clock lane) Requirements: 1. All 8 nets renamed exactly as listed above (uppercase `_P` and `_N` suffixes). 2. No original arbitrary net names remain as label text. 3. J1 Pad properties updated to reflect new net names. 4. U1 and J1 still present in the schematic. Write /home/user/Desktop/answer.kicad_sch.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://docs.kicad.org/10.0/en/eeschema/eeschema.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/mipi.kicad_sch",
+            "path": "/home/user/Desktop/mipi.kicad_sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "eeschema",
+          "/home/user/Desktop/mipi.kicad_sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.kicad_sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

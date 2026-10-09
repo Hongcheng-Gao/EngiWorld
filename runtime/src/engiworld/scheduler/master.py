@@ -53,10 +53,10 @@ DEFAULT_V2_VM_OSWORLD_BUNDLE_PATH = "osworld-v2-vm-server-latest.tgz"
 
 
 _EXPERIMENT_TASK_PREFIXES = {
-    "gui_message_initial": "image-based-modeling/gui/",
-    "cli_environment_initial": "image-based-modeling/cli/",
-    "cli_message_initial": "image-based-modeling/cli/",
-    "cli_message_no_readimg": "image-based-modeling/cli/",
+    "gui_message_initial": "vision-guided-modeling/gui/",
+    "cli_environment_initial": "vision-guided-modeling/cli/",
+    "cli_message_initial": "vision-guided-modeling/cli/",
+    "cli_message_no_readimg": "vision-guided-modeling/cli/",
 }
 
 _EXPERIMENT_PROFILE_ALIASES = {
@@ -128,7 +128,7 @@ def build_parser() -> argparse.ArgumentParser:
         default=[],
         help=(
             "Task path prefix relative to --task-root. "
-            "Examples: single-software/cli/calculix, single-software/gui/autocad. "
+            "Examples: single-software-execution/cli/calculix, single-software-execution/gui/autocad. "
             "Can be specified multiple times. Initial-image CLI experiment profiles "
             "automatically select and stay within their paired task set."
         ),
@@ -1208,6 +1208,7 @@ def _select_tasks_by_ids(tasks: list[TaskSpec], requested_ids: list[str]) -> lis
             str(task.metadata.get("base_task_id") or "").strip(),
             str(task.metadata.get("source_task_id") or "").strip(),
         }
+        stable_ids.update(str(alias).strip() for alias in task.metadata.get("aliases", []))
         for stable_id in stable_ids - {""}:
             matches[stable_id].append(task)
 

@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--cli--openstudio--task-10--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Organize /home/user/Desktop/init.osm in the opened OpenStudio application using its CLI/API automation interface, and save the updated model as /home/user/Desktop/result.osm. For this task, use `/usr/local/openstudioapplication-1.11.0-rc2/bin/openstudio` for OpenStudio CLI or API automation when working on `init.osm`. Do not directly create, rewrite, patch, copy, or post-process OSM text outside the OpenStudio environment. The current model is a four-room community clinic organized as reception, two exam rooms, and clean support space around a simple rectangular plan. The mechanical consultant needs the model to reflect higher outdoor-air demand in exam rooms, lower use intensity in support areas, and the load impact of exterior-wall infiltration. Without changing the room relationships or roof form, organize the space types, comfort settings, exterior windows, and outdoor-air assumptions. Deliver only the updated OpenStudio model file; object handles, serialization order, and automatically generated metadata may vary naturally. The completed model must meet the following exact specification (SI units; geometry coordinates and lengths are metres; areas are square metres; names are exact): {\"building\":\"CLI Outdoor Air Clinic\",\"stories\":[{\"name\":\"01_CLINIC_OA\",\"z\":0}],\"spaces\":[{\"name\":\"T10-WAITING\",\"zone\":\"T10-WAITING Zone\",\"x0\":0,\"y0\":0,\"x1\":8,\"y1\":6,\"z0\":0,\"h\":3.2,\"story\":\"01_CLINIC_OA\",\"space_type\":\"TASK10 Waiting Type\",\"heat\":20,\"cool\":25,\"ideal\":true},{\"name\":\"T10-EXAM-1\",\"zone\":\"T10-EXAM-1 Zone\",\"x0\":8,\"y0\":0,\"x1\":16,\"y1\":6,\"z0\":0,\"h\":3.2,\"story\":\"01_CLINIC_OA\",\"space_type\":\"TASK10 Exam Type\",\"heat\":21,\"cool\":24,\"ideal\":true},{\"name\":\"T10-EXAM-2\",\"zone\":\"T10-EXAM-2 Zone\",\"x0\":0,\"y0\":6,\"x1\":8,\"y1\":12,\"z0\":0,\"h\":3.2,\"story\":\"01_CLINIC_OA\",\"space_type\":\"TASK10 Exam Type\",\"heat\":21,\"cool\":24,\"ideal\":true},{\"name\":\"T10-CLEAN-SUPPLY\",\"zone\":\"T10-CLEAN-SUPPLY Zone\",\"x0\":8,\"y0\":6,\"x1\":16,\"y1\":12,\"z0\":0,\"h\":3.2,\"story\":\"01_CLINIC_OA\",\"space_type\":\"TASK10 Support Type\",\"heat\":18,\"cool\":28,\"ideal\":true}],\"constant_schedules\":{\"TASK10 Occupancy Schedule\":0.75,\"TASK10 Load Schedule\":0.85,\"TASK10 OA Schedule\":1,\"TASK10 Infiltration Schedule\":1},\"space_types\":{\"TASK10 Waiting Type\":{\"people\":0.06,\"people_schedule\":\"TASK10 Occupancy Schedule\",\"lights\":9.5,\"lights_schedule\":\"TASK10 Load Schedule\",\"equipment\":7,\"equipment_schedule\":\"TASK10 Load Schedule\"},\"TASK10 Exam Type\":{\"people\":0.05,\"people_schedule\":\"TASK10 Occupancy Schedule\",\"lights\":10.5,\"lights_schedule\":\"TASK10 Load Schedule\",\"equipment\":12,\"equipment_schedule\":\"TASK10 Load Schedule\"},\"TASK10 Support Type\":{\"people\":0.01,\"people_schedule\":\"TASK10 Occupancy Schedule\",\"lights\":5,\"lights_schedule\":\"TASK10 Load Schedule\",\"equipment\":4,\"equipment_schedule\":\"TASK10 Load Schedule\"}},\"windows\":[{\"space\":\"T10-WAITING\",\"wall\":\"south\",\"start\":1.2,\"end\":6.8,\"sill\":0.9,\"head\":2.5,\"name\":\"T10-WAITING South FixedWindow\"},{\"space\":\"T10-EXAM-1\",\"wall\":\"south\",\"start\":9.2,\"end\":14.8,\"sill\":0.9,\"head\":2.5,\"name\":\"T10-EXAM-1 South FixedWindow\"},{\"space\":\"T10-EXAM-2\",\"wall\":\"north\",\"start\":1.5,\"end\":6.5,\"sill\":0.9,\"head\":2.5,\"name\":\"T10-EXAM-2 North FixedWindow\"},{\"space\":\"T10-CLEAN-SUPPLY\",\"wall\":\"north\",\"start\":9.5,\"end\":14.5,\"sill\":0.9,\"head\":2.5,\"name\":\"T10-CLEAN-SUPPLY North FixedWindow\"},{\"space\":\"T10-WAITING\",\"wall\":\"west\",\"start\":1,\"end\":5,\"sill\":1,\"head\":2.4,\"name\":\"T10-WAITING West FixedWindow\"},{\"space\":\"T10-CLEAN-SUPPLY\",\"wall\":\"east\",\"start\":7,\"end\":11,\"sill\":1,\"head\":2.4,\"name\":\"T10-CLEAN-SUPPLY East FixedWindow\"}],\"infiltration\":{\"all\":{\"flow_per_exterior_area\":0.00025,\"schedule\":\"TASK10 Infiltration Schedule\"}},\"outdoor_air\":{\"T10-WAITING\":{\"per_person\":0.008,\"per_floor_area\":0.0006,\"schedule\":\"TASK10 OA Schedule\"},\"T10-EXAM-1\":{\"per_person\":0.012,\"per_floor_area\":0.001,\"schedule\":\"TASK10 OA Schedule\"},\"T10-EXAM-2\":{\"per_person\":0.012,\"per_floor_area\":0.001,\"schedule\":\"TASK10 OA Schedule\"},\"T10-CLEAN-SUPPLY\":{\"per_person\":0.004,\"per_floor_area\":0.0004,\"schedule\":\"TASK10 OA Schedule\"}},\"metrics\":{\"bbox\":[16,12,3.2],\"floor_area\":192,\"exterior_wall_area\":179.2,\"surface_count\":24,\"space_count\":4,\"zone_count\":4,\"story_count\":1,\"window_count\":6,\"window_area\":45.12,\"shading_count\":0,\"shading_area\":0,\"paired_surface_count\":8,\"ground_floor_count\":4}}.",
+  "source": "OpenStudio CLI / SDK automation interface; task design follows",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

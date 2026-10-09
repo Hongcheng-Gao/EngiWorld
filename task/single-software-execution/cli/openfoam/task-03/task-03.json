@@ -1,0 +1,67 @@
+{
+  "id": "single-software-execution--cli--openfoam--task-03--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "Work from the incomplete OpenFOAM template `/home/user/Desktop/bfs_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve a deterministic turbulent backward-facing-step case. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/bfs/`. Use a 0.05 m step at `x=0`: the upstream section is `-0.2<=x<=0`, `0.05<=y<=0.10`; the downstream section is `0<=x<=1.0`, `0<=y<=0.10`; use one 0.01 m spanwise cell with `frontAndBack` empty. Split the mesh into three conformal blocks with cell counts `40 x 20 x 1` upstream and `200 x 20 x 1` in each downstream half, giving 8800 cells. 2. Set a uniform inlet `U=(10 0 0) m/s`, outlet kinematic pressure `p=0`, no-slip on the top, upstream bottom, step face, and downstream bottom, and `nu=1.5e-5 m^2/s`, so `Re_h=U*h/nu=33333.333`. Use RAS `kOmegaSST`, inlet `k=0.375 m^2/s^2`, inlet `omega=1000 1/s`, and standard `kqRWallFunction`, `omegaWallFunction`, and `nutkWallFunction` wall conditions. 3. Configure `simpleFoam` for exactly 2000 SIMPLE iterations, ASCII output only at iteration 2000, bounded linear-upwind velocity convection, and upwind `k`/`omega`. Source `/opt/openfoam11/etc/bashrc`, run `blockMesh -case /home/user/Desktop/bfs` and retain `bfs/log.blockMesh`, then run `simpleFoam -case /home/user/Desktop/bfs` and retain `bfs/log.simpleFoam`; both must finish with `End`, and iteration 2000 must exist. Run `postProcess -case /home/user/Desktop/bfs -latestTime -func writeCellCentres` and retain `bfs/log.cellCentres`. 4. Write `/home/user/Desktop/postprocess.py`. Treat the 200 cell centers adjacent to the downstream bottom wall (`0<x<1`, `y<0.003 m`) as the pressure trace, sorted by x. For each cell calculate `Cp=p/(0.5*10^2)`, where OpenFOAM `p` is kinematic pressure, and save `/home/user/Desktop/downstream_wall_pressure.csv` with `x_m,p_kinematic_m2ps2,cp,ux_mps`. A separated region must be present: at least one of those cells must have `Ux<0`. 5. Save `/home/user/Desktop/summary.txt` as one finite scalar `min_cp`, the minimum `Cp` in that 200-cell trace. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/bfs_base.tar",
+            "path": "/home/user/Desktop/bfs_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/bfs_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/bfs_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/bfs",
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/downstream_wall_pressure.csv",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

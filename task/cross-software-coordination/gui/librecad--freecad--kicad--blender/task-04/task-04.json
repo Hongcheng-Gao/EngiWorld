@@ -1,0 +1,97 @@
+{
+  "id": "cross-software-coordination--gui--librecad--freecad--kicad--blender--task-04--ubuntu",
+  "snapshot": "freecad-librecad-kicad-blender",
+  "instruction": "Available executables: LibreCAD: `/usr/bin/librecad`; FreeCAD: `/usr/bin/freecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`; Blender: `/home/user/Applications/blender-4.2.3-linux-x64/blender`. Required four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from the provided seed DXF /home/user/Desktop/seed_round_gauge_bezel.dxf; do not start from a blank or unrelated drawing. Run the stages in order. Each stage must read the preceding stage output, and every required intermediate file must be saved on the Desktop. The design token for this task is EW4G04; keep this token visible in the DXF labels and KiCad silkscreen. The Blender output must visibly consume the stage-2 STL and stage-3 SVG through Blender's native import/export operations.\n\nDesign goal: Round instrument gauge bezel with OLED and encoder board. This case is intentionally different from the other benchmark cases: domain=instrument_display_bezel, mechanical target=an instrument front view with smoky display lens and a raised encoder knob, electronics target=a circular gauge PCB carrying an OLED display, encoder, buzzer, mode button, and I2C header.\n\n1. LibreCAD stage: open the provided seed file /home/user/Desktop/seed_round_gauge_bezel.dxf in LibreCAD, use it as the starting drawing, complete the required 2D geometry, remove all GUIDE construction entities, and save /home/user/Desktop/stage1_round_gauge_bezel.dxf. Use millimeters. Use layers OUTLINE, WINDOW, HOLE, LABEL. The overall drawing envelope must be 118 mm x 118 mm. Include the required circular features: center (59,59) radius 59; center (59,59) radius 34; center (59,12) radius 2.1; center (106,59) radius 2.1; center (59,106) radius 2.1; center (12,59) radius 2.1. Add readable labels EW4G04, OLED, ENCODER, BEZEL on the LABEL layer.\n2. FreeCAD stage: import /home/user/Desktop/stage1_round_gauge_bezel.dxf in FreeCAD. Create the 3D mechanical body from that LibreCAD DXF with a localized substantial raised encoder-control region above the base and bezel heights, and export the body as /home/user/Desktop/stage2_round_gauge_bezel.stl with an approximate bounding size of 118 mm x 118 mm x 18 mm. Then, from the same FreeCAD model, export a top-face or board-interface outline for KiCad as /home/user/Desktop/stage2_round_gauge_bezel_handoff_outline.dxf. This handoff DXF must contain the circular board outline and all four stage-1 mounting holes, represent the same XY envelope as the FreeCAD body, and export the visible labels FREECAD_TO_KICAD and EW4G04 as two FreeCAD ShapeString outline objects.\n3. KiCad stage: open KiCad and use /home/user/Desktop/stage2_round_gauge_bezel_handoff_outline.dxf as the geometric source for one matching circular Edge.Cuts outline centered at (59,59) with radius 59; importing the DXF or accurately recreating that circle are equivalent. Save /home/user/Desktop/stage3_round_gauge_bezel_board.kicad_pcb. Add five native footprints: DS1 as a four-pad OLED display, SW1 as a five-pad rotary encoder, BZ1 as a two-pad buzzer, SW2 as a two-pad mode button, and J1 as a four-pad I2C header. Add F.SilkS text carrying KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the stage2 handoff filename, EW4G04, OLED-DS1, ENCODER-SW1, BUZZER-BZ1, BTN-MODE, and I2C-J1. Then use KiCad's plot/export workflow to create /home/user/Desktop/stage3_round_gauge_bezel_board_profile.svg from the same circular Edge.Cuts outline.\n4. Blender stage: open Blender. Import /home/user/Desktop/stage2_round_gauge_bezel.stl with Blender's STL importer, then import /home/user/Desktop/stage3_round_gauge_bezel_board_profile.svg with Blender's SVG importer. Correct the SVG import scale so the visible circular profile matches the full 118 mm diameter carrier. Keep the imported STL body and SVG-derived profile geometry in the scene. Make the instrument front visibly contain a dark translucent smoky OLED lens across the center window and a distinct raised encoder knob. Export glTF Binary (.glb) as /home/user/Desktop/stage4_round_gauge_bezel.glb. Do not satisfy these requirements with names or manually injected metadata alone.\n\nRequired deliverables on the Desktop: /home/user/Desktop/stage1_round_gauge_bezel.dxf, /home/user/Desktop/stage2_round_gauge_bezel.stl, /home/user/Desktop/stage2_round_gauge_bezel_handoff_outline.dxf, /home/user/Desktop/stage3_round_gauge_bezel_board.kicad_pcb, /home/user/Desktop/stage3_round_gauge_bezel_board_profile.svg, /home/user/Desktop/stage4_round_gauge_bezel.glb.\n\n[Software] Use LibreCAD first, then FreeCAD, then KiCad, then Blender. Do not skip stages, reorder stages, or recreate the final result in only one software package.",
+  "source": "https://github.com/LibreCAD/LibreCAD/releases/tag/2.2.0.2; https://docs.librecad.org/en/2.2.0_a/; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://wiki.freecad.org/Draft_DXF; https://wiki.freecad.org/Mesh_Export; https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#board-outlines; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#working-with-footprints; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#plotting; https://docs.blender.org/manual/en/4.2/files/import_export/stl.html; https://docs.blender.org/manual/en/4.2/addons/import_export/curve_svg.html; https://docs.blender.org/manual/en/4.2/addons/import_export/scene_gltf2.html; task regenerated independently in the designated snapshot",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/seed_round_gauge_bezel.dxf",
+            "path": "/home/user/Desktop/seed_round_gauge_bezel.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/stage1_round_gauge_bezel.dxf",
+    "/home/user/Desktop/stage2_round_gauge_bezel.stl",
+    "/home/user/Desktop/stage2_round_gauge_bezel_handoff_outline.dxf",
+    "/home/user/Desktop/stage3_round_gauge_bezel_board.kicad_pcb",
+    "/home/user/Desktop/stage3_round_gauge_bezel_board_profile.svg",
+    "/home/user/Desktop/stage4_round_gauge_bezel.glb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "metric": {
+      "name": "four_gui_transfer_completion",
+      "direction": "maximize",
+      "output_field": "score",
+      "baseline_score": 0.0,
+      "max_score": 1.0
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

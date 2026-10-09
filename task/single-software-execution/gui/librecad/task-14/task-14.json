@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--librecad--task-14--ubuntu",
+  "snapshot": "LibreCAD2.2.0.2",
+  "instruction": "Examine guih06_stair_landing_seed.dxf in LibreCAD. Launch LibreCAD from `/usr/bin/librecad` before opening `guih06_stair_landing_seed.dxf`. Complete the hard stair and landing detail. Draw STAIR rectangles (0,0)-(1800,1500) and (1800,0)-(3600,1500). Add eleven vertical tread divider lines at x=0,180,360,540,720,900,1080,1260,1440,1620,1800 from y=0 to y=1500. Add HANDRAIL lines (0,1300)-(3600,1300) and (0,200)-(3600,200). Add ARROW lines (350,750)-(1550,750) and (2050,750)-(3300,750), then add labels UP, LANDING, 10R @ 170, HANDRAIL BOTH SIDES, and 3600. Save the result as /home/user/Desktop/guih06_stair_landing_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/guih06_stair_landing_seed.dxf",
+            "path": "/home/user/Desktop/guih06_stair_landing_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/guih06_stair_landing_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/guih06_stair_landing_completed.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

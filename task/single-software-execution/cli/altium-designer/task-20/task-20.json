@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--altium-designer--task-20--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "Create a native Altium panel from the board file `C:\\Users\\user\\Desktop\\wifi_board.PcbDoc` and save it as `C:\\Users\\user\\Desktop\\wifi_panel.PcbDoc`. To use Altium Designer on Windows, run `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE` (adjust if your install path differs).\n\nKeep the embedded source board as `WiFi.PcbDoc`. Configure one panel array with 4 rows and 3 columns, `ROWSPACING=1133.8583mil`, `COLSPACING=1338.5827mil`, `MIRROR=TRUE`, and `ORIGINMODE=1`. Add a continuous, closed-loop panel-fabrication route tool path on `MECHANICAL32` using a `10mil` track width that follows all four sides of the panel outline.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/wifi_board.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\wifi_board.PcbDoc"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\WiFi.PcbDoc",
+    "C:\\Users\\user\\Desktop\\wifi_panel.PcbDoc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

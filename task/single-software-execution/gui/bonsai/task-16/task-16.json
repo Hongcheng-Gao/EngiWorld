@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--gui--bonsai--task-16--ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Apartment shell completion. Open `/opt/blender/blender` first; Bonsai is available inside it as the installed BIM extension. Open the provided /home/user/Desktop/init.ifc IFC4 model in Bonsai and use it as the starting project. The init model is a simple editable seed, so keep its project structure where practical while adding, renaming, splitting, or replacing spaces and BIM elements as needed. Use Bonsai's native IFC authoring workflow and save the only required deliverable on the Desktop as /home/user/Desktop/result.ifc using Bonsai's IFC save/export controls. Open the provided apartment shell and complete living, bedroom, kitchen, and bath spaces. Model the building as a rectangular single-storey shell about 11 m by 8 m with walls about 3.0 m high and one floor slab. Create real IfcSpace objects named Living, Bedroom, Kitchen, Bath. Include at least 8 wall-like IfcWall or IfcWallStandardCase elements, at least 1 IfcSlab, at least 4 IfcDoor elements, and at least 5 IfcWindow elements. Create real IFC/BIM elements rather than ordinary Blender mesh placeholders or visual-only geometry. The exported IFC should use the IFC4 schema and have unique GlobalId values for IfcRoot objects. The shaped model should have an overall size roughly matching the shell, with X span about 11 m, Y span about 8 m, and Z span about 3.0 m. Other coordinates, wall thicknesses, opening positions, materials, object type names, relationship nesting, property sets, and harmless exporter metadata may vary as long as the saved IFC satisfies these requirements.",
+  "source": "https://docs.bonsaibim.org/tutorials/project0.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,79 @@
+{
+  "id": "open-environment-engineering--cli--agent-selected--task-09--ubuntu",
+  "task_family": "open-environment-engineering",
+  "cli_tool_policy": "open_choice",
+  "snapshot": "top-10",
+  "instruction": "This is a fully open-workflow engineering task. You may use any tools, scripts, or libraries available in the environment, in any combination and any order, with any amount of iteration. The environment starts from a blank base image with no engineering applications preinstalled. Inspect the supplied inputs, then choose, install, and configure any tools or libraries you need. No particular software is required. The evaluator does not inspect software identity, stage order, intermediate handoffs, command history, version records, or provenance.\n\nThermal camera calibration target PCB mount.\n\nStart from the supplied `board_input.kicad_pcb`, `design_requirements.json`, and `connector_keepouts.csv`. These files define the authoritative PCB geometry, installed coordinates, package dimensions, materials, tolerances, keepouts, and access bounds. They constrain the final design but do not prescribe a software workflow.\n\nUse the PCB outline center as package XY origin and the tray bottom outer face as Z=0 without rotating or mirroring KiCad X/Y. Build the specified 131 x 105 x 25.1 mm black-PA12 package as a tray ending at Z=22.5 plus a separate 2.5 mm lid beginning at Z=22.6, preserving the 0.1 mm assembly separation. The inner cavity must be X=-63..63 and Y=-50..50. Seat the 1.6 mm PCB bottom at Z=13.4 on four 10.9 mm high bored standoffs aligned to MH1-MH4, using 6.9 mm outer diameter and 3.2 mm bore diameter, and preserve 4 mm clearance to every inner side wall. J1 ends at Z=19.6, leaving 3 mm to the lid inner face.\n\nKeep J1 externally accessible through the bounded 20 x 6.2 mm X_MINUS wall window with cutter `[-66.0, -10.0, 14.2, -62.5, 10.0, 20.4]` and enclosure-free path `[-66.0, -10.0, 14.2, -49.0, 10.0, 20.4]`. Keep J2 accessible through the bounded 16 x 5.6 mm X_PLUS wall window with cutter `[62.5, -8.0, 14.2, 66.0, 8.0, 19.8]` and path `[49.0, -8.0, 14.2, 66.0, 8.0, 19.8]`. Bounds use `[xmin, ymin, zmin, xmax, ymax, zmax]`; both paths must be continuous through their relative walls and neither aperture may become a full-height slot.\n\nH1 and H2 each require an independent cylindrical 36 mm finished-diameter Z_PLUS top keepout opening. Their respective lid-cutter bounds are `[-42.0, -30.0, 22.1, -6.0, 6.0, 25.6]` and `[6.0, -30.0, 22.1, 42.0, 6.0, 25.6]`. Each enclosure-free path begins at heater body top Z=16.0 and ends at exterior Z=25.6. For each heater, the complete radius-18 projected keepout cylinder from PCB top Z=15.0 to exterior may intersect carrier material by no more than 0.1 mm3 and must retain at least 99% open area. The openings must remain distinct with at least 10 mm edge gap; the nominal gap is 12 mm. Apply the specified overcut, center/axis tolerances, and minimum guard. Extra structural features are allowed only when all accesses, guards, board clearances, heater exposure, and interference requirements remain valid.\n\nThe evaluator derives black-PA12 mount volume/mass, all four PCB side clearances, covered-component clearance to the nearest covering enclosure material over its XY footprint, four standoff bore checks, all four access checks, per-heater carrier intersection/open-area ratio, heater-opening edge gap, and unintended interference from final submitted geometry.\n\nSave the completed final assembly into `/home/user/Desktop/result` as exactly one non-empty STEP or STP file; the filename is unrestricted. The STEP assembly must contain the physical enclosure or carrier, lid where required, PCB, installed components, and task-specific physical features in their final coordinates. The PCB and installed components must remain identifiable physical parts rather than being fused into enclosure material; this is a final-assembly geometry requirement, not a prescribed workflow. Additional files are allowed but are not required. The evaluator grades only the final submitted geometry against the design contract. It does not grade which tools were used, their order, intermediate filenames, logs, reports, renders, or software identity.",
+  "source": "https://www.kicad.org/blog/2026/06/KiCad-10.0.4-Release/; https://docs.kicad.org/10.0/en/cli/cli.html; https://dev-docs.kicad.org/en/file-formats/sexpr-pcb/; https://github.com/openscad/openscad/releases/tag/openscad-2021.01; https://github.com/FreeCAD/FreeCAD/releases/tag/1.1.0; https://wiki.freecad.org/Start_up_and_Configuration; https://www.blender.org/releases/5-2/; https://docs.blender.org/api/5.2/; generated open-choice variant from task/multi/cli-4-kicad-openscad-freecad-blender/task-09",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/board_input.kicad_pcb",
+            "path": "/home/user/Desktop/board_input.kicad_pcb"
+          },
+          {
+            "local_path": "task-09/init_file/design_requirements.json",
+            "path": "/home/user/Desktop/design_requirements.json"
+          },
+          {
+            "local_path": "task-09/init_file/connector_keepouts.csv",
+            "path": "/home/user/Desktop/connector_keepouts.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad",
+    "openscad",
+    "freecad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "task-09/ground_truth/open_choice_spec.json",
+              "path": "/home/user/Desktop/_eval_open_choice_spec.json"
+            },
+            {
+              "local_path": "../../prepare_evaluator.py",
+              "path": "/home/user/Desktop/_engiworld_prepare_evaluator.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true",
+      "prepare_command": "python3 /home/user/Desktop/_engiworld_prepare_evaluator.py",
+      "prepare_timeout": 960
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

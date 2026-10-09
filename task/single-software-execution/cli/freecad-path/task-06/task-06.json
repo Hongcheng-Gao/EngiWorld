@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--freecad-path--task-06--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Begin in FreeCAD Path/CAM with /home/user/Desktop/job_input.step. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). On this machine, use `/usr/lib/freecad/bin/freecadcmd-python3` for FreeCAD Path command-line automation when working on `job_input.step`.\n\nUse FreeCAD with the Path/CAM modules. Complete a FreeCAD Path/CAM Job containing Pocket, Drilling, and Profile operations. Tool definitions: use T1 as an end mill for pockets, T2 as a drill for holes, and T3 as a profile end mill for outside contours; use S7000 rpm and F500 mm/min for both horizontal and vertical cutting feeds on these tools. Use the LinuxCNC postprocessor. Save the editable FreeCAD Job and its posted NC program using exactly these absolute file paths: /home/user/Desktop/task-06.FCStd and /home/user/Desktop/task-06.nc.",
+  "source": "https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2 https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Main/Job.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Tool/Controller.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/PocketShape.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Drilling.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Op/Profile.py https://github.com/FreeCAD/FreeCAD/blob/0.21.2/src/Mod/Path/Path/Post/scripts/linuxcnc_post.py",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/job_input.step",
+            "path": "/home/user/Desktop/job_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-06.FCStd",
+    "/home/user/Desktop/task-06.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

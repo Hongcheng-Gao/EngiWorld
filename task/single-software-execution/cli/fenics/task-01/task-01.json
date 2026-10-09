@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--fenics--task-01--ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "The starting input is an incomplete legacy FEniCS/DOLFIN Python script `/home/user/Desktop/poisson_base.py`. Run the script with the legacy `dolfin` API used by `poisson_base.py` (for example, FEniCS/DOLFIN 2019.1.0 and `from dolfin import *`), not the incompatible DOLFINx API. Run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `poisson_base.py`.\n\nComplete the following: 1. Modify and generate `/home/user/Desktop/poisson.py`: - Complete the UFL variational form: `a = inner(grad(u), grad(v))*dx`, `L = f*v*dx`, where `f = Constant(-6.0)` - Call `solve(a == L, u, bc)` - Compute L2 error: `error_L2 = sqrt(assemble((u - u_D)**2 * dx))` - Compute H1 seminorm error: `error_H1 = sqrt(assemble(inner(grad(u - u_D), grad(u - u_D)) * dx))` 2. Run `poisson.py`. 3. Save error results to `/home/user/Desktop/summary.txt` in this format: `error_L2, error_H1`",
+  "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/poisson_base.py",
+            "path": "/home/user/Desktop/poisson_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/poisson.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

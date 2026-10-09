@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--blender--task-28--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Mirror-Symmetric Completion `scene.blend` contains a single mesh object `HalfPart` that is only the +X half of an intended X-symmetric shape: every vertex satisfies x >= 0 and the YZ cut-plane face at x=0 is present so the half-mesh is itself closed-manifold. Before starting the work, the Blender executable is `/opt/blender/blender`; use it to open `scene.blend`. Produce the full shape by mirroring `HalfPart` across the YZ plane (x=0) and merging the two halves along the centerline seam, then save the result as `/home/user/Desktop/answer.blend`. Requirements: 1. `answer.blend` opens as a valid Blender file. 2. The scene contains exactly one mesh object, named `Part`; `HalfPart` is absent. 3. `Part.location == (0,0,0)` and its modifier stack is empty. 4. `Part`'s mesh is closed-manifold: 0 non-manifold edges, 0 loose vertices, 0 loose edges. 5. `Part` is X-symmetric about x=0 within tol 1e-4: for every vertex `v`, a vertex also exists at `(-v.co.x, v.co.y, v.co.z)` within that tol. 6. `Part`'s axis-aligned bbox along X is symmetric about 0: `abs(min_x + max_x) < 1e-4` with `max_x > 0`. 7. `Part`'s bbox extents along Y and Z each match `HalfPart`'s original bbox on those axes within 1e-4. 8. `Part`'s vertex count equals `2 * N_half - N_seam`, where `N_half` is the input vertex count of `HalfPart` and `N_seam` is the number of input verts with `x ~= 0` (no duplicate seam verts). 9. `Part`'s unsigned volume is approximately 2x the input `HalfPart`'s volume (within 5%). The final shape must be fully symmetric across the YZ plane with no duplicated verts on the centerline.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-28/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "/home/user/Desktop/scene.blend"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-28/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

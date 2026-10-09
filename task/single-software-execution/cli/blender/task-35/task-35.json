@@ -1,0 +1,53 @@
+{
+  "id": "single-software-execution--cli--blender--task-35--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "USD preview surface export `/home/user/Desktop/scene.blend` contains two unit cubes with Principled BSDF materials. Launch Blender by running `blender` from a terminal. On this machine, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nExport the whole scene to `/home/user/Desktop/output/scene.usda` as ASCII USD with the materials translated into USD `UsdPreviewSurface` shaders. ## Requirements 1. `/home/user/Desktop/output/scene.usda` exists and is readable. 2. The first line of the file starts with `#usda` (ASCII USD marker, not the binary `.usdc` header). 3. The file contains a `def Xform \"Cube_A\"` prim. 4. The file contains a `def Xform \"Cube_B\"` prim. 5. The file contains a `def Material \"Mat_A\"` block with a nested `def Shader \"...\"` definition. 6. The file contains a `def Material \"Mat_B\"` block with a nested `def Shader \"...\"` definition. 7. The token `info:id = \"UsdPreviewSurface\"` appears at least 2 times (once per material). 8. Inside the `Mat_A` block, `diffuseColor = (r, g, b)` has values close to (0.8, 0.2, 0.2) within +/- 0.05 per channel. 9. Inside the `Mat_B` block, `diffuseColor = (r, g, b)` has values close to (0.2, 0.8, 0.2) within +/- 0.05 per channel. 10. At least one `inputs:roughness = <float>` line is present (the scene's two Principled BSDF materials map their Roughness to this shader input).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://openusd.org/release/index.html; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-35/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-35/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

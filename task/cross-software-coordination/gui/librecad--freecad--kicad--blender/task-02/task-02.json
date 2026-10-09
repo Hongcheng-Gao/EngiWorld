@@ -1,0 +1,97 @@
+{
+  "id": "cross-software-coordination--gui--librecad--freecad--kicad--blender--task-02--ubuntu",
+  "snapshot": "freecad-librecad-kicad-blender",
+  "instruction": "Required application entry points: LibreCAD: `/usr/bin/librecad`; FreeCAD: `/usr/bin/freecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`; Blender: `/home/user/Applications/blender-4.2.3-linux-x64/blender`. Required four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from `/home/user/Desktop/seed_hex_air_quality_badge.dxf`; every later stage must consume the previous stage's artifact and save every required intermediate on the Desktop. Keep token EW4G02 visible in the DXF labels and KiCad silkscreen.\n\nDesign goal: a 110 mm x 96 mm hexagonal air-quality wall badge. The six OUTLINE vertices are (0,48), (27.5,0), (82.5,0), (110,48), (82.5,96), and (27.5,96), connected once as a closed hexagon. The centered radius-18 vent must contain seven real horizontal grille bars. The assembled scene must show the badge, a full-scale hex PCB profile, three standoffs, and VOC/CO2 sensor modules.\n\n1. LibreCAD: open the seed, work in millimeters, remove every GUIDE entity, and save `stage1_hex_air_quality_badge.dxf`. Use OUTLINE, VENT, HOLE, LABEL. Draw the specified closed six-edge hexagon; mounting circles at (55,82), (20,22), and (90,22), each radius 2.5; the VENT circle at (55,48), radius 18; seven nonzero horizontal grille bars; and LABEL text EW4G02, VOC, CO2, VENT-7.\n2. FreeCAD: import stage 1. Build a detailed watertight 110 x 96 x 12 mm badge body with the vent grille and three drilled raised standoffs, then export `stage2_hex_air_quality_badge.stl`. From the same model export the same closed hex outline, the central vent circle, and visible FREECAD_TO_KICAD and EW4G02 labels as `stage2_hex_air_quality_badge_handoff_outline.dxf`.\n3. KiCad: import the FreeCAD handoff as exactly one closed six-line Edge.Cuts hexagon with no Edge.Cuts text. Save `stage3_hex_air_quality_badge_board.kicad_pcb`. Add four native footprints with pads and these references/values: U1/VOC Sensor, U2/CO2 Sensor, J1/Battery Input, J2/I2C Header. Keep footprints and pads inside the board. Add a native Dwgs.User vent marker and F.SilkS text KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the handoff filename, EW4G02, VOC-U1, CO2-U2, BAT-J1, VENT-KEEP, I2C-J2. Plot the same six-edge profile as visible path geometry in `stage3_hex_air_quality_badge_board_profile.svg`.\n4. Blender: natively import the stage-2 STL and stage-3 SVG. Preserve them as distinct visible mesh-bound objects named `stage2_hex_air_quality_badge` and `stage3_hex_air_quality_badge_board_profile.svg`; scale and align the SVG so its visible profile remains approximately 110 x 96 mm rather than Blender's meter-scaled import. Add three distinct mesh-bound standoffs named Standoff_1..3 and two distinct mesh-bound sensor modules named VOC_U1 and CO2_U2. Export the active scene through Blender's glTF exporter as `stage4_hex_air_quality_badge.glb`.\n\nRequired Desktop deliverables: stage1_hex_air_quality_badge.dxf, stage2_hex_air_quality_badge.stl, stage2_hex_air_quality_badge_handoff_outline.dxf, stage3_hex_air_quality_badge_board.kicad_pcb, stage3_hex_air_quality_badge_board_profile.svg, stage4_hex_air_quality_badge.glb.\n\n[Software] Use LibreCAD, then FreeCAD, then KiCad, then Blender. Do not skip or reorder stages, and do not recreate the final result in one package.",
+  "source": "https://github.com/LibreCAD/LibreCAD/releases/tag/2.2.0.2; https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://wiki.freecad.org/Draft_DXF; https://wiki.freecad.org/Mesh_Export; https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#importing-graphics; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#working-with-footprints; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#board-outlines; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#plotting; https://docs.blender.org/manual/en/4.2/files/import_export/stl.html; https://docs.blender.org/manual/en/4.2/addons/import_export/curve_svg.html; https://docs.blender.org/manual/en/4.2/addons/import_export/scene_gltf2.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/seed_hex_air_quality_badge.dxf",
+            "path": "/home/user/Desktop/seed_hex_air_quality_badge.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/stage1_hex_air_quality_badge.dxf",
+    "/home/user/Desktop/stage2_hex_air_quality_badge.stl",
+    "/home/user/Desktop/stage2_hex_air_quality_badge_handoff_outline.dxf",
+    "/home/user/Desktop/stage3_hex_air_quality_badge_board.kicad_pcb",
+    "/home/user/Desktop/stage3_hex_air_quality_badge_board_profile.svg",
+    "/home/user/Desktop/stage4_hex_air_quality_badge.glb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "metric": {
+      "name": "four_gui_transfer_completion",
+      "direction": "maximize",
+      "output_field": "score",
+      "baseline_score": 0.0,
+      "max_score": 1.0
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

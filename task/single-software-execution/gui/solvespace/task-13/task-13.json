@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--gui--solvespace--task-13--ubuntu",
+  "snapshot": "solvespace3.1ds1-3.1build2",
+  "instruction": "Work in SolveSpace and import seed_ss_gui_13_dogbone.dxf from /home/user/Desktop with File > Import, then continue editing that imported drawing rather than starting from an empty document. Launch SolveSpace from `/usr/bin/solvespace` before importing `seed_ss_gui_13_dogbone.dxf`. Do not use File > Open or launch the DXF as a native SolveSpace file. Use the existing circles, tangent lines, and center marks in the file to create one closed dogbone outer outline with left and right outside circles of radius 20 centered at (30,30) and (110,30), connected by two common tangent lines. Add one diameter 8 hole at the center of each outside circle. Add one centered rectangular internal slot of 40 x 8 with center at (70,30). Construction or guide geometry from the seed may be changed or removed unless it is explicitly required above. When the geometry is complete, align the view to the active workplane if needed, then use File > Export 2d View, choose the DXF file type, and save the result as /home/user/Desktop/final_ss_gui_13.dxf. Do not use File > Save As for this final DXF export.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/seed_ss_gui_13_dogbone.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_13_dogbone.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/final_ss_gui_13.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

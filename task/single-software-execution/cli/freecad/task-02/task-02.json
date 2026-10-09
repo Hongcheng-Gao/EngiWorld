@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--freecad--task-02--ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Treat /home/user/Desktop/freecad_task-02_input.step as the starting point. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). For this task, use `/usr/lib/freecad/bin/freecadcmd-python3` for the FreeCAD command-line work in this task when working on `freecad_task-02_input.step`.\n\nKeep the outside envelope of the 190 x 90 x 12 mm plate unchanged. Cut six vertical through holes: diameter 6 mm at (28,22), diameter 8 mm at (72,22), diameter 10 mm at (116,22), diameter 6 mm at (162,22), diameter 8 mm at (50,65), and diameter 10 mm at (140,65). Cut a through obround slot centered at (95,48), length 44 mm along X and width 10 mm. Cut a second through obround slot centered at (32,58), length 30 mm along Y and width 8 mm. Cut a 10 mm radius semicircular notch centered on the left edge at (0,45) and a 14 mm radius semicircular notch centered on the right edge at (190,45), both through the full thickness. Export /home/user/Desktop/freecad_task-02_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/freecad_task-02_input.step",
+            "path": "/home/user/Desktop/freecad_task-02_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/freecad_task-02_output.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

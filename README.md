@@ -68,12 +68,12 @@ The decompressed image is saved to `../environment-images/images/LibreCAD2.2.0.2
 Prepare the selected task's input and scoring resources:
 
 ```bash
-python -m engiworld.prepare_tasks --task single-software/gui/librecad/task-08
+python -m engiworld.prepare_tasks --task single-software-execution/gui/librecad/task-08
 ```
 
 ```bash
 python -m engiworld.local_eval \
-  --task single-software/gui/librecad/task-08 \
+  --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --smoke-test
 ```
@@ -97,7 +97,7 @@ export OPENAI_BASE_URL="https://your-api-endpoint/v1"
 export OPENAI_API_KEY="your-api-key"
 
 python -m engiworld.local_eval \
-  --task single-software/gui/librecad/task-08 \
+  --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --model your-model-name \
   --result-dir results
@@ -112,14 +112,16 @@ task/<category>/<gui|cli>/<software or software1--software2>/<task-number>/
 runtime/
 ```
 
-Task categories are `single-software`, `multi-software`, `software-selection`,
-`quantitative-design`, `image-based-modeling`, and `open-ended`.
+Task categories are `single-software-execution`, `cross-software-coordination`, `software-selection`,
+`design-optimization`, `vision-guided-modeling`, and `open-environment-engineering`.
 Open-Environment Engineering tasks use **CLI** in a blank environment and live under
-`task/open-ended/cli/agent-selected/`; the agent chooses and installs its tools.
+`task/open-environment-engineering/cli/agent-selected/`; the agent chooses and installs its tools.
 
 Task JSON IDs follow `<category>--<gui|cli>--<software>--<task-number>--<os>`, for example
-`single-software--gui--librecad--task-08--ubuntu`. Use either this ID or its task
+`single-software-execution--gui--librecad--task-08--ubuntu`. Use either this ID or its task
 directory path with `--task`. See the [task guide](task/README.md).
+
+Directory categories and JSON IDs follow the updated paper taxonomy as of 2026-10-09. `task/aliases.json` preserves historical JSON IDs and directory names; the runtime continues to accept them for task selection. See the full [ID migration map](task/id-migration-20261009.json) and [task taxonomy](task/taxonomy.json).
 
 ## 📊 Evaluation results
 

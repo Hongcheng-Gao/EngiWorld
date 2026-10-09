@@ -1,0 +1,68 @@
+{
+  "id": "single-software-execution--cli--blender--task-25--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Procedural Wood Material `/home/user/Desktop/scene.blend` contains a 2x2 BU UV-unwrapped plane named `Board` at the origin. Launch Blender by running `blender` from a terminal. Use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nIt has a grey Principled BSDF material `WoodMat` containing an Image Texture node referencing a blank 512x512 RGBA image datablock named `WoodBake`. The `WoodBake` image texture node is the active node on the material. Your task: rebuild `WoodMat`'s node tree into a procedural wood shader (NO external texture file — purely from shader nodes like Texture Coordinate, Noise, Wave, Vector Math, and Color Ramp), bake the diffuse color onto the `WoodBake` image, save the result to `/home/user/Desktop/wood.png` at 512x512, and save the completed scene to `/home/user/Desktop/answer.blend`. ## Requirements 1. `/home/user/Desktop/wood.png` exists. 2. `/home/user/Desktop/answer.blend` exists and preserves `Board`, `WoodMat`, a procedural node graph, and the active `WoodBake` image node used as the bake target. 3. Image is exactly 512x512. 4. Brown hue: mean R > mean G > mean B AND mean R in [0.2, 0.7]. 5. Banding detected: along the central row of the image, counting sign-crossings of (pixel luma - row mean luma), at least 4 zero-crossings (distinct bright/dark alternations). 6. Color variation: per-pixel luma standard deviation >= 0.05. 7. Dark and light present: min luma < 0.15 AND max luma > 0.40.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-25/init_file/stub_gray.png",
+            "path": "/home/user/Desktop/stub_gray.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/wood.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-25/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

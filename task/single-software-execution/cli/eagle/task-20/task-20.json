@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--eagle--task-20--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "The file `/home/user/Desktop/dense.brd` is the board to clean up. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nIts refdes placeholders (`>NAME`) are embedded in the element bodies. For exactly the five elements closest to the starter board's geometric center, remove each selected element's embedded `NAME` attribute and add its refdes as free-standing text on layer `25` (`tNames`) in the board's `<plain>` block. Save the result as `/home/user/Desktop/labeled.brd`. Requirements: 1. `/home/user/Desktop/labeled.brd` parses as well-formed XML. 2. The board's `<plain>` block contains exactly 5 `<text layer=\\\"25\\\">` elements. 3. Those five labels correspond to the five elements closest to the board's geometric center in the starter board. 4. Every moved label has content equal to an existing element refdes in the board, and no refdes is labeled more than once. 5. The selected elements no longer contain their embedded `NAME` attributes. 6. The element count and element-name set are unchanged relative to the starter.",
+  "source": "https://learn.adafruit.com/ktowns-ultimate-creating-parts-in-eagle-tutorial/adding-%3Ename-and-%3Evalue-to-the-package",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/dense.brd",
+            "path": "/home/user/Desktop/dense.brd"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/labeled.brd"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

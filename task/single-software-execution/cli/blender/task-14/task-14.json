@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--blender--task-14--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "AOV output -> MultiLayer EXR. `/home/user/Desktop/scene.blend` contains: - Three UV spheres named `Sphere_R`, `Sphere_G`, `Sphere_B` at X=-2, 0, +2, Y=0, Z=0 (radius 0.8). - Each sphere has a Principled BSDF material with a distinct Base Color: Sphere_R -> (0.9, 0.1, 0.1) Sphere_G -> (0.1, 0.9, 0.1) Sphere_B -> (0.1, 0.1, 0.9) - A `Camera` at (0, -5, 1) looking at the origin, resolution 512x512. - An Area light at (0, -3, 3) with energy 500. - Render engine: Cycles, 16 samples, denoiser OFF (for determinism). - NO AOV is declared on the view layer, NO Depth/Normal passes are enabled, and the render format is not MultiLayer EXR. Launch Blender by running `blender` from a terminal. On this machine, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nTask: wire a scene-wide Shader AOV named `custom_col` that captures each sphere's Base Color, enable the required render passes, and render a single MultiLayer EXR file that contains Combined, Depth, Normal, and the `custom_col` AOV channels. 1. Declare the AOV at the scene level: - `aov = bpy.context.view_layer.aovs.add()` - `aov.name = 'custom_col'` - `aov.type = 'COLOR'` 2. For each sphere material (`Mat_Sphere_R`, `Mat_Sphere_G`, `Mat_Sphere_B`): - Add a `ShaderNodeOutputAOV` and set its `.name` attribute to `'custom_col'` (the AOV Output node's `.name` IS the AOV channel name). - Add a `ShaderNodeRGB` whose `outputs['Color'].default_value` equals the same Base Color RGBA used on the material's Principled BSDF. - Link `RGB.Color` -> `AOV_Output.Color`. (Alternatively you may connect the Principled BSDF's Base Color socket -- what matters is that the AOV's Color input carries the material's base color.) 3. Enable the required view-layer passes on `scene.view_layers[0]`: - `view_layer.use_pass_combined = True` - `view_layer.use_pass_z = True` - `view_layer.use_pass_normal = True` 4. Configure MultiLayer EXR output: - `scene.render.image_settings.file_format = 'OPEN_EXR_MULTILAYER'` - `scene.render.image_settings.color_mode = 'RGBA'` - `scene.render.image_settings.color_depth = '32'` 5. Set `scene.render.filepath` to the absolute path `/home/user/Desktop/combined` (Blender auto-appends `.exr` when the format is MultiLayer EXR) and render: `bpy.ops.render.render(write_still=True)` 6. Save the .blend to `/home/user/Desktop/answer.blend`. ## Requirements 1. `/home/user/Desktop/answer.blend` exists and opens. 2. The three spheres `Sphere_R`, `Sphere_G`, `Sphere_B` are present at X=-2, 0, +2 and each has a Principled BSDF material. 3. The active view layer has an AOV entry with `name == 'custom_col'` and `type == 'COLOR'`. 4. `use_pass_combined`, `use_pass_z`, and `use_pass_normal` are all True on the active view layer. 5. `scene.render.image_settings.file_format == 'OPEN_EXR_MULTILAYER'`. 6. Each of the three sphere materials contains a `ShaderNodeOutputAOV` node whose `.name == 'custom_col'` with its `Color` input connected. 7. The RGB value feeding each material's AOV Color input matches the Principled BSDF's Base Color on that material (tolerance 0.05 per channel) -- Sphere_R -> (0.9, 0.1, 0.1), Sphere_G -> (0.1, 0.9, 0.1), Sphere_B -> (0.1, 0.1, 0.9). 8. `/home/user/Desktop/combined.exr` exists on disk and is larger than 100 KB (confirming that the Combined + Depth + Normal + custom_col channels were all written into a MultiLayer EXR).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-14/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-14/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

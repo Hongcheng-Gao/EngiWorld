@@ -1,0 +1,56 @@
+{
+  "id": "vision-guided-modeling--cli--freecad--task-50--ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Work with FreeCAD through its command-line/Python API workflow. The PNG engineering drawing supplied with this message is mandatory and is the only public geometry evidence. Inspect every orthographic and isometric view, numeric dimension, centreline, hidden line, and drawing note in the PNG drawing supplied with this message before modelling. Then read /home/user/Desktop/supplement.csv only for datum, feature direction, depth, array phase, and connectivity facts intentionally omitted from the sheet; it does not replace the drawing geometry. Interpret the views using ISO first-angle projection. Reconstruct the mechanical part shown on the sheet in millimetres as exactly one valid connected solid. Do not infer dimensions from the task title or evaluator. Preserve every shown hole, opening, step, slope, wall, array, axis, depth, and connectivity relation. Use FreeCAD API, FreeCADCmd, or the supplied FreeCAD command-line Python environment; mouse-driven GUI interaction is not required. Export only the final valid solid as /home/user/Desktop/result.step. Do not create metrics.json or reference_dimensions.csv; they are evaluator artifacts.",
+  "source": "generated canonical reverse-CAD evidence package; native FreeCAD TechDraw ISO first-angle page",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-50/init_file/supplement.csv",
+            "path": "/home/user/Desktop/supplement.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-50/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

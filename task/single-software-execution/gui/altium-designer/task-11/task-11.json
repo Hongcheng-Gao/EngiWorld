@@ -1,0 +1,76 @@
+{
+  "id": "single-software-execution--gui--altium-designer--task-11--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "`C:\\Users\\user\\Desktop\\stackup.json` holds a six-layer stackup in top-to-bottom order. Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`; open the supplied design there. Each layer has an `index`, `name`, and `type`, where `type` is `Signal`, `GND`, or `PWR`. The opened `template.OutJob` is an empty OutJob. In its first output group, create six enabled Gerber fabrication outputs in the same order as the layers in `stackup.json`, then save the result as `C:\\Users\\user\\Desktop\\layered.OutJob`. For each output, set its GUI `Layers to Plot` selection to exactly one layer: L1 Signal -> Top Layer, L2 GND -> Mechanical 15, L3 Signal -> Mid Layer 1, L4 PWR -> Mechanical 15, L5 Signal -> Mid Layer 2, and L6 Signal -> Bottom Layer. Other output names and ordinary metadata may remain at their defaults.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/stackup.json",
+            "path": "C:\\Users\\user\\Desktop\\stackup.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/template.OutJob",
+            "path": "C:\\Users\\user\\Desktop\\template.OutJob"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\template.OutJob"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\layered.OutJob"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

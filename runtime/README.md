@@ -18,9 +18,9 @@ or `ENGIWORLD_CLIENT_PASSWORD`.
 |---|---|
 | Desktop resolution | 1920x1080, calibrated and verified before and after initialization |
 | History turns | 15 |
-| Regular GUI / CLI step limit | 200 / 100 |
-| Multi-software GUI / CLI step limit | 300 / 150 |
-| Open-ended step limit | 150 |
+| Regular GUI / CLI turn limit | 200 / 100 |
+| Cross-Software Coordination GUI / CLI turn limit | 300 / 150 |
+| Open-Environment Engineering turn limit | 150 |
 | Active time per task | 5 hours (18000 seconds) |
 
 Set the local time limit with `--task-timeout`, or the cloud limit with the master's
@@ -77,16 +77,16 @@ assigns tasks, and `scheduler.worker_entrypoint` runs the model and evaluators.
 Actions execute only after a complete streamed response. Interrupted or invalid
 responses are retried; exhaustion records an API interruption.
 
-## Image tasks
+## Vision-Guided Modeling
 
-Reference images for `image-based-modeling/` tasks live in `init_file/`. Download
+Reference images for `vision-guided-modeling/` tasks live in `init_file/`. Download
 them with `python -m engiworld.prepare_tasks`. The runtime includes the images in
 model messages by default, using `gui_message_initial` for GUI tasks and
 `cli_message_initial` for CLI tasks.
 
-## Open-ended environments
+## Open-Environment Engineering
 
-`open-ended/` uses the blank `top-10` base image without preinstalled engineering
+`open-environment-engineering/` uses the blank `top-10` base image without preinstalled engineering
 applications. The model chooses, installs, and configures tools, using terminal
 observations and the `open_engineering` interaction profile.
 

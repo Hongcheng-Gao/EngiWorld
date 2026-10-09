@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--cli--floris--task-03--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "For this task, start with a script template `/home/user/Desktop/model_compare.py`. Use Python with `floris==4.6.4` (for example, `from floris import FlorisModel`). On this machine, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program.\n\nIn FLORIS 4.6.4, `jensen`, `gauss`, and `cc` are supported wake velocity-model strings; GCH is a configuration assembled from the Gauss velocity model and additional wake features, not a `velocity_model` string. Complete the following from the command line: 1. Write `/home/user/Desktop/compare.py`. Starting from a fresh copy of the FLORIS 4.6.4 default configuration for every run, use two `nrel_5MW` turbines at `layout_x=[0,630]`, `layout_y=[0,0]`, with wind direction `270 deg`, wind speed `8 m/s`, and turbulence intensity `0.06`. Set only `wake.model_strings.velocity_model` to `jensen`, `gauss`, and `cc`, respectively; call `run()` and extract turbine 1 power in kW for each case. 2. Execute the script and write `/home/user/Desktop/summary.txt` as `jensen_t1_kw, gauss_t1_kw, cc_t1_kw`. 3. Do not use a GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/model_compare.py",
+            "path": "/home/user/Desktop/model_compare.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/compare.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,72 @@
+{
+  "id": "single-software-execution--cli--openfast--task-13--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "Start from `/home/user/Desktop/shutdown.fst`, `/home/user/Desktop/servo_shutdown_base.dat`, and an NREL 5 MW dependency set. Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. Only initialization inputs are included; no answer/result artifacts are preloaded.\n\nComplete a fully specified normal-shutdown simulation from the command line. OpenFAST 5.0 tight coupling does not support the ServoDyn high-speed-shaft mechanical brake, so this task uses generator disconnection and collective feathering only. 1. Write `/home/user/Desktop/build_case.py`. Create `/home/user/Desktop/inflow_shutdown.dat` with steady `HWindSpeed=15 m/s`. Create normalized `/home/user/Desktop/elasto_shutdown.dat` with initial `RotSpeed=12.1 rpm`, output channels `BldPitch1`, `BldPitch2`, `BldPitch3`, and `RotSpeed`, and create normalized `/home/user/Desktop/aero_shutdown.dat`. 2. Create `/home/user/Desktop/servo_shutdown.dat` from the template. Set `GenTiStp=True`, `TimGenOf=20 s`, and `HSSBrMode=0`. For all three blades set `TPitManS=20 s`, `PitManRat=2 deg/s`, and `BlPitchF=90 deg`. Retain the `GenPwr` output channel. 3. Create `/home/user/Desktop/shutdown_case.fst` with `TMax=90 s`, `DT_Out=0.1 s`, `OutFileFmt=1`, and references to the generated files. Run `/home/user/miniconda3/bin/openfast shutdown_case.fst`, retain `/home/user/Desktop/shutdown_case.out`, and save the console output as `/home/user/Desktop/shutdown_case.log`; require normal termination. 4. Write `/home/user/Desktop/postprocess.py`. From the native output, report: (a) elapsed time from 20 s to the first sample at or after 20 s with `abs(GenPwr) < 100 kW`; (b) elapsed time from 20 s to the first sample at or after 20 s at which all three blade-pitch channels are at least 89.9 deg; and (c) absolute `RotSpeed` at the final 90 s sample. Save exactly one CSV row to `/home/user/Desktop/summary.txt` as `power_below_100_time_s,full_feather_time_s,final_rotor_speed_rpm`, using six decimal places. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/aero_shutdown.dat",
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/elasto_shutdown.dat",
+    "/home/user/Desktop/inflow_shutdown.dat",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/servo_shutdown.dat",
+    "/home/user/Desktop/shutdown_case.fst",
+    "/home/user/Desktop/shutdown_case.log",
+    "/home/user/Desktop/shutdown_case.out",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

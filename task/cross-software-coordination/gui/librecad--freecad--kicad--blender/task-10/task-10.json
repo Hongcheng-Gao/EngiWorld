@@ -1,0 +1,97 @@
+{
+  "id": "cross-software-coordination--gui--librecad--freecad--kicad--blender--task-10--ubuntu",
+  "snapshot": "freecad-librecad-kicad-blender",
+  "instruction": "Paths for the installed applications: LibreCAD: `/usr/bin/librecad`; FreeCAD: `/usr/bin/freecad`; KiCad: `/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage`; Blender: `/home/user/Applications/blender-4.2.3-linux-x64/blender`. Required four-software transfer workflow: LibreCAD -> FreeCAD -> KiCad -> Blender. Start from the provided seed DXF /home/user/Desktop/seed_optical_gate_fixture.dxf; do not start from a blank or unrelated drawing. Run the stages in order. Each stage must read the preceding stage output, and every required intermediate file must be saved on the Desktop. The design token for this task is EW4G10; keep this token visible in the DXF labels and KiCad silkscreen. The Blender output must visibly consume the stage-2 STL and stage-3 SVG through Blender's native import/export operations.\n\nDesign goal: U-shaped optical gate fixture with emitter and receiver alignment. The mechanical target is a U-fixture scene showing emitter and receiver pockets connected by a red beam path; the electronics target is an optical-gate PCB with IR emitter, phototransistor, sync connector, gain trimmer, and test pads.\n\n1. LibreCAD stage: open /home/user/Desktop/seed_optical_gate_fixture.dxf, use it as the starting drawing, remove all GUIDE entities, and save /home/user/Desktop/stage1_optical_gate_fixture.dxf. Use millimeters and layers OUTLINE, BEAM_SLOT, HOLE, LABEL. Draw one closed 135 mm x 85 mm OUTLINE and one closed positive-area central BEAM_SLOT region that reaches the top boundary to define the U-shaped opening. Include exactly these HOLE circles: (12,12) r2.4; (123,12) r2.4; (12,73) r2.4; (123,73) r2.4; (35,42.5) r3; (100,42.5) r3. Add EW4G10, EMITTER, RECEIVER, ALIGN on LABEL.\n2. FreeCAD stage: import the stage1 DXF. Create a watertight 135 x 85 x 32 mm mechanical body with the full-height U opening and six real through-holes, and export /home/user/Desktop/stage2_optical_gate_fixture.stl. From the same model export one simple 135 x 85 board-interface outline with visible FREECAD_TO_KICAD and EW4G10 TEXT as /home/user/Desktop/stage2_optical_gate_fixture_handoff_outline.dxf.\n3. KiCad stage: create a native PCB using the handoff as one simple 135 x 85 Edge.Cuts outline and save /home/user/Desktop/stage3_optical_gate_fixture_board.kicad_pcb. Add native footprints referenced IR-D1, PHOTO-Q1, SYNC-J1, GAIN-RV1, TEST-TP1, and TEST-TP2, with at least two pads each and pad-bound functional nets VCC, GND, IR_DRIVE, PHOTO_SENSE, SYNC, and GAIN. Add F.SilkS text KICAD_TO_BLENDER, EDGE_FROM_STAGE2_HANDOFF, the handoff filename, EW4G10, and all six references. Retain FREECAD_TO_KICAD and EW4G10 as Dwgs.User text. Use PCBNEW Plot to create /home/user/Desktop/stage3_optical_gate_fixture_board_profile.svg from the same Edge.Cuts.\n4. Blender stage: import stage2 STL with File > Import > STL and stage3 SVG with File > Import > Scalable Vector Graphics (.svg). Keep both imported geometries visible, full scale, and aligned. Add two substantial visible pocket-rim meshes aligned to (35,42.5) and (100,42.5), and one substantial visible red emissive beam mesh spanning between them. Export glTF Binary as /home/user/Desktop/stage4_optical_gate_fixture.glb. Do not manually inject handoff metadata.\n\nRequired deliverables: /home/user/Desktop/stage1_optical_gate_fixture.dxf, /home/user/Desktop/stage2_optical_gate_fixture.stl, /home/user/Desktop/stage2_optical_gate_fixture_handoff_outline.dxf, /home/user/Desktop/stage3_optical_gate_fixture_board.kicad_pcb, /home/user/Desktop/stage3_optical_gate_fixture_board_profile.svg, /home/user/Desktop/stage4_optical_gate_fixture.glb.\n\n[Software] Use LibreCAD first, then FreeCAD, then KiCad, then Blender. Do not skip stages, reorder stages, or recreate the final result in only one software package.",
+  "source": "https://github.com/LibreCAD/LibreCAD/releases/tag/2.2.0.2; https://docs.librecad.org/en/2.2.0_a/; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2; https://wiki.freecad.org/Draft_DXF; https://wiki.freecad.org/Mesh_Export; https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#working-with-footprints; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#board-outlines; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html#plotting; https://docs.blender.org/manual/en/4.2/files/import_export/stl.html; https://docs.blender.org/manual/en/4.2/addons/import_export/curve_svg.html; https://docs.blender.org/manual/en/4.2/addons/import_export/scene_gltf2.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/seed_optical_gate_fixture.dxf",
+            "path": "/home/user/Desktop/seed_optical_gate_fixture.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/librecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/usr/bin/freecad"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/kicad-10.0.2/kicad-10.0.2-x86_64.AppImage"
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/home/user/Applications/blender-4.2.3-linux-x64/blender"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad",
+    "freecad",
+    "kicad",
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/stage1_optical_gate_fixture.dxf",
+    "/home/user/Desktop/stage2_optical_gate_fixture.stl",
+    "/home/user/Desktop/stage2_optical_gate_fixture_handoff_outline.dxf",
+    "/home/user/Desktop/stage3_optical_gate_fixture_board.kicad_pcb",
+    "/home/user/Desktop/stage3_optical_gate_fixture_board_profile.svg",
+    "/home/user/Desktop/stage4_optical_gate_fixture.glb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "metric": {
+      "name": "four_gui_transfer_completion",
+      "direction": "maximize",
+      "output_field": "score",
+      "baseline_score": 0.0,
+      "max_score": 1.0
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

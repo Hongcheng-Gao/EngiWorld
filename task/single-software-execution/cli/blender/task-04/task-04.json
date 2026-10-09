@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--blender--task-04--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "Procedural Tree with LOD. `/home/user/Desktop/scene.blend` contains a single mesh object named `Tree` sitting at the world origin with a minimal (one-vertex) mesh datablock. Launch Blender by running `blender` from a terminal. Before starting the work, use `/opt/blender/blender` for Blender command-line or background runs when working on `scene.blend`.\n\nA Geometry-Nodes modifier named `GN_Tree` is already attached as a pass-through placeholder (its node tree only wires Group Input straight to Group Output with no LOD input, and there are no sub-node-groups). Your task is to rebuild that Geometry Nodes setup on `Tree` so that a single integer input named `LOD` (range 0..3) on the modifier controls how much geometry the tree shows, with the 3 stages cleanly delegated to 3 named inner node groups. Save the result as `/home/user/Desktop/answer.blend`. ## Required setup 1. Keep the object `Tree` (type MESH) in place. Do NOT apply any modifier; the Geometry-Nodes modifier must remain live so graders can flip its `LOD` input. 2. Make sure `Tree` has exactly one modifier of type `NODES` (you may rename/replace the placeholder). Its node group becomes the TOP-LEVEL procedural tree graph; a natural name is `TreeLOD`. 3. The top-level group must expose an integer interface input socket named `LOD` (default 3), and a Geometry input and Geometry output socket. 4. Inside `bpy.data.node_groups` there must exist THREE separate Geometry-Node groups, each referenced by the top-level group via `GeometryNodeGroup` nodes: - `Trunk` - emits the trunk geometry (self-seeded, e.g. a tube built from Mesh Line -> Mesh to Curve -> Curve to Mesh with a circle profile). - `Branches` - takes the trunk geometry as input and outputs trunk + several branch tubes joined together. - `Leaves` - takes trunk+branches and outputs trunk+branches + a foliage cloud (e.g. Distribute Points on Faces -> Instance on Points a small cube -> Realize Instances -> Join). 5. Inside the top-level group, gate the three inner groups with Switch nodes (`GeometryNodeSwitch`, input_type GEOMETRY) driven by Compare-Integer nodes on the `LOD` input, so that: - LOD = 0 -> only the `Trunk` sub-group contributes; evaluated vertex count is between 50 and 400. - LOD = 1 -> trunk + branches (small set of branches is fine). - LOD = 2 -> trunk + branches (at least as many verts as LOD=1). - LOD = 3 -> trunk + branches + leaves; evaluated vertex count grows by at least 100 over LOD=0. 6. The evaluated bounding box of `Tree` at LOD=3 must span at least 1 Blender Unit in Z (so the tree is actually tree-shaped, not flat). ## Requirements 1. `/home/user/Desktop/answer.blend` exists and opens in Blender 4.1. 2. Mesh object named `Tree` exists in the scene. 3. `Tree` has a live `NODES` modifier; its node group exposes an integer interface input socket named exactly `LOD`. 4. `bpy.data.node_groups` contains node groups named exactly `Trunk`, `Branches`, `Leaves`, AND the top-level group references all three via `GeometryNodeGroup` nodes. 5. With the modifier's `LOD` input set to 0, the evaluated mesh (via `obj.evaluated_get(depsgraph).to_mesh()`) has between 50 and 400 vertices (trunk only). 6. With `LOD` set to 3, evaluated vertex count is at least 100 more than at LOD=0 (leaves are present). 7. Monotonic growth across LOD sweep: vcount(LOD=0) < vcount(LOD=1) <= vcount(LOD=2) < vcount(LOD=3). 8. At LOD=3 the evaluated bounding-box Z-span is at least 1.0 BU. 9. The Geometry-Nodes modifier must NOT be applied; the LOD input must remain editable.",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://www.loc.gov/preservation/digital/formats/fdd/fdd000507.shtml",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/scene.blend",
+            "path": "/home/user/Desktop/scene.blend"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

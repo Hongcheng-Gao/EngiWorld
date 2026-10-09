@@ -1,0 +1,101 @@
+{
+  "id": "single-software-execution--cli--blender--task-17--ubuntu",
+  "snapshot": "Blender-4.2.3",
+  "instruction": "PBR Texture Set -> Shader Graph Wiring `/home/user/Desktop/sphere.blend` contains a UV sphere `Sphere` at the origin with a bare Principled BSDF material (nodes enabled, no texture wiring), a camera at (0, -3, 0) looking at the origin, and a sun light. Launch Blender by running `blender` from a terminal. Use `/opt/blender/blender` for Blender command-line or background runs when working on `sphere.blend`.\n\nThe render engine is Blender Eevee Next at 512x512. Alongside the blend, `/home/user/Desktop/textures/` contains four 512x512 PNGs: - `albedo.png` - warm orange flat color (target 0.7, 0.3, 0.2) - `normal.png` - flat tangent-space normal (0.5, 0.5, 1.0) - `roughness.png` - moderate roughness (0.4 gray) - `metallic.png` - non-metallic (0.0 black) Your task is to wire the four textures into the sphere's Principled BSDF with the correct colorspace per channel, then render the scene and save both the .blend and the render. ## Required shader graph 1. Add four Image Texture nodes, one per PNG: - `albedo_tex` - load `textures/albedo.png`, colorspace `sRGB` - `normal_tex` - load `textures/normal.png`, colorspace `Non-Color` - `roughness_tex` - load `textures/roughness.png`, colorspace `Non-Color` - `metallic_tex` - load `textures/metallic.png`, colorspace `Non-Color` Set `image.colorspace_settings.name` BEFORE the image is used in the shader graph so the colorspace takes effect. 2. Add a Normal Map node (`ShaderNodeNormalMap`). 3. Wire the graph as follows: - `albedo_tex.Color` -> Principled BSDF `Base Color` - `normal_tex.Color` -> `Normal Map` `Color` - `Normal Map.Normal` -> Principled BSDF `Normal` - `roughness_tex.Color` -> Principled BSDF `Roughness` - `metallic_tex.Color` -> Principled BSDF `Metallic` The Principled BSDF output must still drive the Material Output. 4. Render the scene at 512x512 using Eevee Next and save: - the .blend to `/home/user/Desktop/answer.blend` - the rendered image to `/home/user/Desktop/render.png` ## Requirements 1. `/home/user/Desktop/answer.blend` exists and opens cleanly. 2. The `Sphere` mesh is present with a node-based material. 3. The material contains at least 4 `ShaderNodeTexImage` nodes. 4. The material contains a `ShaderNodeBsdfPrincipled` and a `ShaderNodeNormalMap`. 5. The albedo image node has `colorspace_settings.name == 'sRGB'`. 6. The roughness, normal, and metallic image nodes all have `colorspace_settings.name == 'Non-Color'`. 7. The links in the saved .blend show: - albedo texture's Color connected to Principled's `Base Color`. - roughness texture's Color connected to Principled's `Roughness`. - metallic texture's Color connected to Principled's `Metallic`. - Principled's `Normal` input traces back through a `ShaderNodeNormalMap` whose Color input is driven by the normal texture's Color. 8. A 512x512 Eevee Next render of the saved scene, sampled in a 30x30 ROI at the projected pixel of the world origin, has mean R/G/B within +-0.18 of the albedo target (0.7, 0.3, 0.2).",
+  "source": "https://docs.blender.org/manual/en/4.1/; https://docs.blender.org/api/4.1/; https://developer.blender.org/docs/release_notes/4.1/; https://opencolorio.org/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/sphere.blend",
+            "path": "/home/user/Desktop/sphere.blend"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/textures/albedo.png",
+            "path": "/home/user/Desktop/textures/albedo.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/textures/metallic.png",
+            "path": "/home/user/Desktop/textures/metallic.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/textures/normal.png",
+            "path": "/home/user/Desktop/textures/normal.png"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/textures/roughness.png",
+            "path": "/home/user/Desktop/textures/roughness.png"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "blender"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.blend",
+    "/home/user/Desktop/render.png"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

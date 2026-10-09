@@ -389,13 +389,13 @@ def _agent_config_for_task(agent_config: AgentConfig, task: TaskSpec) -> AgentCo
         if not eval_mode:
             eval_mode = infer_engiworld_eval_mode(base_task_id)
 
-    # Open-ended tasks start without engineering applications. Their terminal
+    # Open-Environment Engineering tasks start without engineering applications. Their terminal
     # interface must allow installing tools and choosing an unrestricted workflow.
-    if task_kind == "open-ended" and eval_mode in {"cli", "cli-text", "extreme"}:
+    if task_kind == "open-environment-engineering" and eval_mode in {"cli", "cli-text", "extreme"}:
         eval_mode = "extreme"
         experiment_profile = "open_engineering"
 
-    if not experiment_profile and canonical_prefix(base_task_id).startswith("image-based-modeling/"):
+    if not experiment_profile and canonical_prefix(base_task_id).startswith("vision-guided-modeling/"):
         experiment_profile = (
             "cli_message_no_readimg" if eval_mode == "cli-text"
             else "cli_message_initial" if eval_mode in {"cli", "extreme"}
@@ -430,21 +430,21 @@ def _agent_config_for_task(agent_config: AgentConfig, task: TaskSpec) -> AgentCo
     terminal_mode = eval_mode in {"cli", "cli-text", "extreme"}
     open_ended_limit = (agent_config.top10_max_steps if agent_config.top10_max_steps is not None
                         else agent_config.open_ended_max_steps)
-    if task_kind == "open-ended" and open_ended_limit is not None:
+    if task_kind == "open-environment-engineering" and open_ended_limit is not None:
         max_steps = open_ended_limit
     elif (
-        task_kind == "multi-software"
+        task_kind == "cross-software-coordination"
         and terminal_mode
         and agent_config.cli_multi_max_steps is not None
     ):
         max_steps = agent_config.cli_multi_max_steps
     elif (
-        task_kind == "multi-software"
+        task_kind == "cross-software-coordination"
         and not terminal_mode
         and agent_config.gui_multi_max_steps is not None
     ):
         max_steps = agent_config.gui_multi_max_steps
-    elif task_kind == "multi-software" and agent_config.multi_max_steps is not None:
+    elif task_kind == "cross-software-coordination" and agent_config.multi_max_steps is not None:
         max_steps = agent_config.multi_max_steps
     elif task_kind == "software-selection" and agent_config.open_max_steps is not None:
         max_steps = agent_config.open_max_steps

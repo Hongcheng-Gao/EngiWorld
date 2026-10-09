@@ -1,0 +1,91 @@
+{
+  "id": "single-software-execution--gui--altium-designer--task-20--windows",
+  "snapshot": "altium-designer-17",
+  "instruction": "The opened `template.PCBDwf` is a native Altium Draftsman template. Altium Designer is installed at `D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE`; open `ready_to_release.PcbDoc` there. Use `C:\\Users\\user\\Desktop\\ready_to_release.PcbDoc` and the release specification in `C:\\Users\\user\\Desktop\\requirements.md` to build an editable native Draftsman release document. Consult `C:\\Users\\user\\Desktop\\ready_to_release.BomDoc` when selecting and configuring the document's BOM fields. Include a fabrication drawing linked to the board, a drill table, a layer-stack legend, fabrication notes, a title block, and dimension annotations. Also include at least two assembly drawings, a native BOM table configured with Designator, Quantity, and at least one additional field from the supplied BOM source, assembly notes, revision information, and a title block. Save the completed native document as `C:\\Users\\user\\Desktop\\release.PCBDwf`.",
+  "source": "https://www.altium.com/documentation/altium-designer; https://www.altium.com/documentation/altium-designer/pcb; https://www.altium.com/documentation/altium-designer/pcb?showChildren=false#configuring-design-rules; https://www.altium.com/documentation/altium-designer/schematic/parameters; https://www.altium.com/documentation/altium-designer/schematic/multi-sheet-hierarchical-designs; https://www.altium.com/documentation/altium-designer/preparing-for-manufacture/output-jobs; https://www.altium.com/documentation/altium-designer/draftsman?version=19",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/requirements.md",
+            "path": "C:\\Users\\user\\Desktop\\requirements.md"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/template.PCBDwf",
+            "path": "C:\\Users\\user\\Desktop\\template.PCBDwf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/ready_to_release.PcbDoc",
+            "path": "C:\\Users\\user\\Desktop\\ready_to_release.PcbDoc"
+          },
+          {
+            "local_path": "task-20/init_file/ready_to_release.BomDoc",
+            "path": "C:\\Users\\user\\Desktop\\ready_to_release.BomDoc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "D:\\Program Files (x86)\\Altium\\AD17\\DXP.EXE",
+          "C:\\Users\\user\\Desktop\\template.PCBDwf"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "altium-designer"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\release.PCBDwf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--cli--archicad--task-20--windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Update C:\\Users\\user\\Desktop\\init.ifc in the opened Graphisoft/Archicad environment using the official Graphisoft/Archicad command-line or automation interfaces available there, and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Before starting the work, invoke Archicad from `C:\\Program Files\\GRAPHISOFT\\Archicad 27\\Archicad.exe` when running the automation. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a four-level community learning and care centre with public ground-floor spaces, a learning level, a care level, and a roof garden/plant level. The client wants the after-school suite, care quiet room, family consult support, emergency store, and roof therapy garden clearly coordinated while preserving the entry hall, community hall, main stair circulation, roof plant, courtyard, and overall facade rhythm. Add the missing records and access/daylight/separation items so the operator can hand over education, care, service, and rooftop activities as distinct managed zones. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"annotations\":[{\"class\":\"IfcSpace\",\"name\":\"ENTRY-HALL\",\"tokens\":[\"AFTER SCHOOL ARRIVAL\",\"PUBLIC ROUTE\",\"COMMUNITY CENTRE\"]},{\"class\":\"IfcSpace\",\"name\":\"LIBRARY\",\"tokens\":[\"AFTER SCHOOL SUPPORT\",\"LEARNING\",\"QUIET STUDY\"]},{\"class\":\"IfcSpace\",\"name\":\"GROUP-ROOM\",\"tokens\":[\"CARE QUIET ROOM\",\"THERAPY SUPPORT\",\"LOW STIMULUS\"]},{\"class\":\"IfcSpace\",\"name\":\"ROOF-GARDEN\",\"tokens\":[\"THERAPY GARDEN\",\"ROOFTOP\",\"SUPERVISED AMENITY\"]}],\"products\":[{\"class\":\"IfcSpace\",\"name\":\"AFTER-SCHOOL-SUITE\",\"predefined\":\"INTERNAL\",\"storey\":\"Learning Level\",\"tokens\":[\"AFTER SCHOOL\",\"LEARNING\",\"SUPERVISED\",\"MANAGED ZONE\"]},{\"class\":\"IfcSpace\",\"name\":\"CARE-QUIET-ROOM\",\"predefined\":\"INTERNAL\",\"storey\":\"Care Level\",\"tokens\":[\"CARE QUIET ROOM\",\"LOW STIMULUS\",\"THERAPY\",\"MANAGED ZONE\"]},{\"class\":\"IfcSpace\",\"name\":\"FAMILY-CONSULT\",\"predefined\":\"INTERNAL\",\"storey\":\"Care Level\",\"tokens\":[\"FAMILY CONSULT\",\"PRIVATE\",\"CARE\",\"SUPPORT\"]},{\"class\":\"IfcSpace\",\"name\":\"EMERGENCY-STORE\",\"predefined\":\"INTERNAL\",\"storey\":\"Ground Floor\",\"tokens\":[\"EMERGENCY STORE\",\"SERVICE\",\"PUBLIC HALL SUPPORT\",\"RESILIENCE\"]},{\"class\":\"IfcSpace\",\"name\":\"ROOF-THERAPY-GARDEN\",\"predefined\":\"EXTERNAL\",\"storey\":\"Roof Garden\",\"tokens\":[\"THERAPY GARDEN\",\"ROOFTOP\",\"SUPERVISED\",\"CARE\"]},{\"class\":\"IfcDoor\",\"name\":\"AFTER-SCHOOL-ENTRY-DOOR\",\"predefined\":\"DOOR\",\"storey\":\"Learning Level\",\"tokens\":[\"AFTER SCHOOL\",\"SUPERVISED\",\"ACCESS CONTROL\",\"DOOR\"]},{\"class\":\"IfcDoor\",\"name\":\"CARE-QUIET-DOOR\",\"predefined\":\"DOOR\",\"storey\":\"Care Level\",\"tokens\":[\"CARE QUIET ROOM\",\"LOW STIMULUS\",\"ACCESS CONTROL\",\"DOOR\"]},{\"class\":\"IfcDoor\",\"name\":\"ROOF-THERAPY-DOOR\",\"predefined\":\"DOOR\",\"storey\":\"Roof Garden\",\"tokens\":[\"THERAPY GARDEN\",\"ROOF ACCESS\",\"SUPERVISED\",\"DOOR\"]},{\"class\":\"IfcWindow\",\"name\":\"CARE-QUIET-HIGH-WINDOW\",\"predefined\":\"WINDOW\",\"storey\":\"Care Level\",\"tokens\":[\"CARE QUIET ROOM\",\"HIGH WINDOW\",\"DAYLIGHT\",\"PRIVACY\"]},{\"class\":\"IfcWindow\",\"name\":\"AFTER-SCHOOL-LIBRARY-WINDOW\",\"predefined\":\"WINDOW\",\"storey\":\"Learning Level\",\"tokens\":[\"AFTER SCHOOL\",\"LIBRARY\",\"DAYLIGHT\",\"SUPERVISED\"]},{\"class\":\"IfcWall\",\"name\":\"CARE-ACOUSTIC-SCREEN\",\"predefined\":\"PARTITIONING\",\"storey\":\"Care Level\",\"tokens\":[\"ACOUSTIC SCREEN\",\"CARE QUIET ROOM\",\"LOW STIMULUS\",\"SEPARATION\"]},{\"class\":\"IfcWall\",\"name\":\"ROOF-THERAPY-WIND-SCREEN\",\"predefined\":\"PARTITIONING\",\"storey\":\"Roof Garden\",\"tokens\":[\"WIND SCREEN\",\"THERAPY GARDEN\",\"ROOFTOP\",\"SUPERVISED\"]}]}.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-20/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-20/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

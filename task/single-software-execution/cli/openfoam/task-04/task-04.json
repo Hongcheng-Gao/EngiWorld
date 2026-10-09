@@ -1,0 +1,67 @@
+{
+  "id": "single-software-execution--cli--openfoam--task-04--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "For this task, start with the incomplete OpenFOAM template `/home/user/Desktop/pipe_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve a deterministic fully developed laminar pipe case. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/pipe_laminar/`. Model a 5-degree axisymmetric wedge of a circular pipe aligned with x, with radius `R=0.05 m`, diameter `D=0.10 m`, and length `L=5.0 m` (50D). Use a single conformal block with `500 x 40 x 1` cells (20,000 total), one cell through the wedge, an empty collapsed axis, two wedge patches, and a no-slip outer wall. 2. Set a uniform inlet `U=(1 0 0) m/s`, outlet kinematic pressure `p=0`, and constant kinematic viscosity `nu=1e-4 m^2/s`, so `Re_D=U_bulk*D/nu=1000`. Use laminar momentum transport. The 50D length is the specified entrance-development method for the initially uniform inlet. 3. Configure `simpleFoam` for exactly 2000 SIMPLE iterations, ASCII output only at iteration 2000, and bounded linear-upwind velocity convection. Source `/opt/openfoam11/etc/bashrc`, run `blockMesh -case /home/user/Desktop/pipe_laminar` and retain `pipe_laminar/log.blockMesh`, then run `simpleFoam -case /home/user/Desktop/pipe_laminar` and retain `pipe_laminar/log.simpleFoam`; both must finish with `End`, and iteration 2000 must exist. Run `postProcess -case /home/user/Desktop/pipe_laminar -latestTime -func writeCellCentres` and retain `pipe_laminar/log.cellCentres`. 4. Write `/home/user/Desktop/postprocess.py`. Treat the 40 outlet-adjacent cell centers at `x>4.99 m` as the outlet profile, sorted by radius. For each center calculate the Hagen-Poiseuille reference `u(r)=2*U_bulk*(1-(r/R)^2)` with `U_bulk=1 m/s`, and save `/home/user/Desktop/outlet_profile.csv` with `radius_m,ux_mps,poiseuille_ux_mps`. The area-weighted RMS profile error, normalized by `U_bulk` and evaluated with radial weights, must be at most 5%. 5. Save `/home/user/Desktop/summary.txt` as one finite scalar `u_max`, the maximum simulated `Ux` among those 40 cells. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/pipe_base.tar",
+            "path": "/home/user/Desktop/pipe_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/pipe_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/pipe_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/outlet_profile.csv",
+    "/home/user/Desktop/pipe_laminar",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--solidcam--task-01--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Review plate_100x60x12.step in SOLIDWORKS with the SOLIDWORKS CAM add-in. Start SOLIDWORKS 2025 from the desktop shortcut and use its installed SOLIDWORKS CAM/CAMWorks add-in; there is no separate SolidCAM desktop program in this image. Using that part, create a Milling CAM-Part. Define rectangular stock with 2 mm extension on all X/Y sides and 1 mm extension in Z+. Set the Coordinate System origin at the stock top-face center with Z upward. Use an installed face mill or end mill to create a Face Milling operation on the top face, targeting a valid top-face finishing toolpath. Use the standard Face Milling operation and keep SOLIDWORKS CAM's default generated NC comments; do not rename operations just to add labels. Do not force exact tool station numbers, spindle speeds, feedrates, or internal tool-library IDs if SOLIDWORKS CAM's Technology Database assigns stable defaults; use suitable installed tool-library entries for the required operation types and let the posted NC program reflect those real CAM selections. Save the required output file(s) to the Desktop: C:\\Users\\User\\Desktop\\task-1.nc. Generate the required NC/G-code file(s) by using SOLIDWORKS CAM's normal Post Process workflow after calculating the toolpath, with an installed .ctl postprocessor from C:\\ProgramData\\SOLIDWORKS\\SOLIDWORKS CAM 2025\\Posts. For milling tasks, prefer m3axis-tutorial.ctl, mach_iii.ctl, or haas_vf3.ctl; for turning tasks, use an installed turning .ctl post such as fanuc_t2axis.ctl. If the generated program opens in NC Editor or is initially saved with a different extension, use Save As from that generated program to save the exact requested Desktop filename(s).",
+  "source": "SolidCAM 2.5D Milling: https://solidcam.com/cam-modules/25d-milling/ (SolidCAM); G-code reference: https://linuxcnc.org/docs/html/gcode/overview.html (LinuxCNC)",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/plate_100x60x12.step",
+            "path": "C:\\Users\\User\\Desktop\\plate_100x60x12.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe",
+          "C:\\Users\\User\\Desktop\\plate_100x60x12.step"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-1.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

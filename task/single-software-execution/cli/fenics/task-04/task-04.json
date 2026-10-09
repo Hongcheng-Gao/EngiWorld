@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--fenics--task-04--ubuntu",
+  "snapshot": "FEniCS",
+  "instruction": "A legacy FEniCS/DOLFIN heat-conduction template `/home/user/Desktop/thermal_subdomain_base.py` is provided. Run the script with the legacy `dolfin` API used by the template (for example, FEniCS/DOLFIN 2019.1.0), not DOLFINx. Before starting the work, run legacy FEniCS with `/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy python` when working on `thermal_subdomain_base.py`.\n\nComplete the following: 1. Modify and generate `/home/user/Desktop/thermal.py`: - Use `MeshFunction(\"size_t\", mesh, 2)` to mark left and right subdomains - Thermal conductivity: left half `k=50`, right half `k=10` - Left Dirichlet boundary `100°C`, right Dirichlet boundary `20°C` - Solve the steady temperature field 2. Extract and save to `/home/user/Desktop/summary.txt`: - Temperature at interface `x=50 mm` - Temperature at point `(25, 25)` Format: `interface_temp, center_temp`",
+  "source": "https://olddocs.fenicsproject.org/dolfin/2019.1.0/python/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/thermal_subdomain_base.py",
+            "path": "/home/user/Desktop/thermal_subdomain_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "fenics"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/summary.txt",
+    "/home/user/Desktop/thermal.py"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "/home/user/miniconda3/bin/conda run --no-capture-output --prefix /home/user/miniconda3/envs/fenics-legacy /home/user/miniconda3/envs/fenics-legacy/bin/python /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

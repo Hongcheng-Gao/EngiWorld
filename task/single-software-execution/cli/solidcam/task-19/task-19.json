@@ -1,0 +1,60 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-19--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Operate with command-line automation through the installed SOLIDWORKS CAM 2025 environment and CAMWorks API; do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. On this machine, SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\slot_channel_part.step and read C:\\Users\\User\\Desktop\\tools.csv. Use a single top-side 3-axis milling setup with the supplied tool data to machine the visible straight slots or channels and finish the outside Profile/Contour. Do not use rotary, indexed, or simultaneous 5-axis machining, and do not output A/B/C-axis motion. Save the posted NC output exactly as C:\\Users\\User\\Desktop\\task-19.nc.",
+  "source": "https://camworks.com/modules/25axis-milling/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/slot_channel_part.step",
+            "path": "C:\\Users\\User\\Desktop\\slot_channel_part.step"
+          },
+          {
+            "local_path": "task-19/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-19.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--librecad--task-08--ubuntu",
+  "snapshot": "LibreCAD2.2.0.2",
+  "instruction": "Begin by reviewing guih02_office_suite_seed.dxf in LibreCAD. Launch LibreCAD from `/usr/bin/librecad` before opening `guih02_office_suite_seed.dxf`. Complete the hard office suite plan using exact millimeter coordinates and delete all GUIDE layer entities before saving. Draw WALL segments (0,0)-(2550,0), (3450,0)-(10000,0), (10000,0)-(10000,7000), (10000,7000)-(0,7000), (0,7000)-(0,0), (4200,0)-(4200,2600), (4200,3500)-(4200,7000), (4200,3500)-(6500,3500), and (7400,3500)-(10000,3500). Add DOOR leaf lines (2550,0)-(2550,900), (4200,2600)-(5100,2600), (6500,3500)-(6500,4400), and DOOR arcs radius 900 at centers (2550,0), (4200,2600), and (6500,3500). Add WINDOW segments (1200,0)-(2300,0), (5200,7000)-(7000,7000), and (10000,4200)-(10000,5600). Add room labels OFFICE A, OFFICE B, MEETING and DIM labels 10000 and 7000. Save the result as /home/user/Desktop/guih02_office_suite_completed.dxf.",
+  "source": "https://docs.librecad.org/en/2.2.0_a/ref/tools.html; https://docs.librecad.org/en/2.2.0_a/ref/fundamentals.html; https://docs.librecad.org/en/2.2.0_a/guide/gui.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/guih02_office_suite_seed.dxf",
+            "path": "/home/user/Desktop/guih02_office_suite_seed.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "librecad",
+          "/home/user/Desktop/guih02_office_suite_seed.dxf"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(10); pyautogui.press(\"enter\")"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "librecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/guih02_office_suite_completed.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

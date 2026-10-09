@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--openscad--task-11--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "In OpenSCAD, open /home/user/Desktop/task-031_initial.scad. To use OpenSCAD, run `openscad` from a terminal. On this machine, run OpenSCAD from `/usr/bin/openscad` when working on `task-031_initial.scad`.\n\nRender /home/user/Desktop/task-031_initial.scad from the command line and export the OpenSCAD CSG tree file /home/user/Desktop/task-031_output.csg. Do not export STL. The CSG output must preserve key structures such as union, difference, cube, and cylinder.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export; https://openscad.org/cheatsheet/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-11/init_file/task-031_initial.scad",
+            "path": "/home/user/Desktop/task-031_initial.scad"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-031_output.csg"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-11/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

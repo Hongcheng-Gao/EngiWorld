@@ -1,0 +1,109 @@
+{
+  "id": "single-software-execution--gui--kicad--task-18--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Board-Setup Manufacturing Defaults `board.kicad_pro` and `board.kicad_pcb` form a loadable KiCad 10.0.2 PCB worksheet project. For this task, start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. The board already contains two routed rails, board-outline graphics, a fabrication note, and a courtyard guide. Its current board-setup defaults were copied from an overly coarse template. `/home/user/Desktop/fab_setup.json` lists the routing minima and default drawing/text settings that the fabrication team expects. Use the opened board project in KiCad PCB Editor, apply Board Setup values from `/home/user/Desktop/fab_setup.json`, and save the project without changing the worksheet board geometry or routed items. Requirements: 1. `board.kicad_pro`: `board.design_settings.rules` must match the routing minima in `/home/user/Desktop/fab_setup.json`. 2. `board.kicad_pro`: `board.design_settings.defaults` must match the silkscreen, fabrication-text, and courtyard settings in `/home/user/Desktop/fab_setup.json`. 3. `board.kicad_pcb` must remain a loadable copy of the worksheet board, preserving its outline, two routed rails, fabrication note, and courtyard guide. 4. No project changes outside `board.design_settings.rules` and `board.design_settings.defaults` are allowed. Save the finished project files as `/home/user/Desktop/board.kicad_pro` and `/home/user/Desktop/board.kicad_pcb`.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/board.kicad_pcb",
+            "path": "/home/user/Desktop/board.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/board.kicad_pro",
+            "path": "/home/user/Desktop/board.kicad_pro"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/fab_setup.json",
+            "path": "/home/user/Desktop/fab_setup.json"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "pcbnew",
+          "/home/user/Desktop/board.kicad_pcb"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time, subprocess; time.sleep(8); w, h = pyautogui.size(); exec(\"for _ in range(4):\\n    if 'KiCad Setup' in subprocess.run(['wmctrl', '-l'], capture_output=True, text=True).stdout:\\n        pyautogui.click(int(w * 0.617), int(h * 0.730))\\n        time.sleep(1)\"); time.sleep(3)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/board.kicad_pcb",
+    "/home/user/Desktop/board.kicad_pro"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

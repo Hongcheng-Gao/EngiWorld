@@ -1,0 +1,86 @@
+{
+  "id": "single-software-execution--gui--eagle--task-08--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Refer to `loose.brd`, tighten its design rules in the EAGLE DRC dialog, and save the updated board as `/home/user/Desktop/answer.brd`. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open `loose.brd` there. Required thresholds: `mdWireWire` >= `0.15 mm`, `mdWirePad` >= `0.15 mm`, `mdWireVia` >= `0.15 mm`, `mdDrill` >= `0.30 mm`, `msWidth` >= `0.15 mm`, and `msDrill` >= `0.30 mm`",
+  "source": "https://github.com/ArduinoHannover/Eagle/blob/master/dru/PCBway.dru",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/loose.brd",
+            "path": "/home/user/Desktop/loose.brd"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/loose.brd"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(8); w, h = pyautogui.size(); pyautogui.click(w/2 + 100, h/2 + 25); time.sleep(2); pyautogui.click(w/2 + 213, h/2 + 146); time.sleep(2); pyautogui.click(w/2 - 80, h/2 + 68); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.brd"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

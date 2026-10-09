@@ -1,0 +1,72 @@
+{
+  "id": "single-software-execution--cli--autocad--task-13--windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "Open only the DXF file(s) from the Desktop path(s): C:\\Users\\user\\Desktop\\base.dxf, C:\\Users\\user\\Desktop\\arm.dxf, C:\\Users\\user\\Desktop\\bracket.dxf, C:\\Users\\user\\Desktop\\pin.dxf, C:\\Users\\user\\Desktop\\cap.dxf in AutoCAD. Launch AutoCAD with `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`.\n\nImport base.dxf, arm.dxf, bracket.dxf, cap.dxf, and pin.dxf. Draw a robotic fixture layout: base rectangle (0,0)-(180,45), arm rectangle (40,55)-(155,75), closed triangular bracket outline through vertices (20,45), (70,45), (20,95), cap rectangle (155,52)-(185,78), pin circles at (55,65) and (155,65) radius 7, and text ACAD-33. Use OUTLINE for base, arm, bracket, and cap geometry, HOLE for pin circles, and ANNOTATION for text. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/robotic_fixture/base.dxf",
+            "path": "C:\\Users\\user\\Desktop\\base.dxf"
+          },
+          {
+            "local_path": "task-13/init_file/arm.dxf",
+            "path": "C:\\Users\\user\\Desktop\\arm.dxf"
+          },
+          {
+            "local_path": "task-13/init_file/bracket.dxf",
+            "path": "C:\\Users\\user\\Desktop\\bracket.dxf"
+          },
+          {
+            "local_path": "task-13/init_file/pin.dxf",
+            "path": "C:\\Users\\user\\Desktop\\pin.dxf"
+          },
+          {
+            "local_path": "task-13/init_file/cap.dxf",
+            "path": "C:\\Users\\user\\Desktop\\cap.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\autocad_result.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

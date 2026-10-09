@@ -8,17 +8,17 @@ The 1,301 tasks use a common directory layout:
 <category>/<gui|cli>/<software or software1--software2>/<task-number>/
 ```
 
-| Directory category | Paper task type |
-|---|---|
-| `single-software` | Single-Software Execution |
-| `software-selection` | Software Selection |
-| `image-based-modeling` | Vision-Guided Modeling |
-| `quantitative-design` | Design Optimization |
-| `multi-software` | Cross-Software Coordination |
-| `open-ended` | Open-Environment Engineering |
+| Directory category | Paper task type | Full tasks |
+|---|---|---:|
+| `single-software-execution` | Single-Software Execution | 931 |
+| `software-selection` | Software Selection | 140 |
+| `vision-guided-modeling` | Vision-Guided Modeling | 120 |
+| `design-optimization` | Design Optimization | 40 |
+| `cross-software-coordination` | Cross-Software Coordination | 60 |
+| `open-environment-engineering` | Open-Environment Engineering | 10 |
 
 Software names are lowercase, without version numbers. Multiple names are joined
-with `--`. Open-ended tasks use `cli/agent-selected/`. Interface folders contain
+with `--`. Open-Environment Engineering tasks use `cli/agent-selected/`. Interface folders contain
 only the modes available in that category.
 
 Each task contains a `task-*.json` definition, `init_file/` inputs, and its evaluator
@@ -32,3 +32,5 @@ Use either a task directory or its JSON ID with `python -m engiworld.local_eval 
 Follow the [quick start](../README.md) to run an evaluation.
 
 The paper's 306-task main-experiment subset is listed in [`splits/main-306.txt`](splits/main-306.txt). The scheduler accepts it through `--task-id-file ../task/splits/main-306.txt`.
+
+Directory categories and JSON IDs follow the updated paper taxonomy as of 2026-10-09. `task/aliases.json` preserves historical JSON IDs and directory names; the runtime continues to accept them for task selection. See the full [ID migration map](id-migration-20261009.json) and [task taxonomy](taxonomy.json).

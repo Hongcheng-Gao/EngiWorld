@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--openscad--task-16--ubuntu",
+  "snapshot": "OpenSCAD2021.01",
+  "instruction": "Start with /home/user/Desktop/task-036_initial.scad in OpenSCAD. To use OpenSCAD, run `openscad` from a terminal. At the start of the task, run OpenSCAD from `/usr/bin/openscad` when working on `task-036_initial.scad`.\n\nEdit it. On the base plate, create a centered 3 by 2 cylindrical boss array. Each boss must be diameter 14 mm and height 10 mm, and each boss must contain a centered through hole of diameter 4 mm. The X pitch is 40 mm, the Y pitch is 45 mm, and the array must be centered. Export /home/user/Desktop/task-036_output.stl.",
+  "source": "https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Using_OpenSCAD_in_a_command_line_environment; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/The_OpenSCAD_Language; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Transformations; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/CSG_Modelling; https://en.wikibooks.org/wiki/OpenSCAD_User_Manual/Export",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/task-036_initial.scad",
+            "path": "/home/user/Desktop/task-036_initial.scad"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openscad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-036_output.stl"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

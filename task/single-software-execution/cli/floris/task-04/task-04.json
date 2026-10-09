@@ -1,0 +1,61 @@
+{
+  "id": "single-software-execution--cli--floris--task-04--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "An incomplete script `/home/user/Desktop/aep_base.py` is provided. Use Python with `floris==4.6.4` (for example, `from floris import FlorisModel`). Before starting the work, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program.\n\nComplete the following from the command line: 1. Write `/home/user/Desktop/aep.py` for two `nrel_5MW` turbines at `layout_x=[0,630]`, `layout_y=[0,0]`. Represent three conditions with wind directions `[270,280,290] deg`, wind speeds `[8,8,8] m/s`, turbulence intensities `[0.06,0.06,0.06]`, and frequencies `[0.5,0.3,0.2]`, either with `WindRose` or three vectorized findices. Call `run()`, convert each condition's farm total from W to kW, and compute `aep_gwh = sum(farm_total_kw * frequency) * 8760 / 1e6`. 2. Execute the script and write `/home/user/Desktop/summary.txt` as `wd270_total_kw, wd280_total_kw, wd290_total_kw, aep_gwh`. 3. Do not use a GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/aep_base.py",
+            "path": "/home/user/Desktop/aep_base.py"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/aep.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

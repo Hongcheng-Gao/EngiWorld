@@ -1,0 +1,74 @@
+{
+  "id": "vision-guided-modeling--gui--solidworks--task-13--windows",
+  "snapshot": "SolidWorks-2025",
+  "instruction": "Use SOLIDWORKS 2025 through visible GUI interaction only, treating the accompanying reference image as the primary public geometry source. Inspect every orthographic and isometric view, printed dimension, centreline, hidden line, and annotation in the reference image before modelling. Then read C:\\Users\\User\\Desktop\\supplement.csv only for datum, feature direction, depth, array phase, and connectivity facts intentionally omitted from the reference image; it does not replace the geometry shown in the reference image. Interpret the orthographic views using ISO first-angle projection. Reconstruct the mechanical part in millimetres as exactly one valid connected solid. Do not infer dimensions from the task title or evaluator, and do not import or use any ground-truth STEP. Launch SOLIDWORKS with C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe when needed. Use SOLIDWORKS' visible modeling and export tools. Do not use PowerShell, Python, VBA/C# macros, API/COM automation, or external scripts to bypass GUI actions. Export only the final solid as C:\\Users\\User\\Desktop\\result.step using millimetres and the default model coordinate system. Clear all selections before STEP export so the complete body is exported. Do not create metrics.json or reference_dimensions.csv; they are evaluator artifacts.",
+  "source": "https://help.solidworks.com/2025/English/solidworks/sldworks/HIDD_EXPORT_OPTIONS_STEP.htm",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-13/init_file/supplement.csv",
+            "path": "C:\\Users\\User\\Desktop\\supplement.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time; time.sleep(20); pyautogui.press('enter'); time.sleep(1); pyautogui.press('enter'); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidworks"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\result.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-13/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--gui--eagle--task-02--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Repair `broken_amp.sch` with minimal edits and save `/home/user/Desktop/answer.sch`; do not redraw the circuit. Start EAGLE from `/opt/eagle-7.7.0/bin/eagle` and open `broken_amp.sch` there. Preserve the total part and net counts. Fix the four seeded structural faults: one duplicate net name, one net with only a single pin reference, one empty R/C/L value, and one physical part/gate/pin assignment that is incorrectly shared by two nets. Every final net must have at least two pin references, net names must be unique within a sheet, every R/C/L refdes must have a nonempty value, every pin reference must name a defined part, and each physical pin may belong to only one net.",
+  "source": "https://www.autodesk.com/products/fusion-360/blog/schematic-basics-part-3-erc/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/broken_amp.sch",
+            "path": "/home/user/Desktop/broken_amp.sch"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "/opt/eagle-7.7.0/bin/eagle",
+          "/home/user/Desktop/broken_amp.sch"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui; import time; time.sleep(8); w, h = pyautogui.size(); pyautogui.click(w/2 + 100, h/2 + 25); time.sleep(2); pyautogui.click(w/2 + 213, h/2 + 146); time.sleep(2); pyautogui.click(w/2 - 80, h/2 + 68); time.sleep(5)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/answer.sch"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

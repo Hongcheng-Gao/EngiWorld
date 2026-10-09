@@ -1,0 +1,78 @@
+{
+  "id": "single-software-execution--cli--kicad--task-07--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Two PCB designs are provided: `/home/user/Desktop/A.kicad_pcb` and `/home/user/Desktop/B.kicad_pcb`. Use KiCad 10.0.2; run `kicad` for the GUI or `kicad-cli` for scripting/headless use (use PATH or the full install path). For this workflow, the installed KiCad tools are `/usr/bin/kicad-cli`, `/usr/bin/pcbnew`, and `/usr/bin/eeschema`; use the one that matches the board or schematic operation.\n\nThe mixed-panel build ticket is `/home/user/Desktop/order.txt`; use it for slot origins, copy labels, refdes suffixing, rail dimensions, V-score guides, fiducials, and tooling holes.\n\nCreate `/home/user/Desktop/panel.kicad_pcb` as a KiCad PCB panel that satisfies that build ticket. Replicate the source board geometry and footprints into the requested slots without changing the source boards. Preserve the A-board UA* references and B-board UB* references, applying only the copy suffixes specified in the ticket. Add the panel frame and manufacturing features described in the ticket, and keep the finished panel inside the ticketed outer dimensions.",
+  "source": "https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html; https://dev-docs.kicad.org/en/file-formats/; https://gitlab.com/kicad/code/kicad/-/tags/10.0.2; https://yaqwsx.github.io/KiKit/latest/panelization/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/A.kicad_pcb",
+            "path": "/home/user/Desktop/A.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/B.kicad_pcb",
+            "path": "/home/user/Desktop/B.kicad_pcb"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-07/init_file/order.txt",
+            "path": "/home/user/Desktop/order.txt"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/panel.kicad_pcb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-07/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

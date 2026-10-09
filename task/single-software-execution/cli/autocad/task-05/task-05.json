@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--autocad--task-05--windows",
+  "snapshot": "AutoCAD2024",
+  "instruction": "With AutoCAD, open only the DXF file(s) from the Desktop path(s): C:\\Users\\user\\Desktop\\bracket_seed.dxf. Launch AutoCAD with `C:\\Program Files\\Autodesk\\AutoCAD 2024\\acad.exe`.\n\nImport bracket_seed.dxf. Draw a reinforced right-angle bracket with a closed L outline through vertices (0,0), (130,0), (130,25), (35,25), (35,100), and (0,100), add a diagonal CENTER gusset line from (35,25) to (100,0), add holes at (95,12.5) and (17.5,75) with radius 5, and add text ACAD-25. Use OUTLINE for the bracket outline, CENTER for the gusset line, HOLE for holes, and ANNOTATION for text. Export exactly one DXF deliverable named C:\\Users\\user\\Desktop\\autocad_result.dxf to the output folder.",
+  "source": "https://help.autodesk.com/view/ACD/2025/ENU/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-05/init_file/bracket_seed.dxf",
+            "path": "C:\\Users\\user\\Desktop\\bracket_seed.dxf"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "autocad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\autocad_result.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-05/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

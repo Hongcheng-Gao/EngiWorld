@@ -1,0 +1,75 @@
+{
+  "id": "single-software-execution--cli--archicad--task-09--windows",
+  "snapshot": "ArchiCAD-27",
+  "instruction": "Update C:\\Users\\user\\Desktop\\init.ifc in the opened Graphisoft/Archicad environment using the official Graphisoft/Archicad command-line or automation interfaces available there, and save the finished deliverable as C:\\Users\\user\\Desktop\\result.ifc. Invoke Archicad from `C:\\Program Files\\GRAPHISOFT\\Archicad 27\\Archicad.exe` when running the automation. Do not create, rewrite, patch, copy, or post-process the IFC file outside the Graphisoft/Archicad toolchain. The current model is a single-storey market hall with stalls, stores, an aisle, and a simple roof. The operator wants a clearer cold-chain handover and waste holding arrangement near the service areas without disturbing the public aisle or stall rhythm. Add the missing support zones and service-side door records so food safety review can read the intended back-of-house workflow. Evaluation requirements: the identifiers, counts, relationships, properties, and numeric ranges in the following JSON are explicit task requirements: {\"annotations\":[{\"class\":\"IfcSpace\",\"name\":\"COLD-STORE\",\"tokens\":[\"COLD CHAIN\",\"HANDOVER\",\"FOOD SAFETY\",\"SERVICE SIDE\"]},{\"class\":\"IfcSpace\",\"name\":\"DRY-STORE\",\"tokens\":[\"BACK OF HOUSE\",\"SERVICE SIDE\",\"WASTE SEPARATION\"]}],\"products\":[{\"class\":\"IfcSpace\",\"name\":\"COLD-CHAIN-HANDOVER\",\"predefined\":\"INTERNAL\",\"storey\":\"GROUND\",\"tokens\":[\"COLD CHAIN\",\"HANDOVER\",\"FOOD SAFETY\",\"SERVICE SIDE\"]},{\"class\":\"IfcSpace\",\"name\":\"WASTE-HOLD\",\"predefined\":\"INTERNAL\",\"storey\":\"GROUND\",\"tokens\":[\"WASTE HOLD\",\"BACK OF HOUSE\",\"SERVICE SIDE\",\"SEPARATION\"]},{\"class\":\"IfcDoor\",\"name\":\"COLD-HANDOVER-DOOR\",\"predefined\":\"DOOR\",\"storey\":\"GROUND\",\"tokens\":[\"COLD CHAIN\",\"SERVICE DOOR\",\"HANDOVER\",\"FOOD SAFETY\"]},{\"class\":\"IfcWall\",\"name\":\"HYGIENE-SCREEN\",\"predefined\":\"PARTITIONING\",\"storey\":\"GROUND\",\"tokens\":[\"HYGIENE SCREEN\",\"WASTE SEPARATION\",\"BACK OF HOUSE\",\"FOOD SAFETY\"]}]}.",
+  "source": "Graphisoft Archicad 27 IFC command server and JSON automation interfaces",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-09/init_file/init.ifc",
+            "path": "C:\\Users\\user\\Desktop\\init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "C:\\Program Files\\Graphisoft\\Archicad 27\\Archicad",
+          "C:\\Users\\user\\Desktop\\init.ifc"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python",
+          "-c",
+          "import pyautogui, time\npyautogui.FAILSAFE=False\ntime.sleep(18)\nwins=pyautogui.getWindowsWithTitle('End User License Agreement')\nif wins:\n    w=wins[0]\n    pyautogui.click(w.left+25, w.top+314)\n    time.sleep(0.3)\n    pyautogui.click(w.left+380, w.top+380)\n    time.sleep(12)\nfor _ in range(5):\n    pyautogui.press('enter')\n    time.sleep(2)\n"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "archicad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-09/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

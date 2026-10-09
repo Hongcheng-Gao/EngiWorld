@@ -1,0 +1,70 @@
+{
+  "id": "single-software-execution--cli--openfast--task-15--ubuntu",
+  "snapshot": "openfast5",
+  "instruction": "Begin with `/home/user/Desktop/tsr_scan.fst`, `/home/user/Desktop/elasto_tsr_base.dat`, and a complete NREL 5 MW dependency set containing the blade, tower, aerodynamic blade, and airfoil-polar files required by OpenFAST. Additional initialization dependencies are pre-uploaded under `/home/user/Desktop` with relative structure preserved. Only initialization inputs are included; no answer/result artifacts are preloaded.\n\nAssemble a minimal fixed-speed model from the command line. 1. Write `/home/user/Desktop/build_case.py`. Create `/home/user/Desktop/minimal_elasto.dat` from the supplied ElastoDyn template, normalize its dependency paths, set `GenDOF=False`, and set initial `RotSpeed=9 rpm`. 2. Create `/home/user/Desktop/minimal_aero.dat` from the supplied AeroDyn v15 file, normalize its dependency paths, retain BEMT, and request native channels `RtAeroPwr` and `RtAeroFxh`. 3. Create `/home/user/Desktop/minimal.fst` from the supplied main template with `TMax=30`, `DT=0.0125`, `DT_Out=0.1`, `OutFileFmt=1`, `CompInflow=1`, `CompAero=2`, and `CompServo=0`. Reference the generated module files and the supplied steady 8 m/s InflowWind file. 4. Run `/home/user/miniconda3/bin/openfast minimal.fst`, retain `/home/user/Desktop/minimal.out`, and save the console output as `/home/user/Desktop/minimal.log`; require normal termination. 5. Write `/home/user/Desktop/postprocess.py`. Over `t >= 20 s`, calculate mean `RtAeroPwr` converted from W to kW and maximum absolute `RtAeroFxh` converted from N to kN. Save `/home/user/Desktop/summary.txt` as `mean_aero_pwr_kw,max_rotor_thrust_kn`. Do not use GUI tools.",
+  "source": "https://github.com/openFAST/r-test",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-15/init_file/init_file.tar",
+            "path": "/home/user/Desktop/init_file.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/init_file.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/init_file.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfast"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/minimal.fst",
+    "/home/user/Desktop/minimal.log",
+    "/home/user/Desktop/minimal.out",
+    "/home/user/Desktop/minimal_aero.dat",
+    "/home/user/Desktop/minimal_elasto.dat",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-15/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

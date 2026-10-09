@@ -1,0 +1,80 @@
+{
+  "id": "design-optimization--gui--ansys--task-02--windows",
+  "snapshot": "ANSYS-2026R",
+  "instruction": "Work with ANSYS and maximize the first linear-buckling load factor per unit mass for the column defined in C:\\Users\\user\\Desktop\\problem_spec.json. Open Mechanical APDL from `C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe`. Start from C:\\Users\\user\\Desktop\\baseline_wb_buckling.db and its result file C:\\Users\\user\\Desktop\\baseline_wb_buckling.rst. Keep the column axis, length, material, pin-style end conditions, 1 N reference compression, BEAM188 formulation, analysis type, mesh, and uniform-section restrictions unchanged. Select one uniform RECT or HREC section within the published dimension, wall-thickness, and area limits. Solve the final design and save its native database as C:\\Users\\user\\Desktop\\submission.db and its buckling result as C:\\Users\\user\\Desktop\\submission.rst.",
+  "source": "design-generated quantified CAE optimization task",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-02/init_file/problem_spec.json",
+            "path": "C:\\Users\\user\\Desktop\\problem_spec.json"
+          },
+          {
+            "local_path": "task-02/init_file/baseline_wb_buckling.db",
+            "path": "C:\\Users\\user\\Desktop\\baseline_wb_buckling.db"
+          },
+          {
+            "local_path": "task-02/init_file/baseline_wb_buckling.rst",
+            "path": "C:\\Users\\user\\Desktop\\baseline_wb_buckling.rst"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "powershell",
+          "-NoProfile",
+          "-Command",
+          "Start-Process -FilePath 'C:\\Program Files\\ANSYS Inc\\v261\\ansys\\bin\\winx64\\ANSYS261.exe' -ArgumentList '-g'"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "ansys"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\submission.db",
+    "C:\\Users\\user\\Desktop\\submission.rst"
+  ],
+  "evaluator": {
+    "metric": {
+      "baseline_score": 0.0,
+      "direction": "maximize",
+      "name": "normalized buckling-factor-per-mass improvement",
+      "output_field": "score"
+    },
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-02/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            },
+            {
+              "local_path": "_shared/read_only_eval.py",
+              "path": "C:\\Users\\user\\Desktop\\read_only_eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "quantified_score",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

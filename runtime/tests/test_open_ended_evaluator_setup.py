@@ -18,7 +18,7 @@ def load_module(name, path):
     return module
 
 
-bootstrap = load_module("open_ended_bootstrap", RUNTIME.parent / "task/open-ended/prepare_evaluator.py")
+bootstrap = load_module("open_ended_bootstrap", RUNTIME.parent / "task/open-environment-engineering/prepare_evaluator.py")
 getter = load_module("open_ended_getter", RUNTIME / "engine/desktop_env/evaluators/getters/general.py")
 
 

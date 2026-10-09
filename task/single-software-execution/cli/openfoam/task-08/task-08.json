@@ -1,0 +1,68 @@
+{
+  "id": "single-software-execution--cli--openfoam--task-08--ubuntu",
+  "snapshot": "OpenFOAM11",
+  "instruction": "Begin with the incomplete OpenFOAM template `/home/user/Desktop/airfoil_base/`. The uploaded template is an editable input only; no result or answer artifacts are preloaded. Source `/opt/openfoam11/etc/bashrc` before running OpenFOAM commands.\n\nFrom the command line, build and solve a deterministic steady incompressible NACA0012 external-flow case. 1. Write `/home/user/Desktop/build_case.py` and create `/home/user/Desktop/airfoil/`. Generate an analytic NACA0012 with chord `c=1 m`, finite trailing edge coefficient `-0.1015`, and span `0.01 m`. Use cosine spacing with 80 intervals on each half surface, producing 161 closed surface segments. Build a 161-block O-grid with an outer curve offset `5 m` along the local outward surface normal, 80 radial cells per block, radial `simpleGrading=80`, one circumferential cell per segment, and one spanwise cell. The completed mesh must contain exactly 12,880 hexahedral cells. Name the outer patch `FARFIELD`, airfoil wall `WALL10`, and front/back patch `SYMP3`; `SYMP3` must be `empty`. 2. Set angle of attack `5 degrees` and `U_infinity=1 m/s` using `U=(0.9961946981 0.08715574275 0) m/s`. Set `nu=1e-5 m^2/s`, so `Re_c=100000`; with sound speed `343 m/s`, the reference Mach number is approximately `0.0029`, so incompressible flow is appropriate. On `FARFIELD`, use `freestreamVelocity` for `U`, `freestreamPressure` with value 0 for kinematic `p`, and `inletOutlet` for `k=0.001 m^2/s^2` and `omega=10 1/s`. Use no-slip `U`, zero-gradient `p`, `kqRWallFunction`, `omegaWallFunction`, and `nutkWallFunction` on `WALL10`. Configure RAS `kOmegaSST`. 3. Configure `simpleFoam` for exactly 1000 SIMPLE iterations, ASCII output at iteration 1000, bounded upwind convection for `U`, `k`, and `omega`, one non-orthogonal corrector, GAMG pressure solution, and corrected laplacians. Add `forceCoeffs` on `WALL10`, writing every iteration, with `rhoInf=1 kg/m^3`, `magUInf=1 m/s`, `lRef=1 m`, span `0.01 m`, `Aref=0.01 m^2`, drag direction `(0.9961946981 0.08715574275 0)`, and lift direction `(-0.08715574275 0.9961946981 0)`. 4. Source `/opt/openfoam11/etc/bashrc`; run `blockMesh`, `checkMesh`, `potentialFoam -writePhi`, and `simpleFoam` on `/home/user/Desktop/airfoil`. Retain `airfoil/log.blockMesh`, `airfoil/log.checkMesh`, `airfoil/log.potentialFoam`, and `airfoil/log.simpleFoam`. Every preprocessing log must finish with `End`, `checkMesh` must report `Mesh OK.`, the solver log must finish with `End`, and time 1000 must contain nonuniform `U`, `p`, `k`, and `omega` fields for all 12,880 cells. 5. Write `/home/user/Desktop/postprocess.py`. Read `airfoil/postProcessing/forces/0/forceCoeffs.dat`, whose leading columns are `Time,Cm,Cd,Cl`; save the complete history as `/home/user/Desktop/force_coefficients.csv` with columns `iteration,cd,cl`. Average only iterations 800 through 1000 and require `0.1<Cl<2.0`, `0.001<Cd<0.2`, standard deviation of `Cl<0.02`, and standard deviation of `Cd<0.01` over that window. Save `/home/user/Desktop/summary.txt` as exactly `cl, cd` using those two averages. Do not use ParaView or other GUI tools.",
+  "source": "https://github.com/openfoam/openfoam-dev",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-08/init_file/airfoil_base.tar",
+            "path": "/home/user/Desktop/airfoil_base.tar"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": "bash -c \"mkdir -p '/home/user/Desktop/' && tar -xf '/home/user/Desktop/airfoil_base.tar' -C '/home/user/Desktop/' && rm -f '/home/user/Desktop/airfoil_base.tar'\"",
+        "shell": true
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openfoam"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/airfoil",
+    "/home/user/Desktop/build_case.py",
+    "/home/user/Desktop/force_coefficients.csv",
+    "/home/user/Desktop/forceCoeffs.dat",
+    "/home/user/Desktop/postprocess.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-08/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

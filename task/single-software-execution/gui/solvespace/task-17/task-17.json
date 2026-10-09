@@ -1,0 +1,64 @@
+{
+  "id": "single-software-execution--gui--solvespace--task-17--ubuntu",
+  "snapshot": "solvespace3.1ds1-3.1build2",
+  "instruction": "Work in SolveSpace and import seed_ss_gui_17_bridge_plate.dxf from /home/user/Desktop with File > Import, then continue editing that imported drawing rather than starting from an empty document. Launch SolveSpace from `/usr/bin/solvespace` before importing `seed_ss_gui_17_bridge_plate.dxf`. Do not use File > Open or launch the DXF as a native SolveSpace file. All dimensions and coordinates in this task are in millimeters. Use the existing end guides, tangent lines, and hole-location marks to create the final outer outline from two end circles of radius 18 mm connected by two parallel tangent lines. Overall length is 150 mm and overall height is 36 mm. Add three diameter 6 mm holes on centerline y=18 mm with X coordinates 30 mm, 75 mm, and 120 mm. Construction or guide geometry from the seed may be changed or removed unless it is explicitly required above. When the geometry is complete, align the view to the active workplane if needed, then use File > Export 2d View, choose the DXF file type, and save the result as /home/user/Desktop/final_ss_gui_17.dxf. Do not use File > Save As for this final DXF export.",
+  "source": "https://solvespace.readthedocs.io/en/latest/ ; https://solvespace.readthedocs.io/en/latest/groups/sketch.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-17/init_file/seed_ss_gui_17_bridge_plate.dxf",
+            "path": "/home/user/Desktop/seed_ss_gui_17_bridge_plate.dxf"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "solvespace"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solvespace"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/final_ss_gui_17.dxf"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-17/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

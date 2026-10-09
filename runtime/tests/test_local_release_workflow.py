@@ -60,12 +60,12 @@ def test_reverse_tasks_are_single_software_and_legacy_selection_still_works():
         selected = load_tasks(ROOT, path_prefixes=[old + "/"])
         assert [task.task_id for task in selected] == [new]
         assert selected[0].metadata["eval_mode"] == "gui"
-        assert selected[0].metadata["task_kind"] == "single-software"
+        assert selected[0].metadata["task_kind"] == "single-software-execution"
 
 
 def test_manifest_covers_all_reference_image_tasks():
     _, assets = prepare_tasks.asset_entries(ROOT)
-    image_tasks = load_tasks(ROOT, path_prefixes=["image-based-modeling/"])
+    image_tasks = load_tasks(ROOT, path_prefixes=["vision-guided-modeling/"])
     assert len(image_tasks) == 120
     for task in image_tasks:
         assert any(entry["path"].startswith(task.task_id + "/init_file/")

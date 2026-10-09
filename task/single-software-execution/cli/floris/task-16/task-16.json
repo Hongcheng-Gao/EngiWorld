@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--floris--task-16--ubuntu",
+  "snapshot": "FLORIS4.6.4",
+  "instruction": "Complete the full FLORIS workflow from modeling to post-processing purely from the command line: 1. Run your scripts with Python in an environment where `floris` is installed (e.g. `from floris import FlorisModel`). At the start of the task, FLORIS is provided as the Python `floris` package at `/home/user/.local/lib/python3.12/site-packages/floris`; run the workflow from Python rather than looking for a separate desktop program.\n\nWrite main config `/home/user/Desktop/farm.yaml`: - 3x3 regular layout with spacing `7D` (`882 m`) - 9 NREL 5MW turbines - Use Gauss wake model 2. Write Python script `/home/user/Desktop/full_farm.py`: - Load `farm.yaml` - Set single condition: wind direction `270°`, wind speed `8 m/s`, `TI=0.06` - Execute `run()` - Extract per-turbine power and total farm power 3. Execute and save to `/home/user/Desktop/summary.txt` in this format: `total_kw, front_row_avg_kw, back_row_avg_kw` 4. Do not use any GUI.",
+  "source": "https://github.com/NatLabRockies/floris",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "floris"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/farm.yaml",
+    "/home/user/Desktop/full_farm.py",
+    "/home/user/Desktop/summary.txt"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            },
+            {
+              "local_path": "eval_utils.py",
+              "path": "/home/user/Desktop/eval_utils.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

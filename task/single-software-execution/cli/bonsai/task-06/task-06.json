@@ -1,0 +1,76 @@
+{
+  "id": "single-software-execution--cli--bonsai--task-06--ubuntu",
+  "snapshot": "Bonsai-0.8.5",
+  "instruction": "Update /home/user/Desktop/init.ifc in the already opened Bonsai/Blender IFC authoring environment using its CLI/API tools, and save the finished model as /home/user/Desktop/result.ifc. On this machine, Bonsai is installed as a Blender extension, so start `/opt/blender/blender` and use the Bonsai tools from that environment. Do not create, rewrite, copy, patch, or post-process the IFC outside that software environment. The model is a small single-storey office fit-out that will be exchanged with a civil consultant. The building geometry and room arrangement are already acceptable, but the file lacks the survey context needed for coordination. Preserve the office shell, internal partition, spaces, slab, and existing openings. Rename the building storey to GEO_LEVEL_00. Register the project in a projected CRS named EPSG:3857 (Web Mercator) with an IfcMapConversion using Eastings 501234.0, Northings 6843210.0, OrthogonalHeight 35.0, XAxisAbscissa 1.0, XAxisOrdinate 0.0, and Scale 1.0. Record the survey coordination with revision code BONSAI-CLI-06 on both rooms, all five walls, and the floor slab.",
+  "source": "https://docs.bonsaibim.org/; https://docs.ifcopenshell.org/autoapi/ifcopenshell/api/index.html; https://docs.blender.org/manual/en/latest/advanced/command_line/arguments.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/init.ifc",
+            "path": "/home/user/Desktop/init.ifc"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "blender",
+          "--python-expr",
+          "import bpy; bpy.ops.bim.load_project(filepath='/home/user/Desktop/init.ifc')"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import time; time.sleep(20)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "bonsai"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.ifc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

@@ -1,0 +1,60 @@
+{
+  "id": "single-software-execution--cli--brl-cad--task-01--ubuntu",
+  "snapshot": "BRL-CAD7.32.2",
+  "instruction": "Work from /home/user/Desktop/block_a.step and /home/user/Desktop/cyl_b.step in BRL-CAD. Run `mged` from a terminal (use the full path if it is not on PATH). BRL-CAD's main editor is `/usr/brlcad/bin/mged`; its conversion and rendering tools are under the same `/usr/brlcad/bin` directory when working on `block_a.step`.\n\nReorient the cylinder so its axis is along Y and passes through the center of the block, then fuse it with the block. Cut a central through hole of diameter 10 mm along Z through the fused solid. Save the completed STL mesh as /home/user/Desktop/out.stl.",
+  "source": "https://cadquery.readthedocs.io/en/latest/importexport.html https://cadquery.readthedocs.io/en/latest/genindex.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-01/init_file/block_a.step",
+            "path": "/home/user/Desktop/block_a.step"
+          },
+          {
+            "local_path": "task-01/init_file/cyl_b.step",
+            "path": "/home/user/Desktop/cyl_b.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "brl-cad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/out.stl"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-01/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

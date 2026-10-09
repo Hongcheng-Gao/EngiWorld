@@ -1,0 +1,60 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-12--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Use command-line automation with the installed SOLIDWORKS CAM 2025 environment (CAMWorks technology); do not use GUI clicks, generic G-code generators, or manual .nc editing/copying. Before starting the work, SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\quality_part.step and read C:\\Users\\User\\Desktop\\params.json. Use G54 at the model top-face center [0, 0, 18] mm with the tool axis along -Z. Machine the actual imported geometry in this order: T1 clears the 10 mm-deep upper irregular pocket formed by the union of the left and central regions; T2 clears the central rectangular region a further 1 mm to Z=-11; T3 drills the four D5 through holes at (±30, ±20); and T4 machines the 120 x 80 mm outside contour through 18 mm. Use each operation's specified tool diameter, spindle speed, and primary cutting/drilling feed. Set program number 2032 and save the native posted NC output exactly as C:\\Users\\User\\Desktop\\task-12.nc.",
+  "source": "https://camworks.com/camworks-is-powering-solidworks-cam/",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-12/init_file/quality_part.step",
+            "path": "C:\\Users\\User\\Desktop\\quality_part.step"
+          },
+          {
+            "local_path": "task-12/init_file/params.json",
+            "path": "C:\\Users\\User\\Desktop\\params.json"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\task-12.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-12/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

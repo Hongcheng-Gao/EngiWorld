@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--eagle--task-10--ubuntu",
+  "snapshot": "eagle-7.7.0",
+  "instruction": "Fan out the four pads of the QFN-8 placed at `(50, 50)` mm on `/home/user/Desktop/qfn_board.brd`, and save the board as `/home/user/Desktop/fanout.brd`. On Linux, launch CadSoft EAGLE with `/opt/eagle-7.7.0/bin/eagle` (adjust to your install).\n\nRequirements: 1. `/home/user/Desktop/fanout.brd` parses as well-formed XML. 2. Exactly 4 new `<wire>` elements have been added relative to the starter, each associated with one of those four pads. 3. Exactly 4 new `<via>` elements have been added, one per fan-out. 4. Each new wire/via pair stays attached to the same pad, and all four side-facing pads of the package are used exactly once. 5. The `U1` / `QFN8` element is still present. 6. The total `<element>` count is unchanged.",
+  "source": "https://ww1.microchip.com/downloads/aemDocuments/documents/UNG/ApplicationNotes/ApplicationNotes/AN18.15-PCB-Design-Guide-QFN-DQFN-Packages-00001843.pdf",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-10/init_file/qfn_board.brd",
+            "path": "/home/user/Desktop/qfn_board.brd"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "eagle"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/fanout.brd"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

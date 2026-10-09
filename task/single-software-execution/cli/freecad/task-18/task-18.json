@@ -1,0 +1,56 @@
+{
+  "id": "single-software-execution--cli--freecad--task-18--ubuntu",
+  "snapshot": "FreeCAD0.21.2",
+  "instruction": "Begin with /home/user/Desktop/freecad_task-18_input.step. To use FreeCAD, run `freecad` from a terminal (use the full executable path if it is not on PATH). For this task, use `/usr/lib/freecad/bin/freecadcmd-python3` for the FreeCAD command-line work in this task when working on `freecad_task-18_input.step`.\n\nKeep the base fixed at X=0..100, Y=0..70, Z=0..10. Rotate the loose vertical plate 90 degrees about Z and move it onto the base top face so it spans X=20..80, Y=31..39, Z=10..54. Move the two locator blocks onto the base without fusing: the 12 x 12 x 12 block must span X=16..28, Y=12..24, Z=10..22, and the 12 x 12 x 14 block must span X=72..84, Y=46..58, Z=10..24. Keep the base, plate, and two locator blocks as four separate solids. Export /home/user/Desktop/freecad_task-18_output.step.",
+  "source": "https://wiki.freecad.org/Import_Export; https://wiki.freecad.org/Part_Workbench; https://wiki.freecad.org/Python_scripting_tutorial; https://wiki.freecad.org/Headless_FreeCAD",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-18/init_file/freecad_task-18_input.step",
+            "path": "/home/user/Desktop/freecad_task-18_input.step"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/freecad_task-18_output.step"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-18/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

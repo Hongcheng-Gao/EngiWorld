@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--freecad-path--task-16--ubuntu",
+  "snapshot": "freecad-path0.21.2",
+  "instruction": "Begin by reviewing nameplate.step. Open the part in FreeCAD from `/usr/bin/freecad`, then carry out the Path workbench edits when working on `nameplate.step`. Create a top-face text engraving path in FreeCAD Path/CAM. Engrave the text FREECAD-CAM at 8 mm text height, centered at X=0 and Y=0, to a depth of 0.3 mm using T1. T1 is a small engraving cutter for the FREECAD-CAM text at 0.3 mm depth. Use the Job, stock/setup, origin, ToolBit/ToolController, operation, toolpath verification, and Path postprocessor dialogs as needed. Post the required G-code/NC output file(s) to the output folder using exactly these absolute file paths: /home/user/Desktop/task-16.nc.",
+  "source": "https://wiki.freecad.org/index.php?title=CAM_Engrave&oldid=1262122; https://github.com/FreeCAD/FreeCAD/releases/tag/0.21.2",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-16/init_file/nameplate.step",
+            "path": "/home/user/Desktop/nameplate.step"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "freecad",
+          "/home/user/Desktop/nameplate.step"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "freecad-path"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/task-16.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-16/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

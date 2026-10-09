@@ -1,0 +1,65 @@
+{
+  "id": "single-software-execution--gui--openstudio--task-04--ubuntu",
+  "snapshot": "OpenStudio-1.11.0",
+  "instruction": "Office With Fixed Windows Completion. Before starting the work, launch the OpenStudio application from `/usr/local/bin/OpenStudioApp` and open `init.osm`. Work in the opened OpenStudio application, starting from the Desktop input file init.osm. The init.osm model is a relevant predecessor with placeholder space names and missing final zone HVAC equipment lists. In OpenStudio, assign the required space names, create or restore the required zone HVAC equipment lists, and verify the required DaylitOffice shell, thermal zone, and four FixedWindow subsurfaces. Complete the model, then save `/home/user/Desktop/result.osm`. The completed model must contain 1 building story, 1 spaces and 1 thermal zones. Use these exact OS:Space names: DaylitOffice. Every space must be assigned to a building story and a thermal zone, and each space must have more than 0.05 m2 of floor area. Model the enclosure with 6 OS:Surface objects, split into 1 floor surfaces, 1 roof/ceiling surfaces and 4 wall surfaces. The surface outside-boundary counts should be 1 Ground, 5 Outdoors and 0 Surface. Add 4 OS:SubSurface objects, all FixedWindow windows, with total fixed-window area 9.60 m2 within +/-0.75 m2. Include 0 ideal-loads air systems, 1 zone HVAC equipment lists and 0 dual-setpoint thermostats. Set the geometry so the overall surface-geometry bounding box spans 10.00 m in X, 6.00 m in Y and 3.20 m in Z, each within +/-0.10 m. The total floor surface area should be 60.00 m2 within +/-0.75 m2 and the total exterior wall gross area should be 102.40 m2 within +/-0.75 m2. Other model details may vary as long as the saved OSM satisfies these stated requirements.",
+  "source": "https://github.com/openstudiocoalition/OpenStudioApplication",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-04/init_file/init.osm",
+            "path": "/home/user/Desktop/init.osm"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "OpenStudioApp",
+          "/home/user/Desktop/init.osm"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "openstudio"
+  ],
+  "artifact_paths": [
+    "/home/user/Desktop/result.osm"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-04/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

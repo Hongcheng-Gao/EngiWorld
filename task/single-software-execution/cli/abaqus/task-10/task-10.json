@@ -1,0 +1,52 @@
+{
+  "id": "single-software-execution--cli--abaqus--task-10--windows",
+  "snapshot": "ABAQUS-2025L",
+  "instruction": "Perform a torsion analysis of a circular shaft (Variant B) using Abaqus via the Command Line Interface (CLI). To start Abaqus/CAE, run `C:\\SIMULIA\\CAE\\2025LE\\win_b64\\resources\\install\\le\\launcher.bat cae` (adjust path to your install). For this task, Abaqus command-line jobs should be launched through `C:\\SIMULIA\\Commands\\abaqus.bat`.\n\nUse the N-mm-MPa unit system. 1. Part: 3D Deformable Solid, Revolution - Sketch in the X-Y plane: draw a rectangle from (0,0) to (6,72) - The left vertical edge at X=0 is the revolution axis (global Y-axis) - Revolve 360 deg to create a solid cylinder with diameter 12 mm and length 72 mm, aligned with the global Y-axis 2. Property: - Material Steel: E = 210000 MPa, nu = 0.3 - Solid Homogeneous section 3. Assembly: Create an instance. 4. Step: Static, General, named Step-Torque-B. 5. Interaction: - Create a Reference Point (RP-1) at the center of the free end face (Y=72 mm, X=0, Z=0) - Use Constraint > Coupling to kinematically couple the free end face and RP-1 (all 6 DOFs) - Apply Encastre to the fixed end face (Y=0) 6. Load: - Apply a torque (Moment) = 920 N*mm at RP-1 about the shaft axis (global Y-axis, i.e., component MY) 7. Mesh: - Global seed size: 4 mm - Element type: C3D8R 8. Job: Create Job-Torsion-B and submit for solving. 9. Visualization: - Review Mises stress contour - Query RP-1 rotation magnitude (UR) - Query shear stress components at any node on the shaft outer surface (radius ≈ 6 mm) 10. Save: - Model: C:\\Users\\user\\Desktop\\Job-Torsion-B.cae - Results: C:\\Users\\user\\Desktop\\Job-Torsion-B.odb.",
+  "source": "https://github.com/nasa/abaverify https://github.com/pantale/abaqusVumat https://github.com/davidmorinNTNU/ABAQUS_subroutines",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": []
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "abaqus"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\Job-Torsion-B.cae",
+    "C:\\Users\\user\\Desktop\\Job-Torsion-B.odb"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-10/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "C:\\SIMULIA\\Commands\\abaqus.bat cae noGUI=C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

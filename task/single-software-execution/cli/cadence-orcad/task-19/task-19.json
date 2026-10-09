@@ -1,0 +1,57 @@
+{
+  "id": "single-software-execution--cli--cadence-orcad--task-19--windows",
+  "snapshot": "OrCAD24.1",
+  "instruction": "Run `C:\\Users\\user\\Desktop\\mixed.cir` in native PSpice. Use the native PSpice command-line simulator `C:\\Cadence\\SPB_24.1\\tools\\bin\\psp_cmd.exe`. On this machine, use `C:\\Cadence\\SPB_24.1\\tools\\bin\\Capture.exe` for OrCAD schematics and `C:\\Cadence\\SPB_24.1\\tools\\bin\\allegro.exe` for board work.\n\nSave the native simulator output as `C:\\Users\\user\\Desktop\\mixed.out`. Read the 1 ms measurements for `Q_AT_1MS` and `QBAR_AT_1MS` from the `.out`, infer each logic state using a 2.5 V threshold (`>= 2.5 V` => `HI`, otherwise `LO`), and write `C:\\Users\\user\\Desktop\\mixed.json` with keys `t`, `Q`, `QBAR`, `V_Q`, and `V_QBAR`. Express `t` in seconds; for this measurement it is `1e-3` s.",
+  "source": "https://www.cadence.com/en_US/home/tools/pcb-design-and-analysis/orcad/orcad-capture.html; https://www.cadence.com/en_US/home/resources/datasheets/pspice-advanced-circuit-simulation-ds.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-19/init_file/mixed.cir",
+            "path": "C:\\Users\\user\\Desktop\\mixed.cir"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "cadence-orcad"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\user\\Desktop\\mixed.json",
+    "C:\\Users\\user\\Desktop\\mixed.out"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-19/eval.py",
+              "path": "C:\\Users\\user\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\user\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

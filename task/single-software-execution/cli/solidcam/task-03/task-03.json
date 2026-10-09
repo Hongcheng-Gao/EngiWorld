@@ -1,0 +1,70 @@
+{
+  "id": "single-software-execution--cli--solidcam--task-03--windows",
+  "snapshot": "SolidCAM-2025",
+  "instruction": "Using command-line automation only, operate the installed SOLIDWORKS CAM 2025 environment through the CAMWorks API; do not use GUI clicks, GUI automation, generic G-code generators, prebuilt helper wrappers, or manual .nc editing/copying. On this machine, SOLIDWORKS CAM/CAMWorks is hosted by `C:\\Program Files\\SOLIDWORKS Corp\\SOLIDWORKS\\SLDWORKS.exe`; run the native CAM automation through that installation. Load C:\\Users\\User\\Desktop\\p1.step, C:\\Users\\User\\Desktop\\p2.step, C:\\Users\\User\\Desktop\\p3.step, and read C:\\Users\\User\\Desktop\\tools.csv. Create three independent native CAM parts, one from each STEP input; do not copy or reuse a CAM document, setup, operation, or NC program between parts. For each part, create one outside Profile/Contour operation about its complete rectangular perimeter. Use G54 with the part's own top-face center at model coordinates [0, 0, 10] mm and tool axis -Z, so posted top is Z=0 and the 10 mm bottom is Z=-10. Use T1, a 6 mm flat end mill, at S9000 rpm and F650 mm/min for material-cutting XY contour moves; controlled plunge feed may be lower. Apply one correct cutter-radius compensation method: either CAM-computed 3 mm outside tool-center offset with controller compensation off, or a nominal-boundary path with correct controller compensation. Generate a complete closed outside contour with safe approach and retract, then post-process each native CAM part with the installed SOLIDWORKS CAM postprocessor. Save the posted NC outputs exactly as C:\\Users\\User\\Desktop\\p1.nc, C:\\Users\\User\\Desktop\\p2.nc, and C:\\Users\\User\\Desktop\\p3.nc.",
+  "source": "Installed SOLIDWORKS CAM 2025 / CAMWorks API; official SOLIDWORKS CAM product and training documentation: https://www.solidworks.com/product/solidworks-cam ; https://www.solidworks.com/support/training/solidworks-cam-standard",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-03/init_file/p1.step",
+            "path": "C:\\Users\\User\\Desktop\\p1.step"
+          },
+          {
+            "local_path": "task-03/init_file/p2.step",
+            "path": "C:\\Users\\User\\Desktop\\p2.step"
+          },
+          {
+            "local_path": "task-03/init_file/p3.step",
+            "path": "C:\\Users\\User\\Desktop\\p3.step"
+          },
+          {
+            "local_path": "task-03/init_file/tools.csv",
+            "path": "C:\\Users\\User\\Desktop\\tools.csv"
+          }
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "solidcam"
+  ],
+  "artifact_paths": [
+    "C:\\Users\\User\\Desktop\\p1.nc",
+    "C:\\Users\\User\\Desktop\\p2.nc",
+    "C:\\Users\\User\\Desktop\\p3.nc"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-03/eval.py",
+              "path": "C:\\Users\\User\\Desktop\\eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python C:\\Users\\User\\Desktop\\eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}

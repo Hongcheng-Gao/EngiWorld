@@ -1,0 +1,93 @@
+{
+  "id": "single-software-execution--gui--kicad--task-06--ubuntu",
+  "snapshot": "kicad-10.0.2",
+  "instruction": "Repair a QFN-48 Thermal Pad Footprint `qfn48_nominal_seed.kicad_mod` is a KiCad footprint for a 7x7 mm QFN-48 package. Start KiCad with `/usr/bin/kicad`; the board and schematic editors are also available directly at `/usr/bin/pcbnew` and `/usr/bin/eeschema`. The 48 peripheral pads and numbering are already in place, but the exposed-pad region still needs to be brought to the nominal dimensions in `/home/user/Desktop/qfn48_spec.csv`. Open the seed footprint in KiCad Footprint Editor, repair it, and save the finished result as `/home/user/Desktop/qfn48_nominal.kicad_mod`. Requirements: 1. Keep the 48 numbered peripheral pads and the footprint name `qfn48_nominal`. 2. The exposed pad, paste apertures, and courtyard must match `/home/user/Desktop/qfn48_spec.csv` within its stated tolerances. 3. Do not change the peripheral pad pitch, numbering, or side orientation. Write `/home/user/Desktop/qfn48_nominal.kicad_mod`.",
+  "source": "https://www.kicad.org/blog/2026/05/KiCad-10.0.2-Release/; https://docs.kicad.org/10.0/en/; https://docs.kicad.org/10.0/en/cli/cli.html; https://docs.kicad.org/10.0/en/pcbnew/pcbnew.html",
+  "config": [
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/qfn48_nominal_seed.kicad_mod",
+            "path": "/home/user/Desktop/qfn48_nominal_seed.kicad_mod"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/qfn48_spec.csv",
+            "path": "/home/user/Desktop/qfn48_spec.csv"
+          }
+        ]
+      }
+    },
+    {
+      "type": "upload_file",
+      "parameters": {
+        "files": [
+          {
+            "local_path": "task-06/init_file/README.txt",
+            "path": "/home/user/Desktop/README.txt"
+          }
+        ]
+      }
+    },
+    {
+      "type": "launch",
+      "parameters": {
+        "command": [
+          "kicad"
+        ]
+      }
+    },
+    {
+      "type": "execute",
+      "parameters": {
+        "command": [
+          "python3",
+          "-c",
+          "import pyautogui, time; time.sleep(6); w, h = pyautogui.size(); pyautogui.click(int(w * 0.617), int(h * 0.745)); time.sleep(3); pyautogui.click(int(w * 0.617), int(h * 0.745)); time.sleep(3); pyautogui.click(int(w * 0.617), int(h * 0.745)); time.sleep(45); pyautogui.click(int(w * 0.443), int(h * 0.481)); time.sleep(15); pyautogui.click(int(w * 0.194), int(h * 0.228)); time.sleep(0.5); pyautogui.moveTo(int(w * 0.211), int(h * 0.446)); time.sleep(1); pyautogui.click(int(w * 0.378), int(h * 0.446)); time.sleep(1); pyautogui.hotkey('ctrl', 'l'); time.sleep(0.5); pyautogui.write('/home/user/Desktop/qfn48_nominal_seed.kicad_mod'); pyautogui.press('enter'); time.sleep(6)"
+        ]
+      }
+    }
+  ],
+  "trajectory": "trajectories/",
+  "related_apps": [
+    "kicad"
+  ],
+  "evaluator": {
+    "postconfig": [
+      {
+        "type": "upload_file",
+        "parameters": {
+          "files": [
+            {
+              "local_path": "task-06/eval.py",
+              "path": "/home/user/Desktop/eval.py"
+            }
+          ]
+        }
+      }
+    ],
+    "func": "exact_match",
+    "result": {
+      "type": "vm_command_line",
+      "command": "python3 /home/user/Desktop/eval.py",
+      "shell": "true"
+    },
+    "expected": {
+      "type": "rule",
+      "rules": {
+        "expected": "True\n"
+      }
+    }
+  },
+  "proxy": false,
+  "fixed_ip": false,
+  "possibility_of_env_change": "low"
+}
