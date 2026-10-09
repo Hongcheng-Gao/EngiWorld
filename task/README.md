@@ -8,14 +8,14 @@ The 1,301 tasks use a common directory layout:
 <category>/<gui|cli>/<software or software1--software2>/<task-number>/
 ```
 
-| Category | Description |
+| Directory category | Paper task type |
 |---|---|
-| `single-software` | Tasks within one software application |
-| `multi-software` | Workflows spanning multiple applications |
-| `software-selection` | Choosing among available applications |
-| `quantitative-design` | Design tasks with quantitative objectives |
-| `image-based-modeling` | Modeling from reference images |
-| `open-ended` | CLI tasks in a blank environment, with agent-selected tools |
+| `single-software` | Single-Software Execution |
+| `software-selection` | Software Selection |
+| `image-based-modeling` | Vision-Guided Modeling |
+| `quantitative-design` | Design Optimization |
+| `multi-software` | Cross-Software Coordination |
+| `open-ended` | Open-Environment Engineering |
 
 Software names are lowercase, without version numbers. Multiple names are joined
 with `--`. Open-ended tasks use `cli/agent-selected/`. Interface folders contain
@@ -31,4 +31,4 @@ From `../runtime/`, run `python -m engiworld.prepare_tasks` to download task res
 Use either a task directory or its JSON ID with `python -m engiworld.local_eval --task`.
 Follow the [quick start](../README.md) to run an evaluation.
 
-The paper's 300-task main-experiment subset is listed in [`splits/main-300.txt`](splits/main-300.txt). The scheduler accepts it through `--task-id-file ../task/splits/main-300.txt`.
+The paper's 306-task main-experiment subset is listed in [`splits/main-306.txt`](splits/main-306.txt). The scheduler accepts it through `--task-id-file ../task/splits/main-306.txt`.

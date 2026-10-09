@@ -15,11 +15,13 @@
 
 <p align="center"><a href="assets/engiworld-overview.png"><img src="assets/engiworld-overview.png" alt="EngiWorld 工程软件任务示例与软件覆盖" width="100%"></a></p>
 
-<p align="center"><em>EngiWorld 中的跨软件流程、软件选择任务与工程软件覆盖。点击查看大图。</em></p>
+<p align="center"><em>覆盖六类工程软件任务，按交付成果进行评测。点击查看大图。</em></p>
 
-EngiWorld 评测智能体能否操作专业工程软件，并交付符合要求的工程成果。本仓库提供完整的 **1,301 个任务**、自动评分器和运行框架，支持 GUI 与 CLI 交互。论文主实验使用其中 300 个任务，清单见 [`task/splits/main-300.txt`](task/splits/main-300.txt)。
+EngiWorld 评测智能体能否操作专业工程软件，并交付符合要求的工程成果。本仓库提供完整的 **1,301 个任务**、自动评分器和运行框架，支持 GUI 与 CLI 交互。论文主实验使用其中 306 个任务，清单见 [`task/splits/main-306.txt`](task/splits/main-306.txt)。
 
 完整的 1,301 个任务及其验证器也已发布至 [Hugging Face 任务数据集](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks)，可通过[数据集预览器](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks/viewer/default/tasks)在线浏览任务说明和元数据。
+
+基准覆盖 CAD、CAE、CAM、BIM、EDA 和 DCC 六个领域。六类任务为单软件执行（931）、软件选择（140）、视觉引导建模（120）、设计优化（40）、跨软件协同（60）和开放环境工程（10）。
 
 单机评测在 Linux 主机上通过 Docker 运行环境镜像，调用模型并保存评分结果。
 
@@ -112,7 +114,7 @@ runtime/
 
 任务分为 `single-software`、`multi-software`、`software-selection`、
 `quantitative-design`、`image-based-modeling` 和 `open-ended`。
-Open-ended 使用 **CLI**，位于 `task/open-ended/cli/agent-selected/`，
+开放环境工程任务使用 **CLI**，位于 `task/open-ended/cli/agent-selected/`，
 由智能体在空白环境中自行选择和安装软件。
 
 任务 JSON 的 ID 格式为 `<类别>--<gui|cli>--<软件>--<任务编号>--<系统>`，例如
@@ -121,17 +123,17 @@ Open-ended 使用 **CLI**，位于 `task/open-ended/cli/agent-selected/`，
 
 ## 📊 模型评测结果
 
-论文主实验在同一组 300 个任务上评测了七个模型。EngiScore 为任务得分的平均值，满分 100。
+论文主实验在同一组 **306 个任务**上评测七个模型：**158 个 CLI**、**148 个 GUI**，包含全部 10 个开放环境工程任务。EngiScore 为任务得分的平均值，满分 100。执行指标在全部 306 个任务（含未成功运行）上取平均，输出 Token 按每轮统计，单位为千。
 
-| 模型 | EngiScore |
-| --- | ---: |
-| Claude Opus 5 | **42.3** |
-| GPT-5.6 Sol | 37.0 |
-| Qwen3.8 Max | 25.8 |
-| Gemini 3.7 Flash | 24.9 |
-| DeepSeek V4.1 Flash | 24.8 |
-| Kimi K3 | 24.1 |
-| Qwen3.8 Flash | 15.8 |
+| 模型 | EngiScore | CLI | GUI | 轮/任务 | 输出 Token（K/轮） | 费用（美元/任务） |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Claude Opus 5 | **44.7** | 48.6 | 40.5 | 69.5 | 2.4 | 18.78 |
+| GPT-5.6 Sol | 38.6 | 47.9 | 28.6 | 54.2 | 1.0 | 9.57 |
+| Qwen3.8 Max | 26.3 | 35.3 | 16.6 | 107.3 | 2.7 | 6.44 |
+| Gemini 3.7 Flash | 26.1 | 37.2 | 14.2 | 110.0 | 0.7 | 2.08 |
+| DeepSeek V4.1 Flash | 25.9 | 48.3 | 2.0 | 115.3 | 9.8 | 0.80 |
+| Kimi K3 | 24.3 | 31.3 | 16.7 | 92.1 | 0.9 | 5.85 |
+| Qwen3.8 Flash | 16.7 | 31.5 | 1.0 | 119.6 | 1.3 | 0.44 |
 
 ## 📚 引用
 

@@ -15,11 +15,13 @@
 
 <p align="center"><a href="assets/engiworld-overview.png"><img src="assets/engiworld-overview.png" alt="EngiWorld task examples and engineering software coverage" width="100%"></a></p>
 
-<p align="center"><em>Examples of cross-application workflows and software selection in EngiWorld. Click to enlarge.</em></p>
+<p align="center"><em>Six task types for engineering software use and artifact-based evaluation. Click to enlarge.</em></p>
 
-EngiWorld evaluates whether agents can operate professional engineering software and deliver the requested engineering artifacts. This repository provides all **1,301 tasks**, their evaluators, and the GUI/CLI evaluation runtime. The paper uses a 300-task main-experiment subset, listed in [`task/splits/main-300.txt`](task/splits/main-300.txt).
+EngiWorld evaluates whether agents can operate professional engineering software and deliver the requested engineering artifacts. This repository provides all **1,301 tasks**, their evaluators, and the GUI/CLI evaluation runtime. The paper uses a 306-task main-experiment subset, listed in [`task/splits/main-306.txt`](task/splits/main-306.txt).
 
 The full set of 1,301 tasks and their verifiers is also available in the [Hugging Face task dataset](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks), with a [dataset viewer](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks/viewer/default/tasks) for browsing task instructions and metadata.
+
+The benchmark covers CAD, CAE, CAM, BIM, EDA, and DCC. Its six task types are Single-Software Execution (931), Software Selection (140), Vision-Guided Modeling (120), Design Optimization (40), Cross-Software Coordination (60), and Open-Environment Engineering (10).
 
 Local evaluation runs environment images through Docker on Linux, calls the model, and saves evaluation results.
 
@@ -112,7 +114,7 @@ runtime/
 
 Task categories are `single-software`, `multi-software`, `software-selection`,
 `quantitative-design`, `image-based-modeling`, and `open-ended`.
-Open-ended tasks use **CLI** in a blank environment and live under
+Open-Environment Engineering tasks use **CLI** in a blank environment and live under
 `task/open-ended/cli/agent-selected/`; the agent chooses and installs its tools.
 
 Task JSON IDs follow `<category>--<gui|cli>--<software>--<task-number>--<os>`, for example
@@ -121,17 +123,17 @@ directory path with `--task`. See the [task guide](task/README.md).
 
 ## 📊 Evaluation results
 
-The main experiment evaluates seven models on the same 300 tasks. EngiScore is the mean task score on a 0–100 scale.
+The main experiment evaluates seven models on the same **306 tasks**: **158 CLI** and **148 GUI**, including all 10 Open-Environment Engineering tasks. EngiScore is the mean task score on a 0–100 scale. Execution metrics average all 306 tasks, including unsuccessful runs; output tokens are reported per turn, in thousands.
 
-| Model | EngiScore |
-| --- | ---: |
-| Claude Opus 5 | **42.3** |
-| GPT-5.6 Sol | 37.0 |
-| Qwen3.8 Max | 25.8 |
-| Gemini 3.7 Flash | 24.9 |
-| DeepSeek V4.1 Flash | 24.8 |
-| Kimi K3 | 24.1 |
-| Qwen3.8 Flash | 15.8 |
+| Model | EngiScore | CLI | GUI | Turns/task | Tokens (K/turn) | Cost ($/task) |
+| --- | ---: | ---: | ---: | ---: | ---: | ---: |
+| Claude Opus 5 | **44.7** | 48.6 | 40.5 | 69.5 | 2.4 | 18.78 |
+| GPT-5.6 Sol | 38.6 | 47.9 | 28.6 | 54.2 | 1.0 | 9.57 |
+| Qwen3.8 Max | 26.3 | 35.3 | 16.6 | 107.3 | 2.7 | 6.44 |
+| Gemini 3.7 Flash | 26.1 | 37.2 | 14.2 | 110.0 | 0.7 | 2.08 |
+| DeepSeek V4.1 Flash | 25.9 | 48.3 | 2.0 | 115.3 | 9.8 | 0.80 |
+| Kimi K3 | 24.3 | 31.3 | 16.7 | 92.1 | 0.9 | 5.85 |
+| Qwen3.8 Flash | 16.7 | 31.5 | 1.0 | 119.6 | 1.3 | 0.44 |
 
 ## 📚 Citation
 
