@@ -23,7 +23,7 @@ The full set of 1,301 tasks and their verifiers is also available in the [Huggin
 
 The benchmark covers CAD, CAE, CAM, BIM, EDA, and DCC. Its six task types are Single-Software Execution (931), Software Selection (140), Vision-Guided Modeling (120), Design Optimization (40), Cross-Software Coordination (60), and Open-Environment Engineering (10).
 
-Local evaluation runs environment images through Docker on Linux, calls the model, and saves evaluation results.
+Local evaluation launches Windows or Ubuntu virtual machines through Docker on Linux, calls the model, and saves evaluation results.
 
 ## 💾 Installation
 
