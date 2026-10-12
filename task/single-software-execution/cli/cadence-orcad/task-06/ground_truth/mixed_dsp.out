@@ -1,0 +1,119 @@
+
+**** 04/27/26 22:43:21 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native passive low-pass transient task.
+
+
+ ****     CIRCUIT DESCRIPTION
+
+
+******************************************************************************
+
+
+
+* Run the native PSpice transient analysis, keep the generated
+* .out/.dat/.measure artifacts, and derive passband / stopband
+* attenuation from the measured max/min values.
+
+.PARAM CASE = 1
+.PARAM FREQ = {TABLE(CASE, 1,1k, 2,5k)}
+.PARAM VINAMP = {TABLE(CASE, 1,1.0, 2,0.5)}
+
+VIN   IN   0    SIN(0 {VINAMP} {FREQ} 0 0)
+RSRC  IN   N1   68
+R1    N1   N2   1.0k
+C1    N2   0    47n
+R2    N2   N3   1.5k
+C2    N3   0    33n
+RL    N3   0    10k
+
+.TRAN 10u 10m 0 10u
+.STEP PARAM CASE LIST 1 2
+.MEAS TRAN FREQVAL PARAM {FREQ}
+.MEAS TRAN VINVAL  PARAM {VINAMP}
+.MEAS TRAN VINMAX MAX V(IN) FROM=8m TO=10m
+.MEAS TRAN VINMIN MIN V(IN) FROM=8m TO=10m
+.MEAS TRAN VOUTMAX MAX V(N3) FROM=8m TO=10m
+.MEAS TRAN VOUTMIN MIN V(N3) FROM=8m TO=10m
+.PROBE
+.END
+
+**** 04/27/26 22:43:21 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native passive low-pass transient task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    1     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   N3)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+**** 04/27/26 22:43:21 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native passive low-pass transient task.
+
+
+ ****     INITIAL TRANSIENT SOLUTION       TEMPERATURE =   27.000 DEG C
+
+ ****     CURRENT STEP                     PARAM CASE =    2     
+
+
+******************************************************************************
+
+
+
+ NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE     NODE   VOLTAGE
+
+
+(   IN)    0.0000  (   N1)    0.0000  (   N2)    0.0000  (   N3)    0.0000  
+
+
+
+
+    VOLTAGE SOURCE CURRENTS
+    NAME         CURRENT
+
+    VIN          0.000E+00
+
+    TOTAL POWER DISSIPATION   0.00E+00  WATTS
+
+
+
+          JOB CONCLUDED
+
+**** 04/27/26 22:43:21 ***** PSpice 25.1.0 (25 March 2026) **** ID# 0 ********
+
+ * Native passive low-pass transient task.
+
+
+ ****     JOB STATISTICS SUMMARY
+
+ ****     CURRENT STEP                     PARAM CASE =    2     
+
+
+******************************************************************************
+
+
+
+  Total job time (using Solver 1)   =         .08
+

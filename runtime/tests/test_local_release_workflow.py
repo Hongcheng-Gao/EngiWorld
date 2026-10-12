@@ -2,7 +2,6 @@ import json
 from pathlib import Path
 from types import SimpleNamespace
 from unittest.mock import patch
-from urllib.error import HTTPError
 
 import pytest
 
@@ -26,11 +25,13 @@ def test_docker_provider_waits_for_software_vm_without_kvm(tmp_path, monkeypatch
     calls = []
 
     class Containers:
-        def run(self, image, **kwargs):
+        def create(self, image, **kwargs):
             calls.append((image, kwargs))
-            return SimpleNamespace(stop=lambda: None, remove=lambda: None)
+            return SimpleNamespace(start=lambda: calls.append(("start",)),
+                                   stop=lambda: None, remove=lambda: None)
 
-    monkeypatch.setattr(docker, "from_env", lambda: SimpleNamespace(containers=Containers()))
+    monkeypatch.setattr(docker, "from_env", lambda: SimpleNamespace(
+        containers=Containers(), images=SimpleNamespace(get=lambda image: object())))
     exists = docker_provider.os.path.exists
     monkeypatch.setattr(docker_provider.os.path, "exists",
                         lambda path: False if str(path) == "/dev/kvm" else exists(path))
@@ -45,7 +46,8 @@ def test_docker_provider_waits_for_software_vm_without_kvm(tmp_path, monkeypatch
     assert calls[0][0] == "happysixd/osworld-docker"
     assert calls[0][1]["devices"] == []
     assert calls[0][1]["environment"]["KVM"] == "N"
-    assert calls[1] == ("ready", 900)
+    assert calls[1] == ("start",)
+    assert calls[2] == ("ready", 900)
 
 
 def test_reverse_tasks_are_single_software_and_legacy_selection_still_works():
@@ -73,40 +75,70 @@ def test_manifest_covers_all_reference_image_tasks():
                    for entry in assets)
 
 
-def test_prepare_restores_pinned_bytes_and_rejects_local_changes(tmp_path):
+def test_prepare_copies_verified_download_and_rejects_local_changes(tmp_path):
     data = b"reference image bytes"
     entry = {"path": "task-v/example/task-01/init_file/ref.png", "source": "task/original/ref.png",
              "size": len(data), "git_blob": prepare_tasks.blob_hash(data)}
-    manifest = {"source_repository": "https://github.com/owner/repo", "revision": "pinned"}
-    with patch.object(prepare_tasks.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=data)):
-        assert prepare_tasks.restore_asset(tmp_path, manifest, entry) == "restored"
-        assert prepare_tasks.restore_asset(tmp_path, manifest, entry) == "present"
+    source = tmp_path / "downloaded.png"
+    source.write_bytes(data)
     target = tmp_path / entry["path"]
+    assert prepare_tasks.copy_verified(source, target, entry) == "downloaded"
+    assert prepare_tasks.copy_verified(source, target, entry) == "present"
     target.write_bytes(b"local edit")
     with pytest.raises(ValueError, match="refusing to overwrite"):
-        prepare_tasks.restore_asset(tmp_path, manifest, entry)
+        prepare_tasks.copy_verified(source, target, entry)
     assert target.read_bytes() == b"local edit"
 
 
 def test_prepare_rejects_corrupt_download(tmp_path):
     entry = {"path": "input.bin", "source": "task/input.bin", "size": 4, "git_blob": "0" * 40}
-    with patch.object(prepare_tasks.subprocess, "run", return_value=SimpleNamespace(returncode=0, stdout=b"bad!")):
-        with pytest.raises(ValueError, match="checksum mismatch"):
-            prepare_tasks.restore_asset(tmp_path, {}, entry)
+    source = tmp_path / "corrupt.bin"
+    source.write_bytes(b"bad!")
+    with pytest.raises(ValueError, match="checksum mismatch"):
+        prepare_tasks.copy_verified(source, tmp_path / "input.bin", entry)
     assert not (tmp_path / "input.bin").exists()
 
 
-def test_private_source_can_use_existing_git_credentials(tmp_path):
-    data = b"image bytes"
-    entry = {"path": "ref.png", "source": "task/ref.png", "size": len(data),
-             "git_blob": prepare_tasks.blob_hash(data)}
-    manifest = {"source_repository": "https://github.com/owner/repo", "revision": "pinned"}
-    with patch.object(prepare_tasks.subprocess, "run", return_value=SimpleNamespace(returncode=1)), \
-         patch.object(prepare_tasks, "urlopen", side_effect=HTTPError("url", 404, "Not Found", {}, None)), \
-         patch.object(prepare_tasks, "authenticated_git_asset", return_value=data) as fallback:
-        assert prepare_tasks.restore_asset(tmp_path, manifest, entry) == "restored"
-    fallback.assert_called_once_with(tmp_path, manifest, entry)
-    assert (tmp_path / "ref.png").read_bytes() == data
+@pytest.mark.parametrize("source", ["hf", "modelscope"])
+def test_prepare_downloads_complete_selected_task_and_resolves_alias(tmp_path, monkeypatch, source):
+    snapshot = tmp_path / "snapshot"
+    task = "vision-guided-modeling/cli/freecad/task-01"
+    folder = snapshot / "task" / task
+    folder.mkdir(parents=True)
+    (folder / "task-01.json").write_text('{"id":"task"}')
+    (folder / "ref.png").write_bytes(b"reference")
+    entry = {"path": task + "/ref.png", "size": 9,
+             "sha256": prepare_tasks.file_hash(folder / "ref.png")}
+    (snapshot / "task/assets-manifest.json").write_text(json.dumps({"assets": [entry]}))
+    (snapshot / "task/aliases.json").write_text(json.dumps({"old-task": task}))
+    (snapshot / "task/.gitignore").write_text("*.download")
+    calls = []
+    monkeypatch.setattr(prepare_tasks, "download_snapshot",
+                        lambda provider, kind, patterns: calls.append((provider, kind, patterns)) or snapshot)
+    root = tmp_path / "local"
+    root.mkdir()
+    (root / ".gitignore").write_text("large local resources")
+    result = prepare_tasks.prepare(root, source, "old-task")
+    assert result["resources_verified"] == 1
+    assert (root / task / "ref.png").read_bytes() == b"reference"
+    assert (root / ".gitignore").read_text() == "large local resources"
+    assert calls[1][0] == source and f"task/{task}/*" in calls[1][2]
+    monkeypatch.setattr(prepare_tasks, "download_snapshot", lambda *args: pytest.fail("offline check downloaded data"))
+    assert prepare_tasks.main(["--task-root", str(root), "--task", "old-task", "--check"]) == 0
+
+
+def test_missing_docker_runner_never_triggers_a_pull(tmp_path, monkeypatch):
+    import docker
+    from engiworld.scheduler.runner import ensure_engine_importable
+    ensure_engine_importable(Path(__file__).resolve().parents[1] / "engine")
+    from desktop_env.providers.docker.provider import DockerProvider
+    def missing(image):
+        raise docker.errors.ImageNotFound("missing")
+    client = SimpleNamespace(images=SimpleNamespace(get=missing),
+                             containers=SimpleNamespace(create=lambda *a, **kw: pytest.fail("started VM without prepared runner")))
+    monkeypatch.setattr(docker, "from_env", lambda: client)
+    with pytest.raises(RuntimeError, match="docker pull"):
+        DockerProvider("local").start_emulator(str(tmp_path / "local.qcow2"), True, "Ubuntu")
 
 
 def test_asset_path_cannot_escape_task_root(tmp_path):

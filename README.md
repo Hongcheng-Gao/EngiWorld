@@ -41,38 +41,53 @@ Install the runtime in a Python `venv` environment:
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[worker-api]" huggingface_hub
+python -m pip install -e ".[worker-api,download]"
 ```
 
 Run the following commands from `runtime/`.
 
-## 🚀 Quick start
+## 💾 Download complete data before evaluation
 
-This LibreCAD example shows how to prepare an environment, start a task, and run a model through scoring.
+The complete dataset provides all **1,301 task definitions, drawings, evaluators, and required ground-truth files**. GitHub includes every drawing and evaluator plus smaller task resources. Download the complete data before starting evaluation.
 
-### 1. Download an environment image
+| Source | Complete task data | Environment images |
+|---|---|---|
+| Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
+| ModelScope | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) (image mirror in progress; use HF for images) |
 
-Tasks run inside virtual machines with the corresponding engineering software installed. Download and decompress the LibreCAD image from the [Hugging Face environment image repository](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images):
+The complete ModelScope task mirror is available; download images from Hugging Face while the image mirror is being synchronized.
+
+**Hugging Face:**
 
 ```bash
-hf download HongchengGao/EngiWorld-Images \
-  --repo-type dataset --local-dir ../environment-images \
-  images/LibreCAD2.2.0.2.qcow2.zst &&
+python -m engiworld.prepare_tasks --source hf --task-root ../data/task
+python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
+```
+
+**ModelScope task data (images currently from Hugging Face):**
+
+```bash
+python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
+python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
+```
+
+```bash
 zstd -d ../environment-images/images/LibreCAD2.2.0.2.qcow2.zst
+docker pull happysixd/osworld-docker
+python -m engiworld.prepare_tasks --task-root ../data/task --check
 ```
 
-The decompressed image is saved to `../environment-images/images/LibreCAD2.2.0.2.qcow2`.
+Downloads verify checksums and preserve modified local files. Omitting --image downloads all 15 public archives (about 98 GB compressed). Choose the image matching the task snapshot from manifest.json. Snapshots outside the public catalog require a matching image prepared by the user. Decompress the selected archive and prepare the Docker runner before evaluation. Task preparation uses the published dataset directly.
 
-### 2. Start a task
+## 🚀 Start from local data
 
-Prepare the selected task's input and scoring resources:
+The following commands read already downloaded task data and the local image.
 
-```bash
-python -m engiworld.prepare_tasks --task single-software-execution/gui/librecad/task-08
-```
+### 1. Start a task
 
 ```bash
 python -m engiworld.local_eval \
+  --task-root ../data/task \
   --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --smoke-test
@@ -86,9 +101,9 @@ This starts the VM, loads the task inputs, and saves a `smoke.png` screenshot in
 test -e /dev/kvm && echo "KVM available" || echo "Software emulation"
 ```
 
-If the output says `Software emulation`, run the same `--smoke-test` command above. The runtime selects software emulation automatically; no arguments need to change. Startup may take several minutes. When the terminal shows `"status": "environment_ready"` and `smoke.png` appears in the results directory, open the screenshot to confirm that LibreCAD and the input drawing are ready. Then follow step 3 to run and score a model.
+If the output says `Software emulation`, run the same `--smoke-test` command above. The runtime selects software emulation automatically; no arguments need to change. Startup may take several minutes. When the terminal shows `"status": "environment_ready"` and `smoke.png` appears in the results directory, open the screenshot to confirm that LibreCAD and the input drawing are ready. Then follow step 2 to run and score a model.
 
-### 3. Run a model and score the task
+### 2. Run a model and score the task
 
 Configure an OpenAI-compatible Chat Completions endpoint and run the task:
 
@@ -97,13 +112,14 @@ export OPENAI_BASE_URL="https://your-api-endpoint/v1"
 export OPENAI_API_KEY="your-api-key"
 
 python -m engiworld.local_eval \
+  --task-root ../data/task \
   --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --model your-model-name \
   --result-dir results
 ```
 
-When the run finishes, the terminal shows the result location. `summary.json` summarizes the run, `result.txt` holds the task score, and `traj.jsonl` records the model's actions. To run another task, use its task directory name or JSON ID as `--task`, prepare its resources with `engiworld.prepare_tasks --task`, and use the image named in its `snapshot` field. To download resources for all 1,301 tasks, run `python -m engiworld.prepare_tasks`. See the [runtime guide](runtime/README.md) for more options.
+When the run finishes, summary.json summarizes the run, result.txt holds the score, and traj.jsonl records model actions. For another task, change --task and use its matching local image. Complete-data preparation already supplies its resources. See the [runtime guide](runtime/README.md) for more options.
 
 ## Repository layout
 

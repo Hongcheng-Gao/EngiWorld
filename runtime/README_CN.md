@@ -4,6 +4,11 @@
 
 安装、镜像下载和本地评测见[快速开始](../README_CN.md)。本页介绍运行设置和云端调度。以下命令在本目录执行。
 
+先用 `python -m engiworld.prepare_tasks --source hf --task-root ../data/task` 下载完整任务数据。
+ModelScope 完整任务库可使用 `--source modelscope`。用 `python -m engiworld.prepare_images --source hf --image <snapshot>`
+下载所需镜像，解压后提前执行 `docker pull happysixd/osworld-docker`。本地启动传入
+`--task-root ../data/task` 和已有的 `.qcow2` 路径；启动阶段不下载任务资源或环境镜像。
+
 ## 运行设置
 
 使用 `python -m engiworld.local_eval` 运行本地评测。每个环境默认使用 4 个 CPU、16 GB 内存和 200 GB 虚拟磁盘，可通过 `ENGIWORLD_DOCKER_CPU_CORES`、`ENGIWORLD_DOCKER_RAM_SIZE`、`ENGIWORLD_DOCKER_DISK_SIZE` 调整。来宾系统用户密码通过 `--client-password` 或 `ENGIWORLD_CLIENT_PASSWORD` 设置。
@@ -23,7 +28,7 @@
 
 ## 云端调度
 
-火山 ECS 调度通过 Redis 协调任务，通过对象存储保存结果。资源配置见 [`.env.example`](.env.example)，部署入口见 [`deploy/`](deploy/)。云端执行使用自定义镜像 ID。master 和 worker 的 `--task-root` / `TASK_ROOT` 都应指向 `../task`，并准备好任务资源。
+火山 ECS 调度通过 Redis 协调任务，通过对象存储保存结果。资源配置见 [`.env.example`](.env.example)，部署入口见 [`deploy/`](deploy/)。云端执行使用自定义镜像 ID。master 和 worker 的 `--task-root` / `TASK_ROOT` 都应指向已经下载的完整任务目录。
 
 ## 通用模型接口
 
@@ -33,7 +38,7 @@
 
 ```bash
 python -m engiworld.scheduler.master plan \
-  --task-root ../task --task-limit 1 --num-vms 1 \
+  --task-root ../data/task --task-limit 1 --num-vms 1 \
   --agent openai-compatible \
   --agent-env ARENA_MODEL_NAME=your-model-name
 ```
@@ -57,7 +62,7 @@ python -m engiworld.scheduler.master plan \
 
 ## 视觉引导建模
 
-`vision-guided-modeling/` 的参考图位于 `init_file/`，通过 `python -m engiworld.prepare_tasks` 下载。运行框架默认将图片放入模型消息：GUI 使用 `gui_message_initial`，CLI 使用 `cli_message_initial`。
+`vision-guided-modeling/` 的参考图位于 `init_file/`，通过 `python -m engiworld.prepare_tasks --source hf --task-root ../data/task` 下载。运行框架默认将图片放入模型消息：GUI 使用 `gui_message_initial`，CLI 使用 `cli_message_initial`。
 
 ## 开放环境工程
 

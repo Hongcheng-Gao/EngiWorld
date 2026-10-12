@@ -27,8 +27,8 @@ Each task contains a `task-*.json` definition, `init_file/` inputs, and its eval
 `ubuntu` or `windows` from the task. Reverse-modeling tasks retain a `-reverse`
 suffix on the task number to distinguish them from same-numbered tasks.
 
-From `../runtime/`, run `python -m engiworld.prepare_tasks` to download task resources.
-Use either a task directory or its JSON ID with `python -m engiworld.local_eval --task`.
+From `../runtime/`, run `python -m engiworld.prepare_tasks --source hf --task-root ../data/task` to download task resources.
+Use either a task directory or its JSON ID with `python -m engiworld.local_eval --task-root ../data/task --task`.
 Follow the [quick start](../README.md) to run an evaluation.
 
 The paper's 306-task main-experiment subset is listed in [`splits/main-306.txt`](splits/main-306.txt). The scheduler accepts it through `--task-id-file ../task/splits/main-306.txt`.

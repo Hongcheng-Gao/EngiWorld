@@ -41,38 +41,53 @@ cd Engiworld/runtime
 ```bash
 python3.10 -m venv .venv
 source .venv/bin/activate
-python -m pip install -e ".[worker-api]" huggingface_hub
+python -m pip install -e ".[worker-api,download]"
 ```
 
 下面的命令都在 `runtime/` 目录中执行。
 
-## 🚀 快速开始
+## 💾 先下载完整数据和镜像
 
-下面以 LibreCAD 任务为例，依次准备软件环境、启动任务，再运行模型和评分。
+完整数据提供 **1,301 条任务的定义、输入图纸、评分代码及所需标准答案**。GitHub 直接包含全部图纸、评分代码和较小的任务资源。先下载完整数据，再启动评测。
 
-### 1. 下载环境镜像
+| 下载源 | 完整任务数据 | 环境镜像 |
+|---|---|---|
+| Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
+| ModelScope | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images)（镜像同步中，暂从 HF 下载） |
 
-任务在装有工程软件的虚拟机中运行。本例从 [Hugging Face 环境镜像仓库](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images)下载 LibreCAD 镜像并解压：
+ModelScope 完整任务库已发布；镜像同步期间，请从 Hugging Face 下载镜像。
+
+**Hugging Face:**
 
 ```bash
-hf download HongchengGao/EngiWorld-Images \
-  --repo-type dataset --local-dir ../environment-images \
-  images/LibreCAD2.2.0.2.qcow2.zst &&
+python -m engiworld.prepare_tasks --source hf --task-root ../data/task
+python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
+```
+
+**ModelScope 任务数据（镜像暂从 HF 下载）：**
+
+```bash
+python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
+python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
+```
+
+```bash
 zstd -d ../environment-images/images/LibreCAD2.2.0.2.qcow2.zst
+docker pull happysixd/osworld-docker
+python -m engiworld.prepare_tasks --task-root ../data/task --check
 ```
 
-镜像解压到 `../environment-images/images/LibreCAD2.2.0.2.qcow2`。
+下载程序校验完整性，并保护本地已修改的文件。不传 --image 会下载全部 15 个公开镜像，压缩后约 98 GB。镜像名称见 manifest.json，按任务的 snapshot 选择；公开目录未收录的环境需要自行准备对应镜像。解压所选镜像，并提前下载 Docker 运行环境。任务准备直接使用正式发布的数据集。
 
-### 2. 启动任务
+## 🚀 从本地数据启动
 
-准备所选任务的输入和评分资源：
+下面的启动命令读取已经下载好的任务数据和本地镜像。
 
-```bash
-python -m engiworld.prepare_tasks --task single-software-execution/gui/librecad/task-08
-```
+### 1. 启动任务
 
 ```bash
 python -m engiworld.local_eval \
+  --task-root ../data/task \
   --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --smoke-test
@@ -86,9 +101,9 @@ python -m engiworld.local_eval \
 test -e /dev/kvm && echo "KVM available" || echo "Software emulation"
 ```
 
-如果显示 `Software emulation`，仍运行上面的 `--smoke-test` 命令，程序会自动选择软件模拟，无需修改参数。启动可能需要数分钟；终端显示 `"status": "environment_ready"`，且结果目录中出现 `smoke.png` 后，打开截图确认 LibreCAD 和输入图纸已就绪。接着按第 3 步运行模型并评分。
+如果显示 `Software emulation`，仍运行上面的 `--smoke-test` 命令，程序会自动选择软件模拟，无需修改参数。启动可能需要数分钟；终端显示 `"status": "environment_ready"`，且结果目录中出现 `smoke.png` 后，打开截图确认 LibreCAD 和输入图纸已就绪。接着按第 2 步运行模型并评分。
 
-### 3. 运行模型并评分
+### 2. 运行模型并评分
 
 配置兼容 OpenAI Chat Completions 的模型接口，然后运行任务：
 
@@ -97,13 +112,14 @@ export OPENAI_BASE_URL="https://your-api-endpoint/v1"
 export OPENAI_API_KEY="your-api-key"
 
 python -m engiworld.local_eval \
+  --task-root ../data/task \
   --task single-software-execution/gui/librecad/task-08 \
   --image ../environment-images/images/LibreCAD2.2.0.2.qcow2 \
   --model your-model-name \
   --result-dir results
 ```
 
-运行完成后，终端会显示结果文件的位置。`summary.json` 汇总本次运行，`result.txt` 保存任务得分，`traj.jsonl` 记录模型操作。其他任务可使用任务目录路径或 JSON ID 作为 `--task`，通过 `engiworld.prepare_tasks --task` 准备资源，并按任务文件中的 `snapshot` 准备对应镜像。执行 `python -m engiworld.prepare_tasks` 可下载全部 1,301 条任务的资源。更多参数见[运行框架说明](runtime/README_CN.md)。
+运行结束后，summary.json 汇总结果，result.txt 保存得分，traj.jsonl 记录模型操作。运行其他任务时修改 --task，并使用对应的本地镜像；完整数据下载后无需逐个补齐资源。更多参数见[运行框架说明](runtime/README_CN.md)。
 
 ## 仓库结构
 

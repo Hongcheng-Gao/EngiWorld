@@ -1,0 +1,53 @@
+<?xml version="1.0" ?>
+<IPC-2581 version="B" generator="EngiworldNeutral" name="demo">
+  <Stackup>
+    <Layer index="1" name="TOP" type="Signal" dielectric_constant="4.2" copper_mil="1.0"/>
+    <Layer index="2" name="GND" type="Plane" dielectric_constant="4.2" copper_mil="1.0"/>
+    <Layer index="3" name="PWR" type="Plane" dielectric_constant="4.2" copper_mil="1.0"/>
+    <Layer index="4" name="BOTTOM" type="Signal" dielectric_constant="4.2" copper_mil="1.0"/>
+  </Stackup>
+  <Components>
+    <Component ref="U1" x="25.0" y="25.0" side="TOP" rotation="0" footprint="QFN32"/>
+    <Component ref="R1" x="18.0" y="31.0" side="TOP" rotation="90" footprint="0603"/>
+    <Component ref="C1" x="31.0" y="31.0" side="TOP" rotation="90" footprint="0603"/>
+    <Component ref="J1" x="8.0" y="15.0" side="TOP" rotation="0" footprint="HDR4"/>
+  </Components>
+  <Nets>
+    <Net name="GND">
+      <PinRef name="U1.1"/>
+      <PinRef name="C1.2"/>
+      <PinRef name="J1.1"/>
+    </Net>
+    <Net name="VCC">
+      <PinRef name="U1.2"/>
+      <PinRef name="C1.1"/>
+      <PinRef name="J1.2"/>
+    </Net>
+    <Net name="USB2_D_N">
+      <PinRef name="U1.5"/>
+      <PinRef name="R9.1"/>
+    </Net>
+    <Net name="USB2_D_P">
+      <PinRef name="U1.6"/>
+      <PinRef name="R10.1"/>
+    </Net>
+  </Nets>
+  <Vias>
+    <Via id="V1" net="GND" x="15.0" y="15.0" from="TOP" to="BOTTOM" padstack="VIA12"/>
+    <Via id="V2" net="VCC" x="35.0" y="15.0" from="TOP" to="BOTTOM" padstack="VIA12"/>
+    <Via id="V3" net="GND" x="15.0" y="35.0" from="TOP" to="BOTTOM" padstack="VIA10"/>
+  </Vias>
+  <Padstacks>
+    <Padstack name="VIA12" hole_mil="12" diameter_mil="28" count="2"/>
+    <Padstack name="VIA10" hole_mil="10" diameter_mil="24" count="1"/>
+    <Padstack name="SMD0603" hole_mil="0" diameter_mil="35" count="2"/>
+  </Padstacks>
+  <DifferentialPairs>
+    <DifferentialPair name="USB2_D" negative="USB2_D_N" positive="USB2_D_P" gap_mil="8" length_n_mil="950" length_p_mil="952"/>
+    <DifferentialPair name="PCIE_TX0" negative="PCIE_TX0_N" positive="PCIE_TX0_P" gap_mil="6" length_n_mil="1820" length_p_mil="1816"/>
+  </DifferentialPairs>
+  <Violations>
+    <Violation id="DRC001" type="clearance" object="U1.5-R9.1" severity="error"/>
+    <Violation id="DRC002" type="silkscreen" object="J1" severity="warning"/>
+  </Violations>
+</IPC-2581>

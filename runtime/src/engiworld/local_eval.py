@@ -54,7 +54,8 @@ def preflight(root: Path, task_id: str):
                    if not verify_asset(asset_path(root, entry["path"]), entry))
     if missing:
         raise ValueError(f"Missing or modified task resources: {sorted(set(missing))}. "
-                         f"Run python -m engiworld.prepare_tasks --task {task_id}")
+                         "Download the complete task data before starting evaluation: "
+                         f"python -m engiworld.prepare_tasks --task-root {root} --task {task_id}")
     return task
 
 

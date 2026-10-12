@@ -17,6 +17,7 @@ WAIT_TIME = 3
 RETRY_INTERVAL = 1
 LOCK_TIMEOUT = 10
 SOFTWARE_VM_READY_TIMEOUT = 900
+DOCKER_IMAGE = "happysixd/osworld-docker"
 
 
 class PortAllocationError(Exception):
@@ -90,6 +91,11 @@ class DockerProvider(Provider):
         raise TimeoutError("VM failed to become ready within timeout period")
 
     def start_emulator(self, path_to_vm: str, headless: bool, os_type: str):
+        # Downloading the runner belongs to preparation, never to task execution.
+        try:
+            self.client.images.get(DOCKER_IMAGE)
+        except docker.errors.ImageNotFound as exc:
+            raise RuntimeError(f"Docker runner is not available locally. Prepare it first: docker pull {DOCKER_IMAGE}") from exc
         # Use a single lock for all port allocation and container startup
         lock = FileLock(str(self.lock_file), timeout=LOCK_TIMEOUT)
         
@@ -111,8 +117,8 @@ class DockerProvider(Provider):
                     self.environment["KVM"] = "N"
                     logger.warning("KVM device not found, running without hardware acceleration (will be slower)")
 
-                self.container = self.client.containers.run(
-                    "happysixd/osworld-docker",
+                self.container = self.client.containers.create(
+                    DOCKER_IMAGE,
                     environment=self.environment,
                     cap_add=["NET_ADMIN"],
                     devices=devices,
@@ -127,9 +133,9 @@ class DockerProvider(Provider):
                         5000: self.server_port,
                         9222: self.chromium_port,
                         8080: self.vlc_port
-                    },
-                    detach=True
+                    }
                 )
+                self.container.start()
 
             logger.info(f"Started container with ports - VNC: {self.vnc_port}, "
                        f"Server: {self.server_port}, Chrome: {self.chromium_port}, VLC: {self.vlc_port}")

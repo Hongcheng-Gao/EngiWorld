@@ -2,9 +2,14 @@
 
 # EngiWorld runtime
 
-See the [quick start](../README.md#-quick-start) for installation, image downloads,
+See the [download and start guide](../README.md#-download-complete-data-before-evaluation) for installation, image downloads,
 and local evaluation. This page covers runtime settings and cloud scheduling.
-Run commands from this directory.
+Run commands from this directory. Download complete task data before evaluation with
+`python -m engiworld.prepare_tasks --source hf --task-root ../data/task`.
+Use `--source modelscope` for the complete ModelScope task mirror. Download images with
+`python -m engiworld.prepare_images --source hf --image <snapshot>`, decompress the archive,
+and run `docker pull happysixd/osworld-docker` during preparation. Local evaluation uses
+`--task-root ../data/task` and an existing local `.qcow2`; it does not fetch task assets or images.
 
 ## Runtime settings
 
@@ -40,7 +45,7 @@ a `null` score. Results include `wall_duration_seconds`, `paused_seconds`, and
 Volcengine ECS scheduling uses Redis to coordinate tasks and object storage to save
 results. Configure resources with [`.env.example`](.env.example) and deploy using
 [`deploy/`](deploy/). Cloud execution uses custom image IDs. Both master and worker
-must point `--task-root` / `TASK_ROOT` to `../task` and have task resources prepared.
+must point `--task-root` / `TASK_ROOT` to the downloaded task directory and have task resources prepared.
 
 ## Shared model interface
 
@@ -53,7 +58,7 @@ the model on the master:
 
 ```bash
 python -m engiworld.scheduler.master plan \
-  --task-root ../task --task-limit 1 --num-vms 1 \
+  --task-root ../data/task --task-limit 1 --num-vms 1 \
   --agent openai-compatible \
   --agent-env ARENA_MODEL_NAME=your-model-name
 ```
@@ -80,7 +85,7 @@ responses are retried; exhaustion records an API interruption.
 ## Vision-Guided Modeling
 
 Reference images for `vision-guided-modeling/` tasks live in `init_file/`. Download
-them with `python -m engiworld.prepare_tasks`. The runtime includes the images in
+them with `python -m engiworld.prepare_tasks --source hf --task-root ../data/task`. The runtime includes the images in
 model messages by default, using `gui_message_initial` for GUI tasks and
 `cli_message_initial` for CLI tasks.
 
