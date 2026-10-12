@@ -53,9 +53,9 @@ python -m pip install -e ".[worker-api,download]"
 | 下载源 | 完整任务数据 | 环境镜像 |
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
-| ModelScope | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images)（镜像同步中，暂从 HF 下载） |
+| ModelScope | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) |
 
-ModelScope 完整任务库已发布；镜像同步期间，请从 Hugging Face 下载镜像。
+任选一个下载源。
 
 **Hugging Face:**
 
@@ -64,11 +64,11 @@ python -m engiworld.prepare_tasks --source hf --task-root ../data/task
 python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
-**ModelScope 任务数据（镜像暂从 HF 下载）：**
+**ModelScope:**
 
 ```bash
 python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
-python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
+python -m engiworld.prepare_images --source modelscope --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
 ```bash

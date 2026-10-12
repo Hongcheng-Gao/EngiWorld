@@ -53,9 +53,9 @@ The complete dataset provides all **1,301 task definitions, drawings, evaluators
 | Source | Complete task data | Environment images |
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
-| ModelScope | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) (image mirror in progress; use HF for images) |
+| ModelScope | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) |
 
-The complete ModelScope task mirror is available; download images from Hugging Face while the image mirror is being synchronized.
+Choose either download source.
 
 **Hugging Face:**
 
@@ -64,11 +64,11 @@ python -m engiworld.prepare_tasks --source hf --task-root ../data/task
 python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
-**ModelScope task data (images currently from Hugging Face):**
+**ModelScope:**
 
 ```bash
 python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
-python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
+python -m engiworld.prepare_images --source modelscope --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
 ```bash
