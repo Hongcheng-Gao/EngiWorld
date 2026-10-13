@@ -25,8 +25,6 @@ EngiWorld 评测智能体能否操作专业工程软件，并交付符合要求�
 
 单机评测在 Linux 主机上通过 Docker 启动 Windows 或 Ubuntu 虚拟机，调用模型并保存评分结果。
 
-> **评测支持：** 如需在 EngiWorld 上评测您的模型或智能体，欢迎通过 [GitHub Issues](https://github.com/Hongcheng-Gao/EngiWorld/issues) 联系我们。我们可以协助模型接入、环境配置和评测运行。
-
 ## 💾 安装
 
 准备一台 x86_64 Linux 服务器，安装 Python 3.10、[Docker Engine](https://docs.docker.com/engine/install/) 和 `zstd`。有 `/dev/kvm` 时，虚拟机使用硬件加速；没有时，Docker 运行器会尝试软件模拟，启动和运行会更慢。每个环境默认使用 4 个 CPU、16 GB 内存。
