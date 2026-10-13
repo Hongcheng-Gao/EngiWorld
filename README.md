@@ -53,9 +53,10 @@ The complete dataset provides all **1,301 task definitions, drawings, evaluators
 | Source | Complete task data | Environment images |
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
+| ModelScope domestic (.cn) | [EngiWorld-Tasks](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Images) |
 | ModelScope international (.ai) | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) |
 
-The current ModelScope mirror is on the international `.ai` site. A domestic `.cn` mirror has not been published yet.
+Users in China can choose the ModelScope `.cn` domestic mirror. Hugging Face and the `.ai` international copy remain available. The `--source modelscope` commands below use the domestic site.
 
 **Hugging Face:**
 
@@ -64,7 +65,7 @@ python -m engiworld.prepare_tasks --source hf --task-root ../data/task
 python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
-**ModelScope international (.ai):**
+**ModelScope domestic (.cn):**
 
 ```bash
 python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
@@ -77,7 +78,7 @@ docker pull happysixd/osworld-docker
 python -m engiworld.prepare_tasks --task-root ../data/task --check
 ```
 
-Downloads verify checksums and preserve modified local files. Omitting --image downloads all 15 public archives (about 98 GB compressed). Choose the image matching the task snapshot from manifest.json. Snapshots outside the public catalog require a matching image prepared by the user. Decompress the selected archive and prepare the Docker runner before evaluation. Task preparation uses the published dataset directly.
+Downloads verify checksums and preserve modified local files. ModelScope image downloads use 8 parallel range streams by default; set `MODELSCOPE_DOWNLOAD_PARALLEL_WORKERS` to adjust this. Omitting --image downloads all 15 public archives (about 98 GB compressed). Choose the image matching the task snapshot from manifest.json. Snapshots outside the public catalog require a matching image prepared by the user. Decompress the selected archive and prepare the Docker runner before evaluation. Task preparation uses the published dataset directly.
 
 ## 🚀 Start from local data
 

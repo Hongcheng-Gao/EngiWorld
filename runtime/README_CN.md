@@ -5,7 +5,7 @@
 安装、镜像下载和本地评测见[快速开始](../README_CN.md)。本页介绍运行设置和云端调度。以下命令在本目录执行。
 
 先用 `python -m engiworld.prepare_tasks --source hf --task-root ../data/task` 下载完整任务数据。
-ModelScope 完整任务库可使用 `--source modelscope`。用 `python -m engiworld.prepare_images --source hf --image <snapshot>`
+ModelScope `.cn` 国内站完整任务库可使用 `--source modelscope`。用 `python -m engiworld.prepare_images --source hf --image <snapshot>`
 下载所需镜像，解压后提前执行 `docker pull happysixd/osworld-docker`。本地启动传入
 `--task-root ../data/task` 和已有的 `.qcow2` 路径；启动阶段不下载任务资源或环境镜像。
 

@@ -6,7 +6,7 @@ See the [download and start guide](../README.md#-download-complete-data-before-e
 and local evaluation. This page covers runtime settings and cloud scheduling.
 Run commands from this directory. Download complete task data before evaluation with
 `python -m engiworld.prepare_tasks --source hf --task-root ../data/task`.
-Use `--source modelscope` for the complete ModelScope task mirror. Download images with
+Use `--source modelscope` for the complete ModelScope `.cn` domestic task mirror. Download images with
 `python -m engiworld.prepare_images --source hf --image <snapshot>`, decompress the archive,
 and run `docker pull happysixd/osworld-docker` during preparation. Local evaluation uses
 `--task-root ../data/task` and an existing local `.qcow2`; it does not fetch task assets or images.

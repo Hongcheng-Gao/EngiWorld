@@ -4,6 +4,7 @@ from __future__ import annotations
 
 import argparse
 import json
+import os
 from pathlib import Path
 
 from engiworld.prepare_tasks import asset_path, copy_verified, download_snapshot, verify_asset
@@ -30,6 +31,8 @@ def main(argv: list[str] | None = None) -> int:
     parser.add_argument("--image", nargs="+", help="Snapshot names; omitted: all 15 public images")
     parser.add_argument("--check", action="store_true", help="Verify local archives without downloading")
     args = parser.parse_args(argv)
+    if args.source == "modelscope" and not args.check:
+        os.environ.setdefault("MODELSCOPE_DOWNLOAD_PARALLEL_WORKERS", "8")
     root = args.image_root.resolve()
     if args.check:
         manifest = json.loads((root / "manifest.json").read_text(encoding="utf-8"))

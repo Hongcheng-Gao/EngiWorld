@@ -53,9 +53,10 @@ python -m pip install -e ".[worker-api,download]"
 | 下载源 | 完整任务数据 | 环境镜像 |
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
+| ModelScope 国内站（.cn） | [EngiWorld-Tasks](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Images) |
 | ModelScope 国际站（.ai） | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) |
 
-当前 ModelScope 副本位于 `.ai` 国际站；`.cn` 国内站副本尚未发布。
+国内用户可选择 ModelScope `.cn` 国内站；Hugging Face 和 `.ai` 国际站副本保留。下面的 `--source modelscope` 默认从国内站下载。
 
 **Hugging Face:**
 
@@ -64,7 +65,7 @@ python -m engiworld.prepare_tasks --source hf --task-root ../data/task
 python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
-**ModelScope 国际站（.ai）：**
+**ModelScope 国内站（.cn）：**
 
 ```bash
 python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
@@ -77,7 +78,7 @@ docker pull happysixd/osworld-docker
 python -m engiworld.prepare_tasks --task-root ../data/task --check
 ```
 
-下载程序校验完整性，并保护本地已修改的文件。不传 --image 会下载全部 15 个公开镜像，压缩后约 98 GB。镜像名称见 manifest.json，按任务的 snapshot 选择；公开目录未收录的环境需要自行准备对应镜像。解压所选镜像，并提前下载 Docker 运行环境。任务准备直接使用正式发布的数据集。
+下载程序校验完整性，并保护本地已修改的文件。ModelScope 镜像默认使用 8 路分段并行下载，可通过 `MODELSCOPE_DOWNLOAD_PARALLEL_WORKERS` 调整。不传 --image 会下载全部 15 个公开镜像，压缩后约 98 GB。镜像名称见 manifest.json，按任务的 snapshot 选择；公开目录未收录的环境需要自行准备对应镜像。解压所选镜像，并提前下载 Docker 运行环境。任务准备直接使用正式发布的数据集。
 
 ## 🚀 从本地数据启动
 
