@@ -55,9 +55,9 @@ The complete dataset provides all **1,301 task definitions, drawings, evaluators
 | Source | Complete task data | Environment images |
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
-| ModelScope domestic (.cn) | [EngiWorld-Tasks](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Images) |
+| ModelScope | [EngiWorld-Tasks](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Images) |
 
-Users in China can choose the ModelScope `.cn` domestic mirror. The `--source modelscope` commands below use the domestic site.
+Use `--source modelscope` in the commands below to download from ModelScope.
 
 **Hugging Face:**
 
@@ -66,7 +66,7 @@ python -m engiworld.prepare_tasks --source hf --task-root ../data/task
 python -m engiworld.prepare_images --source hf --image LibreCAD2.2.0.2 --image-root ../environment-images
 ```
 
-**ModelScope domestic (.cn):**
+**ModelScope:**
 
 ```bash
 python -m engiworld.prepare_tasks --source modelscope --task-root ../data/task
