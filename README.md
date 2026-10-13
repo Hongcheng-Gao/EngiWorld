@@ -25,6 +25,8 @@ The benchmark covers CAD, CAE, CAM, BIM, EDA, and DCC. Its six task types are Si
 
 Local evaluation launches Windows or Ubuntu virtual machines through Docker on Linux, calls the model, and saves evaluation results.
 
+> **Evaluation support:** To evaluate your model or agent on EngiWorld, [contact us via GitHub Issues](https://github.com/Hongcheng-Gao/EngiWorld/issues). We can help with model integration, environment setup, and evaluation runs.
+
 ## 💾 Installation
 
 Prepare an x86_64 Linux server with Python 3.10, [Docker Engine](https://docs.docker.com/engine/install/), and `zstd`. With `/dev/kvm`, the VM uses hardware acceleration. Without it, the Docker runner attempts software emulation, which starts and runs more slowly. Each environment defaults to 4 CPUs and 16 GB RAM.
