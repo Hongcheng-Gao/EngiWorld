@@ -54,9 +54,8 @@ python -m pip install -e ".[worker-api,download]"
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
 | ModelScope 国内站（.cn） | [EngiWorld-Tasks](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Images) |
-| ModelScope 国际站（.ai） | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) |
 
-国内用户可选择 ModelScope `.cn` 国内站；Hugging Face 和 `.ai` 国际站副本保留。下面的 `--source modelscope` 默认从国内站下载。
+国内用户可选择 ModelScope `.cn` 国内站。下面的 `--source modelscope` 默认从国内站下载。
 
 **Hugging Face:**
 

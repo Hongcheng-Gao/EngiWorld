@@ -54,9 +54,8 @@ The complete dataset provides all **1,301 task definitions, drawings, evaluators
 |---|---|---|
 | Hugging Face | [EngiWorld-Tasks](https://huggingface.co/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://huggingface.co/datasets/HongchengGao/EngiWorld-Images) |
 | ModelScope domestic (.cn) | [EngiWorld-Tasks](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Tasks) | [EngiWorld-Images](https://modelscope.cn/datasets/HongchengGao/EngiWorld-Images) |
-| ModelScope international (.ai) | [EngiWorld-Tasks](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Tasks) | [EngiWorld-Images](https://www.modelscope.ai/datasets/gaohongcheng/EngiWorld-Images) |
 
-Users in China can choose the ModelScope `.cn` domestic mirror. Hugging Face and the `.ai` international copy remain available. The `--source modelscope` commands below use the domestic site.
+Users in China can choose the ModelScope `.cn` domestic mirror. The `--source modelscope` commands below use the domestic site.
 
 **Hugging Face:**
 
