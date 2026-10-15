@@ -120,19 +120,7 @@ class AliyunProvider(Provider):
                 return ""
 
             _wait_until_server_ready(ip_to_use)
-            if public_ip:
-                vnc_url = f"http://{public_ip}:5910/vnc.html"
-                logger.info(f"🖥️  VNC Web Access URL: {vnc_url}")
-                logger.info("=" * 80)
-            logger.info(f"📡 Public IP: {public_ip}")
-            logger.info(f"🏠 Private IP: {private_ip}")
-            logger.info(f"🔧 Using IP: {'Private' if ip_to_use == private_ip else 'Public'} -> {ip_to_use}")
-            logger.info("=" * 80)
-            print(f"\n🌐 VNC Web Access URL: {vnc_url}")
-            print(
-                "📍 Please open the above address in the browser "
-                "for remote desktop access\n"
-            )
+            logger.info("Environment %s uses %s", path_to_vm, ip_to_use)
 
             return ip_to_use
 

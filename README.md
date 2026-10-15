@@ -25,6 +25,12 @@ The benchmark covers CAD, CAE, CAM, BIM, EDA, and DCC. Its six task types are Si
 
 Local evaluation launches Windows or Ubuntu virtual machines through Docker on Linux, calls the model, and saves evaluation results.
 
+## ☁️ Run with Alibaba Cloud shared images
+
+Configure your Alibaba Cloud account, network and model endpoint after obtaining image access. The evaluator creates a Windows or Ubuntu instance, runs the task, saves its score and trajectory, and releases the instance.
+
+Follow the **[Alibaba Cloud quick start](runtime/deploy/aliyun/README.md)**. The instructions below use local QCOW2 images.
+
 ## 💾 Installation
 
 Prepare an x86_64 Linux server with Python 3.10, [Docker Engine](https://docs.docker.com/engine/install/), and `zstd`. With `/dev/kvm`, the VM uses hardware acceleration. Without it, the Docker runner attempts software emulation, which starts and runs more slowly. Each environment defaults to 4 CPUs and 16 GB RAM.

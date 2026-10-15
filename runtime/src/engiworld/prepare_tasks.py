@@ -32,9 +32,15 @@ def blob_hash(data: bytes) -> str:
     return hashlib.sha1(f"blob {len(data)}\0".encode() + data).hexdigest()
 
 
-def asset_path(root: Path, relative: str) -> Path:
-    path = (root / relative).resolve()
-    if not path.is_relative_to(root.resolve()):
+def asset_path(root: Path, relative: str, *, cached_source: bool = False) -> Path:
+    base = root.resolve()
+    lexical = Path(os.path.abspath(base / relative))
+    if not lexical.is_relative_to(base):
+        raise ValueError(f"Asset path is outside the task root: {relative}")
+    path = lexical.resolve()
+    # Hub snapshots link files to their sibling blob cache. Only downloaded
+    # sources may follow these links; local output paths stay within their root.
+    if not cached_source and not path.is_relative_to(base):
         raise ValueError(f"Asset path is outside the task root: {relative}")
     return path
 
@@ -100,6 +106,26 @@ def copy_verified(source: Path, target: Path, expected: dict | None = None) -> s
     return "downloaded"
 
 
+def task_upload_paths(task_id: str, definition: dict) -> set[str]:
+    """Resolve task input and evaluator uploads relative to their software directory."""
+    base = Path(task_id).parent
+    paths = set()
+    items = [*definition.get("config", []),
+             *definition.get("evaluator", {}).get("postconfig", [])]
+    for item in items:
+        if item.get("type") != "upload_file":
+            continue
+        for resource in item.get("parameters", {}).get("files", []):
+            raw = resource.get("local_path")
+            if not raw:
+                continue
+            relative = Path(os.path.normpath(base / raw))
+            if relative.is_absolute() or str(relative).startswith("../") or str(relative) == "..":
+                raise ValueError(f"Task resource is outside the task root: {raw}")
+            paths.add(relative.as_posix())
+    return paths
+
+
 def prepare(root: Path, source: str, task_id: str | None = None) -> dict:
     patterns = ["task/*"]
     if task_id:
@@ -109,13 +135,25 @@ def prepare(root: Path, source: str, task_id: str | None = None) -> dict:
                     "task/resources-integrity.json", "task/splits/*", f"task/{task_id}/*"]
     snapshot = download_snapshot(source, "tasks", patterns) / "task"
     _, entries = asset_entries(snapshot, task_id)
+    required_paths = set()
     if task_id:
         folder = asset_path(snapshot, task_id)
         if not (folder / f"{folder.name}.json").is_file():
             raise ValueError(f"Unknown task: {task_id}")
+        definition = json.loads((folder / f"{folder.name}.json").read_text())
+        required_paths = task_upload_paths(task_id, definition)
+        shared = sorted(path for path in required_paths if not path.startswith(task_id + "/"))
+        if shared:
+            patterns += ["task/" + path for path in shared]
+            snapshot = download_snapshot(source, "tasks", patterns) / "task"
+            _, all_entries = asset_entries(snapshot)
+            entries += [e for e in all_entries if e["path"] in shared]
+        for path in required_paths:
+            if not asset_path(snapshot, path, cached_source=True).is_file():
+                raise ValueError(f"Downloaded task resource is missing: {path}")
     expected = {entry["path"]: entry for entry in entries}
     invalid = [entry["path"] for entry in entries
-               if not verify_asset(asset_path(snapshot, entry["path"]), entry)]
+               if not verify_asset(asset_path(snapshot, entry["path"], cached_source=True), entry)]
     if invalid:
         raise ValueError(f"Downloaded dataset is incomplete or corrupt: {invalid[:10]}")
     counts: dict[str, int] = {}
@@ -126,7 +164,7 @@ def prepare(root: Path, source: str, task_id: str | None = None) -> dict:
         # The code repository keeps its own ignore policy for large local resources.
         if relative == ".gitignore" and (root / relative).exists():
             continue
-        if task_id and relative not in {"aliases.json", "assets-manifest.json", "taxonomy.json",
+        if task_id and relative not in required_paths and relative not in {"aliases.json", "assets-manifest.json", "taxonomy.json",
                                        "resources-integrity.json"} and not relative.startswith((task_id + "/", "splits/")):
             continue
         status = copy_verified(path, asset_path(root, relative), expected.get(relative))
