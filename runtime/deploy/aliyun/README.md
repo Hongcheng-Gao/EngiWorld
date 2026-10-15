@@ -28,7 +28,7 @@ Fill in your RAM AccessKey, region, vSwitch ID, security group ID and model endp
 source config.aliyun.env
 ```
 
-The RAM identity needs permission to describe images and create, describe, start and delete ECS instances. The default instance type is `ecs.u1-c1m4.xlarge` (4 CPUs, 16 GB RAM). Disk size follows the image. Temporary instances have an automatic release deadline; ECS, disk and model usage are billed to your account.
+The RAM identity needs permission to describe images and create, describe, start and delete ECS instances. The default instance type is `ecs.u1-c1m4.xlarge` (4 CPUs, 16 GB RAM). The system disk size and attached data disks follow the image. Temporary instances have an automatic release deadline; ECS, disk and model usage are billed to your account.
 
 For a controller using public networking, set `ALIYUN_USE_PRIVATE_IP=0` and `ALIYUN_PUBLIC_BANDWIDTH=10`, and allow the controller's public IP/32 in the security group instead.
 

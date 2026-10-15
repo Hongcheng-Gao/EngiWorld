@@ -37,7 +37,7 @@ chmod 600 config.aliyun.env
 source config.aliyun.env
 ```
 
-默认规格为 `ecs.u1-c1m4.xlarge`（4 核、16 GB）。程序按镜像大小设置系统盘，继承镜像登录设置，并配置自动释放时间。按量实例、系统盘及模型调用由使用者的账号付费。
+默认规格为 `ecs.u1-c1m4.xlarge`（4 核、16 GB）。程序按镜像大小设置系统盘，并从镜像恢复附带的数据盘，继承镜像登录设置，并配置自动释放时间。按量实例、系统盘及模型调用由使用者的账号付费。
 
 如果源码服务器通过公网访问评测实例，设置 `ALIYUN_USE_PRIVATE_IP=0`、`ALIYUN_PUBLIC_BANDWIDTH=10`，并将上述安全组来源改为源码服务器的公网 IP/32。
 

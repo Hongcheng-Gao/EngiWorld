@@ -128,12 +128,17 @@ def _allocate_vm(screen_size=(1920, 1080)):
             raise RuntimeError("The configured Aliyun image is not available in this region")
         image = images[0]
         disk_size = max(20, int(image.size))
+        data_disks = []
         if image.disk_device_mappings and image.disk_device_mappings.disk_device_mapping:
             for disk in image.disk_device_mappings.disk_device_mapping:
                 if disk.type == "system":
                     disk_size = max(disk_size, int(disk.size))
                 elif disk.type == "data":
-                    raise ValueError("This image has data disks; configure their mappings before evaluation")
+                    if not disk.snapshot_id:
+                        raise ValueError("An image data disk is missing its snapshot ID")
+                    data_disks.append(ecs_models.RunInstancesRequestDataDisk(
+                        snapshot_id=disk.snapshot_id, size=int(disk.size),
+                        category="cloud_essd", delete_with_instance=True))
         client_token = uuid.uuid4().hex
         # Use a single idempotent creation request with automatic release.
 
@@ -154,6 +159,7 @@ def _allocate_vm(screen_size=(1920, 1080)):
                     size=str(disk_size),
                     category="cloud_essd",
                 ),
+                data_disk=data_disks or None,
                 deletion_protection=False,
             )
             

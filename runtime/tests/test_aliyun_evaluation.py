@@ -39,7 +39,8 @@ def test_public_network_requires_bandwidth(cloud, monkeypatch):
 
 def test_provision_inherits_large_image_and_password(cloud, monkeypatch):
     created = []
-    image = NS(status='Available', size=500, disk_device_mappings=None)
+    image = NS(status='Available', size=500, disk_device_mappings=NS(disk_device_mapping=[
+        NS(type='system', size='500'), NS(type='data', size='30', snapshot_id='s-data')]))
     client = NS(
         describe_images=lambda req: NS(body=NS(images=NS(image=[image]))),
         run_instances=lambda req: (created.append(req) or NS(
@@ -52,6 +53,9 @@ def test_provision_inherits_large_image_and_password(cloud, monkeypatch):
     assert len(created) == 1
     request = created[0]
     assert request.system_disk.size == '500'
+    assert request.data_disk[0].snapshot_id == 's-data'
+    assert request.data_disk[0].size == 30
+    assert request.data_disk[0].delete_with_instance is True
     assert request.password_inherit is True
     assert request.internet_max_bandwidth_out == 0
     assert request.auto_release_time and request.client_token
