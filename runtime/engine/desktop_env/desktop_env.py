@@ -345,7 +345,7 @@ class DesktopEnv(gym.Env):
             else:
                 logger.info("Environment is clean, skipping snapshot revert (provider: {}).".format(self.provider_name))
 
-            if self.provider_name in {"volcengine", "docker"}:
+            if self.provider_name in {"volcengine", "docker", "aliyun"}:
                 self.controller.prepare_desktop(self.screen_width, self.screen_height)
 
             if task_config is not None:
@@ -373,7 +373,7 @@ class DesktopEnv(gym.Env):
 
         logger.info("Environment setup complete.")
 
-        if self.provider_name in {"volcengine", "docker"}:
+        if self.provider_name in {"volcengine", "docker", "aliyun"}:
             self.controller.prepare_desktop(self.screen_width, self.screen_height, check_startup_dialogs=True)
 
         observation = self._get_obs()

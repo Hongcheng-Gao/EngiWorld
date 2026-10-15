@@ -25,6 +25,12 @@ EngiWorld 评测智能体能否操作专业工程软件，并交付符合要求�
 
 单机评测在 Linux 主机上通过 Docker 启动 Windows 或 Ubuntu 虚拟机，调用模型并保存评分结果。
 
+## ☁️ 使用阿里云共享镜像
+
+获得镜像共享权限后，配置自己的阿里云账号、网络和模型接口，即可运行 Windows 或 Ubuntu 任务。程序自动创建评测实例、运行任务、保存评分与轨迹，并在结束后释放实例。
+
+完整步骤见 **[阿里云快速开始](runtime/deploy/aliyun/README_CN.md)**。下面介绍本地 QCOW2 镜像的运行方式。
+
 ## 💾 安装
 
 准备一台 x86_64 Linux 服务器，安装 Python 3.10、[Docker Engine](https://docs.docker.com/engine/install/) 和 `zstd`。有 `/dev/kvm` 时，虚拟机使用硬件加速；没有时，Docker 运行器会尝试软件模拟，启动和运行会更慢。每个环境默认使用 4 个 CPU、16 GB 内存。

@@ -3,6 +3,7 @@ import logging
 import dotenv
 import time
 import signal
+import uuid
 import requests
 from datetime import datetime, timedelta, timezone
 
@@ -70,7 +71,7 @@ def _allocate_vm(screen_size=(1920, 1080)):
             try:
                 delete_request = ecs_models.DeleteInstancesRequest(
                     region_id=ALIYUN_REGION,
-                    instance_ids=UtilClient.to_jsonstring([instance_id]),
+                    instance_id=[instance_id],
                     force=True,
                 )
                 client.delete_instances(delete_request)
@@ -121,7 +122,21 @@ def _allocate_vm(screen_size=(1920, 1080)):
             f"TTL config: enabled={ttl_enabled}, minutes={ttl_minutes}, seconds={ttl_seconds}, ETA(UTC)={auto_release_str}"
         )
 
-        # Create instance request (attempt with auto_release_time first when TTL enabled)
+        images = client.describe_images(ecs_models.DescribeImagesRequest(
+            region_id=ALIYUN_REGION, image_id=ALIYUN_IMAGE_ID)).body.images.image
+        if len(images) != 1 or images[0].status != "Available":
+            raise RuntimeError("The configured Aliyun image is not available in this region")
+        image = images[0]
+        disk_size = max(20, int(image.size))
+        if image.disk_device_mappings and image.disk_device_mappings.disk_device_mapping:
+            for disk in image.disk_device_mappings.disk_device_mapping:
+                if disk.type == "system":
+                    disk_size = max(disk_size, int(disk.size))
+                elif disk.type == "data":
+                    raise ValueError("This image has data disks; configure their mappings before evaluation")
+        client_token = uuid.uuid4().hex
+        # Use a single idempotent creation request with automatic release.
+
         def _build_request(with_ttl: bool) -> ecs_models.RunInstancesRequest:
             kwargs = dict(
                 region_id=ALIYUN_REGION,
@@ -129,13 +144,14 @@ def _allocate_vm(screen_size=(1920, 1080)):
                 instance_type=ALIYUN_INSTANCE_TYPE,
                 security_group_id=ALIYUN_SECURITY_GROUP_ID,
                 v_switch_id=ALIYUN_VSWITCH_ID,
-                instance_name=f"OSWorld-Desktop-{int(time.time())}",
-                description="OSWorld Desktop Environment Instance",
-                internet_max_bandwidth_out=10,
+                instance_name=f"EngiWorld-{client_token[:12]}",
+                description="EngiWorld evaluation environment",
+                client_token=client_token, amount=1, password_inherit=True,
+                internet_max_bandwidth_out=int(os.getenv("ALIYUN_PUBLIC_BANDWIDTH", "0")),
                 internet_charge_type="PayByTraffic",
                 instance_charge_type="PostPaid",
                 system_disk=ecs_models.RunInstancesRequestSystemDisk(
-                    size="50",
+                    size=str(disk_size),
                     category="cloud_essd",
                 ),
                 deletion_protection=False,
@@ -148,16 +164,8 @@ def _allocate_vm(screen_size=(1920, 1080)):
                 kwargs["auto_release_time"] = auto_release_str
             return ecs_models.RunInstancesRequest(**kwargs)
 
-        try:
-            request = _build_request(with_ttl=True)
-            response = client.run_instances(request)
-        except Exception as create_err:
-            # Retry without auto_release_time if creation-time TTL is rejected
-            logger.warning(
-                f"RunInstances with auto_release_time failed: {create_err}. Retrying without TTL field..."
-            )
-            request = _build_request(with_ttl=False)
-            response = client.run_instances(request)
+        request = _build_request(with_ttl=True)
+        response = client.run_instances(request)
         instance_ids = response.body.instance_id_sets.instance_id_set
 
         if not instance_ids:
@@ -181,7 +189,7 @@ def _allocate_vm(screen_size=(1920, 1080)):
             try:
                 delete_request = ecs_models.DeleteInstancesRequest(
                     region_id=ALIYUN_REGION,
-                    instance_ids=UtilClient.to_jsonstring([instance_id]),
+                    instance_id=[instance_id],
                     force=True,
                 )
                 client.delete_instances(delete_request)
@@ -197,7 +205,7 @@ def _allocate_vm(screen_size=(1920, 1080)):
             try:
                 delete_request = ecs_models.DeleteInstancesRequest(
                     region_id=ALIYUN_REGION,
-                    instance_ids=UtilClient.to_jsonstring([instance_id]),
+                    instance_id=[instance_id],
                     force=True,
                 )
                 client.delete_instances(delete_request)
@@ -255,11 +263,12 @@ def _wait_until_server_ready(public_ip: str):
         try:
             logger.info(f"Checking server status on {public_ip}...")
             response = requests.get(f"http://{public_ip}:5000/", timeout=2)
-            if response.status_code == 404:
+            if response.status_code in (200, 404):
                 logger.info(f"Server {public_ip} is ready")
                 return
-        except Exception:
-            time.sleep(WAIT_DELAY)
+        except requests.RequestException:
+            pass
+        time.sleep(WAIT_DELAY)
 
     raise TimeoutError(
         f"Server {public_ip} did not respond within {MAX_ATTEMPTS * WAIT_DELAY} seconds"

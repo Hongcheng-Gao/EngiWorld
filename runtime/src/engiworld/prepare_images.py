@@ -52,7 +52,7 @@ def main(argv: list[str] | None = None) -> int:
                                                          *[entry["path_in_repo"] for entry in entries]])
     for entry in entries:
         relative = entry["path_in_repo"]
-        copy_verified(asset_path(snapshot, relative), asset_path(root, relative), image_checksum(entry))
+        copy_verified(asset_path(snapshot, relative, cached_source=True), asset_path(root, relative), image_checksum(entry))
         print(f"Verified local archive: {asset_path(root, relative)}", flush=True)
     for name in ("manifest.json", "SHA256SUMS", "README.md"):
         copy_verified(snapshot / name, root / name)
