@@ -19,7 +19,8 @@ from engiworld.agents.profiles import (
     get_agent_profile,
     profile_names,
 )
-from engiworld.task_names import canonical_prefix
+from engiworld.cloud_models import resolve_model
+from engiworld.scheduler.cloud_factory import client_for_store, make_cloud_client
 from engiworld.scheduler.redis_store import RedisStore
 from engiworld.scheduler.schemas import (
     AgentConfig,
@@ -31,16 +32,9 @@ from engiworld.scheduler.schemas import (
 )
 from engiworld.scheduler.task_bundle import DEFAULT_TASK_BUCKET, ensure_task_bundle
 from engiworld.scheduler.task_loader import allocate_instances_by_snapshot, load_tasks
-from engiworld.scheduler.volcengine_ecs import (
-    EcsImage,
-    InstanceLaunchGroup,
-    VolcengineEcsClient,
-    VolcengineLaunchConfig,
-    match_images_by_snapshot,
-)
 from engiworld.scheduler.vm_osworld_update import (
-    DEFAULT_VM_OSWORLD_BUNDLE_PATH,
     DEFAULT_VM_OSWORLD_BUCKET,
+    DEFAULT_VM_OSWORLD_BUNDLE_PATH,
     VmOsworldBundleSpec,
     VmOsworldProvisionConfig,
     bundle_spec_dict,
@@ -48,6 +42,13 @@ from engiworld.scheduler.vm_osworld_update import (
     provision_vm_osworld,
     resolve_vm_osworld_bundle,
 )
+from engiworld.scheduler.volcengine_ecs import (
+    EcsImage,
+    InstanceLaunchGroup,
+    VolcengineEcsClient,
+    match_images_by_snapshot,
+)
+from engiworld.task_names import canonical_prefix
 
 DEFAULT_V2_VM_OSWORLD_BUNDLE_PATH = "osworld-v2-vm-server-latest.tgz"
 
@@ -90,6 +91,13 @@ def build_parser() -> argparse.ArgumentParser:
         choices=["engiworld", "osworld-v1", "osworld-v2"],
         default=os.getenv("ENGIWORLD_BENCHMARK", os.getenv("ARENA_BENCHMARK", "engiworld")),
     )
+    parser.add_argument("--cloud-provider", choices=["volcengine", "aliyun"], default=None)
+    parser.add_argument("--use-baked-server", action="store_true",
+                        help="Use the service already installed in the cloud image")
+    parser.add_argument("--reasoning-effort")
+    parser.add_argument("--max-tokens", type=int)
+    parser.add_argument("--model")
+    parser.add_argument("--token-limit-field", choices=["max_tokens", "max_completion_tokens"])
     parser.add_argument("--engine-path", default="engine")
     parser.add_argument("--osworld-path", dest="engine_path", default=argparse.SUPPRESS, help=argparse.SUPPRESS)
     parser.add_argument(
@@ -481,13 +489,17 @@ def build_parser() -> argparse.ArgumentParser:
 def main() -> None:
     parser = build_parser()
     args = parser.parse_args()
+    args.explicit_cloud_provider = args.cloud_provider is not None
+    args.cloud_provider = args.cloud_provider or "volcengine"
     if args.global_max_vms < 0:
         parser.error("--global-max-vms must be zero or greater")
     if args.global_vm_wait_interval_seconds <= 0:
         parser.error("--global-vm-wait-interval-seconds must be greater than zero")
     if args.instance_type:
-        os.environ["VOLCENGINE_INSTANCE_TYPE"] = args.instance_type
-    if not args.vm_osworld_bundle_path:
+        os.environ[args.cloud_provider.upper() + "_INSTANCE_TYPE"] = args.instance_type
+    if args.cloud_provider == "aliyun" or args.use_baked_server:
+        args.vm_osworld_bundle_path = None
+    elif not args.vm_osworld_bundle_path:
         args.vm_osworld_bundle_path = (
             DEFAULT_V2_VM_OSWORLD_BUNDLE_PATH
             if args.benchmark == "osworld-v2"
@@ -497,6 +509,8 @@ def main() -> None:
     if args.command in {"plan", "start"}:
         try:
             _prepare_incomplete_retry_from_args(args)
+            if args.cloud_provider == "aliyun":
+                args.vm_osworld_bundle_path = None
             (
                 args.resolved_agent_profile,
                 args.resolved_agent_config,
@@ -524,7 +538,8 @@ def main() -> None:
         tasks = _load_tasks_from_args(args, task_id_suffix=task_id_suffix)
         plan = _build_plan(tasks, args.num_vms)
         plan["global_max_vms"] = args.global_max_vms
-        plan["instance_type"] = os.getenv("VOLCENGINE_INSTANCE_TYPE")
+        plan["instance_type"] = os.getenv(args.cloud_provider.upper() + "_INSTANCE_TYPE")
+        plan["cloud_provider"] = args.cloud_provider
         agent_profile, agent_config, agent_env = _resolved_agent_settings(args)
         plan["agent"] = _agent_summary(agent_profile, agent_config, agent_env)
         if _has_task_source(args):
@@ -540,7 +555,7 @@ def main() -> None:
         if args.vm_osworld_bundle_path:
             plan["vm_osworld_bundle"] = _requested_vm_osworld_bundle_summary(args)
         if args.check_images:
-            plan["image_matches"] = _image_match_summary(plan["snapshots"])
+            plan["image_matches"] = _image_match_summary(plan["snapshots"], args.cloud_provider)
         _print_json(plan)
         return
 
@@ -580,7 +595,8 @@ def _start(eval_config: EvalConfig, args: argparse.Namespace) -> None:
             f"--global-max-vms={args.global_max_vms}; reduce --num-vms"
         )
     plan["global_max_vms"] = args.global_max_vms
-    plan["instance_type"] = os.getenv("VOLCENGINE_INSTANCE_TYPE")
+    plan["instance_type"] = os.getenv(args.cloud_provider.upper() + "_INSTANCE_TYPE")
+    plan["cloud_provider"] = args.cloud_provider
     agent_profile, agent_config, agent_env = _resolved_agent_settings(args)
     plan["agent"] = _agent_summary(agent_profile, agent_config, agent_env)
     if args.dry_run:
@@ -611,6 +627,8 @@ def _start(eval_config: EvalConfig, args: argparse.Namespace) -> None:
         ),
     )
     store.client.hset(store.key("meta"), mapping={
+        "cloud_provider": args.cloud_provider,
+        "cloud_journal_dir": str((Path(eval_config.result_dir) / eval_config.run_id / "instances").resolve()),
         "retain_failed_instances": str(getattr(args, "retain_failed_instances", False)).lower(),
         "retain_api_incomplete_instances": str(
             getattr(args, "retain_api_incomplete_instances", True)
@@ -632,8 +650,9 @@ def _start(eval_config: EvalConfig, args: argparse.Namespace) -> None:
             args,
             reason="initial_provisioning",
         )
-        launch_config = VolcengineLaunchConfig.from_env()
-        ecs = VolcengineEcsClient(launch_config)
+        ecs = client_for_store(store)
+        launch_config = ecs.config
+        ecs.snapshots = plan["snapshots"]
         images = ecs.list_images()
         image_by_snapshot = match_images_by_snapshot(
             plan["snapshots"],
@@ -727,6 +746,14 @@ def _start(eval_config: EvalConfig, args: argparse.Namespace) -> None:
         if args.follow:
             _run_reconcile_loop(store, args)
     except KeyboardInterrupt:
+        if ecs is not None and not instances_registered:
+            from engiworld.cloud_journal import cleanup_journals
+            failures = cleanup_journals(ecs, ecs.journal_dir)
+            if failures:
+                store.client.hset(store.key("meta"), mapping={"unreleased_cloud_requests": json.dumps(failures)})
+                store.mark_run_status(RunStatus.FAILED)
+                _print_json({"run_id": store.run_id, "status": "cleanup_failed", "unresolved_requests": failures})
+                raise SystemExit(130)
         if ecs and cleanup_instances and not instances_registered:
             ecs.terminate_instances(
                 [instance.instance_id for instance in cleanup_instances]
@@ -745,12 +772,19 @@ def _start(eval_config: EvalConfig, args: argparse.Namespace) -> None:
         raise SystemExit(130)
     except Exception:
         cleanup_succeeded = not cleanup_instances
+        failures = []
+        if ecs is not None and not instances_registered:
+            from engiworld.cloud_journal import cleanup_journals
+            failures = cleanup_journals(ecs, ecs.journal_dir)
+            cleanup_succeeded = not failures
+            if failures:
+                store.client.hset(store.key("meta"), mapping={"unreleased_cloud_requests": json.dumps(failures)})
         if ecs and cleanup_instances and not instances_registered:
             try:
                 ecs.terminate_instances(
                     [instance.instance_id for instance in cleanup_instances]
                 )
-                cleanup_succeeded = True
+                cleanup_succeeded = cleanup_succeeded and not failures
             except Exception:
                 pass
         if slots_acquired and not instances_registered and cleanup_succeeded:
@@ -797,8 +831,7 @@ def _reconcile_once(store: RedisStore, args: argparse.Namespace, *, executor=Non
     report["instances_to_terminate"] = instances_to_terminate
     run_completed_before_replacement = store.is_run_terminal()
     if instances_to_terminate:
-        launch_config = VolcengineLaunchConfig.from_env()
-        ecs = VolcengineEcsClient(launch_config)
+        ecs = client_for_store(store)
         instance_ids = [item["instance_id"] for item in instances_to_terminate]
         ecs.terminate_instances(instance_ids)
         store.mark_instances_terminated(instance_ids, reason="terminated by master reconcile")
@@ -814,8 +847,7 @@ def _reconcile_once(store: RedisStore, args: argparse.Namespace, *, executor=Non
         )
         if replacement_sources:
             if ecs is None:
-                launch_config = VolcengineLaunchConfig.from_env()
-                ecs = VolcengineEcsClient(launch_config)
+                ecs = client_for_store(store)
             if executor is not None:
                 future = executor.submit(_provision_replacement_instances, store, args, ecs, replacement_sources)
                 provisioning["future"] = future
@@ -929,6 +961,7 @@ def _provision_replacement_instances(
         return [], {"status": "waiting_for_capacity"}
     if acquired_slots:
         replacement_sources = replacement_sources[:acquired_slots]
+    journals_before = set(ecs.journal_dir.rglob("*.json"))
     try:
         replacements = _launch_replacement_instances(
             ecs,
@@ -940,8 +973,13 @@ def _provision_replacement_instances(
         if unused_slots:
             store.release_global_vm_slots(count=unused_slots)
             acquired_slots -= unused_slots
-    except Exception:
-        if acquired_slots:
+    except (Exception, KeyboardInterrupt):
+        from engiworld.cloud_journal import cleanup_journals
+        new_journals = set(ecs.journal_dir.rglob("*.json")) - journals_before
+        failures = cleanup_journals(ecs, ecs.journal_dir, paths=new_journals)
+        if failures:
+            store.client.hset(store.key("meta"), mapping={"unreleased_cloud_requests": json.dumps(failures)})
+        elif acquired_slots:
             store.release_global_vm_slots(count=acquired_slots)
         raise
 
@@ -1049,11 +1087,20 @@ def _launch_replacement_instances(
 
 
 def _teardown(store: RedisStore, include_retained: bool = False) -> dict:
+    if store.client.hget(store.key("meta"), "unreleased_cloud_requests"):
+        from engiworld.cloud_journal import cleanup_journals
+        ecs = client_for_store(store)
+        # Only unresolved journal paths are eligible; retained/healthy VMs stay untouched.
+        pending = json.loads(store.client.hget(store.key("meta"), "unreleased_cloud_requests"))
+        failures = cleanup_journals(ecs, ecs.journal_dir, paths=[Path(item["journal"]) for item in pending])
+        if failures:
+            store.client.hset(store.key("meta"), mapping={"unreleased_cloud_requests": json.dumps(failures)})
+            return {"run_id": store.run_id, "status": "cleanup_failed", "unresolved_requests": failures}
+        store.client.hdel(store.key("meta"), "unreleased_cloud_requests")
     instance_ids = store.active_instance_ids() if include_retained else store.cleanup_instance_ids()
     store.mark_run_status(RunStatus.TEARING_DOWN)
     if instance_ids:
-        launch_config = VolcengineLaunchConfig.from_env()
-        ecs = VolcengineEcsClient(launch_config)
+        ecs = client_for_store(store)
         ecs.terminate_instances(instance_ids)
         store.mark_instances_terminated(instance_ids, reason="run teardown")
         store.release_global_vm_slots(instance_ids=instance_ids)
@@ -1072,12 +1119,21 @@ def _teardown(store: RedisStore, include_retained: bool = False) -> dict:
 
 
 def _abort_run(store: RedisStore, reason: str) -> dict:
+    if store.client.hget(store.key("meta"), "unreleased_cloud_requests"):
+        from engiworld.cloud_journal import cleanup_journals
+        ecs = client_for_store(store)
+        # Only unresolved journal paths are eligible; retained/healthy VMs stay untouched.
+        pending = json.loads(store.client.hget(store.key("meta"), "unreleased_cloud_requests"))
+        failures = cleanup_journals(ecs, ecs.journal_dir, paths=[Path(item["journal"]) for item in pending])
+        if failures:
+            store.client.hset(store.key("meta"), mapping={"unreleased_cloud_requests": json.dumps(failures)})
+            return {"run_id": store.run_id, "status": "cleanup_failed", "unresolved_requests": failures}
+        store.client.hdel(store.key("meta"), "unreleased_cloud_requests")
     instance_ids = store.cleanup_instance_ids()
     terminated_instances: list[str] = []
     if instance_ids:
         try:
-            launch_config = VolcengineLaunchConfig.from_env()
-            ecs = VolcengineEcsClient(launch_config)
+            ecs = client_for_store(store)
             ecs.terminate_instances(instance_ids)
             terminated_instances = instance_ids
             store.release_global_vm_slots(instance_ids=instance_ids)
@@ -1297,6 +1353,12 @@ def _prepare_incomplete_retry_from_args(args: argparse.Namespace) -> None:
         raise ValueError("The incomplete-task retry must use a new --run-id")
 
     source_store = RedisStore(args.redis_url, source_run_id)
+    source_client = getattr(source_store, "client", None)
+    if source_client is not None:
+        source_provider = source_client.hget(source_store.key("meta"), "cloud_provider") or "volcengine"
+        if getattr(args, "explicit_cloud_provider", False) and args.cloud_provider != source_provider:
+            raise ValueError("An incomplete retry must preserve the source cloud provider")
+        args.cloud_provider = source_provider
     if api_source_run_id:
         category = "api_incomplete"
         base_task_ids = source_store.api_incomplete_base_task_ids()
@@ -1496,10 +1558,12 @@ def _agent_settings_from_args(args: argparse.Namespace) -> tuple[str, AgentConfi
             multi_max_steps=None,
         )
 
-    env = dict(profile.env)
-    if use_retry_source_agent:
-        env.update(getattr(args, "retry_source_agent_env", {}))
+    env = dict(getattr(args, "retry_source_agent_env", {})) if use_retry_source_agent else {}
     env.update(_parse_agent_env(args.agent_env))
+    _, env = resolve_model(profile_name, model=getattr(args, "model", None),
+        reasoning_effort=getattr(args, "reasoning_effort", None),
+        max_tokens=getattr(args, "max_tokens", None),
+        token_limit_field=getattr(args, "token_limit_field", None), overrides=env)
     return profile.name, config, env
 
 
@@ -1619,9 +1683,10 @@ def _task_summary(task: TaskSpec) -> dict:
     }
 
 
-def _image_match_summary(snapshots: list[str]) -> dict[str, dict[str, str]]:
-    launch_config = VolcengineLaunchConfig.from_env()
-    ecs = VolcengineEcsClient(launch_config)
+def _image_match_summary(snapshots: list[str], provider="volcengine") -> dict[str, dict[str, str]]:
+    ecs = make_cloud_client(provider)
+    launch_config = ecs.config
+    ecs.snapshots = snapshots
     image_by_snapshot = match_images_by_snapshot(
         snapshots,
         ecs.list_images(),

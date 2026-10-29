@@ -8,17 +8,24 @@ import os
 import shutil
 import sys
 import traceback
+from copy import deepcopy
 from dataclasses import replace
 from importlib import import_module
-from copy import deepcopy
 from pathlib import Path
 from types import SimpleNamespace
 from typing import Any, Callable
 
-from engiworld.scheduler.schemas import AgentConfig, EvalConfig, InstanceRecord, TaskResult, TaskSpec
-from engiworld.scheduler.task_loader import infer_engiworld_eval_mode
 from engiworld.scheduler.model_action_outcome import ALT_F4_CATEGORY, ModelActionAudit
-from engiworld.task_names import canonical_prefix, task_kind as canonical_task_kind
+from engiworld.scheduler.schemas import (
+    AgentConfig,
+    EvalConfig,
+    InstanceRecord,
+    TaskResult,
+    TaskSpec,
+)
+from engiworld.scheduler.task_loader import infer_engiworld_eval_mode
+from engiworld.task_names import canonical_prefix
+from engiworld.task_names import task_kind as canonical_task_kind
 
 AgentFactory = Callable[[AgentConfig], Any]
 
@@ -177,8 +184,11 @@ def run_single_task(
     *,
     provider_name: str = "volcengine",
     path_to_vm: str | None = None,
+    manage_lifecycle: bool | None = None,
 ) -> TaskResult:
     """Run one task on a leased ECS instance or an explicit local VM image."""
+    if manage_lifecycle is None:
+        manage_lifecycle = provider_name not in {"volcengine", "aliyun"}
 
     if task.metadata.get("benchmark") == "osworld-v2" or eval_config.benchmark == "osworld-v2":
         from engiworld.scheduler.osworld_v2_runner import run_single_task_v2
@@ -231,6 +241,7 @@ def run_single_task(
                 client_password=task_agent_config.client_password or "",
                 vm_secret_mounts=task_agent_config.vm_secret_mounts,
                 cache_dir=str(cache_root),
+                manage_lifecycle=manage_lifecycle,
             )
             if provider_name == "volcengine":
                 action_audit.attach(env)
@@ -271,8 +282,10 @@ def run_single_task(
             error_category=ALT_F4_CATEGORY if decision else category,
         )
     finally:
+        from engiworld.active_time import finish_task_timing
+        finish_task_timing()
         # The cloud scheduler owns ECS lifecycle; local invocations own their container.
-        if env is not None and provider_name != "volcengine":
+        if env is not None and manage_lifecycle:
             with contextlib.suppress(Exception):
                 env.close()
         shutil.rmtree(cache_root, ignore_errors=True)

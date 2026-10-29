@@ -12,6 +12,14 @@ import time
 BUDGET_EXHAUSTED = "active_time_budget_exhausted"
 LEDGER_FIELD = "active_time_ledger"
 _pause_callback = ContextVar("engiworld_pause_callback", default=None)
+_local_deadline = ContextVar("engiworld_local_deadline", default=None)
+
+
+def finish_task_timing():
+    """Stop local task timing before post-result cache or instance cleanup."""
+    deadline = _local_deadline.get()
+    if deadline is not None:
+        deadline.finish()
 
 
 class ActiveTimeBudgetExceeded(BaseException):
@@ -177,16 +185,21 @@ class ActiveTaskDeadline:
         self.stopped = time.monotonic()
         raise ActiveTimeBudgetExceeded(f"Task used {self.seconds:g} active seconds")
 
+    def finish(self):
+        signal.setitimer(signal.ITIMER_REAL, 0)
+        if self.stopped is None:
+            self.stopped = time.monotonic()
+
     @contextmanager
     def running(self):
         previous = signal.signal(signal.SIGALRM, self._expired)
+        token = _local_deadline.set(self)
         try:
             self.started = time.monotonic()
             self._arm()
             with track_task_pauses(self.pause):
                 yield self
         finally:
-            signal.setitimer(signal.ITIMER_REAL, 0)
-            if self.stopped is None:
-                self.stopped = time.monotonic()
+            self.finish()
+            _local_deadline.reset(token)
             signal.signal(signal.SIGALRM, previous)

@@ -25,6 +25,13 @@ The benchmark covers CAD, CAE, CAM, BIM, EDA, and DCC. Its six task types are Si
 
 Local evaluation launches Windows or Ubuntu virtual machines through Docker on Linux, calls the model, and saves evaluation results.
 
+## ☁️ Run on Alibaba Cloud or Volcengine
+
+Use the [cloud evaluation guide](runtime/deploy/cloud/README.md) for single-task or
+Redis-scheduled batch evaluation on either cloud. Explicit model presets, API
+interruption handling and batch state management are shared. Images require
+compatible engineering applications and desktop services.
+
 ## 💾 Installation
 
 Prepare an x86_64 Linux server with Python 3.10, [Docker Engine](https://docs.docker.com/engine/install/), and `zstd`. With `/dev/kvm`, the VM uses hardware acceleration. Without it, the Docker runner attempts software emulation, which starts and runs more slowly. Each environment defaults to 4 CPUs and 16 GB RAM.

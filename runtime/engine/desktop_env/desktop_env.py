@@ -138,6 +138,7 @@ class DesktopEnv(gym.Env):
             enable_proxy: bool = False,
             client_password: str = "",
             vm_secret_mounts: Optional[List[VMSecretMount]] = None,
+            manage_lifecycle: bool = True,
     ):
         """
         Args:
@@ -161,6 +162,7 @@ class DesktopEnv(gym.Env):
         # Initialize VM manager and vitualization provider
         self.region = region
         self.provider_name = provider_name
+        self.manage_lifecycle = manage_lifecycle
         self.enable_proxy = enable_proxy  # Store proxy enablement setting
         if client_password == "":
             if self.provider_name == "aws":
@@ -259,7 +261,8 @@ class DesktopEnv(gym.Env):
 
         except Exception as e:
             try:
-                self.provider.stop_emulator(self.path_to_vm)
+                if self.manage_lifecycle:
+                    self.provider.stop_emulator(self.path_to_vm)
             except Exception as stop_err:
                 logger.warning(f"Cleanup after interrupt failed: {stop_err}")
             raise
@@ -307,7 +310,8 @@ class DesktopEnv(gym.Env):
 
     def close(self):
         # Close (release) the virtual machine
-        self.provider.stop_emulator(self.path_to_vm)
+        if self.manage_lifecycle:
+            self.provider.stop_emulator(self.path_to_vm)
 
     def reset(self, task_config: Optional[Dict[str, Any]] = None, seed=None, options=None) -> Dict[str, Any]:
 
@@ -345,7 +349,7 @@ class DesktopEnv(gym.Env):
             else:
                 logger.info("Environment is clean, skipping snapshot revert (provider: {}).".format(self.provider_name))
 
-            if self.provider_name in {"volcengine", "docker"}:
+            if self.provider_name in {"volcengine", "docker", "aliyun"}:
                 self.controller.prepare_desktop(self.screen_width, self.screen_height)
 
             if task_config is not None:
@@ -373,7 +377,7 @@ class DesktopEnv(gym.Env):
 
         logger.info("Environment setup complete.")
 
-        if self.provider_name in {"volcengine", "docker"}:
+        if self.provider_name in {"volcengine", "docker", "aliyun"}:
             self.controller.prepare_desktop(self.screen_width, self.screen_height, check_startup_dialogs=True)
 
         observation = self._get_obs()

@@ -1,0 +1,25 @@
+name: Cloud runtime checks
+on:
+  push:
+    branches: [main, aliyun-evaluation, 'fix/cloud-*']
+  pull_request:
+permissions:
+  contents: read
+jobs:
+  offline-tests:
+    runs-on: ubuntu-latest
+    timeout-minutes: 15
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.10'
+      - name: Install test dependencies
+        working-directory: runtime
+        run: pip install -e '.[dev,aliyun]'
+      - name: Run offline regression tests
+        working-directory: runtime
+        run: python -m pytest -q tests --junitxml=cloud-runtime-tests.xml
+      - name: Check changed cloud modules
+        working-directory: runtime
+        run: ruff check --select F,I src/engiworld/cloud_eval.py src/engiworld/cloud_journal.py src/engiworld/cloud_models.py src/engiworld/scheduler/aliyun_ecs.py src/engiworld/scheduler/cloud_factory.py tests/test_cloud_lifecycle.py

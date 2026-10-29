@@ -28,6 +28,8 @@ ModelScope `.cn` 国内站完整任务库可使用 `--source modelscope`。用 `
 
 ## 云端调度
 
+阿里云和火山云的统一入口与批量配置见[云端评测说明](deploy/cloud/README_CN.md)。两云均要求明确指定模型预设、推理档位和生成额度；中断任务不作为有效零分。
+
 火山 ECS 调度通过 Redis 协调任务，通过对象存储保存结果。资源配置见 [`.env.example`](.env.example)，部署入口见 [`deploy/`](deploy/)。云端执行使用自定义镜像 ID。master 和 worker 的 `--task-root` / `TASK_ROOT` 都应指向已经下载的完整任务目录。
 
 ## 通用模型接口
@@ -39,8 +41,8 @@ ModelScope `.cn` 国内站完整任务库可使用 `--source modelscope`。用 `
 ```bash
 python -m engiworld.scheduler.master plan \
   --task-root ../data/task --task-limit 1 --num-vms 1 \
-  --agent openai-compatible \
-  --agent-env ARENA_MODEL_NAME=your-model-name
+  --agent openai-compatible --model your-model-name \
+  --reasoning-effort none --max-tokens 16384
 ```
 
 `plan` 输出所选任务和模型配置。`scheduler.master` 分配任务，`scheduler.worker_entrypoint` 执行模型和评分器。

@@ -9,12 +9,19 @@ description = "EngiWorld GUI/CLI agents, engineering environments, and artifact 
 requires-python = ">=3.10"
 dependencies = [
   "redis>=5.0.0",
-  "volcengine-python-sdk[ark]",
+  "volcenginesdk-ecs>=5,<6",
+  "volcenginesdk-core>=5,<6",
+  "volcenginesdk-kms>=5,<6",
   "boto3",
   "tenacity>=8.2.0",
 ]
 
 [project.optional-dependencies]
+aliyun = [
+  "alibabacloud_ecs20140526",
+  "alibabacloud_tea_openapi",
+  "alibabacloud_tea_util",
+]
 download = [
   "huggingface_hub>=0.34",
   "modelscope-hub>=0.4.6",
@@ -163,6 +170,12 @@ dev = [
   "pytest>=8.0.0",
   "requests",
   "ruff>=0.5.0",
+  "fakeredis>=2.0",
+  "docker>=7,<8",
+  "Pillow~=11.0.0",
+  "psutil~=5.9.6",
+  "python-dotenv",
+  "filelock",
 ]
 
 [tool.setuptools.packages.find]
