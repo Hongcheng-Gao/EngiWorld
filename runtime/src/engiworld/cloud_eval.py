@@ -1,4 +1,4 @@
-"""Run one EngiWorld task on a fresh Aliyun ECS instance."""
+"""Run one EngiWorld task on Alibaba Cloud or Volcengine ECS."""
 from __future__ import annotations
 
 import argparse
