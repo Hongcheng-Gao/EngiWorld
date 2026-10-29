@@ -123,6 +123,8 @@ def test_retry_preserves_legacy_open_ended_limit_and_accepts_explicit_override()
     args = parser.parse_args(["plan", "--allow-nonstandard-step-limits"])
     args.retry_source_agent_profile = "openai-compatible"
     args.retry_source_agent_config = {"top10_max_steps": 123}
+    args.retry_source_agent_env = {"ARENA_MODEL_NAME": "historical-model",
+        "ARENA_MODEL_REASONING_EFFORT": "none", "ARENA_MODEL_MAX_TOKENS": "16384"}
     _, config, _ = master._agent_settings_from_args(args)
     assert config.open_ended_max_steps == 123
     assert config.top10_max_steps is None

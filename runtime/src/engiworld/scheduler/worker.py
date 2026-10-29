@@ -14,9 +14,15 @@ from dataclasses import fields, replace
 from multiprocessing import Process
 
 from engiworld.scheduler.error_policy import classify_task_error
-from engiworld.scheduler.runner import run_single_task
 from engiworld.scheduler.redis_store import RedisStore
-from engiworld.scheduler.schemas import AgentConfig, EvalConfig, InstanceRecord, TaskResult, TaskSpec
+from engiworld.scheduler.runner import run_single_task
+from engiworld.scheduler.schemas import (
+    AgentConfig,
+    EvalConfig,
+    InstanceRecord,
+    TaskResult,
+    TaskSpec,
+)
 from engiworld.scheduler.storage import upload_task_artifacts
 from engiworld.scheduler.task_bundle import DEFAULT_TASK_BUCKET, ensure_task_bundle
 
@@ -497,7 +503,8 @@ def _run_claimed_task(
                 )
 
             with track_task_pauses(record_pause):
-                result = run_single_task(task, instance, eval_config, agent_config)
+                result = run_single_task(task, instance, eval_config, agent_config,
+                    provider_name=instance.metadata.get("provider", "volcengine"), manage_lifecycle=False)
             error = result.error
             error_category = classify_task_error(error, result.error_category)
             try:

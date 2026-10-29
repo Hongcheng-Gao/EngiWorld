@@ -44,7 +44,7 @@ python -m engiworld.prepare_tasks --source hf \
 python -m engiworld.cloud_eval \
   --task-root ../data/task \
   --task single-software-execution/cli/autocad/task-01 \
-  --model your-model-name \
+  --agent kimi-k3-max --max-tokens 16384 \
   --result-dir results
 ```
 
@@ -52,19 +52,10 @@ You can use `--source modelscope` for task downloads. The shared image supplies 
 
 The command creates an instance, uploads task inputs, runs the agent, evaluates the artifacts and releases the instance. `summary.json` reports the score and release status. The task result directory contains `result.txt` and `traj.jsonl`.
 
-To check environment startup without a model, replace `--model your-model-name` with `--smoke-test`. This resets the task and saves `smoke.png`. To run another task, change `--task`; the image catalog selects its environment. Add `--image-id m-your-image-id` to use your own image.
+To check environment startup without a model, replace `--agent kimi-k3-max --max-tokens 16384` with `--smoke-test`. This resets the task and saves `smoke.png`. To run another task, change `--task`; the image catalog selects its environment. Add `--image-id m-your-image-id` to use your own image.
 
-## Evaluate the paper's task split
+## Batch evaluation
 
-Download the full task data, then run the tasks in the split:
+Use the shared Redis master/worker queue described in the [cloud guide](../cloud/README.md).
 
-```bash
-python -m engiworld.prepare_tasks --source hf --task-root ../data/task
-while IFS= read -r task; do
-  python -m engiworld.cloud_eval \
-    --task-root ../data/task --task "$task" \
-    --model your-model-name --result-dir results
-done < ../data/task/splits/main-306.txt
-```
-
-Each task saves its own results. Replace the split with your own task list as needed.
+API recovery waits and retained incomplete instances incur cloud costs. See the [cloud guide](../cloud/README.md) for release policy and durable request tracking.

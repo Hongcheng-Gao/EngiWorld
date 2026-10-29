@@ -120,7 +120,7 @@ def task_upload_paths(task_id: str, definition: dict) -> set[str]:
             if not raw:
                 continue
             relative = Path(os.path.normpath(base / raw))
-            if relative.is_absolute() or str(relative).startswith("../") or str(relative) == "..":
+            if relative.is_absolute() or (relative.parts and relative.parts[0] == "..") or str(relative) == "..":
                 raise ValueError(f"Task resource is outside the task root: {raw}")
             paths.add(relative.as_posix())
     return paths

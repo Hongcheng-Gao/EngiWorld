@@ -59,7 +59,7 @@ python -m engiworld.prepare_tasks --source hf \
 python -m engiworld.cloud_eval \
   --task-root ../data/task \
   --task single-software-execution/cli/autocad/task-01 \
-  --model your-model-name \
+  --agent kimi-k3-max --max-tokens 16384 \
   --result-dir results
 ```
 
@@ -67,21 +67,12 @@ python -m engiworld.cloud_eval \
 
 终端最后显示结果目录。`summary.json` 汇总任务得分、错误信息和实例释放状态；任务子目录中的 `result.txt` 保存得分，`traj.jsonl` 保存交互轨迹。
 
-只检查环境是否能启动和加载任务时，在同一命令中使用 `--smoke-test` 代替 `--model your-model-name`。这会保存 `smoke.png` 截图，不调用模型；正常的模型评测使用上面的完整命令。
+只检查环境是否能启动和加载任务时，在同一命令中使用 `--smoke-test` 代替 `--agent kimi-k3-max --max-tokens 16384`。这会保存 `smoke.png` 截图，不调用模型；正常的模型评测使用上面的完整命令。
 
 更换任务时修改 `--task`。程序按镜像清单选择环境；使用自有镜像时增加 `--image-id m-your-image-id`。每个任务使用一台独立实例。
 
-## 按论文任务清单评测
+## 批量评测
 
-先下载完整任务数据，再按清单逐项运行：
+批量运行使用统一 Redis master/worker 队列，参见[两云批量调度](../cloud/README_CN.md)。
 
-```bash
-python -m engiworld.prepare_tasks --source hf --task-root ../data/task
-while IFS= read -r task; do
-  python -m engiworld.cloud_eval \
-    --task-root ../data/task --task "$task" \
-    --model your-model-name --result-dir results
-done < ../data/task/splits/main-306.txt
-```
-
-每个任务单独保存结果；可将清单换成自己的任务列表。
+API 中断默认等待接口更新，超时后记为未完成且默认保留实例。保留实例仍计费；释放选项、请求追踪及故障处理以[云端说明](../cloud/README_CN.md)为准。

@@ -7,8 +7,10 @@ import json
 import os
 import time
 from dataclasses import dataclass, field
+from pathlib import Path
 from typing import Any, Callable, Iterable
 
+from engiworld.cloud_journal import CloudJournal
 from engiworld.scheduler.schemas import InstanceRecord
 
 
@@ -148,8 +150,10 @@ class VolcengineLaunchConfig:
 
 
 class VolcengineEcsClient:
+    provider_name = "volcengine"
     def __init__(self, config: VolcengineLaunchConfig):
         self.config = config
+        self.journal_dir = Path(os.getenv("ENGIWORLD_CLOUD_JOURNAL_DIR", "results/cloud-instances/volcengine"))
         self._api = self._create_api()
 
     def _create_api(self):
@@ -212,6 +216,8 @@ class VolcengineEcsClient:
         *,
         tags: dict[str, str] | None = None,
         project_name: str | None = None,
+        instance_ids: list[str] | None = None,
+        instance_name: str | None = None,
     ) -> list[EcsInstance]:
         """List ECS instances, optionally filtered by exact tag values."""
         import volcenginesdkecs.models as ecs_models
@@ -235,6 +241,10 @@ class VolcengineEcsClient:
                 lambda request=request: self._api.describe_instances(request),
             )
             for instance in response.instances or []:
+                if instance_ids is not None and instance.instance_id not in instance_ids:
+                    continue
+                if instance_name is not None and instance.instance_name != instance_name:
+                    continue
                 instance_tags = _sdk_tags(instance)
                 # Keep an exact-value check client-side in case provider-side
                 # tag-filter semantics change.
@@ -361,7 +371,12 @@ class VolcengineEcsClient:
                 charge_type="PayByTraffic",
             )
 
+        journal = CloudJournal(self.journal_dir, "volcengine", run_id=run_id,
+                               region=self.config.region, image_id=image.image_id)
+        instance_name = "EngiWorld-" + journal.data["client_token"][:24]
+        journal.update(instance_name=instance_name)
         request = ecs_models.RunInstancesRequest(
+            client_token=journal.data["client_token"],
             image_id=image.image_id,
             instance_type=self.config.instance_type,
             count=count,
@@ -373,7 +388,7 @@ class VolcengineEcsClient:
                 )
             ],
             eip_address=eip,
-            instance_name=f"arena-{run_id}-{snapshot}".replace("_", "-")[:64],
+            instance_name=instance_name,
             volumes=[
                 ecs_models.VolumeForRunInstancesInput(
                     volume_type=self.config.system_disk_type,
@@ -395,11 +410,18 @@ class VolcengineEcsClient:
         if self.config.project_name:
             request.project_name = self.config.project_name
 
-        response = self._call_with_rate_limit_retry(
-            "RunInstances",
-            lambda request=request: self._api.run_instances(request),
-        )
-        return response.instance_ids or []
+        journal.update(state="submitting")
+        try:
+            response = self._call_with_rate_limit_retry(
+                "RunInstances", lambda request=request: self._api.run_instances(request))
+            ids = response.instance_ids or []
+            if not ids:
+                raise RuntimeError("RunInstances returned no IDs; creation outcome unknown")
+            journal.update(state="created", instance_ids=ids)
+            return ids
+        except BaseException as exc:
+            journal.update(creation_error=str(exc))
+            raise
 
     def wait_for_instances(
         self,
@@ -491,18 +513,26 @@ class VolcengineEcsClient:
             f"Last observed: {observed}"
         )
 
-    def terminate_instances(self, instance_ids: list[str]) -> None:
-        if not instance_ids:
-            return
-
+    def terminate_instances(self, instance_ids: list[str], timeout_seconds: int = 300) -> None:
+        """Release once, then confirm absence; pending deletion is not a failure."""
         import volcenginesdkecs.models as ecs_models
-
-        self._call_with_rate_limit_retry(
-            "DeleteInstances",
-            lambda: self._api.delete_instances(
-                ecs_models.DeleteInstancesRequest(instance_ids=instance_ids)
-            ),
-        )
+        for instance_id in dict.fromkeys(instance_ids):
+            current = self.list_instances(instance_ids=[instance_id])
+            if not current:
+                continue
+            if current[0].status.upper() not in {"DELETING", "TERMINATING", "DELETED"}:
+                try:
+                    self._call_with_rate_limit_retry("DeleteInstances", lambda: self._api.delete_instances(
+                        ecs_models.DeleteInstancesRequest(instance_ids=[instance_id])))
+                except Exception:
+                    remaining = self.list_instances(instance_ids=[instance_id])
+                    if remaining and remaining[0].status.lower() not in {"deleting", "terminating", "deleted"}:
+                        raise
+            deadline = time.monotonic() + timeout_seconds
+            while self.list_instances(instance_ids=[instance_id]):
+                if time.monotonic() >= deadline:
+                    raise TimeoutError(f"Deletion not confirmed for {instance_id}")
+                time.sleep(2)
 
     def stop_instances(self, instance_ids: list[str], *, force: bool = False) -> None:
         """Stop instances before capturing a reusable custom image."""

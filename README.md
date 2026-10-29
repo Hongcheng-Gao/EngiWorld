@@ -25,11 +25,12 @@ The benchmark covers CAD, CAE, CAM, BIM, EDA, and DCC. Its six task types are Si
 
 Local evaluation launches Windows or Ubuntu virtual machines through Docker on Linux, calls the model, and saves evaluation results.
 
-## ☁️ Run with Alibaba Cloud shared images
+## ☁️ Run on Alibaba Cloud or Volcengine
 
-Configure your Alibaba Cloud account, network and model endpoint after obtaining image access. The evaluator creates a Windows or Ubuntu instance, runs the task, saves its score and trajectory, and releases the instance.
-
-Follow the **[Alibaba Cloud quick start](runtime/deploy/aliyun/README.md)**. The instructions below use local QCOW2 images.
+Use the [cloud evaluation guide](runtime/deploy/cloud/README.md) for single-task or
+Redis-scheduled batch evaluation on either cloud. Explicit model presets, API
+interruption handling and batch state management are shared. Images require
+compatible engineering applications and desktop services.
 
 ## 💾 Installation
 

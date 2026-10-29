@@ -3,7 +3,6 @@ import time
 import logging
 import json
 import volcenginesdkcore
-import volcenginesdkautoscaling
 import volcenginesdkecs.models as ecs_models
 from volcenginesdkcore.rest import ApiException
 from volcenginesdkecs.api import ECSApi

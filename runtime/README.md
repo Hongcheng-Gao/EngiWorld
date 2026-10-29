@@ -59,8 +59,8 @@ the model on the master:
 ```bash
 python -m engiworld.scheduler.master plan \
   --task-root ../data/task --task-limit 1 --num-vms 1 \
-  --agent openai-compatible \
-  --agent-env ARENA_MODEL_NAME=your-model-name
+  --agent openai-compatible --model your-model-name \
+  --reasoning-effort none --max-tokens 16384
 ```
 
 `plan` prints the selected tasks and model configuration. `scheduler.master`
@@ -98,3 +98,5 @@ observations and the `open_engineering` interaction profile.
 Geometry evaluation requires FreeCAD. The runtime checks and installs this dependency
 after the model finishes. The image must support noninteractive sudo and access
 to Ubuntu package repositories.
+
+See the [shared cloud guide](deploy/cloud/README.md) for Alibaba Cloud and Volcengine single-task and distributed batch runs. Custom models require an explicit model name, reasoning effort and output token allowance.

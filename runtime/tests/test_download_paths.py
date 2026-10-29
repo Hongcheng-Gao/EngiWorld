@@ -1,3 +1,5 @@
+import os
+import pytest
 import hashlib
 import json
 from pathlib import Path
@@ -9,6 +11,7 @@ from engiworld.prepare_tasks import asset_path, copy_verified, prepare, task_upl
 
 
 class DownloadPathTests(unittest.TestCase):
+    @pytest.mark.skipif(os.name == "nt", reason="requires POSIX symlink support")
     def test_hub_blob_link_can_be_verified_and_copied(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
@@ -25,6 +28,7 @@ class DownloadPathTests(unittest.TestCase):
             copy_verified(source, target, {"size": 13, "sha256": hashlib.sha256(blob.read_bytes()).hexdigest()})
             self.assertEqual(target.read_bytes(), blob.read_bytes())
 
+    @pytest.mark.skipif(os.name == "nt", reason="requires POSIX symlink support")
     def test_output_symlink_cannot_write_outside_root(self):
         with tempfile.TemporaryDirectory() as directory:
             root = Path(directory)
