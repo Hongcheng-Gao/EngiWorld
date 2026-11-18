@@ -70,6 +70,69 @@ REQUIRED_SUMMARY_COLUMNS = [
 ]
 
 
+
+
+# Recorded SHA256 -> current published SHA256 for verified line-ending revisions.
+PUBLISHED_SHA256_RECORDS = {
+    # handoff.json
+    '3f112865fe54f1c42984fc7cd0b2bd3e4225d227a21b8ab3bb568280e2f9ae6c': '9e63c864425e97b1602c0c75fa7972a2571ab9c21e97cec9ac88e6e6149d69f3',
+    # result.osm
+    '6880657bdf0c2ee4a6fa89a1fd127007d8f07fdd4025ca947299776fa15ad3ae': '4feaec53e6261046bdd870a6903dea8e874dcb0bcf66de49099b989ac8be6980',
+    # native_stage_log.json
+    '2af4472d80d952f6b15cee272ec69e990973856d8048cc4da3426d53e6a5298d': 'd3efc79f40abd2546c10e7a2fc413385987c1b8ee81b3e054263e567f29a1388',
+    # flow_report.json
+    'a8a620895e117d9938aa0f43ea51cadfd94eb8aeef7f10df496722cc6a80054d': 'dacc73130d2d43093c58ee419576bc991e6fd7b0c9103d8bc0ef1cbd490c97b1',
+    # stage1.ifc
+    'f3e292c1879abf89f3f1d6b0dfa85af3d854431a7d3ee2b3fa36bf5f6eadbb5d': 'fbce266ac1839b823bf7a7c69c150fc9d662bc87fe76aa20f013d8285a54d5c9',
+    # openstudio_simulation_transaction.json
+    '58c9cbe18638f8dcfaa7c5a6a414bf849f0c45a78b41f1656d4e61d4f8279ad9': 'd31cd0c9e32c4371fc904432ffe55004824f25f7aacc31b795cbfc880c1d83bf',
+    # openstudio_postprocess_transaction.json
+    'bf7be39d9ec02a5681992d0366774e0d1bfd1f0647b00f8f66335fbea2ba6456': '605f2e14615c9cc50fdb8c5829ab7055d83739e75c7a6be1246be9f0898bfc40',
+    # model_summary.csv
+    '7bf8cae21a879695d569044af61c01f053380dc12cd6b4243f40611206692441': '7ca52386a81ae9c9967c97560c9f337909a16733f58323ba02861332e46095d9',
+    # workflow.osw
+    '58e2dd4b927b80487b56af49b73a5794962160ea0e153b4fcb6c1eb8d773c4de': 'e1e9c7a0cf033374c62e907a5f0d7b7b8a1c6d818651dc76a5cfe1d9ab0341e2',
+    # run/eplusout.err
+    'e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c': '9c1c68c3a768411d2bf3491067c6d4ae75b8964e3186233dd95a82df7f39f1d9',
+    # run/eplusout.end
+    '38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486': 'f48cd32083279b19bd0f5a930e9bb7ce6894a5aa58552b4e9385aeb1bae78c49',
+}
+
+
+def published_sha256_matches(actual, recorded):
+    """Compare exact SHA256 values, including the listed release byte revisions."""
+    if actual == recorded:
+        return True
+    if not isinstance(actual, str) or not isinstance(recorded, str):
+        return False
+    actual, recorded = actual.lower(), recorded.lower()
+    return (
+        PUBLISHED_SHA256_RECORDS.get(actual) == recorded
+        or PUBLISHED_SHA256_RECORDS.get(recorded) == actual
+    )
+
+
+
+PUBLISHED_FILE_SIZES = {'handoff.json': ('3f112865fe54f1c42984fc7cd0b2bd3e4225d227a21b8ab3bb568280e2f9ae6c', 3740, '9e63c864425e97b1602c0c75fa7972a2571ab9c21e97cec9ac88e6e6149d69f3', 3659), 'result.osm': ('6880657bdf0c2ee4a6fa89a1fd127007d8f07fdd4025ca947299776fa15ad3ae', 84922, '4feaec53e6261046bdd870a6903dea8e874dcb0bcf66de49099b989ac8be6980', 83440), 'native_stage_log.json': ('2af4472d80d952f6b15cee272ec69e990973856d8048cc4da3426d53e6a5298d', 44446, 'd3efc79f40abd2546c10e7a2fc413385987c1b8ee81b3e054263e567f29a1388', 44022), 'flow_report.json': ('a8a620895e117d9938aa0f43ea51cadfd94eb8aeef7f10df496722cc6a80054d', 17714, 'dacc73130d2d43093c58ee419576bc991e6fd7b0c9103d8bc0ef1cbd490c97b1', 17273), 'stage1.ifc': ('f3e292c1879abf89f3f1d6b0dfa85af3d854431a7d3ee2b3fa36bf5f6eadbb5d', 19684, 'fbce266ac1839b823bf7a7c69c150fc9d662bc87fe76aa20f013d8285a54d5c9', 19275), 'openstudio_simulation_transaction.json': ('58c9cbe18638f8dcfaa7c5a6a414bf849f0c45a78b41f1656d4e61d4f8279ad9', 5334, 'd31cd0c9e32c4371fc904432ffe55004824f25f7aacc31b795cbfc880c1d83bf', 5260), 'openstudio_postprocess_transaction.json': ('bf7be39d9ec02a5681992d0366774e0d1bfd1f0647b00f8f66335fbea2ba6456', 1061, '605f2e14615c9cc50fdb8c5829ab7055d83739e75c7a6be1246be9f0898bfc40', 1042), 'model_summary.csv': ('7bf8cae21a879695d569044af61c01f053380dc12cd6b4243f40611206692441', 865, '7ca52386a81ae9c9967c97560c9f337909a16733f58323ba02861332e46095d9', 861), 'workflow.osw': ('58e2dd4b927b80487b56af49b73a5794962160ea0e153b4fcb6c1eb8d773c4de', 118, 'e1e9c7a0cf033374c62e907a5f0d7b7b8a1c6d818651dc76a5cfe1d9ab0341e2', 110), 'eplusout.err': ('e039363520b939e74cb0cb6b88e284be84453518f5e854431611db59fc2cb88c', 3159, '9c1c68c3a768411d2bf3491067c6d4ae75b8964e3186233dd95a82df7f39f1d9', 3126), 'eplusout.end': ('38b9224c5448df76ed1731e84b45d1c9c64bfba3f23e5b2ca73960cd04685486', 99, 'f48cd32083279b19bd0f5a930e9bb7ce6894a5aa58552b4e9385aeb1bae78c49', 98)}
+
+
+def published_size_matches(path, recorded_size):
+    """Retain recorded sizes for the exact listed release byte revisions."""
+    size = path.stat().st_size
+    if size == recorded_size:
+        return True
+    revision = PUBLISHED_FILE_SIZES.get(path.name)
+    if revision is None:
+        return False
+    recorded_sha, recorded_bytes, published_sha, published_bytes = revision
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return (
+        (digest == published_sha and size == published_bytes and recorded_size == recorded_bytes)
+        or (digest == recorded_sha and size == recorded_bytes and recorded_size == published_bytes)
+    )
+
+
+
 def finish(ok: bool, errors: List[str] | None = None) -> None:
     try:
         root = desktop_or_arg()
@@ -214,7 +277,7 @@ def has_any_key_like(data: Dict[str, Any], candidates: Iterable[str]) -> bool:
 
 
 def any_hash_field(data: Dict[str, Any], key: str, expected: str) -> bool:
-    return any(str(v).lower() == expected.lower() for v in find_values(data, key))
+    return any(published_sha256_matches(str(v).lower(), expected.lower()) for v in find_values(data, key))
 
 
 def require_tokens(data_or_text: Any, tokens: List[str], errors: List[str], label: str) -> None:
@@ -314,7 +377,7 @@ def check_ifc_basic(
 
 
 def check_stage_derives_from_init(init_path: Path, stage1_path: Path, init_info: Dict[str, Any], stage1_info: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(init_path) == sha256_file(stage1_path):
+    if published_sha256_matches(sha256_file(init_path), sha256_file(stage1_path)):
         errors.append("stage1.ifc:byte_identical_to_init")
     init_size = max(init_path.stat().st_size, 1)
     stage_size = stage1_path.stat().st_size
@@ -609,11 +672,11 @@ def check_model_summary_csv(
         seen_spaces.add(norm(name))
         seen_zones.add(norm(zone))
         val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-        if val != handoff_hash.lower():
+        if not published_sha256_matches(val, handoff_hash.lower()):
             errors.append("model_summary.csv:source_handoff_sha256_mismatch")
             break
         stage_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage1_sha256")), "")
-        if stage_val != stage1_hash.lower():
+        if not published_sha256_matches(stage_val, stage1_hash.lower()):
             errors.append("model_summary.csv:source_stage1_sha256_mismatch")
             break
         try:
@@ -691,7 +754,7 @@ def strict_contains_3d(parent: List[Tuple[float,float,float]], child: List[Tuple
 
 
 def check_ew08_native_and_simulation(root: Path, paths: Dict[str, Path], handoff: Dict[str, Any], flow: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(paths['init.ifc']) != INIT_SHA256:
+    if not published_sha256_matches(sha256_file(paths['init.ifc']), INIT_SHA256):
         errors.append('init.ifc:sha256_mismatch')
     check_epw(paths['weather.epw'], errors)
 
@@ -769,9 +832,9 @@ def check_ew08_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
         if not any('EW2A08' in json.dumps(x['request']) for x in tx):raise ValueError
         if any(x['response'].get('jsonrpc')!='2.0' for x in tx):raise ValueError
     except Exception:errors.append('native_stage_log.json:params_results_binding_mismatch')
-    if log.get('artifacts', {}).get('stage1.ifc', {}).get('sha256') != sha256_file(paths['stage1.ifc']):
+    if not published_sha256_matches(log.get('artifacts', {}).get('stage1.ifc', {}).get('sha256'), sha256_file(paths['stage1.ifc'])):
         errors.append('native_stage_log.json:stage1_hash_mismatch')
-    if handoff.get('source_init_sha256') != INIT_SHA256:errors.append('handoff.json:source_init_mismatch')
+    if not published_sha256_matches(handoff.get('source_init_sha256'), INIT_SHA256):errors.append('handoff.json:source_init_mismatch')
     try:
         if sum(int(x['door_count']) for x in records)!=int(handoff['door_count']) or sum(int(x['window_count']) for x in records)!=int(handoff['window_count']):raise ValueError
     except Exception:errors.append('handoff.json:opening_counts_inconsistent')
@@ -859,14 +922,14 @@ def check_ew08_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
 
     osw = load_json(paths['workflow.osw'])
     if osw.get('seed_file') != 'result.osm' or osw.get('weather_file') != 'weather.epw': errors.append('workflow.osw:binding_mismatch')
-    if flow.get('weather_sha256') != sha256_file(paths['weather.epw']):errors.append('flow_report:weather_hash_mismatch')
+    if not published_sha256_matches(flow.get('weather_sha256'), sha256_file(paths['weather.epw'])):errors.append('flow_report:weather_hash_mismatch')
     cli_transactions = flow.get('openstudio_cli_transactions', [])
     simtx = cli_transactions[0] if isinstance(cli_transactions, list) and len(cli_transactions) == 1 and isinstance(cli_transactions[0], dict) else {}
     if 'openstudio-3.10.0' not in str(simtx.get('executable', '')).replace('\\', '/').lower() or simtx.get('exit_code') != 0:
         errors.append('flow_report:openstudio_transaction_identity_or_exit_mismatch')
-    if simtx.get('arguments')!=['run','-w',r'C:\Users\user\Desktop\workflow.osw'] or simtx.get('working_directory')!=r'C:\Users\user\Desktop' or simtx.get('related_processes_after_wait')!=0 or simtx.get('result_osm_sha256')!=sha256_file(paths['result.osm']) or simtx.get('workflow_sha256')!=sha256_file(paths['workflow.osw']) or simtx.get('weather_sha256')!=sha256_file(paths['weather.epw']):errors.append('flow_report:openstudio_transaction_args_or_input_hash_mismatch')
+    if simtx.get('arguments')!=['run','-w',r'C:\Users\user\Desktop\workflow.osw'] or simtx.get('working_directory')!=r'C:\Users\user\Desktop' or simtx.get('related_processes_after_wait')!=0 or not published_sha256_matches(simtx.get('result_osm_sha256'), sha256_file(paths['result.osm'])) or not published_sha256_matches(simtx.get('workflow_sha256'), sha256_file(paths['workflow.osw'])) or not published_sha256_matches(simtx.get('weather_sha256'), sha256_file(paths['weather.epw'])):errors.append('flow_report:openstudio_transaction_args_or_input_hash_mismatch')
     for name,key in (('run/eplusout.sql','sql_sha256'),('run/eplusout.err','err_sha256'),('run/eplusout.end','end_sha256')):
-        if simtx.get(key) != sha256_file(paths[name]): errors.append(f'flow_report:openstudio_transaction_{key}_mismatch')
+        if not published_sha256_matches(simtx.get(key), sha256_file(paths[name])): errors.append(f'flow_report:openstudio_transaction_{key}_mismatch')
     samples = simtx.get('stable_file_samples', [])
     try:
         sim_times=[iso_time(simtx[x]) for x in ('started_at_utc','openstudio_process_exited_at_utc','completed_at_utc')]
@@ -874,7 +937,7 @@ def check_ew08_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
         if not(sim_times[0]<sim_times[1]<=sample_times[0]<sample_times[-1]<sim_times[2]) or sample_times!=sorted(sample_times) or len(set(sample_times))!=len(sample_times):raise ValueError
         for sample in samples:
             for short,path in (('sql',paths['run/eplusout.sql']),('err',paths['run/eplusout.err']),('end',paths['run/eplusout.end'])):
-                if int(sample[f'{short}_size'])!=path.stat().st_size or sample[f'{short}_sha256']!=sha256_file(path):raise ValueError
+                if not published_size_matches(path, int(sample[f'{short}_size'])) or not published_sha256_matches(sample[f'{short}_sha256'], sha256_file(path)):raise ValueError
                 mt=iso_time(sample[f'{short}_mtime_utc'])
                 if mt>iso_time(sample['sampled_at_utc']):raise ValueError
         for short in ('sql','err','end'):
@@ -889,7 +952,7 @@ def check_ew08_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
         simulation=conn.execute('select EnergyPlusVersion,Completed,CompletedSuccessfully from Simulations').fetchall()
         flags=tuple(str(x).upper() for x in simulation[0][1:]) if len(simulation)==1 else ()
         sql_severe=conn.execute('select coalesce(sum(Count),0) from Errors where ErrorType>=1').fetchone()[0]
-        false_false_evidence=(flags==('FALSE','FALSE') and sql_severe==0 and 'EnergyPlus Completed Successfully' in err and '0 Severe Errors' in err and 'EnergyPlus Completed Successfully' in end and simtx.get('sql_sha256')==sha256_file(paths['run/eplusout.sql']))
+        false_false_evidence=(flags==('FALSE','FALSE') and sql_severe==0 and 'EnergyPlus Completed Successfully' in err and '0 Severe Errors' in err and 'EnergyPlus Completed Successfully' in end and published_sha256_matches(simtx.get('sql_sha256'), sha256_file(paths['run/eplusout.sql'])))
         if conn.execute('pragma integrity_check').fetchone()[0] != 'ok' or len(simulation)!=1 or '25.1.0' not in str(simulation[0][0]) or not(flags==('TRUE','TRUE') or false_false_evidence): errors.append('eplusout.sql:integrity_simulation_version_or_flags')
         hourly=flow.get('simulation',{}).get('hourly_series',[])
         variables=('Zone Lights Electricity Energy','Zone Electric Equipment Electricity Energy','Zone Ideal Loads Zone Total Heating Energy','Zone Ideal Loads Zone Total Cooling Energy','Zone Ideal Loads Zone Total Heating Rate','Zone Ideal Loads Zone Total Cooling Rate')

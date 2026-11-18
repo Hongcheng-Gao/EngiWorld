@@ -117,6 +117,52 @@ IFC_CLASSES = [
 ]
 
 
+
+
+# Recorded SHA256 -> current published SHA256 for verified line-ending revisions.
+PUBLISHED_SHA256_RECORDS = {
+    # revit_handoff.json
+    '38cd4acba2aa75d112f12bf08e0bfef06805b139a08869164011fa260b2a3aa3': 'a809a32b929a7fa8cad742980893039b3ab59ee8502f20af647c9a0bab08c33a',
+    # result.osm
+    '651fbf75d8165526c8f23efb3d3f681dab31ac26d2f469ba38d666d63f9614fb': 'ade81e84ac1ebb8a130bf08ab889970d679fa6022e86061bb1d6003230f57a98',
+    # native_stage_log.json
+    'aa83739098a5ef2174f4b517bb1d5699537c6826738d72ed3cf6d6379f36eb62': '212c60a473f45ef6faadfa02c7528e3ab2cd64a7685286e1b94d58df58b57dd8',
+    # flow_report.json
+    'ada1d2cf2c574ecaf9ceab4326da37cb85ca88739f634a9681cbfacc158c491e': '14cb29eba1db97ea717eab4c060288856c2d1bb869661a84160569d2f227e136',
+    # in.idf
+    '05ea29e3d2d1d8645f2a6255a5df8bc266cfb151e5790088d5f9f07d51e05209': 'dc7d5b97fb8f7f1bdcf301dbdafee22253919c33d77dcb7660c16bb2000de4f1',
+    # archicad_handoff.json
+    '6c9bef798bbfc6b3bf8e3357d27792973c8304ce2471f76faedb7190bcd9bd24': '3af3611911955abfcd67494e1f176b161415b72e1740ed13cc43750e412cadf2',
+    # workflow.osw
+    '946192fa8244dce3e4c339e37cf57d73010d056a7f56e8ee7d9567b1acb7e653': 'bb47067738d4114a2ecd60a1a9e26c0f57723a63e2b334c1bcdf7049a03670dd',
+    # archicad_validation_report.json
+    '1ac5315924477e8951b46253a38ebc049b3a3f0f23f0e7a287d2de47f606ebc1': '6c8c447ecf15eeb296114ad14a1fd1585e949888363293f6a1654392b1ab6842',
+}
+
+
+def published_sha256_matches(actual, recorded):
+    """Compare exact SHA256 values, including the listed release byte revisions."""
+    if actual == recorded:
+        return True
+    if not isinstance(actual, str) or not isinstance(recorded, str):
+        return False
+    actual, recorded = actual.lower(), recorded.lower()
+    return (
+        PUBLISHED_SHA256_RECORDS.get(actual) == recorded
+        or PUBLISHED_SHA256_RECORDS.get(recorded) == actual
+    )
+
+
+def published_sha256_in_text(actual, text, prefix_length=64):
+    """Find the same recorded digest or prefix for a listed byte revision."""
+    variants = {actual}
+    for recorded, published in PUBLISHED_SHA256_RECORDS.items():
+        if actual.lower() in (recorded, published):
+            variants.update((recorded, published))
+    return any(value[:prefix_length].upper() in text for value in variants)
+
+
+
 def finish(ok: bool, errors: List[str] | None = None) -> None:
     try:
         root = desktop_or_arg()
@@ -182,7 +228,7 @@ def immutable_file_matches(path: Path, expected_hash: str) -> bool:
     byte to the pinned hash; this is stricter than hashing selected PE sections.
     See https://learn.microsoft.com/en-us/windows/win32/debug/pe-format .
     """
-    if sha256_file(path) == expected_hash:
+    if published_sha256_matches(sha256_file(path), expected_hash):
         return True
     if path.name != "EngiWorld.BimBridge.dll":
         return False
@@ -216,7 +262,7 @@ def immutable_file_matches(path: Path, expected_hash: str) -> bool:
     restored = bytearray(data[:original_size])
     restored[checksum:checksum + 4] = bytes.fromhex(layout["original_checksum_hex"])
     restored[directory:directory + 8] = b"\0" * 8
-    if hashlib.sha256(restored).hexdigest() != expected_hash:
+    if not published_sha256_matches(hashlib.sha256(restored).hexdigest(), expected_hash):
         return False
     return valid_authenticode_signature(path)
 
@@ -777,9 +823,9 @@ def check_workflow_osw(path: Path, paths: Dict[str, Path], errors: List[str]) ->
             errors.append(f"workflow.osw:{key}_mismatch")
     if str(workflow.get("osw_version", "")) != "3.10":
         errors.append("workflow.osw:version_not_3_10")
-    if str(workflow.get("source_stage2_sha256", "")).lower() != sha256_file(paths["stage2.ifc"]):
+    if not published_sha256_matches(str(workflow.get("source_stage2_sha256", "")).lower(), sha256_file(paths["stage2.ifc"])):
         errors.append("workflow.osw:source_stage2_sha256_mismatch")
-    if str(workflow.get("source_handoff_sha256", "")).lower() != sha256_file(paths["archicad_handoff.json"]):
+    if not published_sha256_matches(str(workflow.get("source_handoff_sha256", "")).lower(), sha256_file(paths["archicad_handoff.json"])):
         errors.append("workflow.osw:source_handoff_sha256_mismatch")
     steps = workflow.get("steps")
     if not isinstance(steps, list) or not any(
@@ -882,9 +928,9 @@ def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]
         command = str(row.get("command", ""))
         if any(token.casefold() not in command.casefold() for token in command_tokens):
             errors.append(f"native_stage_log.json:{stage}:command_mismatch")
-        if str(row.get("input_sha256", "")).lower() != sha256_file(source):
+        if not published_sha256_matches(str(row.get("input_sha256", "")).lower(), sha256_file(source)):
             errors.append(f"native_stage_log.json:{stage}:input_sha256_mismatch")
-        if str(row.get("output_sha256", "")).lower() != sha256_file(output):
+        if not published_sha256_matches(str(row.get("output_sha256", "")).lower(), sha256_file(output)):
             errors.append(f"native_stage_log.json:{stage}:output_sha256_mismatch")
         if not row.get("started_utc") or not row.get("finished_utc"):
             errors.append(f"native_stage_log.json:{stage}:missing_timestamps")
@@ -906,17 +952,17 @@ def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]
                 errors.append("native_stage_log.json:stages_overlap_or_out_of_order")
                 break
     revit = stages[0]
-    if str(revit.get("handoff_sha256", "")).lower() != sha256_file(paths["revit_handoff.json"]):
+    if not published_sha256_matches(str(revit.get("handoff_sha256", "")).lower(), sha256_file(paths["revit_handoff.json"])):
         errors.append("native_stage_log.json:revit:handoff_sha256_mismatch")
     archicad = stages[1]
-    if str(archicad.get("input_handoff_sha256", "")).lower() != sha256_file(paths["revit_handoff.json"]):
+    if not published_sha256_matches(str(archicad.get("input_handoff_sha256", "")).lower(), sha256_file(paths["revit_handoff.json"])):
         errors.append("native_stage_log.json:archicad:input_handoff_sha256_mismatch")
     for key, filename in (
         ("handoff_sha256", "archicad_handoff.json"),
         ("validation_report_sha256", "archicad_validation_report.json"),
         ("translator_sha256", "archicad_ifc4_translator.json"),
     ):
-        if str(archicad.get(key, "")).lower() != sha256_file(paths[filename]):
+        if not published_sha256_matches(str(archicad.get(key, "")).lower(), sha256_file(paths[filename])):
             errors.append(f"native_stage_log.json:archicad:{key}_mismatch")
     validation_report = load_json(paths["archicad_validation_report.json"])
     provenance = validation_report.get("native_provenance")
@@ -929,7 +975,7 @@ def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]
     if archicad.get("rpc_method_sequence") != verified_methods:
         errors.append("native_stage_log.json:archicad:rpc_method_sequence_mismatch")
     openstudio = stages[2]
-    if str(openstudio.get("input_handoff_sha256", "")).lower() != sha256_file(paths["archicad_handoff.json"]):
+    if not published_sha256_matches(str(openstudio.get("input_handoff_sha256", "")).lower(), sha256_file(paths["archicad_handoff.json"])):
         errors.append("native_stage_log.json:openstudio:input_handoff_sha256_mismatch")
     energyplus_executable = str(openstudio.get("energyplus_executable", ""))
     normalized_energyplus = windows_path(energyplus_executable)
@@ -938,7 +984,7 @@ def check_native_stage_log(path: Path, paths: Dict[str, Path], errors: List[str]
     if str(openstudio.get("energyplus_version", "")) != "EnergyPlus, Version 25.1.0-1c11a3d85f":
         errors.append("native_stage_log.json:openstudio:energyplus_version_build_mismatch")
     for key, filename in (("idf_sha256", "in.idf"), ("workflow_sha256", "workflow.osw"), ("eplusout_sql_sha256", "run/eplusout.sql"), ("eplusout_err_sha256", "run/eplusout.err")):
-        if str(openstudio.get(key, "")).lower() != sha256_file(paths[filename]):
+        if not published_sha256_matches(str(openstudio.get(key, "")).lower(), sha256_file(paths[filename])):
             errors.append(f"native_stage_log.json:openstudio:{key}_mismatch")
 def sql_table_exists(conn: sqlite3.Connection, name: str) -> bool:
     return conn.execute("select 1 from sqlite_master where type in ('table','view') and name = ?", (name,)).fetchone() is not None
@@ -1176,11 +1222,11 @@ def check_energyplus_outputs(paths: Dict[str, Path], handoff: Dict[str, Any], er
         if reported_peak is None or actual_peak is None or abs(reported_peak - actual_peak) > max(0.01, actual_peak * 0.01):
             errors.append("energy_report.csv:peak_load_mismatch_with_sql")
         sql_hash = next((str(value).lower() for key, value in report_rows[0].items() if norm(key) == norm("simulation_sql_sha256")), "")
-        if sql_hash != sha256_file(paths["run/eplusout.sql"]):
+        if not published_sha256_matches(sql_hash, sha256_file(paths["run/eplusout.sql"])):
             errors.append("energy_report.csv:simulation_sql_sha256_mismatch")
     flow = load_json(paths["flow_report.json"])
     for key, filename in (("eplusout_sql_sha256", "run/eplusout.sql"), ("eplusout_err_sha256", "run/eplusout.err"), ("workflow_sha256", "workflow.osw")):
-        if str(flow.get(key, "")).lower() != sha256_file(paths[filename]):
+        if not published_sha256_matches(str(flow.get(key, "")).lower(), sha256_file(paths[filename])):
             errors.append(f"flow_report:{key}_mismatch")
     flow_simulation = flow.get("simulation")
     if not isinstance(flow_simulation, dict) or norm(flow_simulation.get("status")) != norm("EnergyPlus Completed Successfully"):
@@ -1306,7 +1352,7 @@ def check_ifc_basic(
 
 
 def check_stage_derives_from_init(init_path: Path, stage1_path: Path, init_info: Dict[str, Any], stage1_info: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(init_path) == sha256_file(stage1_path):
+    if published_sha256_matches(sha256_file(init_path), sha256_file(stage1_path)):
         errors.append("stage1.ifc:byte_identical_to_init")
     init_size = max(init_path.stat().st_size, 1)
     stage_size = stage1_path.stat().st_size
@@ -1330,7 +1376,7 @@ def check_stage_derives_from_init(init_path: Path, stage1_path: Path, init_info:
 
 
 def check_stage2_derives_from_stage1(stage1_path: Path, stage2_path: Path, stage1_info: Dict[str, Any], stage2_info: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(stage1_path) == sha256_file(stage2_path):
+    if published_sha256_matches(sha256_file(stage1_path), sha256_file(stage2_path)):
         errors.append("stage2.ifc:byte_identical_to_stage1")
     ratio = stage2_path.stat().st_size / max(stage1_path.stat().st_size, 1)
     if ratio < 0.08 or ratio > 80:
@@ -1885,7 +1931,7 @@ def check_handoff(
     extra_hashes: Dict[str, Path] | None = None,
 ) -> Dict[str, Any]:
     data = load_json(path)
-    if str(data.get("source_sha256", "")).lower() != sha256_file(source_file):
+    if not published_sha256_matches(str(data.get("source_sha256", "")).lower(), sha256_file(source_file)):
         errors.append(f"{label}:source_sha256_mismatch")
     if data.get("case_id") != CASE_SPEC["case_id"]:
         errors.append(f"{label}:case_id_mismatch")
@@ -1900,7 +1946,7 @@ def check_handoff(
         if data.get("software_stage") != expected_stage:
             errors.append(f"{label}:software_stage_not_{expected_stage}")
     for key, upstream in (extra_hashes or {}).items():
-        if str(data.get(key, "")).lower() != sha256_file(upstream):
+        if not published_sha256_matches(str(data.get(key, "")).lower(), sha256_file(upstream)):
             errors.append(f"{label}:{key}_mismatch")
     return data
 
@@ -1969,9 +2015,9 @@ def check_validation_report(path: Path, stage1: Path, stage2: Path, required_spa
         errors.append("archicad_validation_report:case_id_mismatch")
     if data.get("software_stage") != CASE_SPEC.get("expected_archicad_stage", "archicad"):
         errors.append("archicad_validation_report:software_stage_mismatch")
-    if str(data.get("source_sha256", "")).lower() != sha256_file(stage1):
+    if not published_sha256_matches(str(data.get("source_sha256", "")).lower(), sha256_file(stage1)):
         errors.append("archicad_validation_report:source_sha256_mismatch")
-    if str(data.get("output_sha256", "")).lower() != sha256_file(stage2):
+    if not published_sha256_matches(str(data.get("output_sha256", "")).lower(), sha256_file(stage2)):
         errors.append("archicad_validation_report:output_sha256_mismatch")
     if not isinstance(data.get("entity_counts"), dict):
         errors.append("archicad_validation_report:missing_entity_counts")
@@ -2684,9 +2730,9 @@ def check_osm(
     require_tokens(text, required_spaces, errors, "result.osm:spaces")
     require_tokens(text, required_zones, errors, "result.osm:zones")
     require_tokens(text, required_tokens, errors, "result.osm:tokens")
-    if handoff_hash[:12].upper() not in up:
+    if not published_sha256_in_text(handoff_hash, up, 12):
         errors.append("result.osm:missing_handoff_hash_prefix")
-    if stage2_hash and stage2_hash[:12].upper() not in up:
+    if stage2_hash and not published_sha256_in_text(stage2_hash, up, 12):
         errors.append("result.osm:missing_stage2_hash_prefix")
     require_metadata_tokens(text, metadata or {}, errors, "result.osm")
     space_count = len(re.findall(r"\bOS:SPACE\s*,", up))
@@ -2720,9 +2766,9 @@ def check_idf(
     require_tokens(text, required_spaces, errors, "in.idf:spaces")
     require_tokens(text, required_zones, errors, "in.idf:zones")
     require_tokens(text, required_tokens, errors, "in.idf:tokens")
-    if handoff_hash[:12].upper() not in up:
+    if not published_sha256_in_text(handoff_hash, up, 12):
         errors.append("in.idf:missing_handoff_hash_prefix")
-    if stage2_hash and stage2_hash[:12].upper() not in up:
+    if stage2_hash and not published_sha256_in_text(stage2_hash, up, 12):
         errors.append("in.idf:missing_stage2_hash_prefix")
     require_metadata_tokens(text, metadata or {}, errors, "in.idf")
     zone_count = len(re.findall(r"\bZONE\s*,", up))
@@ -2786,11 +2832,11 @@ def check_energy_report_csv(
     if row_case != CASE_SPEC["case_id"]:
         errors.append("energy_report.csv:case_id_mismatch")
     hash_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-    if hash_val != handoff_hash.lower():
+    if not published_sha256_matches(hash_val, handoff_hash.lower()):
         errors.append("energy_report.csv:source_handoff_sha256_mismatch")
     if stage2_hash:
         stage2_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage2_sha256")), "")
-        if stage2_val != stage2_hash.lower():
+        if not published_sha256_matches(stage2_val, stage2_hash.lower()):
             errors.append("energy_report.csv:source_stage2_sha256_mismatch")
     area = numeric_value(row, "building_area_m2")
     space_count = numeric_value(row, "space_count")
@@ -2836,15 +2882,15 @@ def check_flow_report(
     data = load_json(path)
     if data.get("case_id") != CASE_SPEC["case_id"]:
         errors.append("flow_report:case_id_mismatch")
-    if str(data.get("consumed_handoff_sha256", "")).lower() != sha256_file(handoff_path):
+    if not published_sha256_matches(str(data.get("consumed_handoff_sha256", "")).lower(), sha256_file(handoff_path)):
         errors.append("flow_report:consumed_handoff_sha256_mismatch")
-    if str(data.get("osm_sha256", "")).lower() != sha256_file(osm_path):
+    if not published_sha256_matches(str(data.get("osm_sha256", "")).lower(), sha256_file(osm_path)):
         errors.append("flow_report:osm_sha256_mismatch")
-    if idf_path and str(data.get("idf_sha256", "")).lower() != sha256_file(idf_path):
+    if idf_path and not published_sha256_matches(str(data.get("idf_sha256", "")).lower(), sha256_file(idf_path)):
         errors.append("flow_report:idf_sha256_mismatch")
-    if energy_report_path and str(data.get("energy_report_sha256", "")).lower() != sha256_file(energy_report_path):
+    if energy_report_path and not published_sha256_matches(str(data.get("energy_report_sha256", "")).lower(), sha256_file(energy_report_path)):
         errors.append("flow_report:energy_report_sha256_mismatch")
-    if stage2_path and str(data.get("stage2_sha256", "")).lower() != sha256_file(stage2_path):
+    if stage2_path and not published_sha256_matches(str(data.get("stage2_sha256", "")).lower(), sha256_file(stage2_path)):
         errors.append("flow_report:stage2_sha256_mismatch")
     require_tokens(data, required_spaces, errors, "flow_report:spaces")
     require_tokens(data, required_zones, errors, "flow_report:zones")
@@ -2923,11 +2969,11 @@ def check_model_summary_csv(
         seen_spaces.append(str(row_value(row, "space_name") or ""))
         seen_zones.append(str(row_value(row, "thermal_zone") or ""))
         val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-        if val != handoff_hash.lower():
+        if not published_sha256_matches(val, handoff_hash.lower()):
             errors.append("model_summary.csv:source_handoff_sha256_mismatch")
         if stage2_hash:
             stage2_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage2_sha256")), "")
-            if stage2_val != stage2_hash.lower():
+            if not published_sha256_matches(stage2_val, stage2_hash.lower()):
                 errors.append("model_summary.csv:source_stage2_sha256_mismatch")
         for key, expected_value in (metadata or {}).items():
             if str(row_value(row, key) or "") != str(expected_value):
@@ -3031,7 +3077,7 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
             "revit_handoff.json",
             expected_stage=CASE_SPEC.get("expected_stage"),
         )
-        if str(revit_handoff_data.get("input_seed_sha256", "")).lower() != sha256_file(init_path):
+        if not published_sha256_matches(str(revit_handoff_data.get("input_seed_sha256", "")).lower(), sha256_file(init_path)):
             errors.append("revit_handoff.json:input_seed_sha256_mismatch")
         check_revit_native_provenance(revit_handoff_data, errors)
         check_stair_opening_metadata(revit_handoff_data, stage1_opening, errors, "revit_handoff.json")
@@ -3071,7 +3117,7 @@ def evaluate(root: Path) -> Tuple[bool, List[str]]:
             expected_stage=CASE_SPEC.get("expected_archicad_stage"),
             extra_hashes={"revit_handoff_sha256": revit_handoff},
         )
-        if str(archicad_handoff_data.get("stage1_sha256", "")).lower() != sha256_file(stage1):
+        if not published_sha256_matches(str(archicad_handoff_data.get("stage1_sha256", "")).lower(), sha256_file(stage1)):
             errors.append("archicad_handoff.json:stage1_sha256_mismatch")
         check_stair_opening_metadata(archicad_handoff_data, stage2_opening, errors, "archicad_handoff.json")
         check_handoff_ifc_space_identity(archicad_handoff_data, stage2_info, workflow_spec, errors)

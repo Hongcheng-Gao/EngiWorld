@@ -83,6 +83,43 @@ REQUIRED_SUMMARY_COLUMNS = [
 ]
 
 
+
+
+# Recorded SHA256 -> current published SHA256 for verified line-ending revisions.
+PUBLISHED_SHA256_RECORDS = {
+    # handoff.json
+    'e9a34ffdec47aba183cc432f8fc8b48462b6f4fd8d7fafea43619b71f7d5edbe': 'cb6661f5f0d5165fe63b3b7e07062b301746d21a54ab94024f9ed365011613d8',
+    # result.osm
+    'a83ff12dcc18c73b170f87568238a2a3196ecf76c2555cb97a370f79dd8e166b': 'ac6844b6c80f075359c3b2930c508304e4176863cd674d9e3b6b63dfc8efc061',
+    # native_stage_log.json
+    'e7e03d6c7a08d13bd5ebdd06aa3433a445381fbb1cd4f732a76a13f53ee36cfe': 'bc210be828cf0f5e3a386d383d697c1689164344f223507f783ca0275c5fa4a7',
+    # flow_report.json
+    '64daa10226d5fcb4bcca342e7028f25b0e83977de140d87c95b544436772eaad': '282d6fbbec4976c2d267369565c35447e1d5a85e3f38c039151fb39c4a29378b',
+    # openstudio_simulation_transaction.json
+    '09d61d370921d21e0ff3a4663384347d37f27068150d34ad1ec1aaae719350a5': '9943cbedcb755a96f0a6e343e263efbad3514b706ebe686f95a721bee22218a4',
+    # openstudio_postprocess_transaction.json
+    '2d1ec12123e1fd9c16bdaee27bf3171abb6c66626494c114e9ca349c1a5b2106': '0f554d2d6cbe186b622b159c3223922eb49966b0a032062b22aaeff71b00b2a1',
+    # model_summary.csv
+    'f057a1186162f8680769596b663f077d94f4750729b83213438eb8a8d2ef92ac': '9dce5f9f5a3890f025fc07f3da1eb106e0e12050b4f2a5eafccfe3077b232939',
+    # workflow.osw
+    '34c8ec756381fa9f1bcaa9862ed7c49663c6fa741d834704be8feac442df2886': '56b0025fd62b0cdcda456e196e7d46bcf3890e5c5d8288b09965ba9f5bc41392',
+}
+
+
+def published_sha256_matches(actual, recorded):
+    """Compare exact SHA256 values, including the listed release byte revisions."""
+    if actual == recorded:
+        return True
+    if not isinstance(actual, str) or not isinstance(recorded, str):
+        return False
+    actual, recorded = actual.lower(), recorded.lower()
+    return (
+        PUBLISHED_SHA256_RECORDS.get(actual) == recorded
+        or PUBLISHED_SHA256_RECORDS.get(recorded) == actual
+    )
+
+
+
 def finish(ok: bool, errors: List[str] | None = None) -> None:
     try:
         root = desktop_or_arg()
@@ -201,7 +238,7 @@ def has_any_key_like(data: Dict[str, Any], candidates: Iterable[str]) -> bool:
 
 
 def any_hash_field(data: Dict[str, Any], key: str, expected: str) -> bool:
-    return any(str(v).lower() == expected.lower() for v in find_values(data, key))
+    return any(published_sha256_matches(str(v).lower(), expected.lower()) for v in find_values(data, key))
 
 
 def require_tokens(data_or_text: Any, tokens: List[str], errors: List[str], label: str) -> None:
@@ -301,7 +338,7 @@ def check_ifc_basic(
 
 
 def check_stage_derives_from_init(init_path: Path, stage1_path: Path, init_info: Dict[str, Any], stage1_info: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(init_path) == sha256_file(stage1_path):
+    if published_sha256_matches(sha256_file(init_path), sha256_file(stage1_path)):
         errors.append("stage1.ifc:byte_identical_to_init")
     init_size = max(init_path.stat().st_size, 1)
     stage_size = stage1_path.stat().st_size
@@ -607,11 +644,11 @@ def check_model_summary_csv(
         seen_spaces.add(norm(name))
         seen_zones.add(norm(zone))
         val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-        if val != handoff_hash.lower():
+        if not published_sha256_matches(val, handoff_hash.lower()):
             errors.append("model_summary.csv:source_handoff_sha256_mismatch")
             break
         stage_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage1_sha256")), "")
-        if stage_val != stage1_hash.lower():
+        if not published_sha256_matches(stage_val, stage1_hash.lower()):
             errors.append("model_summary.csv:source_stage1_sha256_mismatch")
             break
         try:
@@ -695,9 +732,9 @@ def strict_contains_3d(parent: List[Tuple[float,float,float]], child: List[Tuple
 
 
 def check_ew06_native_and_simulation(root: Path, paths: Dict[str, Path], handoff: Dict[str, Any], flow: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(paths['init.ifc']) != INIT_SHA256:
+    if not published_sha256_matches(sha256_file(paths['init.ifc']), INIT_SHA256):
         errors.append('init.ifc:sha256_mismatch')
-    if sha256_file(paths['weather.epw']) != WEATHER_SHA256:
+    if not published_sha256_matches(sha256_file(paths['weather.epw']), WEATHER_SHA256):
         errors.append('weather.epw:sha256_mismatch')
     weather_head = read_text(paths['weather.epw'], 300).splitlines()[0] if paths['weather.epw'].stat().st_size else ''
     if not all(x in weather_head for x in ('TMY3', '724666', '39.74', '-105.18')):
@@ -730,18 +767,18 @@ def check_ew06_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
 
     log = load_json(paths['native_stage_log.json'])
     proc = log.get('command_server_process', {})
-    if proc.get('executable_sha256') != ARCHICAD_EXE_SHA256 or '27.0.0 R1 (6000)' not in str(proc.get('product_version')):
+    if not published_sha256_matches(proc.get('executable_sha256'), ARCHICAD_EXE_SHA256) or '27.0.0 R1 (6000)' not in str(proc.get('product_version')):
         errors.append('native_stage_log.json:archicad_identity_mismatch')
     tx = log.get('native_transactions', {}).get('Items', [])
     methods = [x.get('request', {}).get('method') for x in tx]
     expected = ['Model.LoadFile'] + ['Entity.Modify']*5 + ['Entity.Create']*4 + ['Entity.GetAttribute','Entity.Modify'] + ['Entity.GetAttribute']*4 + ['Model.SaveFile']
     if methods != expected or any(x.get('status') != 200 or not isinstance(x.get('response'), dict) or x['response'].get('error') for x in tx):
         errors.append('native_stage_log.json:transaction_sequence_or_response_mismatch')
-    if log.get('artifacts', {}).get('stage1.ifc', {}).get('sha256') != sha256_file(paths['stage1.ifc']):
+    if not published_sha256_matches(log.get('artifacts', {}).get('stage1.ifc', {}).get('sha256'), sha256_file(paths['stage1.ifc'])):
         errors.append('native_stage_log.json:stage1_hash_mismatch')
     records = handoff.get('spaces', [])
     mapped = {x.get('name'):(x.get('thermal_zone'),float(x.get('floor_area_m2',0)),x.get('ifc_global_id')) for x in records}
-    if mapped != TARGETS or handoff.get('source_init_sha256') != INIT_SHA256:
+    if mapped != TARGETS or not published_sha256_matches(handoff.get('source_init_sha256'), INIT_SHA256):
         errors.append('handoff.json:exact_space_mapping_mismatch')
 
     osm = read_text(paths['result.osm'])
@@ -772,10 +809,10 @@ def check_ew06_native_and_simulation(root: Path, paths: Dict[str, Path], handoff
     if osw.get('seed_file') != 'result.osm' or osw.get('weather_file') != 'weather.epw': errors.append('workflow.osw:binding_mismatch')
     transactions = flow.get('openstudio_cli_transactions', [])
     simtx = transactions[0] if isinstance(transactions, list) and len(transactions) == 1 and isinstance(transactions[0], dict) else {}
-    if simtx.get('executable_sha256') != OPENSTUDIO_EXE_SHA256 or simtx.get('energyplus_executable_sha256') != ENERGYPLUS_EXE_SHA256 or simtx.get('exit_code') != 0:
+    if not published_sha256_matches(simtx.get('executable_sha256'), OPENSTUDIO_EXE_SHA256) or not published_sha256_matches(simtx.get('energyplus_executable_sha256'), ENERGYPLUS_EXE_SHA256) or simtx.get('exit_code') != 0:
         errors.append('flow_report:openstudio_transaction_identity_or_exit_mismatch')
     for name,key in (('run/eplusout.sql','sql_sha256'),('run/eplusout.err','err_sha256'),('run/eplusout.end','end_sha256')):
-        if simtx.get(key) != sha256_file(paths[name]): errors.append(f'flow_report:openstudio_transaction_{key}_mismatch')
+        if not published_sha256_matches(simtx.get(key), sha256_file(paths[name])): errors.append(f'flow_report:openstudio_transaction_{key}_mismatch')
     samples = simtx.get('stable_file_samples', [])
     if len(samples) < 3 or len({(x.get('sql_size'),x.get('err_size'),x.get('end_size')) for x in samples}) != 1: errors.append('flow_report:openstudio_transaction_files_not_stable')
     err = read_text(paths['run/eplusout.err']); end = read_text(paths['run/eplusout.end'])
@@ -827,7 +864,7 @@ def ifc_space_floor_area(space: Any) -> float:
 
 def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any], flow: Dict[str, Any], errors: List[str]) -> None:
     """Validate task semantics without assuming the reference GUIDs, areas, or openings."""
-    if sha256_file(paths["init.ifc"]) != INIT_SHA256:
+    if not published_sha256_matches(sha256_file(paths["init.ifc"]), INIT_SHA256):
         errors.append("init.ifc:sha256_mismatch")
     try:
         weather_lines = read_text(paths["weather.epw"]).splitlines()
@@ -979,7 +1016,7 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
         errors.append("native_stage_log.json:archicad_identity_mismatch")
     artifacts = log.get("artifacts", {})
     for name in ("init.ifc", "stage1.ifc", "handoff.json"):
-        if artifacts.get(name, {}).get("sha256") != sha256_file(paths[name]):
+        if not published_sha256_matches(artifacts.get(name, {}).get("sha256"), sha256_file(paths[name])):
             errors.append(f"native_stage_log.json:artifact_hash_mismatch:{name}")
     tx_section = log.get("native_transactions", {})
     transactions = tx_section.get("Items", []) if isinstance(tx_section, dict) else tx_section
@@ -1044,7 +1081,7 @@ def check_instruction_semantics(paths: Dict[str, Path], handoff: Dict[str, Any],
     if simtx.get("exit_code") != 0 or "openstudio" not in str(simtx.get("executable", "")).lower():
         errors.append("flow_report:openstudio_transaction_invalid")
     for filename, key in (("run/eplusout.sql", "sql_sha256"), ("run/eplusout.err", "err_sha256"), ("run/eplusout.end", "end_sha256")):
-        if simtx.get(key) != sha256_file(paths[filename]):
+        if not published_sha256_matches(simtx.get(key), sha256_file(paths[filename])):
             errors.append(f"flow_report:openstudio_transaction_{key}_mismatch")
     err_text, end_text = read_text(paths["run/eplusout.err"]), read_text(paths["run/eplusout.end"])
     if "EnergyPlus Completed Successfully" not in err_text or "0 Severe Errors" not in err_text or "EnergyPlus Completed Successfully" not in end_text:

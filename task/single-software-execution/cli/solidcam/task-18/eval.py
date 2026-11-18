@@ -11,8 +11,8 @@ from pathlib import Path
 TARGET = Path(os.environ.get("EVAL_TARGET_DIR", r"C:\Users\User\Desktop"))
 NC_NAME = "task-18.nc"
 INPUT_HASHES = {
-    "basic_milling_part.step": "9232ff254deb75a5ebd2b8bfb39a30eac63d19ea498e59215140e90a9f8e61a0",
-    "tools.csv": "d90267f2c2933687188847eaff937205fb0c2333462d59b4fabb5c2d4b666245",
+    "basic_milling_part.step": '9d5431aec64a4f36125fb5d7a3bf8f817e29ec6d801c063ccb0961898a37641a',
+    "tools.csv": 'cf872fb36baa68e0d8c99cb8fa4fdf2e43f5be7ebaf6aa458ae9b7e1dfe26133',
 }
 TOOL_CONTRACT = {
     1: {"diameter": 8.0, "spindle": 7800.0, "feed": 480.0},

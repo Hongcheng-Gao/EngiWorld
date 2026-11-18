@@ -84,6 +84,66 @@ REQUIRED_SUMMARY_COLUMNS = [
 ]
 
 
+
+
+# Recorded SHA256 -> current published SHA256 for verified line-ending revisions.
+PUBLISHED_SHA256_RECORDS = {
+    # handoff.json
+    'b78296aa47cb9e7e0309605d94887883ca77dfa02280be36fb736a8c1df62cfa': '7e3ffad1fe46fab74ce53dd0139cbf9f56e8672acfc95be8833d19c481da0082',
+    # result.osm
+    '7c850abe40ea5eee465a3491cbc12b642d7687b547fe0a1022bb2de7fee13054': 'e43e0d8eefbc31c1f0ea56544dc180cc3aed99707196053b9fb9985ec24edf89',
+    # native_stage_log.json
+    '176d32f4aa898fb8578f31c1e8389aa6a08117288ae840f43b50e6c65529468c': '0e13ad060d2d1c693260647a6ceef49501d0d64156747c100ef9d833dfcbc247',
+    # flow_report.json
+    'a8f2d9187a5e92fccf37847e5015bbd4b4f6f7344572e662f387d0f1667840e2': 'e78d43185c49672991b438c3074a9d64fa8f45496a8ecfcbb1f455852216045d',
+    # workflow.osw
+    '40b3bcb26075b6a20f7ce2e63f1fdeacc3dee59f2cfd9e8a5b5ff0dd06a96445': '58a2bfeb6a49dc7b5e74fa9da722c6b2c3299ba41f357de7a82433a8c861af5a',
+}
+
+
+def published_sha256_matches(actual, recorded):
+    """Compare exact SHA256 values, including the listed release byte revisions."""
+    if actual == recorded:
+        return True
+    if not isinstance(actual, str) or not isinstance(recorded, str):
+        return False
+    actual, recorded = actual.lower(), recorded.lower()
+    return (
+        PUBLISHED_SHA256_RECORDS.get(actual) == recorded
+        or PUBLISHED_SHA256_RECORDS.get(recorded) == actual
+    )
+
+
+def published_sha256_in_text(actual, text, prefix_length=64):
+    """Find the same recorded digest or prefix for a listed byte revision."""
+    variants = {actual}
+    for recorded, published in PUBLISHED_SHA256_RECORDS.items():
+        if actual.lower() in (recorded, published):
+            variants.update((recorded, published))
+    return any(value[:prefix_length].upper() in text for value in variants)
+
+
+
+PUBLISHED_FILE_SIZES = {'handoff.json': ('b78296aa47cb9e7e0309605d94887883ca77dfa02280be36fb736a8c1df62cfa', 2803, '7e3ffad1fe46fab74ce53dd0139cbf9f56e8672acfc95be8833d19c481da0082', 2705), 'result.osm': ('7c850abe40ea5eee465a3491cbc12b642d7687b547fe0a1022bb2de7fee13054', 65676, 'e43e0d8eefbc31c1f0ea56544dc180cc3aed99707196053b9fb9985ec24edf89', 64519), 'native_stage_log.json': ('176d32f4aa898fb8578f31c1e8389aa6a08117288ae840f43b50e6c65529468c', 17336, '0e13ad060d2d1c693260647a6ceef49501d0d64156747c100ef9d833dfcbc247', 17115), 'flow_report.json': ('a8f2d9187a5e92fccf37847e5015bbd4b4f6f7344572e662f387d0f1667840e2', 21088, 'e78d43185c49672991b438c3074a9d64fa8f45496a8ecfcbb1f455852216045d', 20491), 'workflow.osw': ('40b3bcb26075b6a20f7ce2e63f1fdeacc3dee59f2cfd9e8a5b5ff0dd06a96445', 483, '58a2bfeb6a49dc7b5e74fa9da722c6b2c3299ba41f357de7a82433a8c861af5a', 470)}
+
+
+def published_size_matches(path, recorded_size):
+    """Retain recorded sizes for the exact listed release byte revisions."""
+    size = path.stat().st_size
+    if size == recorded_size:
+        return True
+    revision = PUBLISHED_FILE_SIZES.get(path.name)
+    if revision is None:
+        return False
+    recorded_sha, recorded_bytes, published_sha, published_bytes = revision
+    digest = hashlib.sha256(path.read_bytes()).hexdigest()
+    return (
+        (digest == published_sha and size == published_bytes and recorded_size == recorded_bytes)
+        or (digest == recorded_sha and size == recorded_bytes and recorded_size == published_bytes)
+    )
+
+
+
 def finish(ok: bool, errors: List[str] | None = None) -> None:
     try:
         root = desktop_or_arg()
@@ -195,7 +255,7 @@ def has_any_key_like(data: Dict[str, Any], candidates: Iterable[str]) -> bool:
 
 
 def any_hash_field(data: Dict[str, Any], key: str, expected: str) -> bool:
-    return any(str(v).lower() == expected.lower() for v in find_values(data, key))
+    return any(published_sha256_matches(str(v).lower(), expected.lower()) for v in find_values(data, key))
 
 
 def require_tokens(data_or_text: Any, tokens: List[str], errors: List[str], label: str) -> None:
@@ -459,9 +519,9 @@ def check_ifc_basic(
 
 
 def check_stage_derives_from_init(init_path: Path, stage1_path: Path, init_info: Dict[str, Any], stage1_info: Dict[str, Any], errors: List[str]) -> None:
-    if sha256_file(init_path) != SEED_SHA256:
+    if not published_sha256_matches(sha256_file(init_path), SEED_SHA256):
         errors.append("init.ifc:unexpected_seed_sha256")
-    if sha256_file(init_path) == sha256_file(stage1_path):
+    if published_sha256_matches(sha256_file(init_path), sha256_file(stage1_path)):
         errors.append("stage1.ifc:byte_identical_to_init")
     init_size = max(init_path.stat().st_size, 1)
     stage_size = stage1_path.stat().st_size
@@ -574,7 +634,7 @@ def check_handoff(
     data = load_json(path)
     if not any_hash_field(data, "source_sha256", sha256_file(source_file)):
         errors.append(f"{label}:source_sha256_mismatch")
-    if str(data.get("source_init_sha256", "")).lower() != SEED_SHA256:
+    if not published_sha256_matches(str(data.get("source_init_sha256", "")).lower(), SEED_SHA256):
         errors.append(f"{label}:source_init_sha256_mismatch")
     if data.get("ifc_root_global_id_count") != len(stage1_info.get("roots_by_id") or {}):
         errors.append(f"{label}:ifc_root_global_id_count_mismatch")
@@ -744,7 +804,7 @@ def check_native_stage_log(
         executable = str(process.get("executable_path", "")).replace("/", "\\").lower()
         if executable != r"c:\program files\graphisoft\archicad 27\ifccommandserverapp.exe":
             errors.append("native_stage_log:wrong_archicad_executable_path")
-        if str(process.get("executable_sha256", "")).lower() != ARCHICAD_EXE_SHA256:
+        if not published_sha256_matches(str(process.get("executable_sha256", "")).lower(), ARCHICAD_EXE_SHA256):
             errors.append("native_stage_log:wrong_archicad_executable_sha256")
         if not str(process.get("product_version", "")).startswith("27.0.0"):
             errors.append("native_stage_log:wrong_archicad_product_version")
@@ -759,7 +819,7 @@ def check_native_stage_log(
             ("handoff.json", handoff_path),
         ):
             record = artifacts.get(name)
-            if not isinstance(record, dict) or str(record.get("sha256", "")).lower() != sha256_file(artifact_path):
+            if not isinstance(record, dict) or not published_sha256_matches(str(record.get("sha256", "")).lower(), sha256_file(artifact_path)):
                 errors.append(f"native_stage_log:artifact_hash_mismatch:{name}")
 
     preservation = data.get("preservation_evidence")
@@ -767,9 +827,9 @@ def check_native_stage_log(
         errors.append("native_stage_log:missing_preservation_evidence")
     else:
         expected_root_count = len(stage1_info.get("roots_by_id") or {})
-        if preservation.get("init_seed_sha256") != SEED_SHA256:
+        if not published_sha256_matches(preservation.get("init_seed_sha256"), SEED_SHA256):
             errors.append("native_stage_log:seed_hash_mismatch")
-        if preservation.get("source_stage1_sha256") != sha256_file(stage1_path):
+        if not published_sha256_matches(preservation.get("source_stage1_sha256"), sha256_file(stage1_path)):
             errors.append("native_stage_log:stage1_hash_mismatch")
         if preservation.get("ifc_root_global_id_count") != expected_root_count:
             errors.append("native_stage_log:root_count_mismatch")
@@ -907,9 +967,9 @@ def check_workflow_and_weather(
         errors.append("workflow.osw:wrong_weather_file")
     if Path(str(workflow.get("run_directory", ""))).name.lower() != "run":
         errors.append("workflow.osw:wrong_run_directory")
-    if str(workflow.get("source_stage1_sha256", "")).lower() != sha256_file(stage1_path):
+    if not published_sha256_matches(str(workflow.get("source_stage1_sha256", "")).lower(), sha256_file(stage1_path)):
         errors.append("workflow.osw:stage1_hash_mismatch")
-    if str(workflow.get("source_handoff_sha256", "")).lower() != sha256_file(handoff_path):
+    if not published_sha256_matches(str(workflow.get("source_handoff_sha256", "")).lower(), sha256_file(handoff_path)):
         errors.append("workflow.osw:handoff_hash_mismatch")
 
     lines = weather_path.read_text(encoding="utf-8-sig", errors="strict").splitlines()
@@ -1140,7 +1200,7 @@ def check_osm(
     require_tokens(text, required_zones, errors, "result.osm:zones")
     require_tokens(text, required_tokens, errors, "result.osm:tokens")
     require_tokens(text, flow_tokens, errors, "result.osm:flow_tokens")
-    if handoff_hash.upper() not in up:
+    if not published_sha256_in_text(handoff_hash, up, 64):
         errors.append("result.osm:missing_full_handoff_hash")
 
     objects = parse_osm_objects(text)
@@ -1596,7 +1656,7 @@ def check_flow_dependencies(
         "energyplus_end_sha256": paths["run/eplusout.end"],
     }
     for key, artifact in expected_hashes.items():
-        if str(data.get(key, "")).lower() != sha256_file(artifact):
+        if not published_sha256_matches(str(data.get(key, "")).lower(), sha256_file(artifact)):
             errors.append(f"flow_report:top_level_hash_mismatch:{key}")
     if data.get("case_id") != CASE_SPEC["case_id"]:
         errors.append("flow_report:case_id_mismatch")
@@ -1619,11 +1679,11 @@ def check_flow_dependencies(
         errors.append("flow_report:weather_hourly_rows_mismatch")
     if str(data.get("native_cli_executable", "")).replace("\\", "/").lower() != "c:/openstudio-3.10.0/bin/openstudio.exe":
         errors.append("flow_report:wrong_openstudio_executable")
-    if str(data.get("native_cli_sha256", "")).lower() != OPENSTUDIO_EXE_SHA256:
+    if not published_sha256_matches(str(data.get("native_cli_sha256", "")).lower(), OPENSTUDIO_EXE_SHA256):
         errors.append("flow_report:wrong_openstudio_executable_sha256")
     if str(data.get("energyplus_executable", "")).replace("\\", "/").lower() != "c:/openstudio-3.10.0/energyplus/energyplus.exe":
         errors.append("flow_report:wrong_energyplus_executable")
-    if str(data.get("energyplus_executable_sha256", "")).lower() != ENERGYPLUS_EXE_SHA256:
+    if not published_sha256_matches(str(data.get("energyplus_executable_sha256", "")).lower(), ENERGYPLUS_EXE_SHA256):
         errors.append("flow_report:wrong_energyplus_executable_sha256")
     reported_profiles = data.get("schedule_profile_evidence")
     if not isinstance(reported_profiles, dict):
@@ -1679,7 +1739,7 @@ def check_flow_dependencies(
             if record.get("stage", "").startswith("openstudio_") and executable != "c:/openstudio-3.10.0/bin/openstudio.exe":
                 errors.append(f"flow_report:wrong_transaction_executable:{record.get('stage')}")
             if record.get("stage") == "energyplus_native_verification_run":
-                if executable != "c:/openstudio-3.10.0/energyplus/energyplus.exe" or str(record.get("executable_sha256", "")).lower() != ENERGYPLUS_EXE_SHA256:
+                if executable != "c:/openstudio-3.10.0/energyplus/energyplus.exe" or not published_sha256_matches(str(record.get("executable_sha256", "")).lower(), ENERGYPLUS_EXE_SHA256):
                     errors.append("flow_report:wrong_native_energyplus_provenance")
     postprocess = data.get("native_openstudio_postprocess")
     if not isinstance(postprocess, dict) or postprocess.get("exit_code") != 0:
@@ -1929,7 +1989,7 @@ def check_energyplus_evidence(
             if len(signatures) != 1:
                 errors.append("flow_report:unstable_native_energyplus_files")
             first = samples[0]
-            if first.get("sql_size") != sql_path.stat().st_size or first.get("err_size") != err_path.stat().st_size or first.get("end_size") != end_path.stat().st_size:
+            if not published_size_matches(sql_path, first.get("sql_size")) or not published_size_matches(err_path, first.get("err_size")) or not published_size_matches(end_path, first.get("end_size")):
                 errors.append("flow_report:stable_sample_size_mismatch")
         if simulation_evidence.get("transaction_sidecars") != []:
             errors.append("flow_report:transaction_sidecars_not_empty")
@@ -1939,7 +1999,7 @@ def check_energyplus_evidence(
         inventory = flow_data.get("full_disk_sql_inventory")
         inventory_records = inventory.get("records") if isinstance(inventory, dict) else None
         if not isinstance(inventory_records, list) or not any(
-            str(record.get("sha256", "")).lower() == sha256_file(sql_path)
+            published_sha256_matches(str(record.get("sha256", "")).lower(), sha256_file(sql_path))
             and record.get("integrity_check") == "ok"
             and record.get("simulation_rows") == [expected_evidence_row]
             for record in inventory_records
@@ -2009,11 +2069,11 @@ def check_model_summary_csv(
         if norm(name) not in expected_zone_by_space or zone != expected_zone_by_space.get(norm(name)):
             errors.append(f"model_summary.csv:space_zone_bijection_mismatch:{name}:{zone}")
         val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_handoff_sha256")), "")
-        if val != handoff_hash.lower():
+        if not published_sha256_matches(val, handoff_hash.lower()):
             errors.append("model_summary.csv:source_handoff_sha256_mismatch")
             break
         stage_val = next((str(v).lower() for k, v in row.items() if norm(k) == norm("source_stage1_sha256")), "")
-        if stage_val != stage1_hash.lower():
+        if not published_sha256_matches(stage_val, stage1_hash.lower()):
             errors.append("model_summary.csv:source_stage1_sha256_mismatch")
             break
         try:

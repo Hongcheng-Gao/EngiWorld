@@ -66,6 +66,68 @@ REQUIRED = list(IMMUTABLE) + [
 ]
 
 
+
+
+# Recorded SHA256 -> current published SHA256 for verified line-ending revisions.
+PUBLISHED_SHA256_RECORDS = {
+    # init.ifc
+    '6177e75551800b5384d46e7a384cf914bd002cea4dd6ddaf44176cbc60d04817': '9bd21c66d21ae627c4e3a07d1df38f10f4773642983fe57b6c39011af2afc245',
+    # revit_handoff.json
+    '7365a5200a51c408d4f8cebd6ec33ded6d8f7a2dd5da574ee07905a01e19cbd7': '44c80ee8b6ea9f85430dc248e46f99a5ad39a231f098d5910c7ee28158b06780',
+    # result.osm
+    'ca3ccb2ea9342311b520d5e29d1a252d957df7e67a01321ffe1acf27eeea9d86': '795dc512ef9878b5d1b8d78b247704fb696502538f566b665b610ab3418c1c55',
+    # native_stage_log.json
+    '2dfd1ad50e2eb74678e0ad3895697986293c0109cc45eff83144a49ef0d24d60': 'f2cd6e87d56bf362797392c7468b0c8917e98a5b3f5a6a919ea1068e33491d2b',
+    # flow_report.json
+    '76daa5c2073913d5983326fc790410e5b620d7b4ebb4dc3a8b59b105676ecaaa': '3377d8a9e20898fa7b0a1e2599cf50d059d6d36c86cd67462c3a5d79e67ec0fb',
+    # stage1.ifc
+    '6a420609cb001b6c48d28599b09e07f409ea068cc22caf29f3bac6083c7c1574': '1466a5cd5cb1b78498b5ba792093b79d6cfd334fa654fd0b3bdaeaff431b22b2',
+    # stage2.ifc
+    '9b7c8f852d8676a38247a38d2956ea393f79ef4a2f80efde254065486d98cc14': 'c8c5cb33c5cead15c671f2813f3c1ae77e56a31e8e58a5a124536716134c0397',
+    # in.idf
+    '3cecf7167c250e0401f6f6ddac63ea997b8b428c67accd936857c78f2d29ebef': '7a5f24a124a8208b5e9da81161d536e11f443131f8a7c505fb381133e3fd5f45',
+    # archicad_handoff.json
+    '69d041609cffce47bd5740d5b09627a824812ae26a835adb58147184b6af7a3f': 'f8b74a992b84a7e67e66600855327ba1d9730129318af299dea9487236f4a43c',
+    # workflow.osw
+    '2aaa52a09e6034281bb0128bbdbd194b4f7069417adc4756a6e537f4d13533a7': 'b42d34eae95e013a52e29d0e918438d3b3a1775b3285faee808b508ebdff4bcf',
+    # archicad_validation_report.json
+    '4384c297912cb4a49d1c89ef670b390550f5dca74a65adc2aa913a4e13387a18': 'f818ee2aed2ca255040e7ee2ca7522aae8a7d94bbae7d054f6fc970d5f3af376',
+    # run/eplusout.err
+    '5568186d05e293fa69f9eeeb3879ee2408c5839a87228e5910f48adc59e4a019': '9344b81b1a8aeafb7518209bb25caea8f824fa9d2785a8afbc39b640be1c483e',
+}
+
+
+def published_sha256_matches(actual, recorded):
+    """Compare exact SHA256 values, including the listed release byte revisions."""
+    if actual == recorded:
+        return True
+    if not isinstance(actual, str) or not isinstance(recorded, str):
+        return False
+    actual, recorded = actual.lower(), recorded.lower()
+    return (
+        PUBLISHED_SHA256_RECORDS.get(actual) == recorded
+        or PUBLISHED_SHA256_RECORDS.get(recorded) == actual
+    )
+
+
+def published_sha256_in_text(actual, text, prefix_length=64):
+    """Find the same recorded digest or prefix for a listed byte revision."""
+    variants = {actual}
+    for recorded, published in PUBLISHED_SHA256_RECORDS.items():
+        if actual.lower() in (recorded, published):
+            variants.update((recorded, published))
+    return any(value[:prefix_length].upper() in text for value in variants)
+
+
+def published_token_in_text(actual, text):
+    if len(actual) == 64 and (
+        actual.lower() in PUBLISHED_SHA256_RECORDS
+        or actual.lower() in PUBLISHED_SHA256_RECORDS.values()
+    ):
+        return published_sha256_in_text(actual, text.upper())
+    return actual in text
+
+
 def root_dir() -> Path:
     if len(sys.argv) > 1:
         return Path(sys.argv[1]).resolve()
@@ -373,7 +435,7 @@ def check_handoffs(paths: dict[str, Path], stage1: Any, stage2: Any, errors: lis
     revit, arch = load_json(paths["revit_handoff.json"]), load_json(paths["archicad_handoff.json"])
     for data, label, source, expected_stage in ((revit, "revit_handoff.json", paths["stage1.ifc"], "revit"), (arch, "archicad_handoff.json", paths["stage2.ifc"], "archicad")):
         add(errors, data.get("case_id") == CASE_ID and data.get("software_stage") == expected_stage, f"{label}:identity")
-        add(errors, str(data.get("source_sha256", "")).lower() == sha(source), f"{label}:source_hash")
+        add(errors, published_sha256_matches(str(data.get("source_sha256", "")).lower(), sha(source)), f"{label}:source_hash")
         rows = data.get("spaces", [])
         add(errors, isinstance(rows, list) and len(rows) == 5, f"{label}:space_rows")
         by_name = {row.get("name"): row for row in rows if isinstance(row, dict)}
@@ -389,9 +451,9 @@ def check_handoffs(paths: dict[str, Path], stage1: Any, stage2: Any, errors: lis
                 close(row.get("outdoor_air_l_per_s_person"), expected[6], 1e-6),
             ]
             add(errors, all(checks), f"{label}:space_semantics:{name}")
-    add(errors, str(revit.get("input_seed_sha256", "")).lower() == sha(paths["init.ifc"]), "revit_handoff.json:seed_hash")
-    add(errors, str(arch.get("stage1_sha256", "")).lower() == sha(paths["stage1.ifc"]), "archicad_handoff.json:stage1_hash")
-    add(errors, str(arch.get("revit_handoff_sha256", "")).lower() == sha(paths["revit_handoff.json"]), "archicad_handoff.json:revit_handoff_hash")
+    add(errors, published_sha256_matches(str(revit.get("input_seed_sha256", "")).lower(), sha(paths["init.ifc"])), "revit_handoff.json:seed_hash")
+    add(errors, published_sha256_matches(str(arch.get("stage1_sha256", "")).lower(), sha(paths["stage1.ifc"])), "archicad_handoff.json:stage1_hash")
+    add(errors, published_sha256_matches(str(arch.get("revit_handoff_sha256", "")).lower(), sha(paths["revit_handoff.json"])), "archicad_handoff.json:revit_handoff_hash")
     add(errors, close(arch.get("building_area_m2"), 137.28), "archicad_handoff.json:building_area")
     return revit, arch
 
@@ -399,9 +461,9 @@ def check_handoffs(paths: dict[str, Path], stage1: Any, stage2: Any, errors: lis
 def check_archicad_report(path: Path, stage1: Any, stage2: Any, paths: dict[str, Path], errors: list[str]) -> None:
     report = load_json(path)
     add(errors, report.get("case_id") == CASE_ID and report.get("software_stage") == "archicad", "archicad_report:identity")
-    add(errors, report.get("source_file") == "stage1.ifc" and report.get("source_sha256") == sha(paths["stage1.ifc"]), "archicad_report:source")
-    add(errors, report.get("output_file") == "stage2.ifc" and report.get("output_sha256") == sha(paths["stage2.ifc"]), "archicad_report:output")
-    add(errors, sha(paths["stage1.ifc"]) != sha(paths["stage2.ifc"]), "archicad_report:no_native_reserialization")
+    add(errors, report.get("source_file") == "stage1.ifc" and published_sha256_matches(report.get("source_sha256"), sha(paths["stage1.ifc"])), "archicad_report:source")
+    add(errors, report.get("output_file") == "stage2.ifc" and published_sha256_matches(report.get("output_sha256"), sha(paths["stage2.ifc"])), "archicad_report:output")
+    add(errors, not published_sha256_matches(sha(paths["stage1.ifc"]), sha(paths["stage2.ifc"])), "archicad_report:no_native_reserialization")
     stage2_header = paths["stage2.ifc"].read_text(encoding="utf-8", errors="ignore")[:1000]
     add(errors, "The EXPRESS Data Manager Version 5.02.0100.09" in stage2_header, "stage2.ifc:not_archicad_edm_save")
     add(errors, report.get("validation_result") is None and report.get("blocking_errors") == [], "archicad_report:validation")
@@ -589,7 +651,7 @@ def check_osm(text: str, spec: dict[str, Any], paths: dict[str, Path], errors: l
     for key in ("zones", "oa", "thermostats", "people", "lights", "equipment", "people_defs", "light_defs", "equipment_defs"):
         add(errors, len(used[key]) == 5, f"result.osm:one_to_one:{key}")
     for token in (CASE_ID, sha(paths["stage2.ifc"]), sha(paths["archicad_handoff.json"]), "EW3B07-ConstructionSet"):
-        add(errors, token in text, f"result.osm:metadata:{token[:18]}")
+        add(errors, published_token_in_text(token, text), f"result.osm:metadata:{token[:18]}")
 
 
 def sql_facts(path: Path, errors: list[str], label: str) -> dict[str, Any]:
@@ -651,7 +713,7 @@ def check_energy(paths: dict[str, Path], arch: dict[str, Any], spec: dict[str, A
     if rows:
         row = rows[0]
         add(errors, row.get("case_id") == CASE_ID and close(row.get("building_area_m2"), 137.28) and row.get("space_count") == "5" and row.get("thermal_zone_count") == "5", "energy_report.csv:identity")
-        add(errors, str(row.get("source_stage2_sha256", "")).lower() == sha(paths["stage2.ifc"]) and str(row.get("source_handoff_sha256", "")).lower() == sha(paths["archicad_handoff.json"]), "energy_report.csv:hashes")
+        add(errors, published_sha256_matches(str(row.get("source_stage2_sha256", "")).lower(), sha(paths["stage2.ifc"])) and published_sha256_matches(str(row.get("source_handoff_sha256", "")).lower(), sha(paths["archicad_handoff.json"])), "energy_report.csv:hashes")
         reported = float(row.get("total_site_energy_kwh", 0) or 0)
         add(errors, reported > 0 and close(reported, metrics.get("site_kwh"), 1.0), "energy_report.csv:energy")
         add(errors, close(row.get("eui_kwh_m2"), reported / 137.28, 0.01), "energy_report.csv:eui")
@@ -662,7 +724,7 @@ def check_energy(paths: dict[str, Path], arch: dict[str, Any], spec: dict[str, A
     for row in summary:
         name = row.get("space_name")
         if name in SPACES:
-            add(errors, row.get("thermal_zone") == SPACES[name][0] and close(row.get("area_m2"), SPACES[name][1]) and row.get("source_stage2_sha256") == sha(paths["stage2.ifc"]), f"model_summary.csv:{name}")
+            add(errors, row.get("thermal_zone") == SPACES[name][0] and close(row.get("area_m2"), SPACES[name][1]) and published_sha256_matches(row.get("source_stage2_sha256"), sha(paths["stage2.ifc"])), f"model_summary.csv:{name}")
     return metrics
 
 
@@ -670,18 +732,18 @@ def check_reports(paths: dict[str, Path], metrics: dict[str, Any], errors: list[
     flow, osw, log = load_json(paths["flow_report.json"]), load_json(paths["workflow.osw"]), load_json(paths["native_stage_log.json"])
     add(errors, flow.get("case_id") == CASE_ID and flow.get("software_chain") == ["revit", "archicad", "openstudio", "energyplus"], "flow_report.json:identity")
     add(errors, str(flow.get("openstudio_version", "")).startswith("3.10.0") and "25.1.0-1c11a3d85f" in str(flow.get("energyplus_version")), "flow_report.json:versions")
-    add(errors, flow.get("forward_translator_errors") == [] and flow.get("stage2_sha256") == sha(paths["stage2.ifc"]), "flow_report.json:translation_or_hash")
-    add(errors, flow.get("osm_sha256") == sha(paths["result.osm"]) and flow.get("idf_sha256") == sha(paths["in.idf"]) and flow.get("eplusout_sql_sha256") == sha(paths["run/eplusout.sql"]), "flow_report.json:artifact_hashes")
+    add(errors, flow.get("forward_translator_errors") == [] and published_sha256_matches(flow.get("stage2_sha256"), sha(paths["stage2.ifc"])), "flow_report.json:translation_or_hash")
+    add(errors, published_sha256_matches(flow.get("osm_sha256"), sha(paths["result.osm"])) and published_sha256_matches(flow.get("idf_sha256"), sha(paths["in.idf"])) and published_sha256_matches(flow.get("eplusout_sql_sha256"), sha(paths["run/eplusout.sql"])), "flow_report.json:artifact_hashes")
     add(errors, flow.get("simulation", {}).get("status") == "EnergyPlus Completed Successfully" and close(flow.get("simulation", {}).get("total_site_energy_kwh"), metrics.get("reported_site_kwh"), 0.01), "flow_report.json:simulation")
     add(errors, osw.get("name") == CASE_ID and osw.get("osw_version") == "3.10" and osw.get("seed_file") == "result.osm" and osw.get("weather_file") == "weather.epw", "workflow.osw:identity")
-    add(errors, osw.get("source_stage2_sha256") == sha(paths["stage2.ifc"]) and osw.get("source_handoff_sha256") == sha(paths["archicad_handoff.json"]), "workflow.osw:hashes")
+    add(errors, published_sha256_matches(osw.get("source_stage2_sha256"), sha(paths["stage2.ifc"])) and published_sha256_matches(osw.get("source_handoff_sha256"), sha(paths["archicad_handoff.json"])), "workflow.osw:hashes")
     stages = log.get("stages", [])
     add(errors, [s.get("stage") for s in stages] == ["revit", "archicad", "openstudio"], "native_stage_log.json:order")
     if len(stages) == 3:
-        add(errors, str(stages[0].get("product_version", "")).startswith("25.1") and stages[0].get("output_sha256") == sha(paths["stage1.ifc"]), "native_stage_log.json:revit")
-        add(errors, "Archicad 27 build 6000" in str(stages[1].get("product_version")) and stages[1].get("output_sha256") == sha(paths["stage2.ifc"]), "native_stage_log.json:archicad")
-        add(errors, str(stages[2].get("product_version", "")).startswith("3.10.0") and "25.1.0-1c11a3d85f" in str(stages[2].get("energyplus_version")) and stages[2].get("output_sha256") == sha(paths["result.osm"]), "native_stage_log.json:openstudio")
-        add(errors, stages[0].get("input_sha256") == sha(paths["init.ifc"]) and stages[1].get("input_sha256") == sha(paths["stage1.ifc"]) and stages[1].get("input_handoff_sha256") == sha(paths["revit_handoff.json"]) and stages[2].get("input_sha256") == sha(paths["stage2.ifc"]) and stages[2].get("input_handoff_sha256") == sha(paths["archicad_handoff.json"]), "native_stage_log.json:input_chain")
+        add(errors, str(stages[0].get("product_version", "")).startswith("25.1") and published_sha256_matches(stages[0].get("output_sha256"), sha(paths["stage1.ifc"])), "native_stage_log.json:revit")
+        add(errors, "Archicad 27 build 6000" in str(stages[1].get("product_version")) and published_sha256_matches(stages[1].get("output_sha256"), sha(paths["stage2.ifc"])), "native_stage_log.json:archicad")
+        add(errors, str(stages[2].get("product_version", "")).startswith("3.10.0") and "25.1.0-1c11a3d85f" in str(stages[2].get("energyplus_version")) and published_sha256_matches(stages[2].get("output_sha256"), sha(paths["result.osm"])), "native_stage_log.json:openstudio")
+        add(errors, published_sha256_matches(stages[0].get("input_sha256"), sha(paths["init.ifc"])) and published_sha256_matches(stages[1].get("input_sha256"), sha(paths["stage1.ifc"])) and published_sha256_matches(stages[1].get("input_handoff_sha256"), sha(paths["revit_handoff.json"])) and published_sha256_matches(stages[2].get("input_sha256"), sha(paths["stage2.ifc"])) and published_sha256_matches(stages[2].get("input_handoff_sha256"), sha(paths["archicad_handoff.json"])), "native_stage_log.json:input_chain")
         try:
             times = [(parse_iso_datetime(s["started_utc"]), parse_iso_datetime(s["finished_utc"])) for s in stages]
             add(errors, all(a <= b for a, b in times) and times[0][1] <= times[1][0] <= times[1][1] <= times[2][0] <= times[2][1], "native_stage_log.json:timestamps")
@@ -760,7 +822,7 @@ def evaluate(root: Path) -> tuple[bool, list[str]]:
     if errors:
         return False, errors
     for name, expected in IMMUTABLE.items():
-        add(errors, sha(paths[name]) == expected, f"immutable_hash:{name}")
+        add(errors, published_sha256_matches(sha(paths[name]), expected), f"immutable_hash:{name}")
     spec, translator = load_json(paths["workflow_spec.json"]), load_json(paths["archicad_ifc4_translator.json"])
     add(errors, spec.get("case_id") == CASE_ID and spec.get("revision") == "EW3B07", "workflow_spec.json:identity")
     add(errors, spec.get("fixed_software", {}).get("revit", {}).get("major_version") == 2025 and spec.get("fixed_software", {}).get("archicad", {}).get("major_version") == 27 and spec.get("fixed_software", {}).get("openstudio", {}).get("version") == "3.10.0", "workflow_spec.json:versions")

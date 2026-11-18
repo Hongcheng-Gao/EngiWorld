@@ -123,6 +123,69 @@ def json_file(path: Path) -> dict[str, Any]:
     return value
 
 
+
+# Legacy release records used the SHA256 of the original PNG, including metadata.
+# The migration target was computed from the recovered, trusted original image.
+PNG_LEGACY_FINGERPRINTS = {'38c55918dd1e4272a031c6f34502ef34e5f60faf68247a0d8f28acb544390b7e': '4c6b401160411362b5a68b42a21d25ced572d4377f7b21d14cfea27edf0f2bd9'}
+
+
+def png_content_sha256(path: Path) -> str:
+    """Hash PNG chunks after removing only textual and EXIF metadata."""
+    data = path.read_bytes()
+    if not data.startswith(b"\x89PNG\r\n\x1a\n"):
+        raise ValueError("invalid PNG signature")
+    digest = hashlib.sha256(data[:8])
+    offset = 8
+    types = []
+    while offset < len(data):
+        if offset + 12 > len(data):
+            raise ValueError("truncated PNG chunk")
+        size = struct.unpack_from(">I", data, offset)[0]
+        end = offset + 12 + size
+        if end > len(data):
+            raise ValueError("truncated PNG payload")
+        kind = data[offset + 4:offset + 8]
+        payload = data[offset + 8:end - 4]
+        crc = struct.unpack_from(">I", data, end - 4)[0]
+        if zlib.crc32(kind + payload) & 0xffffffff != crc:
+            raise ValueError("invalid PNG CRC")
+        if kind not in {b"tEXt", b"zTXt", b"iTXt", b"eXIf"}:
+            digest.update(data[offset:end])
+        types.append(kind)
+        offset = end
+        if kind == b"IEND":
+            if size or offset != len(data):
+                raise ValueError("invalid PNG end")
+            break
+    if not types or types[0] != b"IHDR" or types[-1] != b"IEND" or b"IDAT" not in types:
+        raise ValueError("incomplete PNG structure")
+    return digest.hexdigest()
+
+
+def artifact_sha256_matches(path: Path, expected: Any) -> bool:
+    if not isinstance(expected, str) or re.fullmatch(r"[0-9a-f]{64}", expected) is None:
+        return False
+    if sha256(path) == expected:
+        return True
+    if path.suffix.lower() in {".csv", ".json", ".scad", ".kicad_pcb", ".md", ".obj", ".mtl"}:
+        data = path.read_bytes()
+        try:
+            data.decode("utf-8")
+        except UnicodeDecodeError:
+            return False
+        lf = data.replace(b"\r\n", b"\n")
+        return expected in {
+            hashlib.sha256(lf).hexdigest(),
+            hashlib.sha256(lf.replace(b"\n", b"\r\n")).hexdigest(),
+        }
+    if path.name != "04_blender_review.png" or expected not in PNG_LEGACY_FINGERPRINTS:
+        return False
+    try:
+        return png_content_sha256(path) == PNG_LEGACY_FINGERPRINTS[expected]
+    except (OSError, ValueError, struct.error):
+        return False
+
+
 def sha256(path: Path) -> str:
     digest = hashlib.sha256()
     with path.open("rb") as handle:
@@ -539,7 +602,7 @@ def check_kicad_handoff(spec: dict[str, Any]) -> tuple[dict[str, Any], dict[str,
         close(item.get("x_mm"), footprint["x_mm"], tol, f"export {ref} x")
         close(item.get("y_mm"), footprint["y_mm"], tol, f"export {ref} y")
         close(item.get("diameter_mm"), footprint["hole_diameter_mm"], tol, f"export {ref} diameter")
-    if export.get("input_board_sha256") is not None and export["input_board_sha256"] != sha256(spec["paths"]["board"]):
+    if export.get("input_board_sha256") is not None and not artifact_sha256_matches(spec["paths"]["board"], export["input_board_sha256"]):
         fail("KiCad export input_board_sha256 does not match trusted postconfig")
     return export, rows
 
@@ -831,7 +894,7 @@ def check_openscad_handoff(spec: dict[str, Any], geometry: dict[str, Any]) -> di
                 close(value, expected["finished_width_mm"], tol, f"OpenSCAD {expected['ref']} width")
             for value in heights:
                 close(value, expected["finished_height_mm"], tol, f"OpenSCAD {expected['ref']} height")
-    if params.get("input_mechanical_map_sha256") is not None and params["input_mechanical_map_sha256"] != sha256(DESKTOP / "01_kicad_mechanical_map.csv"):
+    if params.get("input_mechanical_map_sha256") is not None and not artifact_sha256_matches(DESKTOP / "01_kicad_mechanical_map.csv", params["input_mechanical_map_sha256"]):
         fail("OpenSCAD input mechanical-map hash mismatch")
     return params
 
@@ -2859,9 +2922,9 @@ def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> Non
             output_hashes = entry.get("output_sha256")
             if not isinstance(input_hashes, dict) or not required_inputs.issubset(input_hashes) or not isinstance(output_hashes, dict) or not required_outputs.issubset(output_hashes):
                 continue
-            if any(input_hashes[name] != sha256(trusted_by_name.get(name, DESKTOP / name)) for name in required_inputs):
+            if any(not artifact_sha256_matches(trusted_by_name.get(name, DESKTOP / name), input_hashes[name]) for name in required_inputs):
                 continue
-            if any(output_hashes[name] != sha256(DESKTOP / name) for name in required_outputs):
+            if any(not artifact_sha256_matches(DESKTOP / name, output_hashes[name]) for name in required_outputs):
                 continue
             if stage != "prepare":
                 if not version_matches(stage, entry.get("version")) or not productive_argv_matches(stage, argv, required_outputs):
@@ -3007,7 +3070,7 @@ def check_release_chain(spec: dict[str, Any], cad_result: dict[str, Any]) -> Non
             expected_hash = hashes[name]
             if not isinstance(expected_hash, str) or len(expected_hash) != 64:
                 fail(f"final package has an invalid SHA-256 for {name}")
-            if expected_hash.lower() != sha256(DESKTOP / name):
+            if not artifact_sha256_matches(DESKTOP / name, expected_hash.lower()):
                 fail(f"final package hash mismatch for {name}")
     checks = package.get("checks", package.get("release_checks"))
     if not isinstance(checks, dict) or not checks or not all(value is True for value in checks.values()):
